@@ -4,7 +4,7 @@ from pyboy import PyBoy
 from emulator.game_state import YellowLegacyGameState
 
 
-class YellowLegacyWrapper:
+class YellowLegacyEmulator:
     """
     Wrapper for accessing the game state of Pokemon Yellow Legacy. Encapsulates the PyBoy API so
     that the rest of the codebase doesn't need to worry about emulation or memory addresses.
