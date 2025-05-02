@@ -1,6 +1,6 @@
 from burr.core.action import action
 from agent.state import AgentState, AgentStateParams
-from emulator.context import get_emulator
+from emulator.emulator import YellowLegacyEmulator
 
 
 BUILD_AGENT_STATE = "Build Agent State"
@@ -16,11 +16,7 @@ async def build_agent_state(state: AgentState) -> AgentState:
     The first action in the agent loop. Builds the agent state based on the emulator and the
     previous state.
     """
-    emulator = get_emulator()
-    if not emulator:
-        raise RuntimeError("No emulator instance available in the current context")
-
     state.iteration += 1
-    state.game_state = emulator.game_state
-    state.screenshot = emulator.take_screenshot()
+    state.game_state = YellowLegacyEmulator.get_game_state()
+    state.screenshot = YellowLegacyEmulator.get_screenshot_bytes()
     return state

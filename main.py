@@ -1,8 +1,9 @@
 import argparse
 import asyncio
+from loguru import logger
 from pathlib import Path
 from agent.app import build_agent_application
-from emulator.context import EmulatorContext
+from emulator.emulator import YellowLegacyEmulator
 
 
 async def main(
@@ -17,9 +18,22 @@ async def main(
     :param rom_path: The path to the ROM file.
     :param state_path: Optional path to load a saved state from.
     """
+    YellowLegacyEmulator(rom_path, state_path)
+    tick_task = asyncio.create_task(YellowLegacyEmulator.async_tick_indefinitely())
+    await asyncio.sleep(1)  # Give the emulator a few ticks to load before continuing.
+
     agent_app = build_agent_application(Path(memory_dir), Path(backup_dir))
-    async with EmulatorContext(rom_path, state_path):
+
+    try:
         await agent_app.arun()
+    except Exception:  # noqa: BLE001
+        logger.exception("Agent app raised an exception.")
+    finally:
+        tick_task.cancel()
+    try:
+        await tick_task
+    except asyncio.CancelledError:
+        pass
 
 
 if __name__ == "__main__":
