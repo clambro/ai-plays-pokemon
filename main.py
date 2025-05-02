@@ -18,11 +18,11 @@ async def main(
     :param rom_path: The path to the ROM file.
     :param state_path: Optional path to load a saved state from.
     """
-    YellowLegacyEmulator(rom_path, state_path)
-    tick_task = asyncio.create_task(YellowLegacyEmulator.async_tick_indefinitely())
+    emulator = YellowLegacyEmulator(rom_path, state_path)
+    tick_task = asyncio.create_task(emulator.async_tick_indefinitely())
     await asyncio.sleep(1)  # Give the emulator a few ticks to load before continuing.
 
-    agent_app = build_agent_application(Path(memory_dir), Path(backup_dir))
+    agent_app = build_agent_application(Path(memory_dir), Path(backup_dir), emulator)
 
     try:
         await agent_app.arun()

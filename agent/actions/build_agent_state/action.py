@@ -11,12 +11,12 @@ BUILD_AGENT_STATE = "Build Agent State"
     reads=[*AgentStateParams.__members__.values()],
     writes=[*AgentStateParams.__members__.values()],
 )
-async def build_agent_state(state: AgentState) -> AgentState:
+async def build_agent_state(state: AgentState, emulator: YellowLegacyEmulator) -> AgentState:
     """
     The first action in the agent loop. Builds the agent state based on the emulator and the
     previous state.
     """
     state.iteration += 1
-    state.game_state = YellowLegacyEmulator.get_game_state()
-    state.screenshot = YellowLegacyEmulator.get_screenshot_bytes()
+    state.game_state = emulator.get_game_state()
+    state.screenshot = emulator.get_screenshot_bytes()
     return state

@@ -11,9 +11,9 @@ PRESS_RANDOM_BUTTON = "Press Random Button"
 
 
 @action.pydantic(reads=[], writes=[])
-async def press_random_button(state: AgentState) -> AgentState:
+async def press_random_button(state: AgentState, emulator: YellowLegacyEmulator) -> AgentState:
     """Press a random button for testing purposes."""
     await asyncio.sleep(random.uniform(0, 3))  # Pretend to do something.
     button: Button = random.choice(list(Button))
-    await YellowLegacyEmulator.press_buttons([button])
+    await emulator.press_buttons([button])
     return state
