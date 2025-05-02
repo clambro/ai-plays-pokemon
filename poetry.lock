@@ -13,6 +13,46 @@ files = [
 ]
 
 [[package]]
+name = "burr"
+version = "0.39.1"
+description = "A state machine for data projects"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "burr-0.39.1-py3-none-any.whl", hash = "sha256:49f33c85d7dd0eb29d2d842f513d99580abfbf1509a2459ddd0f087b0a243df0"},
+    {file = "burr-0.39.1.tar.gz", hash = "sha256:401f0b9a76e008b2c2107551c225cf9c907c3171f1ed4c6c1c60fd08de418ae6"},
+]
+
+[package.extras]
+aiosqlite = ["aiosqlite"]
+asyncpg = ["asyncpg"]
+cli = ["click", "loguru", "requests"]
+developer = ["build", "burr[bloat]", "burr[documentation]", "burr[graphviz]", "burr[streamlit]", "burr[tests]", "burr[tracking]", "pre-commit", "twine"]
+documentation = ["burr[aiosqlite]", "burr[asyncpg]", "burr[psycopg2]", "burr[pymongo]", "burr[ray]", "burr[redis]", "burr[tests]", "furo", "myst-nb", "sphinx", "sphinx-autobuild", "sphinx-sitemap", "sphinx-toolbox", "sphinxcontrib-googleanalytics"]
+examples = ["burr[inappexamples]", "langchain", "langchain-community", "langchain-openai"]
+graphviz = ["graphviz"]
+hamilton = ["sf-hamilton"]
+haystack = ["haystack-ai"]
+inappexamples = ["opentelemetry-api", "opentelemetry-instrumentation-openai", "opentelemetry-sdk"]
+learn = ["burr[cli,graphviz,hamilton,inappexamples,streamlit,tracking]"]
+opentelemetry = ["opentelemetry-api", "opentelemetry-sdk"]
+postgresql = ["psycopg2-binary"]
+psycopg2 = ["psycopg2-binary"]
+pydantic = ["pydantic"]
+pymongo = ["pymongo"]
+ray = ["ray[default]"]
+redis = ["redis"]
+start = ["burr[learn]"]
+streamlit = ["graphviz", "matplotlib", "sf-hamilton", "streamlit"]
+tests = ["burr[aiosqlite]", "burr[asyncpg]", "burr[hamilton]", "burr[hamilton]", "burr[haystack]", "burr[opentelemetry]", "burr[psycopg2]", "burr[pymongo]", "burr[ray]", "burr[redis]", "langchain_community", "langchain_core", "pandas", "pyarrow", "pydantic[email]", "pytest", "pytest-asyncio"]
+tracking = ["burr[tracking-client]", "burr[tracking-server]"]
+tracking-client = ["pydantic (>1)"]
+tracking-client-s3 = ["boto3", "burr[tracking-client]"]
+tracking-server = ["aiofiles", "click", "fastapi", "fastapi-pagination", "fastapi-utils", "jinja2", "openai", "pydantic", "pydantic-settings", "requests", "typing-inspect", "uvicorn"]
+tracking-server-s3 = ["aerich", "aiobotocore", "burr[tracking-server]", "fastapi", "tortoise-orm[accel,asyncmy]", "typing-inspect"]
+
+[[package]]
 name = "numpy"
 version = "2.2.5"
 description = "Fundamental package for array computing in Python"
@@ -411,4 +451,4 @@ typing-extensions = ">=4.12.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.14"
-content-hash = "b6fafa96365fdc357d3a13ab5be4ffe0c31f7631ad31725880b00ac0dc170e4b"
+content-hash = "741488dd31df92d18b8921974655f4842b298fee2dd2efb2de34fc526619ad17"
