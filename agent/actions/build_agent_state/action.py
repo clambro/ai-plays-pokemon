@@ -6,7 +6,7 @@ from emulator.context import get_emulator
 BUILD_AGENT_STATE = "Build Agent State"
 
 
-@action(
+@action.pydantic(
     # We need to be able to read and write everything in this action.
     reads=[*AgentStateParams.__members__.values()],
     writes=[*AgentStateParams.__members__.values()],
