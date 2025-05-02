@@ -1,6 +1,8 @@
+import asyncio
 from pathlib import Path
 
 from pyboy import PyBoy
+from constants import GAME_TICKS_PER_SECOND
 from emulator.game_state import YellowLegacyGameState
 
 
@@ -43,3 +45,16 @@ class YellowLegacyEmulator:
     def stop(self) -> None:
         """Stop the emulator."""
         self.pyboy.stop()
+
+    def take_screenshot(self) -> bytes:
+        """Take a screenshot of the current game state."""
+        img = self.pyboy.screen.image
+        if img is None:
+            raise RuntimeError("No screenshot available")
+        return img.tobytes()
+
+    async def press_buttons(self, buttons: list[str], delay_frames: int = 10) -> None:
+        """Press the buttons in order, with a delay between each."""
+        for button in buttons:
+            self.pyboy.button(button, delay_frames)
+            await asyncio.sleep(delay_frames / GAME_TICKS_PER_SECOND)

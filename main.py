@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-from pathlib import Path
 
 from emulator.context import EmulatorContext
 

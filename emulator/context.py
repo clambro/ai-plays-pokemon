@@ -23,6 +23,7 @@ class EmulatorContext:
         emulator_context.set(self._emulator)
         self._running = True
         self._tick_task = asyncio.create_task(self._tick_loop())
+        await asyncio.sleep(1)  # Give the emulator time to load before continuing.
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
