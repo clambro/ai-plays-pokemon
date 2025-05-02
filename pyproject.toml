@@ -15,6 +15,7 @@ numpy = "^2.2.5"
 pillow = "^11.2.1"
 pydantic = "^2.11.3"
 burr = "^0.39.1"
+loguru = "^0.7.3"
 
 [tool.isort]
 profile = "black"
