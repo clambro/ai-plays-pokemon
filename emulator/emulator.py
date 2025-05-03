@@ -1,13 +1,13 @@
 import asyncio
 from pathlib import Path
-from typing import AsyncContextManager
+from contextlib import AbstractAsyncContextManager
 
 from pyboy import PyBoy
 from constants import GAME_TICKS_PER_SECOND
 from emulator.game_state import YellowLegacyGameState
 
 
-class YellowLegacyEmulator(AsyncContextManager):
+class YellowLegacyEmulator(AbstractAsyncContextManager):
     """
     Wrapper for accessing the game state of Pokemon Yellow Legacy. Encapsulates the PyBoy API so
     that the rest of the codebase doesn't need to worry about emulation or memory addresses.
@@ -30,7 +30,7 @@ class YellowLegacyEmulator(AsyncContextManager):
         await asyncio.sleep(1)  # Give the emulator a few ticks to load before continuing
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
         """Stop the emulator and cancel the tick task when exiting the context."""
         self.stop()
         if self._tick_task:
@@ -51,7 +51,7 @@ class YellowLegacyEmulator(AsyncContextManager):
             self._game_state = YellowLegacyGameState.from_memory(self._pyboy.memory, self.tick_num)
         return self._game_state
 
-    def tick(self, count: int = 1) -> bool:
+    def _tick(self, count: int = 1) -> bool:
         """
         Tick the emulator forward by `count` frames.
 
@@ -66,7 +66,7 @@ class YellowLegacyEmulator(AsyncContextManager):
         """Tick the emulator indefinitely on its own thread."""
         while True:
             self._check_stopped()
-            if not self.tick():
+            if not self._tick():
                 self.stop()
                 break
             await asyncio.sleep(0)  # Return control to the event loop.
