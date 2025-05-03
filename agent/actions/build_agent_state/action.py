@@ -17,6 +17,4 @@ async def build_agent_state(state: AgentState, emulator: YellowLegacyEmulator) -
     previous state.
     """
     state.iteration += 1
-    state.game_state = emulator.get_game_state()
-    state.screenshot = emulator.get_screenshot_bytes()
     return state

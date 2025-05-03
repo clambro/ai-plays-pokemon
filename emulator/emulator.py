@@ -63,7 +63,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         return self._pyboy.tick(count, render=True, sound=True)
 
     async def async_tick_indefinitely(self) -> None:
-        """Tick the emulator indefinitely on its own thread."""
+        """Tick the emulator indefinitely. Should be run on its own thread."""
         while True:
             self._check_stopped()
             if not self._tick():

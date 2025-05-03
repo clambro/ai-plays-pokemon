@@ -18,8 +18,6 @@ def build_agent_application(
     """Build the agent application."""
     initial_state = AgentState(
         iteration=0,
-        game_state=None,
-        screenshot=None,
         memory_dir=memory_dir,
         backup_dir=backup_dir,
     )
