@@ -16,6 +16,9 @@ pillow = "^11.2.1"
 pydantic = "^2.11.3"
 burr = "^0.39.1"
 loguru = "^0.7.3"
+google-genai = "^1.13.0"
+dotenv = "^0.9.9"
+pydantic-settings = "^2.9.1"
 
 [tool.isort]
 profile = "black"

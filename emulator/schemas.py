@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Self
 
-from constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
+from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel
 

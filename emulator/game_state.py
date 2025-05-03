@@ -1,7 +1,7 @@
 from typing import Self
 
 import numpy as np
-from constants import (
+from common.constants import (
     CUT_TREE_TILE,
     PIKACHU_TILE,
     SPRITE_TILE,

@@ -17,4 +17,5 @@ async def build_agent_state(state: AgentState, emulator: YellowLegacyEmulator) -
     previous state.
     """
     state.iteration += 1
+    state.button_presses = []
     return state

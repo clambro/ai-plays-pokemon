@@ -3,8 +3,9 @@ from pathlib import Path
 from contextlib import AbstractAsyncContextManager
 
 from pyboy import PyBoy
-from constants import GAME_TICKS_PER_SECOND
+from common.constants import GAME_TICKS_PER_SECOND
 from emulator.game_state import YellowLegacyGameState
+from PIL.Image import Image
 
 
 class YellowLegacyEmulator(AbstractAsyncContextManager):
@@ -76,13 +77,13 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         self._is_stopped = True
         self._pyboy.stop()
 
-    def get_screenshot_bytes(self) -> bytes:
-        """Get a screenshot of the current game screen as a bytes object."""
+    def get_screenshot(self) -> Image:
+        """Get a screenshot of the current game screen."""
         self._check_stopped()
         img = self._pyboy.screen.image
-        if img is None:
+        if not isinstance(img, Image):
             raise RuntimeError("No screenshot available")
-        return img.tobytes()
+        return img
 
     async def press_buttons(self, buttons: list[str], delay_frames: int = 20) -> None:
         """Press the buttons in order, with a delay between each."""
