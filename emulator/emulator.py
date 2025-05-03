@@ -3,7 +3,7 @@ from pathlib import Path
 from contextlib import AbstractAsyncContextManager
 
 from pyboy import PyBoy
-from constants import GAME_TICKS_PER_SECOND
+from common.constants import GAME_TICKS_PER_SECOND
 from emulator.game_state import YellowLegacyGameState
 
 
