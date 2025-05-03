@@ -10,6 +10,7 @@ from google.genai.types import (
 from pydantic import BaseModel
 from common.prompts import SYSTEM_PROMPT
 from common.settings import settings
+from PIL.Image import Image
 
 PydanticModel = TypeVar("PydanticModel", bound=BaseModel)
 
@@ -36,7 +37,7 @@ class Gemini:
 
     async def get_llm_response_pydantic(
         self,
-        messages: str | list[str],
+        messages: str | list[str | Image],
         schema: type[PydanticModel],
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = 0.0,

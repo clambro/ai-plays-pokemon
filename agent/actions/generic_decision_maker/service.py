@@ -3,7 +3,6 @@ from agent.actions.generic_decision_maker.prompts import GENERIC_DECISION_MAKER_
 from agent.actions.generic_decision_maker.schemas import GenericDecisionMakerResponse
 from common.gemini import Gemini, GeminiModel
 from emulator.emulator import YellowLegacyEmulator
-from emulator.enums import Button
 
 
 class GenericDecisionMakerService:
@@ -23,9 +22,10 @@ class GenericDecisionMakerService:
 
         :return: The button to press.
         """
+        img = self.emulator.get_screenshot()
         prompt = GENERIC_DECISION_MAKER_PROMPT
         response = await self.llm_service.get_llm_response_pydantic(
-            messages=prompt,
+            messages=[prompt, img],
             schema=GenericDecisionMakerResponse,
         )
         logger.info(f"Generic decision maker reasoning: {response.thoughts}")
