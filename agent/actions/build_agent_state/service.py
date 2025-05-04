@@ -1,4 +1,6 @@
 import asyncio
+
+from loguru import logger
 from emulator.emulator import YellowLegacyEmulator
 
 
@@ -14,4 +16,5 @@ class BuildAgentStateService:
             game_state = self.emulator.get_game_state()
             if not game_state.is_player_moving:
                 break
+            logger.info("Player is still moving. Waiting before initiating the agent loop.")
             await asyncio.sleep(0.1)
