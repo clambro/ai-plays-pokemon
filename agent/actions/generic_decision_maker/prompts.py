@@ -8,6 +8,8 @@ Based on the screenshot provided, decide which button to press. The (case-sensit
 - left: The left button. Used to navigate menus or move the character left.
 - right: The right button. Used to navigate menus or move the character right.
 
+{raw_memory}
+
 You have been provided with the current game screen. Respond in the format given below. The relevant keys are:
 - thoughts: Your thoughts on the current game state and which button to press.
 - button: The button to press. Must be one of the available buttons above.

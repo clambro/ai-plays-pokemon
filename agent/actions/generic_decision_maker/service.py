@@ -32,7 +32,7 @@ class GenericDecisionMakerService:
         :return: The button to press.
         """
         img = self.emulator.get_screenshot()
-        prompt = GENERIC_DECISION_MAKER_PROMPT
+        prompt = GENERIC_DECISION_MAKER_PROMPT.format(raw_memory=self.raw_memory)
         response = await self.llm_service.get_llm_response_pydantic(
             messages=[prompt, img],
             schema=GenericDecisionMakerResponse,
