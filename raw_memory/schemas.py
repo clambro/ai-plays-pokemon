@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from common.constants import RAW_MEMORY_MAX_SIZE
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class RawMemoryPiece(BaseModel):
@@ -20,18 +20,22 @@ class RawMemory(BaseModel):
     """The Agent's raw memory."""
 
     max_size: int = RAW_MEMORY_MAX_SIZE
-    _pieces: list[RawMemoryPiece] = []
+    pieces: list[RawMemoryPiece] = Field(default_factory=list)
 
     def __str__(self) -> str:
         """Get a string representation of the memory."""
-        if not self._pieces:
+        if not self.pieces:
             return ""
-        out = "Here are the most recent unedited thoughts you have had:\n<raw_memory>\n"
-        out += "\n".join([str(piece) for piece in reversed(self._pieces)])
+        out = (
+            "Here are the most recent unedited thoughts you have had. The bracketed number is the"
+            " incremented iteration number at which you had the thought. Higher numbers are more"
+            " recent.\n<raw_memory>\n"
+        )
+        out += "\n".join([str(piece) for piece in reversed(self.pieces)])
         out += "\n</raw_memory>"
         return out
 
     def append(self, *pieces: RawMemoryPiece) -> None:
         """Append a piece to the memory."""
-        self._pieces.extend(pieces)
-        self._pieces = self._pieces[-self.max_size :]
+        self.pieces.extend(pieces)
+        self.pieces = self.pieces[-self.max_size :]
