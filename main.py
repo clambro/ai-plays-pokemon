@@ -3,7 +3,9 @@ import asyncio
 from loguru import logger
 from pathlib import Path
 from agent.app import build_agent_application
+from agent.state import AgentState
 from emulator.emulator import YellowLegacyEmulator
+import aiofiles
 
 
 async def main(
@@ -24,6 +26,9 @@ async def main(
             await agent_app.arun()
         except Exception:  # noqa: BLE001
             logger.exception("Agent app raised an exception.")
+            state = AgentState.model_validate(agent_app.state)
+            async with aiofiles.open("notes/agent_state.json", "w") as f:
+                await f.write(state.model_dump_json())
 
 
 if __name__ == "__main__":
