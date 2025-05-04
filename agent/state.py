@@ -1,24 +1,27 @@
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from emulator.enums import Button
+from raw_memory.schemas import RawMemory
 
 
 class AgentState(BaseModel):
     """The state used in the agent graph workflow."""
 
-    iteration: int
     memory_dir: Path
     backup_dir: Path
-    button_presses: list[Button]
+    iteration: int = 0
+    buttons_pressed: list[Button] = Field(default_factory=list)
+    raw_memory: RawMemory = Field(default_factory=RawMemory)
 
 
 class AgentStateParams(StrEnum):
     """The parameters for the agent state as strings for use with Burr."""
 
-    iteration = "iteration"
     memory_dir = "memory_dir"
     backup_dir = "backup_dir"
-    button_presses = "button_presses"
+    iteration = "iteration"
+    buttons_pressed = "buttons_pressed"
+    raw_memory = "raw_memory"

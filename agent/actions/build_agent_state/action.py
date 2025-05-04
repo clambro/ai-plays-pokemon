@@ -27,5 +27,5 @@ async def build_agent_state(state: AgentState, emulator: YellowLegacyEmulator) -
     await service.wait_for_movement_end()
 
     state.iteration += 1
-    state.button_presses = []
+    state.buttons_pressed = []
     return state
