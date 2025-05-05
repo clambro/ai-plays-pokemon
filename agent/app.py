@@ -17,10 +17,8 @@ def build_agent_application(
 ) -> Application:
     """Build the agent application."""
     initial_state = AgentState(
-        iteration=0,
         memory_dir=memory_dir,
         backup_dir=backup_dir,
-        button_presses=[],
     )
     app = (
         ApplicationBuilder()

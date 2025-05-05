@@ -85,7 +85,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
             raise RuntimeError("No screenshot available")
         return img
 
-    async def press_buttons(self, buttons: list[str], delay_frames: int = 20) -> None:
+    async def press_buttons(self, buttons: list[str], delay_frames: int = 10) -> None:
         """Press the buttons in order, with a delay between each."""
         self._check_stopped()
         for button in buttons:

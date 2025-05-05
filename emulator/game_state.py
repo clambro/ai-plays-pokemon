@@ -48,6 +48,11 @@ class YellowLegacyGameState(BaseModel):
             battle=BattleState.from_memory(mem),
         )
 
+    @property
+    def is_player_moving(self) -> bool:
+        """Check if the player is moving and not in a battle."""
+        return self.player.is_moving and not self.battle.is_in_battle
+
     def get_ascii_screen(self) -> list[list[str]]:
         """Get an ASCII representation of the current screen."""
         tiles = np.array(self.screen.tiles)

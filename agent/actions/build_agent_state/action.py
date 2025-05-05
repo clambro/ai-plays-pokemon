@@ -1,4 +1,7 @@
+import asyncio
 from burr.core.action import action
+from loguru import logger
+from agent.actions.build_agent_state.service import BuildAgentStateService
 from agent.state import AgentState, AgentStateParams
 from emulator.emulator import YellowLegacyEmulator
 
@@ -16,6 +19,13 @@ async def build_agent_state(state: AgentState, emulator: YellowLegacyEmulator) -
     The first action in the agent loop. Builds the agent state based on the emulator and the
     previous state.
     """
+    logger.info("Building agent state...")
+    logger.info("Triggering artificial delay for free API tier")
+    await asyncio.sleep(3)
+
+    service = BuildAgentStateService(emulator)
+    await service.wait_for_movement_end()
+
     state.iteration += 1
-    state.button_presses = []
+    state.buttons_pressed = []
     return state

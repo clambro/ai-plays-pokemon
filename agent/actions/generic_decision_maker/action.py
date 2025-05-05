@@ -8,7 +8,10 @@ from emulator.emulator import YellowLegacyEmulator
 GENERIC_DECISION_MAKER = "Generic Decision Maker"
 
 
-@action.pydantic(reads=[], writes=[AgentStateParams.button_presses])
+@action.pydantic(
+    reads=[AgentStateParams.iteration, AgentStateParams.raw_memory],
+    writes=[AgentStateParams.buttons_pressed, AgentStateParams.raw_memory],
+)
 async def generic_decision_maker(state: AgentState, emulator: YellowLegacyEmulator) -> AgentState:
     """
     Make a decision based on the current game state.
@@ -16,7 +19,11 @@ async def generic_decision_maker(state: AgentState, emulator: YellowLegacyEmulat
     """
     logger.info("Running the generic decision maker...")
 
-    service = GenericDecisionMakerService(emulator)
+    service = GenericDecisionMakerService(
+        iteration=state.iteration,
+        emulator=emulator,
+        raw_memory=state.raw_memory,  # Modified in place.
+    )
     response = await service.make_decision()
-    state.button_presses.append(response.button)
+    state.buttons_pressed.append(response.button)
     return state
