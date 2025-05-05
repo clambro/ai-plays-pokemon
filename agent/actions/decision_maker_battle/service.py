@@ -34,7 +34,7 @@ class DecisionMakerBattleService:
             messages=[img, prompt],
             schema=DecisionMakerBattleResponse,
         )
-        logger.info(f"Battle decision maker reasoning: {response.thoughts}")
+        logger.info(response.thoughts)
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,

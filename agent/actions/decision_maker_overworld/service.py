@@ -34,7 +34,7 @@ class DecisionMakerOverworldService:
             messages=[img, prompt],
             schema=DecisionMakerOverworldResponse,
         )
-        logger.info(f"Overworld decision maker reasoning: {response.thoughts}")
+        logger.info(response.thoughts)
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
