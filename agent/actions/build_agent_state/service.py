@@ -11,25 +11,19 @@ class BuildAgentStateService:
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
         self.emulator = emulator
 
-    async def wait_for_movement_end(self) -> None:
-        """
-        Check if the player is moving, and if so, wait for them to stop.
-
-        This is to ensure that the player is not moving when the agent loop starts. We need to run
-        the check a few times to ensure that we didn't just catch the player between animation
-        frames.
-        """
+    async def wait_for_animations(self) -> None:
+        """Wait until all animations have finished so that we can begin the Agent loop."""
         successes = 0
-        while True:
-            game_state = self.emulator.get_game_state()
-            if game_state.is_player_moving:
-                successes = 0
-                logger.info("Player movement detected. Waiting for it to end.")
-            else:
+        game_state = await self.emulator.get_game_state()
+        while successes < 5:
+            new_game_state = await self.emulator.get_game_state()
+            if game_state.screen.tiles == new_game_state.screen.tiles:
                 successes += 1
-            if successes >= 3:
-                break
-            await asyncio.sleep(0.01)
+            else:
+                successes = 0
+                logger.info("Animation detected. Waiting for it to finish.")
+            game_state = new_game_state
+            await asyncio.sleep(0.02)
 
     async def determine_handler(self) -> StateHandler:
         """
@@ -37,5 +31,5 @@ class BuildAgentStateService:
 
         :return: The handler to use.
         """
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         return StateHandler.BATTLE if game_state.battle.is_in_battle else StateHandler.OVERWORLD

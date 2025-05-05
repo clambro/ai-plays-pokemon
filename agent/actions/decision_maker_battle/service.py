@@ -28,7 +28,7 @@ class DecisionMakerBattleService:
 
         :return: The button to press.
         """
-        img = self.emulator.get_screenshot()
+        img = await self.emulator.get_screenshot()
         prompt = DECISION_MAKER_BATTLE_PROMPT.format(raw_memory=self.raw_memory)
         response = await self.llm_service.get_llm_response_pydantic(
             messages=[img, prompt],

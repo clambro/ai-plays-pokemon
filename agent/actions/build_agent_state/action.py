@@ -24,7 +24,7 @@ async def build_agent_state(state: AgentState, emulator: YellowLegacyEmulator) -
     await asyncio.sleep(3)
 
     service = BuildAgentStateService(emulator)
-    await service.wait_for_movement_end()
+    await service.wait_for_animations()
 
     state.iteration += 1
     state.buttons_pressed = []
