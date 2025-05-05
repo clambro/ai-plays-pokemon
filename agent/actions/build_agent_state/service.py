@@ -12,7 +12,11 @@ class BuildAgentStateService:
         self.emulator = emulator
 
     async def wait_for_animations(self) -> None:
-        """Wait until all animations have finished so that we can begin the Agent loop."""
+        """
+        Wait until all animations have finished so that we can begin the Agent loop.
+        Important to not take too long here because the blinking cursor counts as an animation, but
+        that should not block the loop.
+        """
         successes = 0
         game_state = await self.emulator.get_game_state()
         while successes < 5:

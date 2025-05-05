@@ -1,5 +1,4 @@
 from datetime import datetime
-from loguru import logger
 from agent.actions.decision_maker_battle.prompts import DECISION_MAKER_BATTLE_PROMPT
 from agent.actions.decision_maker_battle.schemas import DecisionMakerBattleResponse
 from emulator.enums import Button
