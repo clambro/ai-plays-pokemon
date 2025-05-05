@@ -28,4 +28,5 @@ async def build_agent_state(state: AgentState, emulator: YellowLegacyEmulator) -
 
     state.iteration += 1
     state.buttons_pressed = []
+    state.handler = await service.determine_handler()
     return state

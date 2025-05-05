@@ -1,6 +1,7 @@
 import asyncio
 
 from loguru import logger
+from common.enums import StateHandler
 from emulator.emulator import YellowLegacyEmulator
 
 
@@ -29,3 +30,12 @@ class BuildAgentStateService:
             if successes >= 3:
                 break
             await asyncio.sleep(0.01)
+
+    async def determine_handler(self) -> StateHandler:
+        """
+        Determine which handler to use based on the current game state.
+
+        :return: The handler to use.
+        """
+        game_state = self.emulator.get_game_state()
+        return StateHandler.BATTLE if game_state.battle.is_in_battle else StateHandler.OVERWORLD
