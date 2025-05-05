@@ -3,6 +3,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from common.enums import StateHandler
 from emulator.enums import Button
 from raw_memory.schemas import RawMemory
 
@@ -15,6 +16,7 @@ class AgentState(BaseModel):
     iteration: int = 0
     buttons_pressed: list[Button] = Field(default_factory=list)
     raw_memory: RawMemory = Field(default_factory=RawMemory)
+    handler: StateHandler | None = None
 
 
 class AgentStateParams(StrEnum):
@@ -25,3 +27,4 @@ class AgentStateParams(StrEnum):
     iteration = "iteration"
     buttons_pressed = "buttons_pressed"
     raw_memory = "raw_memory"
+    handler = "handler"
