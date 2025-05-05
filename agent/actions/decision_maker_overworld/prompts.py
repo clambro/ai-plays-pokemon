@@ -1,4 +1,4 @@
-GENERIC_DECISION_MAKER_PROMPT = """
+DECISION_MAKER_OVERWORLD_PROMPT = """
 Based on the screenshot provided, decide which button to press. The (case-sensitive) available buttons are:
 - a: The action button. Used to interact with objects in the game or select options.
 - b: The back button. Used to go back to the previous screen or decline a yes/no question.

@@ -1,18 +1,14 @@
 from datetime import datetime
 from loguru import logger
-from agent.actions.generic_decision_maker.prompts import GENERIC_DECISION_MAKER_PROMPT
-from agent.actions.generic_decision_maker.schemas import GenericDecisionMakerResponse
+from agent.actions.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORLD_PROMPT
+from agent.actions.decision_maker_overworld.schemas import DecisionMakerOverworldResponse
 from common.gemini import Gemini, GeminiModel
 from emulator.emulator import YellowLegacyEmulator
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 
 
-class GenericDecisionMakerService:
-    """
-    A service that makes decisions based on the current game state.
-    Designed to be as generic as possible, and to be used as a fallback when no other service is
-    appropriate.
-    """
+class DecisionMakerOverworldService:
+    """A service that makes decisions based on the current game state in the overworld."""
 
     def __init__(
         self,
@@ -25,19 +21,19 @@ class GenericDecisionMakerService:
         self.llm_service = Gemini(GeminiModel.FLASH)
         self.raw_memory = raw_memory
 
-    async def make_decision(self) -> GenericDecisionMakerResponse:
+    async def make_decision(self) -> DecisionMakerOverworldResponse:
         """
         Make a decision based on the current game state.
 
         :return: The button to press.
         """
         img = self.emulator.get_screenshot()
-        prompt = GENERIC_DECISION_MAKER_PROMPT.format(raw_memory=self.raw_memory)
+        prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(raw_memory=self.raw_memory)
         response = await self.llm_service.get_llm_response_pydantic(
             messages=[prompt, img],
-            schema=GenericDecisionMakerResponse,
+            schema=DecisionMakerOverworldResponse,
         )
-        logger.info(f"Generic decision maker reasoning: {response.thoughts}")
+        logger.info(f"Overworld decision maker reasoning: {response.thoughts}")
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
