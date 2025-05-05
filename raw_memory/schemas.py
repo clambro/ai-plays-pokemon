@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from loguru import logger
+
 from common.constants import RAW_MEMORY_MAX_SIZE
 from pydantic import BaseModel, Field
 
@@ -39,3 +41,5 @@ class RawMemory(BaseModel):
         """Append a piece to the memory."""
         self.pieces.extend(pieces)
         self.pieces = self.pieces[-self.max_size :]
+        for piece in pieces:
+            logger.info(f"New thought: {piece.content}")
