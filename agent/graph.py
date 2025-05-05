@@ -5,6 +5,14 @@ from agent.actions.decision_maker_overworld.action import (
     decision_maker_overworld,
     DECISION_MAKER_OVERWORLD,
 )
+from agent.actions.determine_handler.action import determine_handler, DETERMINE_HANDLER
+from agent.actions.decision_maker_battle.action import (
+    decision_maker_battle,
+    DECISION_MAKER_BATTLE,
+)
+from agent.conditions import field_equals_value
+from agent.state import AgentStateParams
+from common.enums import StateHandler
 from emulator.emulator import YellowLegacyEmulator
 
 
@@ -15,11 +23,24 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
         .with_actions(
             **{
                 BUILD_AGENT_STATE: build_agent_state.bind(emulator=emulator),
+                DETERMINE_HANDLER: determine_handler.bind(emulator=emulator),
                 DECISION_MAKER_OVERWORLD: decision_maker_overworld.bind(emulator=emulator),
+                DECISION_MAKER_BATTLE: decision_maker_battle.bind(emulator=emulator),
             }
         )
         .with_transitions(
-            (BUILD_AGENT_STATE, DECISION_MAKER_OVERWORLD),
+            (BUILD_AGENT_STATE, DETERMINE_HANDLER),
+            (
+                DETERMINE_HANDLER,
+                DECISION_MAKER_OVERWORLD,
+                field_equals_value(AgentStateParams.handler, StateHandler.OVERWORLD),
+            ),
+            (
+                DETERMINE_HANDLER,
+                DECISION_MAKER_BATTLE,
+                field_equals_value(AgentStateParams.handler, StateHandler.BATTLE),
+            ),
+            (DECISION_MAKER_BATTLE, BUILD_AGENT_STATE),
             (DECISION_MAKER_OVERWORLD, BUILD_AGENT_STATE),
         )
         .build()
