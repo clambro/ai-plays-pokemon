@@ -4,6 +4,7 @@ from agent.actions.decision_maker_overworld.prompts import DECISION_MAKER_OVERWO
 from agent.actions.decision_maker_overworld.schemas import DecisionMakerOverworldResponse
 from common.gemini import Gemini, GeminiModel
 from emulator.emulator import YellowLegacyEmulator
+from emulator.enums import Button
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 
 
@@ -21,7 +22,7 @@ class DecisionMakerOverworldService:
         self.llm_service = Gemini(GeminiModel.FLASH)
         self.raw_memory = raw_memory
 
-    async def make_decision(self) -> DecisionMakerOverworldResponse:
+    async def make_decision(self) -> Button:
         """
         Make a decision based on the current game state.
 
@@ -42,4 +43,4 @@ class DecisionMakerOverworldService:
             )
         )
         await self.emulator.press_buttons([response.button])
-        return response
+        return response.button
