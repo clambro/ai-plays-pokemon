@@ -31,7 +31,7 @@ class DecisionMakerOverworldService:
         img = self.emulator.get_screenshot()
         prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(raw_memory=self.raw_memory)
         response = await self.llm_service.get_llm_response_pydantic(
-            messages=[prompt, img],
+            messages=[img, prompt],
             schema=DecisionMakerOverworldResponse,
         )
         logger.info(f"Overworld decision maker reasoning: {response.thoughts}")

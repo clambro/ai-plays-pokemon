@@ -1,8 +1,10 @@
 DECISION_MAKER_OVERWORLD_PROMPT = """
-Based on the screenshot provided, decide which button to press. The (case-sensitive) available buttons are:
-- a: The action button. Used to interact with objects in the game or select options.
+You are in the overworld. The screenshot provided above is the current game screen. You must decide which button to press to proceed with the game.
+
+The (case-sensitive) available buttons are:
+- a: The action button. Used to interact with objects in the game or select a menu option.
 - b: The back button. Used to go back to the previous screen or decline a yes/no question.
-- start: The start button. Used to open the menu in the overworld, or to sort the bag in the bag screen.
+- start: The start button. Used to open the main menu in the overworld, or to sort the bag in the bag screen.
 - up: The up button. Used to navigate menus or move the character upwards.
 - down: The down button. Used to navigate menus or move the character downwards.
 - left: The left button. Used to navigate menus or move the character left.
@@ -10,7 +12,7 @@ Based on the screenshot provided, decide which button to press. The (case-sensit
 
 {raw_memory}
 
-You have been provided with the current game screen. Respond in the format given below. The relevant keys are:
+Reflect on the information provided to you and respond in the format given below. The relevant keys are:
 - thoughts: Your thoughts on the current game state and which button to press. These must be detailed and descriptive, accurately reflecting the information available to you and conveying your thought process.
 - button: The button to press. Must be one of the available buttons above.
 """.strip()
