@@ -14,7 +14,7 @@ pyboy = {extras = ["pyboy-core"], version = "^2.5.2"}
 numpy = "^2.2.5"
 pillow = "^11.2.1"
 pydantic = "^2.11.3"
-burr = "^0.39.1"
+burr = {extras = ["graphviz"], version = "^0.39.1"}
 loguru = "^0.7.3"
 google-genai = "^1.13.0"
 dotenv = "^0.9.9"
