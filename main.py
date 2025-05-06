@@ -5,8 +5,10 @@ from loguru import logger
 from pathlib import Path
 from agent.app import build_agent_application
 from agent.state import AgentState
+from common.constants import MAP_SUBFOLDER
 from emulator.emulator import YellowLegacyEmulator
 import aiofiles
+import aiofiles.os
 
 
 async def main(
@@ -22,6 +24,8 @@ async def main(
     """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     folder = Path(parent_folder) / timestamp
+    await aiofiles.os.makedirs(folder, exist_ok=True)
+    await aiofiles.os.makedirs(folder / MAP_SUBFOLDER, exist_ok=True)
 
     async with YellowLegacyEmulator(rom_path, state_path) as emulator:
         agent_app = build_agent_application(folder, emulator)
