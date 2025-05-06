@@ -15,7 +15,7 @@ from common.constants import (
     PLAYER_OFFSET_Y,
     PLAYER_OFFSET_X,
 )
-from emulator.schemas import MapState, PlayerState, ScreenState, BattleState
+from emulator.schemas import MapState, PlayerState, ScreenState, BattleState, Sprite, Warp
 
 
 from pyboy import PyBoyMemoryView
@@ -53,8 +53,11 @@ class YellowLegacyGameState(BaseModel):
         """Check if the player is moving and not in a battle."""
         return self.player.is_moving and not self.battle.is_in_battle
 
-    def get_ascii_screen(self) -> list[list[str]]:
-        """Get an ASCII representation of the current screen."""
+    def get_ascii_screen(self) -> tuple[np.ndarray, list[Sprite], list[Warp]]:
+        """
+        Get an ASCII representation of the current screen, including the on-screen sprites and warp
+        points.
+        """
         tiles = np.array(self.screen.tiles)
         # Each block on screen is a 2x2 square of tiles.
         blocks = []
@@ -78,19 +81,23 @@ class YellowLegacyGameState(BaseModel):
         blocks = np.array(blocks)
 
         blocks[PLAYER_OFFSET_Y, PLAYER_OFFSET_X] = PLAYER_TILE
+
+        on_screen_sprites = []
         for s in self.cur_map.sprites:
-            if not s.is_rendered:
-                continue
             if screen_coords := self.screen.get_screen_coords(s.y, s.x):
-                blocks[screen_coords[0], screen_coords[1]] = SPRITE_TILE
+                on_screen_sprites.append(s)
+                if s.is_rendered:
+                    blocks[screen_coords[0], screen_coords[1]] = SPRITE_TILE
 
         pikachu = self.cur_map.pikachu_sprite
         if pikachu.is_rendered:
             if screen_coords := self.screen.get_screen_coords(pikachu.y, pikachu.x):
                 blocks[screen_coords[0], screen_coords[1]] = PIKACHU_TILE
 
+        on_screen_warps = []
         for w in self.cur_map.warps:
             if screen_coords := self.screen.get_screen_coords(w.y, w.x):
                 blocks[screen_coords[0], screen_coords[1]] = WARP_TILE
+                on_screen_warps.append(w)
 
-        return blocks.tolist()
+        return blocks, on_screen_sprites, on_screen_warps
