@@ -7,6 +7,7 @@ from common.constants import MAP_SUBFOLDER, UNSEEN_TILE
 from emulator.enums import MapLocation
 from emulator.schemas import ScreenState, Sprite, Warp
 from emulator.game_state import YellowLegacyGameState
+from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
 
 
 class OverworldMap(BaseModel):
@@ -55,7 +56,13 @@ class OverworldMap(BaseModel):
 
     def __str__(self) -> str:
         """Return a string representation of the map."""
-        return "\n".join("".join(row) for row in self.ascii_tiles)
+        tiles = "\n".join("".join(row) for row in self.ascii_tiles)
+        return OVERWORLD_MAP_STR_FORMAT.format(
+            map_name=self.id.name,
+            ascii_map=tiles,
+            height=self.height,
+            width=self.width,
+        )
 
     async def save(self, parent_folder: Path) -> None:
         """Save the map to a file."""

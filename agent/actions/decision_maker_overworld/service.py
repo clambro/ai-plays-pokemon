@@ -4,6 +4,7 @@ from agent.actions.decision_maker_overworld.schemas import DecisionMakerOverworl
 from common.gemini import Gemini, GeminiModel
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
+from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 
 
@@ -15,11 +16,13 @@ class DecisionMakerOverworldService:
         iteration: int,
         emulator: YellowLegacyEmulator,
         raw_memory: RawMemory,
+        current_map: OverworldMap,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
         self.llm_service = Gemini(GeminiModel.FLASH)
         self.raw_memory = raw_memory
+        self.current_map = current_map
 
     async def make_decision(self) -> Button:
         """
@@ -28,7 +31,10 @@ class DecisionMakerOverworldService:
         :return: The button to press.
         """
         img = await self.emulator.get_screenshot()
-        prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(raw_memory=self.raw_memory)
+        prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(
+            raw_memory=self.raw_memory,
+            current_map=self.current_map,
+        )
         response = await self.llm_service.get_llm_response_pydantic(
             messages=[img, prompt],
             schema=DecisionMakerOverworldResponse,

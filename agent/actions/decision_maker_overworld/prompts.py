@@ -12,6 +12,9 @@ The (case-sensitive) available buttons are:
 
 {raw_memory}
 
+The following is an ASCII representation of the current map, highlighting your current location. Note that the screenshot above is only a subset of the current map, centered on your current location.
+{current_map}
+
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
 - thoughts: Your thoughts on the current game state and which button to press. These must be detailed and descriptive, accurately reflecting the information available to you and conveying your thought process.
 - button: The button to press. Must be one of the available buttons above.

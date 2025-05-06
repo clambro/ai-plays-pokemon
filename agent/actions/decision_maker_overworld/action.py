@@ -9,17 +9,20 @@ DECISION_MAKER_OVERWORLD = "Decision Maker Overworld"
 
 
 @action.pydantic(
-    reads=[AgentStateParams.iteration, AgentStateParams.raw_memory],
+    reads=[AgentStateParams.iteration, AgentStateParams.raw_memory, AgentStateParams.current_map],
     writes=[AgentStateParams.buttons_pressed, AgentStateParams.raw_memory],
 )
 async def decision_maker_overworld(state: AgentState, emulator: YellowLegacyEmulator) -> AgentState:
     """Make a decision based on the current game state in the overworld."""
     logger.info("Running the overworld decision maker...")
+    if state.current_map is None:
+        raise ValueError("Current map needs to be set before running the overworld decision maker.")
 
     service = DecisionMakerOverworldService(
         iteration=state.iteration,
         emulator=emulator,
         raw_memory=state.raw_memory,  # Modified in place.
+        current_map=state.current_map,
     )
     button = await service.make_decision()
     state.buttons_pressed.append(button)
