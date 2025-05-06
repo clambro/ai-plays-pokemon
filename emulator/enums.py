@@ -18,7 +18,10 @@ class Button(StrEnum):
 
 
 class MapLocation(IntEnum):
-    """Maps location IDs to their names"""
+    """
+    Maps location IDs to their names.
+    Copied from Pokemon_Yellow_Legacy/constants/map_constants.asm
+    """
 
     PALLET_TOWN = 0x00
     VIRIDIAN_CITY = 0x01

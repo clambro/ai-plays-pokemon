@@ -95,10 +95,10 @@ class OverworldMap(BaseModel):
         right = screen.right
 
         if top < 0:
-            ascii_screen = ascii_screen[top:]
+            ascii_screen = ascii_screen[-top:]
             top = 0
         if left < 0:
-            ascii_screen = ascii_screen[:, left:]
+            ascii_screen = ascii_screen[:, -left:]
             left = 0
         if bottom > self.height:
             ascii_screen = ascii_screen[: self.height - bottom]
