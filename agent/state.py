@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from common.enums import StateHandler
 from emulator.enums import Button
+from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory
 
 
@@ -16,6 +17,7 @@ class AgentState(BaseModel):
     buttons_pressed: list[Button] = Field(default_factory=list)
     raw_memory: RawMemory = Field(default_factory=RawMemory)
     handler: StateHandler | None = None
+    current_map: OverworldMap | None = None
 
 
 class AgentStateParams(StrEnum):
@@ -26,3 +28,4 @@ class AgentStateParams(StrEnum):
     buttons_pressed = "buttons_pressed"
     raw_memory = "raw_memory"
     handler = "handler"
+    current_map = "current_map"
