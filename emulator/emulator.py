@@ -54,17 +54,6 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
             self.tick_num,
         )
 
-    def _tick(self, count: int = 1) -> bool:
-        """
-        Tick the emulator forward by `count` frames.
-
-        :param count: Number of frames to tick forward.
-        :return: Whether the game is still running.
-        """
-        self._check_stopped()
-        self.tick_num += count
-        return self._pyboy.tick(count, render=True, sound=True)
-
     async def async_tick_indefinitely(self) -> None:
         """Tick the emulator indefinitely. Should be run on its own thread."""
         while True:
@@ -102,3 +91,14 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
     def _check_stopped(self) -> None:
         if self._is_stopped:
             raise RuntimeError("Emulator is stopped")
+
+    def _tick(self, count: int = 1) -> bool:
+        """
+        Tick the emulator forward by `count` frames.
+
+        :param count: Number of frames to tick forward.
+        :return: Whether the game is still running.
+        """
+        self._check_stopped()
+        self.tick_num += count
+        return self._pyboy.tick(count, render=True, sound=True)

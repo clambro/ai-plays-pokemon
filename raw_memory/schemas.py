@@ -29,9 +29,10 @@ class RawMemory(BaseModel):
         if not self.pieces:
             return ""
         out = (
-            "Here are the most recent unedited thoughts you have had. The bracketed number is the"
-            " incremented iteration number at which you had the thought. Higher numbers are more"
-            " recent.\n<raw_memory>\n"
+            f"Here are the raw, previous thoughts you have had prior to this point. The bracketed"
+            f" number is the incremented iteration number at which you had the thought. Higher"
+            f" numbers are more recent. Only the most recent {self.max_size} thoughts are displayed"
+            f" in this section.\n<raw_memory>\n"
         )
         out += "\n".join([str(piece) for piece in reversed(self.pieces)])
         out += "\n</raw_memory>"
