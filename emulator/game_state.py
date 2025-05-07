@@ -15,6 +15,7 @@ from common.constants import (
     PLAYER_OFFSET_Y,
     PLAYER_OFFSET_X,
 )
+from emulator.char_map import CHAR_TO_INT_MAP, INT_TO_CHAR_MAP
 from emulator.schemas import MapState, PlayerState, ScreenState, BattleState, Sprite, Warp
 
 
@@ -101,3 +102,17 @@ class YellowLegacyGameState(BaseModel):
                 on_screen_warps.append(w)
 
         return blocks, on_screen_sprites, on_screen_warps
+
+    def is_text_on_screen(self) -> bool:
+        """Check if there is text on the screen."""
+        a_upper = CHAR_TO_INT_MAP["A"]
+        z_upper = CHAR_TO_INT_MAP["Z"]
+        a_lower = CHAR_TO_INT_MAP["a"]
+        z_lower = CHAR_TO_INT_MAP["z"]
+        letters = set(range(a_upper, z_upper + 1)) | set(range(a_lower, z_lower + 1))
+        num_letters_on_screen = 0
+        for row in self.screen.tiles:
+            for tile in row:
+                if tile in letters:
+                    num_letters_on_screen += 1
+        return num_letters_on_screen > 3  # Avoid false positives caused by weird tilemaps.

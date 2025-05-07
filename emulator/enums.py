@@ -246,21 +246,3 @@ class MapLocation(IntEnum):
     BRUNOS_ROOM = 0xF6
     AGATHAS_ROOM = 0xF7
     SUMMER_BEACH_HOUSE = 0xF8
-
-
-# Dictionary mapping for easier lookups
-MAP_LOCATIONS = {location.value: location.name for location in MapLocation}
-
-
-# Helper functions for common operations
-def get_location_name(location_id: int) -> str:
-    """Get the name of a location from its ID."""
-    return MAP_LOCATIONS.get(location_id, "UNKNOWN")
-
-
-def get_location_id(location_name: str) -> int:
-    """Get the ID of a location from its name."""
-    try:
-        return MapLocation[location_name].value
-    except KeyError:
-        raise ValueError(f"Unknown location: {location_name}")

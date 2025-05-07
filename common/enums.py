@@ -6,3 +6,4 @@ class StateHandler(StrEnum):
 
     OVERWORLD = "overworld"
     BATTLE = "battle"
+    TEXT = "text"
