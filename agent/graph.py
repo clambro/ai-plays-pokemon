@@ -9,6 +9,7 @@ from agent.actions.decision_maker_battle.action import (
     decision_maker_battle,
     DECISION_MAKER_BATTLE,
 )
+from agent.actions.decision_maker_text.action import DECISION_MAKER_TEXT, decision_maker_text
 from agent.actions.update_current_map.action import (
     update_current_map,
     UPDATE_CURRENT_MAP,
@@ -29,6 +30,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
                 UPDATE_CURRENT_MAP: update_current_map.bind(emulator=emulator),
                 DECISION_MAKER_OVERWORLD: decision_maker_overworld.bind(emulator=emulator),
                 DECISION_MAKER_BATTLE: decision_maker_battle.bind(emulator=emulator),
+                DECISION_MAKER_TEXT: decision_maker_text.bind(emulator=emulator),
             }
         )
         .with_transitions(
@@ -43,8 +45,14 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
                 DECISION_MAKER_BATTLE,
                 field_equals_value(AgentStateParams.handler, StateHandler.BATTLE),
             ),
+            (
+                BUILD_AGENT_STATE,
+                DECISION_MAKER_TEXT,
+                field_equals_value(AgentStateParams.handler, StateHandler.TEXT),
+            ),
             (DECISION_MAKER_BATTLE, BUILD_AGENT_STATE),
             (DECISION_MAKER_OVERWORLD, BUILD_AGENT_STATE),
+            (DECISION_MAKER_TEXT, BUILD_AGENT_STATE),
         )
         .build()
     )
