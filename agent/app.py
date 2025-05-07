@@ -11,15 +11,11 @@ from emulator.emulator import YellowLegacyEmulator
 
 
 def build_agent_application(
-    memory_dir: Path,
-    backup_dir: Path,
+    folder: Path,
     emulator: YellowLegacyEmulator,
 ) -> Application:
     """Build the agent application."""
-    initial_state = AgentState(
-        memory_dir=memory_dir,
-        backup_dir=backup_dir,
-    )
+    initial_state = AgentState(folder=folder)
     app = (
         ApplicationBuilder()
         .with_typing(PydanticTypingSystem(AgentState))

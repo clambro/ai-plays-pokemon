@@ -21,12 +21,12 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         if initial_state_path:
             with Path(initial_state_path).open("rb") as f:
                 self._pyboy.load_state(f)
-        self._game_state = YellowLegacyGameState.from_memory(self._pyboy.memory, self.tick_num)
-        self._is_stopped = False
+        self._is_stopped = True
         self._tick_task: asyncio.Task | None = None
 
     async def __aenter__(self) -> "YellowLegacyEmulator":
         """Start the emulator's tick task when entering the context."""
+        self._is_stopped = False
         self._tick_task = asyncio.create_task(self.async_tick_indefinitely())
         await asyncio.sleep(1)  # Give the emulator a few ticks to load before continuing
         return self
@@ -48,22 +48,11 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         :return: The current game state.
         """
         self._check_stopped()
-        if self.tick_num != self._game_state.tick_num:
-            self._game_state = await asyncio.to_thread(
-                YellowLegacyGameState.from_memory, self._pyboy.memory, self.tick_num
-            )
-        return self._game_state
-
-    def _tick(self, count: int = 1) -> bool:
-        """
-        Tick the emulator forward by `count` frames.
-
-        :param count: Number of frames to tick forward.
-        :return: Whether the game is still running.
-        """
-        self._check_stopped()
-        self.tick_num += count
-        return self._pyboy.tick(count, render=True, sound=True)
+        return await asyncio.to_thread(
+            YellowLegacyGameState.from_memory,
+            self._pyboy.memory,
+            self.tick_num,
+        )
 
     async def async_tick_indefinitely(self) -> None:
         """Tick the emulator indefinitely. Should be run on its own thread."""
@@ -102,3 +91,14 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
     def _check_stopped(self) -> None:
         if self._is_stopped:
             raise RuntimeError("Emulator is stopped")
+
+    def _tick(self, count: int = 1) -> bool:
+        """
+        Tick the emulator forward by `count` frames.
+
+        :param count: Number of frames to tick forward.
+        :return: Whether the game is still running.
+        """
+        self._check_stopped()
+        self.tick_num += count
+        return self._pyboy.tick(count, render=True, sound=True)

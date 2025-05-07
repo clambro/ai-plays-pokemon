@@ -5,6 +5,8 @@ from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SC
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel
 
+from emulator.enums import MapLocation
+
 
 class PlayerState(BaseModel):
     """The state of the player character."""
@@ -71,7 +73,7 @@ class Warp(BaseModel):
 class MapState(BaseModel):
     """The state of the current map."""
 
-    id: int
+    id: MapLocation
     tileset_id: int
     height: int
     width: int
@@ -108,7 +110,7 @@ class MapState(BaseModel):
         sprites, pikachu_sprite = cls._get_sprites(mem)
 
         return cls(
-            id=mem[0xD3AB],
+            id=MapLocation(mem[0xD3AB]),
             tileset_id=mem[0xD3B4],
             height=mem[0xD571],
             width=mem[0xD572],

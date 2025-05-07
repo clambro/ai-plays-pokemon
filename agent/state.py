@@ -5,26 +5,27 @@ from pydantic import BaseModel, Field
 
 from common.enums import StateHandler
 from emulator.enums import Button
+from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory
 
 
 class AgentState(BaseModel):
     """The state used in the agent graph workflow."""
 
-    memory_dir: Path
-    backup_dir: Path
+    folder: Path
     iteration: int = 0
     buttons_pressed: list[Button] = Field(default_factory=list)
     raw_memory: RawMemory = Field(default_factory=RawMemory)
     handler: StateHandler | None = None
+    current_map: OverworldMap | None = None
 
 
 class AgentStateParams(StrEnum):
     """The parameters for the agent state as strings for use with Burr."""
 
-    memory_dir = "memory_dir"
-    backup_dir = "backup_dir"
+    folder = "folder"
     iteration = "iteration"
     buttons_pressed = "buttons_pressed"
     raw_memory = "raw_memory"
     handler = "handler"
+    current_map = "current_map"

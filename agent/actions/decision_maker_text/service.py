@@ -1,28 +1,25 @@
 from datetime import datetime
-from agent.actions.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORLD_PROMPT
-from agent.actions.decision_maker_overworld.schemas import DecisionMakerOverworldResponse
+from agent.actions.decision_maker_text.prompts import DECISION_MAKER_TEXT_PROMPT
+from agent.actions.decision_maker_text.schemas import DecisionMakerTextResponse
 from common.gemini import Gemini, GeminiModel
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
-from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 
 
-class DecisionMakerOverworldService:
-    """A service that makes decisions based on the current game state in the overworld."""
+class DecisionMakerTextService:
+    """A service that makes decisions based on the current game state in the text."""
 
     def __init__(
         self,
         iteration: int,
         emulator: YellowLegacyEmulator,
         raw_memory: RawMemory,
-        current_map: OverworldMap,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
         self.llm_service = Gemini(GeminiModel.FLASH)
         self.raw_memory = raw_memory
-        self.current_map = current_map
 
     async def make_decision(self) -> Button:
         """
@@ -31,13 +28,12 @@ class DecisionMakerOverworldService:
         :return: The button to press.
         """
         img = await self.emulator.get_screenshot()
-        prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(
+        prompt = DECISION_MAKER_TEXT_PROMPT.format(
             raw_memory=self.raw_memory,
-            current_map=self.current_map,
         )
         response = await self.llm_service.get_llm_response_pydantic(
             messages=[img, prompt],
-            schema=DecisionMakerOverworldResponse,
+            schema=DecisionMakerTextResponse,
         )
         self.raw_memory.append(
             RawMemoryPiece(

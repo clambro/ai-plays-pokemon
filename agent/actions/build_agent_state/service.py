@@ -21,13 +21,17 @@ class BuildAgentStateService:
         game_state = await self.emulator.get_game_state()
         while successes < 5:
             new_game_state = await self.emulator.get_game_state()
-            if game_state.screen.tiles == new_game_state.screen.tiles:
+            # The blinking cursor should not block progress, so we ignore it.
+            if (
+                game_state.get_screen_without_blinking_cursor()
+                == new_game_state.get_screen_without_blinking_cursor()
+            ):
                 successes += 1
             else:
                 successes = 0
                 logger.info("Animation detected. Waiting for it to finish.")
             game_state = new_game_state
-            await asyncio.sleep(0.02)
+            await asyncio.sleep(0.05)
 
     async def determine_handler(self) -> StateHandler:
         """
@@ -36,4 +40,9 @@ class BuildAgentStateService:
         :return: The handler to use.
         """
         game_state = await self.emulator.get_game_state()
-        return StateHandler.BATTLE if game_state.battle.is_in_battle else StateHandler.OVERWORLD
+        if game_state.battle.is_in_battle:
+            return StateHandler.BATTLE
+        elif game_state.is_text_on_screen():
+            return StateHandler.TEXT
+        else:
+            return StateHandler.OVERWORLD
