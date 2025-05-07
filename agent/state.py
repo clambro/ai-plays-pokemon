@@ -4,6 +4,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from common.enums import StateHandler
+from common.goals import Goals
 from emulator.enums import Button
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory
@@ -18,6 +19,7 @@ class AgentState(BaseModel):
     raw_memory: RawMemory = Field(default_factory=RawMemory)
     handler: StateHandler | None = None
     current_map: OverworldMap | None = None
+    goals: Goals = Field(default_factory=Goals)
 
 
 class AgentStateParams(StrEnum):
