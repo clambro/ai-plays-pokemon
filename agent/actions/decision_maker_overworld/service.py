@@ -43,7 +43,7 @@ class DecisionMakerOverworldService:
             RawMemoryPiece(
                 iteration=self.iteration,
                 timestamp=datetime.now(),
-                content=response.thoughts,
+                content=str(response),
             )
         )
         await self.emulator.press_buttons([response.button])

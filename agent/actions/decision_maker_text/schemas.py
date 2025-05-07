@@ -8,3 +8,6 @@ class DecisionMakerTextResponse(BaseModel):
 
     thoughts: str
     button: Button
+
+    def __str__(self) -> str:
+        return f'{self.thoughts} Pressed the "{self.button}" button.'
