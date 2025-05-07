@@ -31,3 +31,4 @@ class AgentStateParams(StrEnum):
     raw_memory = "raw_memory"
     handler = "handler"
     current_map = "current_map"
+    goals = "goals"

@@ -1,3 +1,4 @@
+from loguru import logger
 from pydantic import BaseModel, Field
 
 
@@ -22,12 +23,15 @@ class Goals(BaseModel):
 
     def append(self, goal: str) -> None:
         """Append new goals to the list."""
+        logger.info(f'Adding new goal: "{goal.strip()}"')
         self.goals.append(goal.strip())
 
     def remove(self, index: int) -> None:
         """Remove a goal from the list."""
+        logger.info(f'Removing goal: "{self.goals[index]}"')
         del self.goals[index]
 
     def edit(self, index: int, goal: str) -> None:
         """Edit a goal in the list."""
+        logger.info(f'Editing goal: "{self.goals[index]}" to "{goal.strip()}"')
         self.goals[index] = goal.strip()
