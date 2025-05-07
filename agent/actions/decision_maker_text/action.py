@@ -9,7 +9,7 @@ DECISION_MAKER_TEXT = "Decision Maker Text"
 
 
 @action.pydantic(
-    reads=[AgentStateParams.iteration, AgentStateParams.raw_memory],
+    reads=[AgentStateParams.iteration, AgentStateParams.raw_memory, AgentStateParams.goals],
     writes=[AgentStateParams.buttons_pressed, AgentStateParams.raw_memory],
 )
 async def decision_maker_text(state: AgentState, emulator: YellowLegacyEmulator) -> AgentState:
@@ -20,6 +20,7 @@ async def decision_maker_text(state: AgentState, emulator: YellowLegacyEmulator)
         iteration=state.iteration,
         emulator=emulator,
         raw_memory=state.raw_memory,  # Modified in place.
+        goals=state.goals,
     )
     button = await service.make_decision()
     state.buttons_pressed.append(button)

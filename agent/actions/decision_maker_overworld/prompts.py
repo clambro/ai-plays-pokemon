@@ -12,6 +12,8 @@ The (case-sensitive) available buttons are:
 
 {raw_memory}
 
+{goals}
+
 The following is an ASCII representation of the current map, highlighting your current location. Note that the screenshot above is only a subset of the current map, centered on your current location.
 {current_map}
 

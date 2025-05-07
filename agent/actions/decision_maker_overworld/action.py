@@ -9,7 +9,12 @@ DECISION_MAKER_OVERWORLD = "Decision Maker Overworld"
 
 
 @action.pydantic(
-    reads=[AgentStateParams.iteration, AgentStateParams.raw_memory, AgentStateParams.current_map],
+    reads=[
+        AgentStateParams.iteration,
+        AgentStateParams.raw_memory,
+        AgentStateParams.current_map,
+        AgentStateParams.goals,
+    ],
     writes=[AgentStateParams.buttons_pressed, AgentStateParams.raw_memory],
 )
 async def decision_maker_overworld(state: AgentState, emulator: YellowLegacyEmulator) -> AgentState:
@@ -23,6 +28,7 @@ async def decision_maker_overworld(state: AgentState, emulator: YellowLegacyEmul
         emulator=emulator,
         raw_memory=state.raw_memory,  # Modified in place.
         current_map=state.current_map,
+        goals=state.goals,
     )
     button = await service.make_decision()
     state.buttons_pressed.append(button)
