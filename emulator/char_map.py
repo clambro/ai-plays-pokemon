@@ -86,7 +86,7 @@ INT_TO_CHAR_MAP = {
     0xEE: "?",
     0xEF: "?",
     0xF0: "¥",
-    0xF1: "×",
+    0xF1: "×",  # noqa: RUF001
     0xF3: "/",
     0xF4: "=",
     0xF5: "?",
