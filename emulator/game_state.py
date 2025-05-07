@@ -15,12 +15,15 @@ from common.constants import (
     PLAYER_OFFSET_Y,
     PLAYER_OFFSET_X,
 )
-from emulator.char_map import CHAR_TO_INT_MAP, INT_TO_CHAR_MAP
+from emulator.char_map import CHAR_TO_INT_MAP
 from emulator.schemas import MapState, PlayerState, ScreenState, BattleState, Sprite, Warp
-
 
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel
+
+
+BLINKING_CURSOR_ID = 0xEE
+BLANK_TILE_ID = 0x7F
 
 
 class YellowLegacyGameState(BaseModel):
@@ -116,3 +119,9 @@ class YellowLegacyGameState(BaseModel):
                 if tile in letters:
                     num_letters_on_screen += 1
         return num_letters_on_screen > 3  # Avoid false positives caused by weird tilemaps.
+
+    def get_screen_without_blinking_cursor(self) -> np.ndarray:
+        """Get the screen without the blinking cursor."""
+        tiles = np.array(self.screen.tiles)
+        tiles[tiles == BLINKING_CURSOR_ID] = BLANK_TILE_ID
+        return tiles.tolist()
