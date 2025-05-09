@@ -20,6 +20,7 @@ class Button(StrEnum):
 class FacingDirection(IntEnum):
     """The direction the player is facing."""
 
+    NONE = 0
     UP = 8
     DOWN = 4
     LEFT = 2

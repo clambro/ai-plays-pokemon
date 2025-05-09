@@ -33,9 +33,11 @@ class DecisionMakerOverworldService:
 
         :return: The button to press.
         """
+        game_state = await self.emulator.get_game_state()
         img = await self.emulator.get_screenshot()
         prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(
             raw_memory=self.raw_memory,
+            player_info=game_state.player_info,
             current_map=self.current_map,
             goals=self.goals,
         )
@@ -50,17 +52,16 @@ class DecisionMakerOverworldService:
                 content=str(response),
             )
         )
-        state_before = await self.emulator.get_game_state()
         await self.emulator.press_buttons([response.button])
 
         if response.button in [Button.UP, Button.DOWN, Button.LEFT, Button.RIGHT]:
             state_after = await self.emulator.get_game_state()
-            if state_before.position_details == state_after.position_details:
+            if game_state.position_details == state_after.position_details:
                 self.raw_memory.append(
                     RawMemoryPiece(
                         iteration=self.iteration,
                         timestamp=datetime.now(),
-                        content="Movement was interrupted. Bumped in to something.",
+                        content="Movement was interrupted. Bumped in to something impassable.",
                     )
                 )
         return response.button

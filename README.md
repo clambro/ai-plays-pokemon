@@ -2,7 +2,6 @@
 
 ## TODOs
 ### Core
-* Add editable goals
 * Add a grid to the overworld screen
 * Add summary memory
 * Add long term memory with retrieval and decay

@@ -57,11 +57,15 @@ class OverworldMap(BaseModel):
     def __str__(self) -> str:
         """Return a string representation of the map."""
         tiles = "\n".join("".join(row) for row in self.ascii_tiles)
+        explored_percentage = np.mean(np.array(self.ascii_tiles) != UNSEEN_TILE)
         return OVERWORLD_MAP_STR_FORMAT.format(
             map_name=self.id.name,
             ascii_map=tiles,
             height=self.height,
             width=self.width,
+            known_sprites=self._get_sprite_notes(),
+            known_warps=self._get_warp_notes(),
+            explored_percentage=f"{explored_percentage:.0%}",
         )
 
     async def save(self, parent_folder: Path) -> None:
@@ -110,3 +114,19 @@ class OverworldMap(BaseModel):
         ascii_tiles = np.array(self.ascii_tiles)
         ascii_tiles[top:bottom, left:right] = ascii_screen
         self.ascii_tiles = ascii_tiles.tolist()
+
+    def _get_sprite_notes(self) -> str:
+        """Get the notes for the sprites on the map."""
+        if not self.known_sprites:
+            return "No sprites discovered."
+        return "\n".join(
+            [f"- {self.id.name}_{k} at ({v.y}, {v.x})" for k, v in self.known_sprites.items()]
+        )
+
+    def _get_warp_notes(self) -> str:
+        """Get the notes for the warps on the map."""
+        if not self.known_warps:
+            return "No warp tiles discovered."
+        return "\n".join(
+            [f"- {self.id.name}_{k} at ({v.y}, {v.x})" for k, v in self.known_warps.items()]
+        )

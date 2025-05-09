@@ -75,6 +75,17 @@ class YellowLegacyGameState(BaseModel):
             map_id=self.cur_map.id,
         )
 
+    @property
+    def player_info(self) -> str:
+        """Get a string representation of the player's information."""
+        out = "<player_info>\n"
+        out += f"Current map: {self.cur_map.id.name}\n"
+        out += f"Current position (row, column): ({self.player.y}, {self.player.x})\n"
+        out += f"Facing direction: {self.player.direction.name}\n"
+        out += f"Money: {self.player.money}\n"
+        out += "</player_info>"
+        return out
+
     def get_ascii_screen(self) -> tuple[np.ndarray, list[Sprite], list[Warp]]:
         """
         Get an ASCII representation of the current screen, including the on-screen sprites and warp

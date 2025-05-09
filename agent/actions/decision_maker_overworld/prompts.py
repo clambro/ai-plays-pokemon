@@ -14,10 +14,17 @@ The (case-sensitive) available buttons are:
 
 {goals}
 
+{player_info}
+
 The following is an ASCII representation of the current map, highlighting your current location. Note that the screenshot above is only a subset of the current map, centered on your current location.
 {current_map}
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your thoughts on the current game state and which button to press. These must be detailed and descriptive, accurately reflecting the information available to you and conveying your thought process. Consider all the information presented to you above; reflect on it, and then respond with your thoughts.
+- thoughts: Your written thoughts on the current game state and which button to press. Use the following thought process, and be thorough in your commentary:
+    1. Consider your goals. What are you trying to accomplish?
+    2. Consider the information provided in the raw memory. What has happened lately?
+    3. Consider the player information provided to you. What is your current situation?
+    4. Consider the map information provided to you, as well as the accompanying screenshot. Where are you, and where do you want to go?
+    5. Synthesize the above information, and decide which button to press.
 - button: The button to press. Must be one of the available buttons above.
 """.strip()
