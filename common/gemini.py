@@ -63,7 +63,7 @@ class Gemini:
                 response_schema=schema,
                 temperature=temperature,
                 safety_settings=SAFETY_SETTINGS,
-                thinking_config=ThinkingConfig(thinking_budget=0),
+                thinking_config=ThinkingConfig(thinking_budget=256),
             ),
         )
         if not isinstance(response.parsed, schema):

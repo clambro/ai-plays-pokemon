@@ -29,6 +29,8 @@ The map coordinates in row-column order start at (0, 0) in the top left corner. 
 
 The ASCII screen is always ({c.SCREEN_HEIGHT}x{c.SCREEN_WIDTH}) blocks in size, and is always centered such that the player is in position ({c.PLAYER_OFFSET_Y}, {c.PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the whole map section. This should help you navigate from one map to another.
 
+The orientation of the map and screen are always fixed, regardless of the direction that you are facing. Up is North, down is South, left is West, and right is East. Always.
+
 The tile above you is "{{tile_above}}".
 The tile below you is "{{tile_below}}".
 The tile to the left of you is "{{tile_left}}".
@@ -45,7 +47,7 @@ You have discovered the following warp tiles on the portion of the map that you 
 </known_warps>
 
 Navigation tips:
-- You should explore as much of the map as possible to reveal the unexplored tiles, as they may be hiding important sprites or warp tiles. Tiles are revealed by proximity to the player, so move towards the unexplored tiles to reveal them. Revealing unexplored tiles is always a good idea.
+- You should explore as much of the map as possible to reveal the unexplored tiles, as they may be hiding important sprites or warp tiles. Tiles are considered explored once they are on screen, so move towards the unexplored tiles to reveal them. Revealing unexplored tiles is always a good idea.
 - Warp tiles come in two varieties: single and double.
   - Single warp tiles are activated by standing on them. If you are standing on a warp tile and not going anywhere, it means that you have just warped to this tile from somewhere else. If you want to go back to your previous location and are standing on a single warp tile, you have to walk off the tile and then back on it to warp back.
   - Double warp tiles (two warp tiles side by side) are more complicated. These tiles are usually found on the edge of a map, and have to be walked through as if you're trying to walk off the edge of the map. (e.g. if you see a doube warp tile on the right edge of the map, you have to stand on one of the tiles and walk right; if you see a double warp tile on the bottom edge of the map, you have to stand on one of the tiles and walk down; etc.)
