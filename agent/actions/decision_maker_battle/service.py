@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from loguru import logger
 from agent.actions.decision_maker_battle.prompts import DECISION_MAKER_BATTLE_PROMPT
 from agent.actions.decision_maker_battle.schemas import DecisionMakerBattleResponse
 from emulator.enums import Button
@@ -21,7 +23,7 @@ class DecisionMakerBattleService:
         self.llm_service = Gemini(GeminiModel.FLASH)
         self.raw_memory = raw_memory
 
-    async def make_decision(self) -> Button:
+    async def make_decision(self) -> Button | None:
         """
         Make a decision based on the current game state.
 
@@ -29,10 +31,14 @@ class DecisionMakerBattleService:
         """
         img = await self.emulator.get_screenshot()
         prompt = DECISION_MAKER_BATTLE_PROMPT.format(raw_memory=self.raw_memory)
-        response = await self.llm_service.get_llm_response_pydantic(
-            messages=[img, prompt],
-            schema=DecisionMakerBattleResponse,
-        )
+        try:
+            response = await self.llm_service.get_llm_response_pydantic(
+                messages=[img, prompt],
+                schema=DecisionMakerBattleResponse,
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Error making decision. Skipping. {e}")
+            return None
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,

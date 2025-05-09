@@ -3,7 +3,7 @@ import aiofiles
 import numpy as np
 from pydantic import BaseModel
 
-from common.constants import MAP_SUBFOLDER, UNSEEN_TILE
+from common.constants import MAP_SUBFOLDER, PLAYER_OFFSET_X, PLAYER_OFFSET_Y, UNSEEN_TILE
 from emulator.enums import MapLocation
 from emulator.schemas import ScreenState, Sprite, Warp
 from emulator.game_state import YellowLegacyGameState
@@ -54,10 +54,15 @@ class OverworldMap(BaseModel):
         """The width of the map."""
         return len(self.ascii_tiles[0])
 
-    def __str__(self) -> str:
+    def to_string(self, game_state: YellowLegacyGameState) -> str:
         """Return a string representation of the map."""
         tiles = "\n".join("".join(row) for row in self.ascii_tiles)
         explored_percentage = np.mean(np.array(self.ascii_tiles) != UNSEEN_TILE)
+        screen, _, _ = game_state.get_ascii_screen()
+        tile_above = screen[PLAYER_OFFSET_Y - 1, PLAYER_OFFSET_X]
+        tile_below = screen[PLAYER_OFFSET_Y + 1, PLAYER_OFFSET_X]
+        tile_left = screen[PLAYER_OFFSET_Y, PLAYER_OFFSET_X - 1]
+        tile_right = screen[PLAYER_OFFSET_Y, PLAYER_OFFSET_X + 1]
         return OVERWORLD_MAP_STR_FORMAT.format(
             map_name=self.id.name,
             ascii_map=tiles,
@@ -66,6 +71,11 @@ class OverworldMap(BaseModel):
             known_sprites=self._get_sprite_notes(),
             known_warps=self._get_warp_notes(),
             explored_percentage=f"{explored_percentage:.0%}",
+            ascii_screen="\n".join("".join(row) for row in screen),
+            tile_above=tile_above,
+            tile_below=tile_below,
+            tile_left=tile_left,
+            tile_right=tile_right,
         )
 
     async def save(self, parent_folder: Path) -> None:

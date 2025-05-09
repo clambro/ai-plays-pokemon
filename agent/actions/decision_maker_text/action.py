@@ -23,5 +23,6 @@ async def decision_maker_text(state: AgentState, emulator: YellowLegacyEmulator)
         goals=state.goals,
     )
     button = await service.make_decision()
-    state.buttons_pressed.append(button)
+    if button:
+        state.buttons_pressed.append(button)
     return state

@@ -2,15 +2,12 @@ from enum import IntEnum, StrEnum
 
 
 class Button(StrEnum):
-    """
-    The buttons that can be pressed in the game.
-
-    The select button has no real purpose to the AI, so we exclude it to avoid confusion.
-    """
+    """The buttons that can be pressed in the game."""
 
     A = "a"
     B = "b"
     START = "start"
+    SELECT = "select"
     UP = "up"
     DOWN = "down"
     LEFT = "left"

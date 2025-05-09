@@ -14,24 +14,25 @@ class UpdateGoalsService:
         self.goals = goals
         self.llm_service = Gemini(GeminiModel.FLASH)
 
-    async def update_goals(self) -> Goals:
+    async def update_goals(self) -> None:
         """Update the goals based on the latest memory and actions."""
         prompt = UPDATE_GOALS_PROMPT.format(
             raw_memory=self.raw_memory,
             goals=self.goals,
         )
-        response = await self.llm_service.get_llm_response_pydantic(
-            messages=prompt,
-            schema=UpdateGoalsResponse,
-        )
-        goals = self.goals.model_copy()
-        logger.info(f"Goal thoughts: {response.thoughts}")
         try:
-            goals.remove(*response.remove)
+            response = await self.llm_service.get_llm_response_pydantic(
+                messages=prompt,
+                schema=UpdateGoalsResponse,
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Error updating goals. Skipping. {e}")
+            return
+        try:
+            self.goals.remove(*response.remove)
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error removing goals. Skipping. {e}")
         try:
-            goals.append(*response.append)
+            self.goals.append(*response.append)
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error appending goals. Skipping. {e}")
-        return goals

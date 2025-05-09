@@ -1,4 +1,7 @@
+import asyncio
 from datetime import datetime
+
+from loguru import logger
 from agent.actions.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORLD_PROMPT
 from agent.actions.decision_maker_overworld.schemas import DecisionMakerOverworldResponse
 from common.gemini import Gemini, GeminiModel
@@ -27,7 +30,7 @@ class DecisionMakerOverworldService:
         self.current_map = current_map
         self.goals = goals
 
-    async def make_decision(self) -> Button:
+    async def make_decision(self) -> Button | None:
         """
         Make a decision based on the current game state.
 
@@ -38,13 +41,17 @@ class DecisionMakerOverworldService:
         prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(
             raw_memory=self.raw_memory,
             player_info=game_state.player_info,
-            current_map=self.current_map,
+            current_map=self.current_map.to_string(game_state),
             goals=self.goals,
         )
-        response = await self.llm_service.get_llm_response_pydantic(
-            messages=[img, prompt],
-            schema=DecisionMakerOverworldResponse,
-        )
+        try:
+            response = await self.llm_service.get_llm_response_pydantic(
+                messages=[img, prompt],
+                schema=DecisionMakerOverworldResponse,
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Error making decision. Skipping. {e}")
+            return None
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,

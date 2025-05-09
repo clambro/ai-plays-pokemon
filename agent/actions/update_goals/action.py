@@ -16,5 +16,5 @@ async def update_goals(state: AgentState) -> AgentState:
     logger.info("Updating the goals...")
 
     service = UpdateGoalsService(raw_memory=state.raw_memory, goals=state.goals)
-    state.goals = await service.update_goals()
+    await service.update_goals()  # Updated in place.
     return state

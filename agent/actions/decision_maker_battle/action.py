@@ -22,5 +22,6 @@ async def decision_maker_battle(state: AgentState, emulator: YellowLegacyEmulato
         raw_memory=state.raw_memory,  # Modified in place.
     )
     button = await service.make_decision()
-    state.buttons_pressed.append(button)
+    if button:
+        state.buttons_pressed.append(button)
     return state

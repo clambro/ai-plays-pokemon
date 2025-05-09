@@ -31,5 +31,6 @@ async def decision_maker_overworld(state: AgentState, emulator: YellowLegacyEmul
         goals=state.goals,
     )
     button = await service.make_decision()
-    state.buttons_pressed.append(button)
+    if button:
+        state.buttons_pressed.append(button)
     return state

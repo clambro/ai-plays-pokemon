@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from loguru import logger
 from agent.actions.decision_maker_text.prompts import DECISION_MAKER_TEXT_PROMPT
 from agent.actions.decision_maker_text.schemas import DecisionMakerTextResponse
 from common.gemini import Gemini, GeminiModel
@@ -24,7 +26,7 @@ class DecisionMakerTextService:
         self.raw_memory = raw_memory
         self.goals = goals
 
-    async def make_decision(self) -> Button:
+    async def make_decision(self) -> Button | None:
         """
         Make a decision based on the current game state.
 
@@ -35,10 +37,14 @@ class DecisionMakerTextService:
             raw_memory=self.raw_memory,
             goals=self.goals,
         )
-        response = await self.llm_service.get_llm_response_pydantic(
-            messages=[img, prompt],
-            schema=DecisionMakerTextResponse,
-        )
+        try:
+            response = await self.llm_service.get_llm_response_pydantic(
+                messages=[img, prompt],
+                schema=DecisionMakerTextResponse,
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Error making decision. Skipping. {e}")
+            return None
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
