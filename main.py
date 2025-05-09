@@ -14,6 +14,7 @@ import aiofiles.os
 async def main(
     rom_path: str,
     parent_folder: str,
+    mute_sound: bool,
     state_path: str | None = None,
 ) -> None:
     """
@@ -27,7 +28,7 @@ async def main(
     await aiofiles.os.makedirs(folder, exist_ok=True)
     await aiofiles.os.makedirs(folder / MAP_SUBFOLDER, exist_ok=True)
 
-    async with YellowLegacyEmulator(rom_path, state_path) as emulator:
+    async with YellowLegacyEmulator(rom_path, state_path, mute_sound=mute_sound) as emulator:
         agent_app = build_agent_application(folder, emulator)
         try:
             await agent_app.arun()
@@ -43,5 +44,6 @@ if __name__ == "__main__":
     parser.add_argument("--rom-path", type=str, required=True)
     parser.add_argument("--parent-folder", type=str, required=True)
     parser.add_argument("--state-path", type=str, required=False)
+    parser.add_argument("--mute-sound", action="store_true")
     args = parser.parse_args()
-    asyncio.run(main(args.rom_path, args.parent_folder, args.state_path))
+    asyncio.run(main(args.rom_path, args.parent_folder, args.mute_sound, args.state_path))

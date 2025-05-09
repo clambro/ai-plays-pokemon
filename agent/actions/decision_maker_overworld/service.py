@@ -1,7 +1,11 @@
+import asyncio
 from datetime import datetime
+
+from loguru import logger
 from agent.actions.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORLD_PROMPT
 from agent.actions.decision_maker_overworld.schemas import DecisionMakerOverworldResponse
 from common.gemini import Gemini, GeminiModel
+from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
 from overworld_map.schemas import OverworldMap
@@ -17,28 +21,37 @@ class DecisionMakerOverworldService:
         emulator: YellowLegacyEmulator,
         raw_memory: RawMemory,
         current_map: OverworldMap,
+        goals: Goals,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
         self.llm_service = Gemini(GeminiModel.FLASH)
         self.raw_memory = raw_memory
         self.current_map = current_map
+        self.goals = goals
 
-    async def make_decision(self) -> Button:
+    async def make_decision(self) -> Button | None:
         """
         Make a decision based on the current game state.
 
         :return: The button to press.
         """
+        game_state = await self.emulator.get_game_state()
         img = await self.emulator.get_screenshot()
         prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(
             raw_memory=self.raw_memory,
-            current_map=self.current_map,
+            player_info=game_state.player_info,
+            current_map=self.current_map.to_string(game_state),
+            goals=self.goals,
         )
-        response = await self.llm_service.get_llm_response_pydantic(
-            messages=[img, prompt],
-            schema=DecisionMakerOverworldResponse,
-        )
+        try:
+            response = await self.llm_service.get_llm_response_pydantic(
+                messages=[img, prompt],
+                schema=DecisionMakerOverworldResponse,
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Error making decision. Skipping. {e}")
+            return None
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,

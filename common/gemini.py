@@ -6,6 +6,7 @@ from google.genai.types import (
     HarmBlockThreshold,
     SafetySetting,
     HarmCategory,
+    ThinkingConfig,
 )
 from pydantic import BaseModel
 from common.prompts import SYSTEM_PROMPT
@@ -24,7 +25,7 @@ SAFETY_SETTINGS = [
 class GeminiModel(StrEnum):
     """Enum for the Gemini model names."""
 
-    FLASH = "gemini-2.0-flash"
+    FLASH = "gemini-2.5-flash-preview-04-17"
     FLASH_LITE = "gemini-2.0-flash-lite"
 
 
@@ -62,6 +63,7 @@ class Gemini:
                 response_schema=schema,
                 temperature=temperature,
                 safety_settings=SAFETY_SETTINGS,
+                thinking_config=ThinkingConfig(thinking_budget=256),
             ),
         )
         if not isinstance(response.parsed, schema):

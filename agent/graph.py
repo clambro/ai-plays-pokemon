@@ -14,6 +14,7 @@ from agent.actions.update_current_map.action import (
     update_current_map,
     UPDATE_CURRENT_MAP,
 )
+from agent.actions.update_goals.action import UPDATE_GOALS, update_goals
 from agent.conditions import field_equals_value
 from agent.state import AgentStateParams
 from common.enums import StateHandler
@@ -31,6 +32,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
                 DECISION_MAKER_OVERWORLD: decision_maker_overworld.bind(emulator=emulator),
                 DECISION_MAKER_BATTLE: decision_maker_battle.bind(emulator=emulator),
                 DECISION_MAKER_TEXT: decision_maker_text.bind(emulator=emulator),
+                UPDATE_GOALS: update_goals,
             }
         )
         .with_transitions(
@@ -50,9 +52,10 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
                 DECISION_MAKER_TEXT,
                 field_equals_value(AgentStateParams.handler, StateHandler.TEXT),
             ),
-            (DECISION_MAKER_BATTLE, BUILD_AGENT_STATE),
-            (DECISION_MAKER_OVERWORLD, BUILD_AGENT_STATE),
-            (DECISION_MAKER_TEXT, BUILD_AGENT_STATE),
+            (DECISION_MAKER_BATTLE, UPDATE_GOALS),
+            (DECISION_MAKER_OVERWORLD, UPDATE_GOALS),
+            (DECISION_MAKER_TEXT, UPDATE_GOALS),
+            (UPDATE_GOALS, BUILD_AGENT_STATE),
         )
         .build()
     )

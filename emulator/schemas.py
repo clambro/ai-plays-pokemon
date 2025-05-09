@@ -5,7 +5,7 @@ from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SC
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel
 
-from emulator.enums import MapLocation
+from emulator.enums import FacingDirection, MapLocation
 
 
 class PlayerState(BaseModel):
@@ -14,6 +14,7 @@ class PlayerState(BaseModel):
     is_moving: bool
     y: int
     x: int
+    direction: FacingDirection
     money: int
 
     @classmethod
@@ -29,6 +30,7 @@ class PlayerState(BaseModel):
             is_moving=is_moving,
             y=mem[0xD3AE],
             x=mem[0xD3AF],
+            direction=FacingDirection(mem[0xD577]),
             money=cls._read_money(mem),
         )
 

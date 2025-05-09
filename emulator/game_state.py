@@ -16,7 +16,14 @@ from common.constants import (
     PLAYER_OFFSET_X,
 )
 from emulator.char_map import CHAR_TO_INT_MAP
-from emulator.schemas import MapState, PlayerState, ScreenState, BattleState, Sprite, Warp
+from emulator.schemas import (
+    MapState,
+    PlayerState,
+    ScreenState,
+    BattleState,
+    Sprite,
+    Warp,
+)
 
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel
@@ -56,6 +63,17 @@ class YellowLegacyGameState(BaseModel):
     def is_player_moving(self) -> bool:
         """Check if the player is moving and not in a battle."""
         return self.player.is_moving and not self.battle.is_in_battle
+
+    @property
+    def player_info(self) -> str:
+        """Get a string representation of the player's information."""
+        out = "<player_info>\n"
+        out += f"Current map: {self.cur_map.id.name}\n"
+        out += f"Current position (row, column): ({self.player.y}, {self.player.x})\n"
+        out += f"Facing direction: {self.player.direction.name}\n"
+        out += f"Money: {self.player.money}\n"
+        out += "</player_info>"
+        return out
 
     def get_ascii_screen(self) -> tuple[np.ndarray, list[Sprite], list[Warp]]:
         """

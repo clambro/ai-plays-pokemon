@@ -2,7 +2,6 @@
 
 ## TODOs
 ### Core
-* Add editable goals
 * Add a grid to the overworld screen
 * Add summary memory
 * Add long term memory with retrieval and decay
@@ -10,6 +9,7 @@
 * Add strength boulders to map screen
 * Add sprite and warp long term memory to map view
 * Add automated backups
+* Add precommits for sorting imports and linting and whatnot
 
 ### Useful
 * Add tests to everything

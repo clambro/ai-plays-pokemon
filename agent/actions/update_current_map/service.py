@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from emulator.emulator import YellowLegacyEmulator
 from overworld_map.schemas import OverworldMap
 

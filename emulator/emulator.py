@@ -14,10 +14,15 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
     that the rest of the codebase doesn't need to worry about emulation or memory addresses.
     """
 
-    def __init__(self, rom_path: str, initial_state_path: str | None = None) -> None:
+    def __init__(
+        self,
+        rom_path: str,
+        initial_state_path: str | None = None,
+        mute_sound: bool = False,
+    ) -> None:
         """Initialize the emulator."""
         self.tick_num = 0
-        self._pyboy = PyBoy(rom_path)
+        self._pyboy = PyBoy(rom_path, sound_volume=0 if mute_sound else 100)
         if initial_state_path:
             with Path(initial_state_path).open("rb") as f:
                 self._pyboy.load_state(f)
