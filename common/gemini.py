@@ -6,6 +6,7 @@ from google.genai.types import (
     HarmBlockThreshold,
     SafetySetting,
     HarmCategory,
+    ThinkingConfig,
 )
 from pydantic import BaseModel
 from common.prompts import SYSTEM_PROMPT
@@ -62,6 +63,7 @@ class Gemini:
                 response_schema=schema,
                 temperature=temperature,
                 safety_settings=SAFETY_SETTINGS,
+                thinking_config=ThinkingConfig(thinking_budget=0),
             ),
         )
         if not isinstance(response.parsed, schema):

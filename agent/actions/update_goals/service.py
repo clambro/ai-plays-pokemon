@@ -25,6 +25,7 @@ class UpdateGoalsService:
             schema=UpdateGoalsResponse,
         )
         goals = self.goals.model_copy()
+        logger.info(f"Goal thoughts: {response.thoughts}")
         try:
             goals.remove(*response.remove)
         except Exception as e:  # noqa: BLE001

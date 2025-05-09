@@ -1,5 +1,5 @@
 DECISION_MAKER_OVERWORLD_PROMPT = """
-You are navigating the overworld. The screenshot provided above is the current game screen. You must decide which button to press to proceed with the game.
+You are navigating the overworld and there is no on-screen text. The screenshot provided above is the current game screen. You must decide which button to press to proceed with the game.
 
 The (case-sensitive) available buttons are:
 - a: The action button. Used to interact with objects in the game.

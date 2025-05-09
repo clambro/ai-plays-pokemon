@@ -1,14 +1,14 @@
 DECISION_MAKER_TEXT_PROMPT = """
-You are in the overworld, and there is text on the screen. The screenshot provided above is the current game screen. You must decide which button to press to proceed with the game.
+There is text on the screen. The screenshot provided above is the current game screen. You must decide which button to press to proceed with the game.
 
 The (case-sensitive) available buttons are:
 - a: The action button. Used to select a menu option or to continue the text.
 - b: The back button. Used to go back to the previous screen or decline a yes/no question.
-- start: The start button. Only purpose is to sort the bag in the bag screen.
-- up: The up button. Used to navigate the cursor up.
-- down: The down button. Used to navigate the cursor down.
-- left: The left button. Used to navigate the cursor left.
-- right: The right button. Used to navigate the cursor right.
+- start: Only purpose is to sort the bag in the bag screen.
+- up: Used to navigate the cursor up.
+- down: Used to navigate the cursor down.
+- left: Used to navigate the cursor left.
+- right: Used to navigate the cursor right.
 
 {raw_memory}
 

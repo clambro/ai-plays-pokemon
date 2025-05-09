@@ -1,7 +1,5 @@
-import asyncio
 from pathlib import Path
 
-from loguru import logger
 from emulator.emulator import YellowLegacyEmulator
 from overworld_map.schemas import OverworldMap
 
@@ -19,10 +17,6 @@ class UpdateCurrentMapService:
         and return it.
         """
         game_state = await self.emulator.get_game_state()
-        while not game_state.cur_map.walkable_tiles:
-            logger.warning("Current map is not walkable. Waiting for it to be walkable...")
-            await asyncio.sleep(0.01)
-            game_state = await self.emulator.get_game_state()
         try:
             current_map = await OverworldMap.load(self.folder, game_state.cur_map.id)
         except FileNotFoundError:
