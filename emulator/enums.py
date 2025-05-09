@@ -17,6 +17,15 @@ class Button(StrEnum):
     RIGHT = "right"
 
 
+class FacingDirection(IntEnum):
+    """The direction the player is facing."""
+
+    UP = 8
+    DOWN = 4
+    LEFT = 2
+    RIGHT = 1
+
+
 class MapLocation(IntEnum):
     """
     Maps location IDs to their names.

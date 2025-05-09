@@ -18,6 +18,6 @@ The following is an ASCII representation of the current map, highlighting your c
 {current_map}
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your thoughts on the current game state and which button to press. These must be detailed and descriptive, accurately reflecting the information available to you and conveying your thought process.
+- thoughts: Your thoughts on the current game state and which button to press. These must be detailed and descriptive, accurately reflecting the information available to you and conveying your thought process. Consider all the information presented to you above; reflect on it, and then respond with your thoughts.
 - button: The button to press. Must be one of the available buttons above.
 """.strip()

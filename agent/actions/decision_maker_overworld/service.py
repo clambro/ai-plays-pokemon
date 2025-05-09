@@ -50,5 +50,17 @@ class DecisionMakerOverworldService:
                 content=str(response),
             )
         )
+        state_before = await self.emulator.get_game_state()
         await self.emulator.press_buttons([response.button])
+
+        if response.button in [Button.UP, Button.DOWN, Button.LEFT, Button.RIGHT]:
+            state_after = await self.emulator.get_game_state()
+            if state_before.position_details == state_after.position_details:
+                self.raw_memory.append(
+                    RawMemoryPiece(
+                        iteration=self.iteration,
+                        timestamp=datetime.now(),
+                        content="Movement was interrupted. Bumped in to something.",
+                    )
+                )
         return response.button

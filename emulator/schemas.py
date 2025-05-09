@@ -14,6 +14,7 @@ class PlayerState(BaseModel):
     is_moving: bool
     y: int
     x: int
+    direction: int
     money: int
 
     @classmethod
@@ -29,6 +30,7 @@ class PlayerState(BaseModel):
             is_moving=is_moving,
             y=mem[0xD3AE],
             x=mem[0xD3AF],
+            direction=mem[0xD577],
             money=cls._read_money(mem),
         )
 
@@ -234,3 +236,12 @@ class BattleState(BaseModel):
         :return: A new battle state.
         """
         return cls(is_in_battle=bool(mem[0xD057]))
+
+
+class PositionDetails(BaseModel):
+    """The details of the player's position."""
+
+    y: int
+    x: int
+    direction: int
+    map_id: MapLocation

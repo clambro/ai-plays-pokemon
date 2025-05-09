@@ -9,17 +9,20 @@ class Goals(BaseModel):
 
     def __str__(self) -> str:
         """Return a string representation of the goals."""
-        out = (
+        out = "<goals_info>\n"
+        out += (
             "Here are the goals that you have set for yourself. Your ultimate goal is, of course,"
             " to collect all eight badges and become the Elite Four Champion, but these goals here"
-            " are the next steps on your journey to that goal."
+            " are the next steps on your journey to that goal. The actions that you take and the"
+            " thoughts that you think should all be in the service of these goals."
         )
         out += "\n<goals>\n"
         if self.goals:
             out += "\n".join(f"[{i}] {g}" for i, g in enumerate(self.goals))
         else:
-            out += "You have not set any goals yet."
-        out += "\n</goals>"
+            out += "You have not set any goals yet. You should set some goals."
+        out += "\n</goals>\n"
+        out += "</goals_info>"
         return out
 
     def append(self, *goals: str) -> None:
