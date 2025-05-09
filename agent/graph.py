@@ -32,7 +32,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
                 DECISION_MAKER_OVERWORLD: decision_maker_overworld.bind(emulator=emulator),
                 DECISION_MAKER_BATTLE: decision_maker_battle.bind(emulator=emulator),
                 DECISION_MAKER_TEXT: decision_maker_text.bind(emulator=emulator),
-                UPDATE_GOALS: update_goals.bind(emulator=emulator),
+                UPDATE_GOALS: update_goals,
             }
         )
         .with_transitions(

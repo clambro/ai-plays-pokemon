@@ -2,12 +2,13 @@ from common import constants as c
 
 
 OVERWORLD_MAP_STR_FORMAT = f"""
+<map_info>
 {{map_name}}:
 <map>
 {{ascii_map}}
 </map>
 <legend>
-{c.UNSEEN_TILE} - Unexplored terrain.
+{c.UNSEEN_TILE} - Unexplored terrain. You should endevour to explore as much of the map as possible to reduce the number of unknown tiles.
 {c.FREE_TILE} - A walkable tile with nothing noteworthy in it.
 {c.WALL_TILE} - A barrier that you cannot pass through.
 {c.CUT_TREE_TILE} - A tree.
@@ -21,4 +22,7 @@ OVERWORLD_MAP_STR_FORMAT = f"""
 </legend>
 
 The map coordinates in row-column order start at (0, 0) in the top left corner, and increase to the right and down. The full map size is {{height}}x{{width}} blocks.
+
+Note that this ASCII map is significantly more reliable than the screenshot provided above. Screenshots can be misinterpreted, so use the ASCII map to determine the exact location of any sprites or tiles, and consider the screenshot as supplemental information to help you interpret the map.
+</map_info>
 """.strip()

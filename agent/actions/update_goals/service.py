@@ -1,3 +1,4 @@
+from loguru import logger
 from agent.actions.update_goals.prompts import UPDATE_GOALS_PROMPT
 from agent.actions.update_goals.schemas import UpdateGoalsResponse
 from common.gemini import Gemini, GeminiModel
@@ -24,6 +25,12 @@ class UpdateGoalsService:
             schema=UpdateGoalsResponse,
         )
         goals = self.goals.model_copy()
-        goals.remove(*response.remove)
-        goals.append(*response.append)
+        try:
+            goals.remove(*response.remove)
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Error removing goals. Skipping. {e}")
+        try:
+            goals.append(*response.append)
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Error appending goals. Skipping. {e}")
         return goals

@@ -15,6 +15,6 @@ The (case-sensitive) available buttons are:
 {goals}
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your thoughts on the current game state and which button to press. These must be detailed and descriptive, accurately reflecting the information available to you and conveying your thought process.
+- thoughts: Your thoughts on the current game state and which button to press. These must be detailed and descriptive, accurately reflecting the information available to you and conveying your thought process. It is important that you note any text that you are reading in your thoughts, otherwise you will lose access to it in subsequent turns.
 - button: The button to press. Must be one of the available buttons above.
 """.strip()
