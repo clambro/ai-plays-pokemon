@@ -6,7 +6,6 @@ You have just taken an action and added new information to your memory. If you y
 {goals}
 
 To add or remove goals, respond according to the schema given below. The meaning of the fields is as follows:
-- "thoughts": Freeform text that describes the thought process that led to the decision to add or remove goals.
 - "remove" is an array of goal indices to remove. You should only remove goals that you have already completed, or that you no longer want to pursue. Goals to be removed are referred to by the index given above. The remove array should be empty if there are no goals to remove.
 - "append" is an array of new goals to add, in string format. Do not include an index in the append array, just the goal text. These should be goals that you want to pursue, and which are not already in your list. The append array should be empty if there are no new goals to add.
 
