@@ -1,5 +1,6 @@
 from pathlib import Path
 import aiofiles
+from loguru import logger
 import numpy as np
 from typing import Self
 
@@ -65,18 +66,21 @@ class Sprite(BaseModel):
     x: int
     is_rendered: bool
 
-    async def get_description(self, folder: Path, map_id: MapLocation) -> str:
+    async def get_description(self, sprite_folder: Path, map_id: MapLocation) -> str:
         """Get a description of the sprite from a file."""
-        file_path = folder / "sprites" / f"sprite_{map_id.value}_{self.index}.json"
+        file_path = sprite_folder / f"sprite_{map_id.value}_{self.index}.json"
         if not file_path.exists():
             return "No description added yet."
         async with aiofiles.open(file_path) as f:
             data = await f.read()
         return data
 
-    async def save_description(self, folder: Path, map_id: MapLocation, description: str) -> None:
+    async def save_description(
+        self, sprite_folder: Path, map_id: MapLocation, description: str
+    ) -> None:
         """Save a description of the sprite to a file."""
-        file_path = folder / "sprites" / f"sprite_{map_id.value}_{self.index}.json"
+        logger.info(f"Updating sprite_{map_id.value}_{self.index} with description: {description}")
+        file_path = sprite_folder / f"sprite_{map_id.value}_{self.index}.json"
         async with aiofiles.open(file_path, "w") as f:
             await f.write(description)
 
@@ -88,18 +92,21 @@ class Warp(BaseModel):
     y: int
     x: int
 
-    async def get_description(self, folder: Path, map_id: MapLocation) -> str:
+    async def get_description(self, warp_folder: Path, map_id: MapLocation) -> str:
         """Get a description of the warp from a file."""
-        file_path = folder / "warps" / f"warp_{map_id.value}_{self.index}.json"
+        file_path = warp_folder / f"warp_{map_id.value}_{self.index}.json"
         if not file_path.exists():
             return "No description added yet."
         async with aiofiles.open(file_path) as f:
             data = await f.read()
         return data
 
-    async def save_description(self, folder: Path, map_id: MapLocation, description: str) -> None:
+    async def save_description(
+        self, warp_folder: Path, map_id: MapLocation, description: str
+    ) -> None:
         """Save a description of the warp to a file."""
-        file_path = folder / "warps" / f"warp_{map_id.value}_{self.index}.json"
+        logger.info(f"Updating warp_{map_id.value}_{self.index} with description: {description}")
+        file_path = warp_folder / f"warp_{map_id.value}_{self.index}.json"
         async with aiofiles.open(file_path, "w") as f:
             await f.write(description)
 
