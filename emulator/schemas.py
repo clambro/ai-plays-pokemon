@@ -1,3 +1,5 @@
+from pathlib import Path
+import aiofiles
 import numpy as np
 from typing import Self
 
@@ -63,6 +65,21 @@ class Sprite(BaseModel):
     x: int
     is_rendered: bool
 
+    async def get_description(self, folder: Path, map_id: MapLocation) -> str:
+        """Get a description of the sprite from a file."""
+        file_path = folder / "sprites" / f"sprite_{map_id.value}_{self.index}.json"
+        if not file_path.exists():
+            return "No description added yet."
+        async with aiofiles.open(file_path) as f:
+            data = await f.read()
+        return data
+
+    async def save_description(self, folder: Path, map_id: MapLocation, description: str) -> None:
+        """Save a description of the sprite to a file."""
+        file_path = folder / "sprites" / f"sprite_{map_id.value}_{self.index}.json"
+        async with aiofiles.open(file_path, "w") as f:
+            await f.write(description)
+
 
 class Warp(BaseModel):
     """A warp on the current map."""
@@ -70,6 +87,21 @@ class Warp(BaseModel):
     index: int
     y: int
     x: int
+
+    async def get_description(self, folder: Path, map_id: MapLocation) -> str:
+        """Get a description of the warp from a file."""
+        file_path = folder / "warps" / f"warp_{map_id.value}_{self.index}.json"
+        if not file_path.exists():
+            return "No description added yet."
+        async with aiofiles.open(file_path) as f:
+            data = await f.read()
+        return data
+
+    async def save_description(self, folder: Path, map_id: MapLocation, description: str) -> None:
+        """Save a description of the warp to a file."""
+        file_path = folder / "warps" / f"warp_{map_id.value}_{self.index}.json"
+        async with aiofiles.open(file_path, "w") as f:
+            await f.write(description)
 
 
 class MapState(BaseModel):

@@ -41,7 +41,7 @@ class DecisionMakerOverworldService:
         prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(
             raw_memory=self.raw_memory,
             player_info=game_state.player_info,
-            current_map=self.current_map.to_string(game_state),
+            current_map=await self.current_map.to_string(game_state),
             goals=self.goals,
         )
         try:
