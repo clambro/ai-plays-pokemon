@@ -68,7 +68,7 @@ class Sprite(BaseModel):
 
     async def get_description(self, sprite_folder: Path, map_id: MapLocation) -> str:
         """Get a description of the sprite from a file."""
-        file_path = sprite_folder / f"sprite_{map_id.value}_{self.index}.json"
+        file_path = sprite_folder / f"sprite_{map_id.value}_{self.index}.txt"
         if not file_path.exists():
             return "No description added yet."
         async with aiofiles.open(file_path) as f:
@@ -80,7 +80,7 @@ class Sprite(BaseModel):
     ) -> None:
         """Save a description of the sprite to a file."""
         logger.info(f"Updating sprite_{map_id.value}_{self.index} with description: {description}")
-        file_path = sprite_folder / f"sprite_{map_id.value}_{self.index}.json"
+        file_path = sprite_folder / f"sprite_{map_id.value}_{self.index}.txt"
         async with aiofiles.open(file_path, "w") as f:
             await f.write(description)
 
@@ -94,7 +94,7 @@ class Warp(BaseModel):
 
     async def get_description(self, warp_folder: Path, map_id: MapLocation) -> str:
         """Get a description of the warp from a file."""
-        file_path = warp_folder / f"warp_{map_id.value}_{self.index}.json"
+        file_path = warp_folder / f"warp_{map_id.value}_{self.index}.txt"
         if not file_path.exists():
             return "No description added yet."
         async with aiofiles.open(file_path) as f:
@@ -106,7 +106,7 @@ class Warp(BaseModel):
     ) -> None:
         """Save a description of the warp to a file."""
         logger.info(f"Updating warp_{map_id.value}_{self.index} with description: {description}")
-        file_path = warp_folder / f"warp_{map_id.value}_{self.index}.json"
+        file_path = warp_folder / f"warp_{map_id.value}_{self.index}.txt"
         async with aiofiles.open(file_path, "w") as f:
             await f.write(description)
 

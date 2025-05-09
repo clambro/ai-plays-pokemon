@@ -11,7 +11,7 @@ from common.gemini import Gemini, GeminiModel
 from emulator.emulator import YellowLegacyEmulator
 from PIL.Image import Image
 
-from emulator.enums import MapLocation
+from common.constants import SPRITES_SUBFOLDER, WARPS_SUBFOLDER
 from emulator.game_state import YellowLegacyGameState
 from emulator.schemas import Sprite, Warp
 from overworld_map.schemas import OverworldMap
@@ -69,7 +69,9 @@ class UpdateOnscreenEntitiesService:
                 schema=UpdateEntitiesResponse,
             )
             for u in response.updates:
-                await sprites[u.index].save_description(self.parent_folder, map_id, u.description)
+                await sprites[u.index].save_description(
+                    self.parent_folder / SPRITES_SUBFOLDER, map_id, u.description
+                )
         except Exception as e:  # noqa: BLE001
             logger.error(f"Error updating sprites. Skipping. {e}")
             return
@@ -99,7 +101,9 @@ class UpdateOnscreenEntitiesService:
                 schema=UpdateEntitiesResponse,
             )
             for u in response.updates:
-                await warps[u.index].save_description(self.parent_folder, map_id, u.description)
+                await warps[u.index].save_description(
+                    self.parent_folder / WARPS_SUBFOLDER, map_id, u.description
+                )
         except Exception as e:  # noqa: BLE001
             logger.error(f"Error updating warps. Skipping. {e}")
             return
