@@ -236,12 +236,3 @@ class BattleState(BaseModel):
         :return: A new battle state.
         """
         return cls(is_in_battle=bool(mem[0xD057]))
-
-
-class PositionDetails(BaseModel):
-    """The details of the player's position."""
-
-    y: int
-    x: int
-    direction: int
-    map_id: MapLocation

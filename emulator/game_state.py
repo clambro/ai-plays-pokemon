@@ -19,7 +19,6 @@ from emulator.char_map import CHAR_TO_INT_MAP
 from emulator.schemas import (
     MapState,
     PlayerState,
-    PositionDetails,
     ScreenState,
     BattleState,
     Sprite,
@@ -64,16 +63,6 @@ class YellowLegacyGameState(BaseModel):
     def is_player_moving(self) -> bool:
         """Check if the player is moving and not in a battle."""
         return self.player.is_moving and not self.battle.is_in_battle
-
-    @property
-    def position_details(self) -> PositionDetails:
-        """Get the player's position and direction."""
-        return PositionDetails(
-            y=self.player.y,
-            x=self.player.x,
-            direction=self.player.direction,
-            map_id=self.cur_map.id,
-        )
 
     @property
     def player_info(self) -> str:
