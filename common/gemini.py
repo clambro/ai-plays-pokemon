@@ -24,7 +24,7 @@ SAFETY_SETTINGS = [
 class GeminiModel(StrEnum):
     """Enum for the Gemini model names."""
 
-    FLASH = "gemini-2.0-flash"
+    FLASH = "gemini-2.5-flash-preview-04-17"
     FLASH_LITE = "gemini-2.0-flash-lite"
 
 
