@@ -20,7 +20,7 @@ class UpdateCurrentMapService:
         try:
             current_map = await OverworldMap.load(self.folder, game_state.cur_map.id)
         except FileNotFoundError:
-            current_map = await OverworldMap.from_game_state(game_state)
+            current_map = await OverworldMap.from_game_state(self.folder, game_state)
 
         current_map.update_with_screen_info(game_state)
         await current_map.save(self.folder)

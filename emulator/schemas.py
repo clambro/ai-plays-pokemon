@@ -1,3 +1,6 @@
+from pathlib import Path
+import aiofiles
+from loguru import logger
 import numpy as np
 from typing import Self
 
@@ -62,6 +65,36 @@ class Sprite(BaseModel):
     y: int
     x: int
     is_rendered: bool
+    moves_randomly: bool
+
+    async def to_string(self, sprite_folder: Path, map_id: MapLocation) -> str:
+        """Get a string representation of the sprite."""
+        description = await self.get_description(sprite_folder, map_id)
+        out = f"sprite_{map_id.value}_{self.index} at ({self.y}, {self.x}): {description}"
+        if self.moves_randomly:
+            out += (
+                " Warning: This sprite wanders randomly around the map. Your actions are likely too"
+                " slow to catch it. Sprites like this are usually not worth interacting with."
+            )
+        return out
+
+    async def get_description(self, sprite_folder: Path, map_id: MapLocation) -> str:
+        """Get a description of the sprite from a file."""
+        file_path = sprite_folder / f"sprite_{map_id.value}_{self.index}.txt"
+        if not file_path.exists():
+            return "No description added yet."
+        async with aiofiles.open(file_path) as f:
+            data = await f.read()
+        return data
+
+    async def save_description(
+        self, sprite_folder: Path, map_id: MapLocation, description: str
+    ) -> None:
+        """Save a description of the sprite to a file."""
+        logger.info(f"Updating sprite_{map_id.value}_{self.index} with description: {description}")
+        file_path = sprite_folder / f"sprite_{map_id.value}_{self.index}.txt"
+        async with aiofiles.open(file_path, "w") as f:
+            await f.write(description)
 
 
 class Warp(BaseModel):
@@ -70,6 +103,30 @@ class Warp(BaseModel):
     index: int
     y: int
     x: int
+
+    async def to_string(self, warp_folder: Path, map_id: MapLocation) -> str:
+        """Get a string representation of the warp."""
+        description = await self.get_description(warp_folder, map_id)
+        out = f"warp_{map_id.value}_{self.index} at ({self.y}, {self.x}): {description}"
+        return out
+
+    async def get_description(self, warp_folder: Path, map_id: MapLocation) -> str:
+        """Get a description of the warp from a file."""
+        file_path = warp_folder / f"warp_{map_id.value}_{self.index}.txt"
+        if not file_path.exists():
+            return "No description added yet."
+        async with aiofiles.open(file_path) as f:
+            data = await f.read()
+        return data
+
+    async def save_description(
+        self, warp_folder: Path, map_id: MapLocation, description: str
+    ) -> None:
+        """Save a description of the warp to a file."""
+        logger.info(f"Updating warp_{map_id.value}_{self.index} with description: {description}")
+        file_path = warp_folder / f"warp_{map_id.value}_{self.index}.txt"
+        async with aiofiles.open(file_path, "w") as f:
+            await f.write(description)
 
 
 class MapState(BaseModel):
@@ -145,6 +202,7 @@ class MapState(BaseModel):
                     y=mem[0xC204 + i] - 4,
                     x=mem[0xC205 + i] - 4,
                     is_rendered=mem[0xC102 + i] != 0xFF,
+                    moves_randomly=mem[0xC206 + i] == 0xFE,
                 )
             )
         pikachu_sprite = Sprite(
@@ -152,6 +210,7 @@ class MapState(BaseModel):
             y=mem[0xC2F4] - 4,
             x=mem[0xC2F5] - 4,
             is_rendered=mem[0xC1F2] != 0xFF,
+            moves_randomly=False,
         )
         return sprites, pikachu_sprite
 

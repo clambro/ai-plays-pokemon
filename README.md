@@ -2,14 +2,15 @@
 
 ## TODOs
 ### Core
-* Add a grid to the overworld screen
-* Add summary memory
+* Add a grid to the overworld screen. Maybe not necessary?
+* Add summary memory with decay
 * Add long term memory with retrieval and decay
 * Add player/party information
 * Add strength boulders to map screen
 * Add sprite and warp long term memory to map view
 * Add automated backups
 * Add precommits for sorting imports and linting and whatnot
+* Add a critic model
 
 ### Useful
 * Add tests to everything
