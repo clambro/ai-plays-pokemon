@@ -27,14 +27,14 @@ You have explored {{explored_percentage}} of this map.
 
 The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map is {{height}}x{{width}} blocks.
 
-The ASCII screen is always ({c.SCREEN_HEIGHT}x{c.SCREEN_WIDTH}) blocks in size, and is always centered such that the player is in position ({c.PLAYER_OFFSET_Y}, {c.PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the whole map section. This should help you navigate from one map to another.
+The ASCII screen is always ({c.SCREEN_HEIGHT}x{c.SCREEN_WIDTH}) blocks in size, and is always centered such that the player is in position ({c.PLAYER_OFFSET_Y}, {c.PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the whole map section. This should help you navigate from one map to another. The upper left corner of the screen is currently at ({{screen_upper_left_y}}, {{screen_upper_left_x}}) in map coordinates. The lower right corner of the screen is currently at ({{screen_lower_right_y}}, {{screen_lower_right_x}}) in map coordinates.
 
 The orientation of the map and screen are always fixed, regardless of the direction that you are facing. Up is North, down is South, left is West, and right is East. Always.
 
-The tile above you is "{{tile_above}}".
-The tile below you is "{{tile_below}}".
-The tile to the left of you is "{{tile_left}}".
-The tile to the right of you is "{{tile_right}}".
+The tile directly above you is "{{tile_above}}".
+The tile directly below you is "{{tile_below}}".
+The tile directly to the left of you is "{{tile_left}}".
+The tile directly to the right of you is "{{tile_right}}".
 
 You have discovered the following sprites on the portion of the map that you have revealed so far:
 <known_sprites>
@@ -56,6 +56,7 @@ Navigation tips:
 - If you are indoors, the edges of the map (indicated by a black void in the screenshot) are impassable. You cannot walk off the edge of an indoor map. The only exception to this is if you see two adjacent warp tiles on the edge of a map. In this case, you can walk through the warp tiles to enter the adjoining map. Warp tiles are the only way to move between maps indoors.
 - Your companion Pikachu will never block your movement. Unlike other sprites, you can walk through pikachu.
 - To interact with a sprite, you need to be directly adjacent to it, face it, and press the action button. The only exception to the direct adjacency rule is in poke-marts and pokemon centers where you interact with the clerk or nurse respectively from across the counter that is directly in front of them.
+- Note that some sprites move around, so their position may change between screenshots. Do not let this confuse you. The information that you have in the <known_sprites> section is the most accurate information available to you since it comes straight from the game's memory at this moment in time.
 
 Note that this ASCII information comes straight from the game's memory and is therefore perfectly reliable. Screenshot images can be misinterpreted, so use the ASCII map and screen to determine the exact location of any sprites or tiles, and consider the screenshot image as supplemental information to help you visually interpret the ASCII.
 </map_info>

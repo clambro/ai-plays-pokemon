@@ -15,6 +15,8 @@ UPDATE_ONSCREEN_ENTITIES = "Update Onscreen Entities"
 async def update_onscreen_entities(state: AgentState, emulator: YellowLegacyEmulator) -> AgentState:
     """Update the onscreen entities based on the current game state."""
     logger.info("Updating the onscreen entities...")
+    if state.current_map is None:
+        raise ValueError("Current map is not set.")
 
     service = UpdateOnscreenEntitiesService(
         emulator=emulator,

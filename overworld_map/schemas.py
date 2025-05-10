@@ -89,6 +89,10 @@ class OverworldMap(BaseModel):
             tile_below=tile_below,
             tile_left=tile_left,
             tile_right=tile_right,
+            screen_upper_left_y=game_state.screen.top,
+            screen_upper_left_x=game_state.screen.left,
+            screen_lower_right_y=game_state.screen.bottom,
+            screen_lower_right_x=game_state.screen.right,
         )
 
     async def save(self, parent_folder: Path) -> None:

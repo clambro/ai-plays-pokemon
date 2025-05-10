@@ -52,11 +52,12 @@ class DecisionMakerOverworldService:
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
             return None
+        position = (game_state.player.y, game_state.player.x)
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
                 timestamp=datetime.now(),
-                content=str(response),
+                content=f"Current position: {position}. {response}",
             )
         )
         await self.emulator.press_buttons([response.button])

@@ -10,6 +10,7 @@
 * Add sprite and warp long term memory to map view
 * Add automated backups
 * Add precommits for sorting imports and linting and whatnot
+* Add a critic model
 
 ### Useful
 * Add tests to everything

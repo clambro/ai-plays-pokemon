@@ -21,7 +21,7 @@ The following is an ASCII representation of the current map, highlighting your c
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
 - thoughts: Your written thoughts on the current game state and which button to press. Use the following thought process, and be thorough in your commentary:
     1. Consider your goals. What are you trying to accomplish?
-    2. Consider the information provided in the raw memory. What has happened lately?
+    2. Consider the information provided in the raw memory. What has happened lately? If you feel like you're repeating yourself, or getting stuck in a loop, say so, and suggest a change of course.
     3. Consider the player information provided to you. What is your current situation?
     4. Consider the map information provided to you. Where are you, and where do you want to go? Are there sprites or warp tiles that you haven't checked out yet? Is there something blocking your path?
     5. Consider the screenshot. What is currently on the screen? How does it help you contextualize your situation?
