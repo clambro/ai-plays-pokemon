@@ -2,8 +2,8 @@
 
 ## TODOs
 ### Core
-* Add a grid to the overworld screen
-* Add summary memory
+* Add a grid to the overworld screen. Maybe not necessary?
+* Add summary memory with decay
 * Add long term memory with retrieval and decay
 * Add player/party information
 * Add strength boulders to map screen

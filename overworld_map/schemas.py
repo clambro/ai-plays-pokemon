@@ -147,12 +147,9 @@ class OverworldMap(BaseModel):
         if not self.known_sprites:
             return "No sprites discovered."
         out = ""
-        for idx, sprite in self.known_sprites.items():
-            description = await sprite.get_description(
-                self.parent_folder / SPRITE_SUBFOLDER,
-                self.id,
-            )
-            out += f"- sprite_{self.id.value}_{idx} at ({sprite.y}, {sprite.x}) - {description}\n"
+        for sprite in self.known_sprites.values():
+            description = await sprite.to_string(self.parent_folder / SPRITE_SUBFOLDER, self.id)
+            out += f"- {description}\n"
         return out.strip()
 
     async def _get_warp_notes(self) -> str:
@@ -160,7 +157,7 @@ class OverworldMap(BaseModel):
         if not self.known_warps:
             return "No warp tiles discovered."
         out = ""
-        for idx, warp in self.known_warps.items():
-            description = await warp.get_description(self.parent_folder / WARP_SUBFOLDER, self.id)
-            out += f"- warp_{self.id.value}_{idx} at ({warp.y}, {warp.x}) - {description}\n"
+        for warp in self.known_warps.values():
+            description = await warp.to_string(self.parent_folder / WARP_SUBFOLDER, self.id)
+            out += f"- {description}\n"
         return out.strip()

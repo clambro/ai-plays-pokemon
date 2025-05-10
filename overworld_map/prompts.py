@@ -19,7 +19,7 @@ You have explored {{explored_percentage}} of this map.
 - "{c.WATER_TILE}" - Water.
 - "{c.GRASS_TILE}" - Tall grass, where wild Pokemon can be found.
 - "{c.LEDGE_TILE}" - A ledge that you can jump down from above. These tiles are only passable if you approach them from above and walk downwards.
-- "{c.SPRITE_TILE}" - A sprite that you can interact with. This could be an NPC, an item you can pick up, or some other interactable entity. You will need to use the screenshot to determine what the sprite is. You cannot walk through sprites.
+- "{c.SPRITE_TILE}" - A sprite that you can interact with. This could be an NPC, an item you can pick up, or some other interactable entity. You will need to use the screenshot to determine what the sprite is. You cannot walk through sprites, nor can you stand on top of them.
 - "{c.WARP_TILE}" - A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.
 - "{c.PLAYER_TILE}" - Your current location.
 - "{c.PIKACHU_TILE}" - Your companion Pikachu. If you do not see this, it means that pikachu has either fainted or is not in your party.

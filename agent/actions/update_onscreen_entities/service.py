@@ -54,10 +54,8 @@ class UpdateOnscreenEntitiesService:
         sprite_text = ""
         for i, s in enumerate(sprites):
             map_id = self.current_map.id
-            description = await s.get_description(self.parent_folder, map_id)
-            sprite_text += (
-                f"- [{i}] sprite_{map_id.value}_{s.index} at ({s.y}, {s.x}) - {description}\n"
-            )
+            description = await s.to_string(self.parent_folder / SPRITE_SUBFOLDER, map_id)
+            sprite_text += f"- [{i}] {description}\n"
         prompt = UPDATE_SPRITES_PROMPT.format(
             raw_memory=self.raw_memory,
             map_info=await self.current_map.to_string(game_state),
@@ -74,7 +72,7 @@ class UpdateOnscreenEntitiesService:
                     self.parent_folder / SPRITE_SUBFOLDER, map_id, u.description
                 )
         except Exception as e:  # noqa: BLE001
-            logger.error(f"Error updating sprites. Skipping. {e}")
+            logger.warning(f"Error updating sprites. Skipping. {e}")
             return
 
     async def _update_warps(
@@ -87,16 +85,14 @@ class UpdateOnscreenEntitiesService:
         warp_text = ""
         for i, w in enumerate(warps):
             map_id = self.current_map.id
-            description = await w.get_description(self.parent_folder, map_id)
-            warp_text += (
-                f"- [{i}] warp_{map_id.value}_{w.index} at ({w.y}, {w.x}) - {description}\n"
+            description = await w.to_string(self.parent_folder / WARP_SUBFOLDER, map_id)
+            warp_text += f"- [{i}] {description}\n"
+            prompt = UPDATE_WARPS_PROMPT.format(
+                raw_memory=self.raw_memory,
+                map_info=await self.current_map.to_string(game_state),
+                player_info=game_state.player_info,
+                warps=warp_text.strip(),
             )
-        prompt = UPDATE_WARPS_PROMPT.format(
-            raw_memory=self.raw_memory,
-            map_info=await self.current_map.to_string(game_state),
-            player_info=game_state.player_info,
-            warps=warp_text.strip(),
-        )
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[screenshot, prompt],
@@ -107,5 +103,5 @@ class UpdateOnscreenEntitiesService:
                     self.parent_folder / WARP_SUBFOLDER, map_id, u.description
                 )
         except Exception as e:  # noqa: BLE001
-            logger.error(f"Error updating warps. Skipping. {e}")
+            logger.warning(f"Error updating warps. Skipping. {e}")
             return
