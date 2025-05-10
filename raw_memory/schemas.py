@@ -35,7 +35,7 @@ class RawMemory(BaseModel):
             f" section."
         )
         out += "\n<raw_memory>\n"
-        out += "\n".join([str(piece) for piece in reversed(self.pieces)])
+        out += "\n".join([str(piece) for piece in self.pieces])
         out += "\n</raw_memory>"
         return out
 

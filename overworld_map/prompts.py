@@ -4,13 +4,13 @@ from common import constants as c
 OVERWORLD_MAP_STR_FORMAT = f"""
 <map_info>
 Map name: {{map_name}}
+<ascii_screen>
+{{ascii_screen}}
+</ascii_screen>
 <whole_map>
 {{ascii_map}}
 </whole_map>
 You have explored {{explored_percentage}} of this map.
-<ascii_screen>
-{{ascii_screen}}
-</ascii_screen>
 <legend>
 - "{c.UNSEEN_TILE}" - Tiles that you have not yet explored. Move towards these tiles to reveal them.
 - "{c.FREE_TILE}" - A walkable tile with nothing noteworthy in it.
@@ -50,7 +50,7 @@ Navigation tips:
 - You should explore as much of the map as possible to reveal the unexplored tiles, as they may be hiding important sprites or warp tiles. Tiles are considered explored once they are on screen, so move towards the unexplored tiles to reveal them. Revealing unexplored tiles is always a good idea.
 - Warp tiles come in two varieties: single and double.
   - Single warp tiles are activated by standing on them. If you are standing on a warp tile and not going anywhere, it means that you have just warped to this tile from somewhere else. If you want to go back to your previous location and are standing on a single warp tile, you have to walk off the tile and then back on it to warp back.
-  - Double warp tiles (two warp tiles side by side) are more complicated. These tiles are usually found on the edge of a map, and have to be walked through as if you're trying to walk off the edge of the map. (e.g. if you see a doube warp tile on the right edge of the map, you have to stand on one of the tiles and walk right; if you see a double warp tile on the bottom edge of the map, you have to stand on one of the tiles and walk down; etc.)
+  - Double warp tiles (two warp tiles side by side) are more complicated. These tiles are usually found on the edge of a map, and have to be walked through as if you're trying to walk off the edge of the map. (e.g. if you see a doube warp tile arranged vertically on the right edge of the map, you have to stand on one of the tiles and walk right, off the edge of the map; if you see a double warp tile arranged horizontally on the bottom edge of the map, you have to stand on one of the tiles and walk down, off the edge of the map; etc.)
   - Do not attempt to interact with a warp tile using the action button. You have to walk on or through the tile depending on its type to warp.
 - To connect from one map to another, you must either walk through a warp tile, or, *in outdoor maps only*, walk off the edge of the map.
 - If you are indoors, the edges of the map (indicated by a black void in the screenshot) are impassable. You cannot walk off the edge of an indoor map. The only exception to this is if you see two adjacent warp tiles on the edge of a map. In this case, you can walk through the warp tiles to enter the adjoining map. Warp tiles are the only way to move between maps indoors.

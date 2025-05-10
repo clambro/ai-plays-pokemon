@@ -10,8 +10,7 @@ The following sprites are visible on the screen right now. Here are the descript
 {sprites}
 </sprites>
 
-If you want to update your long-term memory with new information about any of these sprites, do so by returning an array of objects, where each object contains the sprite index (the one in square brackets above) and the new description. Do not include anything in your description about the position of the sprite; that information will be pulled from the game's memory as needed. Returning an empty array is a valid response and simply means that you don't want to update any of the sprite descriptions.
-
+If you want to update your long-term memory with new information about any of these sprites, do so by returning an array of objects, where each object contains the sprite index (the one in square brackets above) and the new description. Do not include anything in your description about the position of the sprite; that information will be pulled from the game's memory as needed. Returning an empty array is a valid response and simply means that you don't want to update any of the sprite descriptions. If you have not learned anything new about any of the sprites, you should not update any of the descriptions.
 """.strip()
 
 UPDATE_WARPS_PROMPT = """
@@ -26,5 +25,12 @@ The following warp tiles are visible on the screen right now. Here are the descr
 {warps}
 </warps>
 
-If you want to update your long-term memory with new information about any of these warp tiles, do so by returning an array of objects, where each object contains the warp index (the one in square brackets above) and the new description. Do not include anything in your description about the position of the warp tile; that information will be pulled from the game's memory as needed. Returning an empty array is a valid response and simply means that you don't want to update any of the warp tile descriptions.
+For warp tiles, it's important to note the kind of warp tile in your description: single vs double.
+- Single warp tiles are activated by standing on them.
+- Double warp tiles (two warp tiles side by side) are usually found on the edge of a map, and have to be walked through as if you're trying to walk off the edge of the map. (e.g. if you see a doube warp tile arranged vertically on the right edge of the map, you have to stand on one of the tiles and walk right, off the edge of the map; if you see a double warp tile arranged horizontally on the bottom edge of the map, you have to stand on one of the tiles and walk down, off the edge of the map; etc.). If you see a double warp tile, you should note that it is a double warp tile in your description, as well as noting the direction you have to walk through it to warp.
+- Warp tiles are never interacted with using the action button. You have to walk on or through the tile depending on its type to warp.
+
+You don't need to re-add this information if it is already present, but you can update your description if you have learned something new about the warp tile.
+
+If you want to update your long-term memory with new information about any of these warp tiles, do so by returning an array of objects, where each object contains the warp index (the one in square brackets above) and the new description. Do not include anything in your description about the position of the warp tile; that information will be pulled from the game's memory as needed. Returning an empty array is a valid response and simply means that you don't want to update any of the warp tile descriptions. If you have not learned anything new about any of the warp tiles, you should not update any of the descriptions.
 """.strip()
