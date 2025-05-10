@@ -5,10 +5,14 @@ There are one or more sprites visible on the screen right now. This is your chan
 
 {map_info}
 
+{player_info}
+
 The following sprites are visible on the screen right now. Here are the descriptions of them that you have in your long-term memory:
 <sprites>
 {sprites}
 </sprites>
+
+Sprites are usually either people or item balls, but can also be other entities. You should note the kind of sprite in your description, as well as any other relevant information about it. If the sprite is a person, whom you have recently spoken to, you should note what they said in the description for the sprite.
 
 If you want to update your long-term memory with new information about any of these sprites, do so by returning an array of objects, where each object contains the sprite index (the one in square brackets above) and the new description. Do not include anything in your description about the position of the sprite; that information will be pulled from the game's memory as needed. Returning an empty array is a valid response and simply means that you don't want to update any of the sprite descriptions. If you have not learned anything new about any of the sprites, you should not update any of the descriptions.
 """.strip()
@@ -19,6 +23,8 @@ There are one or more warp tiles visible on the screen right now. This is your c
 {raw_memory}
 
 {map_info}
+
+{player_info}
 
 The following warp tiles are visible on the screen right now. Here are the descriptions of them that you have in your long-term memory:
 <warps>

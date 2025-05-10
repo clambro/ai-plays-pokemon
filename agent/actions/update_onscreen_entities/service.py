@@ -61,6 +61,7 @@ class UpdateOnscreenEntitiesService:
         prompt = UPDATE_SPRITES_PROMPT.format(
             raw_memory=self.raw_memory,
             map_info=await self.current_map.to_string(game_state),
+            player_info=game_state.player_info,
             sprites=sprite_text.strip(),
         )
         try:
@@ -93,6 +94,7 @@ class UpdateOnscreenEntitiesService:
         prompt = UPDATE_WARPS_PROMPT.format(
             raw_memory=self.raw_memory,
             map_info=await self.current_map.to_string(game_state),
+            player_info=game_state.player_info,
             warps=warp_text.strip(),
         )
         try:
