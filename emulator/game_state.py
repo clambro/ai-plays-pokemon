@@ -136,19 +136,19 @@ class YellowLegacyGameState(BaseModel):
 
         return blocks, on_screen_sprites, on_screen_warps
 
-    def is_text_on_screen(self) -> bool:
+    def is_text_on_screen(self, ignore_dialogue_box: bool = False) -> bool:
         """Check if there is text on the screen."""
         a_upper = CHAR_TO_INT_MAP["A"]
         z_upper = CHAR_TO_INT_MAP["Z"]
         a_lower = CHAR_TO_INT_MAP["a"]
         z_lower = CHAR_TO_INT_MAP["z"]
-        letters = set(range(a_upper, z_upper + 1)) | set(range(a_lower, z_lower + 1))
-        num_letters_on_screen = 0
-        for row in self.screen.tiles:
-            for tile in row:
-                if tile in letters:
-                    num_letters_on_screen += 1
-        return num_letters_on_screen > 3  # Avoid false positives caused by weird tilemaps.
+        letters = np.array(list(range(a_upper, z_upper + 1)) + list(range(a_lower, z_lower + 1)))
+
+        tiles = np.array(self.screen.tiles)
+        if ignore_dialogue_box:
+            tiles = tiles[:13, :]
+
+        return np.isin(tiles, letters).sum() > 3  # Avoid false positives caused by weird tilemaps.
 
     def get_screen_without_blinking_cursor(self) -> np.ndarray:
         """Get the screen without the blinking cursor."""
