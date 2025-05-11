@@ -29,7 +29,7 @@ class DecisionMakerOverworldService:
         self.current_map = current_map
         self.goals = goals
 
-    async def make_decision(self) -> Button | None:
+    async def make_decision(self) ->  None:
         """
         Make a decision based on the current game state.
 

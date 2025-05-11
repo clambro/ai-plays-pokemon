@@ -16,7 +16,6 @@ class AgentState(BaseState):
 
     folder: Path
     iteration: int = 0
-    buttons_pressed: list[Button] = Field(default_factory=list)
     raw_memory: RawMemory = Field(default_factory=RawMemory)
     handler: AgentStateHandler | None = None
     current_map: OverworldMap | None = None
@@ -29,10 +28,6 @@ class AgentStore(BaseStore[AgentState]):
     async def set_iteration(self, iteration: int) -> None:
         """Set the iteration."""
         await self.set_state({"iteration": iteration})
-
-    async def set_buttons_pressed(self, buttons_pressed: list[Button]) -> None:
-        """Set the buttons pressed."""
-        await self.set_state({"buttons_pressed": buttons_pressed})
 
     async def set_raw_memory(self, raw_memory: RawMemory) -> None:
         """Set the raw memory."""

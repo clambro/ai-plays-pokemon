@@ -23,7 +23,7 @@ class DecisionMakerBattleService:
         self.llm_service = Gemini(GeminiModel.FLASH)
         self.raw_memory = raw_memory
 
-    async def make_decision(self) -> Button | None:
+    async def make_decision(self) -> None:
         """
         Make a decision based on the current game state.
 
@@ -47,4 +47,3 @@ class DecisionMakerBattleService:
             )
         )
         await self.emulator.press_buttons([response.button])
-        return response.button
