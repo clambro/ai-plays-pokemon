@@ -6,7 +6,6 @@ from agent.actions.decision_maker_overworld.schemas import DecisionMakerOverworl
 from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
-from emulator.enums import Button
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 

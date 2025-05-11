@@ -6,7 +6,6 @@ from agent.actions.decision_maker_text.schemas import DecisionMakerTextResponse
 from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
-from emulator.enums import Button
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 
 

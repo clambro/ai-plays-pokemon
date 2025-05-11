@@ -4,7 +4,6 @@ from pydantic import Field
 
 from common.enums import AgentStateHandler
 from common.goals import Goals
-from emulator.enums import Button
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory
 from junjo.state import BaseState
