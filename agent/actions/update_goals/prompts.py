@@ -3,6 +3,8 @@ You have just taken an action and added new information to your memory. If you y
 
 {raw_memory}
 
+{player_info}
+
 {goals}
 
 To add or remove goals, respond according to the schema given below. The meaning of the fields is as follows:
@@ -27,6 +29,8 @@ Remember that a good goal must be SMART:
 - Time-bound: The least-relevant of the SMART criteria for your purposes, but try to ensure that your goals have clear temporal boundaries when relevant.
   - Suboptimal: "Catch a [pokemon] in [location]"
   - Good: "Catch a [pokemon] in [location] and add it to my team before challenging [major opponent]"
+
+New goals should be based on your experience in the game as recorded in your memory or the player info above, not based on your prior knowledge of Pokemon, which is prone to error. Similarly, do not assume that you have accomplished a goal until you are certain that you have done so based on the information in your memory and the player info above.
 
 Read the instructions above carefully and update your goals. Remember that doing nothing here is a valid response if you are satisfied with your current goals. Only update your goals if you feel that recent events warrant it. You must have at least one goal at any given time, and try to have no more than five active at once. The upper limit is not strict, but try to keep your goals manageable.
 """.strip()

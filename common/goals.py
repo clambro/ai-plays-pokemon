@@ -20,7 +20,7 @@ class Goals(BaseModel):
         if self.goals:
             out += "\n".join(f"[{i}] {g}" for i, g in enumerate(self.goals))
         else:
-            out += "You have not set any goals yet. You should set some goals."
+            out += "You have not set any goals yet."
         out += "\n</goals>\n"
         out += "</goals_info>"
         return out
