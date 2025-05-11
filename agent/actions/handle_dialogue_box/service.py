@@ -1,6 +1,8 @@
 import asyncio
 from datetime import datetime
 
+from loguru import logger
+
 from common.enums import AgentStateHandler
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
@@ -29,7 +31,8 @@ class HandleDialogueBoxService:
         game_state = await self.emulator.get_game_state()
         dialogue_box = game_state.get_dialogue_box()
         if not dialogue_box:
-            return
+            logger.warning("No dialogue box found.")
+            return AgentStateHandler.TEXT  # Go to the generic text handler.
 
         text: list[str] = []
         while dialogue_box:
@@ -42,20 +45,33 @@ class HandleDialogueBoxService:
             if not text or (bottom_line and bottom_line != text[-1]):
                 text.append(bottom_line)
 
-            if dialogue_box.cursor_on_screen:
-                await self.emulator.press_buttons([Button.A])
-                await self.emulator.wait_for_animation_to_finish()
+            counter = 0
+            blink_wait_time = 0.1
+            max_counter = 5  # Cursor blinks every half second.
+            while counter < max_counter:
+                logger.warning("Cursor not on screen. Waiting for it to blink.")
+                await asyncio.sleep(blink_wait_time)
                 game_state = await self.emulator.get_game_state()
                 dialogue_box = game_state.get_dialogue_box()
-                continue
-            else:
-                await asyncio.sleep(0.5)  # Cursor blinks every half second.
-                game_state = await self.emulator.get_game_state()
-                dialogue_box = game_state.get_dialogue_box()
-                if not dialogue_box or not dialogue_box.cursor_on_screen:
-                    # Either the box is gone, or there is still no cursor, meaning that some other
-                    # decision has to be made.
+                if dialogue_box and dialogue_box.cursor_on_screen:
+                    logger.warning("Cursor is on screen. Breaking.")
                     break
+                counter += 1
+
+            if counter == max_counter:
+                logger.warning(f"Cursor not on screen after {max_counter} attempts. Breaking.")
+                break
+
+            logger.warning("Pressing A to continue dialogue.")
+            await self.emulator.press_buttons([Button.A])
+            await asyncio.sleep(0.2)
+            logger.warning("Button pressed. Waiting for animation to finish.")
+            await self.emulator.wait_for_animation_to_finish()
+            game_state = await self.emulator.get_game_state()
+            dialogue_box = game_state.get_dialogue_box()
+
+        # TODO: Check if there's text outside the dialogue box. If there isn't, hit A one more time.
+        # to end the dialogue.
 
         joined_text = " ".join(text)
         self.raw_memory.append(

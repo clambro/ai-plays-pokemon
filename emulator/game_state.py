@@ -81,10 +81,10 @@ class YellowLegacyGameState(BaseModel):
         """Check if the dialogue box is on the screen by checking for the correct corner tiles."""
         screen = np.array(self.screen.tiles)
         return (
-            screen[12, 0] == 124
+            screen[12, 0] == 121
             and screen[12, -1] == 123
             and screen[17, 0] == 125
-            and screen[17, -1] == 122
+            and screen[17, -1] == 126
         )
 
     def get_ascii_screen(self) -> tuple[np.ndarray, list[Sprite], list[Warp]]:
@@ -163,7 +163,7 @@ class YellowLegacyGameState(BaseModel):
         tiles = np.array(self.screen.tiles)
         top_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[14, 1:-3])
         bottom_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[16, 1:-3])
-        cursor_on_screen = tiles[16, -2] == 238
+        cursor_on_screen = tiles[16, -2] == BLINKING_CURSOR_ID
         return DialogueBox(
             top_line=top_line.strip(),
             bottom_line=bottom_line.strip(),

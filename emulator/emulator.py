@@ -110,7 +110,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
                 successes = 0
                 logger.info("Animation detected. Waiting for it to finish.")
             game_state = new_game_state
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(0.1)
 
     def _check_stopped(self) -> None:
         if self._is_stopped:
