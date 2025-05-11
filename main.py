@@ -3,7 +3,7 @@ import asyncio
 from datetime import datetime
 from loguru import logger
 from pathlib import Path
-from agent.app import build_agent_application
+from agent.app import build_agent_workflow
 from agent.state import AgentState
 from common.constants import MAP_SUBFOLDER, SPRITE_SUBFOLDER, WARP_SUBFOLDER
 from emulator.emulator import YellowLegacyEmulator
@@ -31,12 +31,14 @@ async def main(
     await aiofiles.os.makedirs(folder / WARP_SUBFOLDER, exist_ok=True)
 
     async with YellowLegacyEmulator(rom_path, state_path, mute_sound=mute_sound) as emulator:
-        agent_app = build_agent_application(folder, emulator)
+        state = AgentState(folder=folder)
         try:
-            await agent_app.arun()
+            while True:
+                workflow = build_agent_workflow(state, emulator)
+                await workflow.execute()
+                state = AgentState.model_validate(await workflow.get_state())
         except Exception:  # noqa: BLE001
-            logger.exception("Agent app raised an exception.")
-            state = AgentState.model_validate(agent_app.state)
+            logger.exception("Agent workflow raised an exception.")
             async with aiofiles.open("notes/agent_state.json", "w") as f:
                 await f.write(state.model_dump_json())
 

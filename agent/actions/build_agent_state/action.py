@@ -1,29 +1,26 @@
-from burr.core.action import action
 from loguru import logger
 from agent.actions.build_agent_state.service import BuildAgentStateService
-from agent.state import AgentState, AgentStateParams
+from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
+from junjo.node import Node
 
 
-BUILD_AGENT_STATE = "Build Agent State"
+class UpdateAgentStoreNode(Node[AgentStore]):
+    """The first node in the agent loop. Prepares the agent store for the next iteration."""
 
+    def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        self.emulator = emulator
+        super().__init__()
 
-@action.pydantic(
-    # We need to be able to read and write everything in this action.
-    reads=[*AgentStateParams.__members__.values()],
-    writes=[*AgentStateParams.__members__.values()],
-)
-async def build_agent_state(state: AgentState, emulator: YellowLegacyEmulator) -> AgentState:
-    """
-    The first action in the agent loop. Builds the agent state based on the emulator and the
-    previous state.
-    """
-    logger.info("Building agent state...")
+    async def service(self, store: AgentStore) -> None:
+        """The service for the node."""
+        logger.info("Updating agent store...")
 
-    service = BuildAgentStateService(emulator)
-    await service.wait_for_animations()
+        state = await store.get_state()
+        service = BuildAgentStateService(self.emulator)
 
-    state.iteration += 1
-    state.buttons_pressed = []
-    state.handler = await service.determine_handler()
-    return state
+        handler = await service.determine_handler()
+
+        await store.set_iteration(state.iteration + 1)
+        await store.set_buttons_pressed([])
+        await store.set_handler(handler)

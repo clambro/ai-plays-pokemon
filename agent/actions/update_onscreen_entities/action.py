@@ -1,28 +1,29 @@
-from burr.core.action import action
 from loguru import logger
 from agent.actions.update_onscreen_entities.service import UpdateOnscreenEntitiesService
-from agent.state import AgentState, AgentStateParams
+from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
+from junjo.node import Node
 
 
-UPDATE_ONSCREEN_ENTITIES = "Update Onscreen Entities"
-
-
-@action.pydantic(
-    reads=[AgentStateParams.folder, AgentStateParams.raw_memory, AgentStateParams.current_map],
-    writes=[],
-)
-async def update_onscreen_entities(state: AgentState, emulator: YellowLegacyEmulator) -> AgentState:
+class UpdateOnscreenEntitiesNode(Node[AgentStore]):
     """Update the onscreen entities based on the current game state."""
-    logger.info("Updating the onscreen entities...")
-    if state.current_map is None:
-        raise ValueError("Current map is not set.")
 
-    service = UpdateOnscreenEntitiesService(
-        emulator=emulator,
-        parent_folder=state.folder,
-        raw_memory=state.raw_memory,
-        current_map=state.current_map,
-    )
-    await service.update_onscreen_entities()
-    return state
+    def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        self.emulator = emulator
+        super().__init__()
+
+    async def service(self, store: AgentStore) -> None:
+        """The service for the node."""
+        logger.info("Updating the onscreen entities...")
+
+        state = await store.get_state()
+        if state.current_map is None:
+            raise ValueError("Current map is not set.")
+
+        service = UpdateOnscreenEntitiesService(
+            emulator=self.emulator,
+            parent_folder=state.folder,
+            raw_memory=state.raw_memory,
+            current_map=state.current_map,
+        )
+        await service.update_onscreen_entities()

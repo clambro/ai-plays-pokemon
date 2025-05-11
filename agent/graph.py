@@ -1,79 +1,74 @@
-from burr.core.graph import GraphBuilder, Graph
+from junjo.graph import Graph
+from junjo.edge import Edge
 
-from agent.actions.build_agent_state.action import build_agent_state, BUILD_AGENT_STATE
-from agent.actions.decision_maker_overworld.action import (
-    decision_maker_overworld,
-    DECISION_MAKER_OVERWORLD,
-)
-from agent.actions.decision_maker_battle.action import (
-    decision_maker_battle,
-    DECISION_MAKER_BATTLE,
-)
-from agent.actions.decision_maker_text.action import DECISION_MAKER_TEXT, decision_maker_text
-from agent.actions.handle_dialog_box.action import HANDLE_DIALOG_BOX, handle_dialog_box
-from agent.actions.update_current_map.action import (
-    update_current_map,
-    UPDATE_CURRENT_MAP,
-)
-from agent.actions.update_goals.action import UPDATE_GOALS, update_goals
-from agent.actions.update_onscreen_entities.action import (
-    UPDATE_ONSCREEN_ENTITIES,
-    update_onscreen_entities,
-)
-from agent.conditions import field_equals_value
-from agent.state import AgentStateParams
+from agent.actions.build_agent_state.action import UpdateAgentStoreNode
+from agent.actions.decision_maker_overworld.action import DecisionMakerOverworldNode
+from agent.actions.decision_maker_battle.action import DecisionMakerBattleNode
+from agent.actions.decision_maker_text.action import DecisionMakerTextNode
+from agent.actions.handle_dialog_box.action import HandleDialogBoxNode
+from agent.actions.update_current_map.action import UpdateCurrentMapNode
+from agent.actions.update_goals.action import UpdateGoalsNode
+from agent.actions.update_onscreen_entities.action import UpdateOnscreenEntitiesNode
 from common.enums import AgentStateHandler
 from emulator.emulator import YellowLegacyEmulator
+from agent.conditions import AgentHandlerIs
 
 
 def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
-    """Build the Burr agent graph."""
-    return (
-        GraphBuilder()
-        .with_actions(
-            **{
-                BUILD_AGENT_STATE: build_agent_state.bind(emulator=emulator),
-                UPDATE_CURRENT_MAP: update_current_map.bind(emulator=emulator),
-                UPDATE_ONSCREEN_ENTITIES: update_onscreen_entities.bind(emulator=emulator),
-                HANDLE_DIALOG_BOX: handle_dialog_box.bind(emulator=emulator),
-                DECISION_MAKER_OVERWORLD: decision_maker_overworld.bind(emulator=emulator),
-                DECISION_MAKER_BATTLE: decision_maker_battle.bind(emulator=emulator),
-                DECISION_MAKER_TEXT: decision_maker_text.bind(emulator=emulator),
-                UPDATE_GOALS: update_goals.bind(emulator=emulator),
-            }
-        )
-        .with_transitions(
-            (
-                BUILD_AGENT_STATE,
-                UPDATE_CURRENT_MAP,
-                field_equals_value(AgentStateParams.handler, AgentStateHandler.OVERWORLD),
+    """Build the Junjo agent graph."""
+    update_agent_store = UpdateAgentStoreNode(emulator)
+    update_current_map = UpdateCurrentMapNode(emulator)
+    update_onscreen_entities = UpdateOnscreenEntitiesNode(emulator)
+    decision_maker_overworld = DecisionMakerOverworldNode(emulator)
+    decision_maker_battle = DecisionMakerBattleNode(emulator)
+    decision_maker_text = DecisionMakerTextNode(emulator)
+    handle_dialog_box = HandleDialogBoxNode(emulator)
+    update_goals = UpdateGoalsNode(emulator)
+
+    return Graph(
+        source=update_agent_store,
+        sink=update_goals,  # TODO: Will probably need a dummy sink node eventually.
+        edges=[
+            Edge(
+                update_agent_store,
+                update_current_map,
+                AgentHandlerIs(AgentStateHandler.OVERWORLD),
             ),
-            (UPDATE_CURRENT_MAP, UPDATE_ONSCREEN_ENTITIES),
-            (UPDATE_ONSCREEN_ENTITIES, DECISION_MAKER_OVERWORLD),
-            (
-                BUILD_AGENT_STATE,
-                DECISION_MAKER_BATTLE,
-                field_equals_value(AgentStateParams.handler, AgentStateHandler.BATTLE),
+            Edge(
+                update_current_map,
+                update_onscreen_entities,
             ),
-            (
-                BUILD_AGENT_STATE,
-                HANDLE_DIALOG_BOX,
-                field_equals_value(AgentStateParams.handler, AgentStateHandler.TEXT),
+            Edge(
+                update_onscreen_entities,
+                decision_maker_overworld,
             ),
-            (
-                HANDLE_DIALOG_BOX,
-                DECISION_MAKER_TEXT,
-                field_equals_value(AgentStateParams.handler, AgentStateHandler.TEXT),
+            Edge(
+                update_agent_store,
+                decision_maker_battle,
+                AgentHandlerIs(AgentStateHandler.BATTLE),
             ),
-            (
-                HANDLE_DIALOG_BOX,
-                UPDATE_GOALS,
-                ~field_equals_value(AgentStateParams.handler, AgentStateHandler.TEXT),
+            Edge(
+                update_agent_store,
+                handle_dialog_box,
+                AgentHandlerIs(AgentStateHandler.TEXT),
             ),
-            (DECISION_MAKER_BATTLE, UPDATE_GOALS),
-            (DECISION_MAKER_OVERWORLD, UPDATE_GOALS),
-            (DECISION_MAKER_TEXT, UPDATE_GOALS),
-            (UPDATE_GOALS, BUILD_AGENT_STATE),
-        )
-        .build()
+            Edge(
+                handle_dialog_box,
+                decision_maker_text,
+                AgentHandlerIs(AgentStateHandler.TEXT),
+            ),
+            Edge(
+                handle_dialog_box,
+                update_goals,
+                AgentHandlerIs(None),
+            ),
+            Edge(
+                decision_maker_text,
+                update_goals,
+            ),
+            Edge(
+                decision_maker_overworld,
+                update_goals,
+            ),
+        ],
     )

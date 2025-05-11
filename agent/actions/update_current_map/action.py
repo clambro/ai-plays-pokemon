@@ -1,21 +1,24 @@
-from burr.core.action import action
 from loguru import logger
 from agent.actions.update_current_map.service import UpdateCurrentMapService
-from agent.state import AgentState, AgentStateParams
+from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
+from junjo.node import Node
 
 
-UPDATE_CURRENT_MAP = "Update Current Map"
-
-
-@action.pydantic(
-    reads=[AgentStateParams.current_map, AgentStateParams.folder],
-    writes=[AgentStateParams.current_map],
-)
-async def update_current_map(state: AgentState, emulator: YellowLegacyEmulator) -> AgentState:
+class UpdateCurrentMapNode(Node[AgentStore]):
     """Update the current map based on the current game state."""
-    logger.info("Updating the current map...")
 
-    service = UpdateCurrentMapService(emulator=emulator, folder=state.folder)
-    state.current_map = await service.update_current_map()
-    return state
+    def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        self.emulator = emulator
+        super().__init__()
+
+    async def service(self, store: AgentStore) -> None:
+        """The service for the node."""
+        logger.info("Updating the current map...")
+
+        state = await store.get_state()
+        service = UpdateCurrentMapService(emulator=self.emulator, folder=state.folder)
+
+        current_map = await service.update_current_map()
+
+        await store.set_current_map(current_map)

@@ -1,27 +1,20 @@
 from pathlib import Path
 
-from agent.actions.build_agent_state.action import BUILD_AGENT_STATE
 from agent.graph import build_agent_graph
-from agent.state import AgentState
-from burr.core import ApplicationBuilder
-from burr.core.application import Application
-from burr.integrations.pydantic import PydanticTypingSystem
+from agent.state import AgentState, AgentStore
+from junjo.workflow import Workflow
 
 from emulator.emulator import YellowLegacyEmulator
 
 
-def build_agent_application(
-    folder: Path,
+def build_agent_workflow(
+    initial_state: AgentState,
     emulator: YellowLegacyEmulator,
-) -> Application:
-    """Build the agent application."""
-    initial_state = AgentState(folder=folder)
-    app = (
-        ApplicationBuilder()
-        .with_typing(PydanticTypingSystem(AgentState))
-        .with_graph(build_agent_graph(emulator))
-        .with_state(initial_state)
-        .with_entrypoint(BUILD_AGENT_STATE)
-        .build()
+) -> Workflow:
+    """Build the top-level agent workflow."""
+    initial_store = AgentStore(initial_state)
+    return Workflow[AgentState, AgentStore](
+        name="Top-Level Agent Workflow",
+        graph=build_agent_graph(emulator),
+        store=initial_store,
     )
-    return app
