@@ -1,11 +1,11 @@
 from burr.core.action import action
 from loguru import logger
-from agent.actions.handle_dialog_box.service import HandleDialogueBoxService
+from agent.actions.handle_dialog_box.service import HandleDialogBoxService
 from agent.state import AgentState, AgentStateParams
 from emulator.emulator import YellowLegacyEmulator
 
 
-HANDLE_DIALOGUE_BOX = "Handle Dialogue Box"
+HANDLE_DIALOG_BOX = "Handle Dialog Box"
 
 
 @action.pydantic(
@@ -16,7 +16,7 @@ async def handle_dialog_box(state: AgentState, emulator: YellowLegacyEmulator) -
     """Handle reading the dialog box if it is present."""
     logger.info("Handling the dialog box if it is present...")
 
-    service = HandleDialogueBoxService(
+    service = HandleDialogBoxService(
         iteration=state.iteration,
         emulator=emulator,
         raw_memory=state.raw_memory,  # Modified in place.

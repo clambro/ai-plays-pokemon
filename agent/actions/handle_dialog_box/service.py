@@ -4,11 +4,11 @@ from datetime import datetime
 from common.enums import AgentStateHandler
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
-from emulator.schemas import DialogueBox
+from emulator.schemas import DialogBox
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 
 
-class HandleDialogueBoxService:
+class HandleDialogBoxService:
     """A service that handles reading the dialog box if it is present."""
 
     def __init__(
@@ -64,7 +64,7 @@ class HandleDialogueBoxService:
             return  # All text is gone, so go to the next agent loop.
 
     @staticmethod
-    def _append_dialog_to_list(text: list[str], dialog_box: DialogueBox) -> None:
+    def _append_dialog_to_list(text: list[str], dialog_box: DialogBox) -> None:
         """
         Append the dialog box text to the text list in place, accounting for the case where the
         current top line is the same as the previous bottom line due to the dialog box scrolling

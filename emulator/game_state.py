@@ -17,7 +17,7 @@ from common.constants import (
 )
 from emulator.char_map import CHAR_TO_INT_MAP, INT_TO_CHAR_MAP
 from emulator.schemas import (
-    DialogueBox,
+    DialogBox,
     MapState,
     PlayerState,
     ScreenState,
@@ -156,7 +156,7 @@ class YellowLegacyGameState(BaseModel):
         tiles[tiles == BLINKING_CURSOR_ID] = BLANK_TILE_ID
         return tiles.tolist()
 
-    def get_dialog_box(self) -> DialogueBox | None:
+    def get_dialog_box(self) -> DialogBox | None:
         """Get the text in the dialog box. Return the top and bottom lines."""
         if not self.is_dialog_box_on_screen:
             return None
@@ -164,7 +164,7 @@ class YellowLegacyGameState(BaseModel):
         top_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[14, 1:-2])
         bottom_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[16, 1:-2])
         cursor_on_screen = tiles[16, -2] == BLINKING_CURSOR_ID
-        return DialogueBox(
+        return DialogBox(
             top_line=top_line.strip(),
             bottom_line=bottom_line.strip(),
             cursor_on_screen=cursor_on_screen,

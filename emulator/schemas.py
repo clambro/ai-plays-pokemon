@@ -297,7 +297,7 @@ class BattleState(BaseModel):
         return cls(is_in_battle=bool(mem[0xD057]))
 
 
-class DialogueBox(BaseModel):
+class DialogBox(BaseModel):
     """The state of the dialog box."""
 
     top_line: str
