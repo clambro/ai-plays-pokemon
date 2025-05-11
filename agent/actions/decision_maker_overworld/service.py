@@ -59,4 +59,3 @@ class DecisionMakerOverworldService:
             )
         )
         await self.emulator.press_buttons([response.button])
-        return response.button
