@@ -67,10 +67,15 @@ class OverworldMap(BaseModel):
         """The width of the map."""
         return len(self.ascii_tiles[0])
 
+    @property
+    def ascii_tiles_ndarray(self) -> np.ndarray:
+        """The ascii tiles as a numpy array."""
+        return np.array(self.ascii_tiles)
+
     async def to_string(self, game_state: YellowLegacyGameState) -> str:
         """Return a string representation of the map."""
         tiles = "\n".join("".join(row) for row in self.ascii_tiles)
-        explored_percentage = np.mean(np.array(self.ascii_tiles) != UNSEEN_TILE)
+        explored_percentage = np.mean(self.ascii_tiles_ndarray != UNSEEN_TILE)
         screen, _, _ = game_state.get_ascii_screen()
         tile_above = screen[PLAYER_OFFSET_Y - 1, PLAYER_OFFSET_X]
         tile_below = screen[PLAYER_OFFSET_Y + 1, PLAYER_OFFSET_X]
@@ -138,7 +143,7 @@ class OverworldMap(BaseModel):
             ascii_screen = ascii_screen[:, : self.width - right]
             right = self.width
 
-        ascii_tiles = np.array(self.ascii_tiles)
+        ascii_tiles = self.ascii_tiles_ndarray
         ascii_tiles[top:bottom, left:right] = ascii_screen
         self.ascii_tiles = ascii_tiles.tolist()
 
