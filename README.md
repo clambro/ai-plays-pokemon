@@ -7,11 +7,12 @@
 * Add long term memory with retrieval and decay
 * Add player/party information
 * Add strength boulders to map screen
-* Add sprite and warp long term memory to map view
 * Add automated backups
 * Add the initial game state to the output folder
 * Add precommits for sorting imports and linting and whatnot
 * Add a critic model
+* Handle surfing in navigation
+* Rename actions to nodes
 
 ### Useful
 * Add tests to everything
@@ -27,4 +28,4 @@
 
 ### Notes
 * Might have to drop Pikachu from the map view. I could see that maybe causing problems.
-* Do we really need the buttons pressed in the state?
+* Can we skip the file storage and do everything in memory? Or maybe sqlite?
