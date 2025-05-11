@@ -1,14 +1,19 @@
-from typing import Any
-from burr.core import Condition, State
+from junjo.condition import Condition
 
 from agent.state import AgentState
+from common.enums import AgentStateHandler
 
 
-def field_equals_value(field: str, value: Any) -> Condition:
-    """A condition that checks if a field equals a value."""
+class AgentHandlerIs(Condition[AgentState]):
+    """A condition that checks if the agent handler equals a value."""
 
-    def resolver(state: State) -> bool:  # Burr forces the generic State type here.
-        validated_state = AgentState.model_validate(state)
-        return getattr(validated_state, field) == value
+    def __init__(self, handler: AgentStateHandler | None) -> None:
+        self.handler = handler
 
-    return Condition(keys=[field], resolver=resolver)
+    def evaluate(self, state: AgentState) -> bool:
+        """Evaluate the condition."""
+        if self.handler is None and state.handler is None:
+            return True
+        if self.handler is not None and state.handler is not None:
+            return self.handler == state.handler
+        return False

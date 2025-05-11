@@ -1,16 +1,17 @@
-from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from common.enums import AgentStateHandler
 from common.goals import Goals
 from emulator.enums import Button
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory
+from junjo.state import BaseState
+from junjo.store import BaseStore
 
 
-class AgentState(BaseModel):
+class AgentState(BaseState):
     """The state used in the agent graph workflow."""
 
     folder: Path
@@ -22,13 +23,29 @@ class AgentState(BaseModel):
     goals: Goals = Field(default_factory=Goals)
 
 
-class AgentStateParams(StrEnum):
-    """The parameters for the agent state as strings for use with Burr."""
+class AgentStore(BaseStore[AgentState]):
+    """Concrete store for the agent state."""
 
-    folder = "folder"
-    iteration = "iteration"
-    buttons_pressed = "buttons_pressed"
-    raw_memory = "raw_memory"
-    handler = "handler"
-    current_map = "current_map"
-    goals = "goals"
+    async def set_iteration(self, iteration: int) -> None:
+        """Set the iteration."""
+        await self.set_state({"iteration": iteration})
+
+    async def set_buttons_pressed(self, buttons_pressed: list[Button]) -> None:
+        """Set the buttons pressed."""
+        await self.set_state({"buttons_pressed": buttons_pressed})
+
+    async def set_raw_memory(self, raw_memory: RawMemory) -> None:
+        """Set the raw memory."""
+        await self.set_state({"raw_memory": raw_memory})
+
+    async def set_handler(self, handler: AgentStateHandler | None) -> None:
+        """Set the handler."""
+        await self.set_state({"handler": handler})
+
+    async def set_current_map(self, current_map: OverworldMap) -> None:
+        """Set the current map."""
+        await self.set_state({"current_map": current_map})
+
+    async def set_goals(self, goals: Goals) -> None:
+        """Set the goals."""
+        await self.set_state({"goals": goals})

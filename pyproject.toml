@@ -14,12 +14,12 @@ pyboy = {extras = ["pyboy-core"], version = "^2.5.2"}
 numpy = "^2.2.5"
 pillow = "^11.2.1"
 pydantic = "^2.11.3"
-burr = {extras = ["graphviz"], version = "^0.39.1"}
 loguru = "^0.7.3"
 google-genai = "^1.13.0"
 dotenv = "^0.9.9"
 pydantic-settings = "^2.9.1"
 aiofiles = "^24.1.0"
+junjo = {extras = ["graphviz"], version = "^0.41"}
 
 [tool.isort]
 profile = "black"
