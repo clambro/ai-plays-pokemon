@@ -36,7 +36,7 @@ async def main(
             while True:
                 workflow = build_agent_workflow(state, emulator)
                 await workflow.execute()
-                state = AgentState.model_validate(await workflow.get_state())
+                state = await workflow.get_state()
         except Exception:  # noqa: BLE001
             logger.exception("Agent workflow raised an exception.")
             async with aiofiles.open("notes/agent_state.json", "w") as f:

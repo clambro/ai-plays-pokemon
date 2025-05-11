@@ -8,7 +8,7 @@ from emulator.emulator import YellowLegacyEmulator
 def build_agent_workflow(
     initial_state: AgentState,
     emulator: YellowLegacyEmulator,
-) -> Workflow:
+) -> Workflow[AgentState, AgentStore]:
     """Build the top-level agent workflow."""
     initial_store = AgentStore(initial_state)
     return Workflow[AgentState, AgentStore](
