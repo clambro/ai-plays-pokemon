@@ -10,6 +10,7 @@ from agent.actions.decision_maker_battle.action import (
     DECISION_MAKER_BATTLE,
 )
 from agent.actions.decision_maker_text.action import DECISION_MAKER_TEXT, decision_maker_text
+from agent.actions.handle_dialogue_box.action import HANDLE_DIALOGUE_BOX, handle_dialogue_box
 from agent.actions.update_current_map.action import (
     update_current_map,
     UPDATE_CURRENT_MAP,
@@ -34,6 +35,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
                 BUILD_AGENT_STATE: build_agent_state.bind(emulator=emulator),
                 UPDATE_CURRENT_MAP: update_current_map.bind(emulator=emulator),
                 UPDATE_ONSCREEN_ENTITIES: update_onscreen_entities.bind(emulator=emulator),
+                HANDLE_DIALOGUE_BOX: handle_dialogue_box.bind(emulator=emulator),
                 DECISION_MAKER_OVERWORLD: decision_maker_overworld.bind(emulator=emulator),
                 DECISION_MAKER_BATTLE: decision_maker_battle.bind(emulator=emulator),
                 DECISION_MAKER_TEXT: decision_maker_text.bind(emulator=emulator),
@@ -55,8 +57,18 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             ),
             (
                 BUILD_AGENT_STATE,
+                HANDLE_DIALOGUE_BOX,
+                field_equals_value(AgentStateParams.handler, AgentStateHandler.TEXT),
+            ),
+            (
+                HANDLE_DIALOGUE_BOX,
                 DECISION_MAKER_TEXT,
                 field_equals_value(AgentStateParams.handler, AgentStateHandler.TEXT),
+            ),
+            (
+                HANDLE_DIALOGUE_BOX,
+                UPDATE_GOALS,
+                ~field_equals_value(AgentStateParams.handler, AgentStateHandler.TEXT),
             ),
             (DECISION_MAKER_BATTLE, UPDATE_GOALS),
             (DECISION_MAKER_OVERWORLD, UPDATE_GOALS),
