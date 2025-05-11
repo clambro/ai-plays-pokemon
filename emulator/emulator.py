@@ -2,6 +2,7 @@ import asyncio
 from pathlib import Path
 from contextlib import AbstractAsyncContextManager
 
+from loguru import logger
 from pyboy import PyBoy
 from common.constants import GAME_TICKS_PER_SECOND
 from emulator.game_state import YellowLegacyGameState
@@ -92,6 +93,24 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         for button in buttons:
             await asyncio.to_thread(self._pyboy.button, button, delay_frames)
             await asyncio.sleep(delay_frames / GAME_TICKS_PER_SECOND)
+
+    async def wait_for_animation_to_finish(self) -> None:
+        """Wait until all ongoing animations have finished."""
+        logger.info("Checking for animations and waiting for them to finish.")
+        successes = 0
+        game_state = await self.get_game_state()
+        while successes < 5:
+            new_game_state = await self.get_game_state()
+            # The blinking cursor should not block progress, so we ignore it.
+            if (
+                game_state.get_screen_without_blinking_cursor()
+                == new_game_state.get_screen_without_blinking_cursor()
+            ):
+                successes += 1
+            else:
+                successes = 0
+            game_state = new_game_state
+            await asyncio.sleep(0.1)
 
     def _check_stopped(self) -> None:
         if self._is_stopped:

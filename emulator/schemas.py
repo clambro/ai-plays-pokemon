@@ -295,3 +295,11 @@ class BattleState(BaseModel):
         :return: A new battle state.
         """
         return cls(is_in_battle=bool(mem[0xD057]))
+
+
+class DialogBox(BaseModel):
+    """The state of the dialog box."""
+
+    top_line: str
+    bottom_line: str
+    cursor_on_screen: bool

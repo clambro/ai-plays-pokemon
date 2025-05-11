@@ -22,7 +22,7 @@ You have explored {{explored_percentage}} of this map.
 - "{c.SPRITE_TILE}" - A sprite that you can interact with. This could be an NPC, an item you can pick up, or some other interactable entity. You will need to use the screenshot to determine what the sprite is. You cannot walk through sprites, nor can you stand on top of them.
 - "{c.WARP_TILE}" - A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.
 - "{c.PLAYER_TILE}" - Your current location.
-- "{c.PIKACHU_TILE}" - Your companion Pikachu. If you do not see this, it means that pikachu has either fainted or is not in your party.
+- "{c.PIKACHU_TILE}" - Your companion Pikachu that follows you around. May or may not be present on the map. Pikachu will always be standing on a walkable tile if present.
 </legend>
 
 The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map is {{height}}x{{width}} blocks.

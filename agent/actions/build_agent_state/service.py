@@ -1,7 +1,4 @@
-import asyncio
-
-from loguru import logger
-from common.enums import StateHandler
+from common.enums import AgentStateHandler
 from emulator.emulator import YellowLegacyEmulator
 
 
@@ -12,28 +9,10 @@ class BuildAgentStateService:
         self.emulator = emulator
 
     async def wait_for_animations(self) -> None:
-        """
-        Wait until all animations have finished so that we can begin the Agent loop.
-        Important to not take too long here because the blinking cursor counts as an animation, but
-        that should not block the loop.
-        """
-        successes = 0
-        game_state = await self.emulator.get_game_state()
-        while successes < 5:
-            new_game_state = await self.emulator.get_game_state()
-            # The blinking cursor should not block progress, so we ignore it.
-            if (
-                game_state.get_screen_without_blinking_cursor()
-                == new_game_state.get_screen_without_blinking_cursor()
-            ):
-                successes += 1
-            else:
-                successes = 0
-                logger.info("Animation detected. Waiting for it to finish.")
-            game_state = new_game_state
-            await asyncio.sleep(0.05)
+        """Wait until all animations have finished so that we can begin the Agent loop."""
+        return await self.emulator.wait_for_animation_to_finish()
 
-    async def determine_handler(self) -> StateHandler:
+    async def determine_handler(self) -> AgentStateHandler:
         """
         Determine which handler to use based on the current game state.
 
@@ -41,8 +20,8 @@ class BuildAgentStateService:
         """
         game_state = await self.emulator.get_game_state()
         if game_state.battle.is_in_battle:
-            return StateHandler.BATTLE
+            return AgentStateHandler.BATTLE
         elif game_state.is_text_on_screen():
-            return StateHandler.TEXT
+            return AgentStateHandler.TEXT
         else:
-            return StateHandler.OVERWORLD
+            return AgentStateHandler.OVERWORLD

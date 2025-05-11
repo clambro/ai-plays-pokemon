@@ -15,8 +15,9 @@ from common.constants import (
     PLAYER_OFFSET_Y,
     PLAYER_OFFSET_X,
 )
-from emulator.char_map import CHAR_TO_INT_MAP
+from emulator.char_map import CHAR_TO_INT_MAP, INT_TO_CHAR_MAP
 from emulator.schemas import (
+    DialogBox,
     MapState,
     PlayerState,
     ScreenState,
@@ -75,6 +76,17 @@ class YellowLegacyGameState(BaseModel):
         out += "</player_info>"
         return out
 
+    @property
+    def is_dialog_box_on_screen(self) -> bool:
+        """Check if the dialog box is on the screen by checking for the correct corner tiles."""
+        screen = np.array(self.screen.tiles)
+        return (
+            screen[12, 0] == 121
+            and screen[12, -1] == 123
+            and screen[17, 0] == 125
+            and screen[17, -1] == 126
+        )
+
     def get_ascii_screen(self) -> tuple[np.ndarray, list[Sprite], list[Warp]]:
         """
         Get an ASCII representation of the current screen, including the on-screen sprites and warp
@@ -124,22 +136,36 @@ class YellowLegacyGameState(BaseModel):
 
         return blocks, on_screen_sprites, on_screen_warps
 
-    def is_text_on_screen(self) -> bool:
+    def is_text_on_screen(self, ignore_dialog_box: bool = False) -> bool:
         """Check if there is text on the screen."""
         a_upper = CHAR_TO_INT_MAP["A"]
         z_upper = CHAR_TO_INT_MAP["Z"]
         a_lower = CHAR_TO_INT_MAP["a"]
         z_lower = CHAR_TO_INT_MAP["z"]
-        letters = set(range(a_upper, z_upper + 1)) | set(range(a_lower, z_lower + 1))
-        num_letters_on_screen = 0
-        for row in self.screen.tiles:
-            for tile in row:
-                if tile in letters:
-                    num_letters_on_screen += 1
-        return num_letters_on_screen > 3  # Avoid false positives caused by weird tilemaps.
+        letters = np.array(list(range(a_upper, z_upper + 1)) + list(range(a_lower, z_lower + 1)))
+
+        tiles = np.array(self.screen.tiles)
+        if ignore_dialog_box:
+            tiles = tiles[:13, :]
+
+        return np.isin(tiles, letters).sum() > 3  # Avoid false positives caused by weird tilemaps.
 
     def get_screen_without_blinking_cursor(self) -> np.ndarray:
         """Get the screen without the blinking cursor."""
         tiles = np.array(self.screen.tiles)
         tiles[tiles == BLINKING_CURSOR_ID] = BLANK_TILE_ID
         return tiles.tolist()
+
+    def get_dialog_box(self) -> DialogBox | None:
+        """Get the text in the dialog box. Return the top and bottom lines."""
+        if not self.is_dialog_box_on_screen:
+            return None
+        tiles = np.array(self.screen.tiles)
+        top_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[14, 1:-2])
+        bottom_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[16, 1:-2])
+        cursor_on_screen = tiles[16, -2] == BLINKING_CURSOR_ID
+        return DialogBox(
+            top_line=top_line.strip(),
+            bottom_line=bottom_line.strip(),
+            cursor_on_screen=cursor_on_screen,
+        )
