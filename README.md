@@ -19,7 +19,6 @@
 * Add a quick navigation tool
 * Add a tool to rearrange the team
 * Add a tool to select moves or swap pokemon in battle
-* Add a tool to auto-scroll dialogue and log it to memory
 * Add a tool to name things
 * Debug logger for prompts with log level set in main
 * Some kind of info about items and PC pokemon

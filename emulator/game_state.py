@@ -77,8 +77,8 @@ class YellowLegacyGameState(BaseModel):
         return out
 
     @property
-    def is_dialogue_box_on_screen(self) -> bool:
-        """Check if the dialogue box is on the screen by checking for the correct corner tiles."""
+    def is_dialog_box_on_screen(self) -> bool:
+        """Check if the dialog box is on the screen by checking for the correct corner tiles."""
         screen = np.array(self.screen.tiles)
         return (
             screen[12, 0] == 121
@@ -136,7 +136,7 @@ class YellowLegacyGameState(BaseModel):
 
         return blocks, on_screen_sprites, on_screen_warps
 
-    def is_text_on_screen(self, ignore_dialogue_box: bool = False) -> bool:
+    def is_text_on_screen(self, ignore_dialog_box: bool = False) -> bool:
         """Check if there is text on the screen."""
         a_upper = CHAR_TO_INT_MAP["A"]
         z_upper = CHAR_TO_INT_MAP["Z"]
@@ -145,7 +145,7 @@ class YellowLegacyGameState(BaseModel):
         letters = np.array(list(range(a_upper, z_upper + 1)) + list(range(a_lower, z_lower + 1)))
 
         tiles = np.array(self.screen.tiles)
-        if ignore_dialogue_box:
+        if ignore_dialog_box:
             tiles = tiles[:13, :]
 
         return np.isin(tiles, letters).sum() > 3  # Avoid false positives caused by weird tilemaps.
@@ -156,9 +156,9 @@ class YellowLegacyGameState(BaseModel):
         tiles[tiles == BLINKING_CURSOR_ID] = BLANK_TILE_ID
         return tiles.tolist()
 
-    def get_dialogue_box(self) -> DialogueBox | None:
-        """Get the text in the dialogue box. Return the top and bottom lines."""
-        if not self.is_dialogue_box_on_screen:
+    def get_dialog_box(self) -> DialogueBox | None:
+        """Get the text in the dialog box. Return the top and bottom lines."""
+        if not self.is_dialog_box_on_screen:
             return None
         tiles = np.array(self.screen.tiles)
         top_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[14, 1:-2])

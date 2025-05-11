@@ -298,7 +298,7 @@ class BattleState(BaseModel):
 
 
 class DialogueBox(BaseModel):
-    """The state of the dialogue box."""
+    """The state of the dialog box."""
 
     top_line: str
     bottom_line: str
