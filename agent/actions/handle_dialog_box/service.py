@@ -1,8 +1,6 @@
 import asyncio
 from datetime import datetime
 
-from loguru import logger
-
 from common.enums import AgentStateHandler
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
@@ -42,15 +40,15 @@ class HandleDialogueBoxService:
         # and no other text on screen, then the dialog box is done scrolling and we can hit A one
         # last time to close the box.
         while dialog_box and (is_blinking_cursor or not is_text_outside_dialog_box):
-            self.append_dialog_to_list(text, dialog_box)
+            self._append_dialog_to_list(text, dialog_box)
             await self.emulator.press_buttons([Button.A])
             await self.emulator.wait_for_animation_to_finish()
             await asyncio.sleep(0.5)  # Buffer to ensure that no new dialog boxes have opened.
-
-            is_blinking_cursor = await self._is_blinking_cursor_on_screen()
-            is_text_outside_dialog_box = game_state.is_text_on_screen(ignore_dialog_box=True)
+            
             game_state = await self.emulator.get_game_state()
             dialog_box = game_state.get_dialog_box()
+            is_blinking_cursor = await self._is_blinking_cursor_on_screen()
+            is_text_outside_dialog_box = game_state.is_text_on_screen(ignore_dialog_box=True)
 
         joined_text = " ".join(text)
         self.raw_memory.append(
@@ -66,7 +64,7 @@ class HandleDialogueBoxService:
             return  # All text is gone, so go to the next agent loop.
 
     @staticmethod
-    def append_dialog_to_list(text: list[str], dialog_box: DialogueBox) -> None:
+    def _append_dialog_to_list(text: list[str], dialog_box: DialogueBox) -> None:
         """
         Append the dialog box text to the text list in place, accounting for the case where the
         current top line is the same as the previous bottom line due to the dialog box scrolling
