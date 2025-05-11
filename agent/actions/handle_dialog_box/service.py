@@ -44,7 +44,7 @@ class HandleDialogueBoxService:
             await self.emulator.press_buttons([Button.A])
             await self.emulator.wait_for_animation_to_finish()
             await asyncio.sleep(0.5)  # Buffer to ensure that no new dialog boxes have opened.
-            
+
             game_state = await self.emulator.get_game_state()
             dialog_box = game_state.get_dialog_box()
             is_blinking_cursor = await self._is_blinking_cursor_on_screen()
