@@ -96,6 +96,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
 
     async def wait_for_animation_to_finish(self) -> None:
         """Wait until all ongoing animations have finished."""
+        logger.info("Checking for animations and waiting for them to finish.")
         successes = 0
         game_state = await self.get_game_state()
         while successes < 5:
@@ -108,7 +109,6 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
                 successes += 1
             else:
                 successes = 0
-                logger.info("Animation detected. Waiting for it to finish.")
             game_state = new_game_state
             await asyncio.sleep(0.1)
 

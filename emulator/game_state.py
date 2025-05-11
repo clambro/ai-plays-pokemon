@@ -161,8 +161,8 @@ class YellowLegacyGameState(BaseModel):
         if not self.is_dialogue_box_on_screen:
             return None
         tiles = np.array(self.screen.tiles)
-        top_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[14, 1:-3])
-        bottom_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[16, 1:-3])
+        top_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[14, 1:-2])
+        bottom_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[16, 1:-2])
         cursor_on_screen = tiles[16, -2] == BLINKING_CURSOR_ID
         return DialogueBox(
             top_line=top_line.strip(),

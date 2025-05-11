@@ -32,22 +32,25 @@ class HandleDialogueBoxService:
         game_state = await self.emulator.get_game_state()
         dialogue_box = game_state.get_dialogue_box()
         if not dialogue_box:
-            logger.warning("No dialogue box found.")
             return AgentStateHandler.TEXT  # Go to the generic text handler.
 
         text: list[str] = []
-        while dialogue_box:
+        is_blinking_cursor = True
+        is_text_outside_dialogue_box = True
+
+        # The blinking cursor means that the dialogue box is still scrolling. If there's no cursor
+        # and no other text on screen, then the dialogue box is done scrolling and we can hit A one
+        # last time to close the box.
+        while dialogue_box and (is_blinking_cursor or not is_text_outside_dialogue_box):
             self.append_dialogue_to_list(text, dialogue_box)
+            await self.emulator.press_buttons([Button.A])
+            await self.emulator.wait_for_animation_to_finish()
+            await asyncio.sleep(0.5)  # Buffer to ensure that no new dialogue boxes have opened.
 
-            if not await self._is_blinking_cursor_on_screen():
-                logger.warning("Cursor is not on screen. Breaking.")
-                break
-
-            dialogue_box = await self._safely_continue_dialogue()
-
-        text_on_screen = game_state.is_text_on_screen(ignore_dialogue_box=True)
-        if not text_on_screen:
-            dialogue_box = await self._safely_continue_dialogue()
+            is_blinking_cursor = await self._is_blinking_cursor_on_screen()
+            is_text_outside_dialogue_box = game_state.is_text_on_screen(ignore_dialogue_box=True)
+            game_state = await self.emulator.get_game_state()
+            dialogue_box = game_state.get_dialogue_box()
 
         joined_text = " ".join(text)
         self.raw_memory.append(
@@ -57,10 +60,10 @@ class HandleDialogueBoxService:
                 content=f'The following text was read from the main dialogue box: "{joined_text}"',
             )
         )
-        if dialogue_box:
+        if game_state.is_text_on_screen():
             return AgentStateHandler.TEXT  # More work to do. Pass to the generic text handler.
         else:
-            return  # Dialogue box is gone, so go to the next agent loop.
+            return  # All text is gone, so go to the next agent loop.
 
     @staticmethod
     def append_dialogue_to_list(text: list[str], dialogue_box: DialogueBox) -> None:
@@ -92,11 +95,3 @@ class HandleDialogueBoxService:
                 break
             counter += 1
         return counter < max_counter
-
-    async def _safely_continue_dialogue(self) -> DialogueBox | None:
-        """Press A to continue the dialogue and wait for the animation to finish."""
-        logger.warning("Pressing A to continue dialogue.")
-        await self.emulator.press_buttons([Button.A])
-        await self.emulator.wait_for_animation_to_finish()
-        game_state = await self.emulator.get_game_state()
-        return game_state.get_dialogue_box()
