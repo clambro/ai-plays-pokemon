@@ -46,49 +46,6 @@ test = ["anyio[trio]", "blockbuster (>=1.5.23)", "coverage[toml] (>=7)", "except
 trio = ["trio (>=0.26.1)"]
 
 [[package]]
-name = "burr"
-version = "0.39.1"
-description = "A state machine for data projects"
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "burr-0.39.1-py3-none-any.whl", hash = "sha256:49f33c85d7dd0eb29d2d842f513d99580abfbf1509a2459ddd0f087b0a243df0"},
-    {file = "burr-0.39.1.tar.gz", hash = "sha256:401f0b9a76e008b2c2107551c225cf9c907c3171f1ed4c6c1c60fd08de418ae6"},
-]
-
-[package.dependencies]
-graphviz = {version = "*", optional = true, markers = "extra == \"graphviz\""}
-
-[package.extras]
-aiosqlite = ["aiosqlite"]
-asyncpg = ["asyncpg"]
-cli = ["click", "loguru", "requests"]
-developer = ["build", "burr[bloat]", "burr[documentation]", "burr[graphviz]", "burr[streamlit]", "burr[tests]", "burr[tracking]", "pre-commit", "twine"]
-documentation = ["burr[aiosqlite]", "burr[asyncpg]", "burr[psycopg2]", "burr[pymongo]", "burr[ray]", "burr[redis]", "burr[tests]", "furo", "myst-nb", "sphinx", "sphinx-autobuild", "sphinx-sitemap", "sphinx-toolbox", "sphinxcontrib-googleanalytics"]
-examples = ["burr[inappexamples]", "langchain", "langchain-community", "langchain-openai"]
-graphviz = ["graphviz"]
-hamilton = ["sf-hamilton"]
-haystack = ["haystack-ai"]
-inappexamples = ["opentelemetry-api", "opentelemetry-instrumentation-openai", "opentelemetry-sdk"]
-learn = ["burr[cli,graphviz,hamilton,inappexamples,streamlit,tracking]"]
-opentelemetry = ["opentelemetry-api", "opentelemetry-sdk"]
-postgresql = ["psycopg2-binary"]
-psycopg2 = ["psycopg2-binary"]
-pydantic = ["pydantic"]
-pymongo = ["pymongo"]
-ray = ["ray[default]"]
-redis = ["redis"]
-start = ["burr[learn]"]
-streamlit = ["graphviz", "matplotlib", "sf-hamilton", "streamlit"]
-tests = ["burr[aiosqlite]", "burr[asyncpg]", "burr[hamilton]", "burr[hamilton]", "burr[haystack]", "burr[opentelemetry]", "burr[psycopg2]", "burr[pymongo]", "burr[ray]", "burr[redis]", "langchain_community", "langchain_core", "pandas", "pyarrow", "pydantic[email]", "pytest", "pytest-asyncio"]
-tracking = ["burr[tracking-client]", "burr[tracking-server]"]
-tracking-client = ["pydantic (>1)"]
-tracking-client-s3 = ["boto3", "burr[tracking-client]"]
-tracking-server = ["aiofiles", "click", "fastapi", "fastapi-pagination", "fastapi-utils", "jinja2", "openai", "pydantic", "pydantic-settings", "requests", "typing-inspect", "uvicorn"]
-tracking-server-s3 = ["aerich", "aiobotocore", "burr[tracking-server]", "fastapi", "tortoise-orm[accel,asyncmy]", "typing-inspect"]
-
-[[package]]
 name = "cachetools"
 version = "5.5.2"
 description = "Extensible memoizing collections and decorators"
@@ -544,6 +501,7 @@ files = [
 ]
 
 [package.dependencies]
+graphviz = {version = "*", optional = true, markers = "extra == \"graphviz\""}
 grpcio = ">=1.70.0"
 jsonpatch = ">=1.33"
 nanoid = ">=2.0.0"
@@ -1443,4 +1401,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.14"
-content-hash = "a6a7d331395f4d6523e8e6bd0bfe15027af1fc0ba142a92fa77102629eb48dd1"
+content-hash = "baef3ee91116180526f6a80c800acaf35079f63154ab7c7fd1d162ee634c50f7"
