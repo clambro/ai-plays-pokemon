@@ -1,6 +1,6 @@
 from agent.graph import build_agent_graph
-from graphviz import Graph
 from unittest.mock import MagicMock
+from junjo.graphviz.utils import graph_to_graphviz_image
 
 
 def main() -> None:
@@ -10,16 +10,10 @@ def main() -> None:
         ("Top Level Agent", build_agent_graph(dummy_emulator)),
     ]
 
-    for name, burr_graph in names_and_graphs:
+    for name, graph in names_and_graphs:
         # The file extension is added by graphviz.
         filename = f"visualization/{name.lower().replace(' ', '_')}"
-
-        graph: Graph = burr_graph.visualize(filename)  # type: ignore -- Burr issue.
-        graph.attr(label=name)
-        graph.attr(fontsize="20")
-        graph.attr(labeljust="c")
-        graph.attr(labelloc="t")
-        graph.render(filename, format="png", cleanup=True)
+        graph_to_graphviz_image(graph, filename)
 
 
 if __name__ == "__main__":

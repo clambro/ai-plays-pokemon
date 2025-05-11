@@ -70,5 +70,9 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
                 decision_maker_overworld,
                 update_goals,
             ),
+            Edge(
+                decision_maker_battle,
+                update_goals,
+            ),
         ],
     )
