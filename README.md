@@ -25,4 +25,7 @@
 * Some kind of info about items and PC pokemon
 * Add a strength puzzle solver?
 * Add a tool for spinning around to find wild pokemon
+
+### Notes
 * Might have to drop Pikachu from the map view. I could see that maybe causing problems.
+* Do we really need the buttons pressed in the state?
