@@ -103,11 +103,17 @@ class Warp(BaseModel):
     index: int
     y: int
     x: int
+    # TODO: Saving the destination is kinda cheating, but much easier than detecting a warp and
+    # going back to edit the long term memory.
+    destination: MapLocation
 
     async def to_string(self, warp_folder: Path, map_id: MapLocation) -> str:
         """Get a string representation of the warp."""
         description = await self.get_description(warp_folder, map_id)
-        out = f"warp_{map_id.value}_{self.index} at ({self.y}, {self.x}): {description}"
+        out = (
+            f"warp_{map_id.value}_{self.index} at ({self.y}, {self.x}) leading to"
+            f" {self.destination.name}: {description}"
+        )
         return out
 
     async def get_description(self, warp_folder: Path, map_id: MapLocation) -> str:
@@ -226,7 +232,14 @@ class MapState(BaseModel):
         warps = []
         for i in range(num_warps):
             base = 0xD3FC + 4 * i
-            warps.append(Warp(index=i, y=mem[base], x=mem[base + 1]))
+            warps.append(
+                Warp(
+                    index=i,
+                    y=mem[base],
+                    x=mem[base + 1],
+                    destination=MapLocation(mem[base + 3]),
+                )
+            )
         return warps
 
 

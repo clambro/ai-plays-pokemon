@@ -40,7 +40,7 @@ For warp tiles, it's important to note the kind of warp tile in your description
 
 You do not need to re-add this information if it is already present, but you can update your description if you have learned something new about a warp tile.
 
-Do not assume anything about where a warp tile will take you unless you know for sure based on the information provided. Be explicit about not knowing in your description so that you will know to update your description when you learn more. The best way to learn more is to use the warp tile and see where it takes you.
+The warp tile will tell you which map it leads to, but no more information than that. Do not assume anything about the details of where a warp tile will take you unless you know for sure based on the information provided. Be explicit about not knowing in your description so that you will know to update your description when you learn more. The best way to learn more is to use the warp tile and see where it takes you.
 
 If you want to update your long-term memory with new information about any of these warp tiles, do so by returning an array of objects, where each object contains the warp index (the one in square brackets above) and the new description. Do not include anything in your description about the position of the warp tile; that information will be pulled from the game's memory as needed. Returning an empty array is a valid response and simply means that you don't want to update any of the warp tile descriptions. If you have not learned anything new about any of the warp tiles, you should not update any of the descriptions.
 """.strip()

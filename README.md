@@ -12,7 +12,7 @@
 * Add precommits for sorting imports and linting and whatnot
 * Add a critic model
 * Handle surfing in navigation
-* Rename actions to nodes
+* Rename actions to nodes and use updated junjo imports
 
 ### Useful
 * Add tests to everything
