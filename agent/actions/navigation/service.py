@@ -62,7 +62,10 @@ class NavigationService:
             current_pos = (game_state.player.y, game_state.player.x)
             await self.emulator.press_buttons([button])
             await self.emulator.wait_for_animation_to_finish()
+
             game_state = await self.emulator.get_game_state()
+            self.current_map.update_with_screen_info(game_state)
+
             new_pos = (game_state.player.y, game_state.player.x)
             if current_pos == new_pos:
                 logger.warning("Navigation interrupted. Cancelling.")
