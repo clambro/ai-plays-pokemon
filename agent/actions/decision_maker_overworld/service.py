@@ -55,25 +55,25 @@ class DecisionMakerOverworldService:
             logger.warning(f"Error making decision. Skipping. {e}")
             return None, None
 
+        position = (game_state.player.y, game_state.player.x)
+        thought = f"Current position: {position}. {response.thoughts}"
+
         if response.navigation_args:
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    timestamp=datetime.now(),
+                    content=f"{thought} Navigating to {response.navigation_args}.",
+                )
+            )
             return Tool.NAVIGATION, response.navigation_args
         elif response.button:
-            await self._press_button(game_state, response.thoughts, response.button)
-        return None, None
-
-    async def _press_button(
-        self,
-        game_state: YellowLegacyGameState,
-        thoughts: str,
-        button: Button,
-    ) -> None:
-        """Press the given button."""
-        await self.emulator.press_buttons([button])
-        position = (game_state.player.y, game_state.player.x)
-        self.raw_memory.append(
-            RawMemoryPiece(
-                iteration=self.iteration,
-                timestamp=datetime.now(),
-                content=f'Current position: {position}. {thoughts} Pressed the "{button}" button.',
+            await self.emulator.press_buttons([response.button])
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    timestamp=datetime.now(),
+                    content=f"{thought} Pressed the '{response.button}' button.",
+                )
             )
-        )
+        return None, None
