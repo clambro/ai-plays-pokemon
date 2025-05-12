@@ -18,7 +18,6 @@
 * Add tests to everything
 * Subgraphs for the battle, text, and overworld conditions
 * Improve separation of responsibilities
-* Add a quick navigation tool
 * Add a tool to rearrange the team
 * Add a tool to select moves or swap pokemon in battle
 * Add a tool to name things
@@ -26,6 +25,8 @@
 * Some kind of info about items and PC pokemon
 * Add a strength puzzle solver?
 * Add a tool for spinning around to find wild pokemon
+* Token counts and telemetry
+* Tool for using fly
 
 ### Notes
 * Might have to drop Pikachu from the map view. I could see that maybe causing problems.
