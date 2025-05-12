@@ -12,4 +12,4 @@ class AgentStateHandler(StrEnum):
 class Tool(StrEnum):
     """An enum for the different tools."""
 
-    NAVIGATE = "navigate"
+    NAVIGATION = "navigation"

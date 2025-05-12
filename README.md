@@ -16,6 +16,7 @@
 
 ### Useful
 * Add tests to everything
+* Subgraphs for the battle, text, and overworld conditions
 * Improve separation of responsibilities
 * Add a quick navigation tool
 * Add a tool to rearrange the team

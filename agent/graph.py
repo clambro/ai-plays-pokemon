@@ -9,9 +9,10 @@ from agent.actions.handle_dialog_box.action import HandleDialogBoxNode
 from agent.actions.update_current_map.action import UpdateCurrentMapNode
 from agent.actions.update_goals.action import UpdateGoalsNode
 from agent.actions.update_onscreen_entities.action import UpdateOnscreenEntitiesNode
-from common.enums import AgentStateHandler
+from common.enums import AgentStateHandler, Tool
 from emulator.emulator import YellowLegacyEmulator
-from agent.conditions import AgentHandlerIs
+from agent.conditions import AgentHandlerIs, ToolIs
+from agent.actions.navigation.node import NavigationNode
 
 
 def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
@@ -24,6 +25,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     decision_maker_text = DecisionMakerTextNode(emulator)
     handle_dialog_box = HandleDialogBoxNode(emulator)
     update_goals = UpdateGoalsNode(emulator)
+    navigation = NavigationNode(emulator)
 
     return Graph(
         source=update_agent_store,
@@ -41,6 +43,15 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             Edge(
                 update_onscreen_entities,
                 decision_maker_overworld,
+            ),
+            Edge(
+                decision_maker_overworld,
+                navigation,
+                ToolIs(Tool.NAVIGATION),
+            ),
+            Edge(
+                navigation,
+                update_goals,
             ),
             Edge(
                 update_agent_store,
@@ -69,6 +80,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             Edge(
                 decision_maker_overworld,
                 update_goals,
+                ToolIs(None),
             ),
             Edge(
                 decision_maker_battle,
