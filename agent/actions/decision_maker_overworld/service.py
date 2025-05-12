@@ -3,9 +3,12 @@ from datetime import datetime
 from loguru import logger
 from agent.actions.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORLD_PROMPT
 from agent.actions.decision_maker_overworld.schemas import DecisionMakerOverworldResponse
+from common.enums import AgentStateHandler
 from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
+from emulator.enums import Button
+from emulator.game_state import YellowLegacyGameState
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 
@@ -28,7 +31,7 @@ class DecisionMakerOverworldService:
         self.current_map = current_map
         self.goals = goals
 
-    async def make_decision(self) ->  None:
+    async def make_decision(self) -> AgentStateHandler | None:
         """
         Make a decision based on the current game state.
 
@@ -50,12 +53,26 @@ class DecisionMakerOverworldService:
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
             return None
+
+        if response.navigation_args:
+            return AgentStateHandler.OVERWORLD  # Pass control to the navigation node.
+        elif response.button:
+            await self._press_button(game_state, response.thoughts, response.button)
+            return None
+
+    async def _press_button(
+        self,
+        game_state: YellowLegacyGameState,
+        thoughts: str,
+        button: Button,
+    ) -> None:
+        """Press the given button."""
+        await self.emulator.press_buttons([button])
         position = (game_state.player.y, game_state.player.x)
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
                 timestamp=datetime.now(),
-                content=f"Current position: {position}. {response}",
+                content=f'Current position: {position}. {thoughts} Pressed the "{button}" button.',
             )
         )
-        await self.emulator.press_buttons([response.button])

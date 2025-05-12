@@ -29,6 +29,7 @@ class DecisionMakerOverworldNode(Node[AgentStore]):
             current_map=state.current_map,
             goals=state.goals,
         )
-        await service.make_decision()
+        handler = await service.make_decision()
 
         await store.set_raw_memory(service.raw_memory)
+        await store.set_handler(handler)
