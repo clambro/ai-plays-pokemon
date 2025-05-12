@@ -3,7 +3,8 @@ from datetime import datetime
 from loguru import logger
 from agent.actions.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORLD_PROMPT
 from agent.actions.decision_maker_overworld.schemas import DecisionMakerOverworldResponse
-from common.enums import AgentStateHandler
+from agent.schemas import NavigationArgs
+from common.enums import Tool
 from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
@@ -31,7 +32,7 @@ class DecisionMakerOverworldService:
         self.current_map = current_map
         self.goals = goals
 
-    async def make_decision(self) -> AgentStateHandler | None:
+    async def make_decision(self) -> tuple[Tool | None, NavigationArgs | None]:
         """
         Make a decision based on the current game state.
 
@@ -52,13 +53,13 @@ class DecisionMakerOverworldService:
             )
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
-            return None
+            return None, None
 
         if response.navigation_args:
-            return AgentStateHandler.OVERWORLD  # Pass control to the navigation node.
+            return Tool.NAVIGATION, response.navigation_args
         elif response.button:
             await self._press_button(game_state, response.thoughts, response.button)
-            return None
+        return None, None
 
     async def _press_button(
         self,

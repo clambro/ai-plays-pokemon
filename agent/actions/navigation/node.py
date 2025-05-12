@@ -20,15 +20,13 @@ class NavigationNode(Node[AgentStore]):
         state = await store.get_state()
         if not state.current_map:
             raise ValueError("Current map is not set.")
-        if not isinstance(state.tool_args, NavigationArgs):
-            raise ValueError("Tool args are not a NavigationArgs instance.")
 
         service = NavigationService(
             iteration=state.iteration,
             emulator=self.emulator,
             current_map=state.current_map,
             raw_memory=state.raw_memory,
-            args=state.tool_args,
+            args=NavigationArgs.model_validate(state.tool_args),
         )
         await service.navigate()
 

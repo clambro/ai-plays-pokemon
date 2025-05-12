@@ -1,6 +1,7 @@
 from loguru import logger
 from agent.actions.decision_maker_overworld.service import DecisionMakerOverworldService
 from agent.state import AgentStore
+from common.enums import Tool
 from emulator.emulator import YellowLegacyEmulator
 from junjo.node import Node
 
@@ -29,7 +30,8 @@ class DecisionMakerOverworldNode(Node[AgentStore]):
             current_map=state.current_map,
             goals=state.goals,
         )
-        handler = await service.make_decision()
+        tool, args = await service.make_decision()
 
         await store.set_raw_memory(service.raw_memory)
-        await store.set_handler(handler)
+        await store.set_tool(tool)
+        await store.set_tool_args(args)
