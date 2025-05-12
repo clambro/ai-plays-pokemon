@@ -22,5 +22,6 @@ class UpdateAgentStoreNode(Node[AgentStore]):
         handler = await service.determine_handler()
 
         await store.set_iteration(state.iteration + 1)
-        await store.set_buttons_pressed([])
         await store.set_handler(handler)
+        await store.set_tool(None)
+        await store.set_tool_args(None)

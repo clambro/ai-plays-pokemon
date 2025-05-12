@@ -5,6 +5,7 @@ SCREEN_WIDTH = 10
 PLAYER_OFFSET_Y = 4
 PLAYER_OFFSET_X = 4
 
+# TODO: This should be an enum.
 UNSEEN_TILE = "?"
 WALL_TILE = "x"
 WATER_TILE = "~"

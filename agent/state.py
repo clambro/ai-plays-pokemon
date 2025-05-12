@@ -1,10 +1,9 @@
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
-from common.enums import AgentStateHandler
+from common.enums import AgentStateHandler, Tool
 from common.goals import Goals
-from emulator.enums import Button
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory
 from junjo.state import BaseState
@@ -16,11 +15,12 @@ class AgentState(BaseState):
 
     folder: Path
     iteration: int = 0
-    buttons_pressed: list[Button] = Field(default_factory=list)
     raw_memory: RawMemory = Field(default_factory=RawMemory)
     handler: AgentStateHandler | None = None
     current_map: OverworldMap | None = None
     goals: Goals = Field(default_factory=Goals)
+    tool: Tool | None = None
+    tool_args: BaseModel | None = None
 
 
 class AgentStore(BaseStore[AgentState]):
@@ -29,10 +29,6 @@ class AgentStore(BaseStore[AgentState]):
     async def set_iteration(self, iteration: int) -> None:
         """Set the iteration."""
         await self.set_state({"iteration": iteration})
-
-    async def set_buttons_pressed(self, buttons_pressed: list[Button]) -> None:
-        """Set the buttons pressed."""
-        await self.set_state({"buttons_pressed": buttons_pressed})
 
     async def set_raw_memory(self, raw_memory: RawMemory) -> None:
         """Set the raw memory."""
@@ -49,3 +45,11 @@ class AgentStore(BaseStore[AgentState]):
     async def set_goals(self, goals: Goals) -> None:
         """Set the goals."""
         await self.set_state({"goals": goals})
+
+    async def set_tool(self, tool: Tool | None) -> None:
+        """Set the tool."""
+        await self.set_state({"tool": tool})
+
+    async def set_tool_args(self, tool_args: BaseModel | None) -> None:
+        """Set the tool args."""
+        await self.set_state({"tool_args": tool_args})

@@ -6,7 +6,6 @@ from agent.actions.decision_maker_text.schemas import DecisionMakerTextResponse
 from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
-from emulator.enums import Button
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 
 
@@ -26,7 +25,7 @@ class DecisionMakerTextService:
         self.raw_memory = raw_memory
         self.goals = goals
 
-    async def make_decision(self) -> Button | None:
+    async def make_decision(self) -> None:
         """
         Make a decision based on the current game state.
 
@@ -53,4 +52,3 @@ class DecisionMakerTextService:
             )
         )
         await self.emulator.press_buttons([response.button])
-        return response.button

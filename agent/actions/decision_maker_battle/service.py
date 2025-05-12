@@ -3,7 +3,6 @@ from datetime import datetime
 from loguru import logger
 from agent.actions.decision_maker_battle.prompts import DECISION_MAKER_BATTLE_PROMPT
 from agent.actions.decision_maker_battle.schemas import DecisionMakerBattleResponse
-from emulator.enums import Button
 from common.gemini import Gemini, GeminiModel
 from emulator.emulator import YellowLegacyEmulator
 from raw_memory.schemas import RawMemory, RawMemoryPiece
@@ -23,7 +22,7 @@ class DecisionMakerBattleService:
         self.llm_service = Gemini(GeminiModel.FLASH)
         self.raw_memory = raw_memory
 
-    async def make_decision(self) -> Button | None:
+    async def make_decision(self) -> None:
         """
         Make a decision based on the current game state.
 
@@ -47,4 +46,3 @@ class DecisionMakerBattleService:
             )
         )
         await self.emulator.press_buttons([response.button])
-        return response.button

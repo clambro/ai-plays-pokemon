@@ -29,10 +29,8 @@ class DecisionMakerOverworldNode(Node[AgentStore]):
             current_map=state.current_map,
             goals=state.goals,
         )
-        button = await service.make_decision()
+        tool, args = await service.make_decision()
 
         await store.set_raw_memory(service.raw_memory)
-        if button:
-            buttons_pressed = state.buttons_pressed.copy()
-            buttons_pressed.append(button)
-            await store.set_buttons_pressed(buttons_pressed)
+        await store.set_tool(tool)
+        await store.set_tool_args(args)

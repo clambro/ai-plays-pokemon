@@ -7,3 +7,9 @@ class AgentStateHandler(StrEnum):
     OVERWORLD = "overworld"
     BATTLE = "battle"
     TEXT = "text"
+
+
+class Tool(StrEnum):
+    """An enum for the different tools."""
+
+    NAVIGATION = "navigation"

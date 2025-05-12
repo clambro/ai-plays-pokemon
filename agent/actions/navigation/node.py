@@ -1,12 +1,13 @@
 from loguru import logger
-from agent.actions.decision_maker_text.service import DecisionMakerTextService
+from agent.actions.navigation.service import NavigationService
+from agent.schemas import NavigationArgs
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
 from junjo.node import Node
 
 
-class DecisionMakerTextNode(Node[AgentStore]):
-    """Make a decision based on the current game state in the text."""
+class NavigationNode(Node[AgentStore]):
+    """Navigate to the given coordinates."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
         self.emulator = emulator
@@ -14,16 +15,20 @@ class DecisionMakerTextNode(Node[AgentStore]):
 
     async def service(self, store: AgentStore) -> None:
         """The service for the node."""
-        logger.info("Running the text decision maker...")
+        logger.info("Navigating to the given coordinates...")
 
         state = await store.get_state()
-        service = DecisionMakerTextService(
+        if not state.current_map:
+            raise ValueError("Current map is not set.")
+
+        service = NavigationService(
             iteration=state.iteration,
             emulator=self.emulator,
+            current_map=state.current_map,
             raw_memory=state.raw_memory,
-            goals=state.goals,
+            args=NavigationArgs.model_validate(state.tool_args),
         )
+        await service.navigate()
 
-        await service.make_decision()
-
+        await store.set_current_map(service.current_map)
         await store.set_raw_memory(service.raw_memory)

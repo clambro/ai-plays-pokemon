@@ -67,5 +67,5 @@ class Gemini:
             ),
         )
         if not isinstance(response.parsed, schema):
-            raise ValueError("Failed to parse response from Gemini")
+            raise ValueError(f"Failed to parse response from Gemini. Got {response.text}")
         return response.parsed

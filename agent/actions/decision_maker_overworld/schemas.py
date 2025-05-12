@@ -1,13 +1,19 @@
-from pydantic import BaseModel
+from typing import Self
+from pydantic import BaseModel, model_validator
 
 from emulator.enums import Button
+from agent.schemas import NavigationArgs
 
 
 class DecisionMakerOverworldResponse(BaseModel):
     """The response from the overworld decision maker prompt."""
 
     thoughts: str
-    button: Button
+    button: Button | None = None
+    navigation_args: NavigationArgs | None = None
 
-    def __str__(self) -> str:
-        return f'{self.thoughts} Pressed the "{self.button}" button.'
+    @model_validator(mode="after")
+    def _validate_exclusive_fields(self) -> Self:
+        if self.button is None and self.navigation_args is None:
+            raise ValueError("Either button or navigation_args must be provided.")
+        return self

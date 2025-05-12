@@ -3,10 +3,11 @@ from datetime import datetime
 from loguru import logger
 from agent.actions.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORLD_PROMPT
 from agent.actions.decision_maker_overworld.schemas import DecisionMakerOverworldResponse
+from agent.schemas import NavigationArgs
+from common.enums import Tool
 from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
-from emulator.enums import Button
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 
@@ -29,7 +30,7 @@ class DecisionMakerOverworldService:
         self.current_map = current_map
         self.goals = goals
 
-    async def make_decision(self) -> Button | None:
+    async def make_decision(self) -> tuple[Tool | None, NavigationArgs | None]:
         """
         Make a decision based on the current game state.
 
@@ -50,14 +51,27 @@ class DecisionMakerOverworldService:
             )
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
-            return None
+            return None, None
+
         position = (game_state.player.y, game_state.player.x)
-        self.raw_memory.append(
-            RawMemoryPiece(
-                iteration=self.iteration,
-                timestamp=datetime.now(),
-                content=f"Current position: {position}. {response}",
+        thought = f"Current position: {position}. {response.thoughts}"
+
+        if response.navigation_args:
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    timestamp=datetime.now(),
+                    content=f"{thought} Navigating to {response.navigation_args}.",
+                )
             )
-        )
-        await self.emulator.press_buttons([response.button])
-        return response.button
+            return Tool.NAVIGATION, response.navigation_args
+        elif response.button:
+            await self.emulator.press_buttons([response.button])
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    timestamp=datetime.now(),
+                    content=f"{thought} Pressed the '{response.button}' button.",
+                )
+            )
+        return None, None

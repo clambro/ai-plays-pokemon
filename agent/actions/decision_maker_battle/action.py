@@ -23,10 +23,6 @@ class DecisionMakerBattleNode(Node[AgentStore]):
             raw_memory=state.raw_memory,
         )
 
-        button = await service.make_decision()
+        await service.make_decision()
 
         await store.set_raw_memory(service.raw_memory)
-        if button:
-            buttons_pressed = state.buttons_pressed.copy()
-            buttons_pressed.append(button)
-            await store.set_buttons_pressed(buttons_pressed)
