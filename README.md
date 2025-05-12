@@ -2,7 +2,7 @@
 
 ## TODOs
 ### Core
-* Add a grid to the overworld screen. Maybe not necessary?
+* Add a grid to the overworld screen and overlay collisions
 * Add summary memory with decay
 * Add long term memory with retrieval and decay
 * Add player/party information
@@ -12,7 +12,6 @@
 * Add precommits for sorting imports and linting and whatnot
 * Add a critic model
 * Handle surfing in navigation
-* Rename actions to nodes and use updated junjo imports
 
 ### Useful
 * Add tests to everything
@@ -27,6 +26,7 @@
 * Add a tool for spinning around to find wild pokemon
 * Token counts and telemetry
 * Tool for using fly
+* Tile constants should be an enum
 
 ### Notes
 * Might have to drop Pikachu from the map view. I could see that maybe causing problems.
