@@ -1,18 +1,17 @@
-from junjo.graph import Graph
-from junjo.edge import Edge
+from junjo import Graph, Edge
 
-from agent.actions.build_agent_state.action import UpdateAgentStoreNode
-from agent.actions.decision_maker_overworld.action import DecisionMakerOverworldNode
-from agent.actions.decision_maker_battle.action import DecisionMakerBattleNode
-from agent.actions.decision_maker_text.action import DecisionMakerTextNode
-from agent.actions.handle_dialog_box.action import HandleDialogBoxNode
-from agent.actions.update_current_map.action import UpdateCurrentMapNode
-from agent.actions.update_goals.action import UpdateGoalsNode
-from agent.actions.update_onscreen_entities.action import UpdateOnscreenEntitiesNode
+from agent.nodes.build_agent_state.node import UpdateAgentStoreNode
+from agent.nodes.decision_maker_overworld.node import DecisionMakerOverworldNode
+from agent.nodes.decision_maker_battle.node import DecisionMakerBattleNode
+from agent.nodes.decision_maker_text.node import DecisionMakerTextNode
+from agent.nodes.handle_dialog_box.node import HandleDialogBoxNode
+from agent.nodes.update_current_map.node import UpdateCurrentMapNode
+from agent.nodes.update_goals.node import UpdateGoalsNode
+from agent.nodes.update_onscreen_entities.node import UpdateOnscreenEntitiesNode
 from common.enums import AgentStateHandler, Tool
 from emulator.emulator import YellowLegacyEmulator
 from agent.conditions import AgentHandlerIs, ToolIs
-from agent.actions.navigation.node import NavigationNode
+from agent.nodes.navigation.node import NavigationNode
 
 
 def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:

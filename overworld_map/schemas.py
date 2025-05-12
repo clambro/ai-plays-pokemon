@@ -111,7 +111,6 @@ class OverworldMap(BaseModel):
         ascii_screen, sprites, warps = game_state.get_ascii_screen()
         self._add_tiles_to_screen(game_state.screen, ascii_screen)
 
-        # TODO: Sprites need associated notes, not just positions.
         for s in sprites:
             if s.is_rendered:
                 self.known_sprites[s.index] = s

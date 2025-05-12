@@ -1,6 +1,6 @@
 from agent.graph import build_agent_graph
 from agent.state import AgentState, AgentStore
-from junjo.workflow import Workflow
+from junjo import Workflow
 
 from emulator.emulator import YellowLegacyEmulator
 
