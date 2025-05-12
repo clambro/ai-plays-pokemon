@@ -21,6 +21,9 @@ pydantic-settings = "^2.9.1"
 aiofiles = "^24.1.0"
 junjo = {extras = ["graphviz"], version = "^0.42"}
 
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.6.2"
+
 [tool.isort]
 profile = "black"
 multi_line_output = 3
