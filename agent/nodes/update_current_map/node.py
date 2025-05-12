@@ -1,5 +1,5 @@
 from loguru import logger
-from agent.actions.update_current_map.service import UpdateCurrentMapService
+from agent.nodes.update_current_map.service import UpdateCurrentMapService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
 from junjo import Node

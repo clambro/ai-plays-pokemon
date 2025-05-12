@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from loguru import logger
-from agent.actions.decision_maker_text.prompts import DECISION_MAKER_TEXT_PROMPT
-from agent.actions.decision_maker_text.schemas import DecisionMakerTextResponse
+from agent.nodes.decision_maker_text.prompts import DECISION_MAKER_TEXT_PROMPT
+from agent.nodes.decision_maker_text.schemas import DecisionMakerTextResponse
 from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator

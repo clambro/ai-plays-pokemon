@@ -2,11 +2,11 @@ from pathlib import Path
 
 from loguru import logger
 
-from agent.actions.update_onscreen_entities.prompts import (
+from agent.nodes.update_onscreen_entities.prompts import (
     UPDATE_SPRITES_PROMPT,
     UPDATE_WARPS_PROMPT,
 )
-from agent.actions.update_onscreen_entities.schemas import UpdateEntitiesResponse
+from agent.nodes.update_onscreen_entities.schemas import UpdateEntitiesResponse
 from common.gemini import Gemini, GeminiModel
 from emulator.emulator import YellowLegacyEmulator
 from PIL.Image import Image

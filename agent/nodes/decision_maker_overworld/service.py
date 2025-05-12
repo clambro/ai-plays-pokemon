@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from loguru import logger
-from agent.actions.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORLD_PROMPT
-from agent.actions.decision_maker_overworld.schemas import DecisionMakerOverworldResponse
+from agent.nodes.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORLD_PROMPT
+from agent.nodes.decision_maker_overworld.schemas import DecisionMakerOverworldResponse
 from agent.schemas import NavigationArgs
 from common.enums import Tool
 from common.gemini import Gemini, GeminiModel

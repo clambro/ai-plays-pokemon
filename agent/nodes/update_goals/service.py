@@ -1,6 +1,6 @@
 from loguru import logger
-from agent.actions.update_goals.prompts import UPDATE_GOALS_PROMPT
-from agent.actions.update_goals.schemas import UpdateGoalsResponse
+from agent.nodes.update_goals.prompts import UPDATE_GOALS_PROMPT
+from agent.nodes.update_goals.schemas import UpdateGoalsResponse
 from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
 from raw_memory.schemas import RawMemory

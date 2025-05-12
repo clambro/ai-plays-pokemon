@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from loguru import logger
-from agent.actions.decision_maker_battle.prompts import DECISION_MAKER_BATTLE_PROMPT
-from agent.actions.decision_maker_battle.schemas import DecisionMakerBattleResponse
+from agent.nodes.decision_maker_battle.prompts import DECISION_MAKER_BATTLE_PROMPT
+from agent.nodes.decision_maker_battle.schemas import DecisionMakerBattleResponse
 from common.gemini import Gemini, GeminiModel
 from emulator.emulator import YellowLegacyEmulator
 from raw_memory.schemas import RawMemory, RawMemoryPiece

@@ -1,12 +1,12 @@
 from loguru import logger
-from agent.actions.update_goals.service import UpdateGoalsService
+from agent.nodes.decision_maker_battle.service import DecisionMakerBattleService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
 from junjo import Node
 
 
-class UpdateGoalsNode(Node[AgentStore]):
-    """Update the goals based on the raw memory."""
+class DecisionMakerBattleNode(Node[AgentStore]):
+    """Make a decision based on the current game state in the battle."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
         self.emulator = emulator
@@ -14,15 +14,15 @@ class UpdateGoalsNode(Node[AgentStore]):
 
     async def service(self, store: AgentStore) -> None:
         """The service for the node."""
-        logger.info("Updating the goals...")
+        logger.info("Running the battle decision maker...")
 
         state = await store.get_state()
-
-        service = UpdateGoalsService(
+        service = DecisionMakerBattleService(
+            iteration=state.iteration,
             emulator=self.emulator,
             raw_memory=state.raw_memory,
-            goals=state.goals,
         )
-        await service.update_goals()  # Updated in place.
 
-        await store.set_goals(service.goals)
+        await service.make_decision()
+
+        await store.set_raw_memory(service.raw_memory)
