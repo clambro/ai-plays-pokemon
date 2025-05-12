@@ -2,7 +2,7 @@ from loguru import logger
 from agent.actions.decision_maker_text.service import DecisionMakerTextService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo.node import Node
+from junjo import Node
 
 
 class DecisionMakerTextNode(Node[AgentStore]):

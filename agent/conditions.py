@@ -1,4 +1,4 @@
-from junjo.condition import Condition
+from junjo import Condition
 
 from agent.state import AgentState
 from common.enums import AgentStateHandler, Tool

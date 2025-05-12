@@ -6,8 +6,7 @@ from common.enums import AgentStateHandler, Tool
 from common.goals import Goals
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory
-from junjo.state import BaseState
-from junjo.store import BaseStore
+from junjo import BaseState, BaseStore
 
 
 class AgentState(BaseState):

@@ -2,7 +2,7 @@ from loguru import logger
 from agent.actions.decision_maker_overworld.service import DecisionMakerOverworldService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo.node import Node
+from junjo import Node
 
 
 class DecisionMakerOverworldNode(Node[AgentStore]):

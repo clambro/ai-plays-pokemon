@@ -3,7 +3,7 @@ from agent.actions.navigation.service import NavigationService
 from agent.schemas import NavigationArgs
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo.node import Node
+from junjo import Node
 
 
 class NavigationNode(Node[AgentStore]):

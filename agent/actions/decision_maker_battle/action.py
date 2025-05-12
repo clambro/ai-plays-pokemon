@@ -2,7 +2,7 @@ from loguru import logger
 from agent.actions.decision_maker_battle.service import DecisionMakerBattleService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo.node import Node
+from junjo import Node
 
 
 class DecisionMakerBattleNode(Node[AgentStore]):

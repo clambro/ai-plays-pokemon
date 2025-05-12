@@ -1,5 +1,4 @@
-from junjo.graph import Graph
-from junjo.edge import Edge
+from junjo import Graph, Edge
 
 from agent.actions.build_agent_state.action import UpdateAgentStoreNode
 from agent.actions.decision_maker_overworld.action import DecisionMakerOverworldNode

@@ -2,7 +2,7 @@ from loguru import logger
 from agent.actions.handle_dialog_box.service import HandleDialogBoxService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo.node import Node
+from junjo import Node
 
 
 class HandleDialogBoxNode(Node[AgentStore]):
