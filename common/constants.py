@@ -29,3 +29,8 @@ WARP_SUBFOLDER = "warps"
 
 DB_FILE_PATH = OUTPUTS_FOLDER / "database" / "memory.db"
 DB_URL = f"sqlite+aiosqlite:///{DB_FILE_PATH}"
+
+
+# Make sure all the relevant folders exist.
+OUTPUTS_FOLDER.mkdir(exist_ok=True)
+DB_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)

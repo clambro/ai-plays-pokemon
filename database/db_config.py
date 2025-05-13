@@ -7,10 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from common.constants import DB_FILE_PATH, DB_URL
 from database.base import SQLAlchemyBase
 
-if not DB_FILE_PATH.parent.exists():  # Make sure the folder exists.
-    DB_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-
 _engine = create_async_engine(
     DB_URL,
     echo=True,
