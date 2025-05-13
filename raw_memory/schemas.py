@@ -1,9 +1,9 @@
 from datetime import datetime
 
 from loguru import logger
+from pydantic import BaseModel, Field
 
 from common.constants import RAW_MEMORY_MAX_SIZE
-from pydantic import BaseModel, Field
 
 
 class RawMemoryPiece(BaseModel):

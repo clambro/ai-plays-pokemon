@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import aiofiles
 import numpy as np
 from pydantic import BaseModel
@@ -12,8 +13,8 @@ from common.constants import (
     WARP_SUBFOLDER,
 )
 from emulator.enums import MapLocation
-from emulator.schemas import ScreenState, Sprite, Warp
 from emulator.game_state import YellowLegacyGameState
+from emulator.schemas import ScreenState, Sprite, Warp
 from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
 
 

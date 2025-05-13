@@ -1,13 +1,13 @@
 from pathlib import Path
-import aiofiles
-from loguru import logger
-import numpy as np
 from typing import Self
 
-from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
+import aiofiles
+import numpy as np
+from loguru import logger
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel
 
+from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
 from emulator.enums import FacingDirection, MapLocation
 
 
@@ -88,7 +88,10 @@ class Sprite(BaseModel):
         return data
 
     async def save_description(
-        self, sprite_folder: Path, map_id: MapLocation, description: str
+        self,
+        sprite_folder: Path,
+        map_id: MapLocation,
+        description: str,
     ) -> None:
         """Save a description of the sprite to a file."""
         logger.info(f"Updating sprite_{map_id.value}_{self.index} with description: {description}")
@@ -126,7 +129,10 @@ class Warp(BaseModel):
         return data
 
     async def save_description(
-        self, warp_folder: Path, map_id: MapLocation, description: str
+        self,
+        warp_folder: Path,
+        map_id: MapLocation,
+        description: str,
     ) -> None:
         """Save a description of the warp to a file."""
         logger.info(f"Updating warp_{map_id.value}_{self.index} with description: {description}")
@@ -209,7 +215,7 @@ class MapState(BaseModel):
                     x=mem[0xC205 + i] - 4,
                     is_rendered=mem[0xC102 + i] != 0xFF,
                     moves_randomly=mem[0xC206 + i] == 0xFE,
-                )
+                ),
             )
         pikachu_sprite = Sprite(
             index=0,
@@ -238,7 +244,7 @@ class MapState(BaseModel):
                     y=mem[base],
                     x=mem[base + 1],
                     destination=MapLocation(mem[base + 3]),
-                )
+                ),
             )
         return warps
 

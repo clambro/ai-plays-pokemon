@@ -1,17 +1,19 @@
 from enum import StrEnum
 from typing import TypeVar
+
 from google import genai
 from google.genai.types import (
     GenerateContentConfig,
     HarmBlockThreshold,
-    SafetySetting,
     HarmCategory,
+    SafetySetting,
     ThinkingConfig,
 )
+from PIL.Image import Image
 from pydantic import BaseModel
+
 from common.prompts import SYSTEM_PROMPT
 from common.settings import settings
-from PIL.Image import Image
 
 PydanticModel = TypeVar("PydanticModel", bound=BaseModel)
 

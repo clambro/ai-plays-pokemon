@@ -1,12 +1,13 @@
 import asyncio
-from pathlib import Path
 from contextlib import AbstractAsyncContextManager
+from pathlib import Path
 
 from loguru import logger
+from PIL import Image
 from pyboy import PyBoy
+
 from common.constants import GAME_TICKS_PER_SECOND
 from emulator.game_state import YellowLegacyGameState
-from PIL import Image
 
 
 class YellowLegacyEmulator(AbstractAsyncContextManager):
