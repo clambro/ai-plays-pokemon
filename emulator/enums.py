@@ -25,10 +25,7 @@ class FacingDirection(IntEnum):
 
 
 class MapLocation(IntEnum):
-    """
-    Maps location IDs to their names.
-    Copied from Pokemon_Yellow_Legacy/constants/map_constants.asm.
-    """
+    """Maps location IDs to their names."""
 
     PALLET_TOWN = 0x00
     VIRIDIAN_CITY = 0x01

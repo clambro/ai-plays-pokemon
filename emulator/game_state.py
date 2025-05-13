@@ -1,34 +1,33 @@
 from typing import Self
 
 import numpy as np
+from pyboy import PyBoyMemoryView
+from pydantic import BaseModel
+
 from common.constants import (
     CUT_TREE_TILE,
+    FREE_TILE,
+    GRASS_TILE,
+    LEDGE_TILE,
     PIKACHU_TILE,
+    PLAYER_OFFSET_X,
+    PLAYER_OFFSET_Y,
+    PLAYER_TILE,
     SPRITE_TILE,
     WALL_TILE,
     WARP_TILE,
     WATER_TILE,
-    GRASS_TILE,
-    LEDGE_TILE,
-    FREE_TILE,
-    PLAYER_TILE,
-    PLAYER_OFFSET_Y,
-    PLAYER_OFFSET_X,
 )
 from emulator.char_map import CHAR_TO_INT_MAP, INT_TO_CHAR_MAP
 from emulator.schemas import (
+    BattleState,
     DialogBox,
     MapState,
     PlayerState,
     ScreenState,
-    BattleState,
     Sprite,
     Warp,
 )
-
-from pyboy import PyBoyMemoryView
-from pydantic import BaseModel
-
 
 BLINKING_CURSOR_ID = 0xEE
 BLANK_TILE_ID = 0x7F
