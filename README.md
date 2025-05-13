@@ -1,33 +1,40 @@
 # ai-plays-pokemon
 
-## TODOs
-### Core
-* Add a grid to the overworld screen and overlay collisions
-* Add summary memory with decay
-* Add long term memory with retrieval and decay
-* Add player/party information
-* Add strength boulders to map screen
+## TODOs in rough order of importance
+* Tile constants should be an enum
+
+* Add a critic model
 * Add automated backups
 * Add the initial game state to the output folder
-* Add precommits for sorting imports and linting and whatnot
-* Add a critic model
-* Handle surfing in navigation
 
-### Useful
-* Add tests to everything
+* Add summary memory with decay -- Fixed size, max(age*decay_rate) drops off first
+* Add long term memory with retrieval and decay -- Asks to delete after N iterations without retrieval
+
+* Add player/party information
+
+* Add a grid to the overworld screen and overlay collisions
+
 * Subgraphs for the battle, text, and overworld conditions
 * Improve separation of responsibilities
-* Add a tool to rearrange the team
+* Add tests to everything
+
 * Add a tool to select moves or swap pokemon in battle
-* Add a tool to name things
-* Debug logger for prompts with log level set in main
-* Some kind of info about items and PC pokemon
-* Add a strength puzzle solver?
 * Add a tool for spinning around to find wild pokemon
-* Token counts and telemetry
+* Some kind of info about items and PC pokemon
+* Add a tool to rearrange the team
+* Add a tool to name things
 * Tool for using fly
-* Tile constants should be an enum
+
+* Subgraphs for different battle types (e.g. Safari Zone)? Battle type is at 0xD05A, and the move menus are at 0xCCDB
+
+* Add strength boulders to map screen
+* Handle surfing in navigation
+* Add a strength puzzle solver?
+* Token counts, telemetry, and better logging
+
+* Some kind of twitch frontend
 
 ### Notes
 * Might have to drop Pikachu from the map view. I could see that maybe causing problems.
 * Can we skip the file storage and do everything in memory? Or maybe sqlite?
+* Numerical coords on screen? Dots to show past steps? Maybe when I have tests set up.
