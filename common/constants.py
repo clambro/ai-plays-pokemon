@@ -1,3 +1,5 @@
+from pathlib import Path
+
 GAME_TICKS_PER_SECOND = 60
 
 SCREEN_HEIGHT = 9
@@ -20,6 +22,10 @@ PIKACHU_TILE = "k"
 
 RAW_MEMORY_MAX_SIZE = 100
 
+OUTPUTS_FOLDER = Path("outputs/")
 MAP_SUBFOLDER = "maps"
 SPRITE_SUBFOLDER = "sprites"
 WARP_SUBFOLDER = "warps"
+
+DB_FILE_PATH = OUTPUTS_FOLDER / "database" / "memory.db"
+DB_URL = f"sqlite+aiosqlite:///{DB_FILE_PATH}"
