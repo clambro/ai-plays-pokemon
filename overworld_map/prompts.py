@@ -1,6 +1,5 @@
 from common import constants as c
 
-
 OVERWORLD_MAP_STR_FORMAT = f"""
 <map_info>
 Map name: {{map_name}}

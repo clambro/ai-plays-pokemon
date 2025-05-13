@@ -1,6 +1,8 @@
-from agent.graph import build_agent_graph
 from unittest.mock import MagicMock
+
 from junjo.graphviz.utils import graph_to_graphviz_image
+
+from agent.graph import build_agent_graph
 
 
 def main() -> None:
