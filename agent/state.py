@@ -1,12 +1,12 @@
 from pathlib import Path
 
+from junjo import BaseState, BaseStore
 from pydantic import BaseModel, Field
 
 from common.enums import AgentStateHandler, Tool
 from common.goals import Goals
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory
-from junjo import BaseState, BaseStore
 
 
 class AgentState(BaseState):
