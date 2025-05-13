@@ -1,8 +1,6 @@
-from collections.abc import AsyncGenerator
-
 from loguru import logger
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from common.constants import DB_FILE_PATH, DB_URL
 from database.base import SQLAlchemyBase
@@ -12,13 +10,7 @@ _engine = create_async_engine(
     echo=True,
     connect_args={"check_same_thread": False},
 )
-_sessionmaker = async_sessionmaker(_engine, expire_on_commit=False)
-
-
-async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
-    """Get a database session."""
-    async with _sessionmaker() as session:
-        yield session
+db_sessionmaker = async_sessionmaker(_engine, expire_on_commit=False)
 
 
 async def init_fresh_db() -> None:
