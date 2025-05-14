@@ -116,7 +116,7 @@ class YellowLegacyGameState(BaseModel):
         blocks[PLAYER_OFFSET_Y, PLAYER_OFFSET_X] = PLAYER_TILE
 
         on_screen_sprites = []
-        for s in self.cur_map.sprites:
+        for s in self.cur_map.sprites.values():
             if screen_coords := self.screen.get_screen_coords(s.y, s.x):
                 on_screen_sprites.append(s)
                 if s.is_rendered:
@@ -128,7 +128,7 @@ class YellowLegacyGameState(BaseModel):
                 blocks[screen_coords[0], screen_coords[1]] = PIKACHU_TILE
 
         on_screen_warps = []
-        for w in self.cur_map.warps:
+        for w in self.cur_map.warps.values():
             if screen_coords := self.screen.get_screen_coords(w.y, w.x):
                 blocks[screen_coords[0], screen_coords[1]] = WARP_TILE
                 on_screen_warps.append(w)
