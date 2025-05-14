@@ -1,14 +1,14 @@
 from sqlalchemy import select, update
 
 from database.db_config import db_sessionmaker
-from database.sprite_memory.model import SpriteMemoryTable
+from database.sprite_memory.model import SpriteMemoryDBModel
 from database.sprite_memory.schemas import SpriteMemory
 
 
 async def create_sprite_memory(sprite: SpriteMemory) -> SpriteMemory:
     """Create a new sprite memory."""
     async with db_sessionmaker() as session:
-        db_obj = SpriteMemoryTable(
+        db_obj = SpriteMemoryDBModel(
             map_id=sprite.map_id,
             sprite_id=sprite.sprite_id,
             description=sprite.description,
@@ -23,9 +23,9 @@ async def create_sprite_memory(sprite: SpriteMemory) -> SpriteMemory:
 async def get_sprite_memory(map_id: int, sprite_id: int) -> SpriteMemory:
     """Get a sprite memory by map id and sprite id."""
     async with db_sessionmaker() as session:
-        query = select(SpriteMemoryTable).where(
-            SpriteMemoryTable.map_id == map_id,
-            SpriteMemoryTable.sprite_id == sprite_id,
+        query = select(SpriteMemoryDBModel).where(
+            SpriteMemoryDBModel.map_id == map_id,
+            SpriteMemoryDBModel.sprite_id == sprite_id,
         )
         result = await session.execute(query)
         db_obj = result.scalar_one_or_none()
@@ -42,13 +42,13 @@ async def update_known_sprite_description(sprite: SpriteMemory) -> SpriteMemory:
     """Update the description of a sprite memory."""
     async with db_sessionmaker() as session:
         query = (
-            update(SpriteMemoryTable)
+            update(SpriteMemoryDBModel)
             .where(
-                SpriteMemoryTable.map_id == sprite.map_id,
-                SpriteMemoryTable.sprite_id == sprite.sprite_id,
+                SpriteMemoryDBModel.map_id == sprite.map_id,
+                SpriteMemoryDBModel.sprite_id == sprite.sprite_id,
             )
             .values(description=sprite.description)
-            .returning(SpriteMemoryTable)
+            .returning(SpriteMemoryDBModel)
         )
         result = await session.execute(query)
         db_obj = result.scalar_one_or_none()

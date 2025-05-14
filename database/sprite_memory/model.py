@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from database.base import SQLAlchemyBase
 
 
-class SpriteMemoryTable(SQLAlchemyBase):
+class SpriteMemoryDBModel(SQLAlchemyBase):
     """A table for sprite tiles that are known to the Agent."""
 
     __tablename__ = "sprite_memory"

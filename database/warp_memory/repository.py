@@ -1,14 +1,14 @@
 from sqlalchemy import select, update
 
 from database.db_config import db_sessionmaker
-from database.warp_memory.model import WarpMemoryTable
+from database.warp_memory.model import WarpMemoryDBModel
 from database.warp_memory.schemas import WarpMemory
 
 
 async def create_warp_memory(warp: WarpMemory) -> WarpMemory:
     """Create a new warp memory."""
     async with db_sessionmaker() as session:
-        db_obj = WarpMemoryTable(
+        db_obj = WarpMemoryDBModel(
             map_id=warp.map_id,
             warp_id=warp.warp_id,
             description=warp.description,
@@ -23,9 +23,9 @@ async def create_warp_memory(warp: WarpMemory) -> WarpMemory:
 async def get_warp_memory(map_id: int, warp_id: int) -> WarpMemory:
     """Get a warp memory by map id and warp id."""
     async with db_sessionmaker() as session:
-        query = select(WarpMemoryTable).where(
-            WarpMemoryTable.map_id == map_id,
-            WarpMemoryTable.warp_id == warp_id,
+        query = select(WarpMemoryDBModel).where(
+            WarpMemoryDBModel.map_id == map_id,
+            WarpMemoryDBModel.warp_id == warp_id,
         )
         result = await session.execute(query)
         db_obj = result.scalar_one_or_none()
@@ -40,13 +40,13 @@ async def update_known_warp_description(warp: WarpMemory) -> WarpMemory:
     """Update the description of a warp memory."""
     async with db_sessionmaker() as session:
         query = (
-            update(WarpMemoryTable)
+            update(WarpMemoryDBModel)
             .where(
-                WarpMemoryTable.map_id == warp.map_id,
-                WarpMemoryTable.warp_id == warp.warp_id,
+                WarpMemoryDBModel.map_id == warp.map_id,
+                WarpMemoryDBModel.warp_id == warp.warp_id,
             )
             .values(description=warp.description)
-            .returning(WarpMemoryTable)
+            .returning(WarpMemoryDBModel)
         )
         result = await session.execute(query)
         db_obj = result.scalar_one_or_none()

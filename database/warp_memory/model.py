@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from database.base import SQLAlchemyBase
 
 
-class WarpMemoryTable(SQLAlchemyBase):
+class WarpMemoryDBModel(SQLAlchemyBase):
     """A table for warp tiles that are known to the Agent."""
 
     __tablename__ = "warp_memory"
