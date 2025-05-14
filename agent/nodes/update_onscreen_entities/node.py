@@ -1,8 +1,9 @@
+from junjo import Node
 from loguru import logger
+
 from agent.nodes.update_onscreen_entities.service import UpdateOnscreenEntitiesService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo import Node
 
 
 class UpdateOnscreenEntitiesNode(Node[AgentStore]):
@@ -22,7 +23,6 @@ class UpdateOnscreenEntitiesNode(Node[AgentStore]):
 
         service = UpdateOnscreenEntitiesService(
             emulator=self.emulator,
-            parent_folder=state.folder,
             raw_memory=state.raw_memory,
             current_map=state.current_map,
         )
