@@ -16,7 +16,7 @@ async def create_map_memory(map_memory: MapMemory) -> MapMemory:
     return MapMemory.model_validate(db_obj)
 
 
-async def get_map_memory(map_id: int) -> MapMemory:
+async def get_map_memory(map_id: int) -> MapMemory | None:
     """Get a map memory by map id."""
     async with db_sessionmaker() as session:
         query = select(MapMemoryDBModel).where(MapMemoryDBModel.map_id == map_id)
@@ -24,7 +24,7 @@ async def get_map_memory(map_id: int) -> MapMemory:
         db_obj = result.scalar_one_or_none()
 
         if db_obj is None:
-            raise ValueError(f"No map memory found for map_id {map_id}")
+            return None
 
     return MapMemory.model_validate(db_obj)
 

@@ -20,22 +20,14 @@ async def create_sprite_memory(sprite: SpriteMemory) -> SpriteMemory:
     return SpriteMemory.model_validate(db_obj)
 
 
-async def get_sprite_memory(map_id: int, sprite_id: int) -> SpriteMemory:
-    """Get a sprite memory by map id and sprite id."""
+async def get_sprite_memories_for_map(map_id: int) -> list[SpriteMemory]:
+    """Get all sprite memories for a map."""
     async with db_sessionmaker() as session:
-        query = select(SpriteMemoryDBModel).where(
-            SpriteMemoryDBModel.map_id == map_id,
-            SpriteMemoryDBModel.sprite_id == sprite_id,
-        )
+        query = select(SpriteMemoryDBModel).where(SpriteMemoryDBModel.map_id == map_id)
         result = await session.execute(query)
-        db_obj = result.scalar_one_or_none()
+        db_objs = result.scalars().all()
 
-        if db_obj is None:
-            raise ValueError(
-                f"No sprite memory found for map_id: {map_id} and sprite_id: {sprite_id}",
-            )
-
-    return SpriteMemory.model_validate(db_obj)
+    return [SpriteMemory.model_validate(d) for d in db_objs]
 
 
 async def update_known_sprite_description(sprite: SpriteMemory) -> SpriteMemory:

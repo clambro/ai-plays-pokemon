@@ -20,20 +20,14 @@ async def create_warp_memory(warp: WarpMemory) -> WarpMemory:
     return WarpMemory.model_validate(db_obj)
 
 
-async def get_warp_memory(map_id: int, warp_id: int) -> WarpMemory:
-    """Get a warp memory by map id and warp id."""
+async def get_warp_memories_for_map(map_id: int) -> list[WarpMemory]:
+    """Get all warp memories for a map."""
     async with db_sessionmaker() as session:
-        query = select(WarpMemoryDBModel).where(
-            WarpMemoryDBModel.map_id == map_id,
-            WarpMemoryDBModel.warp_id == warp_id,
-        )
+        query = select(WarpMemoryDBModel).where(WarpMemoryDBModel.map_id == map_id)
         result = await session.execute(query)
-        db_obj = result.scalar_one_or_none()
+        db_objs = result.scalars().all()
 
-        if db_obj is None:
-            raise ValueError(f"No warp memory found for map_id: {map_id} and warp_id: {warp_id}")
-
-    return WarpMemory.model_validate(db_obj)
+    return [WarpMemory.model_validate(d) for d in db_objs]
 
 
 async def update_known_warp_description(warp: WarpMemory) -> WarpMemory:
