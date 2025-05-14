@@ -1,4 +1,4 @@
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 
 from database.db_config import db_sessionmaker
 from database.sprite_memory.model import SpriteMemoryDBModel
@@ -52,5 +52,15 @@ async def update_known_sprite_description(sprite: SpriteMemory) -> SpriteMemory:
             )
 
         await session.commit()
+    return SpriteMemory.model_validate(db_obj)
 
-        return SpriteMemory.model_validate(db_obj)
+
+async def delete_sprite_memory(map_id: int, sprite_id: int) -> None:
+    """Delete a sprite memory."""
+    async with db_sessionmaker() as session:
+        query = delete(SpriteMemoryDBModel).where(
+            SpriteMemoryDBModel.map_id == map_id,
+            SpriteMemoryDBModel.sprite_id == sprite_id,
+        )
+        await session.execute(query)
+        await session.commit()
