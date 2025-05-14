@@ -36,7 +36,7 @@ async def update_sprite_memory(sprite: SpriteMemory) -> SpriteMemory:
         query = (
             update(SpriteMemoryDBModel)
             .where(
-                SpriteMemoryDBModel.map_id == sprite.map_id,
+                SpriteMemoryDBModel.map_id == sprite.map_id.value,
                 SpriteMemoryDBModel.sprite_id == sprite.sprite_id,
             )
             .values(description=sprite.description)

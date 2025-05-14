@@ -36,7 +36,7 @@ async def update_warp_memory(warp: WarpMemory) -> WarpMemory:
         query = (
             update(WarpMemoryDBModel)
             .where(
-                WarpMemoryDBModel.map_id == warp.map_id,
+                WarpMemoryDBModel.map_id == warp.map_id.value,
                 WarpMemoryDBModel.warp_id == warp.warp_id,
             )
             .values(description=warp.description)

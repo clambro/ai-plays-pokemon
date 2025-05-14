@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from emulator.enums import MapLocation
 
@@ -9,3 +9,5 @@ class SpriteMemory(BaseModel):
     map_id: MapLocation
     sprite_id: int
     description: str
+
+    model_config = ConfigDict(from_attributes=True)

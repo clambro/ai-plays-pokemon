@@ -1,13 +1,15 @@
 from datetime import datetime
 
 from loguru import logger
+
+from agent.schemas import NavigationArgs
+from common.constants import FREE_TILE, GRASS_TILE, LEDGE_TILE, PIKACHU_TILE, WARP_TILE
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
 from emulator.game_state import YellowLegacyGameState
 from overworld_map.schemas import OverworldMap
+from overworld_map.service import add_remove_map_entities, update_overworld_map_tiles
 from raw_memory.schemas import RawMemory, RawMemoryPiece
-from agent.schemas import NavigationArgs
-from common.constants import GRASS_TILE, FREE_TILE, LEDGE_TILE, WARP_TILE, PIKACHU_TILE
 
 # TODO: This service doesn't handle surfing at all.
 # TODO: Should avoid grass tiles when possible.
@@ -54,7 +56,7 @@ class NavigationService:
                         f"Navigation failed. No walkable path found to target coordinates"
                         f" {self.coords}."
                     ),
-                )
+                ),
             )
             return
 
@@ -64,7 +66,8 @@ class NavigationService:
             await self.emulator.wait_for_animation_to_finish()
 
             game_state = await self.emulator.get_game_state()
-            self.current_map.update_with_screen_info(game_state)
+            self.current_map = await add_remove_map_entities(game_state, self.current_map)
+            self.current_map = await update_overworld_map_tiles(game_state, self.current_map)
 
             new_pos = (game_state.player.y, game_state.player.x)
             if current_pos == new_pos:
@@ -76,7 +79,7 @@ class NavigationService:
                         content=(
                             f"Navigation to {self.coords} interrupted at position {current_pos}."
                         ),
-                    )
+                    ),
                 )
                 return
 
@@ -96,7 +99,7 @@ class NavigationService:
                         f"Navigation failed. Target coordinates {self.coords} are outside of the"
                         f" {self.current_map.id.name} map boundary."
                     ),
-                )
+                ),
             )
             return False
 
@@ -110,7 +113,7 @@ class NavigationService:
                         f"Navigation failed. Target coordinates {self.coords} are on a non-walkable"
                         f' tile of type "{target_tile}".'
                     ),
-                )
+                ),
             )
             return False
 

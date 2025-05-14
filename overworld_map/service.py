@@ -55,10 +55,10 @@ async def add_remove_map_entities(
     if overworld_map.id != game_state.cur_map.id:
         raise ValueError("Overworld map does not match current game state.")
 
-    _, sprites, warps = game_state.get_ascii_screen()
+    _, screen_sprites, screen_warps = game_state.get_ascii_screen()
 
     tasks = []
-    for s in sprites:
+    for s in screen_sprites:
         if s.index not in overworld_map.known_sprites:
             tasks.append(
                 create_sprite_memory(
@@ -74,7 +74,7 @@ async def add_remove_map_entities(
             # or a scripted character that has walked off the screen.
             tasks.append(delete_sprite_memory(overworld_map.id, s.index))
 
-    for w in warps:
+    for w in screen_warps:
         if w.index not in overworld_map.known_warps:
             tasks.append(
                 create_warp_memory(

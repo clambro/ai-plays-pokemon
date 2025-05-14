@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 from pydantic import BaseModel
 
@@ -20,7 +18,7 @@ class OverworldSprite(Sprite):
         """Create an overworld sprite from a sprite and a description."""
         return cls(**sprite.model_dump(), description=description)
 
-    def __str__(self, sprite_folder: Path, map_id: MapLocation) -> str:
+    def to_string(self, map_id: MapLocation) -> str:
         """Get a string representation of the sprite."""
         out = f"sprite_{map_id.value}_{self.index} at ({self.y}, {self.x}): {self.description}"
         if self.moves_randomly:
@@ -41,7 +39,7 @@ class OverworldWarp(Warp):
         """Create an overworld warp from a warp and a description."""
         return cls(**warp.model_dump(), description=description)
 
-    def __str__(self, warp_folder: Path, map_id: MapLocation) -> str:
+    def to_string(self, map_id: MapLocation) -> str:
         """Get a string representation of the warp."""
         return (
             f"warp_{map_id.value}_{self.index} at ({self.y}, {self.x}) leading to"
@@ -109,10 +107,10 @@ class OverworldMap(BaseModel):
         """Get the notes for the sprites on the map, sorted by index."""
         if not self.known_sprites:
             return "No sprites discovered."
-        return "\n".join(f"- {v}" for _, v in sorted(self.known_sprites.items()))
+        return "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_sprites.items()))
 
     async def _get_warp_notes(self) -> str:
         """Get the notes for the warps on the map, sorted by index."""
         if not self.known_warps:
             return "No warp tiles discovered."
-        return "\n".join(f"- {v}" for _, v in sorted(self.known_warps.items()))
+        return "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_warps.items()))

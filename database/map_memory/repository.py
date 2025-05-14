@@ -34,7 +34,7 @@ async def update_map_tiles(map_memory: MapMemory) -> MapMemory:
     async with db_sessionmaker() as session:
         query = (
             update(MapMemoryDBModel)
-            .where(MapMemoryDBModel.map_id == map_memory.map_id)
+            .where(MapMemoryDBModel.map_id == map_memory.map_id.value)
             .values(tiles=map_memory.tiles)
             .returning(MapMemoryDBModel)
         )
