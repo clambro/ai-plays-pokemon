@@ -48,7 +48,7 @@ class UpdateOnscreenEntitiesService:
         game_state: YellowLegacyGameState,
     ) -> None:
         """Update the long-term memory of the sprites."""
-        sprite_text = "\n".join([f"- [{i}] {s}" for i, s in enumerate(sprites)])
+        sprite_text = "\n".join([f"- [{s.index}] {s}" for s in sprites])
         prompt = UPDATE_SPRITES_PROMPT.format(
             raw_memory=self.raw_memory,
             map_info=await self.current_map.to_string(game_state),
@@ -83,7 +83,7 @@ class UpdateOnscreenEntitiesService:
         game_state: YellowLegacyGameState,
     ) -> None:
         """Update the long-term memory of the sprites."""
-        warp_text = "\n".join([f"- [{i}] {w}" for i, w in enumerate(warps)])
+        warp_text = "\n".join([f"- [{w.index}] {w}" for w in warps])
         prompt = UPDATE_WARPS_PROMPT.format(
             raw_memory=self.raw_memory,
             map_info=await self.current_map.to_string(game_state),

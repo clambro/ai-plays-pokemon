@@ -7,7 +7,7 @@ from database.base import SQLAlchemyBase
 
 _engine = create_async_engine(
     DB_URL,
-    echo=True,
+    echo=False,
     connect_args={"check_same_thread": False},
 )
 db_sessionmaker = async_sessionmaker(_engine, expire_on_commit=False)

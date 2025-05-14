@@ -142,8 +142,9 @@ class MapState(BaseModel):
         for i in range(0x10, 0xF0, 0x10):  # First sprite is the player.
             if mem[0xC100 + i] == 0:  # No more sprites on this map.
                 break
-            sprites[i] = Sprite(
-                index=i,
+            index = i // 0x10
+            sprites[index] = Sprite(
+                index=index,
                 # Sprite coordinates start counting from 4 for some reason.
                 y=mem[0xC204 + i] - 4,
                 x=mem[0xC205 + i] - 4,
@@ -151,7 +152,7 @@ class MapState(BaseModel):
                 moves_randomly=mem[0xC206 + i] == 0xFE,
             )
         pikachu_sprite = Sprite(
-            index=0,
+            index=15,  # Pikachu is always the last sprite if it's on screen.
             y=mem[0xC2F4] - 4,
             x=mem[0xC2F5] - 4,
             is_rendered=mem[0xC1F2] != 0xFF,
