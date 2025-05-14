@@ -30,7 +30,7 @@ async def get_warp_memories_for_map(map_id: int) -> list[WarpMemory]:
     return [WarpMemory.model_validate(d) for d in db_objs]
 
 
-async def update_known_warp_description(warp: WarpMemory) -> WarpMemory:
+async def update_warp_memory(warp: WarpMemory) -> WarpMemory:
     """Update the description of a warp memory."""
     async with db_sessionmaker() as session:
         query = (

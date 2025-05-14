@@ -30,7 +30,7 @@ async def get_sprite_memories_for_map(map_id: int) -> list[SpriteMemory]:
     return [SpriteMemory.model_validate(d) for d in db_objs]
 
 
-async def update_known_sprite_description(sprite: SpriteMemory) -> SpriteMemory:
+async def update_sprite_memory(sprite: SpriteMemory) -> SpriteMemory:
     """Update the description of a sprite memory."""
     async with db_sessionmaker() as session:
         query = (
