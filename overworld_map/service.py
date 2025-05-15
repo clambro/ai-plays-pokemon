@@ -47,10 +47,20 @@ async def get_overworld_map(game_state: YellowLegacyGameState) -> OverworldMap:
     return overworld_map
 
 
-async def add_remove_map_entities(
+async def update_map_with_screen_info(
     game_state: YellowLegacyGameState,
     overworld_map: OverworldMap,
 ) -> OverworldMap:
+    """Update the overworld map with the current screen info."""
+    await _add_remove_map_entities(game_state, overworld_map)
+    await _update_overworld_map_tiles(game_state, overworld_map)
+    return await get_overworld_map(game_state)
+
+
+async def _add_remove_map_entities(
+    game_state: YellowLegacyGameState,
+    overworld_map: OverworldMap,
+) -> None:
     """Add or remove sprites or warps from the overworld map depending on the current screen."""
     if overworld_map.id != game_state.cur_map.id:
         raise ValueError("Overworld map does not match current game state.")
@@ -87,17 +97,13 @@ async def add_remove_map_entities(
             )
         # Warps are never de-rendered, so no need to delete them.
 
-    if not tasks:
-        return overworld_map
-
     await asyncio.gather(*tasks)
-    return await get_overworld_map(game_state)
 
 
-async def update_overworld_map_tiles(
+async def _update_overworld_map_tiles(
     game_state: YellowLegacyGameState,
     overworld_map: OverworldMap,
-) -> OverworldMap:
+) -> None:
     """Update the overworld map with the current game state, revealing new tiles."""
     ascii_screen, _, _ = game_state.get_ascii_screen()
     screen = game_state.screen
@@ -127,7 +133,6 @@ async def update_overworld_map_tiles(
     overworld_map.ascii_tiles = ascii_tiles.tolist()
 
     await update_map_tiles(MapMemory(map_id=overworld_map.id, tiles=overworld_map.ascii_tiles_str))
-    return await get_overworld_map(game_state)
 
 
 async def _create_overworld_map_from_game_state(game_state: YellowLegacyGameState) -> OverworldMap:

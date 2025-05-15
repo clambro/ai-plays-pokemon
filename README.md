@@ -6,6 +6,7 @@
 * Add a critic model
 * Add automated backups
 * Add the initial game state to the output folder
+* Add internal prompts to the DB for error anaysis
 
 * Add summary memory with decay -- Fixed size, max(age*decay_rate) drops off first
 * Add long term memory with retrieval and decay -- Asks to delete after N iterations without retrieval
