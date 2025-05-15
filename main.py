@@ -1,7 +1,6 @@
 import argparse
 import asyncio
 from datetime import datetime
-from pathlib import Path
 
 import aiofiles
 import aiofiles.os
@@ -9,13 +8,13 @@ from loguru import logger
 
 from agent.app import build_agent_workflow
 from agent.state import AgentState
-from common.constants import MAP_SUBFOLDER, SPRITE_SUBFOLDER, WARP_SUBFOLDER
+from common.constants import OUTPUTS_FOLDER
+from database.db_config import init_fresh_db
 from emulator.emulator import YellowLegacyEmulator
 
 
 async def main(
     rom_path: str,
-    parent_folder: str,
     mute_sound: bool,
     state_path: str | None = None,
 ) -> None:
@@ -26,11 +25,9 @@ async def main(
     :param state_path: Optional path to load a saved state from.
     """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    folder = Path(parent_folder) / timestamp
+    folder = OUTPUTS_FOLDER / timestamp
     await aiofiles.os.makedirs(folder, exist_ok=True)
-    await aiofiles.os.makedirs(folder / MAP_SUBFOLDER, exist_ok=True)
-    await aiofiles.os.makedirs(folder / SPRITE_SUBFOLDER, exist_ok=True)
-    await aiofiles.os.makedirs(folder / WARP_SUBFOLDER, exist_ok=True)
+    await init_fresh_db()
 
     async with YellowLegacyEmulator(rom_path, state_path, mute_sound=mute_sound) as emulator:
         state = AgentState(folder=folder)
@@ -48,8 +45,7 @@ async def main(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--rom-path", type=str, required=True)
-    parser.add_argument("--parent-folder", type=str, required=True)
     parser.add_argument("--state-path", type=str, required=False)
     parser.add_argument("--mute-sound", action="store_true")
     args = parser.parse_args()
-    asyncio.run(main(args.rom_path, args.parent_folder, args.mute_sound, args.state_path))
+    asyncio.run(main(args.rom_path, args.mute_sound, args.state_path))

@@ -1,9 +1,6 @@
-from pathlib import Path
 from typing import Self
 
-import aiofiles
 import numpy as np
-from loguru import logger
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel
 
@@ -67,38 +64,6 @@ class Sprite(BaseModel):
     is_rendered: bool
     moves_randomly: bool
 
-    async def to_string(self, sprite_folder: Path, map_id: MapLocation) -> str:
-        """Get a string representation of the sprite."""
-        description = await self.get_description(sprite_folder, map_id)
-        out = f"sprite_{map_id.value}_{self.index} at ({self.y}, {self.x}): {description}"
-        if self.moves_randomly:
-            out += (
-                " Warning: This sprite wanders randomly around the map. Your actions are likely too"
-                " slow to catch it. Sprites like this are usually not worth interacting with."
-            )
-        return out
-
-    async def get_description(self, sprite_folder: Path, map_id: MapLocation) -> str:
-        """Get a description of the sprite from a file."""
-        file_path = sprite_folder / f"sprite_{map_id.value}_{self.index}.txt"
-        if not file_path.exists():
-            return "No description added yet."
-        async with aiofiles.open(file_path) as f:
-            data = await f.read()
-        return data
-
-    async def save_description(
-        self,
-        sprite_folder: Path,
-        map_id: MapLocation,
-        description: str,
-    ) -> None:
-        """Save a description of the sprite to a file."""
-        logger.info(f"Updating sprite_{map_id.value}_{self.index} with description: {description}")
-        file_path = sprite_folder / f"sprite_{map_id.value}_{self.index}.txt"
-        async with aiofiles.open(file_path, "w") as f:
-            await f.write(description)
-
 
 class Warp(BaseModel):
     """A warp on the current map."""
@@ -109,36 +74,6 @@ class Warp(BaseModel):
     # TODO: Saving the destination is kinda cheating, but much easier than detecting a warp and
     # going back to edit the long term memory.
     destination: MapLocation
-
-    async def to_string(self, warp_folder: Path, map_id: MapLocation) -> str:
-        """Get a string representation of the warp."""
-        description = await self.get_description(warp_folder, map_id)
-        out = (
-            f"warp_{map_id.value}_{self.index} at ({self.y}, {self.x}) leading to"
-            f" {self.destination.name}: {description}"
-        )
-        return out
-
-    async def get_description(self, warp_folder: Path, map_id: MapLocation) -> str:
-        """Get a description of the warp from a file."""
-        file_path = warp_folder / f"warp_{map_id.value}_{self.index}.txt"
-        if not file_path.exists():
-            return "No description added yet."
-        async with aiofiles.open(file_path) as f:
-            data = await f.read()
-        return data
-
-    async def save_description(
-        self,
-        warp_folder: Path,
-        map_id: MapLocation,
-        description: str,
-    ) -> None:
-        """Save a description of the warp to a file."""
-        logger.info(f"Updating warp_{map_id.value}_{self.index} with description: {description}")
-        file_path = warp_folder / f"warp_{map_id.value}_{self.index}.txt"
-        async with aiofiles.open(file_path, "w") as f:
-            await f.write(description)
 
 
 class MapState(BaseModel):
@@ -153,9 +88,9 @@ class MapState(BaseModel):
     ledge_tiles: list[int]
     cut_tree_tiles: list[int]
     walkable_tiles: list[int]
-    sprites: list[Sprite]
+    sprites: dict[int, Sprite]
     pikachu_sprite: Sprite
-    warps: list[Warp]
+    warps: dict[int, Warp]
 
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView) -> Self:
@@ -196,29 +131,28 @@ class MapState(BaseModel):
         )
 
     @staticmethod
-    def _get_sprites(mem: PyBoyMemoryView) -> tuple[list[Sprite], Sprite]:
+    def _get_sprites(mem: PyBoyMemoryView) -> tuple[dict[int, Sprite], Sprite]:
         """
         Get the list of sprites on the current map from a snapshot of the memory.
 
         :param mem: The PyBoyMemoryView instance to create the sprites from.
-        :return: A list of normal sprites, plus the pikachu sprite.
+        :return: A dictionary of normal sprites, keyed by index, plus the pikachu sprite.
         """
-        sprites = []
+        sprites = {}
         for i in range(0x10, 0xF0, 0x10):  # First sprite is the player.
             if mem[0xC100 + i] == 0:  # No more sprites on this map.
                 break
-            sprites.append(
-                Sprite(
-                    index=i,
-                    # Sprite coordinates start counting from 4 for some reason.
-                    y=mem[0xC204 + i] - 4,
-                    x=mem[0xC205 + i] - 4,
-                    is_rendered=mem[0xC102 + i] != 0xFF,
-                    moves_randomly=mem[0xC206 + i] == 0xFE,
-                ),
+            index = i // 0x10
+            sprites[index] = Sprite(
+                index=index,
+                # Sprite coordinates start counting from 4 for some reason.
+                y=mem[0xC204 + i] - 4,
+                x=mem[0xC205 + i] - 4,
+                is_rendered=mem[0xC102 + i] != 0xFF,
+                moves_randomly=mem[0xC206 + i] == 0xFE,
             )
         pikachu_sprite = Sprite(
-            index=0,
+            index=15,  # Pikachu is always the last sprite if it's on screen.
             y=mem[0xC2F4] - 4,
             x=mem[0xC2F5] - 4,
             is_rendered=mem[0xC1F2] != 0xFF,
@@ -227,24 +161,22 @@ class MapState(BaseModel):
         return sprites, pikachu_sprite
 
     @staticmethod
-    def _get_warps(mem: PyBoyMemoryView) -> list[Warp]:
+    def _get_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
         """
         Get the list of warps on the current map from a snapshot of the memory.
 
         :param mem: The PyBoyMemoryView instance to create the warps from.
-        :return: A list of warps.
+        :return: A dictionary of warps, keyed by index.
         """
         num_warps = mem[0xD3FB]
-        warps = []
+        warps = {}
         for i in range(num_warps):
             base = 0xD3FC + 4 * i
-            warps.append(
-                Warp(
-                    index=i,
-                    y=mem[base],
-                    x=mem[base + 1],
-                    destination=MapLocation(mem[base + 3]),
-                ),
+            warps[i] = Warp(
+                index=i,
+                y=mem[base],
+                x=mem[base + 1],
+                destination=MapLocation(mem[base + 3]),
             )
         return warps
 

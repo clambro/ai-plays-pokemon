@@ -1,13 +1,15 @@
 from datetime import datetime
 
 from loguru import logger
+
+from agent.schemas import NavigationArgs
+from common.constants import FREE_TILE, GRASS_TILE, LEDGE_TILE, PIKACHU_TILE, WARP_TILE
 from emulator.emulator import YellowLegacyEmulator
-from emulator.enums import Button
+from emulator.enums import Button, MapLocation
 from emulator.game_state import YellowLegacyGameState
 from overworld_map.schemas import OverworldMap
+from overworld_map.service import update_map_with_screen_info
 from raw_memory.schemas import RawMemory, RawMemoryPiece
-from agent.schemas import NavigationArgs
-from common.constants import GRASS_TILE, FREE_TILE, LEDGE_TILE, WARP_TILE, PIKACHU_TILE
 
 # TODO: This service doesn't handle surfing at all.
 # TODO: Should avoid grass tiles when possible.
@@ -54,31 +56,25 @@ class NavigationService:
                         f"Navigation failed. No walkable path found to target coordinates"
                         f" {self.coords}."
                     ),
-                )
+                ),
             )
             return
 
+        starting_map_id = self.current_map.id
         for button in path:
-            current_pos = (game_state.player.y, game_state.player.x)
             await self.emulator.press_buttons([button])
             await self.emulator.wait_for_animation_to_finish()
 
+            prev_pos = (game_state.player.y, game_state.player.x)
             game_state = await self.emulator.get_game_state()
-            self.current_map.update_with_screen_info(game_state)
-
-            new_pos = (game_state.player.y, game_state.player.x)
-            if current_pos == new_pos:
-                logger.warning("Navigation interrupted. Cancelling.")
-                self.raw_memory.append(
-                    RawMemoryPiece(
-                        iteration=self.iteration,
-                        timestamp=datetime.now(),
-                        content=(
-                            f"Navigation to {self.coords} interrupted at position {current_pos}."
-                        ),
-                    )
-                )
+            if self.should_cancel_navigation(game_state, prev_pos, starting_map_id):
                 return
+            # Can't update the map until we validate above that we haven't switched maps.
+            self.current_map = await update_map_with_screen_info(
+                self.iteration,
+                game_state,
+                self.current_map,
+            )
 
     def _validate_target_coords(self) -> bool:
         """Validate the target coordinates."""
@@ -96,7 +92,7 @@ class NavigationService:
                         f"Navigation failed. Target coordinates {self.coords} are outside of the"
                         f" {self.current_map.id.name} map boundary."
                     ),
-                )
+                ),
             )
             return False
 
@@ -110,7 +106,7 @@ class NavigationService:
                         f"Navigation failed. Target coordinates {self.coords} are on a non-walkable"
                         f' tile of type "{target_tile}".'
                     ),
-                )
+                ),
             )
             return False
 
@@ -185,3 +181,36 @@ class NavigationService:
 
         # If we get here, no path was found
         return None
+
+    def should_cancel_navigation(
+        self,
+        game_state: YellowLegacyGameState,
+        prev_pos: tuple[int, int],
+        starting_map_id: MapLocation,
+    ) -> bool:
+        """Check if we should cancel navigation."""
+        new_pos = (game_state.player.y, game_state.player.x)
+        if new_pos == self.coords:
+            logger.info("Navigation to target coordinates completed.")
+            return True
+        if prev_pos == new_pos:
+            logger.warning("Navigation interrupted. Cancelling.")
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    timestamp=datetime.now(),
+                    content=(f"Navigation to {self.coords} interrupted at position {new_pos}."),
+                ),
+            )
+            return True
+        if game_state.cur_map.id != starting_map_id:
+            logger.warning("Map changed during navigation. Cancelling.")
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    timestamp=datetime.now(),
+                    content="The map has changed during navigation. Cancelling further steps.",
+                ),
+            )
+            return True
+        return False

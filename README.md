@@ -1,6 +1,7 @@
 # ai-plays-pokemon
 
 ## TODOs in rough order of importance
+* Add internal prompts to the DB for error anaysis
 * Tile constants should be an enum
 
 * Add a critic model
@@ -36,5 +37,4 @@
 
 ### Notes
 * Might have to drop Pikachu from the map view. I could see that maybe causing problems.
-* Can we skip the file storage and do everything in memory? Or maybe sqlite?
 * Numerical coords on screen? Dots to show past steps? Maybe when I have tests set up.

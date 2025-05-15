@@ -1,8 +1,9 @@
+from junjo import Node
 from loguru import logger
+
 from agent.nodes.update_current_map.service import UpdateCurrentMapService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo import Node
 
 
 class UpdateCurrentMapNode(Node[AgentStore]):
@@ -17,7 +18,7 @@ class UpdateCurrentMapNode(Node[AgentStore]):
         logger.info("Updating the current map...")
 
         state = await store.get_state()
-        service = UpdateCurrentMapService(emulator=self.emulator, folder=state.folder)
+        service = UpdateCurrentMapService(emulator=self.emulator, iteration=state.iteration)
 
         current_map = await service.update_current_map()
 

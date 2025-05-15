@@ -1,21 +1,50 @@
-from pathlib import Path
-
-import aiofiles
 import numpy as np
 from pydantic import BaseModel
 
-from common.constants import (
-    MAP_SUBFOLDER,
-    PLAYER_OFFSET_X,
-    PLAYER_OFFSET_Y,
-    SPRITE_SUBFOLDER,
-    UNSEEN_TILE,
-    WARP_SUBFOLDER,
-)
+from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, UNSEEN_TILE
 from emulator.enums import MapLocation
 from emulator.game_state import YellowLegacyGameState
-from emulator.schemas import ScreenState, Sprite, Warp
+from emulator.schemas import Sprite, Warp
 from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
+
+
+class OverworldSprite(Sprite):
+    """A sprite on the overworld map, known to the player."""
+
+    description: str
+
+    @classmethod
+    def from_sprite(cls, sprite: Sprite, description: str) -> "OverworldSprite":
+        """Create an overworld sprite from a sprite and a description."""
+        return cls(**sprite.model_dump(), description=description)
+
+    def to_string(self, map_id: MapLocation) -> str:
+        """Get a string representation of the sprite."""
+        out = f"sprite_{map_id.value}_{self.index} at ({self.y}, {self.x}): {self.description}"
+        if self.moves_randomly:
+            out += (
+                " Warning: This sprite wanders randomly around the map. Your actions are likely too"
+                " slow to catch it. Sprites like this are usually not worth interacting with."
+            )
+        return out
+
+
+class OverworldWarp(Warp):
+    """A warp on the overworld map, known to the player."""
+
+    description: str
+
+    @classmethod
+    def from_warp(cls, warp: Warp, description: str) -> "OverworldWarp":
+        """Create an overworld warp from a warp and a description."""
+        return cls(**warp.model_dump(), description=description)
+
+    def to_string(self, map_id: MapLocation) -> str:
+        """Get a string representation of the warp."""
+        return (
+            f"warp_{map_id.value}_{self.index} at ({self.y}, {self.x}) leading to"
+            f" {self.destination.name}: {self.description}"
+        )
 
 
 class OverworldMap(BaseModel):
@@ -23,40 +52,8 @@ class OverworldMap(BaseModel):
 
     id: MapLocation
     ascii_tiles: list[list[str]]
-    known_sprites: dict[int, Sprite]
-    known_warps: dict[int, Warp]
-    parent_folder: Path
-
-    @classmethod
-    async def load(cls, parent_folder: Path, id: MapLocation) -> "OverworldMap":
-        """Load a map from a file."""
-        file_path = parent_folder / MAP_SUBFOLDER / f"{id.name}.json"
-        if not file_path.exists():
-            raise FileNotFoundError(f"Map file not found: {file_path}")
-        async with aiofiles.open(file_path) as f:
-            data = await f.read()
-        return cls.model_validate_json(data)
-
-    @classmethod
-    async def from_game_state(
-        cls,
-        parent_folder: Path,
-        game_state: YellowLegacyGameState,
-    ) -> "OverworldMap":
-        """Load a map from the game state."""
-        tiles = []
-        for _ in range(game_state.cur_map.height):
-            row = []
-            for _ in range(game_state.cur_map.width):
-                row.append(UNSEEN_TILE)
-            tiles.append(row)
-        return cls(
-            id=game_state.cur_map.id,
-            ascii_tiles=tiles,
-            known_sprites={},
-            known_warps={},
-            parent_folder=parent_folder,
-        )
+    known_sprites: dict[int, OverworldSprite]
+    known_warps: dict[int, OverworldWarp]
 
     @property
     def height(self) -> int:
@@ -73,9 +70,14 @@ class OverworldMap(BaseModel):
         """The ascii tiles as a numpy array."""
         return np.array(self.ascii_tiles)
 
+    @property
+    def ascii_tiles_str(self) -> str:
+        """The ascii tiles as a string."""
+        return "\n".join("".join(row) for row in self.ascii_tiles)
+
     async def to_string(self, game_state: YellowLegacyGameState) -> str:
         """Return a string representation of the map."""
-        tiles = "\n".join("".join(row) for row in self.ascii_tiles)
+        tiles = self.ascii_tiles_str
         explored_percentage = np.mean(self.ascii_tiles_ndarray != UNSEEN_TILE)
         screen, _, _ = game_state.get_ascii_screen()
         tile_above = screen[PLAYER_OFFSET_Y - 1, PLAYER_OFFSET_X]
@@ -101,68 +103,14 @@ class OverworldMap(BaseModel):
             screen_lower_right_x=game_state.screen.right,
         )
 
-    async def save(self, parent_folder: Path) -> None:
-        """Save the map to a file."""
-        file_path = parent_folder / MAP_SUBFOLDER / f"{self.id.name}.json"
-        async with aiofiles.open(file_path, "w") as f:
-            await f.write(self.model_dump_json())
-
-    def update_with_screen_info(self, game_state: YellowLegacyGameState) -> None:
-        """Update the map with the screen info."""
-        ascii_screen, sprites, warps = game_state.get_ascii_screen()
-        self._add_tiles_to_screen(game_state.screen, ascii_screen)
-
-        for s in sprites:
-            if s.is_rendered:
-                self.known_sprites[s.index] = s
-            elif s.index in self.known_sprites:
-                # Previously seen sprite has been de-rendered. Likely an item that has been picked
-                # up, or a scripted character that has walked off screen.
-                del self.known_sprites[s.index]
-
-        for w in warps:
-            self.known_warps[w.index] = w  # Warps are always rendered.
-
-    def _add_tiles_to_screen(self, screen: ScreenState, ascii_screen: np.ndarray) -> None:
-        """Add the tiles to the screen."""
-        top = screen.top
-        left = screen.left
-        bottom = screen.bottom
-        right = screen.right
-
-        if top < 0:
-            ascii_screen = ascii_screen[-top:]
-            top = 0
-        if left < 0:
-            ascii_screen = ascii_screen[:, -left:]
-            left = 0
-        if bottom > self.height:
-            ascii_screen = ascii_screen[: self.height - bottom]
-            bottom = self.height
-        if right > self.width:
-            ascii_screen = ascii_screen[:, : self.width - right]
-            right = self.width
-
-        ascii_tiles = self.ascii_tiles_ndarray
-        ascii_tiles[top:bottom, left:right] = ascii_screen
-        self.ascii_tiles = ascii_tiles.tolist()
-
     async def _get_sprite_notes(self) -> str:
-        """Get the notes for the sprites on the map."""
+        """Get the notes for the sprites on the map, sorted by index."""
         if not self.known_sprites:
             return "No sprites discovered."
-        out = ""
-        for sprite in self.known_sprites.values():
-            description = await sprite.to_string(self.parent_folder / SPRITE_SUBFOLDER, self.id)
-            out += f"- {description}\n"
-        return out.strip()
+        return "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_sprites.items()))
 
     async def _get_warp_notes(self) -> str:
-        """Get the notes for the warps on the map."""
+        """Get the notes for the warps on the map, sorted by index."""
         if not self.known_warps:
             return "No warp tiles discovered."
-        out = ""
-        for warp in self.known_warps.values():
-            description = await warp.to_string(self.parent_folder / WARP_SUBFOLDER, self.id)
-            out += f"- {description}\n"
-        return out.strip()
+        return "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_warps.items()))
