@@ -2,27 +2,27 @@ import asyncio
 
 from common.constants import UNSEEN_TILE
 from database.map_memory.repository import create_map_memory, get_map_memory, update_map_tiles
-from database.map_memory.schemas import MapMemory
+from database.map_memory.schemas import MapMemoryCreateUpdate
 from database.sprite_memory.repository import (
     create_sprite_memory,
     delete_sprite_memory,
     get_sprite_memories_for_map,
 )
-from database.sprite_memory.schemas import SpriteMemory
+from database.sprite_memory.schemas import SpriteMemoryCreateUpdate
 from database.warp_memory.repository import create_warp_memory, get_warp_memories_for_map
-from database.warp_memory.schemas import WarpMemory
+from database.warp_memory.schemas import WarpMemoryCreateUpdate
 from emulator.game_state import YellowLegacyGameState
 from overworld_map.schemas import OverworldMap, OverworldSprite, OverworldWarp
 
 
-async def get_overworld_map(game_state: YellowLegacyGameState) -> OverworldMap:
+async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -> OverworldMap:
     """
     Get the overworld map from the game state, loading the relevant memories from the database if
     the map is known, otherwise creating a new one.
     """
     map_memory = await get_map_memory(game_state.cur_map.id)
     if map_memory is None:
-        return await _create_overworld_map_from_game_state(game_state)
+        return await _create_overworld_map_from_game_state(iteration, game_state)
 
     sprite_memories = await get_sprite_memories_for_map(map_memory.map_id)
     game_sprites = game_state.cur_map.sprites
@@ -48,16 +48,18 @@ async def get_overworld_map(game_state: YellowLegacyGameState) -> OverworldMap:
 
 
 async def update_map_with_screen_info(
+    iteration: int,
     game_state: YellowLegacyGameState,
     overworld_map: OverworldMap,
 ) -> OverworldMap:
     """Update the overworld map with the current screen info."""
-    await _add_remove_map_entities(game_state, overworld_map)
-    await _update_overworld_map_tiles(game_state, overworld_map)
-    return await get_overworld_map(game_state)
+    await _add_remove_map_entities(iteration, game_state, overworld_map)
+    await _update_overworld_map_tiles(iteration, game_state, overworld_map)
+    return await get_overworld_map(iteration, game_state)
 
 
 async def _add_remove_map_entities(
+    iteration: int,
     game_state: YellowLegacyGameState,
     overworld_map: OverworldMap,
 ) -> None:
@@ -72,7 +74,8 @@ async def _add_remove_map_entities(
         if s.index not in overworld_map.known_sprites:
             tasks.append(
                 create_sprite_memory(
-                    SpriteMemory(
+                    SpriteMemoryCreateUpdate(
+                        iteration=iteration,
                         map_id=overworld_map.id,
                         sprite_id=s.index,
                         description="No description added yet.",
@@ -88,7 +91,8 @@ async def _add_remove_map_entities(
         if w.index not in overworld_map.known_warps:
             tasks.append(
                 create_warp_memory(
-                    WarpMemory(
+                    WarpMemoryCreateUpdate(
+                        iteration=iteration,
                         map_id=overworld_map.id,
                         warp_id=w.index,
                         description="No description added yet.",
@@ -101,6 +105,7 @@ async def _add_remove_map_entities(
 
 
 async def _update_overworld_map_tiles(
+    iteration: int,
     game_state: YellowLegacyGameState,
     overworld_map: OverworldMap,
 ) -> None:
@@ -132,10 +137,19 @@ async def _update_overworld_map_tiles(
     ascii_tiles[top:bottom, left:right] = ascii_screen
     overworld_map.ascii_tiles = ascii_tiles.tolist()
 
-    await update_map_tiles(MapMemory(map_id=overworld_map.id, tiles=overworld_map.ascii_tiles_str))
+    await update_map_tiles(
+        MapMemoryCreateUpdate(
+            iteration=iteration,
+            map_id=overworld_map.id,
+            tiles=overworld_map.ascii_tiles_str,
+        ),
+    )
 
 
-async def _create_overworld_map_from_game_state(game_state: YellowLegacyGameState) -> OverworldMap:
+async def _create_overworld_map_from_game_state(
+    iteration: int,
+    game_state: YellowLegacyGameState,
+) -> OverworldMap:
     """Create a new overworld map from the game state."""
     tiles = []
     for _ in range(game_state.cur_map.height):
@@ -150,6 +164,10 @@ async def _create_overworld_map_from_game_state(game_state: YellowLegacyGameStat
         known_warps={},
     )
     await create_map_memory(
-        MapMemory(map_id=overworld_map.id, tiles=overworld_map.ascii_tiles_str),
+        MapMemoryCreateUpdate(
+            iteration=iteration,
+            map_id=overworld_map.id,
+            tiles=overworld_map.ascii_tiles_str,
+        ),
     )
     return overworld_map

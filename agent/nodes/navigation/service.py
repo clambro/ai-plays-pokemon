@@ -70,7 +70,11 @@ class NavigationService:
             if self.should_cancel_navigation(game_state, prev_pos, starting_map_id):
                 return
             # Can't update the map until we validate above that we haven't switched maps.
-            self.current_map = await update_map_with_screen_info(game_state, self.current_map)
+            self.current_map = await update_map_with_screen_info(
+                self.iteration,
+                game_state,
+                self.current_map,
+            )
 
     def _validate_target_coords(self) -> bool:
         """Validate the target coordinates."""

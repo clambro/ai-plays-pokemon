@@ -7,9 +7,9 @@ from agent.nodes.update_onscreen_entities.prompts import UPDATE_SPRITES_PROMPT, 
 from agent.nodes.update_onscreen_entities.schemas import UpdateEntitiesResponse
 from common.gemini import Gemini, GeminiModel
 from database.sprite_memory.repository import update_sprite_memory
-from database.sprite_memory.schemas import SpriteMemory
+from database.sprite_memory.schemas import SpriteMemoryCreateUpdate
 from database.warp_memory.repository import update_warp_memory
-from database.warp_memory.schemas import WarpMemory
+from database.warp_memory.schemas import WarpMemoryCreateUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
 from emulator.schemas import Sprite, Warp
@@ -23,9 +23,11 @@ class UpdateOnscreenEntitiesService:
     def __init__(
         self,
         emulator: YellowLegacyEmulator,
+        iteration: int,
         raw_memory: RawMemory,
         current_map: OverworldMap,
     ) -> None:
+        self.iteration = iteration
         self.emulator = emulator
         self.raw_memory = raw_memory
         self.current_map = current_map
@@ -63,10 +65,11 @@ class UpdateOnscreenEntitiesService:
             asyncio.gather(
                 *[
                     update_sprite_memory(
-                        SpriteMemory(
+                        SpriteMemoryCreateUpdate(
                             map_id=self.current_map.id,
                             sprite_id=u.index,
                             description=u.description,
+                            iteration=self.iteration,
                         ),
                     )
                     for u in response.updates
@@ -98,10 +101,11 @@ class UpdateOnscreenEntitiesService:
             asyncio.gather(
                 *[
                     update_warp_memory(
-                        WarpMemory(
+                        WarpMemoryCreateUpdate(
                             map_id=self.current_map.id,
                             warp_id=u.index,
                             description=u.description,
+                            iteration=self.iteration,
                         ),
                     )
                     for u in response.updates

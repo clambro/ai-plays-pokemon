@@ -23,6 +23,7 @@ class UpdateOnscreenEntitiesNode(Node[AgentStore]):
 
         service = UpdateOnscreenEntitiesService(
             emulator=self.emulator,
+            iteration=state.iteration,
             raw_memory=state.raw_memory,
             current_map=state.current_map,
         )

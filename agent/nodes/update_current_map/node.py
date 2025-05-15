@@ -17,7 +17,8 @@ class UpdateCurrentMapNode(Node[AgentStore]):
         """The service for the node."""
         logger.info("Updating the current map...")
 
-        service = UpdateCurrentMapService(emulator=self.emulator)
+        state = await store.get_state()
+        service = UpdateCurrentMapService(emulator=self.emulator, iteration=state.iteration)
 
         current_map = await service.update_current_map()
 
