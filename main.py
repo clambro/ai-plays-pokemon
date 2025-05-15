@@ -8,7 +8,7 @@ from loguru import logger
 
 from agent.app import build_agent_workflow
 from agent.state import AgentState
-from common.constants import MAP_SUBFOLDER, OUTPUTS_FOLDER, SPRITE_SUBFOLDER, WARP_SUBFOLDER
+from common.constants import OUTPUTS_FOLDER
 from database.db_config import init_fresh_db
 from emulator.emulator import YellowLegacyEmulator
 
@@ -27,9 +27,6 @@ async def main(
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     folder = OUTPUTS_FOLDER / timestamp
     await aiofiles.os.makedirs(folder, exist_ok=True)
-    await aiofiles.os.makedirs(folder / MAP_SUBFOLDER, exist_ok=True)
-    await aiofiles.os.makedirs(folder / SPRITE_SUBFOLDER, exist_ok=True)
-    await aiofiles.os.makedirs(folder / WARP_SUBFOLDER, exist_ok=True)
     await init_fresh_db()
 
     async with YellowLegacyEmulator(rom_path, state_path, mute_sound=mute_sound) as emulator:

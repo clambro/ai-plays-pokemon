@@ -17,8 +17,6 @@ async def init_fresh_db() -> None:
     """Initialize a fresh database by dropping all existing tables and recreating them."""
     logger.info(f"Initializing a fresh database at: {DB_URL}")
 
-    # These are the tables that will be created in the database.
-
     async with _engine.begin() as conn:
         if DB_FILE_PATH.exists():
             await conn.run_sync(SQLAlchemyBase.metadata.drop_all)

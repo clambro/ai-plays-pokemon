@@ -1,12 +1,12 @@
 # ai-plays-pokemon
 
 ## TODOs in rough order of importance
+* Add internal prompts to the DB for error anaysis
 * Tile constants should be an enum
 
 * Add a critic model
 * Add automated backups
 * Add the initial game state to the output folder
-* Add internal prompts to the DB for error anaysis
 
 * Add summary memory with decay -- Fixed size, max(age*decay_rate) drops off first
 * Add long term memory with retrieval and decay -- Asks to delete after N iterations without retrieval
@@ -37,5 +37,4 @@
 
 ### Notes
 * Might have to drop Pikachu from the map view. I could see that maybe causing problems.
-* Can we skip the file storage and do everything in memory? Or maybe sqlite?
 * Numerical coords on screen? Dots to show past steps? Maybe when I have tests set up.
