@@ -44,7 +44,8 @@ You have discovered the following warp tiles on the portion of the map that you 
 </known_warps>
 
 Navigation tips:
-- You should explore as much of the map as possible to reveal the unexplored tiles, as they may be hiding important sprites or warp tiles. Tiles are considered explored once they are on screen, so move towards the unexplored tiles to reveal them. Revealing unexplored tiles is always a good idea.
+- You should explore as much of the map as possible to reveal the unexplored tiles, as they may be hiding important sprites or warp tiles. Tiles are considered explored once they are on screen, so move towards the unexplored tiles to reveal them.
+- Exploring the map to reveal unexplored tiles is always a good idea, especially if you feel stuck or unsure of how to proceed.
 - The orientation of the map and screen are always fixed, regardless of the direction that you are facing.
 - Warp tiles come in two varieties: single and double.
   - Single warp tiles are activated by standing on them. If you are standing on a warp tile and not going anywhere, it means that you have just warped to this tile from somewhere else. If you want to go back to your previous location and are standing on a single warp tile, you have to walk off the tile and then back on it to warp back.
