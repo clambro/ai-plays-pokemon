@@ -10,6 +10,7 @@ The (case-sensitive) available buttons are:
 - right: Used to move the character right.
 
 You also have access to the navigation tool, which can be used to navigate to any revealed, accessible tile on the current map. To use this tool, simply provide the coordinates of the tile you wish to navigate to in the "navigation_args" field below. Navigation from one map to another is not possible using this tool, but you can navigate to the edge of the current map and then transition from this map to the next in the next iteration using the directional buttons. You may also use the navigation tool to navigate directly to any accessible warp tile that you have discovered on the current map. The navigation tool will update your map information as you navigate, so just think of it as a way to move around a little faster if you want to move more than one tile at a time.
+For reference, the walkable tiles types are {walkable_tiles}.
 
 {raw_memory}
 
@@ -17,7 +18,7 @@ You also have access to the navigation tool, which can be used to navigate to an
 
 {player_info}
 
-The following is an ASCII representation of the current map, highlighting your current location. Note that the screenshot above is only a subset of the current map, centered on your current location.
+The following is an ASCII representation of the current map, highlighting your current location. Note that the screenshot above, also represented in ASCII below, is only a subset of the current map, centered on your current location.
 {current_map}
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
