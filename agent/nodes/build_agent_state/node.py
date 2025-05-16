@@ -1,8 +1,9 @@
+from junjo import Node
 from loguru import logger
+
 from agent.nodes.build_agent_state.service import BuildAgentStateService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo import Node
 
 
 class UpdateAgentStoreNode(Node[AgentStore]):
@@ -19,9 +20,11 @@ class UpdateAgentStoreNode(Node[AgentStore]):
         state = await store.get_state()
         service = BuildAgentStateService(self.emulator)
 
+        await service.wait_for_animations()
         handler = await service.determine_handler()
 
         await store.set_iteration(state.iteration + 1)
         await store.set_handler(handler)
+        await store.set_current_map(None)
         await store.set_tool(None)
         await store.set_tool_args(None)
