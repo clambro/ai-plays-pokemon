@@ -14,6 +14,8 @@ from pydantic import BaseModel
 
 from common.prompts import SYSTEM_PROMPT
 from common.settings import settings
+from database.llm_messages.repository import create_llm_message
+from database.llm_messages.schemas import LLMMessageCreate
 
 PydanticModel = TypeVar("PydanticModel", bound=BaseModel)
 
@@ -66,6 +68,19 @@ class Gemini:
                 temperature=temperature,
                 safety_settings=SAFETY_SETTINGS,
                 thinking_config=ThinkingConfig(thinking_budget=256),
+            ),
+        )
+        if not response.text or not response.usage_metadata:
+            raise ValueError("No response from Gemini.")
+        message_str = "\n\n".join("<IMAGE>" if isinstance(m, Image) else m for m in messages)
+        await create_llm_message(
+            LLMMessageCreate(
+                model=self.model,
+                prompt=message_str,
+                response=response.text,
+                prompt_tokens=response.usage_metadata.prompt_token_count or 0,
+                thought_tokens=response.usage_metadata.thoughts_token_count or 0,
+                response_tokens=response.usage_metadata.candidates_token_count or 0,
             ),
         )
         if not isinstance(response.parsed, schema):
