@@ -2,8 +2,9 @@
 
 ## TODOs in rough order of importance
 * Tile constants should be an enum
-
+* Add previous positions
 * Add a critic model
+
 * Add automated backups
 * Add the initial game state to the output folder
 
