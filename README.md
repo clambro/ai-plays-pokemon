@@ -1,7 +1,6 @@
 # ai-plays-pokemon
 
 ## TODOs in rough order of importance
-* Add internal prompts to the DB for error anaysis
 * Tile constants should be an enum
 
 * Add a critic model
@@ -31,7 +30,7 @@
 * Add strength boulders to map screen
 * Handle surfing in navigation
 * Add a strength puzzle solver?
-* Token counts, telemetry, and better logging
+* Set up Junjo server and opentelemetry and move the LLM stuff there
 
 * Some kind of twitch frontend
 
