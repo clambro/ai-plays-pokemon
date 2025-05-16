@@ -11,8 +11,6 @@ class SpriteMemoryCreateUpdate(BaseModel):
     description: str
     iteration: int
 
-    model_config = ConfigDict(from_attributes=True)
-
 
 class SpriteMemoryRead(BaseModel):
     """Read model for a sprite memory."""
