@@ -11,8 +11,6 @@ class WarpMemoryCreateUpdate(BaseModel):
     description: str
     iteration: int
 
-    model_config = ConfigDict(from_attributes=True)
-
 
 class WarpMemoryRead(BaseModel):
     """Read model for a warp memory."""

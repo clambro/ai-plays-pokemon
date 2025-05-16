@@ -119,11 +119,10 @@ class YellowLegacyGameState(BaseModel):
         for s in self.cur_map.sprites.values():
             if screen_coords := self.screen.get_screen_coords(s.y, s.x):
                 on_screen_sprites.append(s)
-                if s.is_rendered:
-                    blocks[screen_coords[0], screen_coords[1]] = SPRITE_TILE
+                blocks[screen_coords[0], screen_coords[1]] = SPRITE_TILE
 
         pikachu = self.cur_map.pikachu_sprite
-        if pikachu.is_rendered:
+        if pikachu:
             if screen_coords := self.screen.get_screen_coords(pikachu.y, pikachu.x):
                 blocks[screen_coords[0], screen_coords[1]] = PIKACHU_TILE
 

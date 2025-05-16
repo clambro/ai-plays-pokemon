@@ -10,8 +10,6 @@ class MapMemoryCreateUpdate(BaseModel):
     tiles: str
     iteration: int
 
-    model_config = ConfigDict(from_attributes=True)
-
 
 class MapMemoryRead(BaseModel):
     """Read model for a map memory."""

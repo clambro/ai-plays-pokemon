@@ -12,8 +12,7 @@ from database.warp_memory.repository import update_warp_memory
 from database.warp_memory.schemas import WarpMemoryCreateUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
-from emulator.schemas import Sprite, Warp
-from overworld_map.schemas import OverworldMap
+from overworld_map.schemas import OverworldMap, OverworldSprite, OverworldWarp
 from raw_memory.schemas import RawMemory
 
 
@@ -39,18 +38,23 @@ class UpdateOnscreenEntitiesService:
         _, sprites, warps = game_state.get_ascii_screen()
         screenshot = await self.emulator.get_screenshot()
         if sprites:
+            known_sprites = self.current_map.known_sprites
+            sprites = [known_sprites[s.index] for s in sprites if s.index in known_sprites]
             await self._update_sprites(sprites, screenshot, game_state)
         if warps:
+            known_warps = self.current_map.known_warps
+            warps = [known_warps[w.index] for w in warps if w.index in known_warps]
             await self._update_warps(warps, screenshot, game_state)
 
     async def _update_sprites(
         self,
-        sprites: list[Sprite],
+        sprites: list[OverworldSprite],
         screenshot: Image,
         game_state: YellowLegacyGameState,
     ) -> None:
         """Update the long-term memory of the sprites."""
-        sprite_text = "\n".join([f"- [{s.index}] {s}" for s in sprites])
+        m_id = self.current_map.id
+        sprite_text = "\n".join([f"- [{s.index}] {s.to_string(m_id)}" for s in sprites])
         prompt = UPDATE_SPRITES_PROMPT.format(
             raw_memory=self.raw_memory,
             map_info=await self.current_map.to_string(game_state),
@@ -81,12 +85,13 @@ class UpdateOnscreenEntitiesService:
 
     async def _update_warps(
         self,
-        warps: list[Warp],
+        warps: list[OverworldWarp],
         screenshot: Image,
         game_state: YellowLegacyGameState,
     ) -> None:
         """Update the long-term memory of the sprites."""
-        warp_text = "\n".join([f"- [{w.index}] {w}" for w in warps])
+        m_id = self.current_map.id
+        warp_text = "\n".join([f"- [{w.index}] {w.to_string(m_id)}" for w in warps])
         prompt = UPDATE_WARPS_PROMPT.format(
             raw_memory=self.raw_memory,
             map_info=await self.current_map.to_string(game_state),

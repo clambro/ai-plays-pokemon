@@ -37,7 +37,7 @@ class AgentStore(BaseStore[AgentState]):
         """Set the handler."""
         await self.set_state({"handler": handler})
 
-    async def set_current_map(self, current_map: OverworldMap) -> None:
+    async def set_current_map(self, current_map: OverworldMap | None) -> None:
         """Set the current map."""
         await self.set_state({"current_map": current_map})
 
