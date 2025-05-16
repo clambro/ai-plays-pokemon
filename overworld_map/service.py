@@ -1,6 +1,6 @@
 import asyncio
 
-from common.constants import UNSEEN_TILE
+from common.enums import AsciiTiles
 from database.map_memory.repository import create_map_memory, get_map_memory, update_map_tiles
 from database.map_memory.schemas import MapMemoryCreateUpdate
 from database.sprite_memory.repository import (
@@ -160,7 +160,7 @@ async def _create_overworld_map_from_game_state(
     for _ in range(game_state.cur_map.height):
         row = []
         for _ in range(game_state.cur_map.width):
-            row.append(UNSEEN_TILE)
+            row.append(AsciiTiles.UNSEEN)
         tiles.append(row)
     overworld_map = OverworldMap(
         id=game_state.cur_map.id,

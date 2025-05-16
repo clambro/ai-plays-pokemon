@@ -4,20 +4,8 @@ import numpy as np
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel
 
-from common.constants import (
-    CUT_TREE_TILE,
-    FREE_TILE,
-    GRASS_TILE,
-    LEDGE_TILE,
-    PIKACHU_TILE,
-    PLAYER_OFFSET_X,
-    PLAYER_OFFSET_Y,
-    PLAYER_TILE,
-    SPRITE_TILE,
-    WALL_TILE,
-    WARP_TILE,
-    WATER_TILE,
-)
+from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
+from common.enums import AsciiTiles
 from emulator.char_map import CHAR_TO_INT_MAP, INT_TO_CHAR_MAP
 from emulator.schemas import (
     BattleState,
@@ -99,37 +87,37 @@ class YellowLegacyGameState(BaseModel):
             for j in range(0, tiles.shape[1], 2):
                 b = tiles[i : i + 2, j : j + 2]
                 if np.any(b == self.cur_map.water_tile):
-                    row.append(WATER_TILE)
+                    row.append(AsciiTiles.WATER)
                 elif np.isin(b, self.cur_map.ledge_tiles).any():
-                    row.append(LEDGE_TILE)
+                    row.append(AsciiTiles.LEDGE)
                 elif np.any(b == self.cur_map.grass_tile):
-                    row.append(GRASS_TILE)
+                    row.append(AsciiTiles.GRASS)
                 elif b.flatten().tolist() == self.cur_map.cut_tree_tiles:
-                    row.append(CUT_TREE_TILE)
+                    row.append(AsciiTiles.CUT_TREE)
                 elif not np.isin(b, self.cur_map.walkable_tiles).any():
-                    row.append(WALL_TILE)
+                    row.append(AsciiTiles.WALL)
                 else:
-                    row.append(FREE_TILE)
+                    row.append(AsciiTiles.FREE)
             blocks.append(row)
         blocks = np.array(blocks)
 
-        blocks[PLAYER_OFFSET_Y, PLAYER_OFFSET_X] = PLAYER_TILE
+        blocks[PLAYER_OFFSET_Y, PLAYER_OFFSET_X] = AsciiTiles.PLAYER
 
         on_screen_sprites = []
         for s in self.cur_map.sprites.values():
             if screen_coords := self.screen.get_screen_coords(s.y, s.x):
                 on_screen_sprites.append(s)
-                blocks[screen_coords[0], screen_coords[1]] = SPRITE_TILE
+                blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.SPRITE
 
         pikachu = self.cur_map.pikachu_sprite
         if pikachu:
             if screen_coords := self.screen.get_screen_coords(pikachu.y, pikachu.x):
-                blocks[screen_coords[0], screen_coords[1]] = PIKACHU_TILE
+                blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.PIKACHU
 
         on_screen_warps = []
         for w in self.cur_map.warps.values():
             if screen_coords := self.screen.get_screen_coords(w.y, w.x):
-                blocks[screen_coords[0], screen_coords[1]] = WARP_TILE
+                blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.WARP
                 on_screen_warps.append(w)
 
         return blocks, on_screen_sprites, on_screen_warps
