@@ -71,7 +71,7 @@ async def _add_remove_map_entities(
 
     tasks = []
     for s in screen_sprites:
-        if s.index not in overworld_map.known_sprites:
+        if s.is_rendered and s.index not in overworld_map.known_sprites:
             tasks.append(
                 create_sprite_memory(
                     SpriteMemoryCreateUpdate(
@@ -83,11 +83,9 @@ async def _add_remove_map_entities(
                 ),
             )
 
-    screen_sprite_indices = [s.index for s in screen_sprites]
     for s in overworld_map.known_sprites.values():
-        is_s_rendered = s.index in screen_sprite_indices
         is_s_on_screen = game_state.screen.get_screen_coords(s.y, s.x) is not None
-        if not is_s_rendered and is_s_on_screen:
+        if is_s_on_screen and not s.is_rendered:
             # Previously seen sprite has been de-rendered. Likely an item that has been picked up,
             # or a scripted character that has walked off the screen.
             tasks.append(delete_sprite_memory(overworld_map.id, s.index))

@@ -61,6 +61,7 @@ class Sprite(BaseModel):
     index: int
     y: int
     x: int
+    is_rendered: bool
     moves_randomly: bool
 
 
@@ -88,7 +89,7 @@ class MapState(BaseModel):
     cut_tree_tiles: list[int]
     walkable_tiles: list[int]
     sprites: dict[int, Sprite]
-    pikachu_sprite: Sprite | None
+    pikachu_sprite: Sprite
     warps: dict[int, Warp]
 
     @classmethod
@@ -130,7 +131,7 @@ class MapState(BaseModel):
         )
 
     @staticmethod
-    def _get_sprites(mem: PyBoyMemoryView) -> tuple[dict[int, Sprite], Sprite | None]:
+    def _get_sprites(mem: PyBoyMemoryView) -> tuple[dict[int, Sprite], Sprite]:
         """
         Get the list of sprites on the current map from a snapshot of the memory.
 
@@ -142,25 +143,20 @@ class MapState(BaseModel):
             if mem[0xC100 + i] == 0:  # No more sprites on this map.
                 break
             index = i // 0x10
-            is_rendered = mem[0xC102 + i] != 0xFF
-            if not is_rendered:
-                continue
             sprites[index] = Sprite(
                 index=index,
                 # Sprite coordinates start counting from 4 for some reason.
                 y=mem[0xC204 + i] - 4,
                 x=mem[0xC205 + i] - 4,
+                is_rendered=mem[0xC102 + i] != 0xFF,
                 moves_randomly=mem[0xC206 + i] == 0xFE,
             )
-
-        pikachu_is_rendered = mem[0xC1F2] != 0xFF
-        if not pikachu_is_rendered:
-            return sprites, None
 
         pikachu_sprite = Sprite(
             index=15,  # Pikachu is always the last sprite if it's on screen.
             y=mem[0xC2F4] - 4,
             x=mem[0xC2F5] - 4,
+            is_rendered=mem[0xC1F2] != 0xFF,
             moves_randomly=False,
         )
         return sprites, pikachu_sprite
