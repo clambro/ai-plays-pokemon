@@ -76,8 +76,8 @@ class NavigationService:
         if (
             self.coords.row < 0
             or self.coords.col < 0
-            or self.coords.row >= self.current_map.width
-            or self.coords.col >= self.current_map.height
+            or self.coords.row >= self.current_map.height
+            or self.coords.col >= self.current_map.width
         ):
             self.raw_memory.append(
                 RawMemoryPiece(

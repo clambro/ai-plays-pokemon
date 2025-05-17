@@ -27,7 +27,7 @@ class ShouldCritiqueService:
 
     async def should_critique(self) -> bool:
         """Determine if the agent should critique the current state of the game."""
-        if self.iteration < MIN_ITERATIONS_PER_CRITIQUE:
+        if self.iteration % MIN_ITERATIONS_PER_CRITIQUE != 0:
             return False
 
         game_state = await self.emulator.get_game_state()

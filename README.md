@@ -11,6 +11,8 @@
 * Add long term memory with retrieval and decay -- Asks to delete after N iterations without retrieval
 
 * Add player/party information
+* Add connecting maps to the overworld maps
+* Add signs to the overworld maps
 
 * Add a grid to the overworld screen and overlay collisions
 
@@ -37,3 +39,4 @@
 ### Notes
 * Might have to drop Pikachu from the map view. I could see that maybe causing problems.
 * Numerical coords on screen? Dots to show past steps? Maybe when I have tests set up.
+* Maybe put the critic model on a parallel thread? It's really slow.

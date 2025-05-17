@@ -9,5 +9,11 @@ Take a step back from playing the game for a moment. You have signaled that you 
 
 {raw_memory}
 
+Common sources of error include (but are not limited to):
+- Misinterpreting the screenshot information
+- Incorrectly deciding that the screenshot is more reliable than the 100% accurate game memory data
+- Making false assumptions and failing to correct them
+- Not exploring the game world enough, especially the current map. If this is the case, you should point out exactly where you should be exploring. Which direction should you be going in?
+
 Give a thorough critique of your performance so far. Why are you stuck? Where did you go wrong? What should you do to make meaningful progress towards your goals?
 """.strip()

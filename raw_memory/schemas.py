@@ -44,4 +44,4 @@ class RawMemory(BaseModel):
         self.pieces.extend(pieces)
         self.pieces = self.pieces[-self.max_size :]
         for piece in pieces:
-            logger.info(f"New thought: {piece.content}")
+            logger.info(f"[{piece.iteration}] New thought: {piece.content}")
