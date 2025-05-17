@@ -1,7 +1,6 @@
 # ai-plays-pokemon
 
 ## TODOs in rough order of importance
-* Tile constants should be an enum
 * Add previous positions
 * Add a critic model
 

@@ -18,6 +18,7 @@ class AgentState(BaseState):
     handler: AgentStateHandler | None = None
     current_map: OverworldMap | None = None
     goals: Goals = Field(default_factory=Goals)
+    should_critique: bool = False
     tool: Tool | None = None
     tool_args: BaseModel | None = None
 
@@ -44,6 +45,10 @@ class AgentStore(BaseStore[AgentState]):
     async def set_goals(self, goals: Goals) -> None:
         """Set the goals."""
         await self.set_state({"goals": goals})
+
+    async def set_should_critique(self, should_critique: bool) -> None:
+        """Set the should critique."""
+        await self.set_state({"should_critique": should_critique})
 
     async def set_tool(self, tool: Tool | None) -> None:
         """Set the tool."""
