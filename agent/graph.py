@@ -1,7 +1,8 @@
 from junjo import Edge, Graph
 
-from agent.conditions import AgentHandlerIs, ToolIs
+from agent.conditions import AgentHandlerIs, ShouldCritique, ToolIs
 from agent.nodes.build_agent_state.node import UpdateAgentStoreNode
+from agent.nodes.critique.node import CritiqueNode
 from agent.nodes.decision_maker_battle.node import DecisionMakerBattleNode
 from agent.nodes.decision_maker_overworld.node import DecisionMakerOverworldNode
 from agent.nodes.decision_maker_text.node import DecisionMakerTextNode
@@ -20,6 +21,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     update_agent_store = UpdateAgentStoreNode(emulator)
     update_current_map = UpdateCurrentMapNode(emulator)
     should_critique = ShouldCritiqueNode(emulator)
+    critique = CritiqueNode(emulator)
     update_onscreen_entities = UpdateOnscreenEntitiesNode(emulator)
     decision_maker_overworld = DecisionMakerOverworldNode(emulator)
     decision_maker_battle = DecisionMakerBattleNode(emulator)
@@ -47,7 +49,17 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             ),
             Edge(
                 should_critique,
+                critique,
+                ShouldCritique(True),
+            ),
+            Edge(
+                critique,
                 decision_maker_overworld,
+            ),
+            Edge(
+                should_critique,
+                decision_maker_overworld,
+                ShouldCritique(False),
             ),
             Edge(
                 decision_maker_overworld,
