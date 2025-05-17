@@ -1,11 +1,6 @@
 # ai-plays-pokemon
 
 ## TODOs in rough order of importance
-* Add previous positions
-* Add a critic model
-
-* Add automated backups
-* Add the initial game state to the output folder
 
 * Add summary memory with decay -- Fixed size, max(age*decay_rate) drops off first
 * Add long term memory with retrieval and decay -- Asks to delete after N iterations without retrieval
@@ -13,6 +8,9 @@
 * Add player/party information
 * Add connecting maps to the overworld maps
 * Add signs to the overworld maps
+
+* Add automated backups
+* Add the initial game state to the output folder
 
 * Add a grid to the overworld screen and overlay collisions
 
