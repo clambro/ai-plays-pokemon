@@ -2,17 +2,19 @@
 
 ## TODOs in rough order of importance
 
-* Update junjo and improve visualizations
+* Add connecting maps to the overworld maps
+* Make object descriptions nullable and remove magic strings
+* Only update entities if they're new or you're standing next to them
+* Set up dotenv
+* Make the output of get ascii screen into a schema
 
 * Add summary memory with decay -- Fixed size, max(age*decay_rate) drops off first
 * Add long term memory with retrieval and decay -- Asks to delete after N iterations without retrieval
 
-* Add player/party information, including the current level cap (remove from system prompt)
-* Add connecting maps to the overworld maps
-* Add signs to the overworld maps
-
 * Add automated backups
 * Add the initial game state to the output folder
+
+* Add player/party information, including the current level cap (remove from system prompt)
 
 * Add a grid to the overworld screen and overlay collisions
 
@@ -34,9 +36,17 @@
 * Handle surfing in navigation
 * Add a strength puzzle solver?
 * Set up Junjo server and opentelemetry and move the LLM stuff there
+* Add event flags for tracking progress (00:d746 wEventFlags -- check the decomp for details)
+* Add team rocket spin puzzle tiles to navigation
 
 * Some kind of twitch frontend
 
 ## Notes
 * Might have to drop Pikachu from the map view. I could see that maybe causing problems.
 * Numerical coords on screen? Dots to show past steps? Maybe when I have tests set up.
+* Look into these:
+  * 00:d717 wBoulderSpriteIndex
+  * 00:d718 wLastBlackoutMap  - Useful for a "go back for healing" tool? Could get complicated.
+  * 00:d719 wDestinationMap
+  * 00:cd6b wJoyIgnore - Better way of handling waits between button presses?
+* Test Junjo for editing state lists in place
