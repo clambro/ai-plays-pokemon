@@ -1,4 +1,5 @@
-from common import constants as c
+from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
+from common.enums import AsciiTiles
 
 OVERWORLD_MAP_STR_FORMAT = f"""
 <map_info>
@@ -11,22 +12,22 @@ Map name: {{map_name}}
 </whole_map>
 You have explored {{explored_percentage}} of this map.
 <legend>
-- "{c.UNSEEN_TILE}" - Tiles that you have not yet explored. Move toward these tiles to reveal them.
-- "{c.FREE_TILE}" - A walkable tile with nothing noteworthy in it.
-- "{c.WALL_TILE}" - A barrier (usually a wall or an object) that you cannot pass through.
-- "{c.CUT_TREE_TILE}" - A tree.
-- "{c.WATER_TILE}" - Water.
-- "{c.GRASS_TILE}" - Tall grass, where wild Pokemon can be found.
-- "{c.LEDGE_TILE}" - A ledge that you can jump down from above. These tiles are only passable if you approach them from above and walk downwards.
-- "{c.SPRITE_TILE}" - A sprite that you can interact with. This could be an NPC, an item you can pick up, or some other interactable entity. You will need to use the screenshot to determine what the sprite is. You cannot walk through sprites, nor can you stand on top of them.
-- "{c.WARP_TILE}" - A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.
-- "{c.PLAYER_TILE}" - Your current location.
-- "{c.PIKACHU_TILE}" - Your companion Pikachu that follows you around. May or may not be present on the map. Pikachu will always be standing on a walkable tile if present.
+- "{AsciiTiles.UNSEEN}" - Tiles that you have not yet explored. Move toward these tiles to reveal them.
+- "{AsciiTiles.FREE}" - A walkable tile with nothing noteworthy in it.
+- "{AsciiTiles.WALL}" - A barrier (usually a wall or an object) that you cannot pass through.
+- "{AsciiTiles.CUT_TREE}" - A tree.
+- "{AsciiTiles.WATER}" - Water.
+- "{AsciiTiles.GRASS}" - Tall grass, where wild Pokemon can be found.
+- "{AsciiTiles.LEDGE}" - A ledge that you can jump down from above. These tiles are only passable if you approach them from above and walk downwards.
+- "{AsciiTiles.SPRITE}" - A sprite that you can interact with. This could be an NPC, an item you can pick up, or some other interactable entity. You will need to use the screenshot to determine what the sprite is. You cannot walk through sprites, nor can you stand on top of them.
+- "{AsciiTiles.WARP}" - A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.
+- "{AsciiTiles.PLAYER}" - Your current location.
+- "{AsciiTiles.PIKACHU}" - Your companion Pikachu that follows you around. May or may not be present on the map. Pikachu will always be standing on a walkable tile if present.
 </legend>
 
 The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map is {{height}}x{{width}} blocks.
 
-The ASCII screen is always ({c.SCREEN_HEIGHT}x{c.SCREEN_WIDTH}) blocks in size, and is always centered such that the player is in position ({c.PLAYER_OFFSET_Y}, {c.PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the whole map section. This should help you navigate from one map to another. The upper left corner of the screen is currently at ({{screen_upper_left_y}}, {{screen_upper_left_x}}) in map coordinates. The lower right corner of the screen is currently at ({{screen_lower_right_y}}, {{screen_lower_right_x}}) in map coordinates.
+The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that the player is in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the whole map section. This should help you navigate from one map to another. The upper left corner of the screen is currently at ({{screen_upper_left_y}}, {{screen_upper_left_x}}) in map coordinates. The lower right corner of the screen is currently at ({{screen_lower_right_y}}, {{screen_lower_right_x}}) in map coordinates.
 
 The tile directly above you is "{{tile_above}}".
 The tile directly below you is "{{tile_below}}".
@@ -50,7 +51,7 @@ Navigation tips:
 - Warp tiles come in two varieties: single and double.
   - Single warp tiles are activated by standing on them. If you are standing on a warp tile and not going anywhere, it means that you have just warped to this tile from somewhere else. If you want to go back to your previous location and are standing on a single warp tile, you have to walk off the tile and then back on it to warp back.
   - Double warp tiles (two warp tiles side by side) are more complicated. These tiles are usually found on the edge of a map, and have to be walked through as if you're trying to walk off the edge of the map, into the barrier. (e.g. if you see a doube warp tile arranged vertically on the right edge of the map, you have to stand on one of the tiles and walk right, off the edge of the map; if you see a double warp tile arranged horizontally on the bottom edge of the map, you have to stand on one of the tiles and walk down, off the edge of the map; etc.). This is the only instance in which you are allowed to walk on a barrier tile.
-  - If you find yourself on a double warp tile and are not getting anywhere, try walking into an adjacent tile of type "{c.WALL_TILE}" to exit the map.
+  - If you find yourself on a double warp tile and are not getting anywhere, try walking into an adjacent tile of type "{AsciiTiles.WALL}" to exit the map.
   - Do not attempt to interact with a warp tile using the action button. You have to walk on or through the tile depending on its type to warp..
 - To connect from one map to another, you must either walk through a warp tile, or, *in outdoor maps only*, walk off the edge of the map. Trust the ASCII screen to guide you between maps outdoors.
 - If you are indoors, the edges of the map (indicated by a black void in the screenshot) are impassable. You cannot walk off the edge of an indoor map. The only exception to this is if you see two adjacent warp tiles on the edge of a map. In this case, you can walk through the warp tiles to enter the adjoining map. Warp tiles are the only way to move between maps indoors.

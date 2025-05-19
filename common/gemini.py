@@ -29,6 +29,7 @@ SAFETY_SETTINGS = [
 class GeminiModel(StrEnum):
     """Enum for the Gemini model names."""
 
+    PRO = "gemini-2.5-pro-preview-05-06"
     FLASH = "gemini-2.5-flash-preview-04-17"
     FLASH_LITE = "gemini-2.0-flash-lite"
 
@@ -46,6 +47,7 @@ class Gemini:
         schema: type[PydanticModel],
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = 0.0,
+        thinking_tokens: int | None = 256,
     ) -> PydanticModel:
         """
         Get a Pydantic model from the Gemini LLM, parsed from a JSON response.
@@ -54,10 +56,15 @@ class Gemini:
         :param schema: The schema to use for the response.
         :param system_prompt: The system prompt to send to the Gemini LLM.
         :param temperature: The temperature to use for the response.
+        :param thinking_tokens: The number of tokens to use for the thinking. None is for
+            non-thinking models.
         :return: A Pydantic model from the Gemini LLM.
         """
         if isinstance(messages, str):
             messages = [messages]
+        thinking_config = (
+            ThinkingConfig(thinking_budget=thinking_tokens) if thinking_tokens else None
+        )
         response = await self.client.aio.models.generate_content(
             model=self.model,
             contents=messages,  # type: ignore -- This is a Gemini API issue.
@@ -67,7 +74,7 @@ class Gemini:
                 response_schema=schema,
                 temperature=temperature,
                 safety_settings=SAFETY_SETTINGS,
-                thinking_config=ThinkingConfig(thinking_budget=256),
+                thinking_config=thinking_config,
             ),
         )
         if not response.text or not response.usage_metadata:

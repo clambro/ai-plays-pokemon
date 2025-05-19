@@ -32,3 +32,14 @@ class ToolIs(Condition[AgentState]):
         if self.tool is not None and state.tool is not None:
             return self.tool == state.tool
         return False
+
+
+class ShouldCritique(Condition[AgentState]):
+    """A condition that checks if the agent should_critique value matches a value."""
+
+    def __init__(self, should_critique: bool) -> None:
+        self.should_critique = should_critique
+
+    def evaluate(self, state: AgentState) -> bool:
+        """Evaluate the condition."""
+        return state.should_critique == self.should_critique

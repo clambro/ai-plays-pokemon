@@ -1,10 +1,11 @@
 from datetime import datetime
 
 from loguru import logger
+
 from agent.nodes.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORLD_PROMPT
 from agent.nodes.decision_maker_overworld.schemas import DecisionMakerOverworldResponse
 from agent.schemas import NavigationArgs
-from common.enums import Tool
+from common.enums import AsciiTiles, Tool
 from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
@@ -43,6 +44,7 @@ class DecisionMakerOverworldService:
             player_info=game_state.player_info,
             current_map=await self.current_map.to_string(game_state),
             goals=self.goals,
+            walkable_tiles=", ".join(f'"{t}"' for t in AsciiTiles.get_walkable_tiles()),
         )
         try:
             response = await self.llm_service.get_llm_response_pydantic(
@@ -53,8 +55,9 @@ class DecisionMakerOverworldService:
             logger.warning(f"Error making decision. Skipping. {e}")
             return None, None
 
+        map_str = game_state.cur_map.id.name
         position = (game_state.player.y, game_state.player.x)
-        thought = f"Current position: {position}. {response.thoughts}"
+        thought = f"Current map: {map_str} at coordinates {position}. {response.thoughts}"
 
         if response.navigation_args:
             self.raw_memory.append(
@@ -62,7 +65,7 @@ class DecisionMakerOverworldService:
                     iteration=self.iteration,
                     timestamp=datetime.now(),
                     content=f"{thought} Navigating to {response.navigation_args}.",
-                )
+                ),
             )
             return Tool.NAVIGATION, response.navigation_args
         elif response.button:
@@ -72,6 +75,6 @@ class DecisionMakerOverworldService:
                     iteration=self.iteration,
                     timestamp=datetime.now(),
                     content=f"{thought} Pressed the '{response.button}' button.",
-                )
+                ),
             )
         return None, None

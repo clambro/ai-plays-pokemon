@@ -26,5 +26,6 @@ class UpdateAgentStoreNode(Node[AgentStore]):
         await store.set_iteration(state.iteration + 1)
         await store.set_handler(handler)
         await store.set_current_map(None)
+        await store.set_should_critique(False)
         await store.set_tool(None)
         await store.set_tool_args(None)

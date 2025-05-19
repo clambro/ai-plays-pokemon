@@ -3,7 +3,7 @@ from datetime import datetime
 from loguru import logger
 
 from agent.schemas import NavigationArgs
-from common.constants import FREE_TILE, GRASS_TILE, LEDGE_TILE, PIKACHU_TILE, WARP_TILE
+from common.enums import AsciiTiles
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button, MapLocation
 from emulator.game_state import YellowLegacyGameState
@@ -13,12 +13,7 @@ from raw_memory.schemas import RawMemory, RawMemoryPiece
 
 # TODO: This service doesn't handle surfing at all.
 # TODO: Should avoid grass tiles when possible.
-WALKABLE_TILES = {
-    GRASS_TILE,
-    FREE_TILE,
-    WARP_TILE,
-    PIKACHU_TILE,
-}
+# TODO: Bumping into Pikachu might break this. You have to take an extra step if you walk into it.
 
 
 class NavigationService:
@@ -81,8 +76,8 @@ class NavigationService:
         if (
             self.coords.row < 0
             or self.coords.col < 0
-            or self.coords.row >= self.current_map.width
-            or self.coords.col >= self.current_map.height
+            or self.coords.row >= self.current_map.height
+            or self.coords.col >= self.current_map.width
         ):
             self.raw_memory.append(
                 RawMemoryPiece(
@@ -97,7 +92,7 @@ class NavigationService:
             return False
 
         target_tile = self.current_map.ascii_tiles_ndarray[self.coords.row, self.coords.col]
-        if target_tile not in WALKABLE_TILES:
+        if target_tile not in AsciiTiles.get_walkable_tiles():
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
@@ -130,9 +125,9 @@ class NavigationService:
                 new_y, new_x = y + dy, x + dx
                 if 0 <= new_y < self.current_map.height and 0 <= new_x < self.current_map.width:
                     target_tile = self.current_map.ascii_tiles_ndarray[new_y, new_x]
-                    if target_tile in WALKABLE_TILES:
+                    if target_tile in AsciiTiles.get_walkable_tiles():
                         neighbors.append((new_y, new_x))
-                    elif target_tile == LEDGE_TILE and dy == 1:
+                    elif target_tile == AsciiTiles.LEDGE and dy == 1:
                         # Account for the fact that we can jump down ledges, skipping a tile.
                         neighbors.append((new_y + 1, new_x))
             return neighbors
