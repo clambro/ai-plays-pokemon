@@ -19,7 +19,7 @@ google-genai = "^1.13.0"
 dotenv = "^0.9.9"
 pydantic-settings = "^2.9.1"
 aiofiles = "^24.1.0"
-junjo = {extras = ["graphviz"], version = "^0.42"}
+junjo = {extras = ["graphviz"], version = "^0.45.0"}
 sqlalchemy = "^2.0.40"
 aiosqlite = "^0.21.0"
 

@@ -635,14 +635,14 @@ files = [
 
 [[package]]
 name = "junjo"
-version = "0.42"
+version = "0.45.0"
 description = "A graph workflow execution library for building agentic AI workflows."
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "junjo-0.42-py3-none-any.whl", hash = "sha256:b8bfbeb3e8efaab69d19f792360b86fdcf72ee66ef51816650a142150422e36b"},
-    {file = "junjo-0.42.tar.gz", hash = "sha256:73222dc9484f2d5fd8c7b77ff87e618dd874964803f8d1152e98d6f8022ea681"},
+    {file = "junjo-0.45.0-py3-none-any.whl", hash = "sha256:95ce26585709927369b506cf7ce7cdeac11f3e5e5652294b85bcfe41b1a38bdf"},
+    {file = "junjo-0.45.0.tar.gz", hash = "sha256:cfbb1b3ab6096fd209e4bde27d7b6ecac70d071dd9f39e28674c650821e320b5"},
 ]
 
 [package.dependencies]
@@ -1784,4 +1784,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.14"
-content-hash = "36a4a7de42821bc315c26fc4dff3ee14df5e97549b5e30d76372899eb3b8f1c5"
+content-hash = "cd6161abb649701a3f6332e38020e0080e13df5806714c5f224d4a8a54376738"

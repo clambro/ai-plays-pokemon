@@ -1,0 +1,32 @@
+digraph "G" {
+  rankdir=LR;
+  compound=true;
+  node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9];
+  opaOH30Mr2DB6HTnUcbrp [label="UpdateCurrentMapNode"];
+  uN7jjQTadlVzJkWkNWjxm [label="UpdateGoalsNode"];
+  KFA2CiNjNhBfO6VQvYXrD [label="ShouldCritiqueNode"];
+  oU5TvuHmu6QPxSaBq8XEM [label="DecisionMakerTextNode"];
+  UONVwf0KCSkYWD6ki1ujl [label="CritiqueNode"];
+  "3w0HehF2XawCkRJ3n8Mbw" [label="UpdateAgentStoreNode"];
+  b9V4wILZosEGWX2hljlCm [label="DecisionMakerBattleNode"];
+  vqMRnOXeIAPLLUf96Cwzj [label="UpdateOnscreenEntitiesNode"];
+  oKynigpG4PoGcNwYOhINh [label="DecisionMakerOverworldNode"];
+  "7abUQcNJDcdjyEdfRY0KA" [label="NavigationNode"];
+  edomvU2nXQuDd87xNXTuq [label="HandleDialogBoxNode"];
+  "3w0HehF2XawCkRJ3n8Mbw" -> opaOH30Mr2DB6HTnUcbrp [style="dashed", label="AgentHandlerIs"];
+  opaOH30Mr2DB6HTnUcbrp -> vqMRnOXeIAPLLUf96Cwzj [style="solid"];
+  vqMRnOXeIAPLLUf96Cwzj -> KFA2CiNjNhBfO6VQvYXrD [style="solid"];
+  KFA2CiNjNhBfO6VQvYXrD -> UONVwf0KCSkYWD6ki1ujl [style="dashed", label="ShouldCritique"];
+  UONVwf0KCSkYWD6ki1ujl -> oKynigpG4PoGcNwYOhINh [style="solid"];
+  KFA2CiNjNhBfO6VQvYXrD -> oKynigpG4PoGcNwYOhINh [style="dashed", label="ShouldCritique"];
+  oKynigpG4PoGcNwYOhINh -> "7abUQcNJDcdjyEdfRY0KA" [style="dashed", label="ToolIs"];
+  "7abUQcNJDcdjyEdfRY0KA" -> uN7jjQTadlVzJkWkNWjxm [style="solid"];
+  "3w0HehF2XawCkRJ3n8Mbw" -> b9V4wILZosEGWX2hljlCm [style="dashed", label="AgentHandlerIs"];
+  "3w0HehF2XawCkRJ3n8Mbw" -> edomvU2nXQuDd87xNXTuq [style="dashed", label="AgentHandlerIs"];
+  edomvU2nXQuDd87xNXTuq -> oU5TvuHmu6QPxSaBq8XEM [style="dashed", label="AgentHandlerIs"];
+  edomvU2nXQuDd87xNXTuq -> uN7jjQTadlVzJkWkNWjxm [style="dashed", label="AgentHandlerIs"];
+  oU5TvuHmu6QPxSaBq8XEM -> uN7jjQTadlVzJkWkNWjxm [style="solid"];
+  oKynigpG4PoGcNwYOhINh -> uN7jjQTadlVzJkWkNWjxm [style="dashed", label="ToolIs"];
+  b9V4wILZosEGWX2hljlCm -> uN7jjQTadlVzJkWkNWjxm [style="solid"];
+}
