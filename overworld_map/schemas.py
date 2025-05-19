@@ -5,7 +5,7 @@ from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
 from emulator.enums import MapLocation
 from emulator.game_state import YellowLegacyGameState
-from emulator.schemas import Sprite, Warp
+from emulator.schemas import Sign, Sprite, Warp
 from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
 
 
@@ -24,8 +24,8 @@ class OverworldSprite(Sprite):
         out = f"sprite_{map_id.value}_{self.index} at ({self.y}, {self.x}): {self.description}"
         if self.moves_randomly:
             out += (
-                " Warning: This sprite wanders randomly around the map. Your actions are likely too"
-                " slow to catch it. Sprites like this are usually not worth interacting with."
+                " Warning: This sprite wanders randomly around the map. Your reactions are likely"
+                " too slow to catch it. Sprites like this are usually not worth interacting with."
             )
         return out
 
@@ -48,6 +48,21 @@ class OverworldWarp(Warp):
         )
 
 
+class OverworldSign(Sign):
+    """A sign on the overworld map, known to the player."""
+
+    description: str
+
+    @classmethod
+    def from_sign(cls, sign: Sign, description: str) -> "OverworldSign":
+        """Create an overworld sign from a sign and a description."""
+        return cls(**sign.model_dump(), description=description)
+
+    def to_string(self, map_id: MapLocation) -> str:
+        """Get a string representation of the sign."""
+        return f"sign_{map_id.value}_{self.index} at ({self.y}, {self.x}): {self.description}"
+
+
 class OverworldMap(BaseModel):
     """A map of a particular region of the overworld."""
 
@@ -55,6 +70,7 @@ class OverworldMap(BaseModel):
     ascii_tiles: list[list[str]]
     known_sprites: dict[int, OverworldSprite]
     known_warps: dict[int, OverworldWarp]
+    known_signs: dict[int, OverworldSign]
 
     @property
     def height(self) -> int:
@@ -80,7 +96,7 @@ class OverworldMap(BaseModel):
         """Return a string representation of the map."""
         tiles = self.ascii_tiles_str
         explored_percentage = np.mean(self.ascii_tiles_ndarray != AsciiTiles.UNSEEN)
-        screen, _, _ = game_state.get_ascii_screen()
+        screen, _, _, _ = game_state.get_ascii_screen()
         tile_above = screen[PLAYER_OFFSET_Y - 1, PLAYER_OFFSET_X]
         tile_below = screen[PLAYER_OFFSET_Y + 1, PLAYER_OFFSET_X]
         tile_left = screen[PLAYER_OFFSET_Y, PLAYER_OFFSET_X - 1]
@@ -92,6 +108,7 @@ class OverworldMap(BaseModel):
             width=self.width,
             known_sprites=await self._get_sprite_notes(),
             known_warps=await self._get_warp_notes(),
+            known_signs=await self._get_sign_notes(),
             explored_percentage=f"{explored_percentage:.0%}",
             ascii_screen="\n".join("".join(row) for row in screen),
             tile_above=tile_above,
@@ -115,3 +132,9 @@ class OverworldMap(BaseModel):
         if not self.known_warps:
             return "No warp tiles discovered."
         return "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_warps.items()))
+
+    async def _get_sign_notes(self) -> str:
+        """Get the notes for the signs on the map, sorted by index."""
+        if not self.known_signs:
+            return "No signs discovered."
+        return "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_signs.items()))
