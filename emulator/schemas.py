@@ -66,13 +66,16 @@ class Sprite(BaseModel):
 
 
 class Warp(BaseModel):
-    """A warp on the current map."""
+    """
+    A warp on the current map.
+
+    Saving the destination is kinda cheating, but much easier than detecting a warp and going back
+    to edit the long term memory.
+    """
 
     index: int
     y: int
     x: int
-    # TODO: Saving the destination is kinda cheating, but much easier than detecting a warp and
-    # going back to edit the long term memory.
     destination: MapLocation
 
 

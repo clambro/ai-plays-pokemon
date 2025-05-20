@@ -127,7 +127,6 @@ class YellowLegacyGameState(BaseModel):
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.SIGN
                 on_screen_signs.append(s)
 
-        # TODO: This needs an output schema.
         return blocks, on_screen_sprites, on_screen_warps, on_screen_signs
 
     def is_text_on_screen(self, ignore_dialog_box: bool = False) -> bool:

@@ -11,10 +11,6 @@ from overworld_map.schemas import OverworldMap
 from overworld_map.service import update_map_with_screen_info
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 
-# TODO: This service doesn't handle surfing at all.
-# TODO: Should avoid grass tiles when possible.
-# TODO: Bumping into Pikachu might break this. You have to take an extra step if you walk into it.
-
 
 class NavigationService:
     """The service for the navigation action."""

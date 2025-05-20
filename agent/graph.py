@@ -32,7 +32,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
 
     return Graph(
         source=update_agent_store,
-        sink=update_goals,  # TODO: Will probably need a dummy sink node eventually.
+        sink=update_goals,
         edges=[
             Edge(
                 update_agent_store,

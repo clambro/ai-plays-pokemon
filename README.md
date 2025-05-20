@@ -12,13 +12,16 @@
 * Add automated backups
 * Add the initial game state to the output folder
 
-* Make entities into a singe DB table?
+* Make entitie memories into a single DB table?
 
 * Add player/party information, including the current level cap (remove from system prompt)
+
+* Fix navigation when Pikachu is on screen. I think bumping into it breaks the existing flow.
 
 * Add a grid to the overworld screen and overlay collisions
 
 * Subgraphs for the battle, text, and overworld conditions
+* Add proper source/sink nodes for graphs that need them
 * Improve separation of responsibilities
 * Add tests to everything
 
@@ -35,6 +38,7 @@
 
 * Add strength boulders to map screen
 * Handle surfing in navigation
+* Navigation should avoid grass tiles where possible
 * Add a strength puzzle solver?
 * Set up Junjo server and opentelemetry and move the LLM stuff there
 * Add event flags for tracking progress (00:d746 wEventFlags -- check the decomp for details)
