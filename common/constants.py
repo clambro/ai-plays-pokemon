@@ -7,7 +7,9 @@ SCREEN_WIDTH = 10
 PLAYER_OFFSET_Y = 4
 PLAYER_OFFSET_X = 4
 
-MIN_ITERATIONS_PER_CRITIQUE = 20
+ITERATIONS_PER_CRITIQUE_CHECK = 20
+ITERATIONS_PER_SUMMARY_UPDATE = 10
+
 RAW_MEMORY_MAX_SIZE = 100
 SUMMARY_MEMORY_MAX_SIZE = 100
 
@@ -15,7 +17,6 @@ OUTPUTS_FOLDER = Path("outputs/")
 
 DB_FILE_PATH = OUTPUTS_FOLDER / "database" / "memory.db"
 DB_URL = f"sqlite+aiosqlite:///{DB_FILE_PATH}"
-
 
 # Make sure all the relevant folders exist.
 OUTPUTS_FOLDER.mkdir(exist_ok=True)

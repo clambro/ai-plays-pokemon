@@ -1,3 +1,4 @@
+from loguru import logger
 from pydantic import BaseModel, Field
 
 from common.constants import SUMMARY_MEMORY_MAX_SIZE
@@ -47,3 +48,5 @@ class SummaryMemory(BaseModel):
         self.pieces = sorted(self.pieces, key=lambda x: x.get_decay_value(iteration))
         self.pieces = self.pieces[-SUMMARY_MEMORY_MAX_SIZE:]
         self.pieces = sorted(self.pieces, key=lambda x: x.iteration)
+        for piece in pieces:
+            logger.info(f"[{piece.iteration}] New summary memory: {piece.content}")
