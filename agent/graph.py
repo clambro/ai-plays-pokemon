@@ -29,7 +29,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     decision_maker_text = DecisionMakerTextNode(emulator)
     handle_dialog_box = HandleDialogBoxNode(emulator)
     update_goals = UpdateGoalsNode(emulator)
-    update_summary_memory = UpdateSummaryMemoryNode()
+    update_summary_memory = UpdateSummaryMemoryNode(emulator)
     navigation = NavigationNode(emulator)
 
     return Graph(

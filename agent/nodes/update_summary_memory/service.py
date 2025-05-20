@@ -4,7 +4,6 @@ from common.constants import ITERATIONS_PER_SUMMARY_UPDATE
 from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
-from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory
 from summary_memory.schemas import SummaryMemory, SummaryMemoryPiece
 
@@ -18,14 +17,12 @@ class UpdateSummaryMemoryService:
         iteration: int,
         raw_memory: RawMemory,
         summary_memory: SummaryMemory,
-        current_map: OverworldMap,
         goals: Goals,
     ) -> None:
         self.emulator = emulator
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.summary_memory = summary_memory
-        self.current_map = current_map
         self.goals = goals
         self.llm_service = Gemini(GeminiModel.FLASH)
 
