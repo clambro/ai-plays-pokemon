@@ -8,13 +8,12 @@ from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
 from emulator.char_map import CHAR_TO_INT_MAP, INT_TO_CHAR_MAP
 from emulator.schemas import (
+    AsciiScreenWithEntities,
     BattleState,
     DialogBox,
     MapState,
     PlayerState,
     ScreenState,
-    Sprite,
-    Warp,
 )
 
 BLINKING_CURSOR_ID = 0xEE
@@ -74,7 +73,7 @@ class YellowLegacyGameState(BaseModel):
             and screen[17, -1] == 126
         )
 
-    def get_ascii_screen(self) -> tuple[np.ndarray, list[Sprite], list[Warp]]:
+    def get_ascii_screen(self) -> AsciiScreenWithEntities:
         """
         Get an ASCII representation of the current screen, including the on-screen sprites and warp
         points.
@@ -120,7 +119,18 @@ class YellowLegacyGameState(BaseModel):
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.WARP
                 on_screen_warps.append(w)
 
-        return blocks, on_screen_sprites, on_screen_warps
+        on_screen_signs = []
+        for s in self.cur_map.signs.values():
+            if screen_coords := self.screen.get_screen_coords(s.y, s.x):
+                blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.SIGN
+                on_screen_signs.append(s)
+
+        return AsciiScreenWithEntities(
+            screen=blocks.tolist(),
+            sprites=on_screen_sprites,
+            warps=on_screen_warps,
+            signs=on_screen_signs,
+        )
 
     def is_text_on_screen(self, ignore_dialog_box: bool = False) -> bool:
         """Check if there is text on the screen."""

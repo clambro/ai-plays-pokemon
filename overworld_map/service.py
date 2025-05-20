@@ -3,16 +3,18 @@ import asyncio
 from common.enums import AsciiTiles
 from database.map_memory.repository import create_map_memory, get_map_memory, update_map_tiles
 from database.map_memory.schemas import MapMemoryCreateUpdate
+from database.sign_memory.repository import create_sign_memory, get_sign_memories_for_map
+from database.sign_memory.schemas import SignMemoryCreate
 from database.sprite_memory.repository import (
     create_sprite_memory,
     delete_sprite_memory,
     get_sprite_memories_for_map,
 )
-from database.sprite_memory.schemas import SpriteMemoryCreateUpdate
+from database.sprite_memory.schemas import SpriteMemoryCreate
 from database.warp_memory.repository import create_warp_memory, get_warp_memories_for_map
-from database.warp_memory.schemas import WarpMemoryCreateUpdate
+from database.warp_memory.schemas import WarpMemoryCreate
 from emulator.game_state import YellowLegacyGameState
-from overworld_map.schemas import OverworldMap, OverworldSprite, OverworldWarp
+from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
 
 
 async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -> OverworldMap:
@@ -38,11 +40,20 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
         for mem in warp_memories
     }
 
+    sign_memories = await get_sign_memories_for_map(map_memory.map_id)
+    game_signs = game_state.cur_map.signs
+    signs = {
+        mem.sign_id: OverworldSign.from_sign(game_signs[mem.sign_id], mem.description)
+        for mem in sign_memories
+    }
+
     overworld_map = OverworldMap(
         id=map_memory.map_id,
         ascii_tiles=[list(row) for row in map_memory.tiles.split("\n")],
         known_sprites=sprites,
         known_warps=warps,
+        known_signs=signs,
+        connections=game_state.cur_map.connections,
     )
     return overworld_map
 
@@ -67,18 +78,17 @@ async def _add_remove_map_entities(
     if overworld_map.id != game_state.cur_map.id:
         raise ValueError("Overworld map does not match current game state.")
 
-    _, screen_sprites, screen_warps = game_state.get_ascii_screen()
+    ascii_screen = game_state.get_ascii_screen()
 
     tasks = []
-    for s in screen_sprites:
+    for s in ascii_screen.sprites:
         if s.is_rendered and s.index not in overworld_map.known_sprites:
             tasks.append(
                 create_sprite_memory(
-                    SpriteMemoryCreateUpdate(
+                    SpriteMemoryCreate(
                         iteration=iteration,
                         map_id=overworld_map.id,
                         sprite_id=s.index,
-                        description="No description added yet.",
                     ),
                 ),
             )
@@ -90,19 +100,31 @@ async def _add_remove_map_entities(
             # or a scripted character that has walked off the screen.
             tasks.append(delete_sprite_memory(overworld_map.id, s.index))
 
-    for w in screen_warps:
+    for w in ascii_screen.warps:
         if w.index not in overworld_map.known_warps:
             tasks.append(
                 create_warp_memory(
-                    WarpMemoryCreateUpdate(
+                    WarpMemoryCreate(
                         iteration=iteration,
                         map_id=overworld_map.id,
                         warp_id=w.index,
-                        description="No description added yet.",
                     ),
                 ),
             )
         # Warps are never de-rendered, so no need to delete them.
+
+    for s in ascii_screen.signs:
+        if s.index not in overworld_map.known_signs:
+            tasks.append(
+                create_sign_memory(
+                    SignMemoryCreate(
+                        iteration=iteration,
+                        map_id=overworld_map.id,
+                        sign_id=s.index,
+                    ),
+                ),
+            )
+        # Signs are never de-rendered, so no need to delete them.
 
     await asyncio.gather(*tasks)
 
@@ -113,7 +135,7 @@ async def _update_overworld_map_tiles(
     overworld_map: OverworldMap,
 ) -> None:
     """Update the overworld map with the current game state, revealing new tiles."""
-    ascii_screen, _, _ = game_state.get_ascii_screen()
+    ascii_screen = game_state.get_ascii_screen().ndarray
     screen = game_state.screen
 
     top = screen.top
@@ -165,6 +187,8 @@ async def _create_overworld_map_from_game_state(
         ascii_tiles=tiles,
         known_sprites={},
         known_warps={},
+        known_signs={},
+        connections=game_state.cur_map.connections,
     )
     await create_map_memory(
         MapMemoryCreateUpdate(

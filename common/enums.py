@@ -29,6 +29,7 @@ class AsciiTiles(StrEnum):
     WARP = "W"
     CUT_TREE = "T"
     PIKACHU = "k"
+    SIGN = "!"
 
     @classmethod
     def get_walkable_tiles(cls) -> list["AsciiTiles"]:

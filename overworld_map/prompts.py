@@ -23,6 +23,7 @@ You have explored {{explored_percentage}} of this map.
 - "{AsciiTiles.WARP}" - A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.
 - "{AsciiTiles.PLAYER}" - Your current location.
 - "{AsciiTiles.PIKACHU}" - Your companion Pikachu that follows you around. May or may not be present on the map. Pikachu will always be standing on a walkable tile if present.
+- "{AsciiTiles.SIGN}" - An object that you can interact with to read something. Usually a signpost, but could be a TV, radio, or other object. The main distinction between signs and sprites is that signs are static. They will never move, and their text will never change.
 </legend>
 
 The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map is {{height}}x{{width}} blocks.
@@ -34,6 +35,9 @@ The tile directly below you is "{{tile_below}}".
 The tile directly to the left of you is "{{tile_left}}".
 The tile directly to the right of you is "{{tile_right}}".
 
+The current map has the following connections:
+{{connections}}
+
 You have discovered the following sprites on the portion of the map that you have revealed so far:
 <known_sprites>
 {{known_sprites}}
@@ -43,6 +47,11 @@ You have discovered the following warp tiles on the portion of the map that you 
 <known_warps>
 {{known_warps}}
 </known_warps>
+
+You have discovered the following signs on the portion of the map that you have revealed so far:
+<known_signs>
+{{known_signs}}
+</known_signs>
 
 Navigation tips:
 - You should explore as much of the map as possible to reveal the unexplored tiles, as they may be hiding important sprites or warp tiles. Tiles are considered explored once they are on screen, so move towards the unexplored tiles to reveal them.

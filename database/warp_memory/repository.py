@@ -2,16 +2,16 @@ from sqlalchemy import select, update
 
 from database.db_config import db_sessionmaker
 from database.warp_memory.model import WarpMemoryDBModel
-from database.warp_memory.schemas import WarpMemoryCreateUpdate, WarpMemoryRead
+from database.warp_memory.schemas import WarpMemoryCreate, WarpMemoryRead, WarpMemoryUpdate
 
 
-async def create_warp_memory(warp: WarpMemoryCreateUpdate) -> WarpMemoryRead:
+async def create_warp_memory(warp: WarpMemoryCreate) -> WarpMemoryRead:
     """Create a new warp memory."""
     async with db_sessionmaker() as session:
         db_obj = WarpMemoryDBModel(
             map_id=warp.map_id,
             warp_id=warp.warp_id,
-            description=warp.description,
+            description=None,
             create_iteration=warp.iteration,
             update_iteration=warp.iteration,
         )
@@ -32,7 +32,7 @@ async def get_warp_memories_for_map(map_id: int) -> list[WarpMemoryRead]:
     return [WarpMemoryRead.model_validate(d) for d in db_objs]
 
 
-async def update_warp_memory(warp: WarpMemoryCreateUpdate) -> WarpMemoryRead:
+async def update_warp_memory(warp: WarpMemoryUpdate) -> WarpMemoryRead:
     """Update the description of a warp memory."""
     async with db_sessionmaker() as session:
         query = (
