@@ -4,7 +4,6 @@
 
 * Add connecting maps to the overworld maps
 * Only update entities if they're new or you're standing next to them
-* Set up dotenv
 * Make the output of get ascii screen into a schema
 
 * Add summary memory with decay -- Fixed size, max(age*decay_rate) drops off first
