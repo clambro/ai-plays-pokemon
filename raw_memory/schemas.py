@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from loguru import logger
 from pydantic import BaseModel, Field
 
@@ -10,7 +8,6 @@ class RawMemoryPiece(BaseModel):
     """A single piece of information contained in the Agent's raw memory."""
 
     iteration: int
-    timestamp: datetime
     content: str
 
     def __str__(self) -> str:
