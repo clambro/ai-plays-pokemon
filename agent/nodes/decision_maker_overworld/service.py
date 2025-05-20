@@ -69,7 +69,7 @@ class DecisionMakerOverworldService:
                 ),
             )
             return Tool.NAVIGATION, response.navigation_args
-        elif response.button:
+        if response.button:
             await self.emulator.press_buttons([response.button])
             self.raw_memory.append(
                 RawMemoryPiece(
