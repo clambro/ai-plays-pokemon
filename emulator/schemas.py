@@ -288,3 +288,17 @@ class DialogBox(BaseModel):
     top_line: str
     bottom_line: str
     cursor_on_screen: bool
+
+
+class AsciiScreenWithEntities(BaseModel):
+    """An ASCII representation of a screen with entities on it."""
+
+    screen: list[list[str]]
+    sprites: list[Sprite]
+    warps: list[Warp]
+    signs: list[Sign]
+
+    @property
+    def ndarray(self) -> np.ndarray:
+        """Convert the screen to a numpy array."""
+        return np.asarray(self.screen)

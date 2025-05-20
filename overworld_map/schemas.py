@@ -99,7 +99,7 @@ class OverworldMap(BaseModel):
         """Return a string representation of the map."""
         tiles = self.ascii_tiles_str
         explored_percentage = np.mean(self.ascii_tiles_ndarray != AsciiTiles.UNSEEN)
-        screen, _, _, _ = game_state.get_ascii_screen()
+        screen = game_state.get_ascii_screen().ndarray
         tile_above = screen[PLAYER_OFFSET_Y - 1, PLAYER_OFFSET_X]
         tile_below = screen[PLAYER_OFFSET_Y + 1, PLAYER_OFFSET_X]
         tile_left = screen[PLAYER_OFFSET_Y, PLAYER_OFFSET_X - 1]

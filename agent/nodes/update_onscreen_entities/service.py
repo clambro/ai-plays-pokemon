@@ -41,19 +41,21 @@ class UpdateOnscreenEntitiesService:
     async def update_onscreen_entities(self) -> None:
         """Update the long-term memory of the onscreen entities."""
         game_state = await self.emulator.get_game_state()
-        _, sprites, warps, signs = game_state.get_ascii_screen()
+        ascii_screen = game_state.get_ascii_screen()
         screenshot = await self.emulator.get_screenshot()
-        if sprites:
+        if ascii_screen.sprites:
             known_sprites = self.current_map.known_sprites
-            sprites = [known_sprites[s.index] for s in sprites if s.index in known_sprites]
+            sprites = [
+                known_sprites[s.index] for s in ascii_screen.sprites if s.index in known_sprites
+            ]
             await self._update_sprites(sprites, screenshot, game_state)
-        if warps:
+        if ascii_screen.warps:
             known_warps = self.current_map.known_warps
-            warps = [known_warps[w.index] for w in warps if w.index in known_warps]
+            warps = [known_warps[w.index] for w in ascii_screen.warps if w.index in known_warps]
             await self._update_warps(warps, screenshot, game_state)
-        if signs:
+        if ascii_screen.signs:
             known_signs = self.current_map.known_signs
-            signs = [known_signs[s.index] for s in signs if s.index in known_signs]
+            signs = [known_signs[s.index] for s in ascii_screen.signs if s.index in known_signs]
             await self._update_signs(signs, screenshot, game_state)
 
     async def _update_sprites(
