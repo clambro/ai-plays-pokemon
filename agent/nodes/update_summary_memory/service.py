@@ -1,6 +1,6 @@
 from agent.nodes.update_summary_memory.prompts import UPDATE_SUMMARY_MEMORY_PROMPT
 from agent.nodes.update_summary_memory.schemas import UpdateSummaryMemoryResponse
-from common.constants import ITERATIONS_PER_SUMMARY_UPDATE
+from common.constants import ITERATIONS_PER_SUMMARY_UPDATE, RAW_MEMORY_MAX_SIZE
 from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
@@ -32,6 +32,7 @@ class UpdateSummaryMemoryService:
             return
         game_state = await self.emulator.get_game_state()
         prompt = UPDATE_SUMMARY_MEMORY_PROMPT.format(
+            raw_memory_max_size=RAW_MEMORY_MAX_SIZE,
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
             player_info=game_state.player_info,

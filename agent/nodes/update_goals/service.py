@@ -1,23 +1,35 @@
 from loguru import logger
+
 from agent.nodes.update_goals.prompts import UPDATE_GOALS_PROMPT
 from agent.nodes.update_goals.schemas import UpdateGoalsResponse
+from common.constants import ITERATIONS_PER_GOAL_UPDATE
 from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
-from raw_memory.schemas import RawMemory
 from emulator.emulator import YellowLegacyEmulator
+from raw_memory.schemas import RawMemory
 
 
 class UpdateGoalsService:
     """Service for updating the goals."""
 
-    def __init__(self, emulator: YellowLegacyEmulator, raw_memory: RawMemory, goals: Goals) -> None:
+    def __init__(
+        self,
+        emulator: YellowLegacyEmulator,
+        iteration: int,
+        raw_memory: RawMemory,
+        goals: Goals,
+    ) -> None:
         self.emulator = emulator
+        self.iteration = iteration
         self.raw_memory = raw_memory
         self.goals = goals
         self.llm_service = Gemini(GeminiModel.FLASH)
 
     async def update_goals(self) -> None:
         """Update the goals based on the latest memory and actions."""
+        if self.iteration % ITERATIONS_PER_GOAL_UPDATE != 0:
+            return
+
         game_state = await self.emulator.get_game_state()
         prompt = UPDATE_GOALS_PROMPT.format(
             raw_memory=self.raw_memory,
