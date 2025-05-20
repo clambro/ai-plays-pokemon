@@ -1,8 +1,9 @@
+from junjo import Node
 from loguru import logger
+
 from agent.nodes.decision_maker_text.service import DecisionMakerTextService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo import Node
 
 
 class DecisionMakerTextNode(Node[AgentStore]):
@@ -22,6 +23,7 @@ class DecisionMakerTextNode(Node[AgentStore]):
             emulator=self.emulator,
             raw_memory=state.raw_memory,
             goals=state.goals,
+            summary_memory=state.summary_memory,
         )
 
         await service.make_decision()

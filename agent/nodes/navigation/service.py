@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from loguru import logger
 
 from agent.schemas import NavigationArgs
@@ -42,7 +40,6 @@ class NavigationService:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
-                    timestamp=datetime.now(),
                     content=(
                         f"Navigation failed. No walkable path found to target coordinates"
                         f" {self.coords}."
@@ -78,7 +75,6 @@ class NavigationService:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
-                    timestamp=datetime.now(),
                     content=(
                         f"Navigation failed. Target coordinates {self.coords} are outside of the"
                         f" {self.current_map.id.name} map boundary."
@@ -92,7 +88,6 @@ class NavigationService:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
-                    timestamp=datetime.now(),
                     content=(
                         f"Navigation failed. Target coordinates {self.coords} are on a non-walkable"
                         f' tile of type "{target_tile}".'
@@ -189,7 +184,6 @@ class NavigationService:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
-                    timestamp=datetime.now(),
                     content=(f"Navigation to {self.coords} interrupted at position {new_pos}."),
                 ),
             )
@@ -199,7 +193,6 @@ class NavigationService:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
-                    timestamp=datetime.now(),
                     content="The map has changed during navigation. Cancelling further steps.",
                 ),
             )

@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from loguru import logger
 
 from agent.nodes.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORLD_PROMPT
@@ -11,6 +9,7 @@ from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory, RawMemoryPiece
+from summary_memory.schemas import SummaryMemory
 
 
 class DecisionMakerOverworldService:
@@ -23,6 +22,7 @@ class DecisionMakerOverworldService:
         raw_memory: RawMemory,
         current_map: OverworldMap,
         goals: Goals,
+        summary_memory: SummaryMemory,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
@@ -30,6 +30,7 @@ class DecisionMakerOverworldService:
         self.raw_memory = raw_memory
         self.current_map = current_map
         self.goals = goals
+        self.summary_memory = summary_memory
 
     async def make_decision(self) -> tuple[Tool | None, NavigationArgs | None]:
         """
@@ -41,6 +42,7 @@ class DecisionMakerOverworldService:
         img = await self.emulator.get_screenshot()
         prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(
             raw_memory=self.raw_memory,
+            summary_memory=self.summary_memory,
             player_info=game_state.player_info,
             current_map=await self.current_map.to_string(game_state),
             goals=self.goals,
@@ -63,17 +65,15 @@ class DecisionMakerOverworldService:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
-                    timestamp=datetime.now(),
                     content=f"{thought} Navigating to {response.navigation_args}.",
                 ),
             )
             return Tool.NAVIGATION, response.navigation_args
-        elif response.button:
+        if response.button:
             await self.emulator.press_buttons([response.button])
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
-                    timestamp=datetime.now(),
                     content=f"{thought} Pressed the '{response.button}' button.",
                 ),
             )

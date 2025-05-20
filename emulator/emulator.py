@@ -30,6 +30,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
                 self._pyboy.load_state(f)
         self._is_stopped = True
         self._tick_task: asyncio.Task | None = None
+        self._button_lock = asyncio.Lock()
 
     async def __aenter__(self) -> "YellowLegacyEmulator":
         """Start the emulator's tick task when entering the context."""
@@ -65,10 +66,11 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         """Tick the emulator indefinitely. Should be run on its own thread."""
         while True:
             self._check_stopped()
-            if not self._tick():
-                self.stop()
-                break
-            await asyncio.sleep(0)  # Return control to the event loop.
+            async with self._button_lock:
+                if not self._tick():
+                    self.stop()
+                    break
+            await asyncio.sleep(0)  # Return control to the event loop
 
     def stop(self) -> None:
         """Stop the emulator."""
@@ -92,7 +94,8 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         """Press the buttons in order, with a delay between each."""
         self._check_stopped()
         for button in buttons:
-            await asyncio.to_thread(self._pyboy.button, button, delay_frames)
+            async with self._button_lock:
+                await asyncio.to_thread(self._pyboy.button, button, delay_frames)
             await asyncio.sleep(delay_frames / GAME_TICKS_PER_SECOND)
 
     async def wait_for_animation_to_finish(self) -> None:

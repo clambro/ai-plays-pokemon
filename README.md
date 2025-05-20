@@ -2,7 +2,6 @@
 
 ## TODOs in rough order of importance
 
-* Add summary memory with decay -- Fixed size, max(age*decay_rate) drops off first
 * Add long term memory with retrieval and decay -- Asks to delete after N iterations without retrieval
 
 * Add automated backups
@@ -19,6 +18,7 @@
 * Subgraphs for the battle, text, and overworld conditions
 * Add proper source/sink nodes for graphs that need them
 * Improve separation of responsibilities
+* Combine memories into a single object so you're not adding them all to prompts separately
 * Add tests to everything
 
 * Make the critic tool part of the overworld navigation step?

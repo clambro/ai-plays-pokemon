@@ -1,8 +1,9 @@
+from junjo import Node
 from loguru import logger
+
 from agent.nodes.update_goals.service import UpdateGoalsService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo import Node
 
 
 class UpdateGoalsNode(Node[AgentStore]):
@@ -20,8 +21,10 @@ class UpdateGoalsNode(Node[AgentStore]):
 
         service = UpdateGoalsService(
             emulator=self.emulator,
+            iteration=state.iteration,
             raw_memory=state.raw_memory,
             goals=state.goals,
+            summary_memory=state.summary_memory,
         )
         await service.update_goals()  # Updated in place.
 

@@ -12,6 +12,7 @@ from agent.nodes.should_critique.node import ShouldCritiqueNode
 from agent.nodes.update_current_map.node import UpdateCurrentMapNode
 from agent.nodes.update_goals.node import UpdateGoalsNode
 from agent.nodes.update_onscreen_entities.node import UpdateOnscreenEntitiesNode
+from agent.nodes.update_summary_memory.node import UpdateSummaryMemoryNode
 from common.enums import AgentStateHandler, Tool
 from emulator.emulator import YellowLegacyEmulator
 
@@ -28,11 +29,12 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     decision_maker_text = DecisionMakerTextNode(emulator)
     handle_dialog_box = HandleDialogBoxNode(emulator)
     update_goals = UpdateGoalsNode(emulator)
+    update_summary_memory = UpdateSummaryMemoryNode(emulator)
     navigation = NavigationNode(emulator)
 
     return Graph(
         source=update_agent_store,
-        sink=update_goals,
+        sink=update_summary_memory,
         edges=[
             Edge(
                 update_agent_store,
@@ -102,6 +104,10 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             Edge(
                 decision_maker_battle,
                 update_goals,
+            ),
+            Edge(
+                update_goals,
+                update_summary_memory,
             ),
         ],
     )

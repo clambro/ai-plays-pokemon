@@ -21,6 +21,7 @@ from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
 from raw_memory.schemas import RawMemory
+from summary_memory.schemas import SummaryMemory
 
 OverworldEntity = TypeVar("OverworldEntity", OverworldSprite, OverworldWarp, OverworldSign)
 
@@ -34,11 +35,13 @@ class UpdateOnscreenEntitiesService:
         iteration: int,
         raw_memory: RawMemory,
         current_map: OverworldMap,
+        summary_memory: SummaryMemory,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
         self.raw_memory = raw_memory
         self.current_map = current_map
+        self.summary_memory = summary_memory
         self.llm_service = Gemini(GeminiModel.FLASH)
 
     async def update_onscreen_entities(self) -> None:
@@ -101,6 +104,7 @@ class UpdateOnscreenEntitiesService:
         sprite_text = "\n".join([f"- [{s.index}] {s.to_string(m_id)}" for s in sprites])
         prompt = UPDATE_SPRITES_PROMPT.format(
             raw_memory=self.raw_memory,
+            summary_memory=self.summary_memory,
             map_info=await self.current_map.to_string(game_state),
             player_info=game_state.player_info,
             sprites=sprite_text.strip(),
@@ -138,6 +142,7 @@ class UpdateOnscreenEntitiesService:
         warp_text = "\n".join([f"- [{w.index}] {w.to_string(m_id)}" for w in warps])
         prompt = UPDATE_WARPS_PROMPT.format(
             raw_memory=self.raw_memory,
+            summary_memory=self.summary_memory,
             map_info=await self.current_map.to_string(game_state),
             player_info=game_state.player_info,
             warps=warp_text.strip(),
@@ -175,6 +180,7 @@ class UpdateOnscreenEntitiesService:
         sign_text = "\n".join([f"- [{s.index}] {s.to_string(m_id)}" for s in signs])
         prompt = UPDATE_SIGNS_PROMPT.format(
             raw_memory=self.raw_memory,
+            summary_memory=self.summary_memory,
             map_info=await self.current_map.to_string(game_state),
             player_info=game_state.player_info,
             signs=sign_text.strip(),

@@ -2,6 +2,7 @@ from enum import StrEnum
 from typing import TypeVar
 
 from google import genai
+from google.genai.errors import ServerError
 from google.genai.types import (
     GenerateContentConfig,
     HarmBlockThreshold,
@@ -11,6 +12,7 @@ from google.genai.types import (
 )
 from PIL.Image import Image
 from pydantic import BaseModel
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from common.prompts import SYSTEM_PROMPT
 from common.settings import settings
@@ -41,6 +43,12 @@ class Gemini:
         self.client = genai.Client(api_key=settings.gemini_api_key)
         self.model = model
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(1),
+        retry=retry_if_exception_type(ServerError),  # The experimental models are unstable.
+        reraise=True,
+    )
     async def get_llm_response_pydantic(
         self,
         messages: str | list[str | Image],

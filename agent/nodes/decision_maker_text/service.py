@@ -1,12 +1,12 @@
-from datetime import datetime
-
 from loguru import logger
+
 from agent.nodes.decision_maker_text.prompts import DECISION_MAKER_TEXT_PROMPT
 from agent.nodes.decision_maker_text.schemas import DecisionMakerTextResponse
 from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
 from raw_memory.schemas import RawMemory, RawMemoryPiece
+from summary_memory.schemas import SummaryMemory
 
 
 class DecisionMakerTextService:
@@ -18,12 +18,14 @@ class DecisionMakerTextService:
         emulator: YellowLegacyEmulator,
         raw_memory: RawMemory,
         goals: Goals,
+        summary_memory: SummaryMemory,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
         self.llm_service = Gemini(GeminiModel.FLASH)
         self.raw_memory = raw_memory
         self.goals = goals
+        self.summary_memory = summary_memory
 
     async def make_decision(self) -> None:
         """
@@ -34,6 +36,7 @@ class DecisionMakerTextService:
         img = await self.emulator.get_screenshot()
         prompt = DECISION_MAKER_TEXT_PROMPT.format(
             raw_memory=self.raw_memory,
+            summary_memory=self.summary_memory,
             goals=self.goals,
         )
         try:
@@ -47,8 +50,7 @@ class DecisionMakerTextService:
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
-                timestamp=datetime.now(),
                 content=str(response),
-            )
+            ),
         )
         await self.emulator.press_buttons([response.button])

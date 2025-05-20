@@ -7,6 +7,7 @@ from common.enums import AgentStateHandler, Tool
 from common.goals import Goals
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory
+from summary_memory.schemas import SummaryMemory
 
 
 class AgentState(BaseState):
@@ -15,6 +16,7 @@ class AgentState(BaseState):
     folder: Path
     iteration: int = 0
     raw_memory: RawMemory = Field(default_factory=RawMemory)
+    summary_memory: SummaryMemory = Field(default_factory=SummaryMemory)
     handler: AgentStateHandler | None = None
     current_map: OverworldMap | None = None
     goals: Goals = Field(default_factory=Goals)
@@ -33,6 +35,10 @@ class AgentStore(BaseStore[AgentState]):
     async def set_raw_memory(self, raw_memory: RawMemory) -> None:
         """Set the raw memory."""
         await self.set_state({"raw_memory": raw_memory})
+
+    async def set_summary_memory(self, summary_memory: SummaryMemory) -> None:
+        """Set the summary memory."""
+        await self.set_state({"summary_memory": summary_memory})
 
     async def set_handler(self, handler: AgentStateHandler | None) -> None:
         """Set the handler."""

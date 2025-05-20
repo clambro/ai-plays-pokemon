@@ -1,13 +1,13 @@
 from junjo import Node
 from loguru import logger
 
-from agent.nodes.decision_maker_battle.service import DecisionMakerBattleService
+from agent.nodes.update_summary_memory.service import UpdateSummaryMemoryService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
 
 
-class DecisionMakerBattleNode(Node[AgentStore]):
-    """Make a decision based on the current game state in the battle."""
+class UpdateSummaryMemoryNode(Node[AgentStore]):
+    """Update the summary memory based on the current game state."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
         self.emulator = emulator
@@ -15,16 +15,16 @@ class DecisionMakerBattleNode(Node[AgentStore]):
 
     async def service(self, store: AgentStore) -> None:
         """The service for the node."""
-        logger.info("Running the battle decision maker...")
+        logger.info("Updating the summary memory...")
 
         state = await store.get_state()
-        service = DecisionMakerBattleService(
-            iteration=state.iteration,
+
+        service = UpdateSummaryMemoryService(
             emulator=self.emulator,
+            iteration=state.iteration,
             raw_memory=state.raw_memory,
             summary_memory=state.summary_memory,
+            goals=state.goals,
         )
-
-        await service.make_decision()
-
-        await store.set_raw_memory(service.raw_memory)
+        await service.update_summary_memory()
+        await store.set_summary_memory(service.summary_memory)
