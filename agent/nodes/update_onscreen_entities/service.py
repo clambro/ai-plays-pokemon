@@ -19,11 +19,9 @@ from database.warp_memory.repository import update_warp_memory
 from database.warp_memory.schemas import WarpMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
-from emulator.schemas import Sign, Sprite, Warp
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
 from raw_memory.schemas import RawMemory
 
-Entity = TypeVar("Entity", Sprite, Warp, Sign)
 OverworldEntity = TypeVar("OverworldEntity", OverworldSprite, OverworldWarp, OverworldSign)
 
 
