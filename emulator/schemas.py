@@ -206,7 +206,7 @@ class MapState(BaseModel):
         num_signs = mem[0xD4FD]
         signs = {}
         for i in range(num_signs):
-            base = 0xD4FE + 3 * i
+            base = 0xD4FE + 2 * i
             signs[i] = Sign(
                 index=i,
                 y=mem[base],

@@ -2,7 +2,7 @@ DECISION_MAKER_OVERWORLD_PROMPT = """
 You are navigating the overworld and there is no on-screen text. The screenshot provided above is the current game screen. You must decide which button to press or tool to use to proceed with the game.
 
 The (case-sensitive) available buttons are:
-- a: The action button. Used to interact with objects in the game.
+- a: The action button. Used to interact with objects in the game. The object you interact with will be the tile directly adjacent to you in the direction that you are facing.
 - start: Used to open the main menu.
 - up: Used to move the character upwards.
 - down: Used to move the character downwards.
