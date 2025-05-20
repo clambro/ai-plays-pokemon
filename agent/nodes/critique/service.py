@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from agent.nodes.critique.prompts import CRITIQUE_PROMPT
 from agent.nodes.critique.schemas import CritiqueResponse
 from common.gemini import Gemini, GeminiModel
@@ -45,7 +43,6 @@ class CritiqueService:
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
-                timestamp=datetime.now(),
                 content=(
                     f"An exterior critic model has provided you with the following advice on your"
                     f" progress. This is CRITICAL, HIGH QUALITY INFORMATION: {response.critique}"

@@ -1,6 +1,5 @@
-from datetime import datetime
-
 from loguru import logger
+
 from agent.nodes.decision_maker_text.prompts import DECISION_MAKER_TEXT_PROMPT
 from agent.nodes.decision_maker_text.schemas import DecisionMakerTextResponse
 from common.gemini import Gemini, GeminiModel
@@ -47,8 +46,7 @@ class DecisionMakerTextService:
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
-                timestamp=datetime.now(),
                 content=str(response),
-            )
+            ),
         )
         await self.emulator.press_buttons([response.button])

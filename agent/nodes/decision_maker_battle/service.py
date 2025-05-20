@@ -1,6 +1,5 @@
-from datetime import datetime
-
 from loguru import logger
+
 from agent.nodes.decision_maker_battle.prompts import DECISION_MAKER_BATTLE_PROMPT
 from agent.nodes.decision_maker_battle.schemas import DecisionMakerBattleResponse
 from common.gemini import Gemini, GeminiModel
@@ -41,8 +40,7 @@ class DecisionMakerBattleService:
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
-                timestamp=datetime.now(),
                 content=str(response),
-            )
+            ),
         )
         await self.emulator.press_buttons([response.button])

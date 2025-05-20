@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from loguru import logger
 
 from agent.nodes.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORLD_PROMPT
@@ -63,7 +61,6 @@ class DecisionMakerOverworldService:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
-                    timestamp=datetime.now(),
                     content=f"{thought} Navigating to {response.navigation_args}.",
                 ),
             )
@@ -73,7 +70,6 @@ class DecisionMakerOverworldService:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
-                    timestamp=datetime.now(),
                     content=f"{thought} Pressed the '{response.button}' button.",
                 ),
             )

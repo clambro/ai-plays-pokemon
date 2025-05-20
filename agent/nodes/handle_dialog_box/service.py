@@ -1,5 +1,4 @@
 import asyncio
-from datetime import datetime
 
 from common.enums import AgentStateHandler
 from emulator.emulator import YellowLegacyEmulator
@@ -54,9 +53,8 @@ class HandleDialogBoxService:
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
-                timestamp=datetime.now(),
                 content=f'The following text was read from the main dialog box: "{joined_text}"',
-            )
+            ),
         )
         if game_state.is_text_on_screen():
             return AgentStateHandler.TEXT  # More work to do. Pass to the generic text handler.
