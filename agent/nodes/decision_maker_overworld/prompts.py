@@ -14,6 +14,8 @@ For reference, the walkable tiles types are {walkable_tiles}.
 
 {raw_memory}
 
+{summary_memory}
+
 {goals}
 
 {player_info}

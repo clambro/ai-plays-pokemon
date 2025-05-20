@@ -3,6 +3,8 @@ There are one or more sprites visible on the screen right now. This is your chan
 
 {raw_memory}
 
+{summary_memory}
+
 {map_info}
 
 {player_info}
@@ -23,6 +25,8 @@ UPDATE_WARPS_PROMPT = """
 There are one or more warp tiles visible on the screen right now. This is your chance to, if you so desire, update your long-term memory with new information about them.
 
 {raw_memory}
+
+{summary_memory}
 
 {map_info}
 
@@ -49,6 +53,8 @@ UPDATE_SIGNS_PROMPT = """
 There are one or more signs visible on the screen right now. This is your chance to, if you so desire, update your long-term memory with new information about them.
 
 {raw_memory}
+
+{summary_memory}
 
 {map_info}
 

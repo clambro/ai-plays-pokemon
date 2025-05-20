@@ -3,6 +3,8 @@ You have just taken an action and added new information to your memory. If you y
 
 {raw_memory}
 
+{summary_memory}
+
 {player_info}
 
 {goals}

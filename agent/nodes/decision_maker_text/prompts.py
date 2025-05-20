@@ -12,6 +12,8 @@ The (case-sensitive) available buttons are:
 
 {raw_memory}
 
+{summary_memory}
+
 {goals}
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:

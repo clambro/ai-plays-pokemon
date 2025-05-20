@@ -1,8 +1,9 @@
+from junjo import Node
 from loguru import logger
+
 from agent.nodes.decision_maker_battle.service import DecisionMakerBattleService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo import Node
 
 
 class DecisionMakerBattleNode(Node[AgentStore]):
@@ -21,6 +22,7 @@ class DecisionMakerBattleNode(Node[AgentStore]):
             iteration=state.iteration,
             emulator=self.emulator,
             raw_memory=state.raw_memory,
+            summary_memory=state.summary_memory,
         )
 
         await service.make_decision()

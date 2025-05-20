@@ -5,6 +5,7 @@ from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory, RawMemoryPiece
+from summary_memory.schemas import SummaryMemory
 
 
 class CritiqueService:
@@ -17,12 +18,14 @@ class CritiqueService:
         current_map: OverworldMap,
         goals: Goals,
         emulator: YellowLegacyEmulator,
+        summary_memory: SummaryMemory,
     ) -> None:
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.current_map = current_map
         self.goals = goals
         self.emulator = emulator
+        self.summary_memory = summary_memory
         self.llm_service = Gemini(GeminiModel.PRO)
 
     async def critique(self) -> None:
@@ -34,6 +37,7 @@ class CritiqueService:
             current_map=await self.current_map.to_string(game_state),
             goals=self.goals,
             raw_memory=self.raw_memory,
+            summary_memory=self.summary_memory,
         )
         response = await self.llm_service.get_llm_response_pydantic(
             [screenshot, prompt],

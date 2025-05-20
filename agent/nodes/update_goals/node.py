@@ -24,6 +24,7 @@ class UpdateGoalsNode(Node[AgentStore]):
             iteration=state.iteration,
             raw_memory=state.raw_memory,
             goals=state.goals,
+            summary_memory=state.summary_memory,
         )
         await service.update_goals()  # Updated in place.
 

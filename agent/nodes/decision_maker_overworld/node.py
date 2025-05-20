@@ -1,8 +1,9 @@
+from junjo import Node
 from loguru import logger
+
 from agent.nodes.decision_maker_overworld.service import DecisionMakerOverworldService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo import Node
 
 
 class DecisionMakerOverworldNode(Node[AgentStore]):
@@ -19,7 +20,7 @@ class DecisionMakerOverworldNode(Node[AgentStore]):
         state = await store.get_state()
         if state.current_map is None:
             raise ValueError(
-                "Current map needs to be set before running the overworld decision maker."
+                "Current map needs to be set before running the overworld decision maker.",
             )
 
         service = DecisionMakerOverworldService(
@@ -28,6 +29,7 @@ class DecisionMakerOverworldNode(Node[AgentStore]):
             raw_memory=state.raw_memory,
             current_map=state.current_map,
             goals=state.goals,
+            summary_memory=state.summary_memory,
         )
         tool, args = await service.make_decision()
 

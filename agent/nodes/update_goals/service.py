@@ -7,6 +7,7 @@ from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
 from raw_memory.schemas import RawMemory
+from summary_memory.schemas import SummaryMemory
 
 
 class UpdateGoalsService:
@@ -18,11 +19,13 @@ class UpdateGoalsService:
         iteration: int,
         raw_memory: RawMemory,
         goals: Goals,
+        summary_memory: SummaryMemory,
     ) -> None:
         self.emulator = emulator
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.goals = goals
+        self.summary_memory = summary_memory
         self.llm_service = Gemini(GeminiModel.FLASH)
 
     async def update_goals(self) -> None:
@@ -33,6 +36,7 @@ class UpdateGoalsService:
         game_state = await self.emulator.get_game_state()
         prompt = UPDATE_GOALS_PROMPT.format(
             raw_memory=self.raw_memory,
+            summary_memory=self.summary_memory,
             player_info=game_state.player_info,
             goals=self.goals,
         )

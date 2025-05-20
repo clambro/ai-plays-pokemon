@@ -9,6 +9,8 @@ Take a step back from playing the game for a moment. You have signaled that you 
 
 {raw_memory}
 
+{summary_memory}
+
 Common sources of error include (but are not limited to):
 - Misinterpreting the screenshot information
 - Incorrectly deciding that the screenshot is more reliable than the 100% accurate game memory data
