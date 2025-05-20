@@ -1,4 +1,5 @@
 import asyncio
+from typing import TypeVar
 
 from loguru import logger
 from PIL.Image import Image
@@ -18,8 +19,12 @@ from database.warp_memory.repository import update_warp_memory
 from database.warp_memory.schemas import WarpMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
+from emulator.schemas import Sign, Sprite, Warp
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
 from raw_memory.schemas import RawMemory
+
+Entity = TypeVar("Entity", Sprite, Warp, Sign)
+OverworldEntity = TypeVar("OverworldEntity", OverworldSprite, OverworldWarp, OverworldSign)
 
 
 class UpdateOnscreenEntitiesService:
@@ -39,24 +44,53 @@ class UpdateOnscreenEntitiesService:
         self.llm_service = Gemini(GeminiModel.FLASH)
 
     async def update_onscreen_entities(self) -> None:
-        """Update the long-term memory of the onscreen entities."""
+        """
+        Update the long-term memory of the valid targets for updating, as defined in
+        _get_updatable_entities.
+        """
         game_state = await self.emulator.get_game_state()
-        ascii_screen = game_state.get_ascii_screen()
         screenshot = await self.emulator.get_screenshot()
-        if ascii_screen.sprites:
-            known_sprites = self.current_map.known_sprites
-            sprites = [
-                known_sprites[s.index] for s in ascii_screen.sprites if s.index in known_sprites
-            ]
-            await self._update_sprites(sprites, screenshot, game_state)
-        if ascii_screen.warps:
-            known_warps = self.current_map.known_warps
-            warps = [known_warps[w.index] for w in ascii_screen.warps if w.index in known_warps]
-            await self._update_warps(warps, screenshot, game_state)
-        if ascii_screen.signs:
-            known_signs = self.current_map.known_signs
-            signs = [known_signs[s.index] for s in ascii_screen.signs if s.index in known_signs]
-            await self._update_signs(signs, screenshot, game_state)
+        tasks = []
+        updatable_sprites = self._get_updatable_entities(
+            list(self.current_map.known_sprites.values()),
+            game_state,
+        )
+        if updatable_sprites:
+            tasks.append(self._update_sprites(updatable_sprites, screenshot, game_state))
+
+        updatable_warps = self._get_updatable_entities(
+            list(self.current_map.known_warps.values()),
+            game_state,
+        )
+        if updatable_warps:
+            tasks.append(self._update_warps(updatable_warps, screenshot, game_state))
+
+        updatable_signs = self._get_updatable_entities(
+            list(self.current_map.known_signs.values()),
+            game_state,
+        )
+        if updatable_signs:
+            tasks.append(self._update_signs(updatable_signs, screenshot, game_state))
+
+        await asyncio.gather(*tasks)
+
+    @staticmethod
+    def _get_updatable_entities(
+        known_entities: list[OverworldEntity],
+        game_state: YellowLegacyGameState,
+    ) -> list[OverworldEntity]:
+        """
+        Get the entities that are valid targets for updating, meaning they are either within two
+        blocks of the player, or they have no description in the long-term memory.
+        """
+        updatable_entities: list[OverworldEntity] = []
+        for entity in known_entities:
+            if (
+                entity.description is None
+                or abs(entity.y - game_state.player.y) + abs(entity.x - game_state.player.x) <= 2
+            ):
+                updatable_entities.append(entity)
+        return updatable_entities
 
     async def _update_sprites(
         self,

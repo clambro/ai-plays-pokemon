@@ -2,15 +2,13 @@
 
 ## TODOs in rough order of importance
 
-* Only update entities if they're new or you're standing next to them
-
 * Add summary memory with decay -- Fixed size, max(age*decay_rate) drops off first
 * Add long term memory with retrieval and decay -- Asks to delete after N iterations without retrieval
 
 * Add automated backups
 * Add the initial game state to the output folder
 
-* Make entitie memories into a single DB table?
+* Make entity memories into a single DB table?
 
 * Add player/party information, including the current level cap (remove from system prompt)
 
