@@ -9,7 +9,6 @@ You have taken some actions and have added new information to your raw memory. T
 
 {goals}
 
-
 To update your summary memory, respond according to the schema given below. The meaning of the fields is as follows:
 - "description" is the exact string that you want to add to your summary memory.
 - "importance" is an integer between 1 and 5 representing how important you think this information is, where 1 is not important and 5 is very important. The importance scale is as follows:
@@ -23,4 +22,6 @@ IMPORTANT: You will not be able to edit your summary memories once you have subm
 1. You are not mistaken about.
 2. Is not already in your summary memory.
 3. Is complete (e.g. do not summarize an ongoing process, only summarize something that is finished). A good rule of thumb is to not summarize anything from the most recent 20 iterations. The current iteration is {iteration}.
+
+You should submit no more than one summary memory for this iteration. Submitting an empty list is fine if you feel that there is no new information to add.
 """.strip()
