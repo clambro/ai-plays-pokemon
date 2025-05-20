@@ -2,11 +2,13 @@
 
 ## TODOs in rough order of importance
 
+### Core Functionality
 * Add long term memory with retrieval and decay -- Asks to delete after N iterations without retrieval
 
 * Add automated backups
 * Add the initial game state to the output folder
 
+### Clean-Up, Refactoring, and Testing
 * Make entity memories into a single DB table?
 
 * Add player/party information, including the current level cap (remove from system prompt)
@@ -20,19 +22,22 @@
 * Improve separation of responsibilities
 * Combine memories into a single object so you're not adding them all to prompts separately
 * Add tests to everything
+* Make the critic tool part of the overworld navigation step? Includes functionality for determining which tools are available at any given iteration.
 
-* Make the critic tool part of the overworld navigation step?
+### Useful Tools and Additions
+* Detailed subflow for battles
 * Add a tool to select moves or swap pokemon in battle, or use a ball in non-trainer battles
 * Add a tool for spinning around to find wild pokemon
 * Some kind of info about items and PC pokemon
 * Add a tool to rearrange the team
 * Add a tool to name things
-* Tool for using fly
 * Tool to use items
 
+### Longer-Term Issues that I'll Have to Tackle Eventually
 * Subgraphs for different battle types (e.g. Safari Zone)? Battle type is at 0xD05A, and the move menus are at 0xCCDB
 
 * Add strength boulders to map screen
+* Tool for using fly
 * Handle surfing in navigation
 * Navigation should avoid grass tiles where possible
 * Add a strength puzzle solver?
