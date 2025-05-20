@@ -2,16 +2,16 @@ from sqlalchemy import select, update
 
 from database.db_config import db_sessionmaker
 from database.sign_memory.model import SignMemoryDBModel
-from database.sign_memory.schemas import SignMemoryCreateUpdate, SignMemoryRead
+from database.sign_memory.schemas import SignMemoryCreate, SignMemoryRead, SignMemoryUpdate
 
 
-async def create_sign_memory(sign: SignMemoryCreateUpdate) -> SignMemoryRead:
+async def create_sign_memory(sign: SignMemoryCreate) -> SignMemoryRead:
     """Create a new sign memory."""
     async with db_sessionmaker() as session:
         db_obj = SignMemoryDBModel(
             map_id=sign.map_id,
             sign_id=sign.sign_id,
-            description=sign.description,
+            description=None,
             create_iteration=sign.iteration,
             update_iteration=sign.iteration,
         )
@@ -32,7 +32,7 @@ async def get_sign_memories_for_map(map_id: int) -> list[SignMemoryRead]:
     return [SignMemoryRead.model_validate(d) for d in db_objs]
 
 
-async def update_sign_memory(sign: SignMemoryCreateUpdate) -> SignMemoryRead:
+async def update_sign_memory(sign: SignMemoryUpdate) -> SignMemoryRead:
     """Update the description of a sign memory."""
     async with db_sessionmaker() as session:
         query = (

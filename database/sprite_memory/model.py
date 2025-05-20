@@ -12,6 +12,6 @@ class SpriteMemoryDBModel(SQLAlchemyBase):
 
     map_id: Mapped[MapLocation] = mapped_column(Integer, primary_key=True, index=True)
     sprite_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    description: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str | None] = mapped_column(String, nullable=True)
     create_iteration: Mapped[int] = mapped_column(Integer, nullable=False)
     update_iteration: Mapped[int] = mapped_column(Integer, nullable=False)

@@ -12,16 +12,17 @@ from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
 class OverworldSprite(Sprite):
     """A sprite on the overworld map, known to the player."""
 
-    description: str
+    description: str | None
 
     @classmethod
-    def from_sprite(cls, sprite: Sprite, description: str) -> "OverworldSprite":
+    def from_sprite(cls, sprite: Sprite, description: str | None) -> "OverworldSprite":
         """Create an overworld sprite from a sprite and a description."""
         return cls(**sprite.model_dump(), description=description)
 
     def to_string(self, map_id: MapLocation) -> str:
         """Get a string representation of the sprite."""
-        out = f"sprite_{map_id.value}_{self.index} at ({self.y}, {self.x}): {self.description}"
+        description = self.description or "No description added yet."
+        out = f"sprite_{map_id.value}_{self.index} at ({self.y}, {self.x}): {description}"
         if self.moves_randomly:
             out += (
                 " Warning: This sprite wanders randomly around the map. Your reactions are likely"
@@ -33,34 +34,36 @@ class OverworldSprite(Sprite):
 class OverworldWarp(Warp):
     """A warp on the overworld map, known to the player."""
 
-    description: str
+    description: str | None
 
     @classmethod
-    def from_warp(cls, warp: Warp, description: str) -> "OverworldWarp":
+    def from_warp(cls, warp: Warp, description: str | None) -> "OverworldWarp":
         """Create an overworld warp from a warp and a description."""
         return cls(**warp.model_dump(), description=description)
 
     def to_string(self, map_id: MapLocation) -> str:
         """Get a string representation of the warp."""
+        description = self.description or "No description added yet."
         return (
             f"warp_{map_id.value}_{self.index} at ({self.y}, {self.x}) leading to"
-            f" {self.destination.name}: {self.description}"
+            f" {self.destination.name}: {description}"
         )
 
 
 class OverworldSign(Sign):
     """A sign on the overworld map, known to the player."""
 
-    description: str
+    description: str | None
 
     @classmethod
-    def from_sign(cls, sign: Sign, description: str) -> "OverworldSign":
+    def from_sign(cls, sign: Sign, description: str | None) -> "OverworldSign":
         """Create an overworld sign from a sign and a description."""
         return cls(**sign.model_dump(), description=description)
 
     def to_string(self, map_id: MapLocation) -> str:
         """Get a string representation of the sign."""
-        return f"sign_{map_id.value}_{self.index} at ({self.y}, {self.x}): {self.description}"
+        description = self.description or "No description added yet."
+        return f"sign_{map_id.value}_{self.index} at ({self.y}, {self.x}): {description}"
 
 
 class OverworldMap(BaseModel):

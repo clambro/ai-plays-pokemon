@@ -3,7 +3,6 @@
 ## TODOs in rough order of importance
 
 * Add connecting maps to the overworld maps
-* Make object descriptions nullable and remove magic strings
 * Only update entities if they're new or you're standing next to them
 * Set up dotenv
 * Make the output of get ascii screen into a schema
@@ -14,6 +13,8 @@
 * Add automated backups
 * Add the initial game state to the output folder
 
+* Make entities into a singe DB table?
+
 * Add player/party information, including the current level cap (remove from system prompt)
 
 * Add a grid to the overworld screen and overlay collisions
@@ -22,6 +23,7 @@
 * Improve separation of responsibilities
 * Add tests to everything
 
+* Make the critic tool part of the overworld navigation step?
 * Add a tool to select moves or swap pokemon in battle, or use a ball in non-trainer battles
 * Add a tool for spinning around to find wild pokemon
 * Some kind of info about items and PC pokemon

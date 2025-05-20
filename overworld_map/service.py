@@ -4,15 +4,15 @@ from common.enums import AsciiTiles
 from database.map_memory.repository import create_map_memory, get_map_memory, update_map_tiles
 from database.map_memory.schemas import MapMemoryCreateUpdate
 from database.sign_memory.repository import create_sign_memory, get_sign_memories_for_map
-from database.sign_memory.schemas import SignMemoryCreateUpdate
+from database.sign_memory.schemas import SignMemoryCreate
 from database.sprite_memory.repository import (
     create_sprite_memory,
     delete_sprite_memory,
     get_sprite_memories_for_map,
 )
-from database.sprite_memory.schemas import SpriteMemoryCreateUpdate
+from database.sprite_memory.schemas import SpriteMemoryCreate
 from database.warp_memory.repository import create_warp_memory, get_warp_memories_for_map
-from database.warp_memory.schemas import WarpMemoryCreateUpdate
+from database.warp_memory.schemas import WarpMemoryCreate
 from emulator.game_state import YellowLegacyGameState
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
 
@@ -84,11 +84,10 @@ async def _add_remove_map_entities(
         if s.is_rendered and s.index not in overworld_map.known_sprites:
             tasks.append(
                 create_sprite_memory(
-                    SpriteMemoryCreateUpdate(
+                    SpriteMemoryCreate(
                         iteration=iteration,
                         map_id=overworld_map.id,
                         sprite_id=s.index,
-                        description="No description added yet.",
                     ),
                 ),
             )
@@ -104,11 +103,10 @@ async def _add_remove_map_entities(
         if w.index not in overworld_map.known_warps:
             tasks.append(
                 create_warp_memory(
-                    WarpMemoryCreateUpdate(
+                    WarpMemoryCreate(
                         iteration=iteration,
                         map_id=overworld_map.id,
                         warp_id=w.index,
-                        description="No description added yet.",
                     ),
                 ),
             )
@@ -118,11 +116,10 @@ async def _add_remove_map_entities(
         if s.index not in overworld_map.known_signs:
             tasks.append(
                 create_sign_memory(
-                    SignMemoryCreateUpdate(
+                    SignMemoryCreate(
                         iteration=iteration,
                         map_id=overworld_map.id,
                         sign_id=s.index,
-                        description="No description added yet.",  # TODO: Null these instead.
                     ),
                 ),
             )

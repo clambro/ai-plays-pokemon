@@ -11,11 +11,11 @@ from agent.nodes.update_onscreen_entities.prompts import (
 from agent.nodes.update_onscreen_entities.schemas import UpdateEntitiesResponse
 from common.gemini import Gemini, GeminiModel
 from database.sign_memory.repository import update_sign_memory
-from database.sign_memory.schemas import SignMemoryCreateUpdate
+from database.sign_memory.schemas import SignMemoryUpdate
 from database.sprite_memory.repository import update_sprite_memory
-from database.sprite_memory.schemas import SpriteMemoryCreateUpdate
+from database.sprite_memory.schemas import SpriteMemoryUpdate
 from database.warp_memory.repository import update_warp_memory
-from database.warp_memory.schemas import WarpMemoryCreateUpdate
+from database.warp_memory.schemas import WarpMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
@@ -79,7 +79,7 @@ class UpdateOnscreenEntitiesService:
             asyncio.gather(
                 *[
                     update_sprite_memory(
-                        SpriteMemoryCreateUpdate(
+                        SpriteMemoryUpdate(
                             map_id=self.current_map.id,
                             sprite_id=u.index,
                             description=u.description,
@@ -116,7 +116,7 @@ class UpdateOnscreenEntitiesService:
             asyncio.gather(
                 *[
                     update_warp_memory(
-                        WarpMemoryCreateUpdate(
+                        WarpMemoryUpdate(
                             map_id=self.current_map.id,
                             warp_id=u.index,
                             description=u.description,
@@ -153,7 +153,7 @@ class UpdateOnscreenEntitiesService:
             asyncio.gather(
                 *[
                     update_sign_memory(
-                        SignMemoryCreateUpdate(
+                        SignMemoryUpdate(
                             map_id=self.current_map.id,
                             sign_id=u.index,
                             description=u.description,
