@@ -53,6 +53,7 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
         known_sprites=sprites,
         known_warps=warps,
         known_signs=signs,
+        connections=game_state.cur_map.connections,
     )
     return overworld_map
 
@@ -187,6 +188,7 @@ async def _create_overworld_map_from_game_state(
         known_sprites={},
         known_warps={},
         known_signs={},
+        connections=game_state.cur_map.connections,
     )
     await create_map_memory(
         MapMemoryCreateUpdate(

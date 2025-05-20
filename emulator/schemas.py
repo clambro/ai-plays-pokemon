@@ -87,6 +87,33 @@ class Sign(BaseModel):
     x: int
 
 
+class MapConnections(BaseModel):
+    """The connections of the current map."""
+
+    north: MapLocation | None
+    south: MapLocation | None
+    east: MapLocation | None
+    west: MapLocation | None
+
+    def __str__(self) -> str:
+        """Get a string representation of the map connections."""
+        out = ""
+        if self.north:
+            out += f"The map to the north is {self.north.name}.\n"
+        if self.south:
+            out += f"The map to the south is {self.south.name}.\n"
+        if self.east:
+            out += f"The map to the east is {self.east.name}.\n"
+        if self.west:
+            out += f"The map to the west is {self.west.name}.\n"
+        if out:
+            return out.strip()
+        return (
+            "There are no direct connections to other maps on this map. The only way to leave this"
+            " map is via warp tiles."
+        )
+
+
 class MapState(BaseModel):
     """The state of the current map."""
 
@@ -103,6 +130,7 @@ class MapState(BaseModel):
     pikachu_sprite: Sprite
     warps: dict[int, Warp]
     signs: dict[int, Sign]
+    connections: MapConnections
 
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView) -> Self:
@@ -128,6 +156,13 @@ class MapState(BaseModel):
         sprites, pikachu_sprite = cls._get_sprites(mem)
         signs = cls._get_signs(mem)
 
+        connections = MapConnections(
+            north=MapLocation(mem[0xD3BE]) if mem[0xD3BE] != 0xFF else None,
+            south=MapLocation(mem[0xD3C9]) if mem[0xD3C9] != 0xFF else None,
+            east=MapLocation(mem[0xD3DF]) if mem[0xD3DF] != 0xFF else None,
+            west=MapLocation(mem[0xD3D4]) if mem[0xD3D4] != 0xFF else None,
+        )
+
         return cls(
             id=MapLocation(mem[0xD3AB]),
             tileset_id=mem[0xD3B4],
@@ -142,6 +177,7 @@ class MapState(BaseModel):
             pikachu_sprite=pikachu_sprite,
             warps=cls._get_warps(mem),
             signs=signs,
+            connections=connections,
         )
 
     @staticmethod

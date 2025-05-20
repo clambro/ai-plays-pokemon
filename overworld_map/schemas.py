@@ -5,7 +5,7 @@ from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
 from emulator.enums import MapLocation
 from emulator.game_state import YellowLegacyGameState
-from emulator.schemas import Sign, Sprite, Warp
+from emulator.schemas import MapConnections, Sign, Sprite, Warp
 from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
 
 
@@ -74,6 +74,7 @@ class OverworldMap(BaseModel):
     known_sprites: dict[int, OverworldSprite]
     known_warps: dict[int, OverworldWarp]
     known_signs: dict[int, OverworldSign]
+    connections: MapConnections
 
     @property
     def height(self) -> int:
@@ -122,6 +123,7 @@ class OverworldMap(BaseModel):
             screen_upper_left_x=game_state.screen.left,
             screen_lower_right_y=game_state.screen.bottom,
             screen_lower_right_x=game_state.screen.right,
+            connections=self.connections,
         )
 
     async def _get_sprite_notes(self) -> str:

@@ -2,9 +2,7 @@
 
 ## TODOs in rough order of importance
 
-* Add connecting maps to the overworld maps
 * Only update entities if they're new or you're standing next to them
-* Make the output of get ascii screen into a schema
 
 * Add summary memory with decay -- Fixed size, max(age*decay_rate) drops off first
 * Add long term memory with retrieval and decay -- Asks to delete after N iterations without retrieval

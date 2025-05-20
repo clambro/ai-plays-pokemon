@@ -35,6 +35,9 @@ The tile directly below you is "{{tile_below}}".
 The tile directly to the left of you is "{{tile_left}}".
 The tile directly to the right of you is "{{tile_right}}".
 
+The current map has the following connections:
+{{connections}}
+
 You have discovered the following sprites on the portion of the map that you have revealed so far:
 <known_sprites>
 {{known_sprites}}
