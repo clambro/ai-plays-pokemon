@@ -46,7 +46,7 @@ class SummaryMemory(BaseModel):
         """Append pieces to the memory, dropping the most decayed pieces if necessary."""
         self.pieces.extend(pieces)
         self.pieces = sorted(self.pieces, key=lambda x: x.get_decay_value(iteration))
-        self.pieces = self.pieces[-SUMMARY_MEMORY_MAX_SIZE:]
+        self.pieces = self.pieces[:SUMMARY_MEMORY_MAX_SIZE]
         self.pieces = sorted(self.pieces, key=lambda x: x.iteration)
         for piece in pieces:
             logger.info(f"[{piece.iteration}] New summary memory: {piece.content}")
