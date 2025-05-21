@@ -33,9 +33,10 @@ class SummaryMemory(BaseModel):
             "Here is a summarized representation of your past raw thoughts which, in addition to"
             " aggregating the information you have learned so far, extends beyond the limits of"
             " your basic raw memory. Higher iteration numbers (the bracketed numbers) are more"
-            " recent. The importance rating is an estimate of how important the information was"
-            " to you at the time of the thought, on a scale from 1 to 5, where 5 is the most"
-            " important."
+            " recent, but keep in mind that the iteration number represents the moment that the"
+            " thought was summarized, not necessarily the moment that it occurred. The importance"
+            " rating is an estimate of how important the information was to you at the time of the"
+            " thought, on a scale from 1 to 5, where 5 is the most important."
         )
         out += "\n<summary_memory>\n"
         out += "\n".join([str(piece) for piece in self.pieces])
