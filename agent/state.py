@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from common.enums import AgentStateHandler, Tool
 from common.goals import Goals
+from database.long_term_memory.schemas import LongTermMemoryRead
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory
 from summary_memory.schemas import SummaryMemory
@@ -17,6 +18,7 @@ class AgentState(BaseState):
     iteration: int = 0
     raw_memory: RawMemory = Field(default_factory=RawMemory)
     summary_memory: SummaryMemory = Field(default_factory=SummaryMemory)
+    long_term_memory: list[LongTermMemoryRead] = Field(default_factory=list)
     handler: AgentStateHandler | None = None
     current_map: OverworldMap | None = None
     goals: Goals = Field(default_factory=Goals)
@@ -39,6 +41,10 @@ class AgentStore(BaseStore[AgentState]):
     async def set_summary_memory(self, summary_memory: SummaryMemory) -> None:
         """Set the summary memory."""
         await self.set_state({"summary_memory": summary_memory})
+
+    async def set_long_term_memory(self, long_term_memory: list[LongTermMemoryRead]) -> None:
+        """Set the long-term memory."""
+        await self.set_state({"long_term_memory": long_term_memory})
 
     async def set_handler(self, handler: AgentStateHandler | None) -> None:
         """Set the handler."""

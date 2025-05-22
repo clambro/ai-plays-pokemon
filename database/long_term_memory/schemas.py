@@ -28,5 +28,6 @@ class LongTermMemoryUpdate(BaseModel):
 
     id: UUID4
     content: str
+    embedding: list[float]
     importance: int = Field(ge=1, le=5)
     iteration: int

@@ -51,6 +51,7 @@ async def update_long_term_memory(update_schema: LongTermMemoryUpdate) -> None:
             .where(LongTermMemoryDBModel.id == update_schema.id)
             .values(
                 content=update_schema.content,
+                embedding=update_schema.embedding,
                 importance=update_schema.importance,
                 update_iteration=update_schema.iteration,
                 last_accessed_iteration=update_schema.iteration,
@@ -58,3 +59,18 @@ async def update_long_term_memory(update_schema: LongTermMemoryUpdate) -> None:
         )
         await session.execute(query)
         await session.commit()
+
+
+# TODO: Delete this when we have RAG set up.
+async def get_all_long_term_memory(iteration: int) -> list[LongTermMemoryRead]:
+    """Get all long-term memory."""
+    async with db_sessionmaker() as session:
+        query = (
+            update(LongTermMemoryDBModel)
+            .values(last_accessed_iteration=iteration)
+            .returning(LongTermMemoryDBModel)
+        )
+        result = await session.execute(query)
+        db_objs = result.scalars().all()
+
+        return [LongTermMemoryRead.model_validate(o) for o in db_objs]
