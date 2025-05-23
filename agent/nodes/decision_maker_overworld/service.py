@@ -4,8 +4,8 @@ from agent.nodes.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORL
 from agent.nodes.decision_maker_overworld.schemas import DecisionMakerOverworldResponse
 from agent.schemas import NavigationArgs
 from common.enums import AsciiTiles, Tool
-from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
+from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory, RawMemoryPiece
@@ -26,7 +26,7 @@ class DecisionMakerOverworldService:
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
-        self.llm_service = Gemini(GeminiModel.FLASH)
+        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
         self.raw_memory = raw_memory
         self.current_map = current_map
         self.goals = goals

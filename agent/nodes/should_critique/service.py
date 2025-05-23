@@ -1,8 +1,8 @@
 from agent.nodes.should_critique.prompts import SHOULD_CRITIQUE_PROMPT
 from agent.nodes.should_critique.schemas import ShouldCritiqueResponse
 from common.constants import ITERATIONS_PER_CRITIQUE_CHECK
-from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
+from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
 from raw_memory.schemas import RawMemory
 from summary_memory.schemas import SummaryMemory
@@ -24,7 +24,7 @@ class ShouldCritiqueService:
         self.goals = goals
         self.summary_memory = summary_memory
         self.emulator = emulator
-        self.llm_service = Gemini(model=GeminiModel.FLASH_LITE)
+        self.llm_service = GeminiLLMService(model=GeminiLLMEnum.FLASH_LITE)
 
     async def should_critique(self) -> bool:
         """Determine if the agent should critique the current state of the game."""

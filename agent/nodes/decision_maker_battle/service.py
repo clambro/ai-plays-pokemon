@@ -2,7 +2,7 @@ from loguru import logger
 
 from agent.nodes.decision_maker_battle.prompts import DECISION_MAKER_BATTLE_PROMPT
 from agent.nodes.decision_maker_battle.schemas import DecisionMakerBattleResponse
-from common.gemini import Gemini, GeminiModel
+from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 from summary_memory.schemas import SummaryMemory
@@ -20,7 +20,7 @@ class DecisionMakerBattleService:
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
-        self.llm_service = Gemini(GeminiModel.FLASH)
+        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
         self.raw_memory = raw_memory
         self.summary_memory = summary_memory
 

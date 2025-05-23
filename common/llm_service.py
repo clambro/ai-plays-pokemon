@@ -28,7 +28,7 @@ SAFETY_SETTINGS = [
 ]
 
 
-class GeminiModel(StrEnum):
+class GeminiLLMEnum(StrEnum):
     """Enum for the Gemini model names."""
 
     PRO = "gemini-2.5-pro-preview-05-06"
@@ -36,10 +36,10 @@ class GeminiModel(StrEnum):
     FLASH_LITE = "gemini-2.0-flash-lite"
 
 
-class Gemini:
+class GeminiLLMService:
     """Wrapper for the Gemini LLM API."""
 
-    def __init__(self, model: GeminiModel) -> None:
+    def __init__(self, model: GeminiLLMEnum) -> None:
         self.client = genai.Client(api_key=settings.gemini_api_key)
         self.model = model
 

@@ -2,8 +2,8 @@ from loguru import logger
 
 from agent.nodes.decision_maker_text.prompts import DECISION_MAKER_TEXT_PROMPT
 from agent.nodes.decision_maker_text.schemas import DecisionMakerTextResponse
-from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
+from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 from summary_memory.schemas import SummaryMemory
@@ -22,7 +22,7 @@ class DecisionMakerTextService:
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
-        self.llm_service = Gemini(GeminiModel.FLASH)
+        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
         self.raw_memory = raw_memory
         self.goals = goals
         self.summary_memory = summary_memory

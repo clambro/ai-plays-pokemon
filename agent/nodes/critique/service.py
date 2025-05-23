@@ -1,7 +1,7 @@
 from agent.nodes.critique.prompts import CRITIQUE_PROMPT
 from agent.nodes.critique.schemas import CritiqueResponse
-from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
+from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory, RawMemoryPiece
@@ -26,7 +26,7 @@ class CritiqueService:
         self.goals = goals
         self.emulator = emulator
         self.summary_memory = summary_memory
-        self.llm_service = Gemini(GeminiModel.PRO)
+        self.llm_service = GeminiLLMService(GeminiLLMEnum.PRO)
 
     async def critique(self) -> None:
         """Critique the current state of the game."""

@@ -10,7 +10,7 @@ from agent.nodes.update_onscreen_entities.prompts import (
     UPDATE_WARPS_PROMPT,
 )
 from agent.nodes.update_onscreen_entities.schemas import UpdateEntitiesResponse
-from common.gemini import Gemini, GeminiModel
+from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from database.sign_memory.repository import update_sign_memory
 from database.sign_memory.schemas import SignMemoryUpdate
 from database.sprite_memory.repository import update_sprite_memory
@@ -42,7 +42,7 @@ class UpdateOnscreenEntitiesService:
         self.raw_memory = raw_memory
         self.current_map = current_map
         self.summary_memory = summary_memory
-        self.llm_service = Gemini(GeminiModel.FLASH)
+        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
 
     async def update_onscreen_entities(self) -> None:
         """
