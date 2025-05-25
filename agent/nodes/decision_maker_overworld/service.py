@@ -7,7 +7,7 @@ from common.enums import AsciiTiles, Tool
 from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
-from emulator.enums import Button
+from emulator.enums import Button, FacingDirection
 from long_term_memory.schemas import LongTermMemory
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory, RawMemoryPiece
@@ -77,6 +77,7 @@ class DecisionMakerOverworldService:
         if response.button:
             prev_map = game_state.cur_map.id.name
             prev_coords = (game_state.player.y, game_state.player.x)
+            prev_direction = game_state.player.direction
             await self.emulator.press_buttons([response.button])
             self.raw_memory.append(
                 RawMemoryPiece(
@@ -84,7 +85,7 @@ class DecisionMakerOverworldService:
                     content=f"{thought} Pressed the '{response.button}' button.",
                 ),
             )
-            await self._check_for_collision(response.button, prev_map, prev_coords)
+            await self._check_for_collision(response.button, prev_map, prev_coords, prev_direction)
 
         return None, None
 
@@ -93,16 +94,22 @@ class DecisionMakerOverworldService:
         button: Button,
         prev_map: str,
         prev_coords: tuple[int, int],
+        prev_direction: FacingDirection,
     ) -> None:
         """Check if the player bumped into a wall and add a note to the raw memory if so."""
-        if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN]:
+        if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN, Button.A]:
             return
 
         await self.emulator.wait_for_animation_to_finish()
         game_state = await self.emulator.get_game_state()
         current_map = game_state.cur_map.id.name
         current_coords = (game_state.player.y, game_state.player.x)
-        if current_map == prev_map and current_coords == prev_coords:
+        current_direction = game_state.player.direction
+        if (
+            current_map == prev_map
+            and current_coords == prev_coords
+            and current_direction == prev_direction
+        ):
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
