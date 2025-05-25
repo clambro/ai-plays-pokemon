@@ -2,6 +2,7 @@ from junjo import Edge, Graph
 
 from agent.conditions import AgentHandlerIs, ShouldCritique, ToolIs
 from agent.nodes.build_agent_state.node import UpdateAgentStoreNode
+from agent.nodes.create_long_term_memory.node import CreateLongTermMemoryNode
 from agent.nodes.critique.node import CritiqueNode
 from agent.nodes.decision_maker_battle.node import DecisionMakerBattleNode
 from agent.nodes.decision_maker_overworld.node import DecisionMakerOverworldNode
@@ -33,6 +34,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     update_goals = UpdateGoalsNode(emulator)
     update_summary_memory = UpdateSummaryMemoryNode(emulator)
     navigation = NavigationNode(emulator)
+    create_long_term_memory = CreateLongTermMemoryNode(emulator)
 
     return Graph(
         source=update_agent_store,
@@ -113,6 +115,10 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             ),
             Edge(
                 update_goals,
+                create_long_term_memory,
+            ),
+            Edge(
+                create_long_term_memory,
                 update_summary_memory,
             ),
         ],

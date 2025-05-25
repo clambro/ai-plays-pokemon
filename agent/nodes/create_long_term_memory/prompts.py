@@ -5,6 +5,8 @@ You are being given the chance to create a new long-term memory object for futur
 
 {summary_memory}
 
+{long_term_memory}
+
 Here are the existing titles in your long-term memory:
 <titles>
 {titles}

@@ -18,8 +18,6 @@ class CreateLongTermMemoryNode(Node[AgentStore]):
         logger.info("Creating long-term memory if needed...")
 
         state = await store.get_state()
-        if not state.current_map:
-            raise ValueError("Current map is not set.")
 
         service = CreateLongTermMemoryService(
             iteration=state.iteration,

@@ -1,4 +1,4 @@
-from sqlalchemy import update
+from sqlalchemy import select, update
 
 from database.db_config import db_sessionmaker
 from database.long_term_memory.model import LongTermMemoryDBModel
@@ -15,6 +15,7 @@ async def create_long_term_memory(create_schema: LongTermMemoryCreate) -> None:
         db_obj = LongTermMemoryDBModel(
             title=create_schema.title,
             content=create_schema.content,
+            importance=create_schema.importance,
             embedding=create_schema.embedding,
             create_iteration=create_schema.iteration,
             update_iteration=create_schema.iteration,
@@ -74,3 +75,13 @@ async def get_all_long_term_memory(iteration: int) -> list[LongTermMemoryRead]:
         db_objs = result.scalars().all()
 
         return [LongTermMemoryRead.model_validate(o) for o in db_objs]
+
+
+async def get_all_long_term_memory_titles() -> list[str]:
+    """Get all long-term memory titles."""
+    async with db_sessionmaker() as session:
+        query = select(LongTermMemoryDBModel.title)
+        result = await session.execute(query)
+        db_objs = result.scalars().all()
+
+        return list(db_objs)
