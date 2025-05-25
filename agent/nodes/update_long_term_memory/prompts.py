@@ -7,6 +7,8 @@ You are being given the chance to update your currently available long-term memo
 
 {long_term_memory}
 
+The above memories are the only memories that you have access to at the moment. You can only update memories from the above list.
+
 Your response must be in the JSON format described below, with the keys defined as follows:
 - title: The title of the long-term memory object to update, exactly as it appears above.
 - update_type: The type of update to perform on the long-term memory object, either appending your new information to the end of the existing content or rewriting the entire content.
