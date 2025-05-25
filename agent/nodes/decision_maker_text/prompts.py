@@ -14,6 +14,8 @@ The (case-sensitive) available buttons are:
 
 {summary_memory}
 
+{long_term_memory}
+
 {goals}
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:

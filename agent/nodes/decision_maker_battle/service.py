@@ -2,8 +2,9 @@ from loguru import logger
 
 from agent.nodes.decision_maker_battle.prompts import DECISION_MAKER_BATTLE_PROMPT
 from agent.nodes.decision_maker_battle.schemas import DecisionMakerBattleResponse
-from common.gemini import Gemini, GeminiModel
+from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
+from long_term_memory.schemas import LongTermMemory
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 from summary_memory.schemas import SummaryMemory
 
@@ -17,12 +18,14 @@ class DecisionMakerBattleService:
         emulator: YellowLegacyEmulator,
         raw_memory: RawMemory,
         summary_memory: SummaryMemory,
+        long_term_memory: LongTermMemory,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
-        self.llm_service = Gemini(GeminiModel.FLASH)
+        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
         self.raw_memory = raw_memory
         self.summary_memory = summary_memory
+        self.long_term_memory = long_term_memory
 
     async def make_decision(self) -> None:
         """
@@ -34,6 +37,7 @@ class DecisionMakerBattleService:
         prompt = DECISION_MAKER_BATTLE_PROMPT.format(
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
+            long_term_memory=self.long_term_memory,
         )
         try:
             response = await self.llm_service.get_llm_response_pydantic(

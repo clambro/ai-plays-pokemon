@@ -27,5 +27,6 @@ class UpdateOnscreenEntitiesNode(Node[AgentStore]):
             raw_memory=state.raw_memory,
             current_map=state.current_map,
             summary_memory=state.summary_memory,
+            long_term_memory=state.long_term_memory,
         )
         await service.update_onscreen_entities()

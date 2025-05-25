@@ -30,6 +30,7 @@ class DecisionMakerOverworldNode(Node[AgentStore]):
             current_map=state.current_map,
             goals=state.goals,
             summary_memory=state.summary_memory,
+            long_term_memory=state.long_term_memory,
         )
         tool, args = await service.make_decision()
 

@@ -5,6 +5,8 @@ There are one or more sprites visible on the screen right now. This is your chan
 
 {summary_memory}
 
+{long_term_memory}
+
 {map_info}
 
 {player_info}
@@ -27,6 +29,8 @@ There are one or more warp tiles visible on the screen right now. This is your c
 {raw_memory}
 
 {summary_memory}
+
+{long_term_memory}
 
 {map_info}
 
@@ -55,6 +59,8 @@ There are one or more signs visible on the screen right now. This is your chance
 {raw_memory}
 
 {summary_memory}
+
+{long_term_memory}
 
 {map_info}
 

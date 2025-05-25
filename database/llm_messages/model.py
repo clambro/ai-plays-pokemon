@@ -8,7 +8,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from database.base import SQLAlchemyBase
 
 
-# Temporary until we set up Junjo server and opentelemetry.
 class LLMMessageDBModel(SQLAlchemyBase):
     """A table for LLM messages."""
 

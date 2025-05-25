@@ -10,7 +10,7 @@ from agent.nodes.update_onscreen_entities.prompts import (
     UPDATE_WARPS_PROMPT,
 )
 from agent.nodes.update_onscreen_entities.schemas import UpdateEntitiesResponse
-from common.gemini import Gemini, GeminiModel
+from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from database.sign_memory.repository import update_sign_memory
 from database.sign_memory.schemas import SignMemoryUpdate
 from database.sprite_memory.repository import update_sprite_memory
@@ -19,6 +19,7 @@ from database.warp_memory.repository import update_warp_memory
 from database.warp_memory.schemas import WarpMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
+from long_term_memory.schemas import LongTermMemory
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
 from raw_memory.schemas import RawMemory
 from summary_memory.schemas import SummaryMemory
@@ -36,13 +37,15 @@ class UpdateOnscreenEntitiesService:
         raw_memory: RawMemory,
         current_map: OverworldMap,
         summary_memory: SummaryMemory,
+        long_term_memory: LongTermMemory,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
         self.raw_memory = raw_memory
         self.current_map = current_map
         self.summary_memory = summary_memory
-        self.llm_service = Gemini(GeminiModel.FLASH)
+        self.long_term_memory = long_term_memory
+        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
 
     async def update_onscreen_entities(self) -> None:
         """
@@ -105,6 +108,7 @@ class UpdateOnscreenEntitiesService:
         prompt = UPDATE_SPRITES_PROMPT.format(
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
+            long_term_memory=self.long_term_memory,
             map_info=await self.current_map.to_string(game_state),
             player_info=game_state.player_info,
             sprites=sprite_text.strip(),
@@ -143,6 +147,7 @@ class UpdateOnscreenEntitiesService:
         prompt = UPDATE_WARPS_PROMPT.format(
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
+            long_term_memory=self.long_term_memory,
             map_info=await self.current_map.to_string(game_state),
             player_info=game_state.player_info,
             warps=warp_text.strip(),
@@ -181,6 +186,7 @@ class UpdateOnscreenEntitiesService:
         prompt = UPDATE_SIGNS_PROMPT.format(
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
+            long_term_memory=self.long_term_memory,
             map_info=await self.current_map.to_string(game_state),
             player_info=game_state.player_info,
             signs=sign_text.strip(),

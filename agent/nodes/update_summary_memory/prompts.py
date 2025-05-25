@@ -5,6 +5,8 @@ You have taken some actions and have added new information to your raw memory. T
 
 {summary_memory}
 
+{long_term_memory}
+
 {player_info}
 
 {goals}

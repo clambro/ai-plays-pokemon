@@ -3,9 +3,10 @@ from loguru import logger
 from agent.nodes.update_goals.prompts import UPDATE_GOALS_PROMPT
 from agent.nodes.update_goals.schemas import UpdateGoalsResponse
 from common.constants import ITERATIONS_PER_GOAL_UPDATE
-from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
+from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
+from long_term_memory.schemas import LongTermMemory
 from raw_memory.schemas import RawMemory
 from summary_memory.schemas import SummaryMemory
 
@@ -20,13 +21,15 @@ class UpdateGoalsService:
         raw_memory: RawMemory,
         goals: Goals,
         summary_memory: SummaryMemory,
+        long_term_memory: LongTermMemory,
     ) -> None:
         self.emulator = emulator
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.goals = goals
         self.summary_memory = summary_memory
-        self.llm_service = Gemini(GeminiModel.FLASH)
+        self.long_term_memory = long_term_memory
+        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
 
     async def update_goals(self) -> None:
         """Update the goals based on the latest memory and actions."""
@@ -37,6 +40,7 @@ class UpdateGoalsService:
         prompt = UPDATE_GOALS_PROMPT.format(
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
+            long_term_memory=self.long_term_memory,
             player_info=game_state.player_info,
             goals=self.goals,
         )

@@ -4,9 +4,11 @@ from agent.nodes.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORL
 from agent.nodes.decision_maker_overworld.schemas import DecisionMakerOverworldResponse
 from agent.schemas import NavigationArgs
 from common.enums import AsciiTiles, Tool
-from common.gemini import Gemini, GeminiModel
 from common.goals import Goals
+from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
+from emulator.enums import Button, FacingDirection
+from long_term_memory.schemas import LongTermMemory
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 from summary_memory.schemas import SummaryMemory
@@ -23,14 +25,16 @@ class DecisionMakerOverworldService:
         current_map: OverworldMap,
         goals: Goals,
         summary_memory: SummaryMemory,
+        long_term_memory: LongTermMemory,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
-        self.llm_service = Gemini(GeminiModel.FLASH)
+        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
         self.raw_memory = raw_memory
         self.current_map = current_map
         self.goals = goals
         self.summary_memory = summary_memory
+        self.long_term_memory = long_term_memory
 
     async def make_decision(self) -> tuple[Tool | None, NavigationArgs | None]:
         """
@@ -47,6 +51,7 @@ class DecisionMakerOverworldService:
             current_map=await self.current_map.to_string(game_state),
             goals=self.goals,
             walkable_tiles=", ".join(f'"{t}"' for t in AsciiTiles.get_walkable_tiles()),
+            long_term_memory=self.long_term_memory,
         )
         try:
             response = await self.llm_service.get_llm_response_pydantic(
@@ -70,6 +75,9 @@ class DecisionMakerOverworldService:
             )
             return Tool.NAVIGATION, response.navigation_args
         if response.button:
+            prev_map = game_state.cur_map.id.name
+            prev_coords = (game_state.player.y, game_state.player.x)
+            prev_direction = game_state.player.direction
             await self.emulator.press_buttons([response.button])
             self.raw_memory.append(
                 RawMemoryPiece(
@@ -77,4 +85,37 @@ class DecisionMakerOverworldService:
                     content=f"{thought} Pressed the '{response.button}' button.",
                 ),
             )
+            await self._check_for_collision(response.button, prev_map, prev_coords, prev_direction)
+
         return None, None
+
+    async def _check_for_collision(
+        self,
+        button: Button,
+        prev_map: str,
+        prev_coords: tuple[int, int],
+        prev_direction: FacingDirection,
+    ) -> None:
+        """Check if the player bumped into a wall and add a note to the raw memory if so."""
+        if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN, Button.A]:
+            return
+
+        await self.emulator.wait_for_animation_to_finish()
+        game_state = await self.emulator.get_game_state()
+        current_map = game_state.cur_map.id.name
+        current_coords = (game_state.player.y, game_state.player.x)
+        current_direction = game_state.player.direction
+        if (
+            current_map == prev_map
+            and current_coords == prev_coords
+            and current_direction == prev_direction
+        ):
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    content=(
+                        f"My position did not change after pressing the '{button}' button. Did I"
+                        f" bump into something?"
+                    ),
+                ),
+            )
