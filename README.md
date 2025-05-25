@@ -17,11 +17,11 @@
 
 * Add a grid to the overworld screen and overlay collisions
 
+* Combine memories into a single object so you're not adding them all to prompts separately
 * Subgraphs for the battle, text, and overworld conditions
 * Add proper source/sink nodes for graphs that need them
 * Add names to all the prompts
 * Improve separation of responsibilities
-* Combine memories into a single object so you're not adding them all to prompts separately
 * Add tests to everything
 * Make the critic tool part of the overworld navigation step? Includes functionality for determining which tools are available at any given iteration.
 
@@ -58,3 +58,4 @@
   * 00:d719 wDestinationMap
   * 00:cd6b wJoyIgnore - Better way of handling waits between button presses?
 * Test Junjo for editing state lists in place
+* Might be nice to generate the overworld map legend dynamically
