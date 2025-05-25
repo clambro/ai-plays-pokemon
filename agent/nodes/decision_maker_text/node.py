@@ -24,6 +24,7 @@ class DecisionMakerTextNode(Node[AgentStore]):
             raw_memory=state.raw_memory,
             goals=state.goals,
             summary_memory=state.summary_memory,
+            long_term_memory=state.long_term_memory,
         )
 
         await service.make_decision()

@@ -8,6 +8,7 @@ from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
+from long_term_memory.schemas import LongTermMemory
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 from summary_memory.schemas import SummaryMemory
@@ -24,6 +25,7 @@ class DecisionMakerOverworldService:
         current_map: OverworldMap,
         goals: Goals,
         summary_memory: SummaryMemory,
+        long_term_memory: LongTermMemory,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
@@ -32,6 +34,7 @@ class DecisionMakerOverworldService:
         self.current_map = current_map
         self.goals = goals
         self.summary_memory = summary_memory
+        self.long_term_memory = long_term_memory
 
     async def make_decision(self) -> tuple[Tool | None, NavigationArgs | None]:
         """
@@ -48,6 +51,7 @@ class DecisionMakerOverworldService:
             current_map=await self.current_map.to_string(game_state),
             goals=self.goals,
             walkable_tiles=", ".join(f'"{t}"' for t in AsciiTiles.get_walkable_tiles()),
+            long_term_memory=self.long_term_memory,
         )
         try:
             response = await self.llm_service.get_llm_response_pydantic(

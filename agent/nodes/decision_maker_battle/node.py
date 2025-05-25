@@ -23,6 +23,7 @@ class DecisionMakerBattleNode(Node[AgentStore]):
             emulator=self.emulator,
             raw_memory=state.raw_memory,
             summary_memory=state.summary_memory,
+            long_term_memory=state.long_term_memory,
         )
 
         await service.make_decision()

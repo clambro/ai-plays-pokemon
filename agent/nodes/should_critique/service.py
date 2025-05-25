@@ -4,6 +4,7 @@ from common.constants import ITERATIONS_PER_CRITIQUE_CHECK
 from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
+from long_term_memory.schemas import LongTermMemory
 from raw_memory.schemas import RawMemory
 from summary_memory.schemas import SummaryMemory
 
@@ -18,11 +19,13 @@ class ShouldCritiqueService:
         goals: Goals,
         emulator: YellowLegacyEmulator,
         summary_memory: SummaryMemory,
+        long_term_memory: LongTermMemory,
     ) -> None:
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.goals = goals
         self.summary_memory = summary_memory
+        self.long_term_memory = long_term_memory
         self.emulator = emulator
         self.llm_service = GeminiLLMService(model=GeminiLLMEnum.FLASH_LITE)
 
@@ -36,6 +39,7 @@ class ShouldCritiqueService:
             player_info=game_state.player_info,
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
+            long_term_memory=self.long_term_memory,
             goals=self.goals,
         )
         response = await self.llm_service.get_llm_response_pydantic(

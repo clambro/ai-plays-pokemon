@@ -5,6 +5,8 @@ You have just taken an action and added new information to your memory. If you y
 
 {summary_memory}
 
+{long_term_memory}
+
 {player_info}
 
 {goals}

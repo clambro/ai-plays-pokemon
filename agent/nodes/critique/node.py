@@ -28,6 +28,7 @@ class CritiqueNode(Node[AgentStore]):
             goals=state.goals,
             emulator=self.emulator,
             summary_memory=state.summary_memory,
+            long_term_memory=state.long_term_memory,
         )
         await service.critique()
 

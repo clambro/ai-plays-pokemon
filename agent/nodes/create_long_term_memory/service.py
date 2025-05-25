@@ -10,8 +10,9 @@ from database.long_term_memory.repository import (
     create_long_term_memory,
     get_all_long_term_memory_titles,
 )
-from database.long_term_memory.schemas import LongTermMemoryCreate, LongTermMemoryRead
+from database.long_term_memory.schemas import LongTermMemoryCreate
 from emulator.emulator import YellowLegacyEmulator
+from long_term_memory.schemas import LongTermMemory
 from raw_memory.schemas import RawMemory
 from summary_memory.schemas import SummaryMemory
 
@@ -27,7 +28,7 @@ class CreateLongTermMemoryService:
         iteration: int,
         raw_memory: RawMemory,
         summary_memory: SummaryMemory,
-        long_term_memory: list[LongTermMemoryRead],
+        long_term_memory: LongTermMemory,
         goals: Goals,
         emulator: YellowLegacyEmulator,
     ) -> None:
