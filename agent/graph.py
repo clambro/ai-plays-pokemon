@@ -13,6 +13,7 @@ from agent.nodes.navigation.node import NavigationNode
 from agent.nodes.should_critique.node import ShouldCritiqueNode
 from agent.nodes.update_current_map.node import UpdateCurrentMapNode
 from agent.nodes.update_goals.node import UpdateGoalsNode
+from agent.nodes.update_long_term_memory.node import UpdateLongTermMemoryNode
 from agent.nodes.update_onscreen_entities.node import UpdateOnscreenEntitiesNode
 from agent.nodes.update_summary_memory.node import UpdateSummaryMemoryNode
 from common.enums import AgentStateHandler, Tool
@@ -35,6 +36,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     update_summary_memory = UpdateSummaryMemoryNode(emulator)
     navigation = NavigationNode(emulator)
     create_long_term_memory = CreateLongTermMemoryNode(emulator)
+    update_long_term_memory = UpdateLongTermMemoryNode(emulator)
 
     return Graph(
         source=update_agent_store,
@@ -119,6 +121,10 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             ),
             Edge(
                 create_long_term_memory,
+                update_long_term_memory,
+            ),
+            Edge(
+                update_long_term_memory,
                 update_summary_memory,
             ),
         ],
