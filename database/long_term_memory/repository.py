@@ -26,24 +26,6 @@ async def create_long_term_memory(create_schema: LongTermMemoryCreate) -> None:
         await session.refresh(db_obj)
 
 
-async def get_long_term_memory_by_name(name: str, iteration: int) -> LongTermMemoryRead | None:
-    """Get a long-term memory by name and update the last accessed iteration."""
-    async with db_sessionmaker() as session:
-        query = (
-            update(LongTermMemoryDBModel)
-            .where(LongTermMemoryDBModel.title == name)
-            .values(last_accessed_iteration=iteration)
-            .returning(LongTermMemoryDBModel)
-        )
-        result = await session.execute(query)
-        db_obj = result.scalar_one_or_none()
-
-        if db_obj is None:
-            return None
-
-    return LongTermMemoryRead.model_validate(db_obj)
-
-
 async def update_long_term_memory(update_schema: LongTermMemoryUpdate) -> None:
     """Update a long-term memory with new content and importance."""
     async with db_sessionmaker() as session:
@@ -55,7 +37,6 @@ async def update_long_term_memory(update_schema: LongTermMemoryUpdate) -> None:
                 embedding=update_schema.embedding,
                 importance=update_schema.importance,
                 update_iteration=update_schema.iteration,
-                last_accessed_iteration=update_schema.iteration,
             )
         )
         await session.execute(query)
