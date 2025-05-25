@@ -7,6 +7,7 @@ from common.enums import AsciiTiles, Tool
 from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
+from emulator.enums import Button
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 from summary_memory.schemas import SummaryMemory
@@ -70,6 +71,8 @@ class DecisionMakerOverworldService:
             )
             return Tool.NAVIGATION, response.navigation_args
         if response.button:
+            prev_map = game_state.cur_map.id.name
+            prev_coords = (game_state.player.y, game_state.player.x)
             await self.emulator.press_buttons([response.button])
             self.raw_memory.append(
                 RawMemoryPiece(
@@ -77,4 +80,31 @@ class DecisionMakerOverworldService:
                     content=f"{thought} Pressed the '{response.button}' button.",
                 ),
             )
+            await self._check_for_collision(response.button, prev_map, prev_coords)
+
         return None, None
+
+    async def _check_for_collision(
+        self,
+        button: Button,
+        prev_map: str,
+        prev_coords: tuple[int, int],
+    ) -> None:
+        """Check if the player bumped into a wall and add a note to the raw memory if so."""
+        if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN]:
+            return
+
+        await self.emulator.wait_for_animation_to_finish()
+        game_state = await self.emulator.get_game_state()
+        current_map = game_state.cur_map.id.name
+        current_coords = (game_state.player.y, game_state.player.x)
+        if current_map == prev_map and current_coords == prev_coords:
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    content=(
+                        f"My position did not change after pressing the '{button}' button. Did I"
+                        f" bump into something?"
+                    ),
+                ),
+            )

@@ -19,6 +19,7 @@
 
 * Subgraphs for the battle, text, and overworld conditions
 * Add proper source/sink nodes for graphs that need them
+* Add names to all the prompts
 * Improve separation of responsibilities
 * Combine memories into a single object so you're not adding them all to prompts separately
 * Add tests to everything
