@@ -40,10 +40,12 @@ class UpdateLongTermMemoryService:
         if not self.long_term_memory.pieces:
             return
 
+        game_state = await self.emulator.get_game_state()
         prompt = UPDATE_LONG_TERM_MEMORY_PROMPT.format(
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
             long_term_memory=self.long_term_memory,
+            player_info=game_state.player_info,
         )
         try:
             response = await self.llm_service.get_llm_response_pydantic(

@@ -7,6 +7,8 @@ You are being given the chance to update your currently available long-term memo
 
 {long_term_memory}
 
+{player_info}
+
 The above memories are the only memories that you have access to at the moment. You can only update memories from the above list.
 
 Your response must be in the JSON format described below, with the keys defined as follows:
@@ -19,8 +21,8 @@ Your response must be in the JSON format described below, with the keys defined 
   - 1: Information that you don't want to forget, but don't expect to refer back to often (e.g. defeated trainers, Pokemon that you don't expect to use, etc.).
 
 Guidelines for updating long-term memory objects:
-- Never include the coordinates for any entity in your content. The game's memory will provide this information as needed.
+- Never include coordinates in your content (e.g. for warp points, sprites, etc.). The game's memory will provide coordinate information as needed.
 - Each piece of long-term memory is meant to be a document containing polished notes on a specific topic. Do not fill your content with useless noise straight from your raw and summary memories. Everything in your long-term memory should be useful to you.
 
-Remember that you do not have to update any long-term memory objects here if you don't have anything to add, meaning an empty list is a perfectly valid response, and you should certainly not update more than one long-term memory object at a time. When in doubt, don't make any updates.
+Remember that you do not have to update any long-term memory objects here if you don't have anything to add. An empty list is a perfectly valid response, and you should certainly not update more than one long-term memory object at a time. When in doubt, don't make any updates.
 """

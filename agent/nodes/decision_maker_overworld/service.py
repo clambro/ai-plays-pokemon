@@ -48,7 +48,7 @@ class DecisionMakerOverworldService:
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
             player_info=game_state.player_info,
-            current_map=await self.current_map.to_string(game_state),
+            current_map=self.current_map.to_string(game_state),
             goals=self.goals,
             walkable_tiles=", ".join(f'"{t}"' for t in AsciiTiles.get_walkable_tiles()),
             long_term_memory=self.long_term_memory,

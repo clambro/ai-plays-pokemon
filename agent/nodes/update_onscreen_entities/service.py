@@ -109,7 +109,7 @@ class UpdateOnscreenEntitiesService:
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
             long_term_memory=self.long_term_memory,
-            map_info=await self.current_map.to_string(game_state),
+            map_info=self.current_map.to_string(game_state),
             player_info=game_state.player_info,
             sprites=sprite_text.strip(),
         )
@@ -148,7 +148,7 @@ class UpdateOnscreenEntitiesService:
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
             long_term_memory=self.long_term_memory,
-            map_info=await self.current_map.to_string(game_state),
+            map_info=self.current_map.to_string(game_state),
             player_info=game_state.player_info,
             warps=warp_text.strip(),
         )
@@ -187,7 +187,7 @@ class UpdateOnscreenEntitiesService:
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
             long_term_memory=self.long_term_memory,
-            map_info=await self.current_map.to_string(game_state),
+            map_info=self.current_map.to_string(game_state),
             player_info=game_state.player_info,
             signs=sign_text.strip(),
         )

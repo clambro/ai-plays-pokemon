@@ -96,7 +96,7 @@ class OverworldMap(BaseModel):
         """The ascii tiles as a string."""
         return "\n".join("".join(row) for row in self.ascii_tiles)
 
-    async def to_string(self, game_state: YellowLegacyGameState) -> str:
+    def to_string(self, game_state: YellowLegacyGameState) -> str:
         """Return a string representation of the map."""
         tiles = self.ascii_tiles_str
         explored_percentage = np.mean(self.ascii_tiles_ndarray != AsciiTiles.UNSEEN)
@@ -110,9 +110,9 @@ class OverworldMap(BaseModel):
             ascii_map=tiles,
             height=self.height,
             width=self.width,
-            known_sprites=await self._get_sprite_notes(),
-            known_warps=await self._get_warp_notes(),
-            known_signs=await self._get_sign_notes(),
+            known_sprites=self._get_sprite_notes(),
+            known_warps=self._get_warp_notes(),
+            known_signs=self._get_sign_notes(),
             explored_percentage=f"{explored_percentage:.0%}",
             ascii_screen="\n".join("".join(row) for row in screen),
             tile_above=tile_above,
@@ -126,19 +126,19 @@ class OverworldMap(BaseModel):
             connections=self.connections,
         )
 
-    async def _get_sprite_notes(self) -> str:
+    def _get_sprite_notes(self) -> str:
         """Get the notes for the sprites on the map, sorted by index."""
         if not self.known_sprites:
             return "No sprites discovered."
         return "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_sprites.items()))
 
-    async def _get_warp_notes(self) -> str:
+    def _get_warp_notes(self) -> str:
         """Get the notes for the warps on the map, sorted by index."""
         if not self.known_warps:
             return "No warp tiles discovered."
         return "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_warps.items()))
 
-    async def _get_sign_notes(self) -> str:
+    def _get_sign_notes(self) -> str:
         """Get the notes for the signs on the map, sorted by index."""
         if not self.known_signs:
             return "No signs discovered."
