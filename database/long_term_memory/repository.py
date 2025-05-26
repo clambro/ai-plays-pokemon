@@ -27,10 +27,17 @@ async def create_long_term_memory(create_schema: LongTermMemoryCreate) -> None:
         await session.refresh(db_obj)
 
 
-async def get_long_term_memories_by_ids(ids: list[UUID4]) -> list[LongTermMemoryRead]:
+async def get_long_term_memories_by_ids(
+    ids: list[UUID4],
+    iteration: int,
+) -> list[LongTermMemoryRead]:
     """Get long-term memories by their IDs."""
     async with db_sessionmaker() as session:
-        query = select(LongTermMemoryDBModel).where(LongTermMemoryDBModel.id.in_(ids))
+        query = (
+            update(LongTermMemoryDBModel)
+            .where(LongTermMemoryDBModel.id.in_(ids))
+            .values(last_accessed_iteration=iteration)
+        )
         result = await session.execute(query)
         db_objs = result.scalars().all()
 

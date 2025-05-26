@@ -55,14 +55,17 @@ class MemoryRetrievalService:
         """
         embeddings = await get_all_long_term_memory_embeddings()
         if len(embeddings) <= self.num_memories:
-            return await get_long_term_memories_by_ids(list(embeddings.keys()))
+            return await get_long_term_memories_by_ids(list(embeddings.keys()), iteration)
 
         query_embedding = await embedding_service.get_embedding(query)
         top_similarities = await self._get_top_n_semantic_similarity(query_embedding, embeddings)
         if not top_similarities:
             return []
 
-        memories_to_rerank = await get_long_term_memories_by_ids(list(top_similarities.keys()))
+        memories_to_rerank = await get_long_term_memories_by_ids(
+            list(top_similarities.keys()),
+            iteration,
+        )
         if len(memories_to_rerank) <= self.num_memories:
             return memories_to_rerank
 
