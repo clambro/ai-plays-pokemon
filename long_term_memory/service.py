@@ -1,7 +1,11 @@
 import numpy as np
 from pydantic import UUID4
 
-from common.constants import DEFAULT_NUM_MEMORIES_RETRIEVED, DEFAULT_RERANKING_FACTOR
+from common.constants import (
+    DEFAULT_MIN_SEMANTIC_SIMILARITY,
+    DEFAULT_NUM_MEMORIES_RETRIEVED,
+    DEFAULT_RERANKING_FACTOR,
+)
 from common.embedding_service import GeminiEmbeddingService
 from database.long_term_memory.repository import (
     get_all_long_term_memory_embeddings,
@@ -19,6 +23,7 @@ class MemoryRetrievalService:
         self,
         num_memories: int = DEFAULT_NUM_MEMORIES_RETRIEVED,
         reranking_factor: float = DEFAULT_RERANKING_FACTOR,
+        min_semantic_similarity: float = DEFAULT_MIN_SEMANTIC_SIMILARITY,
     ) -> None:
         """
         Initialize the memory similarity service.
@@ -34,6 +39,7 @@ class MemoryRetrievalService:
 
         self.num_memories = num_memories
         self.num_to_rerank = int(self.num_memories * reranking_factor)
+        self.min_semantic_similarity = min_semantic_similarity
 
     async def get_most_relevant_memories(
         self,
@@ -53,7 +59,12 @@ class MemoryRetrievalService:
 
         query_embedding = await embedding_service.get_embedding(query)
         top_similarities = await self._get_top_n_semantic_similarity(query_embedding, embeddings)
+        if not top_similarities:
+            return []
+
         memories_to_rerank = await get_long_term_memories_by_ids(list(top_similarities.keys()))
+        if len(memories_to_rerank) <= self.num_memories:
+            return memories_to_rerank
 
         return self._rerank_memories(iteration, memories_to_rerank, top_similarities)
 
@@ -72,11 +83,15 @@ class MemoryRetrievalService:
         """
         mem_ids, mem_embeddings = zip(*memory_embeddings.items())
         mem_embeddings = np.array(mem_embeddings)
-        similarities = np.dot(query_embedding, mem_embeddings) / (
+        similarities = np.dot(query_embedding, mem_embeddings.T) / (
             np.linalg.norm(query_embedding) * np.linalg.norm(mem_embeddings, axis=1)
         )
         top_n_ids = np.argsort(similarities)[-self.num_to_rerank :]
-        return {mem_ids[i]: similarities[i] for i in top_n_ids}
+        return {
+            mem_ids[i]: similarities[i]
+            for i in top_n_ids
+            if similarities[i] >= self.min_semantic_similarity
+        }
 
     def _rerank_memories(
         self,
@@ -95,9 +110,9 @@ class MemoryRetrievalService:
         scores = (
             (
                 memory,
-                top_similarities.get(memory.id, 0)
+                top_similarities.get(memory.id, self.min_semantic_similarity)
                 * memory.importance
-                / max((memory.last_accessed_iteration - iteration), 1),
+                / max(memory.last_accessed_iteration - iteration, 1),
             )
             for memory in memories
         )
