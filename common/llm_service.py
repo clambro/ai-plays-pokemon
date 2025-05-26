@@ -5,6 +5,7 @@ from google import genai
 from google.genai.errors import ServerError
 from google.genai.types import (
     GenerateContentConfig,
+    GenerateContentResponse,
     HarmBlockThreshold,
     HarmCategory,
     SafetySetting,
@@ -43,12 +44,37 @@ class GeminiLLMService:
         self.client = genai.Client(api_key=settings.gemini_api_key)
         self.model = model
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_fixed(1),
-        retry=retry_if_exception_type(ServerError),  # The experimental models are unstable.
-        reraise=True,
-    )
+    async def get_llm_response(
+        self,
+        messages: str | list[str | Image],
+        system_prompt: str = SYSTEM_PROMPT,
+        temperature: float = 0.0,
+        thinking_tokens: int | None = 256,
+        max_output_tokens: int | None = 2048,
+    ) -> str:
+        """
+        Get a response from the Gemini LLM as a string.
+
+        :param messages: The messages to send to the Gemini LLM.
+        :param system_prompt: The system prompt to send to the Gemini LLM.
+        :param temperature: The temperature to use for the response.
+        :param thinking_tokens: The number of tokens to use for the thinking. None is for
+            non-thinking models.
+        :param max_output_tokens: The maximum number of tokens to output.
+        :return: A string from the Gemini LLM.
+        """
+        response = await self._get_llm_response(
+            messages=messages,
+            schema=None,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            thinking_tokens=thinking_tokens,
+            max_output_tokens=max_output_tokens,
+        )
+        if not response.text:
+            raise ValueError("No response from Gemini.")
+        return response.text
+
     async def get_llm_response_pydantic(
         self,
         messages: str | list[str | Image],
@@ -56,6 +82,7 @@ class GeminiLLMService:
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = 0.0,
         thinking_tokens: int | None = 256,
+        max_output_tokens: int | None = 2048,
     ) -> PydanticModel:
         """
         Get a Pydantic model from the Gemini LLM, parsed from a JSON response.
@@ -66,24 +93,64 @@ class GeminiLLMService:
         :param temperature: The temperature to use for the response.
         :param thinking_tokens: The number of tokens to use for the thinking. None is for
             non-thinking models.
+        :param max_output_tokens: The maximum number of tokens to output.
         :return: A Pydantic model from the Gemini LLM.
+        """
+        response = await self._get_llm_response(
+            messages=messages,
+            schema=schema,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            thinking_tokens=thinking_tokens,
+            max_output_tokens=max_output_tokens,
+        )
+        return schema.model_validate(response.parsed)
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(1),
+        retry=retry_if_exception_type(ServerError),  # The experimental models are unstable.
+        reraise=True,
+    )
+    async def _get_llm_response(
+        self,
+        messages: str | list[str | Image],
+        schema: type[PydanticModel] | None,
+        system_prompt: str,
+        temperature: float,
+        thinking_tokens: int | None,
+        max_output_tokens: int | None,
+    ) -> GenerateContentResponse:
+        """
+        Get a response from the Gemini LLM.
+
+        :param messages: The messages to send to the Gemini LLM.
+        :param system_prompt: The system prompt to send to the Gemini LLM.
+        :param temperature: The temperature to use for the response.
+        :param thinking_tokens: The number of tokens to use for the thinking. None is for
+            non-thinking models.
+        :param max_output_tokens: The maximum number of tokens to output.
+        :return: A response from the Gemini LLM.
         """
         if isinstance(messages, str):
             messages = [messages]
         thinking_config = (
             ThinkingConfig(thinking_budget=thinking_tokens) if thinking_tokens else None
         )
+        content_config = GenerateContentConfig(
+            system_instruction=system_prompt,
+            temperature=temperature,
+            safety_settings=SAFETY_SETTINGS,
+            thinking_config=thinking_config,
+            max_output_tokens=max_output_tokens,
+        )
+        if schema:
+            content_config.response_mime_type = "application/json"
+            content_config.response_schema = schema
         response = await self.client.aio.models.generate_content(
             model=self.model,
             contents=messages,  # type: ignore -- This is a Gemini API issue.
-            config=GenerateContentConfig(
-                system_instruction=system_prompt,
-                response_mime_type="application/json",
-                response_schema=schema,
-                temperature=temperature,
-                safety_settings=SAFETY_SETTINGS,
-                thinking_config=thinking_config,
-            ),
+            config=content_config,
         )
         if not response.text or not response.usage_metadata:
             raise ValueError("No response from Gemini.")
@@ -98,6 +165,6 @@ class GeminiLLMService:
                 response_tokens=response.usage_metadata.candidates_token_count or 0,
             ),
         )
-        if not isinstance(response.parsed, schema):
+        if schema and not isinstance(response.parsed, schema):
             raise ValueError(f"Failed to parse response from Gemini. Got {response.text}")
-        return response.parsed
+        return response
