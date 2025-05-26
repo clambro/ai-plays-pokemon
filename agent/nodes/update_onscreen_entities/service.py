@@ -53,7 +53,7 @@ class UpdateOnscreenEntitiesService:
         _get_updatable_entities.
         """
         game_state = self.emulator.get_game_state()
-        screenshot = await self.emulator.get_screenshot()
+        screenshot = self.emulator.get_screenshot()
         tasks = []
         updatable_sprites = self._get_updatable_entities(
             list(self.current_map.known_sprites.values()),

@@ -43,7 +43,7 @@ class DecisionMakerOverworldService:
         :return: The button to press.
         """
         game_state = self.emulator.get_game_state()
-        img = await self.emulator.get_screenshot()
+        img = self.emulator.get_screenshot()
         prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,

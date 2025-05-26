@@ -71,17 +71,13 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         self._is_stopped = True
         self._pyboy.stop()
 
-    async def get_screenshot(self) -> Image.Image:
+    def get_screenshot(self) -> Image.Image:
         """Asynchronously get a screenshot of the current game screen."""
         self._check_stopped()
         img = deepcopy(self._pyboy.screen.image)
         if not isinstance(img, Image.Image):
             raise RuntimeError("No screenshot available")
-        img = await asyncio.to_thread(
-            img.resize,
-            (img.width * 2, img.height * 2),
-            resample=Image.Resampling.NEAREST,
-        )
+        img = img.resize((img.width * 2, img.height * 2), resample=Image.Resampling.NEAREST)
         return img
 
     async def press_buttons(self, buttons: list[str], delay_frames: int = 10) -> None:
