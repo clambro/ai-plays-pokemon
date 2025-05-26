@@ -97,7 +97,7 @@ class DecisionMakerOverworldService:
         prev_direction: FacingDirection,
     ) -> None:
         """Check if the player bumped into a wall and add a note to the raw memory if so."""
-        if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN, Button.A]:
+        if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN]:
             return
 
         await self.emulator.wait_for_animation_to_finish()

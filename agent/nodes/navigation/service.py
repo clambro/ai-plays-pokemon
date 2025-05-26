@@ -100,7 +100,7 @@ class NavigationService:
 
     def _calculate_path_to_target(self, game_state: YellowLegacyGameState) -> list[Button] | None:
         """
-        Calculate the path to the target coordinates as a list of button presses using the A*
+        Calculate the path to the target coordinates as a list of button presses using the A* search
         algorithm.
         """
         start_pos = (game_state.player.y, game_state.player.x)

@@ -119,10 +119,10 @@ class OverworldMap(BaseModel):
             tile_below=tile_below,
             tile_left=tile_left,
             tile_right=tile_right,
-            screen_upper_left_y=game_state.screen.top,
-            screen_upper_left_x=game_state.screen.left,
-            screen_lower_right_y=game_state.screen.bottom,
-            screen_lower_right_x=game_state.screen.right,
+            screen_top=game_state.screen.top,
+            screen_left=game_state.screen.left,
+            screen_bottom=game_state.screen.bottom,
+            screen_right=game_state.screen.right,
             connections=self.connections,
         )
 

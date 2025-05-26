@@ -28,7 +28,11 @@ You have explored {{explored_percentage}} of this map.
 
 The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map is {{height}}x{{width}} blocks.
 
-The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that the player is in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the whole map section. This should help you navigate from one map to another. The upper left corner of the screen is currently at ({{screen_upper_left_y}}, {{screen_upper_left_x}}) in map coordinates. The lower right corner of the screen is currently at ({{screen_lower_right_y}}, {{screen_lower_right_x}}) in map coordinates.
+The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that the player is in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the whole map section. This should help you navigate from one map to another.
+The top of the screen is currently at row {{screen_top}} in map coordinates.
+The bottom of the screen is currently at row {{screen_bottom}} in map coordinates.
+The left side of the screen is currently at column {{screen_left}} in map coordinates.
+The right side of the screen is currently at column {{screen_right}} in map coordinates.
 
 The tile directly above you is "{{tile_above}}".
 The tile directly below you is "{{tile_below}}".
