@@ -1,11 +1,13 @@
-from database.long_term_memory.repository import get_all_long_term_memory
 from long_term_memory.schemas import LongTermMemory
+from long_term_memory.service import MemoryRetrievalService
 from raw_memory.schemas import RawMemory
 from summary_memory.schemas import SummaryMemory
 
 
 class LoadLongTermMemoryService:
     """Service for loading the long-term memory."""
+
+    memory_retrieval_service = MemoryRetrievalService()
 
     def __init__(
         self,
@@ -21,5 +23,9 @@ class LoadLongTermMemoryService:
 
     async def load_long_term_memory(self) -> LongTermMemory:
         """Load the long-term memory."""
-        memories = await get_all_long_term_memory(iteration=self.iteration)
+        query = "test"
+        memories = await self.memory_retrieval_service.get_most_relevant_memories(
+            query,
+            iteration=self.iteration,
+        )
         return LongTermMemory(pieces=memories)

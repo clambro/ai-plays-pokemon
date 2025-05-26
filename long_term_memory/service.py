@@ -1,6 +1,7 @@
 import numpy as np
-from pydantic import UUID4, BaseModel
+from pydantic import UUID4
 
+from common.constants import DEFAULT_NUM_MEMORIES_RETRIEVED, DEFAULT_RERANKING_FACTOR
 from common.embedding_service import GeminiEmbeddingService
 from database.long_term_memory.repository import (
     get_all_long_term_memory_embeddings,
@@ -11,35 +12,39 @@ from database.long_term_memory.schemas import LongTermMemoryRead
 embedding_service = GeminiEmbeddingService()
 
 
-class MemoryRetrievalService(BaseModel):
+class MemoryRetrievalService:
     """Service for getting the semantic similarity between a query and a memory."""
 
-    def __init__(self, iteration: int, num_memories: int, reranking_factor: float) -> None:
+    def __init__(
+        self,
+        num_memories: int = DEFAULT_NUM_MEMORIES_RETRIEVED,
+        reranking_factor: float = DEFAULT_RERANKING_FACTOR,
+    ) -> None:
         """
         Initialize the memory similarity service.
 
-        :param iteration: The current iteration of the Agent.
         :param num_memories: The number of memories to return.
         :param reranking_factor: The multiplier for determining how many more memories to pull
             before reranking.
         """
-        if iteration < 0:
-            raise ValueError("Iteration must be greater than 0")
         if num_memories < 1:
             raise ValueError("Number of memories must be greater than 0")
         if reranking_factor < 1:
             raise ValueError("Reranking factor must be greater than 1")
 
-        self.iteration = iteration
         self.num_memories = num_memories
         self.num_to_rerank = int(self.num_memories * reranking_factor)
 
-    async def get_most_relevant_memories(self, query: str) -> list[LongTermMemoryRead]:
+    async def get_most_relevant_memories(
+        self,
+        query: str,
+        iteration: int,
+    ) -> list[LongTermMemoryRead]:
         """
         Get the most relevant memories to the `query`.
 
         :param query: The query to search for.
-        :param num_memories: The number of memories to return.
+        :param iteration: The current iteration of the Agent.
         :return: A list of the `num_memories` most relevant memories to the `query`.
         """
         embeddings = await get_all_long_term_memory_embeddings()
@@ -50,7 +55,7 @@ class MemoryRetrievalService(BaseModel):
         top_similarities = await self._get_top_n_semantic_similarity(query_embedding, embeddings)
         memories_to_rerank = await get_long_term_memories_by_ids(list(top_similarities.keys()))
 
-        return self._rerank_memories(memories_to_rerank, top_similarities)
+        return self._rerank_memories(iteration, memories_to_rerank, top_similarities)
 
     async def _get_top_n_semantic_similarity(
         self,
@@ -75,12 +80,14 @@ class MemoryRetrievalService(BaseModel):
 
     def _rerank_memories(
         self,
+        iteration: int,
         memories: list[LongTermMemoryRead],
         top_similarities: dict[UUID4, float],
     ) -> list[LongTermMemoryRead]:
         """
         Rerank the memories based on semantic similarity, recency, and importance.
 
+        :param iteration: The current iteration of the Agent.
         :param memories: The memories to rerank.
         :param top_similarities: The semantic similarity of the memories to the query.
         :return: A list of the reranked memories.
@@ -90,7 +97,7 @@ class MemoryRetrievalService(BaseModel):
                 memory,
                 top_similarities.get(memory.id, 0)
                 * memory.importance
-                / max((memory.last_accessed_iteration - self.iteration), 1),
+                / max((memory.last_accessed_iteration - iteration), 1),
             )
             for memory in memories
         )
