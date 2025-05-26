@@ -1,5 +1,6 @@
 import asyncio
 from contextlib import AbstractAsyncContextManager
+from copy import deepcopy
 from pathlib import Path
 
 from loguru import logger
@@ -80,7 +81,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
     async def get_screenshot(self) -> Image.Image:
         """Asynchronously get a screenshot of the current game screen."""
         self._check_stopped()
-        img = self._pyboy.screen.image
+        img = deepcopy(self._pyboy.screen.image)
         if not isinstance(img, Image.Image):
             raise RuntimeError("No screenshot available")
         img = await asyncio.to_thread(
@@ -115,6 +116,17 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
                 successes = 0
             game_state = new_game_state
             await asyncio.sleep(0.1)
+
+    async def save_game_state(self, path: Path) -> None:
+        """Save the current game state to a file."""
+        self._check_stopped()
+        async with self._button_lock:
+            await asyncio.to_thread(self._save_state_sync, path)
+
+    def _save_state_sync(self, path: Path) -> None:
+        """Synchronous helper method to save game state."""
+        with path.open("wb") as f:
+            self._pyboy.save_state(f)
 
     def _check_stopped(self) -> None:
         if self._is_stopped:

@@ -8,7 +8,8 @@ from loguru import logger
 
 from agent.app import build_agent_workflow
 from agent.state import AgentState
-from common.constants import OUTPUTS_FOLDER
+from backup.service import create_backup
+from common.constants import ITERATIONS_PER_BACKUP, OUTPUTS_FOLDER
 from database.db_config import init_fresh_db
 from emulator.emulator import YellowLegacyEmulator
 
@@ -36,10 +37,11 @@ async def main(
                 workflow = build_agent_workflow(state, emulator)
                 await workflow.execute()
                 state = await workflow.get_state()
+                if state.iteration % ITERATIONS_PER_BACKUP == 0:
+                    await create_backup(state, emulator)
         except Exception:  # noqa: BLE001
             logger.exception("Agent workflow raised an exception.")
-            async with aiofiles.open("notes/agent_state.json", "w") as f:
-                await f.write(state.model_dump_json())
+            await create_backup(state, emulator)
 
 
 if __name__ == "__main__":
