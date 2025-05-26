@@ -1,3 +1,4 @@
+from pydantic import UUID4
 from sqlalchemy import select, update
 
 from database.db_config import db_sessionmaker
@@ -24,6 +25,16 @@ async def create_long_term_memory(create_schema: LongTermMemoryCreate) -> None:
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)
+
+
+async def get_long_term_memories_by_ids(ids: list[UUID4]) -> list[LongTermMemoryRead]:
+    """Get long-term memories by their IDs."""
+    async with db_sessionmaker() as session:
+        query = select(LongTermMemoryDBModel).where(LongTermMemoryDBModel.id.in_(ids))
+        result = await session.execute(query)
+        db_objs = result.scalars().all()
+
+        return [LongTermMemoryRead.model_validate(o) for o in db_objs]
 
 
 async def update_long_term_memory(update_schema: LongTermMemoryUpdate) -> None:
@@ -66,3 +77,13 @@ async def get_all_long_term_memory_titles() -> list[str]:
         db_objs = result.scalars().all()
 
         return list(db_objs)
+
+
+async def get_all_long_term_memory_embeddings() -> dict[UUID4, list[float]]:
+    """Get all long-term memory embeddings."""
+    async with db_sessionmaker() as session:
+        query = select(LongTermMemoryDBModel.id, LongTermMemoryDBModel.embedding)
+        result = await session.execute(query)
+        db_objs = result.all()
+
+        return {o[0]: o[1] for o in db_objs}
