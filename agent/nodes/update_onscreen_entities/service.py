@@ -118,7 +118,7 @@ class UpdateOnscreenEntitiesService:
                 messages=[screenshot, prompt],
                 schema=UpdateEntitiesResponse,
             )
-            asyncio.gather(
+            await asyncio.gather(
                 *[
                     update_sprite_memory(
                         SpriteMemoryUpdate(
@@ -157,7 +157,7 @@ class UpdateOnscreenEntitiesService:
                 messages=[screenshot, prompt],
                 schema=UpdateEntitiesResponse,
             )
-            asyncio.gather(
+            await asyncio.gather(
                 *[
                     update_warp_memory(
                         WarpMemoryUpdate(
@@ -196,7 +196,7 @@ class UpdateOnscreenEntitiesService:
                 messages=[screenshot, prompt],
                 schema=UpdateEntitiesResponse,
             )
-            asyncio.gather(
+            await asyncio.gather(
                 *[
                     update_sign_memory(
                         SignMemoryUpdate(
