@@ -20,7 +20,9 @@ Good candidates for new long-term memory are:
 - New Pokemon: If you have caught a new Pokemon for your team, you can keep notes on it. Prefix such titles with "TEAM_" for easy reference.
 - Generic notes or strategies: If you have learned something important, you can keep notes on it. Prefix such titles with "NOTE_" for easy reference.
 
-Titles must be in SCREAMING_SNAKE_CASE with no punctuation.
+Guidelines for creating new long-term memory objects:
+- Titles must be in SCREAMING_SNAKE_CASE with no punctuation.
+- Never include the coordinates for any entity in your content. The game's memory will provide this information as needed.
 
 Your response must be in the JSON format described below, with the keys defined as follows:
 - title: The title of the new long-term memory object in SCREAMING_SNAKE_CASE with no punctuation.

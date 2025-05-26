@@ -25,8 +25,8 @@ class OverworldSprite(Sprite):
         out = f"sprite_{map_id.value}_{self.index} at ({self.y}, {self.x}): {description}"
         if self.moves_randomly:
             out += (
-                " Warning: This sprite wanders randomly around the map. Your reactions are likely"
-                " too slow to catch it. Sprites like this are usually not worth interacting with."
+                " Warning: This sprite wanders randomly around the map. Your reactions are too slow"
+                " to catch it. Sprites like this are not worth interacting with."
             )
         return out
 
