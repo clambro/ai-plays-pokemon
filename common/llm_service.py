@@ -50,7 +50,6 @@ class GeminiLLMService:
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = 0.0,
         thinking_tokens: int | None = 256,
-        max_output_tokens: int | None = 2048,
     ) -> str:
         """
         Get a response from the Gemini LLM as a string.
@@ -60,7 +59,6 @@ class GeminiLLMService:
         :param temperature: The temperature to use for the response.
         :param thinking_tokens: The number of tokens to use for the thinking. None is for
             non-thinking models.
-        :param max_output_tokens: The maximum number of tokens to output.
         :return: A string from the Gemini LLM.
         """
         response = await self._get_llm_response(
@@ -69,7 +67,6 @@ class GeminiLLMService:
             system_prompt=system_prompt,
             temperature=temperature,
             thinking_tokens=thinking_tokens,
-            max_output_tokens=max_output_tokens,
         )
         if not response.text:
             raise ValueError("No response from Gemini.")
@@ -82,7 +79,6 @@ class GeminiLLMService:
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = 0.0,
         thinking_tokens: int | None = 256,
-        max_output_tokens: int | None = 2048,
     ) -> PydanticModel:
         """
         Get a Pydantic model from the Gemini LLM, parsed from a JSON response.
@@ -93,7 +89,6 @@ class GeminiLLMService:
         :param temperature: The temperature to use for the response.
         :param thinking_tokens: The number of tokens to use for the thinking. None is for
             non-thinking models.
-        :param max_output_tokens: The maximum number of tokens to output.
         :return: A Pydantic model from the Gemini LLM.
         """
         response = await self._get_llm_response(
@@ -102,7 +97,6 @@ class GeminiLLMService:
             system_prompt=system_prompt,
             temperature=temperature,
             thinking_tokens=thinking_tokens,
-            max_output_tokens=max_output_tokens,
         )
         return schema.model_validate(response.parsed)
 
@@ -119,7 +113,6 @@ class GeminiLLMService:
         system_prompt: str,
         temperature: float,
         thinking_tokens: int | None,
-        max_output_tokens: int | None,
     ) -> GenerateContentResponse:
         """
         Get a response from the Gemini LLM.
@@ -129,7 +122,6 @@ class GeminiLLMService:
         :param temperature: The temperature to use for the response.
         :param thinking_tokens: The number of tokens to use for the thinking. None is for
             non-thinking models.
-        :param max_output_tokens: The maximum number of tokens to output.
         :return: A response from the Gemini LLM.
         """
         if isinstance(messages, str):
@@ -142,7 +134,6 @@ class GeminiLLMService:
             temperature=temperature,
             safety_settings=SAFETY_SETTINGS,
             thinking_config=thinking_config,
-            max_output_tokens=max_output_tokens,
         )
         if schema:
             content_config.response_mime_type = "application/json"
