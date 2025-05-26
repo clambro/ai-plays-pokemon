@@ -8,6 +8,7 @@ from PIL import Image
 from pyboy import PyBoy
 
 from common.constants import GAME_TICKS_PER_SECOND
+from common.exceptions import EmulatorIsStoppedError
 from emulator.game_state import YellowLegacyGameState
 
 
@@ -130,7 +131,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
 
     def _check_stopped(self) -> None:
         if self._is_stopped:
-            raise RuntimeError("Emulator is stopped")
+            raise EmulatorIsStoppedError()
 
     def _tick(self, count: int = 1) -> bool:
         """

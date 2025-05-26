@@ -8,6 +8,7 @@ from common.constants import (
     DB_FILE_PATH,
     DB_FILENAME,
 )
+from common.exceptions import EmulatorIsStoppedError
 from emulator.emulator import YellowLegacyEmulator
 
 
@@ -29,5 +30,5 @@ async def create_backup(agent_state: AgentState, emulator: YellowLegacyEmulator)
 
     try:
         await emulator.save_game_state(backup_folder / BACKUP_GAME_STATE_NAME)
-    except RuntimeError:
-        logger.warning("Failed to save the game state, likely because the emulator has died.")
+    except EmulatorIsStoppedError:
+        logger.warning("Failed to save the game state because the emulator is stopped.")
