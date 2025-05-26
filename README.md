@@ -3,8 +3,6 @@
 ## TODOs in rough order of importance
 
 ### Core Functionality
-* Add RAG for long term memory
-
 * Add automated backups
 * Add the initial game state to the output folder
 
@@ -59,3 +57,4 @@
   * 00:cd6b wJoyIgnore - Better way of handling waits between button presses?
 * Test Junjo for editing state lists in place
 * Might be nice to generate the overworld map legend dynamically
+* Some better way of doing RAG that doesn't involve reading everything into memory. Might need to switch DBs for that.
