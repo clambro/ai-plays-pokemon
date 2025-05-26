@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import aiofiles
 from loguru import logger
 
@@ -16,8 +18,8 @@ async def create_backup(agent_state: AgentState, emulator: YellowLegacyEmulator)
     """Save the current game state, agent state, and database to a backup folder."""
     logger.info(f"Creating backup at iteration {agent_state.iteration}.")
 
-    iteration_str = str(agent_state.iteration).zfill(8)
-    backup_folder = agent_state.folder / f"backup_{iteration_str}"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_folder = agent_state.folder / f"backup_{timestamp}_iter_{agent_state.iteration}"
     backup_folder.mkdir(parents=True, exist_ok=True)
 
     async with aiofiles.open(backup_folder / BACKUP_AGENT_STATE_NAME, "w") as f:
