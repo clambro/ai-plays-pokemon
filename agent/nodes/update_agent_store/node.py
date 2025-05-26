@@ -1,7 +1,7 @@
 from junjo import Node
 from loguru import logger
 
-from agent.nodes.build_agent_state.service import BuildAgentStateService
+from agent.nodes.update_agent_store.service import BuildAgentStateService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
 

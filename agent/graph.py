@@ -1,7 +1,6 @@
 from junjo import Edge, Graph
 
 from agent.conditions import AgentHandlerIs, ShouldCritique, ToolIs
-from agent.nodes.build_agent_state.node import UpdateAgentStoreNode
 from agent.nodes.create_long_term_memory.node import CreateLongTermMemoryNode
 from agent.nodes.critique.node import CritiqueNode
 from agent.nodes.decision_maker_battle.node import DecisionMakerBattleNode
@@ -11,6 +10,7 @@ from agent.nodes.handle_dialog_box.node import HandleDialogBoxNode
 from agent.nodes.navigation.node import NavigationNode
 from agent.nodes.retrieve_long_term_memory.node import RetrieveLongTermMemoryNode
 from agent.nodes.should_critique.node import ShouldCritiqueNode
+from agent.nodes.update_agent_store.node import UpdateAgentStoreNode
 from agent.nodes.update_current_map.node import UpdateCurrentMapNode
 from agent.nodes.update_goals.node import UpdateGoalsNode
 from agent.nodes.update_long_term_memory.node import UpdateLongTermMemoryNode

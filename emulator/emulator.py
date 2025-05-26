@@ -71,11 +71,12 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         self._pyboy.stop()
 
     def get_screenshot(self) -> Image.Image:
-        """Asynchronously get a screenshot of the current game screen."""
+        """Get a screenshot of the current game screen."""
         self._check_stopped()
         img = deepcopy(self._pyboy.screen.image)
         if not isinstance(img, Image.Image):
             raise RuntimeError("No screenshot available")
+        # Putting this on its own thread is much slower than just calling it directly.
         img = img.resize((img.width * 2, img.height * 2), resample=Image.Resampling.NEAREST)
         return img
 
