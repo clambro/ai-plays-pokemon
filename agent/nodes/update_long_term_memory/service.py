@@ -40,7 +40,7 @@ class UpdateLongTermMemoryService:
         if not self.long_term_memory.pieces:
             return
 
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
         prompt = UPDATE_LONG_TERM_MEMORY_PROMPT.format(
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,

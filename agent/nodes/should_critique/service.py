@@ -34,7 +34,7 @@ class ShouldCritiqueService:
         if self.iteration % ITERATIONS_PER_CRITIQUE_CHECK != 0:
             return False
 
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
         prompt = SHOULD_CRITIQUE_PROMPT.format(
             player_info=game_state.player_info,
             raw_memory=self.raw_memory,

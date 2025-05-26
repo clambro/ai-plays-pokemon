@@ -52,7 +52,7 @@ class UpdateOnscreenEntitiesService:
         Update the long-term memory of the valid targets for updating, as defined in
         _get_updatable_entities.
         """
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
         screenshot = await self.emulator.get_screenshot()
         tasks = []
         updatable_sprites = self._get_updatable_entities(

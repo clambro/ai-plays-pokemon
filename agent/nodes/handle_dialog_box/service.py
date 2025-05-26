@@ -26,7 +26,7 @@ class HandleDialogBoxService:
 
         :return: The handler to set in the state.
         """
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
         dialog_box = game_state.get_dialog_box()
         if not dialog_box:
             return AgentStateHandler.TEXT  # Go to the generic text handler.
@@ -44,7 +44,7 @@ class HandleDialogBoxService:
             await self.emulator.wait_for_animation_to_finish()
             await asyncio.sleep(0.5)  # Buffer to ensure that no new dialog boxes have opened.
 
-            game_state = await self.emulator.get_game_state()
+            game_state = self.emulator.get_game_state()
             dialog_box = game_state.get_dialog_box()
             is_blinking_cursor = await self._is_blinking_cursor_on_screen()
             is_text_outside_dialog_box = game_state.is_text_on_screen(ignore_dialog_box=True)
@@ -85,7 +85,7 @@ class HandleDialogBoxService:
         max_counter = 6  # Cursor blinks on/off a bit more than 2x per second.
         while counter < max_counter:
             await asyncio.sleep(blink_wait_time)
-            game_state = await self.emulator.get_game_state()
+            game_state = self.emulator.get_game_state()
             dialog_box = game_state.get_dialog_box()
             if dialog_box and dialog_box.cursor_on_screen:
                 break

@@ -32,7 +32,7 @@ class RetrieveLongTermMemoryService:
 
     async def retrieve_long_term_memory(self) -> LongTermMemory:
         """Retrieve the long-term memory."""
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
 
         prompt = GET_RETRIEVAL_QUERY_PROMPT.format(
             raw_memory=self.raw_memory,

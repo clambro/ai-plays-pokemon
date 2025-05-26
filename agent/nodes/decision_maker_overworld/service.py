@@ -42,7 +42,7 @@ class DecisionMakerOverworldService:
 
         :return: The button to press.
         """
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
         img = await self.emulator.get_screenshot()
         prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(
             raw_memory=self.raw_memory,
@@ -101,7 +101,7 @@ class DecisionMakerOverworldService:
             return
 
         await self.emulator.wait_for_animation_to_finish()
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
         current_map = game_state.cur_map.id.name
         current_coords = (game_state.player.y, game_state.player.x)
         current_direction = game_state.player.direction

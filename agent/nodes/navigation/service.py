@@ -33,7 +33,7 @@ class NavigationService:
             logger.warning("Cancelling navigation due to invalid target coordinates.")
             return
 
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
         path = self._calculate_path_to_target(game_state)
         if not path:
             logger.warning("No path found to target coordinates.")
@@ -54,7 +54,7 @@ class NavigationService:
             await self.emulator.wait_for_animation_to_finish()
 
             prev_pos = (game_state.player.y, game_state.player.x)
-            game_state = await self.emulator.get_game_state()
+            game_state = self.emulator.get_game_state()
             if self.should_cancel_navigation(game_state, prev_pos, starting_map_id):
                 return
             # Can't update the map until we validate above that we haven't switched maps.

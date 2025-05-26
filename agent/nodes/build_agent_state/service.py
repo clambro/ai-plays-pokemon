@@ -18,7 +18,7 @@ class BuildAgentStateService:
 
         :return: The handler to use.
         """
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
         if game_state.battle.is_in_battle:
             return AgentStateHandler.BATTLE
         elif game_state.is_text_on_screen():

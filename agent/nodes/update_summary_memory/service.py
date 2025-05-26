@@ -33,7 +33,7 @@ class UpdateSummaryMemoryService:
         """Update the summary memory."""
         if self.iteration % ITERATIONS_PER_SUMMARY_UPDATE != 0:
             return
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
         prompt = UPDATE_SUMMARY_MEMORY_PROMPT.format(
             raw_memory_max_size=RAW_MEMORY_MAX_SIZE,
             raw_memory=self.raw_memory,

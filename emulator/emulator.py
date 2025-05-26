@@ -51,18 +51,10 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
             except asyncio.CancelledError:
                 pass
 
-    async def get_game_state(self) -> YellowLegacyGameState:
-        """
-        Get the current game state, lazily updating it if necessary.
-
-        :return: The current game state.
-        """
+    def get_game_state(self) -> YellowLegacyGameState:
+        """Get the current game state."""
         self._check_stopped()
-        return await asyncio.to_thread(
-            YellowLegacyGameState.from_memory,
-            self._pyboy.memory,
-            self.tick_num,
-        )
+        return YellowLegacyGameState.from_memory(self._pyboy.memory, self.tick_num)
 
     async def async_tick_indefinitely(self) -> None:
         """Tick the emulator indefinitely. Should be run on its own thread."""
@@ -104,9 +96,9 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         """Wait until all ongoing animations have finished."""
         logger.info("Checking for animations and waiting for them to finish.")
         successes = 0
-        game_state = await self.get_game_state()
+        game_state = self.get_game_state()
         while successes < 5:
-            new_game_state = await self.get_game_state()
+            new_game_state = self.get_game_state()
             # The blinking cursor should not block progress, so we ignore it.
             if (
                 game_state.get_screen_without_blinking_cursor()
@@ -121,8 +113,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
     async def save_game_state(self, path: Path) -> None:
         """Save the current game state to a file."""
         self._check_stopped()
-        async with self._button_lock:
-            await asyncio.to_thread(self._save_state_sync, path)
+        await asyncio.to_thread(self._save_state_sync, path)
 
     def _save_state_sync(self, path: Path) -> None:
         """Synchronous helper method to save game state."""

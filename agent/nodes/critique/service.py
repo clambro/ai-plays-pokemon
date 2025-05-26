@@ -33,7 +33,7 @@ class CritiqueService:
 
     async def critique(self) -> None:
         """Critique the current state of the game."""
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
         screenshot = await self.emulator.get_screenshot()
         prompt = CRITIQUE_PROMPT.format(
             player_info=game_state.player_info,
