@@ -25,7 +25,6 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         mute_sound: bool = False,
     ) -> None:
         """Initialize the emulator."""
-        self.tick_num = 0
         self._pyboy = PyBoy(rom_path, sound_volume=0 if mute_sound else 100)
         if initial_state_path:
             with Path(initial_state_path).open("rb") as f:
@@ -38,7 +37,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         """Start the emulator's tick task when entering the context."""
         self._is_stopped = False
         self._tick_task = asyncio.create_task(self.async_tick_indefinitely())
-        await asyncio.sleep(1)  # Give the emulator a few ticks to load before continuing
+        await asyncio.sleep(1)  # Give the emulator some time to load before continuing.
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
@@ -54,7 +53,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
     def get_game_state(self) -> YellowLegacyGameState:
         """Get the current game state."""
         self._check_stopped()
-        return YellowLegacyGameState.from_memory(self._pyboy.memory, self.tick_num)
+        return YellowLegacyGameState.from_memory(self._pyboy.memory)
 
     async def async_tick_indefinitely(self) -> None:
         """Tick the emulator indefinitely. Should be run on its own thread."""
@@ -85,7 +84,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         self._check_stopped()
         for button in buttons:
             async with self._button_lock:
-                await asyncio.to_thread(self._pyboy.button, button, delay_frames)
+                self._pyboy.button(button, delay_frames)
             await asyncio.sleep(delay_frames / GAME_TICKS_PER_SECOND)
 
     async def wait_for_animation_to_finish(self) -> None:
@@ -128,5 +127,4 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         :return: Whether the game is still running.
         """
         self._check_stopped()
-        self.tick_num += count
         return self._pyboy.tick(count, render=True, sound=True)

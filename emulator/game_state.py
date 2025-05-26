@@ -23,15 +23,13 @@ BLANK_TILE_ID = 0x7F
 class YellowLegacyGameState(BaseModel):
     """A snapshot of the Pokemon Yellow Legacy game state."""
 
-    tick_num: int
-
     player: PlayerState
     cur_map: MapState
     screen: ScreenState
     battle: BattleState
 
     @classmethod
-    def from_memory(cls, mem: PyBoyMemoryView, tick_num: int) -> Self:
+    def from_memory(cls, mem: PyBoyMemoryView) -> Self:
         """
         Create a new game state from a snapshot of the memory.
 
@@ -39,7 +37,6 @@ class YellowLegacyGameState(BaseModel):
         :return: A new game state.
         """
         return cls(
-            tick_num=tick_num,
             player=PlayerState.from_memory(mem),
             cur_map=MapState.from_memory(mem),
             screen=ScreenState.from_memory(mem),
