@@ -37,8 +37,6 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
             with save_state_path.open("rb") as f:
                 self._pyboy.load_state(f)
 
-        # We need extra time to manually start a new game if we're not loading a save state.
-        self._wait_time = 1 if save_state or save_state_path else 10
         self._is_stopped = True
         self._tick_task: asyncio.Task | None = None
         self._button_lock = asyncio.Lock()
@@ -47,7 +45,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         """Start the emulator's tick task when entering the context."""
         self._is_stopped = False
         self._tick_task = asyncio.create_task(self.async_tick_indefinitely())
-        await asyncio.sleep(self._wait_time)  # Give the emulator time to load before continuing.
+        await asyncio.sleep(1)  # Give the emulator time to load before continuing.
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001

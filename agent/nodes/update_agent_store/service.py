@@ -23,7 +23,7 @@ class BuildAgentStateService:
             return AgentStateHandler.BATTLE
         elif (
             game_state.is_text_on_screen()
-            or game_state.cur_map.height == 0
+            or game_state.cur_map.height == 0  # Usually indicates a transition between cutscenes.
             or game_state.cur_map.width == 0
         ):
             return AgentStateHandler.TEXT

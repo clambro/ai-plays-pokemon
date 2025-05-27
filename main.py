@@ -40,16 +40,18 @@ async def main(
         emulator_state = None
 
     async with YellowLegacyEmulator(rom_path, emulator_state, mute_sound=mute_sound) as emulator:
+        if not emulator_state:
+            await asyncio.sleep(30)  # Some time to manually get to the new game screen.
         try:
             while True:
                 workflow = build_agent_workflow(state, emulator)
                 await workflow.execute()
                 state = await workflow.get_state()
                 if state.iteration % ITERATIONS_PER_BACKUP == 0:
-                    await create_backup(state, emulator)
+                    await create_backup(state)
         except Exception:  # noqa: BLE001
             logger.exception("Agent workflow raised an exception.")
-            await create_backup(state, emulator)
+            await create_backup(state)
 
 
 if __name__ == "__main__":
