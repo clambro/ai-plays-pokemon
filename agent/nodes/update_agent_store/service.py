@@ -21,7 +21,11 @@ class BuildAgentStateService:
         game_state = self.emulator.get_game_state()
         if game_state.battle.is_in_battle:
             return AgentStateHandler.BATTLE
-        elif game_state.is_text_on_screen():
+        elif (
+            game_state.is_text_on_screen()
+            or game_state.cur_map.height == 0  # Usually indicates a transition between cutscenes.
+            or game_state.cur_map.width == 0
+        ):
             return AgentStateHandler.TEXT
         else:
             return AgentStateHandler.OVERWORLD

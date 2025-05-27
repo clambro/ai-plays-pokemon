@@ -3,12 +3,12 @@
 ## TODOs in rough order of importance
 
 ### Core Functionality
-* Add player/party information, including the current level cap (remove from system prompt)
+Done?
 
 ### Clean-Up, Refactoring, and Testing
 * Make entity memories into a single DB table?
 
-* Fix navigation when Pikachu is on screen. I think bumping into it breaks the existing flow.
+* Fix navigation when Pikachu is on screen. Bumping into it breaks the existing flow.
 
 * Find some better way to handle the fact that the three memory types almost always appear together
 * Subgraphs for the battle, text, and overworld conditions
@@ -33,7 +33,7 @@
 ### Longer-Term Issues that I'll Have to Tackle Eventually
 * Subgraphs for different battle types (e.g. Safari Zone)? Battle type is at 0xD05A, and the move menus are at 0xCCDB
 
-* Add strength boulders to map screen
+* Add strength boulders to map screen -- 00:d717 wBoulderSpriteIndex
 * Tool for using fly
 * Handle surfing in navigation
 * Navigation should avoid grass tiles where possible
@@ -42,10 +42,9 @@
 * Add team rocket spin puzzle tiles to navigation
 
 * Some kind of twitch frontend
+* Custom music player to avoid the little async issues?
 
 ## Notes
 * Numerical coords on screen? Dots to show past steps? Maybe when I have tests set up.
-* Look into these:
-  * 00:d717 wBoulderSpriteIndex
 * Test Junjo for editing state lists in place
-* Some better way of doing RAG that doesn't involve reading everything into memory. Might need to switch DBs for that.
+* Some better way of doing RAG that doesn't involve reading everything into memory. Might need to switch DBs for this.

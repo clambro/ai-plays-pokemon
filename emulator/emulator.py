@@ -45,7 +45,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         """Start the emulator's tick task when entering the context."""
         self._is_stopped = False
         self._tick_task = asyncio.create_task(self.async_tick_indefinitely())
-        await asyncio.sleep(1)  # Give the emulator some time to load before continuing.
+        await asyncio.sleep(1)  # Give the emulator time to load before continuing.
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001

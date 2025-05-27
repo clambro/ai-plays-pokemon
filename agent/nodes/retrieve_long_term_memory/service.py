@@ -33,6 +33,7 @@ class RetrieveLongTermMemoryService:
     async def retrieve_long_term_memory(self) -> LongTermMemory:
         """Retrieve the long-term memory."""
         game_state = self.emulator.get_game_state()
+        screenshot = self.emulator.get_screenshot()
 
         prompt = GET_RETRIEVAL_QUERY_PROMPT.format(
             raw_memory=self.raw_memory,
@@ -41,7 +42,7 @@ class RetrieveLongTermMemoryService:
             player_info=game_state.player_info,
             goals=self.goals,
         )
-        query = await self.llm_service.get_llm_response(prompt, thinking_tokens=None)
+        query = await self.llm_service.get_llm_response([screenshot, prompt], thinking_tokens=None)
 
         memories = await self.retrieval_service.get_most_relevant_memories(query, self.iteration)
         return LongTermMemory(pieces=memories)

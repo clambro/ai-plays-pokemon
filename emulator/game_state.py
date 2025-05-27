@@ -52,10 +52,31 @@ class YellowLegacyGameState(BaseModel):
     def player_info(self) -> str:
         """Get a string representation of the player's information."""
         out = "<player_info>\n"
-        out += f"Current map: {self.cur_map.id.name}\n"
-        out += f"Current position (row, column): ({self.player.y}, {self.player.x})\n"
-        out += f"Facing direction: {self.player.direction.name}\n"
+        if self.player.name:
+            out += f"Name: {self.player.name}\n"
         out += f"Money: {self.player.money}\n"
+        if self.player.badges:
+            out += f"Badges Earned: {', '.join(b.name for b in self.player.badges)}\n"
+        out += f"Current Level Cap: {self.player.level_cap}\n"
+        if self.player.party:
+            out += "<party>\n"
+            for i, p in enumerate(self.player.party, start=1):
+                out += f"<pokemon_{i}>\n"
+                out += f"Name: {p.name}\n"
+                out += f"Species: {p.species.name}\n"
+                if p.type2:
+                    out += f"Type: {p.type1.name} / {p.type2.name}\n"
+                else:
+                    out += f"Type: {p.type1.name}\n"
+                out += f"Level: {p.level}\n"
+                out += f"HP: {p.hp} / {p.max_hp}\n"
+                out += f"Status Ailment: {p.status.name}\n"
+                out += "<moves>\n"
+                for m in p.moves:
+                    out += f"- {m.id.name} (PP: {m.pp})\n"
+                out += "</moves>\n"
+                out += f"</pokemon_{i}>\n"
+            out += "</party>\n"
         out += "</player_info>"
         return out
 
