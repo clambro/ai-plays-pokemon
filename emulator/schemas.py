@@ -5,7 +5,7 @@ from pyboy import PyBoyMemoryView
 from pydantic import BaseModel
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
-from emulator.char_map import get_name_from_bytes
+from emulator.char_map import get_text_from_byte_array
 from emulator.enums import (
     BadgeId,
     FacingDirection,
@@ -56,7 +56,7 @@ class PlayerPokemon(BaseModel):
         status = PokemonStatus(mem[0xD16E + increment]) if hp > 0 else PokemonStatus.FAINTED
 
         return cls(
-            name=get_name_from_bytes(mem[0xD2B4 + 0xB * index : 0xD2B4 + 0xB * index + 0xB]),
+            name=get_text_from_byte_array(mem[0xD2B4 + 0xB * index : 0xD2B4 + 0xB * index + 0xB]),
             species=PokemonSpecies(mem[0xD16A + increment]),
             type1=type1,
             type2=type2,
@@ -89,6 +89,10 @@ class PlayerState(BaseModel):
         :param mem: The PyBoyMemoryView instance to create the player state from.
         :return: A new player state.
         """
+        name = get_text_from_byte_array(mem[0xD157 : 0xD157 + 0xB])
+        if name == "NINTEN":
+            name = ""  # This is a hack. It's the default name in memory before you choose a name.
+
         party = []
         for i in range(mem[0xD162]):
             pokemon = PlayerPokemon.from_memory(mem, i)
@@ -99,7 +103,7 @@ class PlayerState(BaseModel):
         champion_byte = mem[0xD745]
 
         return cls(
-            name=get_name_from_bytes(mem[0xD157 : 0xD157 + 0xB]),
+            name=name,
             is_moving=mem[0xC107] + mem[0xC108] != 0,
             y=mem[0xD3AE],
             x=mem[0xD3AF],

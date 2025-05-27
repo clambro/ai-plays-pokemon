@@ -104,7 +104,7 @@ INT_TO_CHAR_MAP = {
 CHAR_TO_INT_MAP = {v: k for k, v in INT_TO_CHAR_MAP.items()}
 
 
-def get_name_from_bytes(arr: list[int]) -> str:
+def get_text_from_byte_array(arr: list[int]) -> str:
     """Get a name from a list of bytes."""
     name_chars = []
     for letter in arr:
