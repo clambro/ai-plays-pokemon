@@ -3,7 +3,6 @@ import base64
 import io
 from contextlib import AbstractAsyncContextManager
 from copy import deepcopy
-from pathlib import Path
 
 from loguru import logger
 from PIL import Image
@@ -22,14 +21,13 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
     def __init__(
         self,
         rom_path: str,
-        initial_state_path: str | None = None,
+        save_state: str | None = None,
         mute_sound: bool = False,
     ) -> None:
         """Initialize the emulator."""
         self._pyboy = PyBoy(rom_path, sound_volume=0 if mute_sound else 100)
-        if initial_state_path:
-            with Path(initial_state_path).open("rb") as f:
-                self._pyboy.load_state(f)
+        if save_state:
+            self._pyboy.load_state(io.BytesIO(base64.b64decode(save_state)))
         self._is_stopped = True
         self._tick_task: asyncio.Task | None = None
         self._button_lock = asyncio.Lock()
