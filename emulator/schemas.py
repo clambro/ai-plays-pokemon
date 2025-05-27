@@ -5,7 +5,7 @@ from pyboy import PyBoyMemoryView
 from pydantic import BaseModel
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
-from emulator.char_map import INT_TO_CHAR_MAP
+from emulator.char_map import get_name_from_bytes
 from emulator.enums import (
     BadgeId,
     FacingDirection,
@@ -40,9 +40,6 @@ class PlayerPokemon(BaseModel):
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView, index: int) -> Self:
         """Create a new player pokemon from a snapshot of the memory."""
-        # TODO: Something is wrong with the name.
-        name = "".join(INT_TO_CHAR_MAP.get(mem[0xD2B4 + i + 0xB * index], "") for i in range(0xB))
-
         increment = index * 0x2C
 
         type1 = PokemonType(mem[0xD16F + increment])
@@ -59,7 +56,7 @@ class PlayerPokemon(BaseModel):
         status = PokemonStatus(mem[0xD16E + increment]) if hp > 0 else PokemonStatus.FAINTED
 
         return cls(
-            name=name.strip(),
+            name=get_name_from_bytes(mem[0xD2B4 + 0xB * index : 0xD2B4 + 0xB * index + 0xB]),
             species=PokemonSpecies(mem[0xD16A + increment]),
             type1=type1,
             type2=type2,
@@ -92,8 +89,6 @@ class PlayerState(BaseModel):
         :param mem: The PyBoyMemoryView instance to create the player state from.
         :return: A new player state.
         """
-        name = "".join(INT_TO_CHAR_MAP.get(mem[0xD157 + i], "") for i in range(0xB))
-
         party = []
         for i in range(mem[0xD162]):
             pokemon = PlayerPokemon.from_memory(mem, i)
@@ -104,7 +99,7 @@ class PlayerState(BaseModel):
         champion_byte = mem[0xD745]
 
         return cls(
-            name=name.strip(),
+            name=get_name_from_bytes(mem[0xD157 : 0xD157 + 0xB]),
             is_moving=mem[0xC107] + mem[0xC108] != 0,
             y=mem[0xD3AE],
             x=mem[0xD3AF],

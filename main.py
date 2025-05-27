@@ -32,6 +32,7 @@ async def main(
 
     if backup_folder:
         state = await load_backup(backup_folder)
+        state.folder = folder
         emulator_state = state.emulator_save_state
     else:
         await init_fresh_db()

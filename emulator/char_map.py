@@ -102,3 +102,13 @@ INT_TO_CHAR_MAP = {
     0xFF: "9",
 }
 CHAR_TO_INT_MAP = {v: k for k, v in INT_TO_CHAR_MAP.items()}
+
+
+def get_name_from_bytes(arr: list[int]) -> str:
+    """Get a name from a list of bytes."""
+    name_chars = []
+    for letter in arr:
+        if letter == 0x50:  # Name terminator
+            break
+        name_chars.append(INT_TO_CHAR_MAP.get(letter, ""))
+    return "".join(name_chars).strip()

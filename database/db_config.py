@@ -21,6 +21,10 @@ async def init_fresh_db() -> None:
 
     if DB_FILE_PATH.exists():
         DB_FILE_PATH.unlink()
+    if DB_FILE_PATH.with_suffix(".db-shm").exists():
+        DB_FILE_PATH.with_suffix(".db-shm").unlink()
+    if DB_FILE_PATH.with_suffix(".db-wal").exists():
+        DB_FILE_PATH.with_suffix(".db-wal").unlink()
 
     # Import all models here to ensure they are registered with the engine.
     from database.llm_messages.model import LLMMessageDBModel
