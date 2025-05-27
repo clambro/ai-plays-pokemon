@@ -3,7 +3,7 @@
 ## TODOs in rough order of importance
 
 ### Core Functionality
-* Add player/party information, including the current level cap (remove from system prompt)
+Done?
 
 ### Clean-Up, Refactoring, and Testing
 * Make entity memories into a single DB table?
@@ -42,6 +42,7 @@
 * Add team rocket spin puzzle tiles to navigation
 
 * Some kind of twitch frontend
+* Custom music player to avoid the little async issues?
 
 ## Notes
 * Numerical coords on screen? Dots to show past steps? Maybe when I have tests set up.

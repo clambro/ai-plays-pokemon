@@ -5,7 +5,55 @@ from pyboy import PyBoyMemoryView
 from pydantic import BaseModel
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
-from emulator.enums import FacingDirection, MapLocation
+from emulator.enums import (
+    FacingDirection,
+    MapLocation,
+    PokemonMove,
+    PokemonSpecies,
+    PokemonStatus,
+    PokemonType,
+)
+
+
+class PlayerPokemon(BaseModel):
+    """The state of a player's pokemon."""
+
+    name: str
+    species: PokemonSpecies
+    type1: PokemonType
+    type2: PokemonType | None
+    level: int
+    hp: int
+    max_hp: int
+    status: PokemonStatus
+    moves: list[PokemonMove]
+
+    @classmethod
+    def from_memory(cls, mem: PyBoyMemoryView, index: int) -> Self:
+        """Create a new player pokemon from a snapshot of the memory."""
+        increment = index * 0x2C
+
+        type1 = PokemonType(mem[0xD16F + increment])
+        type2 = PokemonType(mem[0xD170 + increment])
+        type2 = type2 if type1 != type2 else None  # Monotype pokemon have the same type for both.
+
+        moves = []
+        for i in range(4):
+            move = PokemonMove(mem[0xD172 + increment + i])
+            if move != PokemonMove.NO_MOVE:
+                moves.append(move)
+
+        return cls(
+            name="test",
+            species=PokemonSpecies(mem[0xD163 + increment]),
+            type1=type1,
+            type2=type2,
+            level=mem[0xD18B + increment],
+            hp=mem[0xD16B + increment],
+            max_hp=mem[0xD18C + increment],
+            status=PokemonStatus(mem[0xD16E + increment]),
+            moves=moves,
+        )
 
 
 class PlayerState(BaseModel):
@@ -16,6 +64,7 @@ class PlayerState(BaseModel):
     x: int
     direction: FacingDirection
     money: int
+    party: list[PlayerPokemon]
 
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView) -> Self:
@@ -26,12 +75,14 @@ class PlayerState(BaseModel):
         :return: A new player state.
         """
         is_moving = mem[0xC107] + mem[0xC108] != 0
+        num_party_pokemon = mem[0xD162]
         return cls(
             is_moving=is_moving,
             y=mem[0xD3AE],
             x=mem[0xD3AF],
             direction=FacingDirection(mem[0xD577]),
             money=cls._read_money(mem),
+            party=[PlayerPokemon.from_memory(mem, i) for i in range(num_party_pokemon)],
         )
 
     @staticmethod
