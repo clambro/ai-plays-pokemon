@@ -29,3 +29,5 @@ class UpdateAgentStoreNode(Node[AgentStore]):
         await store.set_should_critique(False)
         await store.set_tool(None)
         await store.set_tool_args(None)
+
+        await store.set_emulator_save_state_from_emulator(self.emulator)

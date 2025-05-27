@@ -1,4 +1,6 @@
 import asyncio
+import base64
+import io
 from contextlib import AbstractAsyncContextManager
 from copy import deepcopy
 from pathlib import Path
@@ -8,7 +10,6 @@ from PIL import Image
 from pyboy import PyBoy
 
 from common.constants import GAME_TICKS_PER_SECOND
-from common.exceptions import EmulatorIsStoppedError
 from emulator.game_state import YellowLegacyGameState
 
 
@@ -63,7 +64,8 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
                 if not self._tick():
                     self.stop()
                     break
-            await asyncio.sleep(0)  # Return control to the event loop
+            # Pass control back to the event loop for at least half a frame.
+            await asyncio.sleep(1 / GAME_TICKS_PER_SECOND / 2)
 
     def stop(self) -> None:
         """Stop the emulator."""
@@ -106,19 +108,16 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
             game_state = new_game_state
             await asyncio.sleep(0.1)
 
-    async def save_game_state(self, path: Path) -> None:
-        """Save the current game state to a file."""
+    async def get_emulator_save_state(self) -> str:
+        """Get the current save state as a Base64 encoded string."""
         self._check_stopped()
-        await asyncio.to_thread(self._save_state_sync, path)
-
-    def _save_state_sync(self, path: Path) -> None:
-        """Synchronous helper method to save game state."""
-        with path.open("wb") as f:
-            self._pyboy.save_state(f)
+        with io.BytesIO() as f:
+            await asyncio.to_thread(self._pyboy.save_state, f)
+            return base64.b64encode(f.getvalue()).decode("utf-8")
 
     def _check_stopped(self) -> None:
         if self._is_stopped:
-            raise EmulatorIsStoppedError()
+            raise RuntimeError("Emulator is stopped.")
 
     def _tick(self, count: int = 1) -> bool:
         """

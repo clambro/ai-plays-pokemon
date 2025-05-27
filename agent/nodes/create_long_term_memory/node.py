@@ -28,3 +28,5 @@ class CreateLongTermMemoryNode(Node[AgentStore]):
             long_term_memory=state.long_term_memory,
         )
         await service.create_long_term_memory()
+
+        await store.set_emulator_save_state_from_emulator(self.emulator)

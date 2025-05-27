@@ -4,13 +4,7 @@ import aiofiles
 from loguru import logger
 
 from agent.state import AgentState
-from common.constants import (
-    BACKUP_AGENT_STATE_NAME,
-    BACKUP_GAME_STATE_NAME,
-    DB_FILE_PATH,
-    DB_FILENAME,
-)
-from common.exceptions import EmulatorIsStoppedError
+from common.constants import BACKUP_AGENT_STATE_NAME, DB_FILE_PATH, DB_FILENAME
 from emulator.emulator import YellowLegacyEmulator
 
 
@@ -29,8 +23,3 @@ async def create_backup(agent_state: AgentState, emulator: YellowLegacyEmulator)
         async with aiofiles.open(backup_folder / DB_FILENAME, "wb") as backup_db_path:
             content = await current_db_path.read()
             await backup_db_path.write(content)
-
-    try:
-        await emulator.save_game_state(backup_folder / BACKUP_GAME_STATE_NAME)
-    except EmulatorIsStoppedError:
-        logger.warning("Failed to save the game state because the emulator is stopped.")

@@ -30,3 +30,5 @@ class UpdateOnscreenEntitiesNode(Node[AgentStore]):
             long_term_memory=state.long_term_memory,
         )
         await service.update_onscreen_entities()
+
+        await store.set_emulator_save_state_from_emulator(self.emulator)

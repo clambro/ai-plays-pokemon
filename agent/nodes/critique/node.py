@@ -33,3 +33,5 @@ class CritiqueNode(Node[AgentStore]):
         await service.critique()
 
         await store.set_raw_memory(service.raw_memory)
+
+        await store.set_emulator_save_state_from_emulator(self.emulator)

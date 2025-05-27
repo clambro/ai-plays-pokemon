@@ -27,7 +27,6 @@ DB_FILE_PATH = OUTPUTS_FOLDER / "database" / DB_FILENAME
 DB_URL = f"sqlite+aiosqlite:///{DB_FILE_PATH}"
 
 BACKUP_AGENT_STATE_NAME = "agent_state.json"
-BACKUP_GAME_STATE_NAME = "game_state.state"
 
 # Make sure all the relevant folders exist.
 OUTPUTS_FOLDER.mkdir(exist_ok=True)

@@ -1,9 +1,10 @@
+from junjo import Node
 from loguru import logger
+
 from agent.nodes.navigation.service import NavigationService
 from agent.schemas import NavigationArgs
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo import Node
 
 
 class NavigationNode(Node[AgentStore]):
@@ -32,3 +33,5 @@ class NavigationNode(Node[AgentStore]):
 
         await store.set_current_map(service.current_map)
         await store.set_raw_memory(service.raw_memory)
+
+        await store.set_emulator_save_state_from_emulator(self.emulator)
