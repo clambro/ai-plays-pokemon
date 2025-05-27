@@ -37,3 +37,5 @@ class DecisionMakerOverworldNode(Node[AgentStore]):
         await store.set_raw_memory(service.raw_memory)
         await store.set_tool(tool)
         await store.set_tool_args(args)
+
+        await store.set_emulator_save_state_from_emulator(self.emulator)

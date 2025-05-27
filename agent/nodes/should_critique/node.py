@@ -29,3 +29,5 @@ class ShouldCritiqueNode(Node):
         )
         should_critique = await service.should_critique()
         await store.set_should_critique(should_critique)
+
+        await store.set_emulator_save_state_from_emulator(self.emulator)

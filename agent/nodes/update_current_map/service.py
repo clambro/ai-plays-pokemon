@@ -12,6 +12,6 @@ class UpdateCurrentMapService:
 
     async def update_current_map(self) -> OverworldMap:
         """Update the current overworld map with the latest screen info."""
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
         current_map = await get_overworld_map(self.iteration, game_state)
         return await update_map_with_screen_info(self.iteration, game_state, current_map)

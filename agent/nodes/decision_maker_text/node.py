@@ -30,3 +30,5 @@ class DecisionMakerTextNode(Node[AgentStore]):
         await service.make_decision()
 
         await store.set_raw_memory(service.raw_memory)
+
+        await store.set_emulator_save_state_from_emulator(self.emulator)

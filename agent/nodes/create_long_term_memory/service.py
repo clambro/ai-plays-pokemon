@@ -44,12 +44,14 @@ class CreateLongTermMemoryService:
         if self.iteration % ITERATIONS_PER_LONG_TERM_MEMORY_CREATION != 0:
             return
 
+        game_state = self.emulator.get_game_state()
         titles = "\n".join(await get_all_long_term_memory_titles())
         prompt = CREATE_LONG_TERM_MEMORY_PROMPT.format(
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
             long_term_memory=self.long_term_memory,
             titles=titles,
+            player_info=game_state.player_info,
         )
         try:
             response = await self.llm_service.get_llm_response_pydantic(

@@ -1,8 +1,9 @@
+from junjo import Node
 from loguru import logger
+
 from agent.nodes.handle_dialog_box.service import HandleDialogBoxService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
-from junjo import Node
 
 
 class HandleDialogBoxNode(Node[AgentStore]):
@@ -26,3 +27,5 @@ class HandleDialogBoxNode(Node[AgentStore]):
 
         await store.set_raw_memory(service.raw_memory)
         await store.set_handler(handler)
+
+        await store.set_emulator_save_state_from_emulator(self.emulator)

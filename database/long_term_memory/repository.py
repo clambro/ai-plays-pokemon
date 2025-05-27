@@ -37,9 +37,11 @@ async def get_long_term_memories_by_ids(
             update(LongTermMemoryDBModel)
             .where(LongTermMemoryDBModel.id.in_(ids))
             .values(last_accessed_iteration=iteration)
+            .returning(LongTermMemoryDBModel)
         )
         result = await session.execute(query)
         db_objs = result.scalars().all()
+        await session.commit()
 
         return [LongTermMemoryRead.model_validate(o) for o in db_objs]
 

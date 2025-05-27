@@ -52,8 +52,8 @@ class UpdateOnscreenEntitiesService:
         Update the long-term memory of the valid targets for updating, as defined in
         _get_updatable_entities.
         """
-        game_state = await self.emulator.get_game_state()
-        screenshot = await self.emulator.get_screenshot()
+        game_state = self.emulator.get_game_state()
+        screenshot = self.emulator.get_screenshot()
         tasks = []
         updatable_sprites = self._get_updatable_entities(
             list(self.current_map.known_sprites.values()),
@@ -109,7 +109,7 @@ class UpdateOnscreenEntitiesService:
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
             long_term_memory=self.long_term_memory,
-            map_info=await self.current_map.to_string(game_state),
+            map_info=self.current_map.to_string(game_state),
             player_info=game_state.player_info,
             sprites=sprite_text.strip(),
         )
@@ -118,7 +118,7 @@ class UpdateOnscreenEntitiesService:
                 messages=[screenshot, prompt],
                 schema=UpdateEntitiesResponse,
             )
-            asyncio.gather(
+            await asyncio.gather(
                 *[
                     update_sprite_memory(
                         SpriteMemoryUpdate(
@@ -148,7 +148,7 @@ class UpdateOnscreenEntitiesService:
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
             long_term_memory=self.long_term_memory,
-            map_info=await self.current_map.to_string(game_state),
+            map_info=self.current_map.to_string(game_state),
             player_info=game_state.player_info,
             warps=warp_text.strip(),
         )
@@ -157,7 +157,7 @@ class UpdateOnscreenEntitiesService:
                 messages=[screenshot, prompt],
                 schema=UpdateEntitiesResponse,
             )
-            asyncio.gather(
+            await asyncio.gather(
                 *[
                     update_warp_memory(
                         WarpMemoryUpdate(
@@ -187,7 +187,7 @@ class UpdateOnscreenEntitiesService:
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
             long_term_memory=self.long_term_memory,
-            map_info=await self.current_map.to_string(game_state),
+            map_info=self.current_map.to_string(game_state),
             player_info=game_state.player_info,
             signs=sign_text.strip(),
         )
@@ -196,7 +196,7 @@ class UpdateOnscreenEntitiesService:
                 messages=[screenshot, prompt],
                 schema=UpdateEntitiesResponse,
             )
-            asyncio.gather(
+            await asyncio.gather(
                 *[
                     update_sign_memory(
                         SignMemoryUpdate(

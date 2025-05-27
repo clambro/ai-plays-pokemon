@@ -42,13 +42,13 @@ class DecisionMakerOverworldService:
 
         :return: The button to press.
         """
-        game_state = await self.emulator.get_game_state()
-        img = await self.emulator.get_screenshot()
+        game_state = self.emulator.get_game_state()
+        img = self.emulator.get_screenshot()
         prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,
             player_info=game_state.player_info,
-            current_map=await self.current_map.to_string(game_state),
+            current_map=self.current_map.to_string(game_state),
             goals=self.goals,
             walkable_tiles=", ".join(f'"{t}"' for t in AsciiTiles.get_walkable_tiles()),
             long_term_memory=self.long_term_memory,
@@ -97,11 +97,11 @@ class DecisionMakerOverworldService:
         prev_direction: FacingDirection,
     ) -> None:
         """Check if the player bumped into a wall and add a note to the raw memory if so."""
-        if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN, Button.A]:
+        if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN]:
             return
 
         await self.emulator.wait_for_animation_to_finish()
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
         current_map = game_state.cur_map.id.name
         current_coords = (game_state.player.y, game_state.player.x)
         current_direction = game_state.player.direction

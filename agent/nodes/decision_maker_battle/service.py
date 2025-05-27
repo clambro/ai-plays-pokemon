@@ -33,7 +33,7 @@ class DecisionMakerBattleService:
 
         :return: The button to press.
         """
-        img = await self.emulator.get_screenshot()
+        img = self.emulator.get_screenshot()
         prompt = DECISION_MAKER_BATTLE_PROMPT.format(
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,

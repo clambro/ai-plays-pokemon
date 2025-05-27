@@ -36,7 +36,7 @@ class UpdateGoalsService:
         if self.iteration % ITERATIONS_PER_GOAL_UPDATE != 0:
             return
 
-        game_state = await self.emulator.get_game_state()
+        game_state = self.emulator.get_game_state()
         prompt = UPDATE_GOALS_PROMPT.format(
             raw_memory=self.raw_memory,
             summary_memory=self.summary_memory,

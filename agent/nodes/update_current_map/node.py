@@ -23,3 +23,5 @@ class UpdateCurrentMapNode(Node[AgentStore]):
         current_map = await service.update_current_map()
 
         await store.set_current_map(current_map)
+
+        await store.set_emulator_save_state_from_emulator(self.emulator)
