@@ -616,3 +616,40 @@ class PokemonMoveId(IntEnum):
     SLASH = 0xA3
     SUBSTITUTE = 0xA4
     STRUGGLE = 0xA5
+
+
+class BadgeId(IntEnum):
+    """Enum of badges."""
+
+    BOULDERBADGE = 0b00000001
+    CASCADEBADGE = 0b00000010
+    THUNDERBADGE = 0b00000100
+    RAINBOWBADGE = 0b00001000
+    SOULBADGE = 0b00010000
+    MARSHBADGE = 0b00100000
+    VOLCANOBADGE = 0b01000000
+    EARTHBADGE = 0b10000000
+
+    @classmethod
+    def from_badge_byte(cls, badge_byte: int) -> list["BadgeId"]:
+        """Convert a byte to a list of badge IDs."""
+        return [badge for badge in cls if badge_byte & badge.value]
+
+    @classmethod
+    def get_level_cap(cls, badge_byte: int, champion_byte: int) -> int:
+        """Get the current level cap for the player's team based on the number of badges."""
+        if champion_byte:
+            return 100
+        num_badges = sum(1 for badge in cls if badge_byte & badge.value)
+        level_cap_map = {
+            0: 12,
+            1: 21,
+            2: 24,
+            3: 35,
+            4: 43,
+            5: 50,
+            6: 53,
+            7: 55,
+            8: 65,
+        }
+        return level_cap_map[num_badges]

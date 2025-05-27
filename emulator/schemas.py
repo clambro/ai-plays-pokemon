@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
 from emulator.char_map import INT_TO_CHAR_MAP
 from emulator.enums import (
+    BadgeId,
     FacingDirection,
     MapLocation,
     PokemonMoveId,
@@ -39,6 +40,7 @@ class PlayerPokemon(BaseModel):
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView, index: int) -> Self:
         """Create a new player pokemon from a snapshot of the memory."""
+        # TODO: Something is wrong with the name.
         name = "".join(INT_TO_CHAR_MAP.get(mem[0xD2B4 + i + 0xB * index], "") for i in range(0xB))
 
         increment = index * 0x2C
@@ -53,10 +55,8 @@ class PlayerPokemon(BaseModel):
             if move != PokemonMoveId.NO_MOVE:
                 moves.append(PokemonMove(id=move, pp=mem[0xD187 + increment + i]))
 
-        status = PokemonStatus(mem[0xD16E + increment])
         hp = (mem[0xD16B + increment] << 8) | mem[0xD16B + increment + 1]
-        if hp == 0:
-            status = PokemonStatus.FAINTED
+        status = PokemonStatus(mem[0xD16E + increment]) if hp > 0 else PokemonStatus.FAINTED
 
         return cls(
             name=name.strip(),
@@ -64,7 +64,7 @@ class PlayerPokemon(BaseModel):
             type1=type1,
             type2=type2,
             level=mem[0xD18B + increment],
-            hp=(mem[0xD16B + increment] << 8) | mem[0xD16B + increment + 1],
+            hp=hp,
             max_hp=(mem[0xD18C + increment] << 8) | mem[0xD18C + increment + 1],
             status=status,
             moves=moves,
@@ -81,6 +81,8 @@ class PlayerState(BaseModel):
     direction: FacingDirection
     money: int
     party: list[PlayerPokemon]
+    badges: list[BadgeId]
+    level_cap: int
 
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView) -> Self:
@@ -98,6 +100,9 @@ class PlayerState(BaseModel):
             if pokemon.species != PokemonSpecies.NO_POKEMON:
                 party.append(pokemon)
 
+        badge_byte = mem[0xD3A3]
+        champion_byte = mem[0xD745]
+
         return cls(
             name=name.strip(),
             is_moving=mem[0xC107] + mem[0xC108] != 0,
@@ -106,6 +111,8 @@ class PlayerState(BaseModel):
             direction=FacingDirection(mem[0xD577]),
             money=cls._read_money(mem),
             party=party,
+            badges=BadgeId.from_badge_byte(badge_byte),
+            level_cap=BadgeId.get_level_cap(badge_byte, champion_byte),
         )
 
     @staticmethod

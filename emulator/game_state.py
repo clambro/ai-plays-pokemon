@@ -53,10 +53,13 @@ class YellowLegacyGameState(BaseModel):
         """Get a string representation of the player's information."""
         out = "<player_info>\n"
         out += f"Name: {self.player.name}\n"
-        out += f"Current map: {self.cur_map.id.name}\n"
-        out += f"Current position (row, column): ({self.player.y}, {self.player.x})\n"
-        out += f"Facing direction: {self.player.direction.name}\n"
+        out += f"Current Map: {self.cur_map.id.name}\n"
+        out += f"Current Position (row, col): ({self.player.y}, {self.player.x})\n"
+        out += f"Facing Direction: {self.player.direction.name}\n"
         out += f"Money: {self.player.money}\n"
+        out += f"Current Level Cap: {self.player.level_cap}\n"
+        if self.player.badges:
+            out += f"Badges Earned: {', '.join(badge.name for badge in self.player.badges)}\n"
         if self.player.party:
             out += "<party>\n"
             for i, p in enumerate(self.player.party, start=1):

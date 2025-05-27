@@ -3,7 +3,7 @@ You are playing Pokemon Yellow Legacy, a modified version of Pokemon Yellow desi
 
 You are playing the game on hard mode, meaning:
 1. You cannot use items in battle. Using balls to catch wild Pokemon is allowed, of course, but you cannot use any other items.
-2. There is a level cap on your party related to the number of badges that you have earned. Each badge you get raises the level cap. The level cap is 12 for 0 badges, 21 for 1 badge, 24 for 2 badges, 35 for 3 badges, 43 for 4 badges, 50 for 5 badges, 53 for 6 badges, 55 for 7 badges, and 65 for 8 badges. The game will not allow you to level your Pokemon beyond these caps.
+2. There is a level cap on your party related to the number of badges that you have earned, which will be provided to you in the game state when relevant. Each badge you earn raises the level cap by a few levels. Becoming the champion raises the level cap to 100. The game will not allow you to level your Pokemon beyond this cap.
 
 These restrictions will force you to think strategically and build a balanced party of Pokemon that can take on any challenge.
 
