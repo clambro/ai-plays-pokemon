@@ -24,7 +24,6 @@ class UpdateSummaryMemoryNode(Node[AgentStore]):
             iteration=state.iteration,
             raw_memory=state.raw_memory,
             summary_memory=state.summary_memory,
-            long_term_memory=state.long_term_memory,
             goals=state.goals,
         )
         await service.update_summary_memory()
