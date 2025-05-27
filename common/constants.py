@@ -22,8 +22,8 @@ SUMMARY_MEMORY_MAX_SIZE = 100
 
 OUTPUTS_FOLDER = Path("outputs/")
 
-DB_FILENAME = "memory.db"
-DB_FILE_PATH = OUTPUTS_FOLDER / "database" / DB_FILENAME
+DB_FOLDER_NAME = "database"
+DB_FILE_PATH = OUTPUTS_FOLDER / DB_FOLDER_NAME / "memory.db"
 DB_URL = f"sqlite+aiosqlite:///{DB_FILE_PATH}"
 
 BACKUP_AGENT_STATE_NAME = "agent_state.json"
