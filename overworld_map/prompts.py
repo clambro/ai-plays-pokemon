@@ -34,6 +34,9 @@ The bottom of the screen is currently at row {{screen_bottom}} in map coordinate
 The left side of the screen is currently at column {{screen_left}} in map coordinates.
 The right side of the screen is currently at column {{screen_right}} in map coordinates.
 
+You, the player, are at position ({{player_y}}, {{player_x}}) in map coordinates.
+You are facing {{player_direction}}.
+
 The tile directly above you is "{{tile_above}}".
 The tile directly below you is "{{tile_below}}".
 The tile directly to the left of you is "{{tile_left}}".
