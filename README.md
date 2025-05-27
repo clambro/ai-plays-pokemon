@@ -14,13 +14,13 @@
 * Subgraphs for the battle, text, and overworld conditions
 * Add proper source/sink nodes for graphs that need them
 * Add names to all the prompts
-* Improve separation of responsibilities
+* Improve separation of responsibilities and general refactor
 * Set up Junjo server and opentelemetry
 * Add tests to everything
-* Make the critic tool part of the overworld navigation step? Includes functionality for determining which tools are available at any given iteration.
 
 ### Useful Tools and Additions
 * Detailed subflow for battles
+* Make the critic tool part of the overworld navigation step? Includes functionality for determining which tools are available at any given iteration.
 * Add a tool to select moves or swap pokemon in battle, or use a ball in non-trainer battles
 * Add a tool for spinning around to find wild pokemon
 * Some kind of info about items and PC pokemon
@@ -28,6 +28,7 @@
 * Add a tool to name things
 * Tool to use items
 * Add a grid to the overworld screen and overlay collisions
+* Generate the overworld map legend dynamically
 
 ### Longer-Term Issues that I'll Have to Tackle Eventually
 * Subgraphs for different battle types (e.g. Safari Zone)? Battle type is at 0xD05A, and the move menus are at 0xCCDB
@@ -47,5 +48,4 @@
 * Look into these:
   * 00:d717 wBoulderSpriteIndex
 * Test Junjo for editing state lists in place
-* Might be nice to generate the overworld map legend dynamically
 * Some better way of doing RAG that doesn't involve reading everything into memory. Might need to switch DBs for that.
