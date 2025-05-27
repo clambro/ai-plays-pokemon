@@ -259,6 +259,7 @@ class MapLocation(IntEnum):
 class PokemonSpecies(IntEnum):
     """Pokemon species IDs to their names."""
 
+    NO_POKEMON = 0x00
     RHYDON = 0x01
     KANGASKHAN = 0x02
     NIDORAN_M = 0x03
@@ -422,6 +423,7 @@ class PokemonStatus(IntFlag):
     BURNED = 0b00010000
     FROZEN = 0b00100000
     PARALYZED = 0b01000000
+    FAINTED = 0b10000000  # Not used in game. I added this one for convenience.
 
 
 class PokemonType(IntEnum):
@@ -445,7 +447,7 @@ class PokemonType(IntEnum):
     DRAGON = 0x1A
 
 
-class PokemonMove(IntEnum):
+class PokemonMoveId(IntEnum):
     """Enum of Pokemon moves."""
 
     NO_MOVE = 0x00

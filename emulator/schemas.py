@@ -5,14 +5,22 @@ from pyboy import PyBoyMemoryView
 from pydantic import BaseModel
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
+from emulator.char_map import INT_TO_CHAR_MAP
 from emulator.enums import (
     FacingDirection,
     MapLocation,
-    PokemonMove,
+    PokemonMoveId,
     PokemonSpecies,
     PokemonStatus,
     PokemonType,
 )
+
+
+class PokemonMove(BaseModel):
+    """A move that a pokemon can learn."""
+
+    id: PokemonMoveId
+    pp: int
 
 
 class PlayerPokemon(BaseModel):
@@ -31,6 +39,8 @@ class PlayerPokemon(BaseModel):
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView, index: int) -> Self:
         """Create a new player pokemon from a snapshot of the memory."""
+        name = "".join(INT_TO_CHAR_MAP.get(mem[0xD2B4 + i + 0xB * index], "") for i in range(0xB))
+
         increment = index * 0x2C
 
         type1 = PokemonType(mem[0xD16F + increment])
@@ -39,19 +49,24 @@ class PlayerPokemon(BaseModel):
 
         moves = []
         for i in range(4):
-            move = PokemonMove(mem[0xD172 + increment + i])
-            if move != PokemonMove.NO_MOVE:
-                moves.append(move)
+            move = PokemonMoveId(mem[0xD172 + increment + i])
+            if move != PokemonMoveId.NO_MOVE:
+                moves.append(PokemonMove(id=move, pp=mem[0xD187 + increment + i]))
+
+        status = PokemonStatus(mem[0xD16E + increment])
+        hp = (mem[0xD16B + increment] << 8) | mem[0xD16B + increment + 1]
+        if hp == 0:
+            status = PokemonStatus.FAINTED
 
         return cls(
-            name="test",
-            species=PokemonSpecies(mem[0xD163 + increment]),
+            name=name.strip(),
+            species=PokemonSpecies(mem[0xD16A + increment]),
             type1=type1,
             type2=type2,
             level=mem[0xD18B + increment],
-            hp=mem[0xD16B + increment],
-            max_hp=mem[0xD18C + increment],
-            status=PokemonStatus(mem[0xD16E + increment]),
+            hp=(mem[0xD16B + increment] << 8) | mem[0xD16B + increment + 1],
+            max_hp=(mem[0xD18C + increment] << 8) | mem[0xD18C + increment + 1],
+            status=status,
             moves=moves,
         )
 
@@ -59,6 +74,7 @@ class PlayerPokemon(BaseModel):
 class PlayerState(BaseModel):
     """The state of the player character."""
 
+    name: str
     is_moving: bool
     y: int
     x: int
@@ -74,15 +90,22 @@ class PlayerState(BaseModel):
         :param mem: The PyBoyMemoryView instance to create the player state from.
         :return: A new player state.
         """
-        is_moving = mem[0xC107] + mem[0xC108] != 0
-        num_party_pokemon = mem[0xD162]
+        name = "".join(INT_TO_CHAR_MAP.get(mem[0xD157 + i], "") for i in range(0xB))
+
+        party = []
+        for i in range(mem[0xD162]):
+            pokemon = PlayerPokemon.from_memory(mem, i)
+            if pokemon.species != PokemonSpecies.NO_POKEMON:
+                party.append(pokemon)
+
         return cls(
-            is_moving=is_moving,
+            name=name.strip(),
+            is_moving=mem[0xC107] + mem[0xC108] != 0,
             y=mem[0xD3AE],
             x=mem[0xD3AF],
             direction=FacingDirection(mem[0xD577]),
             money=cls._read_money(mem),
-            party=[PlayerPokemon.from_memory(mem, i) for i in range(num_party_pokemon)],
+            party=party,
         )
 
     @staticmethod
