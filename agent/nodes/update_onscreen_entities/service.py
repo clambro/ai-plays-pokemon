@@ -16,8 +16,6 @@ from database.map_entity_memory.repository import update_map_entity_memory
 from database.map_entity_memory.schemas import MapEntityMemoryUpdate
 from database.sprite_memory.repository import update_sprite_memory
 from database.sprite_memory.schemas import SpriteMemoryUpdate
-from database.warp_memory.repository import update_warp_memory
-from database.warp_memory.schemas import WarpMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
 from long_term_memory.schemas import LongTermMemory
@@ -160,10 +158,11 @@ class UpdateOnscreenEntitiesService:
             )
             await asyncio.gather(
                 *[
-                    update_warp_memory(
-                        WarpMemoryUpdate(
+                    update_map_entity_memory(
+                        MapEntityMemoryUpdate(
                             map_id=self.current_map.id,
-                            warp_id=u.index,
+                            entity_id=u.index,
+                            entity_type=MapEntityType.WARP,
                             description=u.description,
                             iteration=self.iteration,
                         ),

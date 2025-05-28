@@ -14,8 +14,6 @@ from database.sprite_memory.repository import (
     get_sprite_memories_for_map,
 )
 from database.sprite_memory.schemas import SpriteMemoryCreate
-from database.warp_memory.repository import create_warp_memory, get_warp_memories_for_map
-from database.warp_memory.schemas import WarpMemoryCreate
 from emulator.game_state import YellowLegacyGameState
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
 
@@ -38,11 +36,11 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
         for mem in sprite_memories
     }
 
-    warp_memories = await get_warp_memories_for_map(map_memory.map_id)
     game_warps = game_state.cur_map.warps
     warps = {
-        mem.warp_id: OverworldWarp.from_warp(game_warps[mem.warp_id], mem.description)
-        for mem in warp_memories
+        mem.entity_id: OverworldWarp.from_warp(game_warps[mem.entity_id], mem.description)
+        for mem in map_entity_memories
+        if mem.entity_type == MapEntityType.WARP
     }
 
     game_signs = game_state.cur_map.signs
@@ -108,11 +106,12 @@ async def _add_remove_map_entities(
     for w in ascii_screen.warps:
         if w.index not in overworld_map.known_warps:
             tasks.append(
-                create_warp_memory(
-                    WarpMemoryCreate(
+                create_map_entity_memory(
+                    MapEntityMemoryCreate(
                         iteration=iteration,
                         map_id=overworld_map.id,
-                        warp_id=w.index,
+                        entity_id=w.index,
+                        entity_type=MapEntityType.WARP,
                     ),
                 ),
             )
