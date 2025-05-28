@@ -3,11 +3,7 @@ Take a step back from playing the game for a moment. It is time to reflect on yo
 
 {player_info}
 
-{raw_memory}
-
-{summary_memory}
-
-{long_term_memory}
+{agent_memory}
 
 {goals}
 

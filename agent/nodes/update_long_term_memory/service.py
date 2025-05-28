@@ -8,9 +8,7 @@ from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from database.long_term_memory.repository import update_long_term_memory
 from database.long_term_memory.schemas import LongTermMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
-from memory.long_term_memory import LongTermMemory
-from memory.raw_memory import RawMemory
-from memory.summary_memory import SummaryMemory
+from memory.agent_memory import AgentMemory
 
 
 class UpdateLongTermMemoryService:
@@ -22,29 +20,23 @@ class UpdateLongTermMemoryService:
     def __init__(
         self,
         iteration: int,
-        raw_memory: RawMemory,
-        summary_memory: SummaryMemory,
-        long_term_memory: LongTermMemory,
+        agent_memory: AgentMemory,
         goals: Goals,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration
-        self.raw_memory = raw_memory
-        self.summary_memory = summary_memory
-        self.long_term_memory = long_term_memory
+        self.agent_memory = agent_memory
         self.goals = goals
         self.emulator = emulator
 
     async def update_long_term_memory(self) -> None:
         """Update long-term memory."""
-        if not self.long_term_memory.pieces:
+        if not self.agent_memory.long_term_memory.pieces:
             return
 
         game_state = self.emulator.get_game_state()
         prompt = UPDATE_LONG_TERM_MEMORY_PROMPT.format(
-            raw_memory=self.raw_memory,
-            summary_memory=self.summary_memory,
-            long_term_memory=self.long_term_memory,
+            agent_memory=self.agent_memory,
             player_info=game_state.player_info,
         )
         try:
@@ -52,7 +44,7 @@ class UpdateLongTermMemoryService:
                 prompt,
                 UpdateLongTermMemoryResponse,
             )
-            title_piece_map = {p.title: p for p in self.long_term_memory.pieces}
+            title_piece_map = {p.title: p for p in self.agent_memory.long_term_memory.pieces}
             for update_piece in response.pieces:
                 orig_piece = title_piece_map.get(update_piece.title)
                 if orig_piece is None:

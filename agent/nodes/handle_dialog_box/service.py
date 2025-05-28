@@ -4,7 +4,8 @@ from common.enums import AgentStateHandler
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
 from emulator.schemas import DialogBox
-from memory.raw_memory import RawMemory, RawMemoryPiece
+from memory.agent_memory import AgentMemory
+from memory.raw_memory import RawMemoryPiece
 
 
 class HandleDialogBoxService:
@@ -14,13 +15,13 @@ class HandleDialogBoxService:
         self,
         iteration: int,
         emulator: YellowLegacyEmulator,
-        raw_memory: RawMemory,
+        agent_memory: AgentMemory,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
-        self.raw_memory = raw_memory
+        self.agent_memory = agent_memory
 
-    async def handle_dialog_box(self) -> AgentStateHandler | None:
+    async def handle_dialog_box(self) -> tuple[AgentMemory, AgentStateHandler | None]:
         """
         Handle reading the dialog box if it is present.
 
@@ -29,7 +30,7 @@ class HandleDialogBoxService:
         game_state = self.emulator.get_game_state()
         dialog_box = game_state.get_dialog_box()
         if not dialog_box:
-            return AgentStateHandler.TEXT  # Go to the generic text handler.
+            return self.agent_memory, AgentStateHandler.TEXT  # Go to the generic text handler.
 
         text: list[str] = []
         is_blinking_cursor = True
@@ -50,16 +51,17 @@ class HandleDialogBoxService:
             is_text_outside_dialog_box = game_state.is_text_on_screen(ignore_dialog_box=True)
 
         joined_text = " ".join(text)
-        self.raw_memory.append(
+        self.agent_memory.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
                 content=f'The following text was read from the main dialog box: "{joined_text}"',
             ),
         )
         if game_state.is_text_on_screen():
-            return AgentStateHandler.TEXT  # More work to do. Pass to the generic text handler.
+            # More work to do. Pass to the generic text handler.
+            return self.agent_memory, AgentStateHandler.TEXT
         else:
-            return  # All text is gone, so go to the next agent loop.
+            return self.agent_memory, None  # All text is gone, so go to the next agent loop.
 
     @staticmethod
     def _append_dialog_to_list(text: list[str], dialog_box: DialogBox) -> None:

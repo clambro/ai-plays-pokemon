@@ -10,11 +10,7 @@ The (case-sensitive) available buttons are:
 - left: Used to navigate the cursor left.
 - right: Used to navigate the cursor right.
 
-{raw_memory}
-
-{summary_memory}
-
-{long_term_memory}
+{agent_memory}
 
 {goals}
 

@@ -7,11 +7,7 @@ Take a step back from playing the game for a moment. You have signaled that you 
 
 {goals}
 
-{raw_memory}
-
-{summary_memory}
-
-{long_term_memory}
+{agent_memory}
 
 Common sources of error include (but are not limited to):
 - Misinterpreting the screenshot information

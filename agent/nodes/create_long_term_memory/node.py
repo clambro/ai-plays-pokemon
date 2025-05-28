@@ -21,11 +21,9 @@ class CreateLongTermMemoryNode(Node[AgentStore]):
 
         service = CreateLongTermMemoryService(
             iteration=state.iteration,
-            raw_memory=state.raw_memory,
+            agent_memory=state.agent_memory,
             goals=state.goals,
             emulator=self.emulator,
-            summary_memory=state.summary_memory,
-            long_term_memory=state.long_term_memory,
         )
         await service.create_long_term_memory()
 

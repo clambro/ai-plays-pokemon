@@ -1,11 +1,7 @@
 UPDATE_GOALS_PROMPT = """
 You have just taken an action and added new information to your memory. If you you feel that recent events warrant removing/completing past goals, or adding new goals, this is your chance to do so.
 
-{raw_memory}
-
-{summary_memory}
-
-{long_term_memory}
+{agent_memory}
 
 {player_info}
 

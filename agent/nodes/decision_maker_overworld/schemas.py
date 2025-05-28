@@ -1,8 +1,11 @@
 from typing import Self
+
 from pydantic import BaseModel, model_validator
 
-from emulator.enums import Button
 from agent.schemas import NavigationArgs
+from common.enums import Tool
+from emulator.enums import Button
+from memory.agent_memory import AgentMemory
 
 
 class DecisionMakerOverworldResponse(BaseModel):
@@ -17,3 +20,11 @@ class DecisionMakerOverworldResponse(BaseModel):
         if self.button is None and self.navigation_args is None:
             raise ValueError("Either button or navigation_args must be provided.")
         return self
+
+
+class DecisionMakerOverworldDecision(BaseModel):
+    """The decision from the overworld decision maker prompt."""
+
+    agent_memory: AgentMemory
+    tool: Tool | None
+    navigation_args: NavigationArgs | None

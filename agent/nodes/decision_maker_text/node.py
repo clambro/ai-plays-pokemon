@@ -21,14 +21,11 @@ class DecisionMakerTextNode(Node[AgentStore]):
         service = DecisionMakerTextService(
             iteration=state.iteration,
             emulator=self.emulator,
-            raw_memory=state.raw_memory,
+            agent_memory=state.agent_memory,
             goals=state.goals,
-            summary_memory=state.summary_memory,
-            long_term_memory=state.long_term_memory,
         )
 
-        await service.make_decision()
+        agent_memory = await service.make_decision()
 
-        await store.set_raw_memory(service.raw_memory)
-
+        await store.set_agent_memory(agent_memory)
         await store.set_emulator_save_state_from_emulator(self.emulator)

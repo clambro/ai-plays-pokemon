@@ -22,11 +22,10 @@ class UpdateSummaryMemoryNode(Node[AgentStore]):
         service = UpdateSummaryMemoryService(
             emulator=self.emulator,
             iteration=state.iteration,
-            raw_memory=state.raw_memory,
-            summary_memory=state.summary_memory,
+            agent_memory=state.agent_memory,
             goals=state.goals,
         )
-        await service.update_summary_memory()
-        await store.set_summary_memory(service.summary_memory)
+        agent_memory = await service.update_summary_memory()
 
+        await store.set_agent_memory(agent_memory)
         await store.set_emulator_save_state_from_emulator(self.emulator)

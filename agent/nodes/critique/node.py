@@ -23,15 +23,12 @@ class CritiqueNode(Node[AgentStore]):
 
         service = CritiqueService(
             iteration=state.iteration,
-            raw_memory=state.raw_memory,
+            agent_memory=state.agent_memory,
             current_map=state.current_map,
             goals=state.goals,
             emulator=self.emulator,
-            summary_memory=state.summary_memory,
-            long_term_memory=state.long_term_memory,
         )
-        await service.critique()
+        agent_memory = await service.critique()
 
-        await store.set_raw_memory(service.raw_memory)
-
+        await store.set_agent_memory(agent_memory)
         await store.set_emulator_save_state_from_emulator(self.emulator)

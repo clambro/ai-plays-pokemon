@@ -5,9 +5,8 @@ from agent.nodes.decision_maker_text.schemas import DecisionMakerTextResponse
 from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
-from memory.long_term_memory import LongTermMemory
-from memory.raw_memory import RawMemory, RawMemoryPiece
-from memory.summary_memory import SummaryMemory
+from memory.agent_memory import AgentMemory
+from memory.raw_memory import RawMemoryPiece
 
 
 class DecisionMakerTextService:
@@ -17,44 +16,36 @@ class DecisionMakerTextService:
         self,
         iteration: int,
         emulator: YellowLegacyEmulator,
-        raw_memory: RawMemory,
+        agent_memory: AgentMemory,
         goals: Goals,
-        summary_memory: SummaryMemory,
-        long_term_memory: LongTermMemory,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
         self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
-        self.raw_memory = raw_memory
+        self.agent_memory = agent_memory
         self.goals = goals
-        self.summary_memory = summary_memory
-        self.long_term_memory = long_term_memory
 
-    async def make_decision(self) -> None:
+    async def make_decision(self) -> AgentMemory:
         """
         Make a decision based on the current game state.
 
         :return: The button to press.
         """
         img = self.emulator.get_screenshot()
-        prompt = DECISION_MAKER_TEXT_PROMPT.format(
-            raw_memory=self.raw_memory,
-            summary_memory=self.summary_memory,
-            long_term_memory=self.long_term_memory,
-            goals=self.goals,
-        )
+        prompt = DECISION_MAKER_TEXT_PROMPT.format(agent_memory=self.agent_memory, goals=self.goals)
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[img, prompt],
                 schema=DecisionMakerTextResponse,
             )
+            self.agent_memory.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    content=str(response),
+                ),
+            )
+            await self.emulator.press_buttons([response.button])
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
-            return None
-        self.raw_memory.append(
-            RawMemoryPiece(
-                iteration=self.iteration,
-                content=str(response),
-            ),
-        )
-        await self.emulator.press_buttons([response.button])
+
+        return self.agent_memory

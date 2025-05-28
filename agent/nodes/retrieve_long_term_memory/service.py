@@ -2,10 +2,8 @@ from agent.nodes.retrieve_long_term_memory.prompts import GET_RETRIEVAL_QUERY_PR
 from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
-from memory.long_term_memory import LongTermMemory
-from memory.raw_memory import RawMemory
+from memory.agent_memory import AgentMemory
 from memory.retrieval_service import MemoryRetrievalService
-from memory.summary_memory import SummaryMemory
 
 
 class RetrieveLongTermMemoryService:
@@ -18,31 +16,27 @@ class RetrieveLongTermMemoryService:
         self,
         emulator: YellowLegacyEmulator,
         iteration: int,
-        raw_memory: RawMemory,
-        summary_memory: SummaryMemory,
-        prev_long_term_memory: LongTermMemory,
+        agent_memory: AgentMemory,
         goals: Goals,
     ) -> None:
         self.emulator = emulator
         self.iteration = iteration
-        self.raw_memory = raw_memory
-        self.summary_memory = summary_memory
-        self.prev_long_term_memory = prev_long_term_memory
+        self.agent_memory = agent_memory
         self.goals = goals
 
-    async def retrieve_long_term_memory(self) -> LongTermMemory:
+    async def retrieve_long_term_memory(self) -> AgentMemory:
         """Retrieve the long-term memory."""
         game_state = self.emulator.get_game_state()
         screenshot = self.emulator.get_screenshot()
 
         prompt = GET_RETRIEVAL_QUERY_PROMPT.format(
-            raw_memory=self.raw_memory,
-            summary_memory=self.summary_memory,
-            long_term_memory=self.prev_long_term_memory,
+            agent_memory=self.agent_memory,
             player_info=game_state.player_info,
             goals=self.goals,
         )
         query = await self.llm_service.get_llm_response([screenshot, prompt], thinking_tokens=None)
 
         memories = await self.retrieval_service.get_most_relevant_memories(query, self.iteration)
-        return LongTermMemory(pieces=memories)
+        self.agent_memory.long_term_memory.pieces = memories
+
+        return self.agent_memory

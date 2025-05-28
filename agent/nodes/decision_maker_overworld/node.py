@@ -26,16 +26,14 @@ class DecisionMakerOverworldNode(Node[AgentStore]):
         service = DecisionMakerOverworldService(
             iteration=state.iteration,
             emulator=self.emulator,
-            raw_memory=state.raw_memory,
+            agent_memory=state.agent_memory,
             current_map=state.current_map,
             goals=state.goals,
-            summary_memory=state.summary_memory,
-            long_term_memory=state.long_term_memory,
         )
-        tool, args = await service.make_decision()
+        decision = await service.make_decision()
 
-        await store.set_raw_memory(service.raw_memory)
-        await store.set_tool(tool)
-        await store.set_tool_args(args)
+        await store.set_agent_memory(decision.agent_memory)
+        await store.set_tool(decision.tool)
+        await store.set_tool_args(decision.navigation_args)
 
         await store.set_emulator_save_state_from_emulator(self.emulator)

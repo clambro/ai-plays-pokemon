@@ -22,13 +22,10 @@ class UpdateGoalsNode(Node[AgentStore]):
         service = UpdateGoalsService(
             emulator=self.emulator,
             iteration=state.iteration,
-            raw_memory=state.raw_memory,
+            agent_memory=state.agent_memory,
             goals=state.goals,
-            summary_memory=state.summary_memory,
-            long_term_memory=state.long_term_memory,
         )
-        await service.update_goals()  # Updated in place.
+        goals = await service.update_goals()
 
-        await store.set_goals(service.goals)
-
+        await store.set_goals(goals)
         await store.set_emulator_save_state_from_emulator(self.emulator)

@@ -12,11 +12,7 @@ The (case-sensitive) available buttons are:
 You also have access to the navigation tool, which can be used to navigate to any revealed, accessible tile on the current map. To use this tool, simply provide the coordinates of the tile you wish to navigate to in the "navigation_args" field below. Navigation from one map to another is not possible using this tool, but you can navigate to the edge of the current map and then transition from this map to the next in the next iteration using the directional buttons. You may also use the navigation tool to navigate directly to any accessible warp tile that you have discovered on the current map. The navigation tool will update your map information as you navigate, so think of it as a more efficient way to move around if you want to move more than one tile at a time. The navigation tool can be used to navigate beyond the current screen as well, but only as far as the edge of the current map. It is generally recommended to use the navigation tool if you want to move more than one tile.
 For reference, the walkable tiles types are {walkable_tiles}.
 
-{raw_memory}
-
-{summary_memory}
-
-{long_term_memory}
+{agent_memory}
 
 {goals}
 
