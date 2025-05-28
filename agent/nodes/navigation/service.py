@@ -5,9 +5,9 @@ from common.enums import AsciiTiles
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button, MapLocation
 from emulator.game_state import YellowLegacyGameState
+from memory.raw_memory import RawMemory, RawMemoryPiece
 from overworld_map.schemas import OverworldMap
 from overworld_map.service import update_map_with_screen_info
-from raw_memory.schemas import RawMemory, RawMemoryPiece
 
 
 class NavigationService:

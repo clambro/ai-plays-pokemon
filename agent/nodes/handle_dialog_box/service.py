@@ -4,7 +4,7 @@ from common.enums import AgentStateHandler
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
 from emulator.schemas import DialogBox
-from raw_memory.schemas import RawMemory, RawMemoryPiece
+from memory.raw_memory import RawMemory, RawMemoryPiece
 
 
 class HandleDialogBoxService:

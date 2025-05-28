@@ -4,7 +4,7 @@ from common.constants import ITERATIONS_PER_SUMMARY_UPDATE, RAW_MEMORY_MAX_SIZE
 from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
-from raw_memory.schemas import RawMemory
+from memory.raw_memory import RawMemory
 from summary_memory.schemas import SummaryMemory, SummaryMemoryPiece
 
 
