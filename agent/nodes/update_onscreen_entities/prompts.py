@@ -13,7 +13,7 @@ There are one or more sprites visible on the screen right now. This is your chan
 
 The following sprites are visible on the screen right now. Here are the descriptions of them that you have in your long-term memory:
 <sprites>
-{sprites}
+{entities}
 </sprites>
 
 Sprites are usually either people or item balls, but can also be other entities. You should note the kind of sprite in your description, as well as any other relevant information about it. If the sprite is a person, whom you have recently spoken to, you should note what they said in the description for the sprite.
@@ -38,7 +38,7 @@ There are one or more warp tiles visible on the screen right now. This is your c
 
 The following warp tiles are visible on the screen right now. Here are the descriptions of them that you have in your long-term memory:
 <warps>
-{warps}
+{entities}
 </warps>
 
 For warp tiles, it's important to note the kind of warp tile in your description: single vs double.
@@ -68,7 +68,7 @@ There are one or more signs visible on the screen right now. This is your chance
 
 The following signs are visible on the screen right now. Here are the descriptions of them that you have in your long-term memory:
 <signs>
-{signs}
+{entities}
 </signs>
 
 Signs are usualy either signposts or TVs, but can be other objects. Their key defining feature is that they are static, unchanging places where you can read some informational text. You should note the kind of sign in your description, as well as any other relevant information about it. If you have recently read the text on a sign, you should note that in your description.

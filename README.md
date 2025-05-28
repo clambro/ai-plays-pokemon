@@ -6,17 +6,20 @@
 Done?
 
 ### Clean-Up, Refactoring, and Testing
-* Make entity memories into a single DB table?
-
-* Fix navigation when Pikachu is on screen. Bumping into it breaks the existing flow.
-
-* Find some better way to handle the fact that the three memory types almost always appear together
 * Subgraphs for the battle, text, and overworld conditions
 * Add proper source/sink nodes for graphs that need them
+
+* Find some better way to handle the fact that the three memory types almost always appear together
+
 * Add names to all the prompts
+
 * Improve separation of responsibilities and general refactor
+
 * Set up Junjo server and opentelemetry
+
 * Add tests to everything
+
+* Fix navigation when Pikachu is on screen. Bumping into it breaks the existing flow.
 
 ### Useful Tools and Additions
 * Detailed subflow for battles

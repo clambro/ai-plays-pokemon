@@ -22,10 +22,8 @@ async def init_fresh_db() -> None:
     # Import all models here to ensure they are registered with the engine.
     from database.llm_messages.model import LLMMessageDBModel
     from database.long_term_memory.model import LongTermMemoryDBModel
+    from database.map_entity_memory.model import MapEntityMemoryDBModel
     from database.map_memory.model import MapMemoryDBModel
-    from database.sign_memory.model import SignMemoryDBModel
-    from database.sprite_memory.model import SpriteMemoryDBModel
-    from database.warp_memory.model import WarpMemoryDBModel
 
     async with _engine.begin() as conn:
         if DB_FILE_PATH.exists():
