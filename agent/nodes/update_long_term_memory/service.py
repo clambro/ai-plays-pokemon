@@ -44,9 +44,8 @@ class UpdateLongTermMemoryService:
                 prompt,
                 UpdateLongTermMemoryResponse,
             )
-            title_piece_map = {p.title: p for p in self.agent_memory.long_term_memory.pieces}
             for update_piece in response.pieces:
-                orig_piece = title_piece_map.get(update_piece.title)
+                orig_piece = self.agent_memory.long_term_memory_map.get(update_piece.title)
                 if orig_piece is None:
                     logger.warning(
                         f"Tried to update non-existent long-term memory piece:"
