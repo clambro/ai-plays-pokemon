@@ -35,3 +35,11 @@ class AsciiTiles(StrEnum):
     def get_walkable_tiles(cls) -> list["AsciiTiles"]:
         """Get the walkable tiles."""
         return [cls.FREE, cls.GRASS, cls.WARP, cls.PIKACHU]
+
+
+class MapEntityType(StrEnum):
+    """An enum for the different types of map entities."""
+
+    WARP = "warp"
+    SPRITE = "sprite"
+    SIGN = "sign"
