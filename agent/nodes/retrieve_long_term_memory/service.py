@@ -3,7 +3,7 @@ from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
 from long_term_memory.schemas import LongTermMemory
-from long_term_memory.service import MemoryRetrievalService
+from memory.retrieval_service import MemoryRetrievalService
 from raw_memory.schemas import RawMemory
 from summary_memory.schemas import SummaryMemory
 
