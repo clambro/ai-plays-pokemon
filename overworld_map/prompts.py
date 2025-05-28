@@ -23,7 +23,7 @@ You have explored {{explored_percentage}} of this map.
 - "{AsciiTiles.WARP}" - A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.
 - "{AsciiTiles.PLAYER}" - Your current location.
 - "{AsciiTiles.PIKACHU}" - Your companion Pikachu that follows you around. May or may not be present on the map. Pikachu will always be standing on a walkable tile if present.
-- "{AsciiTiles.SIGN}" - An object that you can interact with to read something. Usually a signpost, but could be a TV, radio, or other object. The main distinction between signs and sprites is that signs are static. They will never move, and their text will never change.
+- "{AsciiTiles.SIGN}" - An object that you can interact with to read something. Usually a signpost, but could be a TV, radio, or other object. The main distinction between signs and sprites is that signs are static. They will never move, and their text will never change. Signs are usually interacted with from below, and cannot be walked through.
 </legend>
 
 The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map is {{height}}x{{width}} blocks.

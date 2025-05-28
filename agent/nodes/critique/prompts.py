@@ -11,8 +11,10 @@ Take a step back from playing the game for a moment. You have signaled that you 
 
 Common sources of error include (but are not limited to):
 - Misinterpreting the screenshot information
-- Incorrectly deciding that the screenshot is more reliable than the 100% accurate game memory data
+- Misinterpreting the map information and trying to walk through walls
+- Incorrectly deciding that the screenshot or your own memory is more reliable than the infallible game data
 - Making false assumptions and failing to correct them
+- Not taking advantage of your available tools to help you with more complex tasks
 - Not exploring the game world enough, especially the current map. If this is the case, you should point out exactly where you should be exploring. Which direction should you be going in?
 
 Give a thorough critique of your performance so far. Why are you stuck? Where did you go wrong? What should you do to make meaningful progress towards your goals?
