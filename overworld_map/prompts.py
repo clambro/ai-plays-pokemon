@@ -22,14 +22,14 @@ You have explored {{explored_percentage}} of this map.
 - "{AsciiTiles.SPRITE}" - A sprite that you can interact with. This could be an NPC, an item you can pick up, or some other interactable entity. You will need to use the screenshot to determine what the sprite is. You cannot walk through sprites, nor can you stand on top of them.
 - "{AsciiTiles.WARP}" - A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.
 - "{AsciiTiles.PLAYER}" - Your current location.
-- "{AsciiTiles.PIKACHU}" - Your companion Pikachu that follows you around. May or may not be present on the map. Pikachu will always be standing on a walkable tile if present.
+- "{AsciiTiles.PIKACHU}" - Your companion Pikachu that follows you around. May or may not be present on the map. Pikachu will always be standing on a walkable tile if present. You can interact with Pikachu like any other sprite, though this only provides flavour text. Pikachu will never block your movement.
 - "{AsciiTiles.SIGN}" - An object that you can interact with to read something. Usually a signpost, but could be a TV, radio, or other object. The main distinction between signs and sprites is that signs are static. They will never move, and their text will never change. Signs are usually interacted with from below, and cannot be walked through.
 </legend>
 
 The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map is {{height}}x{{width}} blocks.
 
 <screen_position>
-The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that the player is in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the whole map section. This should help you navigate from one map to another.
+The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that the you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size). This should help you navigate from one map to another.
 The top of the screen is currently at row {{screen_top}} in map coordinates.
 The bottom of the screen is currently at row {{screen_bottom}} in map coordinates.
 The left side of the screen is currently at column {{screen_left}} in map coordinates.
@@ -79,6 +79,8 @@ Navigation tips:
 - To interact with a sprite, you need to be directly adjacent to it, face it, and press the action button. The only exception to the direct adjacency rule is in poke-marts and pokemon centers where you interact with the clerk or nurse respectively from across the counter that is directly in front of them.
 - Note that some sprites move around, so their position may change between screenshots. Do not let this confuse you. The information that you have in the <known_sprites> section is the most accurate information available to you since it comes straight from the game's memory at this moment in time.
 - It is generally not worth interacting with sprites and signs more than once. They usually do not change between interactions.
+- There are no ghost walls or mislabeled tiles in the above maps. If you find your movement unexpectedly blocked by a wall or barrier, you are almost certainly misinterpreting the map. The map is always correct.
+- Focus on the map when you are trying to navigate within a map. Focus on the screen when you are trying to navigate between maps.
 
 Note that this ASCII information comes straight from the game's memory and is therefore perfectly reliable. Screenshot images can be misinterpreted, so use the ASCII map and screen to determine the exact location of any sprites or tiles, and consider the screenshot image as supplemental information to help you visually interpret the ASCII.
 </map_info>

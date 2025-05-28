@@ -85,6 +85,7 @@ class DecisionMakerOverworldService:
                 ),
             )
             await self._check_for_collision(response.button, prev_map, prev_coords, prev_direction)
+            await self._check_for_action(response.button)
 
         return DecisionMakerOverworldDecision(
             agent_memory=self.agent_memory,
@@ -119,6 +120,24 @@ class DecisionMakerOverworldService:
                     content=(
                         f"My position did not change after pressing the '{button}' button. Did I"
                         f" bump into something?"
+                    ),
+                ),
+            )
+
+    async def _check_for_action(self, button: Button) -> None:
+        """Check if the player hit the action button but nothing happened."""
+        if button != Button.A:
+            return
+
+        await self.emulator.wait_for_animation_to_finish()
+        game_state = self.emulator.get_game_state()
+        if not game_state.is_text_on_screen():
+            self.agent_memory.append_raw_memory(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    content=(
+                        "I pressed the action button but nothing happened. There must not be"
+                        " anything to interact with in the direction I am facing."
                     ),
                 ),
             )

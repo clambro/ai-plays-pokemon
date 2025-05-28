@@ -150,6 +150,11 @@ class YellowLegacyGameState(BaseModel):
             signs=on_screen_signs,
         )
 
+    def get_on_screen_text(self) -> str:
+        """Get the text on the screen as a string."""
+        tiles = np.array(self.screen.tiles)
+        return "\n".join("".join(INT_TO_CHAR_MAP.get(t, " ") for t in row) for row in tiles)
+
     def is_text_on_screen(self, ignore_dialog_box: bool = False) -> bool:
         """Check if there is text on the screen."""
         a_upper = CHAR_TO_INT_MAP["A"]

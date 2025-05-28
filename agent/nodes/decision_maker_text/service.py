@@ -32,7 +32,13 @@ class DecisionMakerTextService:
         :return: The button to press.
         """
         img = self.emulator.get_screenshot()
-        prompt = DECISION_MAKER_TEXT_PROMPT.format(agent_memory=self.agent_memory, goals=self.goals)
+        game_state = self.emulator.get_game_state()
+        prompt = DECISION_MAKER_TEXT_PROMPT.format(
+            agent_memory=self.agent_memory,
+            goals=self.goals,
+            player_info=game_state.player_info,
+            text=game_state.get_on_screen_text(),
+        )
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[img, prompt],
