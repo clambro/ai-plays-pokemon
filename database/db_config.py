@@ -24,7 +24,6 @@ async def init_fresh_db() -> None:
     from database.long_term_memory.model import LongTermMemoryDBModel
     from database.map_entity_memory.model import MapEntityMemoryDBModel
     from database.map_memory.model import MapMemoryDBModel
-    from database.sprite_memory.model import SpriteMemoryDBModel
 
     async with _engine.begin() as conn:
         if DB_FILE_PATH.exists():

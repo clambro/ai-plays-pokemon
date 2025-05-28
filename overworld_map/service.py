@@ -3,17 +3,12 @@ import asyncio
 from common.enums import AsciiTiles, MapEntityType
 from database.map_entity_memory.repository import (
     create_map_entity_memory,
+    delete_map_entity_memory,
     get_map_entity_memories_for_map,
 )
-from database.map_entity_memory.schemas import MapEntityMemoryCreate
+from database.map_entity_memory.schemas import MapEntityMemoryCreate, MapEntityMemoryDelete
 from database.map_memory.repository import create_map_memory, get_map_memory, update_map_tiles
 from database.map_memory.schemas import MapMemoryCreateUpdate
-from database.sprite_memory.repository import (
-    create_sprite_memory,
-    delete_sprite_memory,
-    get_sprite_memories_for_map,
-)
-from database.sprite_memory.schemas import SpriteMemoryCreate
 from emulator.game_state import YellowLegacyGameState
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
 
@@ -29,11 +24,11 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
 
     map_entity_memories = await get_map_entity_memories_for_map(map_memory.map_id)
 
-    sprite_memories = await get_sprite_memories_for_map(map_memory.map_id)
     game_sprites = game_state.cur_map.sprites
     sprites = {
-        mem.sprite_id: OverworldSprite.from_sprite(game_sprites[mem.sprite_id], mem.description)
-        for mem in sprite_memories
+        mem.entity_id: OverworldSprite.from_sprite(game_sprites[mem.entity_id], mem.description)
+        for mem in map_entity_memories
+        if mem.entity_type == MapEntityType.SPRITE
     }
 
     game_warps = game_state.cur_map.warps
@@ -77,7 +72,7 @@ async def _add_remove_map_entities(
     game_state: YellowLegacyGameState,
     overworld_map: OverworldMap,
 ) -> None:
-    """Add or remove sprites or warps from the overworld map depending on the current screen."""
+    """Add or remove entities from the overworld map depending on the current screen."""
     if overworld_map.id != game_state.cur_map.id:
         raise ValueError("Overworld map does not match current game state.")
 
@@ -87,11 +82,12 @@ async def _add_remove_map_entities(
     for s in ascii_screen.sprites:
         if s.is_rendered and s.index not in overworld_map.known_sprites:
             tasks.append(
-                create_sprite_memory(
-                    SpriteMemoryCreate(
+                create_map_entity_memory(
+                    MapEntityMemoryCreate(
                         iteration=iteration,
                         map_id=overworld_map.id,
-                        sprite_id=s.index,
+                        entity_id=s.index,
+                        entity_type=MapEntityType.SPRITE,
                     ),
                 ),
             )
@@ -100,8 +96,17 @@ async def _add_remove_map_entities(
         is_s_on_screen = game_state.screen.get_screen_coords(s.y, s.x) is not None
         if is_s_on_screen and not s.is_rendered:
             # Previously seen sprite has been de-rendered. Likely an item that has been picked up,
-            # or a scripted character that has walked off the screen.
-            tasks.append(delete_sprite_memory(overworld_map.id, s.index))
+            # or a scripted character that has walked off the screen. Sprites are the only entity
+            # types that can be de-rendered.
+            tasks.append(
+                delete_map_entity_memory(
+                    MapEntityMemoryDelete(
+                        map_id=overworld_map.id,
+                        entity_id=s.index,
+                        entity_type=MapEntityType.SPRITE,
+                    ),
+                ),
+            )
 
     for w in ascii_screen.warps:
         if w.index not in overworld_map.known_warps:
@@ -115,7 +120,6 @@ async def _add_remove_map_entities(
                     ),
                 ),
             )
-        # Warps are never de-rendered, so no need to delete them.
 
     for s in ascii_screen.signs:
         if s.index not in overworld_map.known_signs:
@@ -129,7 +133,6 @@ async def _add_remove_map_entities(
                     ),
                 ),
             )
-        # Signs are never de-rendered, so no need to delete them.
 
     await asyncio.gather(*tasks)
 

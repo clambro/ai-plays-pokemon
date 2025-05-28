@@ -1,9 +1,10 @@
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 
 from database.db_config import db_sessionmaker
 from database.map_entity_memory.model import MapEntityMemoryDBModel
 from database.map_entity_memory.schemas import (
     MapEntityMemoryCreate,
+    MapEntityMemoryDelete,
     MapEntityMemoryRead,
     MapEntityMemoryUpdate,
 )
@@ -66,3 +67,15 @@ async def update_map_entity_memory(map_entity: MapEntityMemoryUpdate) -> MapEnti
         await session.commit()
 
         return MapEntityMemoryRead.model_validate(db_obj)
+
+
+async def delete_map_entity_memory(map_entity: MapEntityMemoryDelete) -> None:
+    """Delete a map entity memory."""
+    async with db_sessionmaker() as session:
+        query = delete(MapEntityMemoryDBModel).where(
+            MapEntityMemoryDBModel.map_id == map_entity.map_id.value,
+            MapEntityMemoryDBModel.entity_id == map_entity.entity_id,
+            MapEntityMemoryDBModel.entity_type == map_entity.entity_type,
+        )
+        await session.execute(query)
+        await session.commit()

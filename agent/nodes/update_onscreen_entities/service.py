@@ -14,8 +14,6 @@ from common.enums import MapEntityType
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from database.map_entity_memory.repository import update_map_entity_memory
 from database.map_entity_memory.schemas import MapEntityMemoryUpdate
-from database.sprite_memory.repository import update_sprite_memory
-from database.sprite_memory.schemas import SpriteMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
 from long_term_memory.schemas import LongTermMemory
@@ -119,10 +117,11 @@ class UpdateOnscreenEntitiesService:
             )
             await asyncio.gather(
                 *[
-                    update_sprite_memory(
-                        SpriteMemoryUpdate(
+                    update_map_entity_memory(
+                        MapEntityMemoryUpdate(
                             map_id=self.current_map.id,
-                            sprite_id=u.index,
+                            entity_id=u.index,
+                            entity_type=MapEntityType.SPRITE,
                             description=u.description,
                             iteration=self.iteration,
                         ),
