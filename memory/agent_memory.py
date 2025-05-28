@@ -1,8 +1,9 @@
 from pydantic import BaseModel, Field
 
+from database.long_term_memory.schemas import LongTermMemoryRead
 from memory.long_term_memory import LongTermMemory
-from memory.raw_memory import RawMemory
-from memory.summary_memory import SummaryMemory
+from memory.raw_memory import RawMemory, RawMemoryPiece
+from memory.summary_memory import SummaryMemory, SummaryMemoryPiece
 
 
 class AgentMemory(BaseModel):
@@ -15,3 +16,20 @@ class AgentMemory(BaseModel):
     def __str__(self) -> str:
         """Get a string representation of the agent memory."""
         return f"{self.raw_memory}\n\n{self.summary_memory}\n\n{self.long_term_memory}"
+
+    @property
+    def has_long_term_memory(self) -> bool:
+        """Check if the agent has long-term memory."""
+        return bool(self.long_term_memory.pieces)
+
+    def append_raw_memory(self, *pieces: RawMemoryPiece) -> None:
+        """Append a raw memory piece to the agent memory."""
+        self.raw_memory.append(*pieces)
+
+    def append_summary_memory(self, iteration: int, *pieces: SummaryMemoryPiece) -> None:
+        """Append a summary memory piece to the agent memory."""
+        self.summary_memory.append(iteration, *pieces)
+
+    def replace_long_term_memory(self, new_memory: list[LongTermMemoryRead]) -> None:
+        """Replace the long-term memory with a new set of memories."""
+        self.long_term_memory.pieces = new_memory

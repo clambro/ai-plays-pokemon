@@ -37,6 +37,6 @@ class RetrieveLongTermMemoryService:
         query = await self.llm_service.get_llm_response([screenshot, prompt], thinking_tokens=None)
 
         memories = await self.retrieval_service.get_most_relevant_memories(query, self.iteration)
-        self.agent_memory.long_term_memory.pieces = memories
+        self.agent_memory.replace_long_term_memory(memories)
 
         return self.agent_memory

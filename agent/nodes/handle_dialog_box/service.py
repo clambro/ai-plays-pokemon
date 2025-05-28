@@ -51,7 +51,7 @@ class HandleDialogBoxService:
             is_text_outside_dialog_box = game_state.is_text_on_screen(ignore_dialog_box=True)
 
         joined_text = " ".join(text)
-        self.agent_memory.raw_memory.append(
+        self.agent_memory.append_raw_memory(
             RawMemoryPiece(
                 iteration=self.iteration,
                 content=f'The following text was read from the main dialog box: "{joined_text}"',

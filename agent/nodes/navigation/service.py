@@ -38,7 +38,7 @@ class NavigationService:
         path = self._calculate_path_to_target(game_state)
         if not path:
             logger.warning("No path found to target coordinates.")
-            self.agent_memory.raw_memory.append(
+            self.agent_memory.append_raw_memory(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
@@ -74,7 +74,7 @@ class NavigationService:
             or self.coords.row >= self.current_map.height
             or self.coords.col >= self.current_map.width
         ):
-            self.agent_memory.raw_memory.append(
+            self.agent_memory.append_raw_memory(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
@@ -87,7 +87,7 @@ class NavigationService:
 
         target_tile = self.current_map.ascii_tiles_ndarray[self.coords.row, self.coords.col]
         if target_tile not in AsciiTiles.get_walkable_tiles():
-            self.agent_memory.raw_memory.append(
+            self.agent_memory.append_raw_memory(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
@@ -183,7 +183,7 @@ class NavigationService:
             return True
         if prev_pos == new_pos:
             logger.warning("Navigation interrupted. Cancelling.")
-            self.agent_memory.raw_memory.append(
+            self.agent_memory.append_raw_memory(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(f"Navigation to {self.coords} interrupted at position {new_pos}."),
@@ -192,7 +192,7 @@ class NavigationService:
             return True
         if game_state.cur_map.id != starting_map_id:
             logger.warning("Map changed during navigation. Cancelling.")
-            self.agent_memory.raw_memory.append(
+            self.agent_memory.append_raw_memory(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content="The map has changed during navigation. Cancelling further steps.",

@@ -62,7 +62,7 @@ class DecisionMakerOverworldService:
         thought = f"Current map: {map_str} at coordinates {position}. {response.thoughts}"
 
         if response.navigation_args:
-            self.agent_memory.raw_memory.append(
+            self.agent_memory.append_raw_memory(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=f"{thought} Navigating to {response.navigation_args}.",
@@ -78,7 +78,7 @@ class DecisionMakerOverworldService:
             prev_coords = (game_state.player.y, game_state.player.x)
             prev_direction = game_state.player.direction
             await self.emulator.press_buttons([response.button])
-            self.agent_memory.raw_memory.append(
+            self.agent_memory.append_raw_memory(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=f"{thought} Pressed the '{response.button}' button.",
@@ -113,7 +113,7 @@ class DecisionMakerOverworldService:
             and current_coords == prev_coords
             and current_direction == prev_direction
         ):
-            self.agent_memory.raw_memory.append(
+            self.agent_memory.append_raw_memory(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(

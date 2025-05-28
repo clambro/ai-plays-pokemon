@@ -35,7 +35,7 @@ class DecisionMakerBattleService:
                 messages=[img, prompt],
                 schema=DecisionMakerBattleResponse,
             )
-            self.agent_memory.raw_memory.append(
+            self.agent_memory.append_raw_memory(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=str(response),

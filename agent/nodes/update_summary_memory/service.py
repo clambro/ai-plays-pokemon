@@ -48,6 +48,6 @@ class UpdateSummaryMemoryService:
             )
             for memory in response.memories
         ]
-        self.agent_memory.summary_memory.append(self.iteration, *memories)
+        self.agent_memory.append_summary_memory(self.iteration, *memories)
 
         return self.agent_memory

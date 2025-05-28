@@ -31,7 +31,7 @@ class UpdateLongTermMemoryService:
 
     async def update_long_term_memory(self) -> None:
         """Update long-term memory."""
-        if not self.agent_memory.long_term_memory.pieces:
+        if not self.agent_memory.has_long_term_memory:
             return
 
         game_state = self.emulator.get_game_state()
@@ -68,4 +68,4 @@ class UpdateLongTermMemoryService:
                     ),
                 )
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"Error creating long-term memory. Skipping.\n{e}")
+            logger.warning(f"Error updating long-term memory. Skipping.\n{e}")
