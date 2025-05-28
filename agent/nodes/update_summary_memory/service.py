@@ -5,7 +5,7 @@ from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
 from memory.raw_memory import RawMemory
-from summary_memory.schemas import SummaryMemory, SummaryMemoryPiece
+from memory.summary_memory import SummaryMemory, SummaryMemoryPiece
 
 
 class UpdateSummaryMemoryService:

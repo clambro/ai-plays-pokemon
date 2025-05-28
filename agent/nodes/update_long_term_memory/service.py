@@ -10,7 +10,7 @@ from database.long_term_memory.schemas import LongTermMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from memory.long_term_memory import LongTermMemory
 from memory.raw_memory import RawMemory
-from summary_memory.schemas import SummaryMemory
+from memory.summary_memory import SummaryMemory
 
 
 class UpdateLongTermMemoryService:

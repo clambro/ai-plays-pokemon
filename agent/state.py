@@ -9,8 +9,8 @@ from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
 from memory.long_term_memory import LongTermMemory
 from memory.raw_memory import RawMemory
+from memory.summary_memory import SummaryMemory
 from overworld_map.schemas import OverworldMap
-from summary_memory.schemas import SummaryMemory
 
 
 class AgentState(BaseState):

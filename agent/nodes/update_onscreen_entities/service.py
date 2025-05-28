@@ -17,8 +17,8 @@ from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
 from memory.long_term_memory import LongTermMemory
 from memory.raw_memory import RawMemory
+from memory.summary_memory import SummaryMemory
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
-from summary_memory.schemas import SummaryMemory
 
 
 class UpdateOnscreenEntitiesService:
