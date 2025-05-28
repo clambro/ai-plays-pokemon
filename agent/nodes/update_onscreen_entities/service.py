@@ -10,9 +10,10 @@ from agent.nodes.update_onscreen_entities.prompts import (
     UPDATE_WARPS_PROMPT,
 )
 from agent.nodes.update_onscreen_entities.schemas import UpdateEntitiesResponse
+from common.enums import MapEntityType
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
-from database.sign_memory.repository import update_sign_memory
-from database.sign_memory.schemas import SignMemoryUpdate
+from database.map_entity_memory.repository import update_map_entity_memory
+from database.map_entity_memory.schemas import MapEntityMemoryUpdate
 from database.sprite_memory.repository import update_sprite_memory
 from database.sprite_memory.schemas import SpriteMemoryUpdate
 from database.warp_memory.repository import update_warp_memory
@@ -198,10 +199,11 @@ class UpdateOnscreenEntitiesService:
             )
             await asyncio.gather(
                 *[
-                    update_sign_memory(
-                        SignMemoryUpdate(
+                    update_map_entity_memory(
+                        MapEntityMemoryUpdate(
                             map_id=self.current_map.id,
-                            sign_id=u.index,
+                            entity_id=u.index,
+                            entity_type=MapEntityType.SIGN,
                             description=u.description,
                             iteration=self.iteration,
                         ),

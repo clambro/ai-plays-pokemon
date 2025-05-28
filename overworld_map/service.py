@@ -1,10 +1,13 @@
 import asyncio
 
-from common.enums import AsciiTiles
+from common.enums import AsciiTiles, MapEntityType
+from database.map_entity_memory.repository import (
+    create_map_entity_memory,
+    get_map_entity_memories_for_map,
+)
+from database.map_entity_memory.schemas import MapEntityMemoryCreate
 from database.map_memory.repository import create_map_memory, get_map_memory, update_map_tiles
 from database.map_memory.schemas import MapMemoryCreateUpdate
-from database.sign_memory.repository import create_sign_memory, get_sign_memories_for_map
-from database.sign_memory.schemas import SignMemoryCreate
 from database.sprite_memory.repository import (
     create_sprite_memory,
     delete_sprite_memory,
@@ -26,6 +29,8 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
     if map_memory is None:
         return await _create_overworld_map_from_game_state(iteration, game_state)
 
+    map_entity_memories = await get_map_entity_memories_for_map(map_memory.map_id)
+
     sprite_memories = await get_sprite_memories_for_map(map_memory.map_id)
     game_sprites = game_state.cur_map.sprites
     sprites = {
@@ -40,11 +45,11 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
         for mem in warp_memories
     }
 
-    sign_memories = await get_sign_memories_for_map(map_memory.map_id)
     game_signs = game_state.cur_map.signs
     signs = {
-        mem.sign_id: OverworldSign.from_sign(game_signs[mem.sign_id], mem.description)
-        for mem in sign_memories
+        mem.entity_id: OverworldSign.from_sign(game_signs[mem.entity_id], mem.description)
+        for mem in map_entity_memories
+        if mem.entity_type == MapEntityType.SIGN
     }
 
     overworld_map = OverworldMap(
@@ -116,11 +121,12 @@ async def _add_remove_map_entities(
     for s in ascii_screen.signs:
         if s.index not in overworld_map.known_signs:
             tasks.append(
-                create_sign_memory(
-                    SignMemoryCreate(
+                create_map_entity_memory(
+                    MapEntityMemoryCreate(
                         iteration=iteration,
                         map_id=overworld_map.id,
-                        sign_id=s.index,
+                        entity_id=s.index,
+                        entity_type=MapEntityType.SIGN,
                     ),
                 ),
             )
