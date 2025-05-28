@@ -5,7 +5,7 @@ from agent.nodes.decision_maker_text.schemas import DecisionMakerTextResponse
 from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
-from long_term_memory.schemas import LongTermMemory
+from memory.long_term_memory import LongTermMemory
 from raw_memory.schemas import RawMemory, RawMemoryPiece
 from summary_memory.schemas import SummaryMemory
 

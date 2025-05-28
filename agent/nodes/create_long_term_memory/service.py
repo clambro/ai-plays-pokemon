@@ -12,7 +12,7 @@ from database.long_term_memory.repository import (
 )
 from database.long_term_memory.schemas import LongTermMemoryCreate
 from emulator.emulator import YellowLegacyEmulator
-from long_term_memory.schemas import LongTermMemory
+from memory.long_term_memory import LongTermMemory
 from raw_memory.schemas import RawMemory
 from summary_memory.schemas import SummaryMemory
 

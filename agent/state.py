@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from common.enums import AgentStateHandler, Tool
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
-from long_term_memory.schemas import LongTermMemory
+from memory.long_term_memory import LongTermMemory
 from overworld_map.schemas import OverworldMap
 from raw_memory.schemas import RawMemory
 from summary_memory.schemas import SummaryMemory

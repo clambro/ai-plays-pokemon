@@ -15,7 +15,7 @@ from database.map_entity_memory.repository import update_map_entity_memory
 from database.map_entity_memory.schemas import MapEntityMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
-from long_term_memory.schemas import LongTermMemory
+from memory.long_term_memory import LongTermMemory
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
 from raw_memory.schemas import RawMemory
 from summary_memory.schemas import SummaryMemory
