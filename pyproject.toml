@@ -2,7 +2,8 @@
 name = "ai-plays-pokemon"
 version = "0.1.0"
 description = ""
-authors = []
+authors = [{name = "Costa Lambrinoudis", email = "clambro.git@gmail.com"]
+license = { file = "LICENSE" }
 readme = "README.md"
 
 [tool.poetry]
