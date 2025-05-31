@@ -9,18 +9,14 @@ from memory.agent_memory import AgentMemory
 class BattleHandlerState(BaseState):
     """The state used in the battle handler graph workflow."""
 
-    iteration: int | None = None
-    agent_memory: AgentMemory | None = None
-    emulator_save_state: str | None = None
-    last_emulator_save_state_time: datetime | None = None
+    iteration: int
+    agent_memory: AgentMemory
+    emulator_save_state: str
+    last_emulator_save_state_time: datetime
 
 
 class BattleHandlerStore(BaseStore[BattleHandlerState]):
     """Concrete store for the battle handler state."""
-
-    async def set_iteration(self, iteration: int) -> None:
-        """Set the iteration."""
-        await self.set_state({"iteration": iteration})
 
     async def set_agent_memory(self, agent_memory: AgentMemory) -> None:
         """Set the agent memory."""
@@ -39,3 +35,13 @@ class BattleHandlerStore(BaseStore[BattleHandlerState]):
             return
         await self.set_state({"emulator_save_state": await emulator.get_emulator_save_state()})
         await self.set_state({"last_emulator_save_state_time": now})
+
+
+dummy_battle_handler_store = BattleHandlerStore(
+    initial_state=BattleHandlerState(
+        iteration=0,
+        agent_memory=AgentMemory(),
+        emulator_save_state="",
+        last_emulator_save_state_time=datetime.now(),
+    ),
+)

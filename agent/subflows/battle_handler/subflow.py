@@ -21,7 +21,6 @@ class BattleHandlerSubflow(Subflow[BattleHandlerState, BattleHandlerStore, Agent
         """Pre run actions that initialize the subflow store from the parent store."""
         parent_state = await parent_store.get_state()
 
-        await self.store.set_iteration(parent_state.iteration)
         await self.store.set_agent_memory(parent_state.agent_memory)
         await self.store.set_emulator_save_state_from_emulator(self.emulator)
 

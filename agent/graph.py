@@ -16,7 +16,7 @@ from agent.nodes.update_long_term_memory.node import UpdateLongTermMemoryNode
 from agent.nodes.update_onscreen_entities.node import UpdateOnscreenEntitiesNode
 from agent.nodes.update_summary_memory.node import UpdateSummaryMemoryNode
 from agent.subflows.battle_handler.graph import build_battle_handler_subflow_graph
-from agent.subflows.battle_handler.state import BattleHandlerState, BattleHandlerStore
+from agent.subflows.battle_handler.state import dummy_battle_handler_store
 from agent.subflows.battle_handler.subflow import BattleHandlerSubflow
 from common.enums import AgentStateHandler, Tool
 from emulator.emulator import YellowLegacyEmulator
@@ -41,7 +41,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
 
     battle_handler_subflow = BattleHandlerSubflow(
         graph=build_battle_handler_subflow_graph(emulator),
-        store=BattleHandlerStore(initial_state=BattleHandlerState()),
+        store=dummy_battle_handler_store,
         emulator=emulator,
     )
 
