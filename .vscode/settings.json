@@ -10,4 +10,7 @@
         }
     },
     "ruff.enable": true,
+    "python.autoComplete.extraPaths": [
+        "../junjo/src/junjo"
+    ]
 }

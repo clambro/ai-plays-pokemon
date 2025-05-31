@@ -1,5 +1,4 @@
 from junjo import Graph, Subflow
-from loguru import logger
 
 from agent.state import AgentState, AgentStore
 from agent.subflows.text_handler.state import TextHandlerState, TextHandlerStore
@@ -12,20 +11,14 @@ class TextHandlerSubflow(Subflow[TextHandlerState, TextHandlerStore, AgentState,
     def __init__(
         self,
         graph: Graph,
-        store: TextHandlerStore,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.emulator = emulator
-        super().__init__(graph, store)
+        super().__init__(graph)
 
-    async def pre_run_actions(self, parent_store: AgentStore) -> None:
+    async def pre_run_actions(self, parent_store: AgentStore) -> TextHandlerStore:
         """Pre run actions that initialize the subflow store from the parent store."""
-        subflow_state = await self.store.get_state()
-        if any(v is not None for v in subflow_state.model_dump().values()):
-            logger.warning("Text handler state is not empty at subflow initialization.")
-
-        parent_state = await parent_store.get_state()
-        await self.store.set_state_from_parent(parent_state)
+        return await TextHandlerStore.from_parent(parent_store)
 
     async def post_run_actions(self, parent_store: AgentStore) -> None:
         """Post run actions that update the parent store with the subflow's state."""

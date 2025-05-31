@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from junjo import BaseState, BaseStore
 
-from agent.state import AgentState
+from agent.state import AgentStore
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
 from memory.agent_memory import AgentMemory
@@ -22,16 +22,18 @@ class TextHandlerState(BaseState):
 class TextHandlerStore(BaseStore[TextHandlerState]):
     """Concrete store for the text handler state."""
 
-    async def set_state_from_parent(self, parent_state: AgentState) -> None:
-        """Set the state from the parent state. Meant to be called at subflow initialization."""
-        await self.set_state(
-            {
-                "iteration": parent_state.iteration,
-                "agent_memory": parent_state.agent_memory,
-                "goals": parent_state.goals,
-                "emulator_save_state": parent_state.emulator_save_state,
-                "last_emulator_save_state_time": parent_state.last_emulator_save_state_time,
-            },
+    @classmethod
+    async def from_parent(cls, parent_store: AgentStore) -> "TextHandlerStore":
+        """Create a new store from the parent state."""
+        parent_state = await parent_store.get_state()
+        return cls(
+            TextHandlerState(
+                iteration=parent_state.iteration,
+                agent_memory=parent_state.agent_memory,
+                goals=parent_state.goals,
+                emulator_save_state=parent_state.emulator_save_state,
+                last_emulator_save_state_time=parent_state.last_emulator_save_state_time,
+            ),
         )
 
     async def set_agent_memory(self, agent_memory: AgentMemory) -> None:
