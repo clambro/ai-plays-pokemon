@@ -28,8 +28,8 @@ class RawMemory(BaseModel):
         out = (
             f"Here are the raw thoughts you have had prior to this point. The bracketed number is"
             f" the incremented iteration number at which you had the thought. Higher numbers are"
-            f" more recent. Only the most recent {self.max_size} thoughts are displayed in this"
-            f" section."
+            f" more recent. The latest iteration is {self.pieces[-1].iteration}. Only the most"
+            f" recent {self.max_size} thoughts are displayed in this section."
         )
         out += "\n<raw_memory>\n"
         out += "\n".join([str(piece) for piece in self.pieces])

@@ -17,7 +17,7 @@ embedding_service = GeminiEmbeddingService()
 
 
 class MemoryRetrievalService:
-    """Service for getting the semantic similarity between a query and a memory."""
+    """Service for retrieving long-term memories based on semantic similarity to a query."""
 
     def __init__(
         self,

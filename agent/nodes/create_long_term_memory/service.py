@@ -12,9 +12,7 @@ from database.long_term_memory.repository import (
 )
 from database.long_term_memory.schemas import LongTermMemoryCreate
 from emulator.emulator import YellowLegacyEmulator
-from long_term_memory.schemas import LongTermMemory
-from raw_memory.schemas import RawMemory
-from summary_memory.schemas import SummaryMemory
+from memory.agent_memory import AgentMemory
 
 
 class CreateLongTermMemoryService:
@@ -26,16 +24,12 @@ class CreateLongTermMemoryService:
     def __init__(
         self,
         iteration: int,
-        raw_memory: RawMemory,
-        summary_memory: SummaryMemory,
-        long_term_memory: LongTermMemory,
+        agent_memory: AgentMemory,
         goals: Goals,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration
-        self.raw_memory = raw_memory
-        self.summary_memory = summary_memory
-        self.long_term_memory = long_term_memory
+        self.agent_memory = agent_memory
         self.goals = goals
         self.emulator = emulator
 
@@ -47,9 +41,7 @@ class CreateLongTermMemoryService:
         game_state = self.emulator.get_game_state()
         titles = "\n".join(await get_all_long_term_memory_titles())
         prompt = CREATE_LONG_TERM_MEMORY_PROMPT.format(
-            raw_memory=self.raw_memory,
-            summary_memory=self.summary_memory,
-            long_term_memory=self.long_term_memory,
+            agent_memory=self.agent_memory,
             titles=titles,
             player_info=game_state.player_info,
         )

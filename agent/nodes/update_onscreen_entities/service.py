@@ -15,10 +15,8 @@ from database.map_entity_memory.repository import update_map_entity_memory
 from database.map_entity_memory.schemas import MapEntityMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
-from long_term_memory.schemas import LongTermMemory
+from memory.agent_memory import AgentMemory
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
-from raw_memory.schemas import RawMemory
-from summary_memory.schemas import SummaryMemory
 
 
 class UpdateOnscreenEntitiesService:
@@ -28,17 +26,13 @@ class UpdateOnscreenEntitiesService:
         self,
         emulator: YellowLegacyEmulator,
         iteration: int,
-        raw_memory: RawMemory,
+        agent_memory: AgentMemory,
         current_map: OverworldMap,
-        summary_memory: SummaryMemory,
-        long_term_memory: LongTermMemory,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
-        self.raw_memory = raw_memory
+        self.agent_memory = agent_memory
         self.current_map = current_map
-        self.summary_memory = summary_memory
-        self.long_term_memory = long_term_memory
         self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
 
     async def update_onscreen_entities(self) -> None:
@@ -105,9 +99,7 @@ class UpdateOnscreenEntitiesService:
         m_id = self.current_map.id
         entity_text = "\n".join([f"- [{e.index}] {e.to_string(m_id)}" for e in updatable_entities])
         prompt = prompt.format(
-            raw_memory=self.raw_memory,
-            summary_memory=self.summary_memory,
-            long_term_memory=self.long_term_memory,
+            agent_memory=self.agent_memory,
             map_info=self.current_map.to_string(game_state),
             player_info=game_state.player_info,
             entities=entity_text.strip(),

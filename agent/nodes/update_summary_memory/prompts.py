@@ -1,9 +1,7 @@
 UPDATE_SUMMARY_MEMORY_PROMPT = """
 You have taken some actions and have added new information to your raw memory. This is your chance to update your summary memory. Your raw memory is limited to the last {raw_memory_max_size} actions, but you can consolidate and retain any information from your raw memory that you feel is important.
 
-{raw_memory}
-
-{summary_memory}
+{agent_memory}
 
 {player_info}
 

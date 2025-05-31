@@ -21,11 +21,10 @@ class HandleDialogBoxNode(Node[AgentStore]):
         service = HandleDialogBoxService(
             iteration=state.iteration,
             emulator=self.emulator,
-            raw_memory=state.raw_memory,
+            agent_memory=state.agent_memory,
         )
-        handler = await service.handle_dialog_box()
+        agent_memory, handler = await service.handle_dialog_box()
 
-        await store.set_raw_memory(service.raw_memory)
+        await store.set_agent_memory(agent_memory)
         await store.set_handler(handler)
-
         await store.set_emulator_save_state_from_emulator(self.emulator)

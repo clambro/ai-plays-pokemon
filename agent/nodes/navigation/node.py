@@ -26,12 +26,12 @@ class NavigationNode(Node[AgentStore]):
             iteration=state.iteration,
             emulator=self.emulator,
             current_map=state.current_map,
-            raw_memory=state.raw_memory,
+            agent_memory=state.agent_memory,
             args=NavigationArgs.model_validate(state.tool_args),
         )
-        await service.navigate()
+        current_map, agent_memory = await service.navigate()
 
-        await store.set_current_map(service.current_map)
-        await store.set_raw_memory(service.raw_memory)
+        await store.set_current_map(current_map)
+        await store.set_agent_memory(agent_memory)
 
         await store.set_emulator_save_state_from_emulator(self.emulator)

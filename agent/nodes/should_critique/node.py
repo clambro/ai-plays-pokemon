@@ -21,11 +21,9 @@ class ShouldCritiqueNode(Node):
 
         service = ShouldCritiqueService(
             iteration=state.iteration,
-            raw_memory=state.raw_memory,
+            agent_memory=state.agent_memory,
             goals=state.goals,
             emulator=self.emulator,
-            summary_memory=state.summary_memory,
-            long_term_memory=state.long_term_memory,
         )
         should_critique = await service.should_critique()
         await store.set_should_critique(should_critique)
