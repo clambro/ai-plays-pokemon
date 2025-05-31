@@ -10,6 +10,10 @@ class AgentHandlerIs(Condition[AgentState]):
     def __init__(self, handler: AgentStateHandler | None) -> None:
         self.handler = handler
 
+    def __str__(self) -> str:
+        """Return the string representation of the condition."""
+        return f"AgentHandlerIs({self.handler})"
+
     def evaluate(self, state: AgentState) -> bool:
         """Evaluate the condition."""
         if self.handler is None and state.handler is None:
@@ -25,6 +29,10 @@ class ToolIs(Condition[AgentState]):
     def __init__(self, tool: Tool | None) -> None:
         self.tool = tool
 
+    def __str__(self) -> str:
+        """Return the string representation of the condition."""
+        return f"ToolIs({self.tool})"
+
     def evaluate(self, state: AgentState) -> bool:
         """Evaluate the condition."""
         if self.tool is None and state.tool is None:
@@ -39,6 +47,10 @@ class ShouldCritique(Condition[AgentState]):
 
     def __init__(self, should_critique: bool) -> None:
         self.should_critique = should_critique
+
+    def __str__(self) -> str:
+        """Return the string representation of the condition."""
+        return f"ShouldCritique({self.should_critique})"
 
     def evaluate(self, state: AgentState) -> bool:
         """Evaluate the condition."""
