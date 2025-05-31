@@ -8,12 +8,15 @@ Done?
 ### Clean-Up, Refactoring, and Testing
 * Subgraphs for the battle, text, and overworld conditions
 * Add proper source/sink nodes for graphs that need them
+* Parallelize nodes that belong in parallel
 
-* Find some better way to handle the fact that the three memory types almost always appear together
+* Add a string method for each state instead of the agent memory object. The same info can be used in every prompt, then pass state fields only when you actually need to use them.
+
+* Make long term memory retrieval and updates happen either every ten iterations, or when the handler changes
 
 * Add names to all the prompts
 
-* Improve separation of responsibilities and general refactor
+* Get Gemini to give some general refactoring suggestions
 
 * Set up Junjo server and opentelemetry
 
@@ -22,13 +25,14 @@ Done?
 * Fix navigation when Pikachu is on screen. Bumping into it breaks the existing flow.
 
 ### Useful Tools and Additions
+* Add a tool to name things
+
 * Detailed subflow for battles
 * Make the critic tool part of the overworld navigation step? Includes functionality for determining which tools are available at any given iteration.
 * Add a tool to select moves or swap pokemon in battle, or use a ball in non-trainer battles
 * Add a tool for spinning around to find wild pokemon
 * Some kind of info about items and PC pokemon
 * Add a tool to rearrange the team
-* Add a tool to name things
 * Tool to use items
 * Add a grid to the overworld screen and overlay collisions
 * Generate the overworld map legend dynamically
