@@ -1,0 +1,21 @@
+digraph "subflow_M7juKDQ2rDoxZlU8u8SCe" {
+  rankdir=LR;
+  compound=true;
+  node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9];
+  wxTRfRkHxsbftjJbSurlw [label="UpdateCurrentMapNode"];
+  "7dXt9zltsCYGrwDCUfhXn" [label="SinkNode"];
+  nlKyG3PfkB6Qk628mxQfI [label="NavigationNode"];
+  B411yDhXxupk79FNjNJjp [label="CritiqueNode"];
+  sg33urx2CuxmaQDaWezP7 [label="MakeDecisionNode"];
+  ZenO9Ls2TAISJBNBosYSo [label="UpdateOnscreenEntitiesNode"];
+  FYgzwRnXTtw6fYyMkwPGI [label="ShouldCritiqueNode"];
+  wxTRfRkHxsbftjJbSurlw -> ZenO9Ls2TAISJBNBosYSo [style="solid"];
+  ZenO9Ls2TAISJBNBosYSo -> FYgzwRnXTtw6fYyMkwPGI [style="solid"];
+  FYgzwRnXTtw6fYyMkwPGI -> B411yDhXxupk79FNjNJjp [style="dashed", label="ShouldCritique(True)"];
+  B411yDhXxupk79FNjNJjp -> sg33urx2CuxmaQDaWezP7 [style="solid"];
+  FYgzwRnXTtw6fYyMkwPGI -> sg33urx2CuxmaQDaWezP7 [style="dashed", label="ShouldCritique(False)"];
+  sg33urx2CuxmaQDaWezP7 -> nlKyG3PfkB6Qk628mxQfI [style="dashed", label="ToolIs(navigation)"];
+  sg33urx2CuxmaQDaWezP7 -> "7dXt9zltsCYGrwDCUfhXn" [style="dashed", label="ToolIs(None)"];
+  nlKyG3PfkB6Qk628mxQfI -> "7dXt9zltsCYGrwDCUfhXn" [style="solid"];
+}
