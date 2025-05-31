@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from junjo import BaseState, BaseStore
 
+from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
 from memory.agent_memory import AgentMemory
 
@@ -11,6 +12,7 @@ class BattleHandlerState(BaseState):
 
     iteration: int
     agent_memory: AgentMemory
+    goals: Goals
     emulator_save_state: str
     last_emulator_save_state_time: datetime
 
@@ -21,6 +23,10 @@ class BattleHandlerStore(BaseStore[BattleHandlerState]):
     async def set_agent_memory(self, agent_memory: AgentMemory) -> None:
         """Set the agent memory."""
         await self.set_state({"agent_memory": agent_memory})
+
+    async def set_goals(self, goals: Goals) -> None:
+        """Set the goals."""
+        await self.set_state({"goals": goals})
 
     async def set_emulator_save_state_from_emulator(self, emulator: YellowLegacyEmulator) -> None:
         """
@@ -41,6 +47,7 @@ dummy_battle_handler_store = BattleHandlerStore(
     initial_state=BattleHandlerState(
         iteration=0,
         agent_memory=AgentMemory(),
+        goals=Goals(),
         emulator_save_state="",
         last_emulator_save_state_time=datetime.now(),
     ),

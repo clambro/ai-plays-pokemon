@@ -22,6 +22,7 @@ class BattleHandlerSubflow(Subflow[BattleHandlerState, BattleHandlerStore, Agent
         parent_state = await parent_store.get_state()
 
         await self.store.set_agent_memory(parent_state.agent_memory)
+        await self.store.set_goals(parent_state.goals)
         await self.store.set_emulator_save_state_from_emulator(self.emulator)
 
     async def post_run_actions(self, parent_store: AgentStore) -> None:
