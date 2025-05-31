@@ -1,19 +1,19 @@
 from junjo import Node
 from loguru import logger
 
-from agent.nodes.decision_maker_overworld.service import DecisionMakerOverworldService
-from agent.state import AgentStore
+from agent.subflows.overworld_handler.nodes.make_decision.service import MakeDecisionService
+from agent.subflows.overworld_handler.state import OverworldHandlerStore
 from emulator.emulator import YellowLegacyEmulator
 
 
-class DecisionMakerOverworldNode(Node[AgentStore]):
+class MakeDecisionNode(Node[OverworldHandlerStore]):
     """Make a decision based on the current game state in the overworld."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
         self.emulator = emulator
         super().__init__()
 
-    async def service(self, store: AgentStore) -> None:
+    async def service(self, store: OverworldHandlerStore) -> None:
         """The service for the node."""
         logger.info("Running the overworld decision maker...")
 
@@ -22,8 +22,14 @@ class DecisionMakerOverworldNode(Node[AgentStore]):
             raise ValueError(
                 "Current map needs to be set before running the overworld decision maker.",
             )
+        if state.agent_memory is None:
+            raise ValueError("Agent memory is not set")
+        if state.goals is None:
+            raise ValueError("Goals are not set")
+        if state.iteration is None:
+            raise ValueError("Iteration is not set")
 
-        service = DecisionMakerOverworldService(
+        service = MakeDecisionService(
             iteration=state.iteration,
             emulator=self.emulator,
             agent_memory=state.agent_memory,

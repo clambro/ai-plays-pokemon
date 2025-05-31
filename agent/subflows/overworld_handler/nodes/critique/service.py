@@ -1,5 +1,5 @@
-from agent.nodes.critique.prompts import CRITIQUE_PROMPT
-from agent.nodes.critique.schemas import CritiqueResponse
+from agent.subflows.overworld_handler.nodes.critique.prompts import CRITIQUE_PROMPT
+from agent.subflows.overworld_handler.nodes.critique.schemas import CritiqueResponse
 from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator

@@ -1,7 +1,9 @@
 from loguru import logger
 
-from agent.nodes.decision_maker_overworld.prompts import DECISION_MAKER_OVERWORLD_PROMPT
-from agent.nodes.decision_maker_overworld.schemas import (
+from agent.subflows.overworld_handler.nodes.make_decision.prompts import (
+    DECISION_MAKER_OVERWORLD_PROMPT,
+)
+from agent.subflows.overworld_handler.nodes.make_decision.schemas import (
     DecisionMakerOverworldDecision,
     DecisionMakerOverworldResponse,
 )
@@ -15,7 +17,7 @@ from memory.raw_memory import RawMemoryPiece
 from overworld_map.schemas import OverworldMap
 
 
-class DecisionMakerOverworldService:
+class MakeDecisionService:
     """A service that makes decisions based on the current game state in the overworld."""
 
     def __init__(

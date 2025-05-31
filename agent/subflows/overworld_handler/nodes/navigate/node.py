@@ -1,26 +1,32 @@
 from junjo import Node
 from loguru import logger
 
-from agent.nodes.navigation.service import NavigationService
 from agent.schemas import NavigationArgs
-from agent.state import AgentStore
+from agent.subflows.overworld_handler.nodes.navigate.service import NavigationService
+from agent.subflows.overworld_handler.state import OverworldHandlerStore
 from emulator.emulator import YellowLegacyEmulator
 
 
-class NavigationNode(Node[AgentStore]):
+class NavigationNode(Node[OverworldHandlerStore]):
     """Navigate to the given coordinates."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
         self.emulator = emulator
         super().__init__()
 
-    async def service(self, store: AgentStore) -> None:
+    async def service(self, store: OverworldHandlerStore) -> None:
         """The service for the node."""
         logger.info("Navigating to the given coordinates...")
 
         state = await store.get_state()
-        if not state.current_map:
-            raise ValueError("Current map is not set.")
+        if state.iteration is None:
+            raise ValueError("Iteration is not set")
+        if state.agent_memory is None:
+            raise ValueError("Agent memory is not set")
+        if state.current_map is None:
+            raise ValueError("Current map is not set")
+        if state.tool_args is None:
+            raise ValueError("Tool args are not set")
 
         service = NavigationService(
             iteration=state.iteration,

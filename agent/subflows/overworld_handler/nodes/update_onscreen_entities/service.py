@@ -3,12 +3,14 @@ import asyncio
 from loguru import logger
 from PIL.Image import Image
 
-from agent.nodes.update_onscreen_entities.prompts import (
+from agent.subflows.overworld_handler.nodes.update_onscreen_entities.prompts import (
     UPDATE_SIGNS_PROMPT,
     UPDATE_SPRITES_PROMPT,
     UPDATE_WARPS_PROMPT,
 )
-from agent.nodes.update_onscreen_entities.schemas import UpdateEntitiesResponse
+from agent.subflows.overworld_handler.nodes.update_onscreen_entities.schemas import (
+    UpdateEntitiesResponse,
+)
 from common.enums import MapEntityType
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from database.map_entity_memory.repository import update_map_entity_memory

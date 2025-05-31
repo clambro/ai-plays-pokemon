@@ -1,5 +1,5 @@
-from agent.nodes.should_critique.prompts import SHOULD_CRITIQUE_PROMPT
-from agent.nodes.should_critique.schemas import ShouldCritiqueResponse
+from agent.subflows.overworld_handler.nodes.should_critique.prompts import SHOULD_CRITIQUE_PROMPT
+from agent.subflows.overworld_handler.nodes.should_critique.schemas import ShouldCritiqueResponse
 from common.constants import ITERATIONS_PER_CRITIQUE_CHECK
 from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
