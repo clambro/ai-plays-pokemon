@@ -37,10 +37,6 @@ class BattleHandlerStore(BaseStore[BattleHandlerState]):
         """Set the agent memory."""
         await self.set_state({"agent_memory": agent_memory})
 
-    async def set_goals(self, goals: Goals) -> None:
-        """Set the goals."""
-        await self.set_state({"goals": goals})
-
     async def set_emulator_save_state_from_emulator(self, emulator: YellowLegacyEmulator) -> None:
         """
         Set the emulator save state from the emulator, as long as it's been at least 1 second since
