@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from junjo import BaseState, BaseStore
 
+from agent.state import AgentState
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
 from memory.agent_memory import AgentMemory
@@ -10,16 +11,28 @@ from memory.agent_memory import AgentMemory
 class TextHandlerState(BaseState):
     """The state used in the text handler graph workflow."""
 
-    iteration: int
-    agent_memory: AgentMemory
-    goals: Goals
-    emulator_save_state: str
-    last_emulator_save_state_time: datetime
+    iteration: int | None = None
+    agent_memory: AgentMemory | None = None
+    goals: Goals | None = None
+    emulator_save_state: str | None = None
+    last_emulator_save_state_time: datetime | None = None
     needs_generic_handling: bool | None = None
 
 
 class TextHandlerStore(BaseStore[TextHandlerState]):
     """Concrete store for the text handler state."""
+
+    async def set_state_from_parent(self, parent_state: AgentState) -> None:
+        """Set the state from the parent state. Meant to be called at subflow initialization."""
+        await self.set_state(
+            {
+                "iteration": parent_state.iteration,
+                "agent_memory": parent_state.agent_memory,
+                "goals": parent_state.goals,
+                "emulator_save_state": parent_state.emulator_save_state,
+                "last_emulator_save_state_time": parent_state.last_emulator_save_state_time,
+            },
+        )
 
     async def set_agent_memory(self, agent_memory: AgentMemory) -> None:
         """Set the agent memory."""
@@ -46,14 +59,3 @@ class TextHandlerStore(BaseStore[TextHandlerState]):
     async def set_needs_generic_handling(self, needs_generic_handling: bool) -> None:
         """Set the needs generic handling."""
         await self.set_state({"needs_generic_handling": needs_generic_handling})
-
-
-dummy_text_handler_store = TextHandlerStore(
-    initial_state=TextHandlerState(
-        iteration=0,
-        agent_memory=AgentMemory(),
-        goals=Goals(),
-        emulator_save_state="",
-        last_emulator_save_state_time=datetime.now(),
-    ),
-)

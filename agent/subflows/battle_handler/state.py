@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from junjo import BaseState, BaseStore
 
+from agent.state import AgentState
 from common.goals import Goals
 from emulator.emulator import YellowLegacyEmulator
 from memory.agent_memory import AgentMemory
@@ -10,15 +11,27 @@ from memory.agent_memory import AgentMemory
 class BattleHandlerState(BaseState):
     """The state used in the battle handler graph workflow."""
 
-    iteration: int
-    agent_memory: AgentMemory
-    goals: Goals
-    emulator_save_state: str
-    last_emulator_save_state_time: datetime
+    iteration: int | None = None
+    agent_memory: AgentMemory | None = None
+    goals: Goals | None = None
+    emulator_save_state: str | None = None
+    last_emulator_save_state_time: datetime | None = None
 
 
 class BattleHandlerStore(BaseStore[BattleHandlerState]):
     """Concrete store for the battle handler state."""
+
+    async def set_state_from_parent(self, parent_state: AgentState) -> None:
+        """Set the state from the parent state. Meant to be called at subflow initialization."""
+        await self.set_state(
+            {
+                "iteration": parent_state.iteration,
+                "agent_memory": parent_state.agent_memory,
+                "goals": parent_state.goals,
+                "emulator_save_state": parent_state.emulator_save_state,
+                "last_emulator_save_state_time": parent_state.last_emulator_save_state_time,
+            },
+        )
 
     async def set_agent_memory(self, agent_memory: AgentMemory) -> None:
         """Set the agent memory."""
@@ -41,14 +54,3 @@ class BattleHandlerStore(BaseStore[BattleHandlerState]):
             return
         await self.set_state({"emulator_save_state": await emulator.get_emulator_save_state()})
         await self.set_state({"last_emulator_save_state_time": now})
-
-
-dummy_battle_handler_store = BattleHandlerStore(
-    initial_state=BattleHandlerState(
-        iteration=0,
-        agent_memory=AgentMemory(),
-        goals=Goals(),
-        emulator_save_state="",
-        last_emulator_save_state_time=datetime.now(),
-    ),
-)

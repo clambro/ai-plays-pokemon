@@ -18,6 +18,11 @@ class HandleDialogBoxNode(Node[TextHandlerStore]):
         logger.info("Handling the dialog box if it is present...")
 
         state = await store.get_state()
+        if state.iteration is None:
+            raise ValueError("Iteration is not set")
+        if state.agent_memory is None:
+            raise ValueError("Agent memory is not set")
+
         service = HandleDialogBoxService(
             iteration=state.iteration,
             emulator=self.emulator,

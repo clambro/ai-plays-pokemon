@@ -1,4 +1,5 @@
 from junjo import Graph, Subflow
+from loguru import logger
 
 from agent.state import AgentState, AgentStore
 from agent.subflows.battle_handler.state import BattleHandlerState, BattleHandlerStore
@@ -19,11 +20,12 @@ class BattleHandlerSubflow(Subflow[BattleHandlerState, BattleHandlerStore, Agent
 
     async def pre_run_actions(self, parent_store: AgentStore) -> None:
         """Pre run actions that initialize the subflow store from the parent store."""
-        parent_state = await parent_store.get_state()
+        subflow_state = await self.store.get_state()
+        if any(v is not None for v in subflow_state.model_dump().values()):
+            logger.warning("Battle handler state is not empty at subflow initialization.")
 
-        await self.store.set_agent_memory(parent_state.agent_memory)
-        await self.store.set_goals(parent_state.goals)
-        await self.store.set_emulator_save_state_from_emulator(self.emulator)
+        parent_state = await parent_store.get_state()
+        await self.store.set_state_from_parent(parent_state)
 
     async def post_run_actions(self, parent_store: AgentStore) -> None:
         """Post run actions that update the parent store with the subflow's state."""
