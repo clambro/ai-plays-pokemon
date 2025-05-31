@@ -4,8 +4,6 @@ from agent.conditions import AgentHandlerIs, ShouldCritique, ToolIs
 from agent.nodes.create_long_term_memory.node import CreateLongTermMemoryNode
 from agent.nodes.critique.node import CritiqueNode
 from agent.nodes.decision_maker_overworld.node import DecisionMakerOverworldNode
-from agent.nodes.decision_maker_text.node import DecisionMakerTextNode
-from agent.nodes.handle_dialog_box.node import HandleDialogBoxNode
 from agent.nodes.navigation.node import NavigationNode
 from agent.nodes.retrieve_long_term_memory.node import RetrieveLongTermMemoryNode
 from agent.nodes.should_critique.node import ShouldCritiqueNode
@@ -18,6 +16,9 @@ from agent.nodes.update_summary_memory.node import UpdateSummaryMemoryNode
 from agent.subflows.battle_handler.graph import build_battle_handler_subflow_graph
 from agent.subflows.battle_handler.state import dummy_battle_handler_store
 from agent.subflows.battle_handler.subflow import BattleHandlerSubflow
+from agent.subflows.text_handler.graph import build_text_handler_subflow_graph
+from agent.subflows.text_handler.state import dummy_text_handler_store
+from agent.subflows.text_handler.subflow import TextHandlerSubflow
 from common.enums import AgentStateHandler, Tool
 from emulator.emulator import YellowLegacyEmulator
 
@@ -31,8 +32,6 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     critique = CritiqueNode(emulator)
     update_onscreen_entities = UpdateOnscreenEntitiesNode(emulator)
     decision_maker_overworld = DecisionMakerOverworldNode(emulator)
-    decision_maker_text = DecisionMakerTextNode(emulator)
-    handle_dialog_box = HandleDialogBoxNode(emulator)
     update_goals = UpdateGoalsNode(emulator)
     update_summary_memory = UpdateSummaryMemoryNode(emulator)
     navigation = NavigationNode(emulator)
@@ -42,6 +41,11 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     battle_handler_subflow = BattleHandlerSubflow(
         graph=build_battle_handler_subflow_graph(emulator),
         store=dummy_battle_handler_store,
+        emulator=emulator,
+    )
+    text_handler_subflow = TextHandlerSubflow(
+        graph=build_text_handler_subflow_graph(emulator),
+        store=dummy_text_handler_store,
         emulator=emulator,
     )
 
@@ -96,21 +100,11 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             ),
             Edge(
                 retrieve_long_term_memory,
-                handle_dialog_box,
+                text_handler_subflow,
                 AgentHandlerIs(AgentStateHandler.TEXT),
             ),
             Edge(
-                handle_dialog_box,
-                decision_maker_text,
-                AgentHandlerIs(AgentStateHandler.TEXT),
-            ),
-            Edge(
-                handle_dialog_box,
-                update_goals,
-                AgentHandlerIs(None),
-            ),
-            Edge(
-                decision_maker_text,
+                text_handler_subflow,
                 update_goals,
             ),
             Edge(

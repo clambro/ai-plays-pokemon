@@ -1,6 +1,5 @@
 import asyncio
 
-from common.enums import AgentStateHandler
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
 from emulator.schemas import DialogBox
@@ -21,16 +20,17 @@ class HandleDialogBoxService:
         self.emulator = emulator
         self.agent_memory = agent_memory
 
-    async def handle_dialog_box(self) -> tuple[AgentMemory, AgentStateHandler | None]:
+    async def handle_dialog_box(self) -> tuple[AgentMemory, bool]:
         """
         Handle reading the dialog box if it is present.
 
-        :return: The handler to set in the state.
+        :return: The agent memory and a boolean indicating whether we need to follow up with the
+            generic text handler.
         """
         game_state = self.emulator.get_game_state()
         dialog_box = game_state.get_dialog_box()
         if not dialog_box:
-            return self.agent_memory, AgentStateHandler.TEXT  # Go to the generic text handler.
+            return self.agent_memory, True  # Go to the generic text handler.
 
         text: list[str] = []
         is_blinking_cursor = True
@@ -59,9 +59,9 @@ class HandleDialogBoxService:
         )
         if game_state.is_text_on_screen():
             # More work to do. Pass to the generic text handler.
-            return self.agent_memory, AgentStateHandler.TEXT
+            return self.agent_memory, True
         else:
-            return self.agent_memory, None  # All text is gone, so go to the next agent loop.
+            return self.agent_memory, False  # All text is gone, so go to the next agent loop.
 
     @staticmethod
     def _append_dialog_to_list(text: list[str], dialog_box: DialogBox) -> None:

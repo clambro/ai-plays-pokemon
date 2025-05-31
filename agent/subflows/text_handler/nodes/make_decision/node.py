@@ -1,30 +1,31 @@
 from junjo import Node
 from loguru import logger
 
-from agent.nodes.handle_dialog_box.service import HandleDialogBoxService
-from agent.state import AgentStore
+from agent.subflows.text_handler.nodes.make_decision.service import DecisionMakerTextService
+from agent.subflows.text_handler.state import TextHandlerStore
 from emulator.emulator import YellowLegacyEmulator
 
 
-class HandleDialogBoxNode(Node[AgentStore]):
-    """Handle reading the dialog box if it is present."""
+class MakeDecisionNode(Node[TextHandlerStore]):
+    """Make a decision based on the current game state in the text."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
         self.emulator = emulator
         super().__init__()
 
-    async def service(self, store: AgentStore) -> None:
+    async def service(self, store: TextHandlerStore) -> None:
         """The service for the node."""
-        logger.info("Handling the dialog box if it is present...")
+        logger.info("Running the text decision maker...")
 
         state = await store.get_state()
-        service = HandleDialogBoxService(
+        service = DecisionMakerTextService(
             iteration=state.iteration,
             emulator=self.emulator,
             agent_memory=state.agent_memory,
+            goals=state.goals,
         )
-        agent_memory, handler = await service.handle_dialog_box()
+
+        agent_memory = await service.make_decision()
 
         await store.set_agent_memory(agent_memory)
-        await store.set_handler(handler)
         await store.set_emulator_save_state_from_emulator(self.emulator)

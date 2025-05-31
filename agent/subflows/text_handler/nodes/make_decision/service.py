@@ -1,7 +1,7 @@
 from loguru import logger
 
-from agent.nodes.decision_maker_text.prompts import DECISION_MAKER_TEXT_PROMPT
-from agent.nodes.decision_maker_text.schemas import DecisionMakerTextResponse
+from agent.subflows.text_handler.nodes.make_decision.prompts import DECISION_MAKER_TEXT_PROMPT
+from agent.subflows.text_handler.nodes.make_decision.schemas import DecisionMakerTextResponse
 from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from emulator.emulator import YellowLegacyEmulator
