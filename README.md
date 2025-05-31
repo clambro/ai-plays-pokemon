@@ -6,23 +6,22 @@
 Done?
 
 ### Clean-Up, Refactoring, and Testing
-* Subgraphs for the battle, text, and overworld conditions
-* Add proper source/sink nodes for graphs that need them
-* Parallelize nodes that belong in parallel
-
 * Add a string method for each state instead of the agent memory object. The same info can be used in every prompt, then pass state fields only when you actually need to use them.
+
+* Parallelize nodes that belong in parallel
+* In the overworld handler, we should have one node for loading the map and another node for updating it. The logic is weirdly split at the moment. Also rename the UpdateAgentStoreNode to PrepareAgentStoreNode.
 
 * Make long term memory retrieval and updates happen either every ten iterations, or when the handler changes
 
 * Add names to all the prompts
 
-* Get Gemini to give some general refactoring suggestions
+* Get Gemini to give some general architecture refactoring suggestions
 
 * Set up Junjo server and opentelemetry
 
 * Add tests to everything
 
-* Fix navigation when Pikachu is on screen. Bumping into it breaks the existing flow.
+* Fix the navigation tool: When Pikachu is on screen, bumping into it breaks the existing flow.
 
 ### Useful Tools and Additions
 * Add a tool to name things
@@ -53,5 +52,10 @@ Done?
 
 ## Notes
 * Numerical coords on screen? Dots to show past steps? Maybe when I have tests set up.
-* Test Junjo for editing state lists in place
-* Some better way of doing RAG that doesn't involve reading everything into memory. Might need to switch DBs for this.
+* Some better way of doing RAG that doesn't involve reading everything into memory would be nice. Might need to switch DBs for this.
+
+## Junjo Thoughts
+* If I edit a list in place does it change it in the state?
+* Visualization is not idempotent because the dot file changes
+* Subflow visualizations don't have consistent file names
+* Trivial subgraphs with a single node and no edges don't display anything
