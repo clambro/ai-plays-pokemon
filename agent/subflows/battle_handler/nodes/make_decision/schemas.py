@@ -3,8 +3,8 @@ from pydantic import BaseModel
 from emulator.enums import Button
 
 
-class DecisionMakerBattleResponse(BaseModel):
-    """The response from the battle decision maker prompt."""
+class MakeDecisionResponse(BaseModel):
+    """The response from the battle handler make decision prompt."""
 
     thoughts: str
     button: Button
