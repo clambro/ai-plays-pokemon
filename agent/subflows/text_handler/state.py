@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from agent.state import AgentState
 from common.goals import Goals
@@ -12,8 +10,6 @@ class TextHandlerState(BaseStateWithEmulator):
     iteration: int | None = None
     agent_memory: AgentMemory | None = None
     goals: Goals | None = None
-    emulator_save_state: str | None = None
-    last_emulator_save_state_time: datetime | None = None
     needs_generic_handling: bool | None = None
 
 
@@ -27,8 +23,6 @@ class TextHandlerStore(BaseStoreWithEmulator[TextHandlerState]):
                 "iteration": parent_state.iteration,
                 "agent_memory": parent_state.agent_memory,
                 "goals": parent_state.goals,
-                "emulator_save_state": parent_state.emulator_save_state,
-                "last_emulator_save_state_time": parent_state.last_emulator_save_state_time,
             },
         )
 

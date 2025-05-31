@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from pydantic import BaseModel
 
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
@@ -20,8 +18,6 @@ class OverworldHandlerState(BaseStateWithEmulator):
     should_critique: bool | None = None
     tool: Tool | None = None
     tool_args: BaseModel | None = None
-    emulator_save_state: str | None = None
-    last_emulator_save_state_time: datetime | None = None
     needs_generic_handling: bool | None = None
 
 
@@ -35,8 +31,6 @@ class OverworldHandlerStore(BaseStoreWithEmulator[OverworldHandlerState]):
                 "iteration": parent_state.iteration,
                 "agent_memory": parent_state.agent_memory,
                 "goals": parent_state.goals,
-                "emulator_save_state": parent_state.emulator_save_state,
-                "last_emulator_save_state_time": parent_state.last_emulator_save_state_time,
             },
         )
 

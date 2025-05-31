@@ -1,10 +1,10 @@
 from junjo import Condition
 
-from agent.state import AgentState
+from agent.subflows.overworld_handler.state import OverworldHandlerState
 from common.enums import Tool
 
 
-class ToolIs(Condition[AgentState]):
+class ToolIs(Condition[OverworldHandlerState]):
     """A condition that checks if the tool equals a value."""
 
     def __init__(self, tool: Tool | None) -> None:
@@ -14,7 +14,7 @@ class ToolIs(Condition[AgentState]):
         """Return the string representation of the condition."""
         return f"ToolIs({self.tool})"
 
-    def evaluate(self, state: AgentState) -> bool:
+    def evaluate(self, state: OverworldHandlerState) -> bool:
         """Evaluate the condition."""
         if self.tool is None and state.tool is None:
             return True
@@ -23,7 +23,7 @@ class ToolIs(Condition[AgentState]):
         return False
 
 
-class ShouldCritique(Condition[AgentState]):
+class ShouldCritique(Condition[OverworldHandlerState]):
     """A condition that checks if the agent should_critique value matches a value."""
 
     def __init__(self, should_critique: bool) -> None:
@@ -33,6 +33,6 @@ class ShouldCritique(Condition[AgentState]):
         """Return the string representation of the condition."""
         return f"ShouldCritique({self.should_critique})"
 
-    def evaluate(self, state: AgentState) -> bool:
+    def evaluate(self, state: OverworldHandlerState) -> bool:
         """Evaluate the condition."""
         return state.should_critique == self.should_critique

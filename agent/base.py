@@ -5,18 +5,14 @@ from junjo import BaseState, BaseStore
 
 from emulator.emulator import YellowLegacyEmulator
 
+_StateWithEmulatorT = TypeVar("_StateWithEmulatorT", bound="BaseStateWithEmulator")
+
 
 class BaseStateWithEmulator(BaseState):
-    """
-    Base state with emulator save state attributes. Should default to None in subclasses. If you
-    forget to set these in a subclass, the type checker will catch it.
-    """
+    """Base state with emulator save state attributes."""
 
-    emulator_save_state: str | None
-    last_emulator_save_state_time: datetime | None
-
-
-_StateWithEmulatorT = TypeVar("_StateWithEmulatorT", bound=BaseStateWithEmulator)
+    emulator_save_state: str | None = None
+    last_emulator_save_state_time: datetime | None = None
 
 
 class BaseStoreWithEmulator(BaseStore[_StateWithEmulatorT]):
