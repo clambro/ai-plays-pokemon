@@ -39,12 +39,15 @@ class UpdateSummaryMemoryService:
             prompt,
             UpdateSummaryMemoryResponse,
         )
-        memories = [
-            SummaryMemoryPiece(
-                iteration=self.iteration,
-                content=memory.description,
-                importance=memory.importance,
-            )
-            for memory in response.memories
-        ]
-        return SummaryMemory(pieces=memories)
+        self.summary_memory.append(
+            self.iteration,
+            *[
+                SummaryMemoryPiece(
+                    iteration=self.iteration,
+                    content=memory.description,
+                    importance=memory.importance,
+                )
+                for memory in response.memories
+            ],
+        )
+        return self.summary_memory
