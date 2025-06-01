@@ -44,8 +44,7 @@ class AssignNameService:
         name = await self._get_desired_name()  # TODO: Handle invalid names.
         name = list(name.upper())
 
-        while name:
-            letter = name.pop(0)
+        for letter in name:
             argwhere_letter = np.argwhere(LETTER_ARR == letter)
             if len(argwhere_letter) != 1:
                 raise ValueError(f"Invalid letter: {letter}")

@@ -17,6 +17,7 @@ Your response must be in the JSON format described below, with the keys defined 
 Guidelines for updating long-term memory objects:
 - Never include coordinates in your content (e.g. for warp points, sprites, etc.). The game's memory will provide coordinate information as needed.
 - Each piece of long-term memory is meant to be a document containing polished notes on a specific topic. Do not fill your content with useless noise straight from your raw and summary memories. Everything in your long-term memory should be useful to you.
+- You can only update the long-term memory objects that are listed above. Attempting to update a long-term memory object that is not listed above will result in an error.
 
 Remember that you do not have to update any long-term memory objects here if you don't have anything to add. An empty list is a perfectly valid response. When in doubt, don't make any updates.
 """
