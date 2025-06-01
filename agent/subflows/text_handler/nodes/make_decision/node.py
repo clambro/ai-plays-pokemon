@@ -22,14 +22,12 @@ class MakeDecisionNode(Node[TextHandlerStore]):
             raise ValueError("Iteration is not set")
         if state.agent_memory is None:
             raise ValueError("Agent memory is not set")
-        if state.goals is None:
-            raise ValueError("Goals are not set")
 
         service = DecisionMakerTextService(
             iteration=state.iteration,
-            emulator=self.emulator,
             agent_memory=state.agent_memory,
-            goals=state.goals,
+            state_string_builder=state.to_prompt_string,
+            emulator=self.emulator,
         )
 
         agent_memory = await service.make_decision()

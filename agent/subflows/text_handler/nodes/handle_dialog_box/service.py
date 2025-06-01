@@ -13,12 +13,12 @@ class HandleDialogBoxService:
     def __init__(
         self,
         iteration: int,
-        emulator: YellowLegacyEmulator,
         agent_memory: AgentMemory,
+        emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration
-        self.emulator = emulator
         self.agent_memory = agent_memory
+        self.emulator = emulator
 
     async def handle_dialog_box(self) -> tuple[AgentMemory, bool]:
         """

@@ -25,8 +25,8 @@ class HandleDialogBoxNode(Node[TextHandlerStore]):
 
         service = HandleDialogBoxService(
             iteration=state.iteration,
-            emulator=self.emulator,
             agent_memory=state.agent_memory,
+            emulator=self.emulator,
         )
         agent_memory, needs_generic_handling = await service.handle_dialog_box()
 

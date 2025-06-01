@@ -1,6 +1,7 @@
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from agent.state import AgentState
 from common.goals import Goals
+from emulator.game_state import YellowLegacyGameState
 from memory.agent_memory import AgentMemory
 
 
@@ -11,6 +12,11 @@ class TextHandlerState(BaseStateWithEmulator):
     agent_memory: AgentMemory | None = None
     goals: Goals | None = None
     needs_generic_handling: bool | None = None
+
+    def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
+        """Get a string representation of the agent and game state to be used in prompts."""
+        player_info = game_state.player_info
+        return "\n\n".join((str(self.agent_memory), str(self.goals), str(player_info)))
 
 
 class TextHandlerStore(BaseStoreWithEmulator[TextHandlerState]):
