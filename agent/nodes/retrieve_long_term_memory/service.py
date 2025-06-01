@@ -1,6 +1,6 @@
 from agent.nodes.retrieve_long_term_memory.prompts import GET_RETRIEVAL_QUERY_PROMPT
-from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
+from common.types import StateStringBuilder
 from emulator.emulator import YellowLegacyEmulator
 from memory.agent_memory import AgentMemory
 from memory.retrieval_service import MemoryRetrievalService
@@ -14,26 +14,22 @@ class RetrieveLongTermMemoryService:
 
     def __init__(
         self,
-        emulator: YellowLegacyEmulator,
         iteration: int,
         agent_memory: AgentMemory,
-        goals: Goals,
+        state_string_builder: StateStringBuilder,
+        emulator: YellowLegacyEmulator,
     ) -> None:
-        self.emulator = emulator
         self.iteration = iteration
         self.agent_memory = agent_memory
-        self.goals = goals
+        self.state_string_builder = state_string_builder
+        self.emulator = emulator
 
     async def retrieve_long_term_memory(self) -> AgentMemory:
         """Retrieve the long-term memory."""
         game_state = self.emulator.get_game_state()
         screenshot = self.emulator.get_screenshot()
 
-        prompt = GET_RETRIEVAL_QUERY_PROMPT.format(
-            agent_memory=self.agent_memory,
-            player_info=game_state.player_info,
-            goals=self.goals,
-        )
+        prompt = GET_RETRIEVAL_QUERY_PROMPT.format(state=self.state_string_builder(game_state))
         query = await self.llm_service.get_llm_response([screenshot, prompt], thinking_tokens=None)
 
         memories = await self.retrieval_service.get_most_relevant_memories(query, self.iteration)

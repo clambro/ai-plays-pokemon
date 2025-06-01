@@ -5,6 +5,7 @@ from pydantic import Field
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from common.enums import AgentStateHandler
 from common.goals import Goals
+from emulator.game_state import YellowLegacyGameState
 from memory.agent_memory import AgentMemory
 
 
@@ -14,8 +15,13 @@ class AgentState(BaseStateWithEmulator):
     folder: Path
     iteration: int = 0
     agent_memory: AgentMemory = Field(default_factory=AgentMemory)
-    handler: AgentStateHandler | None = None
     goals: Goals = Field(default_factory=Goals)
+    handler: AgentStateHandler | None = None
+
+    def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
+        """Get a string representation of the agent and game state to be used in prompts."""
+        player_info = game_state.player_info
+        return "\n\n".join((str(self.agent_memory), str(self.goals), str(player_info)))
 
 
 class AgentStore(BaseStoreWithEmulator[AgentState]):

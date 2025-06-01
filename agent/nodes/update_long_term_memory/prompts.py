@@ -1,9 +1,7 @@
 UPDATE_LONG_TERM_MEMORY_PROMPT = """
 You are being given the chance to update your currently available long-term memory objects with any new information that you have learned.
 
-{agent_memory}
-
-{player_info}
+{state}
 
 The above memories are the only memories that you have access to at the moment. You can only update memories from the above list.
 

@@ -1,11 +1,7 @@
 GET_RETRIEVAL_QUERY_PROMPT = """
 It is your job to come up with a query string for the long-term memory retrieval service. Your query string will be matched semantically against pieces of long-term memory stored in the database, and whichever pieces are most relevant will be returned for use in the current agent context. Here is the relevant information, including the long term memory objects that were retrieved in the previous iteration:
 
-{agent_memory}
-
-{player_info}
-
-{goals}
+{state}
 
 Some useful things to include in your query string are:
 - The map you are currently on

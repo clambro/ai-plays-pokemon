@@ -22,7 +22,7 @@ class UpdateLongTermMemoryNode(Node[AgentStore]):
         service = UpdateLongTermMemoryService(
             iteration=state.iteration,
             agent_memory=state.agent_memory,
-            goals=state.goals,
+            state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
         await service.update_long_term_memory()

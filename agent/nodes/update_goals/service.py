@@ -5,25 +5,26 @@ from agent.nodes.update_goals.schemas import UpdateGoalsResponse
 from common.constants import ITERATIONS_PER_GOAL_UPDATE
 from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
+from common.types import StateStringBuilder
 from emulator.emulator import YellowLegacyEmulator
-from memory.agent_memory import AgentMemory
 
 
 class UpdateGoalsService:
     """Service for updating the goals."""
 
+    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+
     def __init__(
         self,
         emulator: YellowLegacyEmulator,
         iteration: int,
-        agent_memory: AgentMemory,
         goals: Goals,
+        state_string_builder: StateStringBuilder,
     ) -> None:
-        self.emulator = emulator
         self.iteration = iteration
-        self.agent_memory = agent_memory
         self.goals = goals
-        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+        self.state_string_builder = state_string_builder
+        self.emulator = emulator
 
     async def update_goals(self) -> Goals:
         """Update the goals based on the latest memory and actions."""
@@ -31,11 +32,7 @@ class UpdateGoalsService:
             return self.goals
 
         game_state = self.emulator.get_game_state()
-        prompt = UPDATE_GOALS_PROMPT.format(
-            agent_memory=self.agent_memory,
-            player_info=game_state.player_info,
-            goals=self.goals,
-        )
+        prompt = UPDATE_GOALS_PROMPT.format(state=self.state_string_builder(game_state))
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=prompt,

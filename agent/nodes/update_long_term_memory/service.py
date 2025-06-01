@@ -3,8 +3,8 @@ from loguru import logger
 from agent.nodes.update_long_term_memory.prompts import UPDATE_LONG_TERM_MEMORY_PROMPT
 from agent.nodes.update_long_term_memory.schemas import UpdateLongTermMemoryResponse, UpdateType
 from common.embedding_service import GeminiEmbeddingService
-from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
+from common.types import StateStringBuilder
 from database.long_term_memory.repository import update_long_term_memory
 from database.long_term_memory.schemas import LongTermMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
@@ -21,12 +21,12 @@ class UpdateLongTermMemoryService:
         self,
         iteration: int,
         agent_memory: AgentMemory,
-        goals: Goals,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration
         self.agent_memory = agent_memory
-        self.goals = goals
+        self.state_string_builder = state_string_builder
         self.emulator = emulator
 
     async def update_long_term_memory(self) -> None:
@@ -35,10 +35,7 @@ class UpdateLongTermMemoryService:
             return
 
         game_state = self.emulator.get_game_state()
-        prompt = UPDATE_LONG_TERM_MEMORY_PROMPT.format(
-            agent_memory=self.agent_memory,
-            player_info=game_state.player_info,
-        )
+        prompt = UPDATE_LONG_TERM_MEMORY_PROMPT.format(state=self.state_string_builder(game_state))
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 prompt,
