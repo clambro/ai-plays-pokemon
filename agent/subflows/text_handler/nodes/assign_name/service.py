@@ -22,7 +22,7 @@ LETTER_ARR = np.array(
 class AssignNameService:
     """A service that assigns a name to something in the game."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH_LITE)
 
     def __init__(
         self,
@@ -51,35 +51,18 @@ class AssignNameService:
 
         try:
             name = await self._get_desired_name(game_state)
+            await self._enter_name(name)
         except Exception as e:  # noqa: BLE001
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
                         f"I attempted to enter an invalid name: {e}."
-                        f" I need to try again and pay closer attention to the rules."
+                        f" I need to pay closer attention to the rules and try again."
                     ),
                 ),
             )
             return self.raw_memory
-
-        name = name.upper()
-        for letter in name:
-            argwhere_letter = np.argwhere(LETTER_ARR == letter)
-            if len(argwhere_letter) != 1:
-                raise ValueError(f"Invalid letter: {letter}")
-
-            letter_loc: tuple[int, int] = tuple(argwhere_letter[0])
-            cursor_loc = game_state.screen.cursor_index
-            dir_buttons = self._get_dir_buttons(letter_loc, cursor_loc)
-
-            await self.emulator.press_buttons(
-                [*dir_buttons, Button.A],
-                frames_between=GAME_TICKS_PER_SECOND // 2,
-            )
-            game_state = self.emulator.get_game_state()
-
-        await self.emulator.press_buttons([Button.START])  # Accept the name.
 
         self.raw_memory.append(
             RawMemoryPiece(
@@ -99,6 +82,25 @@ class AssignNameService:
         )
         self.raw_memory.append(RawMemoryPiece(iteration=self.iteration, content=response.thoughts))
         return response.name
+
+    async def _enter_name(self, name: str) -> None:
+        """Enter the name into the game."""
+        for letter in name:
+            game_state = self.emulator.get_game_state()
+            argwhere_letter = np.argwhere(LETTER_ARR == letter)
+            if len(argwhere_letter) != 1:
+                raise ValueError(f"Invalid letter: {letter}")
+
+            letter_loc: tuple[int, int] = tuple(argwhere_letter[0])
+            cursor_loc = game_state.screen.cursor_index
+            dir_buttons = self._get_dir_buttons(letter_loc, cursor_loc)
+
+            await self.emulator.press_buttons(
+                [*dir_buttons, Button.A],
+                frames_between=GAME_TICKS_PER_SECOND // 2,
+            )
+
+        await self.emulator.press_buttons([Button.START])  # Accept the name.
 
     def _get_dir_buttons(self, letter_loc: tuple[int, int], cursor_loc: int) -> list[Button]:
         """
