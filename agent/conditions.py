@@ -1,7 +1,7 @@
 from junjo import Condition
 
+from agent.enums import AgentStateHandler
 from agent.state import AgentState
-from common.enums import AgentStateHandler
 
 
 class AgentHandlerIs(Condition[AgentState]):

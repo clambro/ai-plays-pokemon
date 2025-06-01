@@ -1,6 +1,7 @@
 from junjo import Edge, Graph, RunConcurrent
 
 from agent.conditions import AgentHandlerIs, ShouldRetrieveMemory
+from agent.enums import AgentStateHandler
 from agent.nodes.create_long_term_memory.node import CreateLongTermMemoryNode
 from agent.nodes.dummy.node import DummyNode
 from agent.nodes.prepare_agent_store.node import PrepareAgentStoreNode
@@ -18,7 +19,6 @@ from agent.subflows.overworld_handler.subflow import OverworldHandlerSubflow
 from agent.subflows.text_handler.graph import build_text_handler_subflow_graph
 from agent.subflows.text_handler.state import TextHandlerState, TextHandlerStore
 from agent.subflows.text_handler.subflow import TextHandlerSubflow
-from common.enums import AgentStateHandler
 from emulator.emulator import YellowLegacyEmulator
 
 

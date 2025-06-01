@@ -1,11 +1,12 @@
 from loguru import logger
 
+from agent.subflows.overworld_handler.enums import OverworldTool
 from agent.subflows.overworld_handler.nodes.make_decision.prompts import MAKE_DECISION_PROMPT
 from agent.subflows.overworld_handler.nodes.make_decision.schemas import (
     Decision,
     MakeDecisionResponse,
 )
-from common.enums import AsciiTiles, Tool
+from common.enums import AsciiTiles
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilder
 from emulator.emulator import YellowLegacyEmulator
@@ -64,7 +65,7 @@ class MakeDecisionService:
             )
             return Decision(
                 raw_memory=self.raw_memory,
-                tool=Tool.NAVIGATION,
+                tool=OverworldTool.NAVIGATION,
                 navigation_args=response.navigation_args,
             )
         if response.button:

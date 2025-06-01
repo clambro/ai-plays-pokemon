@@ -1,20 +1,6 @@
 from enum import StrEnum
 
 
-class AgentStateHandler(StrEnum):
-    """An enum for the different state handlers."""
-
-    OVERWORLD = "overworld"
-    BATTLE = "battle"
-    TEXT = "text"
-
-
-class Tool(StrEnum):
-    """An enum for the different tools."""
-
-    NAVIGATION = "navigation"
-
-
 class AsciiTiles(StrEnum):
     """An enum for the ASCII representations of overworld map tiles."""
 

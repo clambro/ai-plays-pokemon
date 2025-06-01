@@ -3,7 +3,7 @@ from pathlib import Path
 from pydantic import Field
 
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
-from common.enums import AgentStateHandler
+from agent.enums import AgentStateHandler
 from common.goals import Goals
 from emulator.game_state import YellowLegacyGameState
 from memory.long_term_memory import LongTermMemory
