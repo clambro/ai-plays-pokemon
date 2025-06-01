@@ -26,6 +26,7 @@ class MakeDecisionNode(Node[BattleHandlerStore]):
         service = MakeDecisionService(
             iteration=state.iteration,
             agent_memory=state.agent_memory,
+            state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
 

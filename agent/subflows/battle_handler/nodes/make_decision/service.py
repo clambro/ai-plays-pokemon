@@ -3,6 +3,7 @@ from loguru import logger
 from agent.subflows.battle_handler.nodes.make_decision.prompts import MAKE_DECISION_PROMPT
 from agent.subflows.battle_handler.nodes.make_decision.schemas import MakeDecisionResponse
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
+from common.types import StateStringBuilder
 from emulator.emulator import YellowLegacyEmulator
 from memory.agent_memory import AgentMemory
 from memory.raw_memory import RawMemoryPiece
@@ -11,16 +12,19 @@ from memory.raw_memory import RawMemoryPiece
 class MakeDecisionService:
     """A service that makes decisions based on the current game state in the battle."""
 
+    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+
     def __init__(
         self,
         iteration: int,
-        emulator: YellowLegacyEmulator,
         agent_memory: AgentMemory,
+        state_string_builder: StateStringBuilder,
+        emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration
-        self.emulator = emulator
-        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
         self.agent_memory = agent_memory
+        self.state_string_builder = state_string_builder
+        self.emulator = emulator
 
     async def make_decision(self) -> AgentMemory:
         """
@@ -29,7 +33,9 @@ class MakeDecisionService:
         :return: The agent memory with the decision added.
         """
         img = self.emulator.get_screenshot()
-        prompt = MAKE_DECISION_PROMPT.format(agent_memory=self.agent_memory)
+        game_state = self.emulator.get_game_state()
+        state_string = self.state_string_builder(game_state)
+        prompt = MAKE_DECISION_PROMPT.format(state=state_string)
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[img, prompt],
