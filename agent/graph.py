@@ -1,4 +1,4 @@
-from junjo import Edge, Graph
+from junjo import Edge, Graph, RunConcurrent
 
 from agent.conditions import AgentHandlerIs
 from agent.nodes.create_long_term_memory.node import CreateLongTermMemoryNode
@@ -45,12 +45,25 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
         emulator=emulator,
     )
 
+    do_concurrent_updates = RunConcurrent(
+        name="DoConcurrentUpdates",
+        items=[
+            update_goals,
+            update_summary_memory,
+            create_long_term_memory,
+        ],
+    )
+
     return Graph(
         source=update_agent_store,
-        sink=update_summary_memory,
+        sink=do_concurrent_updates,
         edges=[
             Edge(
                 update_agent_store,
+                update_long_term_memory,
+            ),
+            Edge(
+                update_long_term_memory,
                 retrieve_long_term_memory,
             ),
             Edge(
@@ -70,27 +83,15 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             ),
             Edge(
                 text_handler_subflow,
-                update_goals,
+                do_concurrent_updates,
             ),
             Edge(
                 battle_handler_subflow,
-                update_goals,
+                do_concurrent_updates,
             ),
             Edge(
                 overworld_handler_subflow,
-                update_goals,
-            ),
-            Edge(
-                update_goals,
-                create_long_term_memory,
-            ),
-            Edge(
-                create_long_term_memory,
-                update_long_term_memory,
-            ),
-            Edge(
-                update_long_term_memory,
-                update_summary_memory,
+                do_concurrent_updates,
             ),
         ],
     )

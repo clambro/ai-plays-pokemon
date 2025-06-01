@@ -6,7 +6,6 @@
 Done?
 
 ### Clean-Up, Refactoring, and Testing
-* Parallelize nodes that belong in parallel
 * In the overworld handler, we should have one node for loading the map and another node for updating it. The logic is weirdly split at the moment. Also rename the UpdateAgentStoreNode to PrepareAgentStoreNode.
 
 * Make long term memory retrieval and updates happen either every ten iterations, or when the handler changes
