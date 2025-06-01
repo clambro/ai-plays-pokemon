@@ -150,7 +150,7 @@ class YellowLegacyGameState(BaseModel):
             signs=on_screen_signs,
         )
 
-    def get_on_screen_text(self) -> str:
+    def get_onscreen_text(self) -> str:
         """Get the text on the screen as a string."""
         tiles = np.array(self.screen.tiles)
         return "\n".join("".join(INT_TO_CHAR_MAP.get(t, " ") for t in row) for row in tiles)

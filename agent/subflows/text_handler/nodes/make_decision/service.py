@@ -36,7 +36,7 @@ class DecisionMakerTextService:
         state_string = self.state_string_builder(game_state)
         prompt = DECISION_MAKER_TEXT_PROMPT.format(
             state=state_string,
-            text=game_state.get_on_screen_text(),
+            text=game_state.get_onscreen_text(),
         )
         try:
             response = await self.llm_service.get_llm_response_pydantic(
