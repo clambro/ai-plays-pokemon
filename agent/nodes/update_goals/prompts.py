@@ -1,11 +1,7 @@
 UPDATE_GOALS_PROMPT = """
 You have just taken an action and added new information to your memory. If you you feel that recent events warrant removing/completing past goals, or adding new goals, this is your chance to do so.
 
-{agent_memory}
-
-{player_info}
-
-{goals}
+{state}
 
 To add or remove goals, respond according to the schema given below. The meaning of the fields is as follows:
 - "remove" is an array of goal indices to remove. You should only remove goals that you have already completed, or that you no longer want to pursue. Goals to be removed are referred to by the index given above. The remove array should be empty if there are no goals to remove.

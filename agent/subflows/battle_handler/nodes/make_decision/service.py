@@ -3,39 +3,44 @@ from loguru import logger
 from agent.subflows.battle_handler.nodes.make_decision.prompts import MAKE_DECISION_PROMPT
 from agent.subflows.battle_handler.nodes.make_decision.schemas import MakeDecisionResponse
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
+from common.types import StateStringBuilder
 from emulator.emulator import YellowLegacyEmulator
-from memory.agent_memory import AgentMemory
-from memory.raw_memory import RawMemoryPiece
+from memory.raw_memory import RawMemory, RawMemoryPiece
 
 
 class MakeDecisionService:
     """A service that makes decisions based on the current game state in the battle."""
 
+    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+
     def __init__(
         self,
         iteration: int,
+        raw_memory: RawMemory,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
-        agent_memory: AgentMemory,
     ) -> None:
         self.iteration = iteration
+        self.raw_memory = raw_memory
+        self.state_string_builder = state_string_builder
         self.emulator = emulator
-        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
-        self.agent_memory = agent_memory
 
-    async def make_decision(self) -> AgentMemory:
+    async def make_decision(self) -> RawMemory:
         """
         Make a decision in a battle based on the current game state.
 
-        :return: The agent memory with the decision added.
+        :return: The raw memory with the decision added.
         """
         img = self.emulator.get_screenshot()
-        prompt = MAKE_DECISION_PROMPT.format(agent_memory=self.agent_memory)
+        game_state = self.emulator.get_game_state()
+        state_string = self.state_string_builder(game_state)
+        prompt = MAKE_DECISION_PROMPT.format(state=state_string)
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[img, prompt],
                 schema=MakeDecisionResponse,
             )
-            self.agent_memory.append_raw_memory(
+            self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=str(response),
@@ -45,4 +50,4 @@ class MakeDecisionService:
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
 
-        return self.agent_memory
+        return self.raw_memory

@@ -1,9 +1,7 @@
 CREATE_LONG_TERM_MEMORY_PROMPT = """
 You are being given the chance to create a new long-term memory object for future reference. Think of your long-term memory as a NoSQL database of documents containing useful information on your past experiences. You will be given your current memories, information about the current game state, and a list of the existing titles in your long-term memory.
 
-{agent_memory}
-
-{player_info}
+{state}
 
 Here are the existing titles in your long-term memory:
 <titles>

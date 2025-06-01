@@ -5,8 +5,7 @@ from common.enums import AsciiTiles
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button, MapLocation
 from emulator.game_state import YellowLegacyGameState
-from memory.agent_memory import AgentMemory
-from memory.raw_memory import RawMemoryPiece
+from memory.raw_memory import RawMemory, RawMemoryPiece
 from overworld_map.schemas import OverworldMap
 from overworld_map.service import update_map_with_screen_info
 
@@ -19,26 +18,26 @@ class NavigationService:
         iteration: int,
         emulator: YellowLegacyEmulator,
         current_map: OverworldMap,
-        agent_memory: AgentMemory,
+        raw_memory: RawMemory,
         args: NavigationArgs,
     ) -> None:
         self.iteration = iteration
         self.emulator = emulator
         self.current_map = current_map
-        self.agent_memory = agent_memory
+        self.raw_memory = raw_memory
         self.coords = args
 
-    async def navigate(self) -> tuple[OverworldMap, AgentMemory]:
+    async def navigate(self) -> tuple[OverworldMap, RawMemory]:
         """Navigate to the given coordinates."""
         if not self._validate_target_coords():
             logger.warning("Cancelling navigation due to invalid target coordinates.")
-            return self.current_map, self.agent_memory
+            return self.current_map, self.raw_memory
 
         game_state = self.emulator.get_game_state()
         path = self._calculate_path_to_target(game_state)
         if not path:
             logger.warning("No path found to target coordinates.")
-            self.agent_memory.append_raw_memory(
+            self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
@@ -47,7 +46,7 @@ class NavigationService:
                     ),
                 ),
             )
-            return self.current_map, self.agent_memory
+            return self.current_map, self.raw_memory
 
         starting_map_id = self.current_map.id
         for button in path:
@@ -57,14 +56,14 @@ class NavigationService:
             prev_pos = (game_state.player.y, game_state.player.x)
             game_state = self.emulator.get_game_state()
             if self.should_cancel_navigation(game_state, prev_pos, starting_map_id):
-                return self.current_map, self.agent_memory
+                return self.current_map, self.raw_memory
             # Can't update the map until we validate above that we haven't switched maps.
             self.current_map = await update_map_with_screen_info(
                 self.iteration,
                 game_state,
                 self.current_map,
             )
-        return self.current_map, self.agent_memory
+        return self.current_map, self.raw_memory
 
     def _validate_target_coords(self) -> bool:
         """Validate the target coordinates."""
@@ -74,7 +73,7 @@ class NavigationService:
             or self.coords.row >= self.current_map.height
             or self.coords.col >= self.current_map.width
         ):
-            self.agent_memory.append_raw_memory(
+            self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
@@ -87,7 +86,7 @@ class NavigationService:
 
         target_tile = self.current_map.ascii_tiles_ndarray[self.coords.row, self.coords.col]
         if target_tile not in AsciiTiles.get_walkable_tiles():
-            self.agent_memory.append_raw_memory(
+            self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
@@ -183,7 +182,7 @@ class NavigationService:
             return True
         if prev_pos == new_pos:
             logger.warning("Navigation interrupted. Cancelling.")
-            self.agent_memory.append_raw_memory(
+            self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(f"Navigation to {self.coords} interrupted at position {new_pos}."),
@@ -192,7 +191,7 @@ class NavigationService:
             return True
         if game_state.cur_map.id != starting_map_id:
             logger.warning("Map changed during navigation. Cancelling.")
-            self.agent_memory.append_raw_memory(
+            self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content="The map has changed during navigation. Cancelling further steps.",

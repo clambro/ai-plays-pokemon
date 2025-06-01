@@ -13,29 +13,30 @@ from agent.subflows.overworld_handler.nodes.update_onscreen_entities.schemas imp
 )
 from common.enums import MapEntityType
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
+from common.types import StateStringBuilder
 from database.map_entity_memory.repository import update_map_entity_memory
 from database.map_entity_memory.schemas import MapEntityMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
-from memory.agent_memory import AgentMemory
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
 
 
 class UpdateOnscreenEntitiesService:
     """Service for updating the current map."""
 
+    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+
     def __init__(
         self,
-        emulator: YellowLegacyEmulator,
         iteration: int,
-        agent_memory: AgentMemory,
         current_map: OverworldMap,
+        state_string_builder: StateStringBuilder,
+        emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration
-        self.emulator = emulator
-        self.agent_memory = agent_memory
         self.current_map = current_map
-        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+        self.state_string_builder = state_string_builder
+        self.emulator = emulator
 
     async def update_onscreen_entities(self) -> None:
         """
@@ -101,9 +102,7 @@ class UpdateOnscreenEntitiesService:
         m_id = self.current_map.id
         entity_text = "\n".join([f"- [{e.index}] {e.to_string(m_id)}" for e in updatable_entities])
         prompt = prompt.format(
-            agent_memory=self.agent_memory,
-            map_info=self.current_map.to_string(game_state),
-            player_info=game_state.player_info,
+            state=self.state_string_builder(game_state),
             entities=entity_text.strip(),
         )
         try:

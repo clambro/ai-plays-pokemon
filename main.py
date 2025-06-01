@@ -9,7 +9,7 @@ from loguru import logger
 
 from agent.app import build_agent_workflow
 from agent.state import AgentState
-from backup.service import create_backup, load_backup
+from common.backup_service import create_backup, load_backup
 from common.constants import ITERATIONS_PER_BACKUP, OUTPUTS_FOLDER
 from database.db_config import init_fresh_db
 from emulator.emulator import YellowLegacyEmulator

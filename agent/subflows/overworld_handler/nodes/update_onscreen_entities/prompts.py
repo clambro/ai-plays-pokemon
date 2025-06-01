@@ -1,11 +1,7 @@
 UPDATE_SPRITES_PROMPT = """
 There are one or more sprites visible on the screen right now. This is your chance to, if you so desire, update your long-term memory with new information about them.
 
-{agent_memory}
-
-{map_info}
-
-{player_info}
+{state}
 
 The following sprites are visible on the screen right now. Here are the descriptions of them that you have in your long-term memory:
 <sprites>
@@ -22,11 +18,7 @@ If you want to update your long-term memory with new information about any of th
 UPDATE_WARPS_PROMPT = """
 There are one or more warp tiles visible on the screen right now. This is your chance to, if you so desire, update your long-term memory with new information about them.
 
-{agent_memory}
-
-{map_info}
-
-{player_info}
+{state}
 
 The following warp tiles are visible on the screen right now. Here are the descriptions of them that you have in your long-term memory:
 <warps>
@@ -48,11 +40,7 @@ If you want to update your long-term memory with new information about any of th
 UPDATE_SIGNS_PROMPT = """
 There are one or more signs visible on the screen right now. This is your chance to, if you so desire, update your long-term memory with new information about them.
 
-{agent_memory}
-
-{map_info}
-
-{player_info}
+{state}
 
 The following signs are visible on the screen right now. Here are the descriptions of them that you have in your long-term memory:
 <signs>

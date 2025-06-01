@@ -5,7 +5,7 @@ from pydantic import BaseModel, model_validator
 from agent.schemas import NavigationArgs
 from common.enums import Tool
 from emulator.enums import Button
-from memory.agent_memory import AgentMemory
+from memory.raw_memory import RawMemory
 
 
 class MakeDecisionResponse(BaseModel):
@@ -25,6 +25,6 @@ class MakeDecisionResponse(BaseModel):
 class Decision(BaseModel):
     """The decision from the overworld decision maker prompt."""
 
-    agent_memory: AgentMemory
+    raw_memory: RawMemory
     tool: Tool | None
     navigation_args: NavigationArgs | None

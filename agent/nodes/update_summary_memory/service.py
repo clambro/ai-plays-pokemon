@@ -1,53 +1,53 @@
 from agent.nodes.update_summary_memory.prompts import UPDATE_SUMMARY_MEMORY_PROMPT
 from agent.nodes.update_summary_memory.schemas import UpdateSummaryMemoryResponse
 from common.constants import ITERATIONS_PER_SUMMARY_UPDATE, RAW_MEMORY_MAX_SIZE
-from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
+from common.types import StateStringBuilder
 from emulator.emulator import YellowLegacyEmulator
-from memory.agent_memory import AgentMemory
-from memory.summary_memory import SummaryMemoryPiece
+from memory.summary_memory import SummaryMemory, SummaryMemoryPiece
 
 
 class UpdateSummaryMemoryService:
     """Service for updating the summary memory."""
 
+    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+
     def __init__(
         self,
-        emulator: YellowLegacyEmulator,
         iteration: int,
-        agent_memory: AgentMemory,
-        goals: Goals,
+        summary_memory: SummaryMemory,
+        state_string_builder: StateStringBuilder,
+        emulator: YellowLegacyEmulator,
     ) -> None:
         self.emulator = emulator
         self.iteration = iteration
-        self.agent_memory = agent_memory
-        self.goals = goals
-        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+        self.summary_memory = summary_memory
+        self.state_string_builder = state_string_builder
 
-    async def update_summary_memory(self) -> AgentMemory:
+    async def update_summary_memory(self) -> SummaryMemory:
         """Update the summary memory."""
         if self.iteration % ITERATIONS_PER_SUMMARY_UPDATE != 0:
-            return self.agent_memory
+            return self.summary_memory
+
         game_state = self.emulator.get_game_state()
         prompt = UPDATE_SUMMARY_MEMORY_PROMPT.format(
             raw_memory_max_size=RAW_MEMORY_MAX_SIZE,
-            agent_memory=self.agent_memory,
-            player_info=game_state.player_info,
-            goals=self.goals,
+            state=self.state_string_builder(game_state),
             iteration=self.iteration,
         )
         response = await self.llm_service.get_llm_response_pydantic(
             prompt,
             UpdateSummaryMemoryResponse,
         )
-        memories = [
-            SummaryMemoryPiece(
-                iteration=self.iteration,
-                content=memory.description,
-                importance=memory.importance,
-            )
-            for memory in response.memories
-        ]
-        self.agent_memory.append_summary_memory(self.iteration, *memories)
-
-        return self.agent_memory
+        self.summary_memory.append(
+            self.iteration,
+            *[
+                SummaryMemoryPiece(
+                    iteration=self.iteration,
+                    content=memory.description,
+                    importance=memory.importance,
+                )
+                for memory in response.memories
+            ],
+        )
+        return self.summary_memory

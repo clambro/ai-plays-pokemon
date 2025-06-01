@@ -3,12 +3,12 @@ from loguru import logger
 from agent.nodes.update_long_term_memory.prompts import UPDATE_LONG_TERM_MEMORY_PROMPT
 from agent.nodes.update_long_term_memory.schemas import UpdateLongTermMemoryResponse, UpdateType
 from common.embedding_service import GeminiEmbeddingService
-from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
+from common.types import StateStringBuilder
 from database.long_term_memory.repository import update_long_term_memory
 from database.long_term_memory.schemas import LongTermMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
-from memory.agent_memory import AgentMemory
+from memory.long_term_memory import LongTermMemory
 
 
 class UpdateLongTermMemoryService:
@@ -20,32 +20,29 @@ class UpdateLongTermMemoryService:
     def __init__(
         self,
         iteration: int,
-        agent_memory: AgentMemory,
-        goals: Goals,
+        long_term_memory: LongTermMemory,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration
-        self.agent_memory = agent_memory
-        self.goals = goals
+        self.long_term_memory = long_term_memory
+        self.state_string_builder = state_string_builder
         self.emulator = emulator
 
     async def update_long_term_memory(self) -> None:
         """Update long-term memory."""
-        if not self.agent_memory.has_long_term_memory:
+        if not self.long_term_memory:
             return
 
         game_state = self.emulator.get_game_state()
-        prompt = UPDATE_LONG_TERM_MEMORY_PROMPT.format(
-            agent_memory=self.agent_memory,
-            player_info=game_state.player_info,
-        )
+        prompt = UPDATE_LONG_TERM_MEMORY_PROMPT.format(state=self.state_string_builder(game_state))
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 prompt,
                 UpdateLongTermMemoryResponse,
             )
             for update_piece in response.pieces:
-                orig_piece = self.agent_memory.long_term_memory_map.get(update_piece.title)
+                orig_piece = self.long_term_memory.pieces.get(update_piece.title)
                 if orig_piece is None:
                     logger.warning(
                         f"Tried to update non-existent long-term memory piece:"

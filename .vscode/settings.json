@@ -6,7 +6,8 @@
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
             "source.organizeImports": "explicit",
-            "source.fixAll": "explicit"
+            "source.fixAll": "explicit",
+            "source.fixAll.ruff": "explicit"
         }
     },
     "ruff.enable": true,

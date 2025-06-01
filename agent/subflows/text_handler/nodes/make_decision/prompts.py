@@ -10,11 +10,7 @@ The (case-sensitive) available buttons are:
 - left: Used to navigate the cursor left.
 - right: Used to navigate the cursor right.
 
-{agent_memory}
-
-{goals}
-
-{player_info}
+{state}
 
 Here is the game memory's representation of the onscreen text. The text you see below is exactly what the game is displaying on the screen, but the formatting may be somewhat messed up because it is not rendering images. Use it to help you understand the text on the screen, as well as the position of any cursors. This is a more reliable way to navigate menus than the screenshot.
 <onscreen_text>

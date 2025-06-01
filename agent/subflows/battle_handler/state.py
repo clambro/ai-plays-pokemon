@@ -1,15 +1,32 @@
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from agent.state import AgentState
 from common.goals import Goals
-from memory.agent_memory import AgentMemory
+from emulator.emulator import YellowLegacyGameState
+from memory.long_term_memory import LongTermMemory
+from memory.raw_memory import RawMemory
+from memory.summary_memory import SummaryMemory
 
 
 class BattleHandlerState(BaseStateWithEmulator):
     """The state used in the battle handler graph workflow."""
 
     iteration: int | None = None
-    agent_memory: AgentMemory | None = None
+    raw_memory: RawMemory | None = None
+    summary_memory: SummaryMemory | None = None
+    long_term_memory: LongTermMemory | None = None
     goals: Goals | None = None
+
+    def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
+        """Get a string representation of the agent and game state to be used in prompts."""
+        return "\n\n".join(
+            (
+                str(self.raw_memory),
+                str(self.summary_memory),
+                str(self.long_term_memory),
+                str(self.goals),
+                game_state.player_info,
+            ),
+        )
 
 
 class BattleHandlerStore(BaseStoreWithEmulator[BattleHandlerState]):
@@ -20,11 +37,13 @@ class BattleHandlerStore(BaseStoreWithEmulator[BattleHandlerState]):
         await self.set_state(
             {
                 "iteration": parent_state.iteration,
-                "agent_memory": parent_state.agent_memory,
+                "raw_memory": parent_state.raw_memory,
+                "summary_memory": parent_state.summary_memory,
+                "long_term_memory": parent_state.long_term_memory,
                 "goals": parent_state.goals,
             },
         )
 
-    async def set_agent_memory(self, agent_memory: AgentMemory) -> None:
-        """Set the agent memory."""
-        await self.set_state({"agent_memory": agent_memory})
+    async def set_raw_memory(self, raw_memory: RawMemory) -> None:
+        """Set the raw memory."""
+        await self.set_state({"raw_memory": raw_memory})

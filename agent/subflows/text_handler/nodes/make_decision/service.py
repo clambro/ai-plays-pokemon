@@ -2,30 +2,30 @@ from loguru import logger
 
 from agent.subflows.text_handler.nodes.make_decision.prompts import DECISION_MAKER_TEXT_PROMPT
 from agent.subflows.text_handler.nodes.make_decision.schemas import DecisionMakerTextResponse
-from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
+from common.types import StateStringBuilder
 from emulator.emulator import YellowLegacyEmulator
-from memory.agent_memory import AgentMemory
-from memory.raw_memory import RawMemoryPiece
+from memory.raw_memory import RawMemory, RawMemoryPiece
 
 
 class DecisionMakerTextService:
     """A service that makes decisions based on the current game state in the text."""
 
+    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+
     def __init__(
         self,
         iteration: int,
+        raw_memory: RawMemory,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
-        agent_memory: AgentMemory,
-        goals: Goals,
     ) -> None:
         self.iteration = iteration
+        self.raw_memory = raw_memory
+        self.state_string_builder = state_string_builder
         self.emulator = emulator
-        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
-        self.agent_memory = agent_memory
-        self.goals = goals
 
-    async def make_decision(self) -> AgentMemory:
+    async def make_decision(self) -> RawMemory:
         """
         Make a decision based on the current game state.
 
@@ -33,10 +33,9 @@ class DecisionMakerTextService:
         """
         img = self.emulator.get_screenshot()
         game_state = self.emulator.get_game_state()
+        state_string = self.state_string_builder(game_state)
         prompt = DECISION_MAKER_TEXT_PROMPT.format(
-            agent_memory=self.agent_memory,
-            goals=self.goals,
-            player_info=game_state.player_info,
+            state=state_string,
             text=game_state.get_on_screen_text(),
         )
         try:
@@ -44,7 +43,7 @@ class DecisionMakerTextService:
                 messages=[img, prompt],
                 schema=DecisionMakerTextResponse,
             )
-            self.agent_memory.append_raw_memory(
+            self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=str(response),
@@ -54,4 +53,4 @@ class DecisionMakerTextService:
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
 
-        return self.agent_memory
+        return self.raw_memory
