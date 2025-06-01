@@ -8,7 +8,7 @@ from emulator.enums import Button
 from memory.agent_memory import AgentMemory
 
 
-class DecisionMakerOverworldResponse(BaseModel):
+class MakeDecisionResponse(BaseModel):
     """The response from the overworld decision maker prompt."""
 
     thoughts: str
@@ -22,7 +22,7 @@ class DecisionMakerOverworldResponse(BaseModel):
         return self
 
 
-class DecisionMakerOverworldDecision(BaseModel):
+class Decision(BaseModel):
     """The decision from the overworld decision maker prompt."""
 
     agent_memory: AgentMemory

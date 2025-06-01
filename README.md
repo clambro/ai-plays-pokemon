@@ -23,6 +23,8 @@ Done?
 
 * Fix the navigation tool: When Pikachu is on screen, bumping into it breaks the existing flow.
 
+* Use proper init files and relative imports within packages
+
 ### Useful Tools and Additions
 * Add a tool to name things
 

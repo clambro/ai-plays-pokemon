@@ -1,11 +1,9 @@
 from loguru import logger
 
-from agent.subflows.overworld_handler.nodes.make_decision.prompts import (
-    DECISION_MAKER_OVERWORLD_PROMPT,
-)
+from agent.subflows.overworld_handler.nodes.make_decision.prompts import MAKE_DECISION_PROMPT
 from agent.subflows.overworld_handler.nodes.make_decision.schemas import (
-    DecisionMakerOverworldDecision,
-    DecisionMakerOverworldResponse,
+    Decision,
+    MakeDecisionResponse,
 )
 from common.enums import AsciiTiles, Tool
 from common.goals import Goals
@@ -35,11 +33,11 @@ class MakeDecisionService:
         self.current_map = current_map
         self.goals = goals
 
-    async def make_decision(self) -> DecisionMakerOverworldDecision:
+    async def make_decision(self) -> Decision:
         """Make a decision based on the current overworld game state."""
         game_state = self.emulator.get_game_state()
         img = self.emulator.get_screenshot()
-        prompt = DECISION_MAKER_OVERWORLD_PROMPT.format(
+        prompt = MAKE_DECISION_PROMPT.format(
             agent_memory=self.agent_memory,
             player_info=game_state.player_info,
             current_map=self.current_map.to_string(game_state),
@@ -49,11 +47,11 @@ class MakeDecisionService:
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[img, prompt],
-                schema=DecisionMakerOverworldResponse,
+                schema=MakeDecisionResponse,
             )
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
-            return DecisionMakerOverworldDecision(
+            return Decision(
                 agent_memory=self.agent_memory,
                 tool=None,
                 navigation_args=None,
@@ -70,7 +68,7 @@ class MakeDecisionService:
                     content=f"{thought} Navigating to {response.navigation_args}.",
                 ),
             )
-            return DecisionMakerOverworldDecision(
+            return Decision(
                 agent_memory=self.agent_memory,
                 tool=Tool.NAVIGATION,
                 navigation_args=response.navigation_args,
@@ -89,7 +87,7 @@ class MakeDecisionService:
             await self._check_for_collision(response.button, prev_map, prev_coords, prev_direction)
             await self._check_for_action(response.button)
 
-        return DecisionMakerOverworldDecision(
+        return Decision(
             agent_memory=self.agent_memory,
             tool=None,
             navigation_args=None,

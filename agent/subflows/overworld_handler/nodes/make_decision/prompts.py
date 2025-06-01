@@ -1,4 +1,4 @@
-DECISION_MAKER_OVERWORLD_PROMPT = """
+MAKE_DECISION_PROMPT = """
 You are navigating the overworld and there is no on-screen text. The screenshot provided above is the current game screen. You must decide which button to press or tool to use to proceed with the game.
 
 The (case-sensitive) available buttons are:
