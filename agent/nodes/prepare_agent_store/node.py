@@ -27,6 +27,7 @@ class PrepareAgentStoreNode(Node[AgentStore]):
         handler = await service.determine_handler()
 
         await store.set_iteration(state.iteration + 1)
+        await store.set_previous_handler(state.handler)
         await store.set_handler(handler)
 
         await store.set_emulator_save_state_from_emulator(self.emulator)

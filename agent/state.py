@@ -21,6 +21,8 @@ class AgentState(BaseStateWithEmulator):
     long_term_memory: LongTermMemory = Field(default_factory=LongTermMemory)
     goals: Goals = Field(default_factory=Goals)
     handler: AgentStateHandler | None = None
+    previous_handler: AgentStateHandler | None = None
+    should_retrieve_memory: bool | None = None
 
     def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
         """Get a string representation of the agent and game state to be used in prompts."""
@@ -54,10 +56,18 @@ class AgentStore(BaseStoreWithEmulator[AgentState]):
         """Set the long-term memory."""
         await self.set_state({"long_term_memory": long_term_memory})
 
-    async def set_handler(self, handler: AgentStateHandler | None) -> None:
-        """Set the handler."""
-        await self.set_state({"handler": handler})
-
     async def set_goals(self, goals: Goals) -> None:
         """Set the goals."""
         await self.set_state({"goals": goals})
+
+    async def set_handler(self, handler: AgentStateHandler) -> None:
+        """Set the handler."""
+        await self.set_state({"handler": handler})
+
+    async def set_previous_handler(self, previous_handler: AgentStateHandler | None) -> None:
+        """Set the previous handler."""
+        await self.set_state({"previous_handler": previous_handler})
+
+    async def set_should_retrieve_memory(self, should_retrieve_memory: bool) -> None:
+        """Set the should retrieve memory."""
+        await self.set_state({"should_retrieve_memory": should_retrieve_memory})

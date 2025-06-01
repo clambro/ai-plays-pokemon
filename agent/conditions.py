@@ -21,3 +21,18 @@ class AgentHandlerIs(Condition[AgentState]):
         if self.handler is not None and state.handler is not None:
             return self.handler == state.handler
         return False
+
+
+class ShouldRetrieveMemory(Condition[AgentState]):
+    """A condition that checks if the agent should retrieve memory."""
+
+    def __init__(self, value: bool) -> None:
+        self.value = value
+
+    def __str__(self) -> str:
+        """Return the string representation of the condition."""
+        return f"ShouldRetrieveMemory({self.value})"
+
+    def evaluate(self, state: AgentState) -> bool:
+        """Evaluate the condition."""
+        return state.should_retrieve_memory == self.value
