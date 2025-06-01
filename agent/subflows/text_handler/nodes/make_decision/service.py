@@ -5,8 +5,7 @@ from agent.subflows.text_handler.nodes.make_decision.schemas import DecisionMake
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilder
 from emulator.emulator import YellowLegacyEmulator
-from memory.agent_memory import AgentMemory
-from memory.raw_memory import RawMemoryPiece
+from memory.raw_memory import RawMemory, RawMemoryPiece
 
 
 class DecisionMakerTextService:
@@ -17,16 +16,16 @@ class DecisionMakerTextService:
     def __init__(
         self,
         iteration: int,
-        agent_memory: AgentMemory,
+        raw_memory: RawMemory,
         state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration
-        self.agent_memory = agent_memory
+        self.raw_memory = raw_memory
         self.state_string_builder = state_string_builder
         self.emulator = emulator
 
-    async def make_decision(self) -> AgentMemory:
+    async def make_decision(self) -> RawMemory:
         """
         Make a decision based on the current game state.
 
@@ -44,7 +43,7 @@ class DecisionMakerTextService:
                 messages=[img, prompt],
                 schema=DecisionMakerTextResponse,
             )
-            self.agent_memory.append_raw_memory(
+            self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=str(response),
@@ -54,4 +53,4 @@ class DecisionMakerTextService:
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
 
-        return self.agent_memory
+        return self.raw_memory

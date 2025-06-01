@@ -3,8 +3,7 @@ import asyncio
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
 from emulator.schemas import DialogBox
-from memory.agent_memory import AgentMemory
-from memory.raw_memory import RawMemoryPiece
+from memory.raw_memory import RawMemory, RawMemoryPiece
 
 
 class HandleDialogBoxService:
@@ -13,24 +12,24 @@ class HandleDialogBoxService:
     def __init__(
         self,
         iteration: int,
-        agent_memory: AgentMemory,
+        raw_memory: RawMemory,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration
-        self.agent_memory = agent_memory
+        self.raw_memory = raw_memory
         self.emulator = emulator
 
-    async def handle_dialog_box(self) -> tuple[AgentMemory, bool]:
+    async def handle_dialog_box(self) -> tuple[RawMemory, bool]:
         """
         Handle reading the dialog box if it is present.
 
-        :return: The agent memory and a boolean indicating whether we need to follow up with the
+        :return: The raw memory and a boolean indicating whether we need to follow up with the
             generic text handler.
         """
         game_state = self.emulator.get_game_state()
         dialog_box = game_state.get_dialog_box()
         if not dialog_box:
-            return self.agent_memory, True  # Go to the generic text handler.
+            return self.raw_memory, True  # Go to the generic text handler.
 
         text: list[str] = []
         is_blinking_cursor = True
@@ -51,7 +50,7 @@ class HandleDialogBoxService:
             is_text_outside_dialog_box = game_state.is_text_on_screen(ignore_dialog_box=True)
 
         joined_text = " ".join(text)
-        self.agent_memory.append_raw_memory(
+        self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
                 content=f'The following text was read from the main dialog box: "{joined_text}"',
@@ -59,9 +58,9 @@ class HandleDialogBoxService:
         )
         if game_state.is_text_on_screen():
             # More work to do. Pass to the generic text handler.
-            return self.agent_memory, True
+            return self.raw_memory, True
         else:
-            return self.agent_memory, False  # All text is gone, so go to the next agent loop.
+            return self.raw_memory, False  # All text is gone, so go to the next agent loop.
 
     @staticmethod
     def _append_dialog_to_list(text: list[str], dialog_box: DialogBox) -> None:
