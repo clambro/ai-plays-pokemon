@@ -7,8 +7,6 @@ Done?
 
 ### Clean-Up, Refactoring, and Testing
 * Make long term memory retrieval and updates happen either every ten iterations, or when the handler changes
-* The summary memory keeps adding duplicates. Stop that.
-* I think the raw memory is way too long. It's 75% of the whole prompt and full of noise.
 
 * Add names to all the prompts
 
