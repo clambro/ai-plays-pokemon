@@ -17,7 +17,6 @@ LETTER_ARR = np.array(
         ["S", "T", "U", "V", "W", "X", "Y", "Z", " "],
     ],
 )
-BUTTON_DELAY_FRAMES = GAME_TICKS_PER_SECOND // 2
 
 
 class AssignNameService:
@@ -76,7 +75,7 @@ class AssignNameService:
 
             await self.emulator.press_buttons(
                 [*dir_buttons, Button.A],
-                frames_between=BUTTON_DELAY_FRAMES,
+                frames_between=GAME_TICKS_PER_SECOND // 2,
             )
             game_state = self.emulator.get_game_state()
 

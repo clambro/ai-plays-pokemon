@@ -12,4 +12,5 @@ Naming rules:
 - The name must be at least one character long and at most eight characters long.
 - The name can only contain the letters A-Z and spaces. Spaces count towards the eight character limit.
 - The name cannot start or end with a space.
+- Be creative. Don't use generic or default names. This is your chance to add some of your own personality to the game.
 """.strip()

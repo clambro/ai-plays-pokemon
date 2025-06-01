@@ -167,7 +167,7 @@ class YellowLegacyGameState(BaseModel):
         if ignore_dialog_box:
             tiles = tiles[:13, :]
 
-        return np.isin(tiles, letters).sum() > 3  # Avoid false positives caused by weird tilemaps.
+        return np.isin(tiles, letters).sum() > 0
 
     def get_screen_without_blinking_cursor(self) -> np.ndarray:
         """Get the screen without the blinking cursor."""
