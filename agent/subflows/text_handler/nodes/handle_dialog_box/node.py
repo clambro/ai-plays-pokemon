@@ -28,8 +28,7 @@ class HandleDialogBoxNode(Node[TextHandlerStore]):
             raw_memory=state.raw_memory,
             emulator=self.emulator,
         )
-        raw_memory, handler = await service.handle_dialog_box()
+        raw_memory = await service.handle_dialog_box()
 
         await store.set_raw_memory(raw_memory)
-        await store.set_handler(handler)
         await store.set_emulator_save_state_from_emulator(self.emulator)

@@ -6,6 +6,8 @@
 Done?
 
 ### Clean-Up, Refactoring, and Testing
+* Explicit text handler for bailing out?
+
 * Add names to all the prompts
 
 * Get Gemini to give some general architecture refactoring suggestions
@@ -19,7 +21,7 @@ Done?
 * Add tests to everything
 
 ### Useful Tools and Additions
-* Add a tool to name things
+* Adding importance to goals might be helpful
 
 * Detailed subflow for battles
 * Make the critic tool part of the overworld navigation step? Includes functionality for determining which tools are available at any given iteration.
