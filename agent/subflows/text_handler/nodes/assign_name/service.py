@@ -1,5 +1,6 @@
 import numpy as np
 
+from common.constants import GAME_TICKS_PER_SECOND
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
 from memory.raw_memory import RawMemory, RawMemoryPiece
@@ -11,6 +12,7 @@ LETTER_ARR = np.array(
         ["S", "T", "U", "V", "W", "X", "Y", "Z", " "],
     ],
 )
+BUTTON_DELAY_FRAMES = GAME_TICKS_PER_SECOND // 2
 
 
 class AssignNameService:
@@ -52,7 +54,13 @@ class AssignNameService:
             cursor_loc = game_state.screen.cursor_index
             dir_buttons = self._get_dir_buttons(letter_loc, cursor_loc)
 
-            await self.emulator.press_buttons([*dir_buttons, Button.A])
+            await self.emulator.press_buttons(
+                [*dir_buttons, Button.A],
+                frames_between=BUTTON_DELAY_FRAMES,
+            )
+            game_state = self.emulator.get_game_state()
+
+        await self.emulator.press_buttons([Button.START])  # Accept the name.
 
         self.raw_memory.append(
             RawMemoryPiece(
@@ -64,7 +72,7 @@ class AssignNameService:
 
     async def _get_desired_name(self) -> str:
         """Get the desired name from the LLM."""
-        return "TEST NAME"
+        return "TST NNE"
 
     def _get_dir_buttons(self, letter_loc: tuple[int, int], cursor_loc: int) -> list[Button]:
         """
