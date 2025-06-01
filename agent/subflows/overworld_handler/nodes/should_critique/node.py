@@ -21,18 +21,13 @@ class ShouldCritiqueNode(Node):
 
         if state.iteration is None:
             raise ValueError("Iteration is not set")
-        if state.agent_memory is None:
-            raise ValueError("Agent memory is not set")
-        if state.goals is None:
-            raise ValueError("Goals are not set")
 
         service = ShouldCritiqueService(
             iteration=state.iteration,
-            agent_memory=state.agent_memory,
-            goals=state.goals,
             emulator=self.emulator,
+            state_string_builder=state.to_prompt_string,
         )
         should_critique = await service.should_critique()
-        await store.set_should_critique(should_critique)
 
+        await store.set_should_critique(should_critique)
         await store.set_emulator_save_state_from_emulator(self.emulator)

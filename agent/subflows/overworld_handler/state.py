@@ -4,6 +4,7 @@ from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from agent.state import AgentState
 from common.enums import Tool
 from common.goals import Goals
+from emulator.game_state import YellowLegacyGameState
 from memory.agent_memory import AgentMemory
 from overworld_map.schemas import OverworldMap
 
@@ -19,6 +20,20 @@ class OverworldHandlerState(BaseStateWithEmulator):
     tool: Tool | None = None
     tool_args: BaseModel | None = None
     needs_generic_handling: bool | None = None
+
+    def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
+        """Get a string representation of the agent and game state to be used in prompts."""
+        if self.current_map is None:
+            raise ValueError("Current map is not set")
+        player_info = game_state.player_info
+        return "\n\n".join(
+            (
+                str(self.agent_memory),
+                str(self.goals),
+                self.current_map.to_string(game_state),
+                str(player_info),
+            ),
+        )
 
 
 class OverworldHandlerStore(BaseStoreWithEmulator[OverworldHandlerState]):

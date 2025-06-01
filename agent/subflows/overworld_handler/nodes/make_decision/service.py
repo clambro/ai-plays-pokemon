@@ -6,42 +6,37 @@ from agent.subflows.overworld_handler.nodes.make_decision.schemas import (
     MakeDecisionResponse,
 )
 from common.enums import AsciiTiles, Tool
-from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
+from common.types import StateStringBuilder
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button, FacingDirection
 from memory.agent_memory import AgentMemory
 from memory.raw_memory import RawMemoryPiece
-from overworld_map.schemas import OverworldMap
 
 
 class MakeDecisionService:
     """A service that makes decisions based on the current game state in the overworld."""
+
+    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
 
     def __init__(
         self,
         iteration: int,
         emulator: YellowLegacyEmulator,
         agent_memory: AgentMemory,
-        current_map: OverworldMap,
-        goals: Goals,
+        state_string_builder: StateStringBuilder,
     ) -> None:
         self.iteration = iteration
-        self.emulator = emulator
-        self.llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
         self.agent_memory = agent_memory
-        self.current_map = current_map
-        self.goals = goals
+        self.emulator = emulator
+        self.state_string_builder = state_string_builder
 
     async def make_decision(self) -> Decision:
         """Make a decision based on the current overworld game state."""
         game_state = self.emulator.get_game_state()
         img = self.emulator.get_screenshot()
         prompt = MAKE_DECISION_PROMPT.format(
-            agent_memory=self.agent_memory,
-            player_info=game_state.player_info,
-            current_map=self.current_map.to_string(game_state),
-            goals=self.goals,
+            state=self.state_string_builder(game_state),
             walkable_tiles=", ".join(f'"{t}"' for t in AsciiTiles.get_walkable_tiles()),
         )
         try:

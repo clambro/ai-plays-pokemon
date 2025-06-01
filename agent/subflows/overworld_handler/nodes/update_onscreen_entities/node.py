@@ -22,16 +22,14 @@ class UpdateOnscreenEntitiesNode(Node[OverworldHandlerStore]):
         state = await store.get_state()
         if state.iteration is None:
             raise ValueError("Iteration is not set")
-        if state.agent_memory is None:
-            raise ValueError("Agent memory is not set")
         if state.current_map is None:
             raise ValueError("Current map is not set.")
 
         service = UpdateOnscreenEntitiesService(
             emulator=self.emulator,
             iteration=state.iteration,
-            agent_memory=state.agent_memory,
             current_map=state.current_map,
+            state_string_builder=state.to_prompt_string,
         )
         await service.update_onscreen_entities()
 

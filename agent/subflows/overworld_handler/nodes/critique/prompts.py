@@ -1,13 +1,7 @@
 CRITIQUE_PROMPT = """
 Take a step back from playing the game for a moment. You have signaled that you are feeling stuck. You have been imbued with significantly more intelligence and memory than you had before. This is your chance to review your past actions, as well as the current state of the game and provide a critique of your performance so far, as well as a plan for the next steps you should take.
 
-{player_info}
-
-{current_map}
-
-{goals}
-
-{agent_memory}
+{state}
 
 Common sources of error include (but are not limited to):
 - Misinterpreting the screenshot information

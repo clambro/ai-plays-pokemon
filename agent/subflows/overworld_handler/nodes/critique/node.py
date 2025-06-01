@@ -22,16 +22,11 @@ class CritiqueNode(Node[OverworldHandlerStore]):
             raise ValueError("Iteration is not set")
         if state.agent_memory is None:
             raise ValueError("Agent memory is not set")
-        if state.current_map is None:
-            raise ValueError("Current map is not set")
-        if state.goals is None:
-            raise ValueError("Goals are not set")
 
         service = CritiqueService(
             iteration=state.iteration,
             agent_memory=state.agent_memory,
-            current_map=state.current_map,
-            goals=state.goals,
+            state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
         agent_memory = await service.critique()
