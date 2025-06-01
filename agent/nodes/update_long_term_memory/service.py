@@ -31,7 +31,7 @@ class UpdateLongTermMemoryService:
 
     async def update_long_term_memory(self) -> None:
         """Update long-term memory."""
-        if not self.long_term_memory:
+        if not self.long_term_memory.pieces:
             return
 
         game_state = self.emulator.get_game_state()
