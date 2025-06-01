@@ -2,8 +2,8 @@ from common.enums import AgentStateHandler
 from emulator.emulator import YellowLegacyEmulator
 
 
-class BuildAgentStateService:
-    """Service for building the agent state."""
+class PrepareAgentStateService:
+    """Service for preparing the agent state."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
         self.emulator = emulator
