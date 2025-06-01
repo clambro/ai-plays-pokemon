@@ -1,7 +1,8 @@
 from junjo import Edge, Graph
 
 from agent.nodes.dummy.node import DummyNode
-from agent.subflows.text_handler.conditions import NeedsGenericHandling
+from agent.subflows.text_handler.conditions import HandlerIs
+from agent.subflows.text_handler.enums import TextHandler
 from agent.subflows.text_handler.nodes.handle_dialog_box.node import HandleDialogBoxNode
 from agent.subflows.text_handler.nodes.make_decision.node import MakeDecisionNode
 from emulator.emulator import YellowLegacyEmulator
@@ -19,8 +20,8 @@ def build_text_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Graph:
         source=handle_dialog_box,
         sink=dummy_sink,
         edges=[
-            Edge(handle_dialog_box, make_decision, NeedsGenericHandling(True)),
-            Edge(handle_dialog_box, dummy_sink, NeedsGenericHandling(False)),
+            Edge(handle_dialog_box, make_decision, HandlerIs(TextHandler.GENERIC)),
+            Edge(handle_dialog_box, dummy_sink, HandlerIs(None)),
             Edge(make_decision, dummy_sink),
         ],
     )

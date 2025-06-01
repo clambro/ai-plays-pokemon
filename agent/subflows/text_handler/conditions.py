@@ -1,18 +1,21 @@
 from junjo import Condition
 
+from agent.subflows.text_handler.enums import TextHandler
 from agent.subflows.text_handler.state import TextHandlerState
 
 
-class NeedsGenericHandling(Condition[TextHandlerState]):
-    """A condition that checks if the agent needs generic handling."""
+class HandlerIs(Condition[TextHandlerState]):
+    """A condition that checks if the state handler is the given handler."""
 
-    def __init__(self, needs_generic_handling: bool) -> None:
-        self.needs_generic_handling = needs_generic_handling
+    def __init__(self, value: TextHandler | None) -> None:
+        self.value = value
 
     def __str__(self) -> str:
         """Return the string representation of the condition."""
-        return f"NeedsGenericHandling({self.needs_generic_handling})"
+        return f"HandlerIs({self.value})"
 
     def evaluate(self, state: TextHandlerState) -> bool:
         """Evaluate the condition."""
-        return state.needs_generic_handling == self.needs_generic_handling
+        if state.handler is None and self.value is None:
+            return True
+        return state.handler == self.value
