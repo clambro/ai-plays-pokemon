@@ -26,6 +26,7 @@ class AssignNameNode(Node[TextHandlerStore]):
         service = AssignNameService(
             iteration=state.iteration,
             raw_memory=state.raw_memory,
+            state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
         raw_memory = await service.assign_name()

@@ -1,8 +1,13 @@
 import numpy as np
 
+from agent.subflows.text_handler.nodes.assign_name.prompts import GET_NAME_PROMPT
+from agent.subflows.text_handler.nodes.assign_name.schemas import NameResponse
 from common.constants import GAME_TICKS_PER_SECOND
+from common.llm_service import GeminiLLMEnum, GeminiLLMService
+from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
+from emulator.game_state import YellowLegacyGameState
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
 LETTER_ARR = np.array(
@@ -18,14 +23,18 @@ BUTTON_DELAY_FRAMES = GAME_TICKS_PER_SECOND // 2
 class AssignNameService:
     """A service that assigns a name to something in the game."""
 
+    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+
     def __init__(
         self,
         iteration: int,
         raw_memory: RawMemory,
+        state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration
         self.raw_memory = raw_memory
+        self.state_string_builder = state_string_builder
         self.emulator = emulator
 
     async def assign_name(self) -> RawMemory:
@@ -41,9 +50,21 @@ class AssignNameService:
             # Should never happen if we're in this handler, but just in case we need to bail.
             return self.raw_memory
 
-        name = await self._get_desired_name()  # TODO: Handle invalid names.
-        name = list(name.upper())
+        try:
+            name = await self._get_desired_name(game_state)
+        except Exception as e:  # noqa: BLE001
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    content=(
+                        f"I attempted to enter an invalid name: {e}."
+                        f" I need to try again and pay closer attention to the rules."
+                    ),
+                ),
+            )
+            return self.raw_memory
 
+        name = name.upper()
         for letter in name:
             argwhere_letter = np.argwhere(LETTER_ARR == letter)
             if len(argwhere_letter) != 1:
@@ -69,9 +90,16 @@ class AssignNameService:
         )
         return self.raw_memory
 
-    async def _get_desired_name(self) -> str:
+    async def _get_desired_name(self, game_state: YellowLegacyGameState) -> str:
         """Get the desired name from the LLM."""
-        return "TST NNE"
+        prompt = GET_NAME_PROMPT.format(state=self.state_string_builder(game_state))
+        response = await self.llm_service.get_llm_response_pydantic(
+            prompt,
+            schema=NameResponse,
+            thinking_tokens=None,
+        )
+        self.raw_memory.append(RawMemoryPiece(iteration=self.iteration, content=response.thoughts))
+        return response.name
 
     def _get_dir_buttons(self, letter_loc: tuple[int, int], cursor_loc: int) -> list[Button]:
         """
@@ -79,7 +107,7 @@ class AssignNameService:
 
         Row 1 starts at cursor_loc 5 for A, adds 2 for each letter, ending at 21 for I.
         Row 2 starts at 45 for J, adds 2 for each letter, ending at 61 for R.
-        Row 3 starts at 85 for S, adds 2 for each letter, with 99 for Z and 101 for space.
+        Row 3 starts at 85 for S, adds 2 for each letter, with 99 for Z, ending at 101 for space.
 
         :param letter_loc: The (row, col) location of the letter in the LETTER_ARR.
         :param cursor_loc: The index of the cursor on the screen.
