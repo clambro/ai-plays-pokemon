@@ -21,11 +21,11 @@ class RetrieveLongTermMemoryNode(Node[AgentStore]):
 
         service = RetrieveLongTermMemoryService(
             iteration=state.iteration,
-            agent_memory=state.agent_memory,
+            long_term_memory=state.long_term_memory,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
-        agent_memory = await service.retrieve_long_term_memory()
+        long_term_memory = await service.retrieve_long_term_memory()
 
-        await store.set_agent_memory(agent_memory)
+        await store.set_long_term_memory(long_term_memory)
         await store.set_emulator_save_state_from_emulator(self.emulator)

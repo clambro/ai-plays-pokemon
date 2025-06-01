@@ -4,8 +4,7 @@ from common.constants import ITERATIONS_PER_SUMMARY_UPDATE, RAW_MEMORY_MAX_SIZE
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilder
 from emulator.emulator import YellowLegacyEmulator
-from memory.agent_memory import AgentMemory
-from memory.summary_memory import SummaryMemoryPiece
+from memory.summary_memory import SummaryMemory, SummaryMemoryPiece
 
 
 class UpdateSummaryMemoryService:
@@ -16,19 +15,20 @@ class UpdateSummaryMemoryService:
     def __init__(
         self,
         iteration: int,
-        agent_memory: AgentMemory,
+        summary_memory: SummaryMemory,
         state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.emulator = emulator
         self.iteration = iteration
-        self.agent_memory = agent_memory
+        self.summary_memory = summary_memory
         self.state_string_builder = state_string_builder
 
-    async def update_summary_memory(self) -> AgentMemory:
+    async def update_summary_memory(self) -> SummaryMemory:
         """Update the summary memory."""
         if self.iteration % ITERATIONS_PER_SUMMARY_UPDATE != 0:
-            return self.agent_memory
+            return self.summary_memory
+
         game_state = self.emulator.get_game_state()
         prompt = UPDATE_SUMMARY_MEMORY_PROMPT.format(
             raw_memory_max_size=RAW_MEMORY_MAX_SIZE,
@@ -47,6 +47,4 @@ class UpdateSummaryMemoryService:
             )
             for memory in response.memories
         ]
-        self.agent_memory.append_summary_memory(self.iteration, *memories)
-
-        return self.agent_memory
+        return SummaryMemory(pieces=memories)
