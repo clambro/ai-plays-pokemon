@@ -34,17 +34,17 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
 
     battle_handler_subflow = BattleHandlerSubflow(
         graph=build_battle_handler_subflow_graph(emulator),
-        store=BattleHandlerStore(BattleHandlerState()),
+        store_factory=lambda: BattleHandlerStore(BattleHandlerState()),
         emulator=emulator,
     )
     text_handler_subflow = TextHandlerSubflow(
         graph=build_text_handler_subflow_graph(emulator),
-        store=TextHandlerStore(TextHandlerState()),
+        store_factory=lambda: TextHandlerStore(TextHandlerState()),
         emulator=emulator,
     )
     overworld_handler_subflow = OverworldHandlerSubflow(
         graph=build_overworld_handler_subflow_graph(emulator),
-        store=OverworldHandlerStore(OverworldHandlerState()),
+        store_factory=lambda: OverworldHandlerStore(OverworldHandlerState()),
         emulator=emulator,
     )
 
