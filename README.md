@@ -6,19 +6,17 @@
 Done?
 
 ### Clean-Up, Refactoring, and Testing
-* Make long term memory retrieval and updates happen either every ten iterations, or when the handler changes
-
 * Add names to all the prompts
 
 * Get Gemini to give some general architecture refactoring suggestions
 
-* Set up Junjo server and opentelemetry
-
-* Add tests to everything
+* Use proper init files and relative imports within packages
 
 * Fix the navigation tool: When Pikachu is on screen, bumping into it breaks the existing flow.
 
-* Use proper init files and relative imports within packages
+* Set up Junjo server and opentelemetry
+
+* Add tests to everything
 
 ### Useful Tools and Additions
 * Add a tool to name things
