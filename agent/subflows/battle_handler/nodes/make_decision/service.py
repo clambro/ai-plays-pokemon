@@ -5,8 +5,7 @@ from agent.subflows.battle_handler.nodes.make_decision.schemas import MakeDecisi
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilder
 from emulator.emulator import YellowLegacyEmulator
-from memory.agent_memory import AgentMemory
-from memory.raw_memory import RawMemoryPiece
+from memory.raw_memory import RawMemory, RawMemoryPiece
 
 
 class MakeDecisionService:
@@ -17,16 +16,16 @@ class MakeDecisionService:
     def __init__(
         self,
         iteration: int,
-        agent_memory: AgentMemory,
+        raw_memory: RawMemory,
         state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration
-        self.agent_memory = agent_memory
+        self.raw_memory = raw_memory
         self.state_string_builder = state_string_builder
         self.emulator = emulator
 
-    async def make_decision(self) -> AgentMemory:
+    async def make_decision(self) -> RawMemory:
         """
         Make a decision in a battle based on the current game state.
 
@@ -41,7 +40,7 @@ class MakeDecisionService:
                 messages=[img, prompt],
                 schema=MakeDecisionResponse,
             )
-            self.agent_memory.append_raw_memory(
+            self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=str(response),
@@ -51,4 +50,4 @@ class MakeDecisionService:
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
 
-        return self.agent_memory
+        return self.raw_memory

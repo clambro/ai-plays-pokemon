@@ -20,17 +20,17 @@ class MakeDecisionNode(Node[BattleHandlerStore]):
         state = await store.get_state()
         if state.iteration is None:
             raise ValueError("Iteration is not set")
-        if state.agent_memory is None:
-            raise ValueError("Agent memory is not set")
+        if state.raw_memory is None:
+            raise ValueError("Raw memory is not set")
 
         service = MakeDecisionService(
             iteration=state.iteration,
-            agent_memory=state.agent_memory,
+            raw_memory=state.raw_memory,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
 
-        agent_memory = await service.make_decision()
+        raw_memory = await service.make_decision()
 
-        await store.set_agent_memory(agent_memory)
+        await store.set_raw_memory(raw_memory)
         await store.set_emulator_save_state_from_emulator(self.emulator)

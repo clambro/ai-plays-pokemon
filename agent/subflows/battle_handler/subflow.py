@@ -26,8 +26,8 @@ class BattleHandlerSubflow(Subflow[BattleHandlerState, BattleHandlerStore, Agent
         """Post run actions that update the parent store with the subflow's state."""
         state = await self.store.get_state()
 
-        if state.agent_memory is None:
-            raise ValueError("Agent memory is not set")
+        if state.raw_memory is None:
+            raise ValueError("Raw memory is not set")
 
-        await parent_store.set_agent_memory(state.agent_memory)
+        await parent_store.set_raw_memory(state.raw_memory)
         await parent_store.set_emulator_save_state_from_emulator(self.emulator)
