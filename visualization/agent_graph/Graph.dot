@@ -3,31 +3,31 @@ digraph "G" {
   compound=true;
   node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
   edge [fontname="Helvetica", fontsize=9];
-  subgraph "cluster_15ISiJW4Yi69JEu04sSHH" {
+  subgraph "cluster_0wn7nP8uiVwA60qyD0yYJ" {
     label="DoConcurrentUpdates (Concurrent)";
     style="filled"; fillcolor="lightblue"; color="blue";
     node [fillcolor="lightblue", style="filled,rounded"];
-    "15ISiJW4Yi69JEu04sSHH__entry" [label="", shape=point, width=0.01, style=invis];
-    "15ISiJW4Yi69JEu04sSHH__exit"  [label="", shape=point, width=0.01, style=invis];
-    c1SKqN2WIx2ij4NgUKTvb [label="UpdateGoalsNode"];
-    jLEwWIrZGxAGg4o38i4su [label="UpdateSummaryMemoryNode"];
-    GXflY9EKdHPiqjInL1sYC [label="CreateLongTermMemoryNode"];
+    "0wn7nP8uiVwA60qyD0yYJ__entry" [label="", shape=point, width=0.01, style=invis];
+    "0wn7nP8uiVwA60qyD0yYJ__exit"  [label="", shape=point, width=0.01, style=invis];
+    jwMSWALOG7oRIjDI8mb9f [label="UpdateGoalsNode"];
+    jnjZw6PJKabnHhiCMhdBh [label="UpdateSummaryMemoryNode"];
+    RhmfpZ2UTXjjk1CC3Oepe [label="CreateLongTermMemoryNode"];
   }
-  GXflY9EKdHPiqjInL1sYC [label="CreateLongTermMemoryNode"];
-  AP86GCGV3npDf4CHClXFg [label="BattleHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
-  fv72b8kyNhTSRWWlL00R2 [label="UpdateLongTermMemoryNode"];
-  oW1E57LB7d2o1qKYWzj4w [label="RetrieveLongTermMemoryNode"];
-  vECg5X0vyAOo7gThuDB4Y [label="OverworldHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
-  HUZQmXyC3O2UpxJ2NxeOm [label="TextHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
-  c1SKqN2WIx2ij4NgUKTvb [label="UpdateGoalsNode"];
-  jLEwWIrZGxAGg4o38i4su [label="UpdateSummaryMemoryNode"];
-  "0gFf65PBfZlXKbrt2YaZI" [label="PrepareAgentStoreNode"];
-  "0gFf65PBfZlXKbrt2YaZI" -> fv72b8kyNhTSRWWlL00R2 [style="solid"];
-  fv72b8kyNhTSRWWlL00R2 -> oW1E57LB7d2o1qKYWzj4w [style="solid"];
-  oW1E57LB7d2o1qKYWzj4w -> vECg5X0vyAOo7gThuDB4Y [style="dashed", label="AgentHandlerIs(overworld)"];
-  oW1E57LB7d2o1qKYWzj4w -> AP86GCGV3npDf4CHClXFg [style="dashed", label="AgentHandlerIs(battle)"];
-  oW1E57LB7d2o1qKYWzj4w -> HUZQmXyC3O2UpxJ2NxeOm [style="dashed", label="AgentHandlerIs(text)"];
-  HUZQmXyC3O2UpxJ2NxeOm -> "15ISiJW4Yi69JEu04sSHH__entry" [lhead="cluster_15ISiJW4Yi69JEu04sSHH", style="solid"];
-  AP86GCGV3npDf4CHClXFg -> "15ISiJW4Yi69JEu04sSHH__entry" [lhead="cluster_15ISiJW4Yi69JEu04sSHH", style="solid"];
-  vECg5X0vyAOo7gThuDB4Y -> "15ISiJW4Yi69JEu04sSHH__entry" [lhead="cluster_15ISiJW4Yi69JEu04sSHH", style="solid"];
+  ZMAkiUR9uMgquhLUkpIPR [label="RetrieveLongTermMemoryNode"];
+  wfXbMoT9sujv2blYkmcYs [label="PrepareAgentStoreNode"];
+  Y9LMgKnSWXwAeyntUAbuI [label="OverworldHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
+  ZnEKS1eWUH2GzzGv8WVYw [label="TextHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
+  dCSRA6hcYs7kW7rciwOfT [label="UpdateLongTermMemoryNode"];
+  RhmfpZ2UTXjjk1CC3Oepe [label="CreateLongTermMemoryNode"];
+  yYFmr5aWKcxbTUgy1WSHO [label="BattleHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
+  jnjZw6PJKabnHhiCMhdBh [label="UpdateSummaryMemoryNode"];
+  jwMSWALOG7oRIjDI8mb9f [label="UpdateGoalsNode"];
+  wfXbMoT9sujv2blYkmcYs -> dCSRA6hcYs7kW7rciwOfT [style="solid"];
+  dCSRA6hcYs7kW7rciwOfT -> ZMAkiUR9uMgquhLUkpIPR [style="solid"];
+  ZMAkiUR9uMgquhLUkpIPR -> Y9LMgKnSWXwAeyntUAbuI [style="dashed", label="AgentHandlerIs(overworld)"];
+  ZMAkiUR9uMgquhLUkpIPR -> yYFmr5aWKcxbTUgy1WSHO [style="dashed", label="AgentHandlerIs(battle)"];
+  ZMAkiUR9uMgquhLUkpIPR -> ZnEKS1eWUH2GzzGv8WVYw [style="dashed", label="AgentHandlerIs(text)"];
+  ZnEKS1eWUH2GzzGv8WVYw -> "0wn7nP8uiVwA60qyD0yYJ__entry" [lhead="cluster_0wn7nP8uiVwA60qyD0yYJ", style="solid"];
+  yYFmr5aWKcxbTUgy1WSHO -> "0wn7nP8uiVwA60qyD0yYJ__entry" [lhead="cluster_0wn7nP8uiVwA60qyD0yYJ", style="solid"];
+  Y9LMgKnSWXwAeyntUAbuI -> "0wn7nP8uiVwA60qyD0yYJ__entry" [lhead="cluster_0wn7nP8uiVwA60qyD0yYJ", style="solid"];
 }
