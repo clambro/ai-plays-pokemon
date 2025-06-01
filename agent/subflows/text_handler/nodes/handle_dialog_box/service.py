@@ -29,8 +29,8 @@ class HandleDialogBoxService:
         game_state = self.emulator.get_game_state()
         dialog_box = game_state.get_dialog_box()
         if not dialog_box:
-            # Should never happen if we're in this handler, but just in case.
-            return self.raw_memory, TextHandler.GENERIC
+            # Should never happen if we're in this handler, but just in case we need to bail.
+            return self.raw_memory, None
 
         text: list[str] = []
         is_blinking_cursor = True
@@ -57,11 +57,11 @@ class HandleDialogBoxService:
                 content=f'The following text was read from the main dialog box: "{joined_text}"',
             ),
         )
-        if game_state.is_text_on_screen():
-            # More work to do. Pass to the generic text handler.
+        if dialog_box and is_text_outside_dialog_box:
+            # Probably a menu or a yes/no. Pass to the generic text handler.
             return self.raw_memory, TextHandler.GENERIC
         else:
-            return self.raw_memory, None  # All text is gone, so go to the next agent loop.
+            return self.raw_memory, None  # Go to the next agent loop.
 
     @staticmethod
     def _append_dialog_to_list(text: list[str], dialog_box: DialogBox) -> None:

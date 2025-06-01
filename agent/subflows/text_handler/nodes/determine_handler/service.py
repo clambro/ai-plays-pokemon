@@ -12,7 +12,8 @@ class DetermineHandlerService:
         """Determine the handler to use."""
         game_state = self.emulator.get_game_state()
         dialog_box = game_state.get_dialog_box()
-        if dialog_box:
+        is_text_outside_dialog_box = game_state.is_text_on_screen(ignore_dialog_box=True)
+        if dialog_box and not is_text_outside_dialog_box:
             return TextHandler.DIALOG_BOX
 
         name_first_row = "A B C D E F G H I"
