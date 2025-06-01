@@ -24,7 +24,8 @@ async def main(
     Get the emulator ticking on an async thread, and iteratively run the agent.
 
     :param rom_path: The path to the ROM file.
-    :param state_path: Optional path to load a saved state from.
+    :param mute_sound: Whether to mute the sound.
+    :param backup_folder: Optional path to load a saved state from.
     """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     folder = OUTPUTS_FOLDER / timestamp
