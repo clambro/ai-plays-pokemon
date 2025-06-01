@@ -1,4 +1,5 @@
 from junjo import Graph, Subflow
+from junjo.workflow import StoreFactory
 
 from agent.state import AgentState, AgentStore
 from agent.subflows.battle_handler.state import BattleHandlerState, BattleHandlerStore
@@ -11,11 +12,11 @@ class BattleHandlerSubflow(Subflow[BattleHandlerState, BattleHandlerStore, Agent
     def __init__(
         self,
         graph: Graph,
-        store: BattleHandlerStore,
+        store_factory: StoreFactory[BattleHandlerStore],
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.emulator = emulator
-        super().__init__(graph, store)
+        super().__init__(graph, store_factory=store_factory)
 
     async def pre_run_actions(self, parent_store: AgentStore) -> None:
         """Pre run actions that initialize the subflow store from the parent store."""

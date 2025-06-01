@@ -1,4 +1,5 @@
 from junjo import Graph, Subflow
+from junjo.workflow import StoreFactory
 
 from agent.state import AgentState, AgentStore
 from agent.subflows.text_handler.state import TextHandlerState, TextHandlerStore
@@ -11,11 +12,11 @@ class TextHandlerSubflow(Subflow[TextHandlerState, TextHandlerStore, AgentState,
     def __init__(
         self,
         graph: Graph,
-        store: TextHandlerStore,
+        store_factory: StoreFactory[TextHandlerStore],
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.emulator = emulator
-        super().__init__(graph, store)
+        super().__init__(graph, store_factory=store_factory)
 
     async def pre_run_actions(self, parent_store: AgentStore) -> None:
         """Pre run actions that initialize the subflow store from the parent store."""

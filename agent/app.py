@@ -10,9 +10,8 @@ def build_agent_workflow(
     emulator: YellowLegacyEmulator,
 ) -> Workflow[AgentState, AgentStore]:
     """Build the top-level agent workflow."""
-    initial_store = AgentStore(initial_state)
     return Workflow[AgentState, AgentStore](
         name="Pokemon Legacy Yellow Agent",
         graph=build_agent_graph(emulator),
-        store=initial_store,
+        store_factory=lambda: AgentStore(initial_state),
     )
