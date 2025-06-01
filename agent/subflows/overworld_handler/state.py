@@ -5,7 +5,9 @@ from agent.state import AgentState
 from common.enums import Tool
 from common.goals import Goals
 from emulator.game_state import YellowLegacyGameState
-from memory.agent_memory import AgentMemory
+from memory.long_term_memory import LongTermMemory
+from memory.raw_memory import RawMemory
+from memory.summary_memory import SummaryMemory
 from overworld_map.schemas import OverworldMap
 
 
@@ -13,7 +15,9 @@ class OverworldHandlerState(BaseStateWithEmulator):
     """The state used in the overworld handler graph workflow."""
 
     iteration: int | None = None
-    agent_memory: AgentMemory | None = None
+    raw_memory: RawMemory | None = None
+    summary_memory: SummaryMemory | None = None
+    long_term_memory: LongTermMemory | None = None
     goals: Goals | None = None
     current_map: OverworldMap | None = None
     should_critique: bool | None = None
@@ -25,13 +29,14 @@ class OverworldHandlerState(BaseStateWithEmulator):
         """Get a string representation of the agent and game state to be used in prompts."""
         if self.current_map is None:
             raise ValueError("Current map is not set")
-        player_info = game_state.player_info
         return "\n\n".join(
             (
-                str(self.agent_memory),
+                str(self.raw_memory),
+                str(self.summary_memory),
+                str(self.long_term_memory),
                 str(self.goals),
                 self.current_map.to_string(game_state),
-                str(player_info),
+                game_state.player_info,
             ),
         )
 
@@ -45,13 +50,16 @@ class OverworldHandlerStore(BaseStoreWithEmulator[OverworldHandlerState]):
             {
                 "iteration": parent_state.iteration,
                 "agent_memory": parent_state.agent_memory,
+                "raw_memory": parent_state.raw_memory,
+                "summary_memory": parent_state.summary_memory,
+                "long_term_memory": parent_state.long_term_memory,
                 "goals": parent_state.goals,
             },
         )
 
-    async def set_agent_memory(self, agent_memory: AgentMemory) -> None:
-        """Set the agent memory."""
-        await self.set_state({"agent_memory": agent_memory})
+    async def set_raw_memory(self, raw_memory: RawMemory) -> None:
+        """Set the raw memory."""
+        await self.set_state({"raw_memory": raw_memory})
 
     async def set_current_map(self, current_map: OverworldMap) -> None:
         """Set the current map."""

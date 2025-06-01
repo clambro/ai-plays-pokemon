@@ -18,20 +18,20 @@ class MakeDecisionNode(Node[OverworldHandlerStore]):
         logger.info("Running the overworld decision maker...")
 
         state = await store.get_state()
-        if state.agent_memory is None:
-            raise ValueError("Agent memory is not set")
+        if state.raw_memory is None:
+            raise ValueError("Raw memory is not set")
         if state.iteration is None:
             raise ValueError("Iteration is not set")
 
         service = MakeDecisionService(
             iteration=state.iteration,
-            agent_memory=state.agent_memory,
+            raw_memory=state.raw_memory,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
         decision = await service.make_decision()
 
-        await store.set_agent_memory(decision.agent_memory)
+        await store.set_raw_memory(decision.raw_memory)
         await store.set_tool(decision.tool)
         await store.set_tool_args(decision.navigation_args)
 

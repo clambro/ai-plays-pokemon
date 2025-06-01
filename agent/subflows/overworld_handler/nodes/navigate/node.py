@@ -21,8 +21,8 @@ class NavigationNode(Node[OverworldHandlerStore]):
         state = await store.get_state()
         if state.iteration is None:
             raise ValueError("Iteration is not set")
-        if state.agent_memory is None:
-            raise ValueError("Agent memory is not set")
+        if state.raw_memory is None:
+            raise ValueError("Raw memory is not set")
         if state.current_map is None:
             raise ValueError("Current map is not set")
         if state.tool_args is None:
@@ -32,12 +32,11 @@ class NavigationNode(Node[OverworldHandlerStore]):
             iteration=state.iteration,
             emulator=self.emulator,
             current_map=state.current_map,
-            agent_memory=state.agent_memory,
+            raw_memory=state.raw_memory,
             args=NavigationArgs.model_validate(state.tool_args),
         )
-        current_map, agent_memory = await service.navigate()
+        current_map, raw_memory = await service.navigate()
 
         await store.set_current_map(current_map)
-        await store.set_agent_memory(agent_memory)
-
+        await store.set_raw_memory(raw_memory)
         await store.set_emulator_save_state_from_emulator(self.emulator)
