@@ -4,7 +4,7 @@ from agent.nodes.update_long_term_memory.prompts import UPDATE_LONG_TERM_MEMORY_
 from agent.nodes.update_long_term_memory.schemas import UpdateLongTermMemoryResponse, UpdateType
 from common.embedding_service import GeminiEmbeddingService
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
-from common.types import StateStringBuilder
+from common.types import StateStringBuilderT
 from database.long_term_memory.repository import update_long_term_memory
 from database.long_term_memory.schemas import LongTermMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
@@ -21,7 +21,7 @@ class UpdateLongTermMemoryService:
         self,
         iteration: int,
         long_term_memory: LongTermMemory,
-        state_string_builder: StateStringBuilder,
+        state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration

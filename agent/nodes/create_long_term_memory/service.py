@@ -5,7 +5,7 @@ from agent.nodes.create_long_term_memory.schemas import CreateLongTermMemoryResp
 from common.constants import ITERATIONS_PER_LONG_TERM_MEMORY_CREATION
 from common.embedding_service import GeminiEmbeddingService
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
-from common.types import StateStringBuilder
+from common.types import StateStringBuilderT
 from database.long_term_memory.repository import (
     create_long_term_memory,
     get_all_long_term_memory_titles,
@@ -23,7 +23,7 @@ class CreateLongTermMemoryService:
     def __init__(
         self,
         iteration: int,
-        state_string_builder: StateStringBuilder,
+        state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration

@@ -3,7 +3,7 @@ from loguru import logger
 from agent.subflows.text_handler.nodes.make_decision.prompts import DECISION_MAKER_TEXT_PROMPT
 from agent.subflows.text_handler.nodes.make_decision.schemas import DecisionMakerTextResponse
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
-from common.types import StateStringBuilder
+from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
@@ -17,7 +17,7 @@ class DecisionMakerTextService:
         self,
         iteration: int,
         raw_memory: RawMemory,
-        state_string_builder: StateStringBuilder,
+        state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration

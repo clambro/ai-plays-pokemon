@@ -2,7 +2,7 @@ from agent.nodes.update_summary_memory.prompts import UPDATE_SUMMARY_MEMORY_PROM
 from agent.nodes.update_summary_memory.schemas import UpdateSummaryMemoryResponse
 from common.constants import ITERATIONS_PER_SUMMARY_UPDATE, RAW_MEMORY_MAX_SIZE
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
-from common.types import StateStringBuilder
+from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from memory.summary_memory import SummaryMemory, SummaryMemoryPiece
 
@@ -16,7 +16,7 @@ class UpdateSummaryMemoryService:
         self,
         iteration: int,
         summary_memory: SummaryMemory,
-        state_string_builder: StateStringBuilder,
+        state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.emulator = emulator
