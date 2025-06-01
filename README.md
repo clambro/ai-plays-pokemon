@@ -6,8 +6,6 @@
 Done?
 
 ### Clean-Up, Refactoring, and Testing
-* Explicit text handler for bailing out?
-
 * Add names to all the prompts
 
 * Get Gemini to give some general architecture refactoring suggestions
