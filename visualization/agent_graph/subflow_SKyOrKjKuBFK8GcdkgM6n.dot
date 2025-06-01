@@ -1,0 +1,12 @@
+digraph "subflow_SKyOrKjKuBFK8GcdkgM6n" {
+  rankdir=LR;
+  compound=true;
+  node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9];
+  Jp9sPLEDcu8Mjsx6Doe0h [label="MakeDecisionNode"];
+  zCft7QEB74TMxm6suQHoP [label="DummyNode"];
+  "7h4P7l0lyolXwcj3VqVOS" [label="HandleDialogBoxNode"];
+  "7h4P7l0lyolXwcj3VqVOS" -> Jp9sPLEDcu8Mjsx6Doe0h [style="dashed", label="NeedsGenericHandling(True)"];
+  "7h4P7l0lyolXwcj3VqVOS" -> zCft7QEB74TMxm6suQHoP [style="dashed", label="NeedsGenericHandling(False)"];
+  Jp9sPLEDcu8Mjsx6Doe0h -> zCft7QEB74TMxm6suQHoP [style="solid"];
+}

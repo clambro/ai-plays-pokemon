@@ -3,14 +3,12 @@ import asyncio
 from loguru import logger
 from PIL.Image import Image
 
-from agent.subflows.overworld_handler.nodes.update_onscreen_entities.prompts import (
+from agent.subflows.overworld_handler.nodes.update_map.prompts import (
     UPDATE_SIGNS_PROMPT,
     UPDATE_SPRITES_PROMPT,
     UPDATE_WARPS_PROMPT,
 )
-from agent.subflows.overworld_handler.nodes.update_onscreen_entities.schemas import (
-    UpdateEntitiesResponse,
-)
+from agent.subflows.overworld_handler.nodes.update_map.schemas import UpdateEntitiesResponse
 from common.enums import MapEntityType
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilder
@@ -19,9 +17,10 @@ from database.map_entity_memory.schemas import MapEntityMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
+from overworld_map.service import update_map_with_screen_info
 
 
-class UpdateOnscreenEntitiesService:
+class UpdateMapService:
     """Service for updating the current map."""
 
     llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
@@ -38,7 +37,17 @@ class UpdateOnscreenEntitiesService:
         self.state_string_builder = state_string_builder
         self.emulator = emulator
 
-    async def update_onscreen_entities(self) -> None:
+    async def update_map(self) -> OverworldMap:
+        """Update the current map with the latest screen info."""
+        game_state = self.emulator.get_game_state()
+        self.current_map = await update_map_with_screen_info(
+            self.iteration,
+            game_state,
+            self.current_map,
+        )
+        return self.current_map
+
+    async def update_entities(self) -> None:
         """
         Update the map entity memory of the valid targets for updating, as defined in
         _update_entities.

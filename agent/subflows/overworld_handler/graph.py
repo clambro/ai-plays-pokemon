@@ -3,38 +3,36 @@ from junjo import Edge, Graph
 from agent.nodes.dummy.node import DummyNode
 from agent.subflows.overworld_handler.conditions import ShouldCritique, ToolIs
 from agent.subflows.overworld_handler.nodes.critique.node import CritiqueNode
+from agent.subflows.overworld_handler.nodes.load_map.node import LoadMapNode
 from agent.subflows.overworld_handler.nodes.make_decision.node import MakeDecisionNode
 from agent.subflows.overworld_handler.nodes.navigate.node import NavigationNode
 from agent.subflows.overworld_handler.nodes.should_critique.node import ShouldCritiqueNode
-from agent.subflows.overworld_handler.nodes.update_current_map.node import UpdateCurrentMapNode
-from agent.subflows.overworld_handler.nodes.update_onscreen_entities.node import (
-    UpdateOnscreenEntitiesNode,
-)
+from agent.subflows.overworld_handler.nodes.update_map.node import UpdateMapNode
 from common.enums import Tool
 from emulator.emulator import YellowLegacyEmulator
 
 
 def build_overworld_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Graph:
     """Build the overworld handler subflow graph."""
-    update_current_map = UpdateCurrentMapNode(emulator)
+    load_map = LoadMapNode(emulator)
     should_critique = ShouldCritiqueNode(emulator)
     critique = CritiqueNode(emulator)
-    update_onscreen_entities = UpdateOnscreenEntitiesNode(emulator)
+    update_map = UpdateMapNode(emulator)
     decision_maker_overworld = MakeDecisionNode(emulator)
     navigation = NavigationNode(emulator)
 
     dummy_sink = DummyNode()
 
     return Graph(
-        source=update_current_map,
+        source=load_map,
         sink=dummy_sink,
         edges=[
             Edge(
-                update_current_map,
-                update_onscreen_entities,
+                load_map,
+                update_map,
             ),
             Edge(
-                update_onscreen_entities,
+                update_map,
                 should_critique,
             ),
             Edge(

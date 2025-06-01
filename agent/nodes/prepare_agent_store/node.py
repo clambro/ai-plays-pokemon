@@ -1,13 +1,16 @@
 from junjo import Node
 from loguru import logger
 
-from agent.nodes.update_agent_store.service import BuildAgentStateService
+from agent.nodes.prepare_agent_store.service import PrepareAgentStateService
 from agent.state import AgentStore
 from emulator.emulator import YellowLegacyEmulator
 
 
-class UpdateAgentStoreNode(Node[AgentStore]):
-    """The first node in the agent loop. Prepares the agent store for the next iteration."""
+class PrepareAgentStoreNode(Node[AgentStore]):
+    """
+    The first node in the agent loop. Prepares the agent store for the next iteration and selects
+    the appropriate handler.
+    """
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
         self.emulator = emulator
@@ -15,10 +18,10 @@ class UpdateAgentStoreNode(Node[AgentStore]):
 
     async def service(self, store: AgentStore) -> None:
         """The service for the node."""
-        logger.info("Updating agent store...")
+        logger.info("Preparing agent store...")
 
         state = await store.get_state()
-        service = BuildAgentStateService(self.emulator)
+        service = PrepareAgentStateService(self.emulator)
 
         await service.wait_for_animations()
         handler = await service.determine_handler()
