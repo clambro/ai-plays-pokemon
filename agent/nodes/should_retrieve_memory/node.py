@@ -23,6 +23,7 @@ class ShouldRetrieveMemoryNode(Node[AgentStore]):
             iteration=state.iteration,
             handler=state.handler,
             previous_handler=state.previous_handler,
+            long_term_memory=state.long_term_memory,
         )
         should_retrieve_memory = await service.should_retrieve_memory()
 
