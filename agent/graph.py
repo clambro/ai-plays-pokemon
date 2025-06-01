@@ -45,8 +45,8 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
         emulator=emulator,
     )
 
-    do_concurrent_updates = RunConcurrent(
-        name="DoConcurrentUpdates",
+    do_updates = RunConcurrent(
+        name="DoUpdates",
         items=[
             update_goals,
             update_summary_memory,
@@ -56,7 +56,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
 
     return Graph(
         source=prepare_agent_store,
-        sink=do_concurrent_updates,
+        sink=do_updates,
         edges=[
             Edge(
                 prepare_agent_store,
@@ -83,15 +83,15 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             ),
             Edge(
                 text_handler_subflow,
-                do_concurrent_updates,
+                do_updates,
             ),
             Edge(
                 battle_handler_subflow,
-                do_concurrent_updates,
+                do_updates,
             ),
             Edge(
                 overworld_handler_subflow,
-                do_concurrent_updates,
+                do_updates,
             ),
         ],
     )

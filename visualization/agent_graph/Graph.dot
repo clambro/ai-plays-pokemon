@@ -3,31 +3,31 @@ digraph "G" {
   compound=true;
   node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
   edge [fontname="Helvetica", fontsize=9];
-  subgraph "cluster_0wn7nP8uiVwA60qyD0yYJ" {
-    label="DoConcurrentUpdates (Concurrent)";
+  subgraph "cluster_lcT2LqEXrHo59CcWnLick" {
+    label="DoUpdates (Concurrent)";
     style="filled"; fillcolor="lightblue"; color="blue";
     node [fillcolor="lightblue", style="filled,rounded"];
-    "0wn7nP8uiVwA60qyD0yYJ__entry" [label="", shape=point, width=0.01, style=invis];
-    "0wn7nP8uiVwA60qyD0yYJ__exit"  [label="", shape=point, width=0.01, style=invis];
-    jwMSWALOG7oRIjDI8mb9f [label="UpdateGoalsNode"];
-    jnjZw6PJKabnHhiCMhdBh [label="UpdateSummaryMemoryNode"];
-    RhmfpZ2UTXjjk1CC3Oepe [label="CreateLongTermMemoryNode"];
+    "lcT2LqEXrHo59CcWnLick__entry" [label="", shape=point, width=0.01, style=invis];
+    "lcT2LqEXrHo59CcWnLick__exit"  [label="", shape=point, width=0.01, style=invis];
+    Yradb7rglmk5Jwj8jEWCo [label="UpdateGoalsNode"];
+    "1PZIEYbeDCIkit7gJTAws" [label="UpdateSummaryMemoryNode"];
+    GGE7PQdJ11ZqYcVlAyh5N [label="CreateLongTermMemoryNode"];
   }
-  ZMAkiUR9uMgquhLUkpIPR [label="RetrieveLongTermMemoryNode"];
-  wfXbMoT9sujv2blYkmcYs [label="PrepareAgentStoreNode"];
-  Y9LMgKnSWXwAeyntUAbuI [label="OverworldHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
-  ZnEKS1eWUH2GzzGv8WVYw [label="TextHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
-  dCSRA6hcYs7kW7rciwOfT [label="UpdateLongTermMemoryNode"];
-  RhmfpZ2UTXjjk1CC3Oepe [label="CreateLongTermMemoryNode"];
-  yYFmr5aWKcxbTUgy1WSHO [label="BattleHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
-  jnjZw6PJKabnHhiCMhdBh [label="UpdateSummaryMemoryNode"];
-  jwMSWALOG7oRIjDI8mb9f [label="UpdateGoalsNode"];
-  wfXbMoT9sujv2blYkmcYs -> dCSRA6hcYs7kW7rciwOfT [style="solid"];
-  dCSRA6hcYs7kW7rciwOfT -> ZMAkiUR9uMgquhLUkpIPR [style="solid"];
-  ZMAkiUR9uMgquhLUkpIPR -> Y9LMgKnSWXwAeyntUAbuI [style="dashed", label="AgentHandlerIs(overworld)"];
-  ZMAkiUR9uMgquhLUkpIPR -> yYFmr5aWKcxbTUgy1WSHO [style="dashed", label="AgentHandlerIs(battle)"];
-  ZMAkiUR9uMgquhLUkpIPR -> ZnEKS1eWUH2GzzGv8WVYw [style="dashed", label="AgentHandlerIs(text)"];
-  ZnEKS1eWUH2GzzGv8WVYw -> "0wn7nP8uiVwA60qyD0yYJ__entry" [lhead="cluster_0wn7nP8uiVwA60qyD0yYJ", style="solid"];
-  yYFmr5aWKcxbTUgy1WSHO -> "0wn7nP8uiVwA60qyD0yYJ__entry" [lhead="cluster_0wn7nP8uiVwA60qyD0yYJ", style="solid"];
-  Y9LMgKnSWXwAeyntUAbuI -> "0wn7nP8uiVwA60qyD0yYJ__entry" [lhead="cluster_0wn7nP8uiVwA60qyD0yYJ", style="solid"];
+  EManaMiRqvjlgA1VDD2zj [label="BattleHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
+  PHwkAvvj487a7tnHPYCt3 [label="RetrieveLongTermMemoryNode"];
+  "1PZIEYbeDCIkit7gJTAws" [label="UpdateSummaryMemoryNode"];
+  YOYX8kja27mMFInhxY1TG [label="UpdateLongTermMemoryNode"];
+  HHzrxG5oVnulNBvUru88v [label="OverworldHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
+  SKyOrKjKuBFK8GcdkgM6n [label="TextHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
+  "4YLwdmhal9c8v1CjS2Ey6" [label="PrepareAgentStoreNode"];
+  Yradb7rglmk5Jwj8jEWCo [label="UpdateGoalsNode"];
+  GGE7PQdJ11ZqYcVlAyh5N [label="CreateLongTermMemoryNode"];
+  "4YLwdmhal9c8v1CjS2Ey6" -> YOYX8kja27mMFInhxY1TG [style="solid"];
+  YOYX8kja27mMFInhxY1TG -> PHwkAvvj487a7tnHPYCt3 [style="solid"];
+  PHwkAvvj487a7tnHPYCt3 -> HHzrxG5oVnulNBvUru88v [style="dashed", label="AgentHandlerIs(overworld)"];
+  PHwkAvvj487a7tnHPYCt3 -> EManaMiRqvjlgA1VDD2zj [style="dashed", label="AgentHandlerIs(battle)"];
+  PHwkAvvj487a7tnHPYCt3 -> SKyOrKjKuBFK8GcdkgM6n [style="dashed", label="AgentHandlerIs(text)"];
+  SKyOrKjKuBFK8GcdkgM6n -> lcT2LqEXrHo59CcWnLick__entry [lhead="cluster_lcT2LqEXrHo59CcWnLick", style="solid"];
+  EManaMiRqvjlgA1VDD2zj -> lcT2LqEXrHo59CcWnLick__entry [lhead="cluster_lcT2LqEXrHo59CcWnLick", style="solid"];
+  HHzrxG5oVnulNBvUru88v -> lcT2LqEXrHo59CcWnLick__entry [lhead="cluster_lcT2LqEXrHo59CcWnLick", style="solid"];
 }
