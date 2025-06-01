@@ -29,7 +29,7 @@ class MakeDecisionService:
         """
         Make a decision in a battle based on the current game state.
 
-        :return: The agent memory with the decision added.
+        :return: The raw memory with the decision added.
         """
         img = self.emulator.get_screenshot()
         game_state = self.emulator.get_game_state()

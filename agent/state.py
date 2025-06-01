@@ -6,7 +6,6 @@ from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from common.enums import AgentStateHandler
 from common.goals import Goals
 from emulator.game_state import YellowLegacyGameState
-from memory.agent_memory import AgentMemory
 from memory.long_term_memory import LongTermMemory
 from memory.raw_memory import RawMemory
 from memory.summary_memory import SummaryMemory
@@ -17,7 +16,6 @@ class AgentState(BaseStateWithEmulator):
 
     folder: Path
     iteration: int = 0
-    agent_memory: AgentMemory = Field(default_factory=AgentMemory)
     raw_memory: RawMemory = Field(default_factory=RawMemory)
     summary_memory: SummaryMemory = Field(default_factory=SummaryMemory)
     long_term_memory: LongTermMemory = Field(default_factory=LongTermMemory)
@@ -43,10 +41,6 @@ class AgentStore(BaseStoreWithEmulator[AgentState]):
     async def set_iteration(self, iteration: int) -> None:
         """Set the iteration."""
         await self.set_state({"iteration": iteration})
-
-    async def set_agent_memory(self, agent_memory: AgentMemory) -> None:
-        """Set the agent memory."""
-        await self.set_state({"agent_memory": agent_memory})
 
     async def set_raw_memory(self, raw_memory: RawMemory) -> None:
         """Set the raw memory."""

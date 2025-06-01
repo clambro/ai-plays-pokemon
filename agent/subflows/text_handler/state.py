@@ -38,7 +38,6 @@ class TextHandlerStore(BaseStoreWithEmulator[TextHandlerState]):
         await self.set_state(
             {
                 "iteration": parent_state.iteration,
-                "agent_memory": parent_state.agent_memory,
                 "raw_memory": parent_state.raw_memory,
                 "summary_memory": parent_state.summary_memory,
                 "long_term_memory": parent_state.long_term_memory,
