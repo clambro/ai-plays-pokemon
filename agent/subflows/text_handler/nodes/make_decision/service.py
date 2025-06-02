@@ -42,6 +42,7 @@ class DecisionMakerTextService:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[img, prompt],
                 schema=DecisionMakerTextResponse,
+                prompt_name="make_text_decision",
             )
             self.raw_memory.append(
                 RawMemoryPiece(

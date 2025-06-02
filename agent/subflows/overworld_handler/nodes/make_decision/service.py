@@ -43,6 +43,7 @@ class MakeDecisionService:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[img, prompt],
                 schema=MakeDecisionResponse,
+                prompt_name="make_overworld_decision",
             )
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")

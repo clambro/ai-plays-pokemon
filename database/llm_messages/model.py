@@ -15,6 +15,7 @@ class LLMMessageDBModel(SQLAlchemyBase):
 
     id: Mapped[UUID4] = mapped_column(UUID, primary_key=True, index=True, default=uuid.uuid4)
     model: Mapped[str] = mapped_column(String, nullable=False)
+    prompt_name: Mapped[str] = mapped_column(String, nullable=False)
     prompt: Mapped[str] = mapped_column(String, nullable=False)
     response: Mapped[str] = mapped_column(String, nullable=False)
     prompt_tokens: Mapped[int] = mapped_column(Integer, nullable=False)

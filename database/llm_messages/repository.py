@@ -10,6 +10,7 @@ async def create_llm_message(llm_message: LLMMessageCreate) -> None:
     async with db_sessionmaker() as session:
         db_obj = LLMMessageDBModel(
             model=llm_message.model,
+            prompt_name=llm_message.prompt_name,
             prompt=llm_message.prompt,
             response=llm_message.response,
             prompt_tokens=llm_message.prompt_tokens,

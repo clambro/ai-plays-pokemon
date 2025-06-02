@@ -47,6 +47,7 @@ class GeminiLLMService:
     async def get_llm_response(
         self,
         messages: str | list[str | Image],
+        prompt_name: str,
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = 0.0,
         thinking_tokens: int | None = 256,
@@ -55,6 +56,7 @@ class GeminiLLMService:
         Get a response from the Gemini LLM as a string.
 
         :param messages: The messages to send to the Gemini LLM.
+        :param prompt_name: The name of the prompt to use as a label in the database.
         :param system_prompt: The system prompt to send to the Gemini LLM.
         :param temperature: The temperature to use for the response.
         :param thinking_tokens: The number of tokens to use for the thinking. None is for
@@ -64,6 +66,7 @@ class GeminiLLMService:
         response = await self._get_llm_response(
             messages=messages,
             schema=None,
+            prompt_name=prompt_name,
             system_prompt=system_prompt,
             temperature=temperature,
             thinking_tokens=thinking_tokens,
@@ -76,6 +79,7 @@ class GeminiLLMService:
         self,
         messages: str | list[str | Image],
         schema: type[PydanticModel],
+        prompt_name: str,
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = 0.0,
         thinking_tokens: int | None = 256,
@@ -85,6 +89,7 @@ class GeminiLLMService:
 
         :param messages: The messages to send to the Gemini LLM.
         :param schema: The schema to use for the response.
+        :param prompt_name: The name of the prompt to use as a label in the database.
         :param system_prompt: The system prompt to send to the Gemini LLM.
         :param temperature: The temperature to use for the response.
         :param thinking_tokens: The number of tokens to use for the thinking. None is for
@@ -94,6 +99,7 @@ class GeminiLLMService:
         response = await self._get_llm_response(
             messages=messages,
             schema=schema,
+            prompt_name=prompt_name,
             system_prompt=system_prompt,
             temperature=temperature,
             thinking_tokens=thinking_tokens,
@@ -110,6 +116,7 @@ class GeminiLLMService:
         self,
         messages: str | list[str | Image],
         schema: type[PydanticModel] | None,
+        prompt_name: str,
         system_prompt: str,
         temperature: float,
         thinking_tokens: int | None,
@@ -118,6 +125,8 @@ class GeminiLLMService:
         Get a response from the Gemini LLM.
 
         :param messages: The messages to send to the Gemini LLM.
+        :param schema: The schema to use for the response.
+        :param prompt_name: The name of the prompt to use as a label in the database.
         :param system_prompt: The system prompt to send to the Gemini LLM.
         :param temperature: The temperature to use for the response.
         :param thinking_tokens: The number of tokens to use for the thinking. None is for
@@ -149,6 +158,7 @@ class GeminiLLMService:
         await create_llm_message(
             LLMMessageCreate(
                 model=self.model,
+                prompt_name=prompt_name,
                 prompt=message_str,
                 response=response.text,
                 prompt_tokens=response.usage_metadata.prompt_token_count or 0,

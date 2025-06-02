@@ -45,6 +45,7 @@ class CreateLongTermMemoryService:
             response = await self.llm_service.get_llm_response_pydantic(
                 prompt,
                 CreateLongTermMemoryResponse,
+                prompt_name="create_long_term_memory",
             )
             for piece in response.pieces:
                 embedding = await self.embedding_service.get_embedding(piece.content, piece.title)

@@ -74,6 +74,7 @@ class AssignNameService:
         response = await self.llm_service.get_llm_response_pydantic(
             prompt,
             schema=NameResponse,
+            prompt_name="get_name",
             thinking_tokens=None,
         )
         self.raw_memory.append(RawMemoryPiece(iteration=self.iteration, content=response.thoughts))

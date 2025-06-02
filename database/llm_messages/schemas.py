@@ -5,6 +5,7 @@ class LLMMessageCreate(BaseModel):
     """Create model for an LLM message."""
 
     model: str
+    prompt_name: str
     prompt: str
     response: str
     prompt_tokens: int

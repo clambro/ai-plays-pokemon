@@ -40,6 +40,7 @@ class UpdateLongTermMemoryService:
             response = await self.llm_service.get_llm_response_pydantic(
                 prompt,
                 UpdateLongTermMemoryResponse,
+                prompt_name="update_long_term_memory",
             )
             for update_piece in response.pieces:
                 orig_piece = self.long_term_memory.pieces.get(update_piece.title)

@@ -39,6 +39,7 @@ class MakeDecisionService:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[img, prompt],
                 schema=MakeDecisionResponse,
+                prompt_name="make_battle_decision",
             )
             self.raw_memory.append(
                 RawMemoryPiece(

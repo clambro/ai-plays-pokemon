@@ -31,6 +31,7 @@ class ShouldCritiqueService:
         response = await self.llm_service.get_llm_response_pydantic(
             prompt,
             schema=ShouldCritiqueResponse,
+            prompt_name="should_critique_overworld_state",
             thinking_tokens=None,
         )
         return response.should_critique

@@ -30,7 +30,11 @@ class RetrieveLongTermMemoryService:
         screenshot = self.emulator.get_screenshot()
 
         prompt = GET_RETRIEVAL_QUERY_PROMPT.format(state=self.state_string_builder(game_state))
-        query = await self.llm_service.get_llm_response([screenshot, prompt], thinking_tokens=None)
+        query = await self.llm_service.get_llm_response(
+            [screenshot, prompt],
+            prompt_name="get_retrieval_query",
+            thinking_tokens=None,
+        )
 
         pieces = await self.retrieval_service.get_most_relevant_memories(query, self.iteration)
         return LongTermMemory(pieces={p.title: p for p in pieces})
