@@ -3,7 +3,7 @@ from typing import Self
 from pydantic import BaseModel, model_validator
 
 from agent.schemas import NavigationArgs
-from common.enums import Tool
+from agent.subflows.overworld_handler.enums import OverworldTool
 from emulator.enums import Button
 from memory.raw_memory import RawMemory
 
@@ -26,5 +26,5 @@ class Decision(BaseModel):
     """The decision from the overworld decision maker prompt."""
 
     raw_memory: RawMemory
-    tool: Tool | None
+    tool: OverworldTool | None
     navigation_args: NavigationArgs | None

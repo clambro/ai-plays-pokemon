@@ -2,7 +2,7 @@ from agent.subflows.overworld_handler.nodes.should_critique.prompts import SHOUL
 from agent.subflows.overworld_handler.nodes.should_critique.schemas import ShouldCritiqueResponse
 from common.constants import ITERATIONS_PER_CRITIQUE_CHECK
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
-from common.types import StateStringBuilder
+from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 
 
@@ -14,7 +14,7 @@ class ShouldCritiqueService:
     def __init__(
         self,
         iteration: int,
-        state_string_builder: StateStringBuilder,
+        state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration

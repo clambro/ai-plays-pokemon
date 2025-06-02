@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from agent.state import AgentState
-from common.enums import Tool
+from agent.subflows.overworld_handler.enums import OverworldTool
 from common.goals import Goals
 from emulator.game_state import YellowLegacyGameState
 from memory.long_term_memory import LongTermMemory
@@ -21,7 +21,7 @@ class OverworldHandlerState(BaseStateWithEmulator):
     goals: Goals | None = None
     current_map: OverworldMap | None = None
     should_critique: bool | None = None
-    tool: Tool | None = None
+    tool: OverworldTool | None = None
     tool_args: BaseModel | None = None
     needs_generic_handling: bool | None = None
 
@@ -68,7 +68,7 @@ class OverworldHandlerStore(BaseStoreWithEmulator[OverworldHandlerState]):
         """Set the should critique."""
         await self.set_state({"should_critique": should_critique})
 
-    async def set_tool(self, tool: Tool | None) -> None:
+    async def set_tool(self, tool: OverworldTool | None) -> None:
         """Set the tool."""
         await self.set_state({"tool": tool})
 

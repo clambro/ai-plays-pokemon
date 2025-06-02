@@ -342,6 +342,8 @@ class ScreenState(BaseModel):
     # Each block on screen is a 2x2 square of tiles.
     tiles: list[list[int]]
 
+    cursor_index: int
+
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView) -> Self:
         """
@@ -367,6 +369,7 @@ class ScreenState(BaseModel):
             bottom=bottom,
             right=right,
             tiles=tiles,
+            cursor_index=mem[0xCC30],
         )
 
     def get_screen_coords(self, y: int, x: int) -> tuple[int, int] | None:

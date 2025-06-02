@@ -1,5 +1,5 @@
+from agent.enums import AgentStateHandler
 from common.constants import ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL
-from common.enums import AgentStateHandler
 from memory.long_term_memory import LongTermMemory
 
 

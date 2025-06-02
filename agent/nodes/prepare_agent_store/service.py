@@ -1,4 +1,4 @@
-from common.enums import AgentStateHandler
+from agent.enums import AgentStateHandler
 from emulator.emulator import YellowLegacyEmulator
 
 

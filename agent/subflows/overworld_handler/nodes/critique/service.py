@@ -1,7 +1,7 @@
 from agent.subflows.overworld_handler.nodes.critique.prompts import CRITIQUE_PROMPT
 from agent.subflows.overworld_handler.nodes.critique.schemas import CritiqueResponse
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
-from common.types import StateStringBuilder
+from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
@@ -13,7 +13,7 @@ class CritiqueService:
         self,
         iteration: int,
         raw_memory: RawMemory,
-        state_string_builder: StateStringBuilder,
+        state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration

@@ -1,5 +1,6 @@
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from agent.state import AgentState
+from agent.subflows.text_handler.enums import TextHandler
 from common.goals import Goals
 from emulator.game_state import YellowLegacyGameState
 from memory.long_term_memory import LongTermMemory
@@ -15,7 +16,7 @@ class TextHandlerState(BaseStateWithEmulator):
     summary_memory: SummaryMemory | None = None
     long_term_memory: LongTermMemory | None = None
     goals: Goals | None = None
-    needs_generic_handling: bool | None = None
+    handler: TextHandler | None = None
 
     def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
         """Get a string representation of the agent and game state to be used in prompts."""
@@ -49,6 +50,6 @@ class TextHandlerStore(BaseStoreWithEmulator[TextHandlerState]):
         """Set the raw memory."""
         await self.set_state({"raw_memory": raw_memory})
 
-    async def set_needs_generic_handling(self, needs_generic_handling: bool) -> None:
-        """Set the needs generic handling."""
-        await self.set_state({"needs_generic_handling": needs_generic_handling})
+    async def set_handler(self, handler: TextHandler | None) -> None:
+        """Set the handler."""
+        await self.set_state({"handler": handler})

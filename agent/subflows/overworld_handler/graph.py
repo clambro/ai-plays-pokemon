@@ -2,13 +2,13 @@ from junjo import Edge, Graph
 
 from agent.nodes.dummy.node import DummyNode
 from agent.subflows.overworld_handler.conditions import ShouldCritique, ToolIs
+from agent.subflows.overworld_handler.enums import OverworldTool
 from agent.subflows.overworld_handler.nodes.critique.node import CritiqueNode
 from agent.subflows.overworld_handler.nodes.load_map.node import LoadMapNode
 from agent.subflows.overworld_handler.nodes.make_decision.node import MakeDecisionNode
 from agent.subflows.overworld_handler.nodes.navigate.node import NavigationNode
 from agent.subflows.overworld_handler.nodes.should_critique.node import ShouldCritiqueNode
 from agent.subflows.overworld_handler.nodes.update_map.node import UpdateMapNode
-from common.enums import Tool
 from emulator.emulator import YellowLegacyEmulator
 
 
@@ -52,7 +52,7 @@ def build_overworld_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Gra
             Edge(
                 decision_maker_overworld,
                 navigation,
-                ToolIs(Tool.NAVIGATION),
+                ToolIs(OverworldTool.NAVIGATION),
             ),
             Edge(
                 decision_maker_overworld,

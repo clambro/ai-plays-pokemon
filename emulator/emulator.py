@@ -89,13 +89,24 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         img = img.resize((img.width * 2, img.height * 2), resample=Image.Resampling.NEAREST)
         return img
 
-    async def press_buttons(self, buttons: list[str], delay_frames: int = 10) -> None:
-        """Press the buttons in order, with a delay between each."""
+    async def press_buttons(
+        self,
+        buttons: list[str],
+        hold_frames: int = 10,
+        frames_between: int = 10,
+    ) -> None:
+        """
+        Press the buttons in order.
+
+        :param buttons: The buttons to press.
+        :param hold_frames: The number of frames to hold each button.
+        :param frames_between: The number of frames to wait between each button.
+        """
         self._check_stopped()
         for button in buttons:
             async with self._button_lock:
-                self._pyboy.button(button, delay_frames)
-            await asyncio.sleep(delay_frames / GAME_TICKS_PER_SECOND)
+                self._pyboy.button(button, hold_frames)
+            await asyncio.sleep(frames_between / GAME_TICKS_PER_SECOND)
 
     async def wait_for_animation_to_finish(self) -> None:
         """Wait until all ongoing animations have finished."""

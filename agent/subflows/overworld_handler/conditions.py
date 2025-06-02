@@ -1,13 +1,13 @@
 from junjo import Condition
 
+from agent.subflows.overworld_handler.enums import OverworldTool
 from agent.subflows.overworld_handler.state import OverworldHandlerState
-from common.enums import Tool
 
 
 class ToolIs(Condition[OverworldHandlerState]):
     """A condition that checks if the tool equals a value."""
 
-    def __init__(self, tool: Tool | None) -> None:
+    def __init__(self, tool: OverworldTool | None) -> None:
         self.tool = tool
 
     def __str__(self) -> str:

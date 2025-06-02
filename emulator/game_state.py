@@ -150,7 +150,7 @@ class YellowLegacyGameState(BaseModel):
             signs=on_screen_signs,
         )
 
-    def get_on_screen_text(self) -> str:
+    def get_onscreen_text(self) -> str:
         """Get the text on the screen as a string."""
         tiles = np.array(self.screen.tiles)
         return "\n".join("".join(INT_TO_CHAR_MAP.get(t, " ") for t in row) for row in tiles)
@@ -167,7 +167,7 @@ class YellowLegacyGameState(BaseModel):
         if ignore_dialog_box:
             tiles = tiles[:13, :]
 
-        return np.isin(tiles, letters).sum() > 3  # Avoid false positives caused by weird tilemaps.
+        return np.isin(tiles, letters).sum() > 0
 
     def get_screen_without_blinking_cursor(self) -> np.ndarray:
         """Get the screen without the blinking cursor."""

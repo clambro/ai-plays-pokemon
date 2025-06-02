@@ -19,7 +19,7 @@ Done?
 * Add tests to everything
 
 ### Useful Tools and Additions
-* Add a tool to name things
+* Adding importance to goals might be helpful
 
 * Detailed subflow for battles
 * Make the critic tool part of the overworld navigation step? Includes functionality for determining which tools are available at any given iteration.

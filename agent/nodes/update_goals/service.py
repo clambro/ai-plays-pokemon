@@ -5,7 +5,7 @@ from agent.nodes.update_goals.schemas import UpdateGoalsResponse
 from common.constants import ITERATIONS_PER_GOAL_UPDATE
 from common.goals import Goals
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
-from common.types import StateStringBuilder
+from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 
 
@@ -19,7 +19,7 @@ class UpdateGoalsService:
         emulator: YellowLegacyEmulator,
         iteration: int,
         goals: Goals,
-        state_string_builder: StateStringBuilder,
+        state_string_builder: StateStringBuilderT,
     ) -> None:
         self.iteration = iteration
         self.goals = goals
