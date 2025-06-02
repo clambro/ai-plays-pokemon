@@ -2,7 +2,7 @@ from typing import Self
 
 import numpy as np
 from pyboy import PyBoyMemoryView
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
 from emulator.char_map import get_text_from_byte_array
@@ -23,6 +23,8 @@ class PokemonMove(BaseModel):
     id: PokemonMoveId
     pp: int
 
+    model_config = ConfigDict(frozen=True)
+
 
 class PlayerPokemon(BaseModel):
     """The state of a player's pokemon."""
@@ -36,6 +38,8 @@ class PlayerPokemon(BaseModel):
     max_hp: int
     status: PokemonStatus
     moves: list[PokemonMove]
+
+    model_config = ConfigDict(frozen=True)
 
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView, index: int) -> Self:
@@ -80,6 +84,8 @@ class PlayerState(BaseModel):
     party: list[PlayerPokemon]
     badges: list[BadgeId]
     level_cap: int
+
+    model_config = ConfigDict(frozen=True)
 
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView) -> Self:
@@ -144,6 +150,8 @@ class Sprite(BaseModel):
     is_rendered: bool
     moves_randomly: bool
 
+    model_config = ConfigDict(frozen=True)
+
 
 class Warp(BaseModel):
     """
@@ -158,6 +166,8 @@ class Warp(BaseModel):
     x: int
     destination: MapLocation
 
+    model_config = ConfigDict(frozen=True)
+
 
 class Sign(BaseModel):
     """A sign on the current map."""
@@ -165,6 +175,8 @@ class Sign(BaseModel):
     index: int
     y: int
     x: int
+
+    model_config = ConfigDict(frozen=True)
 
 
 class MapConnections(BaseModel):
@@ -174,6 +186,8 @@ class MapConnections(BaseModel):
     south: MapLocation | None
     east: MapLocation | None
     west: MapLocation | None
+
+    model_config = ConfigDict(frozen=True)
 
     def __str__(self) -> str:
         """Get a string representation of the map connections."""
@@ -211,6 +225,8 @@ class MapState(BaseModel):
     warps: dict[int, Warp]
     signs: dict[int, Sign]
     connections: MapConnections
+
+    model_config = ConfigDict(frozen=True)
 
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView) -> Self:
@@ -344,6 +360,8 @@ class ScreenState(BaseModel):
 
     cursor_index: int
 
+    model_config = ConfigDict(frozen=True)
+
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView) -> Self:
         """
@@ -390,6 +408,8 @@ class BattleState(BaseModel):
 
     is_in_battle: bool
 
+    model_config = ConfigDict(frozen=True)
+
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView) -> Self:
         """
@@ -408,6 +428,8 @@ class DialogBox(BaseModel):
     bottom_line: str
     cursor_on_screen: bool
 
+    model_config = ConfigDict(frozen=True)
+
 
 class AsciiScreenWithEntities(BaseModel):
     """An ASCII representation of a screen with entities on it."""
@@ -416,6 +438,8 @@ class AsciiScreenWithEntities(BaseModel):
     sprites: list[Sprite]
     warps: list[Warp]
     signs: list[Sign]
+
+    model_config = ConfigDict(frozen=True)
 
     @property
     def ndarray(self) -> np.ndarray:

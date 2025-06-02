@@ -2,7 +2,7 @@ from typing import Self
 
 import numpy as np
 from pyboy import PyBoyMemoryView
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
@@ -27,6 +27,8 @@ class YellowLegacyGameState(BaseModel):
     cur_map: MapState
     screen: ScreenState
     battle: BattleState
+
+    model_config = ConfigDict(frozen=True)
 
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView) -> Self:
