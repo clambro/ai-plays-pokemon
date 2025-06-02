@@ -6,8 +6,6 @@
 Done?
 
 ### Clean-Up, Refactoring, and Testing
-* Get Gemini to give some general architecture refactoring suggestions
-
 * Use proper init files and relative imports within packages
 
 * Fix the navigation tool: When Pikachu is on screen, bumping into it breaks the existing flow.

@@ -55,7 +55,10 @@ class MakeDecisionService:
 
         map_str = game_state.cur_map.id.name
         position = (game_state.player.y, game_state.player.x)
-        thought = f"Current map: {map_str} at coordinates {position}. {response.thoughts}"
+        thought = (
+            f"Current map: {map_str} at coordinates {position}, facing"
+            f" {game_state.player.direction}. {response.thoughts}"
+        )
 
         if response.navigation_args:
             self.raw_memory.append(
