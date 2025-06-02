@@ -37,11 +37,7 @@ class AssignNameService:
         self.emulator = emulator
 
     async def assign_name(self) -> RawMemory:
-        """
-        Assign a name to something in the game.
-
-        :return: The raw memory, and the handler to use if subsequent handling is needed.
-        """
+        """Assign a name to something in the game."""
         game_state = self.emulator.get_game_state()
         onscreen_text = game_state.get_onscreen_text()
         first_name_row = "A B C D E F G H I"
