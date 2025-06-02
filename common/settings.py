@@ -5,7 +5,7 @@ load_dotenv()
 
 
 class Settings(BaseSettings):
-    """Contains global variables and settings for the server."""
+    """Contains keys read from the environment."""
 
     gemini_api_key: str = ""
 
