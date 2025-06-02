@@ -1,7 +1,7 @@
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from agent.state import AgentState
-from common.goals import Goals
 from emulator.emulator import YellowLegacyGameState
+from memory.goals import Goals
 from memory.long_term_memory import LongTermMemory
 from memory.raw_memory import RawMemory
 from memory.summary_memory import SummaryMemory
