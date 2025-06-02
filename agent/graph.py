@@ -6,7 +6,6 @@ from agent.nodes.create_long_term_memory.node import CreateLongTermMemoryNode
 from agent.nodes.dummy.node import DummyNode
 from agent.nodes.prepare_agent_store.node import PrepareAgentStoreNode
 from agent.nodes.retrieve_long_term_memory.node import RetrieveLongTermMemoryNode
-from agent.nodes.should_retrieve_memory.node import ShouldRetrieveMemoryNode
 from agent.nodes.update_goals.node import UpdateGoalsNode
 from agent.nodes.update_long_term_memory.node import UpdateLongTermMemoryNode
 from agent.nodes.update_summary_memory.node import UpdateSummaryMemoryNode
@@ -25,7 +24,6 @@ from emulator.emulator import YellowLegacyEmulator
 def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     """Build the Junjo agent graph."""
     prepare_agent_store = PrepareAgentStoreNode(emulator)
-    should_retrieve_memory = ShouldRetrieveMemoryNode()
     retrieve_long_term_memory = RetrieveLongTermMemoryNode(emulator)
     update_goals = UpdateGoalsNode(emulator)
     update_summary_memory = UpdateSummaryMemoryNode(emulator)
@@ -50,11 +48,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
 
     do_updates = RunConcurrent(
         name="DoUpdates",
-        items=[
-            update_goals,
-            update_summary_memory,
-            create_long_term_memory,
-        ],
+        items=[update_goals, update_summary_memory],
     )
 
     post_retrieval_dummy = DummyNode()
@@ -65,19 +59,19 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
         edges=[
             Edge(
                 prepare_agent_store,
-                should_retrieve_memory,
-            ),
-            Edge(
-                should_retrieve_memory,
                 update_long_term_memory,
                 ShouldRetrieveMemory(True),
             ),
             Edge(
                 update_long_term_memory,
+                create_long_term_memory,
+            ),
+            Edge(
+                create_long_term_memory,
                 retrieve_long_term_memory,
             ),
             Edge(
-                should_retrieve_memory,
+                prepare_agent_store,
                 post_retrieval_dummy,
                 ShouldRetrieveMemory(False),
             ),

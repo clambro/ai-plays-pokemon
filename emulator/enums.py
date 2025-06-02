@@ -417,13 +417,13 @@ class PokemonSpecies(IntEnum):
 class PokemonStatus(IntFlag):
     """Pokemon statuses, which are indicated by a single byte."""
 
-    NONE = 0b00000000
-    ASLEEP = 0b00000111
-    POISONED = 0b00001000
-    BURNED = 0b00010000
-    FROZEN = 0b00100000
-    PARALYZED = 0b01000000
-    FAINTED = 0b10000000  # Not used in game. I added this one for convenience.
+    NONE = 0
+    ASLEEP = 0b111  # One for each turn of sleep, but we aren't supposed to know how many turns.
+    POISONED = 1 << 3
+    BURNED = 1 << 4
+    FROZEN = 1 << 5
+    PARALYZED = 1 << 6
+    FAINTED = 1 << 7  # Not used in game. I added this one for convenience.
 
 
 class PokemonType(IntEnum):
@@ -621,14 +621,14 @@ class PokemonMoveId(IntEnum):
 class BadgeId(IntEnum):
     """Enum of badges."""
 
-    BOULDERBADGE = 0b00000001
-    CASCADEBADGE = 0b00000010
-    THUNDERBADGE = 0b00000100
-    RAINBOWBADGE = 0b00001000
-    SOULBADGE = 0b00010000
-    MARSHBADGE = 0b00100000
-    VOLCANOBADGE = 0b01000000
-    EARTHBADGE = 0b10000000
+    BOULDERBADGE = 1 << 0
+    CASCADEBADGE = 1 << 1
+    THUNDERBADGE = 1 << 2
+    RAINBOWBADGE = 1 << 3
+    SOULBADGE = 1 << 4
+    MARSHBADGE = 1 << 5
+    VOLCANOBADGE = 1 << 6
+    EARTHBADGE = 1 << 7
 
     @classmethod
     def from_badge_byte(cls, badge_byte: int) -> list["BadgeId"]:

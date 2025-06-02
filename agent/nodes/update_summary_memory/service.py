@@ -38,6 +38,7 @@ class UpdateSummaryMemoryService:
         response = await self.llm_service.get_llm_response_pydantic(
             prompt,
             UpdateSummaryMemoryResponse,
+            prompt_name="update_summary_memory",
         )
         self.summary_memory.append(
             self.iteration,

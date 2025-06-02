@@ -6,8 +6,6 @@
 Done?
 
 ### Clean-Up, Refactoring, and Testing
-* Add names to all the prompts
-
 * Get Gemini to give some general architecture refactoring suggestions
 
 * Use proper init files and relative imports within packages
