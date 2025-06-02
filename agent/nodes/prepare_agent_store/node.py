@@ -8,8 +8,8 @@ from emulator.emulator import YellowLegacyEmulator
 
 class PrepareAgentStoreNode(Node[AgentStore]):
     """
-    The first node in the agent loop. Prepares the agent store for the next iteration and selects
-    the appropriate handler.
+    The first node in the agent loop. Prepares the agent store for the next iteration by selecting
+    the appropriate handler and determining if the agent should retrieve memory.
     """
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
@@ -21,13 +21,21 @@ class PrepareAgentStoreNode(Node[AgentStore]):
         logger.info("Preparing agent store...")
 
         state = await store.get_state()
-        service = PrepareAgentStateService(self.emulator)
+        service = PrepareAgentStateService(
+            iteration=state.iteration,
+            long_term_memory=state.long_term_memory,
+            emulator=self.emulator,
+        )
 
         await service.wait_for_animations()
         handler = await service.determine_handler()
+        should_retrieve_memory = await service.should_retrieve_memory(
+            handler=handler,
+            previous_handler=state.handler,
+        )
 
         await store.set_iteration(state.iteration + 1)
         await store.set_previous_handler(state.handler)
         await store.set_handler(handler)
-
+        await store.set_should_retrieve_memory(should_retrieve_memory)
         await store.set_emulator_save_state_from_emulator(self.emulator)

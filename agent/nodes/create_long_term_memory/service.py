@@ -2,7 +2,6 @@ from loguru import logger
 
 from agent.nodes.create_long_term_memory.prompts import CREATE_LONG_TERM_MEMORY_PROMPT
 from agent.nodes.create_long_term_memory.schemas import CreateLongTermMemoryResponse
-from common.constants import ITERATIONS_PER_LONG_TERM_MEMORY_CREATION
 from common.embedding_service import GeminiEmbeddingService
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
@@ -32,9 +31,6 @@ class CreateLongTermMemoryService:
 
     async def create_long_term_memory(self) -> None:
         """Create long-term memory."""
-        if self.iteration % ITERATIONS_PER_LONG_TERM_MEMORY_CREATION != 0:
-            return
-
         game_state = self.emulator.get_game_state()
         titles = "\n".join(await get_all_long_term_memory_titles())
         prompt = CREATE_LONG_TERM_MEMORY_PROMPT.format(
