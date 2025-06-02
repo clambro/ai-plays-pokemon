@@ -57,7 +57,7 @@ class MakeDecisionService:
         position = (game_state.player.y, game_state.player.x)
         thought = (
             f"Current map: {map_str} at coordinates {position}, facing"
-            f" {game_state.player.direction}. {response.thoughts}"
+            f" {game_state.player.direction.name}. {response.thoughts}"
         )
 
         if response.navigation_args:
