@@ -46,11 +46,6 @@ class YellowLegacyGameState(BaseModel):
         )
 
     @property
-    def is_player_moving(self) -> bool:
-        """Check if the player is moving and not in a battle."""
-        return self.player.is_moving and not self.battle.is_in_battle
-
-    @property
     def player_info(self) -> str:
         """Get a string representation of the player's information."""
         out = "<player_info>\n"
