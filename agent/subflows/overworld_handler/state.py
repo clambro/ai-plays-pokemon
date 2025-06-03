@@ -3,8 +3,8 @@ from pydantic import BaseModel
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from agent.state import AgentState
 from agent.subflows.overworld_handler.enums import OverworldTool
-from common.goals import Goals
 from emulator.game_state import YellowLegacyGameState
+from memory.goals import Goals
 from memory.long_term_memory import LongTermMemory
 from memory.raw_memory import RawMemory
 from memory.summary_memory import SummaryMemory

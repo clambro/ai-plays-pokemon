@@ -6,9 +6,15 @@
 Done?
 
 ### Clean-Up, Refactoring, and Testing
-* Get Gemini to give some general architecture refactoring suggestions
+* Make the title the primary key for LTM and drop the useless ID
+* Split the memory parsing logic from the schemas in the game state
+* Enums that involve memory info should be locked with the parsing logic. There should be separate enums for, say, map names as strings instead of memory values.
+* Turn the game state and related sub-states into pure dataclasses and create services that accept the game state for whatever functionailty is needed.
+* Separate entities from the map state
+* Separate pokemon party from the player state
 
-* Use proper init files and relative imports within packages
+* Might have to cave and promote the overworld handler to Gemini Pro, but add the exploration tool first to reduce costs.
+* Can probably get away with categorically demoting the text handlers to Gemini Flash Lite.
 
 * Fix the navigation tool: When Pikachu is on screen, bumping into it breaks the existing flow.
 
@@ -17,6 +23,8 @@ Done?
 * Add tests to everything
 
 ### Useful Tools and Additions
+* Exploration tool to use the navigation tool to explore unseen areas on the current map by walking to the nearest accessible tile with an adjacent unseen tile.
+
 * Adding importance to goals might be helpful
 
 * Detailed subflow for battles

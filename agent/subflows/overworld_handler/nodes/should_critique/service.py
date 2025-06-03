@@ -1,3 +1,5 @@
+from loguru import logger
+
 from agent.subflows.overworld_handler.nodes.should_critique.prompts import SHOULD_CRITIQUE_PROMPT
 from agent.subflows.overworld_handler.nodes.should_critique.schemas import ShouldCritiqueResponse
 from common.constants import ITERATIONS_PER_CRITIQUE_CHECK
@@ -28,10 +30,14 @@ class ShouldCritiqueService:
 
         game_state = self.emulator.get_game_state()
         prompt = SHOULD_CRITIQUE_PROMPT.format(state=self.state_string_builder(game_state))
-        response = await self.llm_service.get_llm_response_pydantic(
-            prompt,
-            schema=ShouldCritiqueResponse,
-            prompt_name="should_critique_overworld_state",
-            thinking_tokens=None,
-        )
-        return response.should_critique
+        try:
+            response = await self.llm_service.get_llm_response_pydantic(
+                prompt,
+                schema=ShouldCritiqueResponse,
+                prompt_name="should_critique_overworld_state",
+                thinking_tokens=None,
+            )
+            return response.should_critique
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Error determining if should critique. Skipping.\n{e}")
+            return False

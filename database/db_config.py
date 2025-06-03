@@ -19,6 +19,15 @@ async def init_fresh_db() -> None:
     """Initialize a fresh database by dropping all existing tables and recreating them."""
     logger.info(f"Initializing a fresh database at: {DB_URL}")
 
+    if DB_FILE_PATH.exists():
+        DB_FILE_PATH.unlink()
+    shm_file = DB_FILE_PATH.with_suffix(".shm")
+    if shm_file.exists():
+        shm_file.unlink()
+    wal_file = DB_FILE_PATH.with_suffix(".wal")
+    if wal_file.exists():
+        wal_file.unlink()
+
     # Import all models here to ensure they are registered with the engine.
     from database.llm_messages.model import LLMMessageDBModel
     from database.long_term_memory.model import LongTermMemoryDBModel
@@ -26,9 +35,6 @@ async def init_fresh_db() -> None:
     from database.map_memory.model import MapMemoryDBModel
 
     async with _engine.begin() as conn:
-        if DB_FILE_PATH.exists():
-            await conn.run_sync(SQLAlchemyBase.metadata.drop_all)
-
         await conn.run_sync(SQLAlchemyBase.metadata.create_all)
 
         await conn.execute(text("PRAGMA foreign_keys=ON"))
