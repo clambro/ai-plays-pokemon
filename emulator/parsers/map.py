@@ -1,7 +1,7 @@
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
-from emulator.schemas import MapLocation
+from emulator.enums import MapLocation
 
 _INT_TO_MAP_NAME = {
     0x00: MapLocation.PALLET_TOWN,
