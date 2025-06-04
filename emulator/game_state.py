@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
 from emulator.char_map import CHAR_TO_INT_MAP, INT_TO_CHAR_MAP
+from emulator.parsers.map import Map, parse_map_state
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
 from emulator.parsers.warp import Warp, parse_warps
@@ -14,7 +15,6 @@ from emulator.schemas import (
     AsciiScreenWithEntities,
     BattleState,
     DialogBox,
-    MapState,
     PlayerState,
     ScreenState,
 )
@@ -27,7 +27,7 @@ class YellowLegacyGameState(BaseModel):
     """A snapshot of the Pokemon Yellow Legacy game state."""
 
     player: PlayerState
-    cur_map: MapState
+    map: Map
     sprites: dict[int, Sprite]
     pikachu: Sprite
     warps: dict[int, Warp]
@@ -47,7 +47,7 @@ class YellowLegacyGameState(BaseModel):
         """
         return cls(
             player=PlayerState.from_memory(mem),
-            cur_map=MapState.from_memory(mem),
+            map=parse_map_state(mem),
             sprites=parse_sprites(mem),
             pikachu=parse_pikachu_sprite(mem),
             warps=parse_warps(mem),
@@ -111,15 +111,15 @@ class YellowLegacyGameState(BaseModel):
             row = []
             for j in range(0, tiles.shape[1], 2):
                 b = tiles[i : i + 2, j : j + 2]
-                if np.any(b == self.cur_map.water_tile):
+                if np.any(b == self.map.water_tile):
                     row.append(AsciiTiles.WATER)
-                elif np.isin(b, self.cur_map.ledge_tiles).any():
+                elif np.isin(b, self.map.ledge_tiles).any():
                     row.append(AsciiTiles.LEDGE)
-                elif np.any(b == self.cur_map.grass_tile):
+                elif np.any(b == self.map.grass_tile):
                     row.append(AsciiTiles.GRASS)
-                elif b.flatten().tolist() == self.cur_map.cut_tree_tiles:
+                elif b.flatten().tolist() == self.map.cut_tree_tiles:
                     row.append(AsciiTiles.CUT_TREE)
-                elif not np.isin(b, self.cur_map.walkable_tiles).any():
+                elif not np.isin(b, self.map.walkable_tiles).any():
                     row.append(AsciiTiles.WALL)
                 else:
                     row.append(AsciiTiles.FREE)

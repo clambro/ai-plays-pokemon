@@ -14,7 +14,7 @@ class Sign(BaseModel):
 
 def parse_signs(mem: PyBoyMemoryView) -> dict[int, Sign]:
     """
-    Get the list of signs on the current map from a snapshot of the memory.
+    Parse the list of signs on the current map from a snapshot of the memory.
 
     :param mem: The PyBoyMemoryView instance to create the signs from.
     :return: A dictionary of signs, keyed by index.

@@ -16,7 +16,7 @@ class Sprite(BaseModel):
 
 def parse_sprites(mem: PyBoyMemoryView) -> dict[int, Sprite]:
     """
-    Get the list of sprites on the current map from a snapshot of the memory.
+    Parse the list of sprites on the current map from a snapshot of the memory.
 
     :param mem: The PyBoyMemoryView instance to create the sprites from.
     :return: A dictionary of normal sprites, keyed by index.
@@ -39,7 +39,7 @@ def parse_sprites(mem: PyBoyMemoryView) -> dict[int, Sprite]:
 
 def parse_pikachu_sprite(mem: PyBoyMemoryView) -> Sprite:
     """
-    Get the pikachu sprite from a snapshot of the memory.
+    Parse the pikachu sprite from a snapshot of the memory.
 
     :param mem: The PyBoyMemoryView instance to create the pikachu sprite from.
     :return: The pikachu sprite.

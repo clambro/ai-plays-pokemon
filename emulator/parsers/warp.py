@@ -22,7 +22,7 @@ class Warp(BaseModel):
 
 def parse_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
     """
-    Get the list of warps on the current map from a snapshot of the memory.
+    Parse the list of warps on the current map from a snapshot of the memory.
 
     :param mem: The PyBoyMemoryView instance to create the warps from.
     :return: A dictionary of warps, keyed by index.

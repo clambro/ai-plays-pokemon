@@ -53,7 +53,7 @@ class MakeDecisionService:
                 navigation_args=None,
             )
 
-        map_str = game_state.cur_map.id.name
+        map_str = game_state.map.name.name
         position = (game_state.player.y, game_state.player.x)
         thought = (
             f"Current map: {map_str} at coordinates {position}, facing"
@@ -73,7 +73,7 @@ class MakeDecisionService:
                 navigation_args=response.navigation_args,
             )
         if response.button:
-            prev_map = game_state.cur_map.id.name
+            prev_map = game_state.map.name.name
             prev_coords = (game_state.player.y, game_state.player.x)
             prev_direction = game_state.player.direction
             await self.emulator.press_buttons([response.button])
@@ -105,7 +105,7 @@ class MakeDecisionService:
 
         await self.emulator.wait_for_animation_to_finish()
         game_state = self.emulator.get_game_state()
-        current_map = game_state.cur_map.id.name
+        current_map = game_state.map.name.name
         current_coords = (game_state.player.y, game_state.player.x)
         current_direction = game_state.player.direction
         if (

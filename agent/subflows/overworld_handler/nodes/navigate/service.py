@@ -189,7 +189,7 @@ class NavigationService:
                 ),
             )
             return True
-        if game_state.cur_map.id != starting_map_id:
+        if game_state.map.name != starting_map_id:
             logger.warning("Map changed during navigation. Cancelling.")
             self.raw_memory.append(
                 RawMemoryPiece(

@@ -173,64 +173,6 @@ class MapConnections(BaseModel):
         )
 
 
-class MapState(BaseModel):
-    """The state of the current map."""
-
-    id: MapLocation
-    tileset_id: int
-    height: int
-    width: int
-    grass_tile: int
-    water_tile: int
-    ledge_tiles: list[int]
-    cut_tree_tiles: list[int]
-    walkable_tiles: list[int]
-    connections: MapConnections
-
-    model_config = ConfigDict(frozen=True)
-
-    @classmethod
-    def from_memory(cls, mem: PyBoyMemoryView) -> Self:
-        """
-        Create a new map state from a snapshot of the memory.
-
-        :param mem: The PyBoyMemoryView instance to create the map state from.
-        :return: A new map state.
-        """
-        tileset_id = mem[0xD3B4]
-
-        # These two were found by inspection.
-        ledge_tiles = [54, 55] if tileset_id == 0 else []
-        cut_tree_tiles = [45, 46, 61, 62] if tileset_id == 0 else []
-
-        walkable_tile_ptr = mem[0xD57D] | (mem[0xD57E] << 8)
-        walkable_tiles = []
-        for i in range(0x180):  # Max possible unique tiles.
-            if mem[walkable_tile_ptr + i] == 0xFF:  # Memory section is terminated by 0xFF.
-                break
-            walkable_tiles.append(mem[walkable_tile_ptr + i])
-
-        connections = MapConnections(
-            north=MapLocation(mem[0xD3BE]) if mem[0xD3BE] != 0xFF else None,
-            south=MapLocation(mem[0xD3C9]) if mem[0xD3C9] != 0xFF else None,
-            east=MapLocation(mem[0xD3DF]) if mem[0xD3DF] != 0xFF else None,
-            west=MapLocation(mem[0xD3D4]) if mem[0xD3D4] != 0xFF else None,
-        )
-
-        return cls(
-            id=MapLocation(mem[0xD3AB]),
-            tileset_id=mem[0xD3B4],
-            height=mem[0xD571],
-            width=mem[0xD572],
-            grass_tile=mem[0xD582],
-            water_tile=mem[3, 0x68A5],
-            ledge_tiles=ledge_tiles,
-            cut_tree_tiles=cut_tree_tiles,
-            walkable_tiles=walkable_tiles,
-            connections=connections,
-        )
-
-
 class ScreenState(BaseModel):
     """The state of the screen."""
 
