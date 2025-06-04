@@ -7,6 +7,9 @@ from pydantic import BaseModel, ConfigDict
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
 from emulator.char_map import CHAR_TO_INT_MAP, INT_TO_CHAR_MAP
+from emulator.parsers.sign import Sign, parse_signs
+from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
+from emulator.parsers.warp import Warp, parse_warps
 from emulator.schemas import (
     AsciiScreenWithEntities,
     BattleState,
@@ -25,6 +28,10 @@ class YellowLegacyGameState(BaseModel):
 
     player: PlayerState
     cur_map: MapState
+    sprites: dict[int, Sprite]
+    pikachu: Sprite
+    warps: dict[int, Warp]
+    signs: dict[int, Sign]
     screen: ScreenState
     battle: BattleState
 
@@ -41,6 +48,10 @@ class YellowLegacyGameState(BaseModel):
         return cls(
             player=PlayerState.from_memory(mem),
             cur_map=MapState.from_memory(mem),
+            sprites=parse_sprites(mem),
+            pikachu=parse_pikachu_sprite(mem),
+            warps=parse_warps(mem),
+            signs=parse_signs(mem),
             screen=ScreenState.from_memory(mem),
             battle=BattleState.from_memory(mem),
         )
@@ -118,24 +129,24 @@ class YellowLegacyGameState(BaseModel):
         blocks[PLAYER_OFFSET_Y, PLAYER_OFFSET_X] = AsciiTiles.PLAYER
 
         on_screen_sprites = []
-        for s in self.cur_map.sprites.values():
+        for s in self.sprites.values():
             if s.is_rendered and (screen_coords := self.screen.get_screen_coords(s.y, s.x)):
                 on_screen_sprites.append(s)
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.SPRITE
 
-        pikachu = self.cur_map.pikachu_sprite
+        pikachu = self.pikachu
         if pikachu.is_rendered:
             if screen_coords := self.screen.get_screen_coords(pikachu.y, pikachu.x):
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.PIKACHU
 
         on_screen_warps = []
-        for w in self.cur_map.warps.values():
+        for w in self.warps.values():
             if screen_coords := self.screen.get_screen_coords(w.y, w.x):
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.WARP
                 on_screen_warps.append(w)
 
         on_screen_signs = []
-        for s in self.cur_map.signs.values():
+        for s in self.signs.values():
             if screen_coords := self.screen.get_screen_coords(s.y, s.x):
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.SIGN
                 on_screen_signs.append(s)

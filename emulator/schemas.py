@@ -15,9 +15,9 @@ from emulator.enums import (
     PokemonStatus,
     PokemonType,
 )
-from emulator.parsers.sign import Sign, parse_signs
-from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
-from emulator.parsers.warp import Warp, parse_warps
+from emulator.parsers.sign import Sign
+from emulator.parsers.sprite import Sprite
+from emulator.parsers.warp import Warp
 
 
 class PokemonMove(BaseModel):
@@ -185,10 +185,6 @@ class MapState(BaseModel):
     ledge_tiles: list[int]
     cut_tree_tiles: list[int]
     walkable_tiles: list[int]
-    sprites: dict[int, Sprite]
-    pikachu_sprite: Sprite
-    warps: dict[int, Warp]
-    signs: dict[int, Sign]
     connections: MapConnections
 
     model_config = ConfigDict(frozen=True)
@@ -231,10 +227,6 @@ class MapState(BaseModel):
             ledge_tiles=ledge_tiles,
             cut_tree_tiles=cut_tree_tiles,
             walkable_tiles=walkable_tiles,
-            sprites=parse_sprites(mem),
-            pikachu_sprite=parse_pikachu_sprite(mem),
-            warps=parse_warps(mem),
-            signs=parse_signs(mem),
             connections=connections,
         )
 

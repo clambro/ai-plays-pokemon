@@ -24,21 +24,21 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
 
     map_entity_memories = await get_map_entity_memories_for_map(map_memory.map_id)
 
-    game_sprites = game_state.cur_map.sprites
+    game_sprites = game_state.sprites
     sprites = {
         mem.entity_id: OverworldSprite.from_sprite(game_sprites[mem.entity_id], mem.description)
         for mem in map_entity_memories
         if mem.entity_type == MapEntityType.SPRITE
     }
 
-    game_warps = game_state.cur_map.warps
+    game_warps = game_state.warps
     warps = {
         mem.entity_id: OverworldWarp.from_warp(game_warps[mem.entity_id], mem.description)
         for mem in map_entity_memories
         if mem.entity_type == MapEntityType.WARP
     }
 
-    game_signs = game_state.cur_map.signs
+    game_signs = game_state.signs
     signs = {
         mem.entity_id: OverworldSign.from_sign(game_signs[mem.entity_id], mem.description)
         for mem in map_entity_memories
