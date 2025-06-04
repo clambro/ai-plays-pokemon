@@ -14,7 +14,7 @@ class Sprite(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-def parse_map_sprites(mem: PyBoyMemoryView) -> dict[int, Sprite]:
+def parse_sprites(mem: PyBoyMemoryView) -> dict[int, Sprite]:
     """
     Get the list of sprites on the current map from a snapshot of the memory.
 

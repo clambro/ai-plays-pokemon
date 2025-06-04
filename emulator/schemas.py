@@ -15,7 +15,8 @@ from emulator.enums import (
     PokemonStatus,
     PokemonType,
 )
-from emulator.parsers.sprite import Sprite, parse_map_sprites, parse_pikachu_sprite
+from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
+from emulator.parsers.warp import Warp, parse_warps
 
 
 class PokemonMove(BaseModel):
@@ -142,22 +143,6 @@ class PlayerState(BaseModel):
         )
 
 
-class Warp(BaseModel):
-    """
-    A warp on the current map.
-
-    Saving the destination is kinda cheating, but much easier than detecting a warp and going back
-    to edit the long term memory.
-    """
-
-    index: int
-    y: int
-    x: int
-    destination: MapLocation
-
-    model_config = ConfigDict(frozen=True)
-
-
 class Sign(BaseModel):
     """A sign on the current map."""
 
@@ -257,32 +242,12 @@ class MapState(BaseModel):
             ledge_tiles=ledge_tiles,
             cut_tree_tiles=cut_tree_tiles,
             walkable_tiles=walkable_tiles,
-            sprites=parse_map_sprites(mem),
+            sprites=parse_sprites(mem),
             pikachu_sprite=parse_pikachu_sprite(mem),
-            warps=cls._get_warps(mem),
+            warps=parse_warps(mem),
             signs=signs,
             connections=connections,
         )
-
-    @staticmethod
-    def _get_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
-        """
-        Get the list of warps on the current map from a snapshot of the memory.
-
-        :param mem: The PyBoyMemoryView instance to create the warps from.
-        :return: A dictionary of warps, keyed by index.
-        """
-        num_warps = mem[0xD3FB]
-        warps = {}
-        for i in range(num_warps):
-            base = 0xD3FC + 4 * i
-            warps[i] = Warp(
-                index=i,
-                y=mem[base],
-                x=mem[base + 1],
-                destination=MapLocation(mem[base + 3]),
-            )
-        return warps
 
     @staticmethod
     def _get_signs(mem: PyBoyMemoryView) -> dict[int, Sign]:
