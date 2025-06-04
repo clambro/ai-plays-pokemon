@@ -10,7 +10,6 @@ from database.map_entity_memory.schemas import MapEntityMemoryCreate, MapEntityM
 from database.map_memory.repository import create_map_memory, get_map_memory, update_map_tiles
 from database.map_memory.schemas import MapMemoryCreateUpdate
 from emulator.game_state import YellowLegacyGameState
-from emulator.schemas import MapConnections
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
 
 
@@ -52,12 +51,10 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
         known_sprites=sprites,
         known_warps=warps,
         known_signs=signs,
-        connections=MapConnections(
-            north=game_state.map.north_connection,
-            south=game_state.map.south_connection,
-            east=game_state.map.east_connection,
-            west=game_state.map.west_connection,
-        ),
+        north_connection=game_state.map.north_connection,
+        south_connection=game_state.map.south_connection,
+        east_connection=game_state.map.east_connection,
+        west_connection=game_state.map.west_connection,
     )
     return overworld_map
 
@@ -202,12 +199,10 @@ async def _create_overworld_map_from_game_state(
         known_sprites={},
         known_warps={},
         known_signs={},
-        connections=MapConnections(
-            north=game_state.map.north_connection,
-            south=game_state.map.south_connection,
-            east=game_state.map.east_connection,
-            west=game_state.map.west_connection,
-        ),
+        north_connection=game_state.map.north_connection,
+        south_connection=game_state.map.south_connection,
+        east_connection=game_state.map.east_connection,
+        west_connection=game_state.map.west_connection,
     )
     await create_map_memory(
         MapMemoryCreateUpdate(

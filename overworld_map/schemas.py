@@ -5,7 +5,7 @@ from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
 from emulator.enums import MapLocation
 from emulator.game_state import YellowLegacyGameState
-from emulator.schemas import MapConnections, Sign, Sprite, Warp
+from emulator.schemas import Sign, Sprite, Warp
 from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
 
 
@@ -74,7 +74,10 @@ class OverworldMap(BaseModel):
     known_sprites: dict[int, OverworldSprite]
     known_warps: dict[int, OverworldWarp]
     known_signs: dict[int, OverworldSign]
-    connections: MapConnections
+    north_connection: MapLocation | None
+    south_connection: MapLocation | None
+    east_connection: MapLocation | None
+    west_connection: MapLocation | None
 
     @property
     def height(self) -> int:
@@ -126,7 +129,7 @@ class OverworldMap(BaseModel):
             screen_left=game_state.screen.left,
             screen_bottom=game_state.screen.bottom,
             screen_right=game_state.screen.right,
-            connections=self.connections,
+            connections=self._get_connection_notes(),
         )
 
     def _get_sprite_notes(self) -> str:
@@ -146,3 +149,21 @@ class OverworldMap(BaseModel):
         if not self.known_signs:
             return "No signs discovered."
         return "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_signs.items()))
+
+    def _get_connection_notes(self) -> str:
+        """Get a string representation of the map connections."""
+        out = ""
+        if self.north_connection:
+            out += f"The map to the north is {self.north_connection.name}.\n"
+        if self.south_connection:
+            out += f"The map to the south is {self.south_connection.name}.\n"
+        if self.east_connection:
+            out += f"The map to the east is {self.east_connection.name}.\n"
+        if self.west_connection:
+            out += f"The map to the west is {self.west_connection.name}.\n"
+        if out:
+            return out.strip()
+        return (
+            "There are no direct connections to other maps on this map. The only way to leave this"
+            " map is via warp tiles."
+        )

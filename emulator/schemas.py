@@ -9,7 +9,6 @@ from emulator.char_map import get_text_from_byte_array
 from emulator.enums import (
     BadgeId,
     FacingDirection,
-    MapLocation,
     PokemonMoveId,
     PokemonSpecies,
     PokemonStatus,
@@ -141,35 +140,6 @@ class PlayerState(BaseModel):
             + ((m2 & 0xF) * 100)
             + ((m3 >> 4) * 10)
             + (m3 & 0xF)
-        )
-
-
-class MapConnections(BaseModel):
-    """The connections of the current map."""
-
-    north: MapLocation | None
-    south: MapLocation | None
-    east: MapLocation | None
-    west: MapLocation | None
-
-    model_config = ConfigDict(frozen=True)
-
-    def __str__(self) -> str:
-        """Get a string representation of the map connections."""
-        out = ""
-        if self.north:
-            out += f"The map to the north is {self.north.name}.\n"
-        if self.south:
-            out += f"The map to the south is {self.south.name}.\n"
-        if self.east:
-            out += f"The map to the east is {self.east.name}.\n"
-        if self.west:
-            out += f"The map to the west is {self.west.name}.\n"
-        if out:
-            return out.strip()
-        return (
-            "There are no direct connections to other maps on this map. The only way to leave this"
-            " map is via warp tiles."
         )
 
 
