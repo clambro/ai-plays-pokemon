@@ -15,6 +15,7 @@ from emulator.enums import (
     PokemonStatus,
     PokemonType,
 )
+from emulator.parsers.sprite import Sprite, parse_map_sprites, parse_pikachu_sprite
 
 
 class PokemonMove(BaseModel):
@@ -141,18 +142,6 @@ class PlayerState(BaseModel):
         )
 
 
-class Sprite(BaseModel):
-    """A sprite on the current map."""
-
-    index: int
-    y: int
-    x: int
-    is_rendered: bool
-    moves_randomly: bool
-
-    model_config = ConfigDict(frozen=True)
-
-
 class Warp(BaseModel):
     """
     A warp on the current map.
@@ -249,7 +238,6 @@ class MapState(BaseModel):
                 break
             walkable_tiles.append(mem[walkable_tile_ptr + i])
 
-        sprites, pikachu_sprite = cls._get_sprites(mem)
         signs = cls._get_signs(mem)
 
         connections = MapConnections(
@@ -269,43 +257,12 @@ class MapState(BaseModel):
             ledge_tiles=ledge_tiles,
             cut_tree_tiles=cut_tree_tiles,
             walkable_tiles=walkable_tiles,
-            sprites=sprites,
-            pikachu_sprite=pikachu_sprite,
+            sprites=parse_map_sprites(mem),
+            pikachu_sprite=parse_pikachu_sprite(mem),
             warps=cls._get_warps(mem),
             signs=signs,
             connections=connections,
         )
-
-    @staticmethod
-    def _get_sprites(mem: PyBoyMemoryView) -> tuple[dict[int, Sprite], Sprite]:
-        """
-        Get the list of sprites on the current map from a snapshot of the memory.
-
-        :param mem: The PyBoyMemoryView instance to create the sprites from.
-        :return: A dictionary of normal sprites, keyed by index, plus the pikachu sprite.
-        """
-        sprites = {}
-        for i in range(0x10, 0xF0, 0x10):  # First sprite is the player.
-            if mem[0xC100 + i] == 0:  # No more sprites on this map.
-                break
-            index = i // 0x10
-            sprites[index] = Sprite(
-                index=index,
-                # Sprite coordinates start counting from 4 for some reason.
-                y=mem[0xC204 + i] - 4,
-                x=mem[0xC205 + i] - 4,
-                is_rendered=mem[0xC102 + i] != 0xFF,
-                moves_randomly=mem[0xC206 + i] == 0xFE,
-            )
-
-        pikachu_sprite = Sprite(
-            index=15,  # Pikachu is always the last sprite if it's on screen.
-            y=mem[0xC2F4] - 4,
-            x=mem[0xC2F5] - 4,
-            is_rendered=mem[0xC1F2] != 0xFF,
-            moves_randomly=False,
-        )
-        return sprites, pikachu_sprite
 
     @staticmethod
     def _get_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
