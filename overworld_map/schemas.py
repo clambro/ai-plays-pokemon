@@ -2,8 +2,7 @@ import numpy as np
 from pydantic import BaseModel
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
-from common.enums import AsciiTiles
-from emulator.enums import MapLocation
+from common.enums import AsciiTiles, MapId
 from emulator.game_state import YellowLegacyGameState
 from emulator.schemas import Sign, Sprite, Warp
 from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
@@ -19,10 +18,10 @@ class OverworldSprite(Sprite):
         """Create an overworld sprite from a sprite and a description."""
         return cls(**sprite.model_dump(), description=description)
 
-    def to_string(self, map_id: MapLocation) -> str:
+    def to_string(self, map_id: int) -> str:
         """Get a string representation of the sprite."""
         description = self.description or "No description added yet."
-        out = f"sprite_{map_id.value}_{self.index} at ({self.y}, {self.x}): {description}"
+        out = f"sprite_{map_id}_{self.index} at ({self.y}, {self.x}): {description}"
         if self.moves_randomly:
             out += (
                 " Warning: This sprite wanders randomly around the map. Your reactions are too slow"
@@ -41,12 +40,12 @@ class OverworldWarp(Warp):
         """Create an overworld warp from a warp and a description."""
         return cls(**warp.model_dump(), description=description)
 
-    def to_string(self, map_id: MapLocation) -> str:
+    def to_string(self, map_id: int) -> str:
         """Get a string representation of the warp."""
         description = self.description or "No description added yet."
         return (
-            f"warp_{map_id.value}_{self.index} at ({self.y}, {self.x}) leading to"
-            f" {self.destination.name}: {description}"
+            f"warp_{map_id}_{self.index} at ({self.y}, {self.x})"
+            f" leading to {self.destination}: {description}"
         )
 
 
@@ -60,24 +59,24 @@ class OverworldSign(Sign):
         """Create an overworld sign from a sign and a description."""
         return cls(**sign.model_dump(), description=description)
 
-    def to_string(self, map_id: MapLocation) -> str:
+    def to_string(self, map_id: int) -> str:
         """Get a string representation of the sign."""
         description = self.description or "No description added yet."
-        return f"sign_{map_id.value}_{self.index} at ({self.y}, {self.x}): {description}"
+        return f"sign_{map_id}_{self.index} at ({self.y}, {self.x}): {description}"
 
 
 class OverworldMap(BaseModel):
     """A map of a particular region of the overworld."""
 
-    id: MapLocation
+    id: MapId
     ascii_tiles: list[list[str]]
     known_sprites: dict[int, OverworldSprite]
     known_warps: dict[int, OverworldWarp]
     known_signs: dict[int, OverworldSign]
-    north_connection: MapLocation | None
-    south_connection: MapLocation | None
-    east_connection: MapLocation | None
-    west_connection: MapLocation | None
+    north_connection: MapId | None
+    south_connection: MapId | None
+    east_connection: MapId | None
+    west_connection: MapId | None
 
     @property
     def height(self) -> int:

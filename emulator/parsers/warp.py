@@ -1,7 +1,7 @@
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
-from emulator.enums import MapLocation
+from common.enums import MapId
 
 
 class Warp(BaseModel):
@@ -15,7 +15,7 @@ class Warp(BaseModel):
     index: int
     y: int
     x: int
-    destination: MapLocation
+    destination: MapId
 
     model_config = ConfigDict(frozen=True)
 
@@ -35,6 +35,6 @@ def parse_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
             index=i,
             y=mem[base],
             x=mem[base + 1],
-            destination=MapLocation(mem[base + 3]),
+            destination=MapId(mem[base + 3]),
         )
     return warps

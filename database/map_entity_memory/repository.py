@@ -44,7 +44,7 @@ async def update_map_entity_memory(map_entity: MapEntityMemoryUpdate) -> MapEnti
         query = (
             update(MapEntityMemoryDBModel)
             .where(
-                MapEntityMemoryDBModel.map_id == map_entity.map_id.value,
+                MapEntityMemoryDBModel.map_id == map_entity.map_id,
                 MapEntityMemoryDBModel.entity_id == map_entity.entity_id,
                 MapEntityMemoryDBModel.entity_type == map_entity.entity_type,
             )
@@ -73,7 +73,7 @@ async def delete_map_entity_memory(map_entity: MapEntityMemoryDelete) -> None:
     """Delete a map entity memory."""
     async with db_sessionmaker() as session:
         query = delete(MapEntityMemoryDBModel).where(
-            MapEntityMemoryDBModel.map_id == map_entity.map_id.value,
+            MapEntityMemoryDBModel.map_id == map_entity.map_id,
             MapEntityMemoryDBModel.entity_id == map_entity.entity_id,
             MapEntityMemoryDBModel.entity_type == map_entity.entity_type,
         )

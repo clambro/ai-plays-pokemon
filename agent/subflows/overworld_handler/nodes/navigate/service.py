@@ -3,7 +3,7 @@ from loguru import logger
 from agent.schemas import NavigationArgs
 from common.enums import AsciiTiles
 from emulator.emulator import YellowLegacyEmulator
-from emulator.enums import Button, MapLocation
+from emulator.enums import Button
 from emulator.game_state import YellowLegacyGameState
 from memory.raw_memory import RawMemory, RawMemoryPiece
 from overworld_map.schemas import OverworldMap
@@ -173,7 +173,7 @@ class NavigationService:
         self,
         game_state: YellowLegacyGameState,
         prev_pos: tuple[int, int],
-        starting_map_id: MapLocation,
+        starting_map_id: int,
     ) -> bool:
         """Check if we should cancel navigation."""
         new_pos = (game_state.player.y, game_state.player.x)
@@ -189,7 +189,7 @@ class NavigationService:
                 ),
             )
             return True
-        if game_state.map.name != starting_map_id:
+        if game_state.map.id != starting_map_id:
             logger.warning("Map changed during navigation. Cancelling.")
             self.raw_memory.append(
                 RawMemoryPiece(

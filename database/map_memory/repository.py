@@ -39,7 +39,7 @@ async def update_map_tiles(map_memory: MapMemoryCreateUpdate) -> MapMemoryRead:
     async with db_sessionmaker() as session:
         query = (
             update(MapMemoryDBModel)
-            .where(MapMemoryDBModel.map_id == map_memory.map_id.value)
+            .where(MapMemoryDBModel.map_id == map_memory.map_id)
             .values(
                 tiles=map_memory.tiles,
                 update_iteration=map_memory.iteration,

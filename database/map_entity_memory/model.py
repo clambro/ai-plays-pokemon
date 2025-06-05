@@ -3,7 +3,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from common.enums import MapEntityType
 from database.base import SQLAlchemyBase
-from emulator.enums import MapLocation
 
 
 class MapEntityMemoryDBModel(SQLAlchemyBase):
@@ -11,7 +10,7 @@ class MapEntityMemoryDBModel(SQLAlchemyBase):
 
     __tablename__ = "map_entity_memory"
 
-    map_id: Mapped[MapLocation] = mapped_column(Integer, primary_key=True, index=True)
+    map_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     entity_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     entity_type: Mapped[MapEntityType] = mapped_column(
         Enum(MapEntityType),

@@ -18,7 +18,7 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
     Get the overworld map from the game state, loading the relevant memories from the database if
     the map is known, otherwise creating a new one.
     """
-    map_memory = await get_map_memory(game_state.map.name)
+    map_memory = await get_map_memory(game_state.map.id)
     if map_memory is None:
         return await _create_overworld_map_from_game_state(iteration, game_state)
 
@@ -76,7 +76,7 @@ async def _add_remove_map_entities(
     overworld_map: OverworldMap,
 ) -> None:
     """Add or remove entities from the overworld map depending on the current screen."""
-    if overworld_map.id != game_state.map.name:
+    if overworld_map.id != game_state.map.id:
         raise ValueError("Overworld map does not match current game state.")
 
     ascii_screen = game_state.get_ascii_screen()
@@ -194,7 +194,7 @@ async def _create_overworld_map_from_game_state(
             row.append(AsciiTiles.UNSEEN)
         tiles.append(row)
     overworld_map = OverworldMap(
-        id=game_state.map.name,
+        id=game_state.map.id,
         ascii_tiles=tiles,
         known_sprites={},
         known_warps={},

@@ -108,8 +108,9 @@ class UpdateMapService:
         if not updatable_entities:
             return
 
-        m_id = self.current_map.id
-        entity_text = "\n".join([f"- [{e.index}] {e.to_string(m_id)}" for e in updatable_entities])
+        entity_text = "\n".join(
+            [f"- [{e.index}] {e.to_string(self.current_map.id)}" for e in updatable_entities],
+        )
         prompt = prompt.format(
             state=self.state_string_builder(game_state),
             entities=entity_text.strip(),
