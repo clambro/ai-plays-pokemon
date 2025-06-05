@@ -1,12 +1,12 @@
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from common.enums import MapEntityType
+from common.enums import MapEntityType, MapId
 
 
 class MapEntityMemoryCreate(BaseModel):
     """Create model for a map entity memory."""
 
-    map_id: int
+    map_id: MapId
     entity_id: int
     entity_type: MapEntityType
     iteration: int
@@ -15,7 +15,7 @@ class MapEntityMemoryCreate(BaseModel):
 class MapEntityMemoryUpdate(BaseModel):
     """Update model for a map entity memory."""
 
-    map_id: int
+    map_id: MapId
     entity_id: int
     entity_type: MapEntityType
     description: str
@@ -25,7 +25,7 @@ class MapEntityMemoryUpdate(BaseModel):
 class MapEntityMemoryRead(BaseModel):
     """Read model for a map entity memory."""
 
-    map_id: int
+    map_id: MapId
     entity_id: int
     entity_type: MapEntityType
     description: str | None
@@ -36,7 +36,7 @@ class MapEntityMemoryRead(BaseModel):
 class MapEntityMemoryDelete(BaseModel):
     """Delete model for a map entity memory."""
 
-    map_id: int
+    map_id: MapId
     entity_id: int
     entity_type: MapEntityType
 

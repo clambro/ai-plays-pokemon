@@ -1,7 +1,7 @@
 from loguru import logger
 
 from agent.schemas import NavigationArgs
-from common.enums import AsciiTiles
+from common.enums import AsciiTiles, MapId
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
 from emulator.game_state import YellowLegacyGameState
@@ -173,7 +173,7 @@ class NavigationService:
         self,
         game_state: YellowLegacyGameState,
         prev_pos: tuple[int, int],
-        starting_map_id: int,
+        starting_map_id: MapId,
     ) -> bool:
         """Check if we should cancel navigation."""
         new_pos = (game_state.player.y, game_state.player.x)

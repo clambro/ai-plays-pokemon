@@ -6,7 +6,7 @@ from agent.subflows.overworld_handler.nodes.make_decision.schemas import (
     Decision,
     MakeDecisionResponse,
 )
-from common.enums import AsciiTiles
+from common.enums import AsciiTiles, MapId
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
@@ -94,7 +94,7 @@ class MakeDecisionService:
     async def _check_for_collision(
         self,
         button: Button,
-        prev_map_id: int,
+        prev_map_id: MapId,
         prev_coords: tuple[int, int],
         prev_direction: FacingDirection,
     ) -> None:

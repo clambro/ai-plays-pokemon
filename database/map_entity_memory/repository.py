@@ -1,5 +1,6 @@
 from sqlalchemy import delete, select, update
 
+from common.enums import MapId
 from database.db_config import db_sessionmaker
 from database.map_entity_memory.model import MapEntityMemoryDBModel
 from database.map_entity_memory.schemas import (
@@ -28,7 +29,7 @@ async def create_map_entity_memory(map_entity: MapEntityMemoryCreate) -> MapEnti
     return MapEntityMemoryRead.model_validate(db_obj)
 
 
-async def get_map_entity_memories_for_map(map_id: int) -> list[MapEntityMemoryRead]:
+async def get_map_entity_memories_for_map(map_id: MapId) -> list[MapEntityMemoryRead]:
     """Get all map entity memories for a map."""
     async with db_sessionmaker() as session:
         query = select(MapEntityMemoryDBModel).where(MapEntityMemoryDBModel.map_id == map_id)

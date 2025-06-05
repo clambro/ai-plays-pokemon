@@ -18,7 +18,7 @@ class OverworldSprite(Sprite):
         """Create an overworld sprite from a sprite and a description."""
         return cls(**sprite.model_dump(), description=description)
 
-    def to_string(self, map_id: int) -> str:
+    def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sprite."""
         description = self.description or "No description added yet."
         out = f"sprite_{map_id}_{self.index} at ({self.y}, {self.x}): {description}"
@@ -40,7 +40,7 @@ class OverworldWarp(Warp):
         """Create an overworld warp from a warp and a description."""
         return cls(**warp.model_dump(), description=description)
 
-    def to_string(self, map_id: int) -> str:
+    def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the warp."""
         description = self.description or "No description added yet."
         return (
@@ -59,7 +59,7 @@ class OverworldSign(Sign):
         """Create an overworld sign from a sign and a description."""
         return cls(**sign.model_dump(), description=description)
 
-    def to_string(self, map_id: int) -> str:
+    def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sign."""
         description = self.description or "No description added yet."
         return f"sign_{map_id}_{self.index} at ({self.y}, {self.x}): {description}"
