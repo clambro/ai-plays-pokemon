@@ -72,9 +72,6 @@ class MakeDecisionService:
                 navigation_args=response.navigation_args,
             )
         if response.button:
-            prev_map = game_state.map.id
-            prev_coords = (game_state.player.y, game_state.player.x)
-            prev_direction = game_state.player.direction
             await self.emulator.press_buttons([response.button])
             self.raw_memory.append(
                 RawMemoryPiece(
@@ -82,7 +79,12 @@ class MakeDecisionService:
                     content=f"{thought} Pressed the '{response.button}' button.",
                 ),
             )
-            await self._check_for_collision(response.button, prev_map, prev_coords, prev_direction)
+            await self._check_for_collision(
+                response.button,
+                prev_map_id=game_state.map.id,
+                prev_coords=(game_state.player.y, game_state.player.x),
+                prev_direction=game_state.player.direction,
+            )
             await self._check_for_action(response.button)
 
         return Decision(
