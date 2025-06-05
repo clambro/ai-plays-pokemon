@@ -257,7 +257,4 @@ class MapId(IntEnum):
     BRUNOS_ROOM = 0xF6
     AGATHAS_ROOM = 0xF7
     SUMMER_BEACH_HOUSE = 0xF8
-
-    # This is used by indoor warp tiles to indicate that they lead outside. Not sure where to get
-    # the actual outside map id.
-    OUTSIDE = 0xFF
+    OUTSIDE = 0xFF  # Used by indoor warp tiles to indicate that they lead outside.
