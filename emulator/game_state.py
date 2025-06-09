@@ -8,6 +8,7 @@ from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
 from emulator.char_map import CHAR_TO_INT_MAP, INT_TO_CHAR_MAP
 from emulator.parsers.map import Map, parse_map_state
+from emulator.parsers.pokemon import Pokemon, parse_player_pokemon
 from emulator.parsers.screen import Screen, parse_screen
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
@@ -22,6 +23,7 @@ class YellowLegacyGameState(BaseModel):
     """A snapshot of the Pokemon Yellow Legacy game state."""
 
     player: PlayerState
+    party: list[Pokemon]
     map: Map
     sprites: dict[int, Sprite]
     pikachu: Sprite
@@ -42,6 +44,7 @@ class YellowLegacyGameState(BaseModel):
         """
         return cls(
             player=PlayerState.from_memory(mem),
+            party=parse_player_pokemon(mem),
             map=parse_map_state(mem),
             sprites=parse_sprites(mem),
             pikachu=parse_pikachu_sprite(mem),
@@ -61,22 +64,22 @@ class YellowLegacyGameState(BaseModel):
         if self.player.badges:
             out += f"Badges Earned: {', '.join(b.name for b in self.player.badges)}\n"
         out += f"Current Level Cap: {self.player.level_cap}\n"
-        if self.player.party:
+        if self.party:
             out += "<party>\n"
-            for i, p in enumerate(self.player.party, start=1):
+            for i, p in enumerate(self.party, start=1):
                 out += f"<pokemon_{i}>\n"
                 out += f"Name: {p.name}\n"
-                out += f"Species: {p.species.name}\n"
+                out += f"Species: {p.species}\n"
                 if p.type2:
-                    out += f"Type: {p.type1.name} / {p.type2.name}\n"
+                    out += f"Type: {p.type1} / {p.type2}\n"
                 else:
-                    out += f"Type: {p.type1.name}\n"
+                    out += f"Type: {p.type1}\n"
                 out += f"Level: {p.level}\n"
                 out += f"HP: {p.hp} / {p.max_hp}\n"
-                out += f"Status Ailment: {p.status.name}\n"
+                out += f"Status Ailment: {p.status}\n"
                 out += "<moves>\n"
                 for m in p.moves:
-                    out += f"- {m.id.name} (PP: {m.pp})\n"
+                    out += f"- {m.name} (PP: {m.pp})\n"
                 out += "</moves>\n"
                 out += f"</pokemon_{i}>\n"
             out += "</party>\n"
