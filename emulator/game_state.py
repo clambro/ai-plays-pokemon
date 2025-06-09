@@ -8,16 +8,11 @@ from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
 from emulator.char_map import CHAR_TO_INT_MAP, INT_TO_CHAR_MAP
 from emulator.parsers.map import Map, parse_map_state
+from emulator.parsers.screen import Screen, parse_screen
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
 from emulator.parsers.warp import Warp, parse_warps
-from emulator.schemas import (
-    AsciiScreenWithEntities,
-    BattleState,
-    DialogBox,
-    PlayerState,
-    ScreenState,
-)
+from emulator.schemas import AsciiScreenWithEntities, BattleState, DialogBox, PlayerState
 
 BLINKING_CURSOR_ID = 0xEE
 BLANK_TILE_ID = 0x7F
@@ -32,7 +27,7 @@ class YellowLegacyGameState(BaseModel):
     pikachu: Sprite
     warps: dict[int, Warp]
     signs: dict[int, Sign]
-    screen: ScreenState
+    screen: Screen
     battle: BattleState
 
     model_config = ConfigDict(frozen=True)
@@ -52,7 +47,7 @@ class YellowLegacyGameState(BaseModel):
             pikachu=parse_pikachu_sprite(mem),
             warps=parse_warps(mem),
             signs=parse_signs(mem),
-            screen=ScreenState.from_memory(mem),
+            screen=parse_screen(mem),
             battle=BattleState.from_memory(mem),
         )
 
@@ -99,6 +94,23 @@ class YellowLegacyGameState(BaseModel):
             and screen[17, -1] == 126
         )
 
+    def to_screen_coords(self, y: int, x: int) -> tuple[int, int] | None:
+        """
+        Convert map coordinates to screen coordinates.
+
+        :param y: The map y coordinate.
+        :param x: The map x coordinate.
+        :return: The screen coordinates (y, x) or None if they're off screen.
+        """
+        if (
+            y < self.screen.top
+            or y >= self.screen.bottom
+            or x < self.screen.left
+            or x >= self.screen.right
+        ):
+            return None
+        return (y - self.screen.top, x - self.screen.left)
+
     def get_ascii_screen(self) -> AsciiScreenWithEntities:
         """
         Get an ASCII representation of the current screen, including the on-screen sprites and warp
@@ -130,24 +142,24 @@ class YellowLegacyGameState(BaseModel):
 
         on_screen_sprites = []
         for s in self.sprites.values():
-            if s.is_rendered and (screen_coords := self.screen.get_screen_coords(s.y, s.x)):
+            if s.is_rendered and (screen_coords := self.to_screen_coords(s.y, s.x)):
                 on_screen_sprites.append(s)
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.SPRITE
 
         pikachu = self.pikachu
         if pikachu.is_rendered:
-            if screen_coords := self.screen.get_screen_coords(pikachu.y, pikachu.x):
+            if screen_coords := self.to_screen_coords(pikachu.y, pikachu.x):
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.PIKACHU
 
         on_screen_warps = []
         for w in self.warps.values():
-            if screen_coords := self.screen.get_screen_coords(w.y, w.x):
+            if screen_coords := self.to_screen_coords(w.y, w.x):
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.WARP
                 on_screen_warps.append(w)
 
         on_screen_signs = []
         for s in self.signs.values():
-            if screen_coords := self.screen.get_screen_coords(s.y, s.x):
+            if screen_coords := self.to_screen_coords(s.y, s.x):
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.SIGN
                 on_screen_signs.append(s)
 

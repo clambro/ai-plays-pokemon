@@ -4,7 +4,6 @@ import numpy as np
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
-from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
 from emulator.char_map import get_text_from_byte_array
 from emulator.enums import (
     BadgeId,
@@ -141,62 +140,6 @@ class PlayerState(BaseModel):
             + ((m3 >> 4) * 10)
             + (m3 & 0xF)
         )
-
-
-class ScreenState(BaseModel):
-    """The state of the screen."""
-
-    top: int
-    left: int
-    bottom: int
-    right: int
-
-    # Each block on screen is a 2x2 square of tiles.
-    tiles: list[list[int]]
-
-    cursor_index: int
-
-    model_config = ConfigDict(frozen=True)
-
-    @classmethod
-    def from_memory(cls, mem: PyBoyMemoryView) -> Self:
-        """
-        Create a new screen state from a snapshot of the memory.
-
-        :param mem: The PyBoyMemoryView instance to create the screen state from.
-        :return: A new screen state.
-        """
-        player_y = mem[0xD3AE]
-        player_x = mem[0xD3AF]
-
-        top = player_y - PLAYER_OFFSET_Y
-        left = player_x - PLAYER_OFFSET_X
-        bottom = top + SCREEN_HEIGHT
-        right = left + SCREEN_WIDTH
-
-        shape = (SCREEN_HEIGHT * 2, SCREEN_WIDTH * 2)
-        tiles = np.asarray(mem[0xC3A0:0xC508]).reshape(shape).tolist()
-
-        return cls(
-            top=top,
-            left=left,
-            bottom=bottom,
-            right=right,
-            tiles=tiles,
-            cursor_index=mem[0xCC30],
-        )
-
-    def get_screen_coords(self, y: int, x: int) -> tuple[int, int] | None:
-        """
-        Convert global coordinates to screen coordinates.
-
-        :param y: The global y coordinate.
-        :param x: The global x coordinate.
-        :return: The screen coordinates (y, x) or None if they're off screen.
-        """
-        if y < self.top or y >= self.bottom or x < self.left or x >= self.right:
-            return None
-        return (y - self.top, x - self.left)
 
 
 class BattleState(BaseModel):

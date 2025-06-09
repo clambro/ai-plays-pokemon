@@ -96,7 +96,7 @@ async def _add_remove_map_entities(
             )
 
     for s in overworld_map.known_sprites.values():
-        is_s_on_screen = game_state.screen.get_screen_coords(s.y, s.x) is not None
+        is_s_on_screen = game_state.to_screen_coords(s.y, s.x) is not None
         if is_s_on_screen and not s.is_rendered:
             # Previously seen sprite has been de-rendered. Likely an item that has been picked up,
             # or a scripted character that has walked off the screen. Sprites are the only entity
