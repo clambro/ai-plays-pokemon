@@ -19,6 +19,18 @@ class Screen(BaseModel):
 
     @computed_field
     @property
+    def is_dialog_box_on_screen(self) -> int:
+        """The tile that the cursor is on."""
+        """Check if the dialog box is on the screen by checking for the correct corner tiles."""
+        return (
+            self.tiles[12][0] == 121
+            and self.tiles[12][-1] == 123
+            and self.tiles[17][0] == 125
+            and self.tiles[17][-1] == 126
+        )
+
+    @computed_field
+    @property
     def text(self) -> str:
         """The tiles on screen converted to text if possible."""
         return "\n".join("".join(INT_TO_CHAR_MAP.get(t, " ") for t in row) for row in self.tiles)

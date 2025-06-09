@@ -15,7 +15,6 @@ class PlayerState(BaseModel):
     """The state of the player character."""
 
     name: str
-    is_moving: bool
     y: int
     x: int
     direction: FacingDirection
@@ -42,7 +41,6 @@ class PlayerState(BaseModel):
 
         return cls(
             name=name,
-            is_moving=mem[0xC107] + mem[0xC108] != 0,
             y=mem[0xD3AE],
             x=mem[0xD3AF],
             direction=FacingDirection(mem[0xD577]),
@@ -77,7 +75,7 @@ class DialogBox(BaseModel):
 
     top_line: str
     bottom_line: str
-    cursor_on_screen: bool
+    has_cursor: bool
 
     model_config = ConfigDict(frozen=True)
 

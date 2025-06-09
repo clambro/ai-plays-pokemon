@@ -83,17 +83,6 @@ class YellowLegacyGameState(BaseModel):
         out += "</player_info>"
         return out
 
-    @property
-    def is_dialog_box_on_screen(self) -> bool:
-        """Check if the dialog box is on the screen by checking for the correct corner tiles."""
-        screen = np.array(self.screen.tiles)
-        return (
-            screen[12, 0] == 121
-            and screen[12, -1] == 123
-            and screen[17, 0] == 125
-            and screen[17, -1] == 126
-        )
-
     def to_screen_coords(self, y: int, x: int) -> tuple[int, int] | None:
         """
         Convert map coordinates to screen coordinates.
@@ -179,11 +168,11 @@ class YellowLegacyGameState(BaseModel):
 
     def get_dialog_box(self) -> DialogBox | None:
         """Get the text in the dialog box. Return the top and bottom lines."""
-        if not self.is_dialog_box_on_screen:
+        if not self.screen.is_dialog_box_on_screen:
             return None
         lines = self.screen.text.split("\n")
         return DialogBox(
             top_line=lines[14][1:-2].strip(),
             bottom_line=lines[16][1:-2].strip(),
-            cursor_on_screen=lines[16][-2] == "▶",
+            has_cursor=lines[16][-2] == "▼",
         )
