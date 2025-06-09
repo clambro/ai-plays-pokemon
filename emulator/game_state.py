@@ -6,13 +6,14 @@ from pydantic import BaseModel, ConfigDict
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
+from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.map import Map, parse_map_state
 from emulator.parsers.pokemon import Pokemon, parse_player_pokemon
 from emulator.parsers.screen import Screen, parse_screen
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
 from emulator.parsers.warp import Warp, parse_warps
-from emulator.schemas import AsciiScreenWithEntities, BattleState, DialogBox, PlayerState
+from emulator.schemas import AsciiScreenWithEntities, DialogBox, PlayerState
 
 
 class YellowLegacyGameState(BaseModel):
@@ -26,7 +27,7 @@ class YellowLegacyGameState(BaseModel):
     warps: dict[int, Warp]
     signs: dict[int, Sign]
     screen: Screen
-    battle: BattleState
+    battle: Battle
 
     model_config = ConfigDict(frozen=True)
 
@@ -47,7 +48,7 @@ class YellowLegacyGameState(BaseModel):
             warps=parse_warps(mem),
             signs=parse_signs(mem),
             screen=parse_screen(mem),
-            battle=BattleState.from_memory(mem),
+            battle=parse_battle_state(mem),
         )
 
     @property

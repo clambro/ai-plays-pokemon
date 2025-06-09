@@ -72,24 +72,6 @@ class PlayerState(BaseModel):
         )
 
 
-class BattleState(BaseModel):
-    """The state of the current battle."""
-
-    is_in_battle: bool
-
-    model_config = ConfigDict(frozen=True)
-
-    @classmethod
-    def from_memory(cls, mem: PyBoyMemoryView) -> Self:
-        """
-        Create a new battle state from a snapshot of the memory.
-
-        :param mem: The PyBoyMemoryView instance to create the battle state from.
-        :return: A new battle state.
-        """
-        return cls(is_in_battle=bool(mem[0xD057]))
-
-
 class DialogBox(BaseModel):
     """The state of the dialog box."""
 
