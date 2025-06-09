@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
-from emulator.char_map import CHAR_TO_INT_MAP, INT_TO_CHAR_MAP
 from emulator.parsers.map import Map, parse_map_state
 from emulator.parsers.pokemon import Pokemon, parse_player_pokemon
 from emulator.parsers.screen import Screen, parse_screen
@@ -14,9 +13,6 @@ from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
 from emulator.parsers.warp import Warp, parse_warps
 from emulator.schemas import AsciiScreenWithEntities, BattleState, DialogBox, PlayerState
-
-BLINKING_CURSOR_ID = 0xEE
-BLANK_TILE_ID = 0x7F
 
 
 class YellowLegacyGameState(BaseModel):
@@ -173,41 +169,20 @@ class YellowLegacyGameState(BaseModel):
             signs=on_screen_signs,
         )
 
-    def get_onscreen_text(self) -> str:
-        """Get the text on the screen as a string."""
-        tiles = np.array(self.screen.tiles)
-        return "\n".join("".join(INT_TO_CHAR_MAP.get(t, " ") for t in row) for row in tiles)
-
     def is_text_on_screen(self, ignore_dialog_box: bool = False) -> bool:
         """Check if there is text on the screen."""
-        a_upper = CHAR_TO_INT_MAP["A"]
-        z_upper = CHAR_TO_INT_MAP["Z"]
-        a_lower = CHAR_TO_INT_MAP["a"]
-        z_lower = CHAR_TO_INT_MAP["z"]
-        letters = np.array(list(range(a_upper, z_upper + 1)) + list(range(a_lower, z_lower + 1)))
-
-        tiles = np.array(self.screen.tiles)
+        text = self.screen.text
         if ignore_dialog_box:
-            tiles = tiles[:13, :]
-
-        return np.isin(tiles, letters).sum() > 0
-
-    def get_screen_without_blinking_cursor(self) -> np.ndarray:
-        """Get the screen without the blinking cursor."""
-        tiles = np.array(self.screen.tiles)
-        tiles[tiles == BLINKING_CURSOR_ID] = BLANK_TILE_ID
-        return tiles.tolist()
+            text = "\n".join(text.split("\n")[:13])
+        return len(text.strip()) > 0
 
     def get_dialog_box(self) -> DialogBox | None:
         """Get the text in the dialog box. Return the top and bottom lines."""
         if not self.is_dialog_box_on_screen:
             return None
-        tiles = np.array(self.screen.tiles)
-        top_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[14, 1:-2])
-        bottom_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[16, 1:-2])
-        cursor_on_screen = tiles[16, -2] == BLINKING_CURSOR_ID
+        lines = self.screen.text.split("\n")
         return DialogBox(
-            top_line=top_line.strip(),
-            bottom_line=bottom_line.strip(),
-            cursor_on_screen=cursor_on_screen,
+            top_line=lines[14][1:-2].strip(),
+            bottom_line=lines[16][1:-2].strip(),
+            cursor_on_screen=lines[16][-2] == "▶",
         )

@@ -4,10 +4,10 @@ import numpy as np
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
-from emulator.char_map import get_text_from_byte_array
 from emulator.enums import BadgeId, FacingDirection
 from emulator.parsers.sign import Sign
 from emulator.parsers.sprite import Sprite
+from emulator.parsers.utils import get_text_from_byte_array
 from emulator.parsers.warp import Warp
 
 

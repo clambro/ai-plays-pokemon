@@ -1,7 +1,8 @@
 from pyboy import PyBoyMemoryView
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, computed_field
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
+from emulator.parsers.utils import INT_TO_CHAR_MAP
 
 
 class Screen(BaseModel):
@@ -15,6 +16,20 @@ class Screen(BaseModel):
     cursor_index: int
 
     model_config = ConfigDict(frozen=True)
+
+    @computed_field
+    @property
+    def text(self) -> str:
+        """The tiles on screen converted to text if possible."""
+        return "\n".join("".join(INT_TO_CHAR_MAP.get(t, " ") for t in row) for row in self.tiles)
+
+    @computed_field
+    @property
+    def tiles_without_cursor(self) -> list[list[int]]:
+        """The tiles on screen without the blinking cursor."""
+        cursor = 0xEE
+        blank = 0x7F
+        return [[t if t != cursor else blank for t in row] for row in self.tiles]
 
 
 def parse_screen(mem: PyBoyMemoryView) -> Screen:

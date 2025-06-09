@@ -101,7 +101,6 @@ INT_TO_CHAR_MAP = {
     0xFE: "8",
     0xFF: "9",
 }
-CHAR_TO_INT_MAP = {v: k for k, v in INT_TO_CHAR_MAP.items()}
 
 
 def get_text_from_byte_array(arr: list[int]) -> str:

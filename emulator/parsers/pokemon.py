@@ -1,7 +1,7 @@
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
-from emulator.char_map import get_text_from_byte_array
+from emulator.parsers.utils import get_text_from_byte_array
 
 
 class PokemonMove(BaseModel):
