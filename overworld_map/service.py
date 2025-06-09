@@ -18,27 +18,27 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
     Get the overworld map from the game state, loading the relevant memories from the database if
     the map is known, otherwise creating a new one.
     """
-    map_memory = await get_map_memory(game_state.cur_map.id)
+    map_memory = await get_map_memory(game_state.map.id)
     if map_memory is None:
         return await _create_overworld_map_from_game_state(iteration, game_state)
 
     map_entity_memories = await get_map_entity_memories_for_map(map_memory.map_id)
 
-    game_sprites = game_state.cur_map.sprites
+    game_sprites = game_state.sprites
     sprites = {
         mem.entity_id: OverworldSprite.from_sprite(game_sprites[mem.entity_id], mem.description)
         for mem in map_entity_memories
         if mem.entity_type == MapEntityType.SPRITE
     }
 
-    game_warps = game_state.cur_map.warps
+    game_warps = game_state.warps
     warps = {
         mem.entity_id: OverworldWarp.from_warp(game_warps[mem.entity_id], mem.description)
         for mem in map_entity_memories
         if mem.entity_type == MapEntityType.WARP
     }
 
-    game_signs = game_state.cur_map.signs
+    game_signs = game_state.signs
     signs = {
         mem.entity_id: OverworldSign.from_sign(game_signs[mem.entity_id], mem.description)
         for mem in map_entity_memories
@@ -51,7 +51,10 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
         known_sprites=sprites,
         known_warps=warps,
         known_signs=signs,
-        connections=game_state.cur_map.connections,
+        north_connection=game_state.map.north_connection,
+        south_connection=game_state.map.south_connection,
+        east_connection=game_state.map.east_connection,
+        west_connection=game_state.map.west_connection,
     )
     return overworld_map
 
@@ -73,7 +76,7 @@ async def _add_remove_map_entities(
     overworld_map: OverworldMap,
 ) -> None:
     """Add or remove entities from the overworld map depending on the current screen."""
-    if overworld_map.id != game_state.cur_map.id:
+    if overworld_map.id != game_state.map.id:
         raise ValueError("Overworld map does not match current game state.")
 
     ascii_screen = game_state.get_ascii_screen()
@@ -150,8 +153,8 @@ async def _update_overworld_map_tiles(
     left = screen.left
     bottom = screen.bottom
     right = screen.right
-    height = game_state.cur_map.height
-    width = game_state.cur_map.width
+    height = game_state.map.height
+    width = game_state.map.width
 
     if top < 0:
         ascii_screen = ascii_screen[-top:]
@@ -185,18 +188,21 @@ async def _create_overworld_map_from_game_state(
 ) -> OverworldMap:
     """Create a new overworld map from the game state."""
     tiles = []
-    for _ in range(game_state.cur_map.height):
+    for _ in range(game_state.map.height):
         row = []
-        for _ in range(game_state.cur_map.width):
+        for _ in range(game_state.map.width):
             row.append(AsciiTiles.UNSEEN)
         tiles.append(row)
     overworld_map = OverworldMap(
-        id=game_state.cur_map.id,
+        id=game_state.map.id,
         ascii_tiles=tiles,
         known_sprites={},
         known_warps={},
         known_signs={},
-        connections=game_state.cur_map.connections,
+        north_connection=game_state.map.north_connection,
+        south_connection=game_state.map.south_connection,
+        east_connection=game_state.map.east_connection,
+        west_connection=game_state.map.west_connection,
     )
     await create_map_memory(
         MapMemoryCreateUpdate(

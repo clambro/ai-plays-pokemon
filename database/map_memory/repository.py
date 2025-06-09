@@ -1,5 +1,6 @@
 from sqlalchemy import select, update
 
+from common.enums import MapId
 from database.db_config import db_sessionmaker
 from database.map_memory.model import MapMemoryDBModel
 from database.map_memory.schemas import MapMemoryCreateUpdate, MapMemoryRead
@@ -21,7 +22,7 @@ async def create_map_memory(map_memory: MapMemoryCreateUpdate) -> MapMemoryRead:
     return MapMemoryRead.model_validate(db_obj)
 
 
-async def get_map_memory(map_id: int) -> MapMemoryRead | None:
+async def get_map_memory(map_id: MapId) -> MapMemoryRead | None:
     """Get a map memory by map id."""
     async with db_sessionmaker() as session:
         query = select(MapMemoryDBModel).where(MapMemoryDBModel.map_id == map_id)
@@ -39,7 +40,7 @@ async def update_map_tiles(map_memory: MapMemoryCreateUpdate) -> MapMemoryRead:
     async with db_sessionmaker() as session:
         query = (
             update(MapMemoryDBModel)
-            .where(MapMemoryDBModel.map_id == map_memory.map_id.value)
+            .where(MapMemoryDBModel.map_id == map_memory.map_id)
             .values(
                 tiles=map_memory.tiles,
                 update_iteration=map_memory.iteration,

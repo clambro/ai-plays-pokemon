@@ -98,18 +98,18 @@ class UpdateMapService:
         :param game_state: The current game state.
         :param prompt: The prompt to use for the LLM.
         """
-        updatable_entities: list[OverworldSprite | OverworldWarp | OverworldSign] = []
-        for e in entities:
-            if (
-                e.description is None
-                or abs(e.y - game_state.player.y) + abs(e.x - game_state.player.x) <= 2
-            ):
-                updatable_entities.append(e)
+        updatable_entities = [
+            e
+            for e in entities
+            if e.description is None
+            or abs(e.y - game_state.player.y) + abs(e.x - game_state.player.x) <= 2
+        ]
         if not updatable_entities:
             return
 
-        m_id = self.current_map.id
-        entity_text = "\n".join([f"- [{e.index}] {e.to_string(m_id)}" for e in updatable_entities])
+        entity_text = "\n".join(
+            [f"- [{e.index}] {e.to_string(self.current_map.id)}" for e in updatable_entities],
+        )
         prompt = prompt.format(
             state=self.state_string_builder(game_state),
             entities=entity_text.strip(),

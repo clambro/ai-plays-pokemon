@@ -6,7 +6,7 @@ from agent.subflows.overworld_handler.nodes.make_decision.schemas import (
     Decision,
     MakeDecisionResponse,
 )
-from common.enums import AsciiTiles
+from common.enums import AsciiTiles, MapId
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
@@ -53,10 +53,9 @@ class MakeDecisionService:
                 navigation_args=None,
             )
 
-        map_str = game_state.cur_map.id.name
         position = (game_state.player.y, game_state.player.x)
         thought = (
-            f"Current map: {map_str} at coordinates {position}, facing"
+            f"Current map: {game_state.map.id.name} at coordinates {position}, facing"
             f" {game_state.player.direction.name}. {response.thoughts}"
         )
 
@@ -73,9 +72,6 @@ class MakeDecisionService:
                 navigation_args=response.navigation_args,
             )
         if response.button:
-            prev_map = game_state.cur_map.id.name
-            prev_coords = (game_state.player.y, game_state.player.x)
-            prev_direction = game_state.player.direction
             await self.emulator.press_buttons([response.button])
             self.raw_memory.append(
                 RawMemoryPiece(
@@ -83,7 +79,12 @@ class MakeDecisionService:
                     content=f"{thought} Pressed the '{response.button}' button.",
                 ),
             )
-            await self._check_for_collision(response.button, prev_map, prev_coords, prev_direction)
+            await self._check_for_collision(
+                response.button,
+                prev_map_id=game_state.map.id,
+                prev_coords=(game_state.player.y, game_state.player.x),
+                prev_direction=game_state.player.direction,
+            )
             await self._check_for_action(response.button)
 
         return Decision(
@@ -95,7 +96,7 @@ class MakeDecisionService:
     async def _check_for_collision(
         self,
         button: Button,
-        prev_map: str,
+        prev_map_id: MapId,
         prev_coords: tuple[int, int],
         prev_direction: FacingDirection,
     ) -> None:
@@ -105,13 +106,10 @@ class MakeDecisionService:
 
         await self.emulator.wait_for_animation_to_finish()
         game_state = self.emulator.get_game_state()
-        current_map = game_state.cur_map.id.name
-        current_coords = (game_state.player.y, game_state.player.x)
-        current_direction = game_state.player.direction
         if (
-            current_map == prev_map
-            and current_coords == prev_coords
-            and current_direction == prev_direction
+            prev_map_id == game_state.map.id
+            and prev_coords == (game_state.player.y, game_state.player.x)
+            and prev_direction == game_state.player.direction
         ):
             self.raw_memory.append(
                 RawMemoryPiece(
