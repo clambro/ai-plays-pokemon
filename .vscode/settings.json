@@ -2,11 +2,10 @@
     "[python]": {
         "editor.insertSpaces": true,
         "editor.tabSize": 4,
-        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
             "source.organizeImports": "explicit",
-            "source.fixAll": "explicit",
             "source.fixAll.ruff": "explicit"
         }
     },
