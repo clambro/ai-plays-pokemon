@@ -23,7 +23,7 @@ class DetermineHandlerService:
             return TextHandler.DIALOG_BOX
 
         name_first_row = "A B C D E F G H I"
-        onscreen_text = game_state.get_onscreen_text().replace("▶", "")  # Ignore the cursor.
+        onscreen_text = game_state.screen.text.replace("▶", "")  # Ignore the cursor.
         if not dialog_box and name_first_row in onscreen_text:
             return TextHandler.NAME
 

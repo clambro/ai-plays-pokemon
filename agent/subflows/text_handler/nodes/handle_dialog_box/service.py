@@ -80,7 +80,7 @@ class HandleDialogBoxService:
             await asyncio.sleep(blink_wait_time)
             game_state = self.emulator.get_game_state()
             dialog_box = game_state.get_dialog_box()
-            if dialog_box and dialog_box.cursor_on_screen:
+            if dialog_box and dialog_box.has_cursor:
                 break
             counter += 1
         return counter < max_counter

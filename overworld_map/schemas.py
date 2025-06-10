@@ -119,7 +119,7 @@ class OverworldMap(BaseModel):
             ascii_screen="\n".join("".join(row) for row in screen),
             player_y=game_state.player.y,
             player_x=game_state.player.x,
-            player_direction=game_state.player.direction.name,
+            player_direction=game_state.player.direction,
             tile_above=tile_above,
             tile_below=tile_below,
             tile_left=tile_left,

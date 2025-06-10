@@ -39,9 +39,8 @@ class AssignNameService:
     async def assign_name(self) -> RawMemory:
         """Assign a name to something in the game."""
         game_state = self.emulator.get_game_state()
-        onscreen_text = game_state.get_onscreen_text()
         first_name_row = "A B C D E F G H I"
-        if first_name_row not in onscreen_text:
+        if first_name_row not in game_state.screen.text:
             # Should never happen if we're in this handler, but just in case we need to bail.
             return self.raw_memory
 

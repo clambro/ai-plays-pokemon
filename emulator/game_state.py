@@ -6,34 +6,29 @@ from pydantic import BaseModel, ConfigDict
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
-from emulator.char_map import CHAR_TO_INT_MAP, INT_TO_CHAR_MAP
+from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.map import Map, parse_map_state
+from emulator.parsers.player import Player, parse_player
+from emulator.parsers.pokemon import Pokemon, parse_player_pokemon
+from emulator.parsers.screen import Screen, parse_screen
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
 from emulator.parsers.warp import Warp, parse_warps
-from emulator.schemas import (
-    AsciiScreenWithEntities,
-    BattleState,
-    DialogBox,
-    PlayerState,
-    ScreenState,
-)
-
-BLINKING_CURSOR_ID = 0xEE
-BLANK_TILE_ID = 0x7F
+from emulator.schemas import AsciiScreenWithEntities, DialogBox
 
 
 class YellowLegacyGameState(BaseModel):
     """A snapshot of the Pokemon Yellow Legacy game state."""
 
-    player: PlayerState
+    player: Player
+    party: list[Pokemon]
     map: Map
     sprites: dict[int, Sprite]
     pikachu: Sprite
     warps: dict[int, Warp]
     signs: dict[int, Sign]
-    screen: ScreenState
-    battle: BattleState
+    screen: Screen
+    battle: Battle
 
     model_config = ConfigDict(frozen=True)
 
@@ -46,14 +41,15 @@ class YellowLegacyGameState(BaseModel):
         :return: A new game state.
         """
         return cls(
-            player=PlayerState.from_memory(mem),
+            player=parse_player(mem),
+            party=parse_player_pokemon(mem),
             map=parse_map_state(mem),
             sprites=parse_sprites(mem),
             pikachu=parse_pikachu_sprite(mem),
             warps=parse_warps(mem),
             signs=parse_signs(mem),
-            screen=ScreenState.from_memory(mem),
-            battle=BattleState.from_memory(mem),
+            screen=parse_screen(mem),
+            battle=parse_battle_state(mem),
         )
 
     @property
@@ -64,40 +60,46 @@ class YellowLegacyGameState(BaseModel):
             out += f"Name: {self.player.name}\n"
         out += f"Money: {self.player.money}\n"
         if self.player.badges:
-            out += f"Badges Earned: {', '.join(b.name for b in self.player.badges)}\n"
+            out += f"Badges Earned: {', '.join(self.player.badges)}\n"
         out += f"Current Level Cap: {self.player.level_cap}\n"
-        if self.player.party:
+        if self.party:
             out += "<party>\n"
-            for i, p in enumerate(self.player.party, start=1):
+            for i, p in enumerate(self.party, start=1):
                 out += f"<pokemon_{i}>\n"
                 out += f"Name: {p.name}\n"
-                out += f"Species: {p.species.name}\n"
+                out += f"Species: {p.species}\n"
                 if p.type2:
-                    out += f"Type: {p.type1.name} / {p.type2.name}\n"
+                    out += f"Type: {p.type1} / {p.type2}\n"
                 else:
-                    out += f"Type: {p.type1.name}\n"
+                    out += f"Type: {p.type1}\n"
                 out += f"Level: {p.level}\n"
                 out += f"HP: {p.hp} / {p.max_hp}\n"
-                out += f"Status Ailment: {p.status.name}\n"
+                out += f"Status Ailment: {p.status}\n"
                 out += "<moves>\n"
                 for m in p.moves:
-                    out += f"- {m.id.name} (PP: {m.pp})\n"
+                    out += f"- {m.name} (PP: {m.pp})\n"
                 out += "</moves>\n"
                 out += f"</pokemon_{i}>\n"
             out += "</party>\n"
         out += "</player_info>"
         return out
 
-    @property
-    def is_dialog_box_on_screen(self) -> bool:
-        """Check if the dialog box is on the screen by checking for the correct corner tiles."""
-        screen = np.array(self.screen.tiles)
-        return (
-            screen[12, 0] == 121
-            and screen[12, -1] == 123
-            and screen[17, 0] == 125
-            and screen[17, -1] == 126
-        )
+    def to_screen_coords(self, y: int, x: int) -> tuple[int, int] | None:
+        """
+        Convert map coordinates to screen coordinates.
+
+        :param y: The map y coordinate.
+        :param x: The map x coordinate.
+        :return: The screen coordinates (y, x) or None if they're off screen.
+        """
+        if (
+            y < self.screen.top
+            or y >= self.screen.bottom
+            or x < self.screen.left
+            or x >= self.screen.right
+        ):
+            return None
+        return (y - self.screen.top, x - self.screen.left)
 
     def get_ascii_screen(self) -> AsciiScreenWithEntities:
         """
@@ -130,24 +132,24 @@ class YellowLegacyGameState(BaseModel):
 
         on_screen_sprites = []
         for s in self.sprites.values():
-            if s.is_rendered and (screen_coords := self.screen.get_screen_coords(s.y, s.x)):
+            if s.is_rendered and (screen_coords := self.to_screen_coords(s.y, s.x)):
                 on_screen_sprites.append(s)
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.SPRITE
 
         pikachu = self.pikachu
         if pikachu.is_rendered:
-            if screen_coords := self.screen.get_screen_coords(pikachu.y, pikachu.x):
+            if screen_coords := self.to_screen_coords(pikachu.y, pikachu.x):
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.PIKACHU
 
         on_screen_warps = []
         for w in self.warps.values():
-            if screen_coords := self.screen.get_screen_coords(w.y, w.x):
+            if screen_coords := self.to_screen_coords(w.y, w.x):
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.WARP
                 on_screen_warps.append(w)
 
         on_screen_signs = []
         for s in self.signs.values():
-            if screen_coords := self.screen.get_screen_coords(s.y, s.x):
+            if screen_coords := self.to_screen_coords(s.y, s.x):
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.SIGN
                 on_screen_signs.append(s)
 
@@ -158,41 +160,20 @@ class YellowLegacyGameState(BaseModel):
             signs=on_screen_signs,
         )
 
-    def get_onscreen_text(self) -> str:
-        """Get the text on the screen as a string."""
-        tiles = np.array(self.screen.tiles)
-        return "\n".join("".join(INT_TO_CHAR_MAP.get(t, " ") for t in row) for row in tiles)
-
     def is_text_on_screen(self, ignore_dialog_box: bool = False) -> bool:
         """Check if there is text on the screen."""
-        a_upper = CHAR_TO_INT_MAP["A"]
-        z_upper = CHAR_TO_INT_MAP["Z"]
-        a_lower = CHAR_TO_INT_MAP["a"]
-        z_lower = CHAR_TO_INT_MAP["z"]
-        letters = np.array(list(range(a_upper, z_upper + 1)) + list(range(a_lower, z_lower + 1)))
-
-        tiles = np.array(self.screen.tiles)
+        text = self.screen.text
         if ignore_dialog_box:
-            tiles = tiles[:13, :]
-
-        return np.isin(tiles, letters).sum() > 0
-
-    def get_screen_without_blinking_cursor(self) -> np.ndarray:
-        """Get the screen without the blinking cursor."""
-        tiles = np.array(self.screen.tiles)
-        tiles[tiles == BLINKING_CURSOR_ID] = BLANK_TILE_ID
-        return tiles.tolist()
+            text = "\n".join(text.split("\n")[:13])
+        return len(text.strip()) > 0
 
     def get_dialog_box(self) -> DialogBox | None:
         """Get the text in the dialog box. Return the top and bottom lines."""
-        if not self.is_dialog_box_on_screen:
+        if not self.screen.is_dialog_box_on_screen:
             return None
-        tiles = np.array(self.screen.tiles)
-        top_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[14, 1:-2])
-        bottom_line = "".join(INT_TO_CHAR_MAP.get(t, "") for t in tiles[16, 1:-2])
-        cursor_on_screen = tiles[16, -2] == BLINKING_CURSOR_ID
+        lines = self.screen.text.split("\n")
         return DialogBox(
-            top_line=top_line.strip(),
-            bottom_line=bottom_line.strip(),
-            cursor_on_screen=cursor_on_screen,
+            top_line=lines[14][1:-2].strip(),
+            bottom_line=lines[16][1:-2].strip(),
+            has_cursor=lines[16][-2] == "▼",
         )
