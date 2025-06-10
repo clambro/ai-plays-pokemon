@@ -75,7 +75,7 @@ class GeminiLLMService:
             raise ValueError("No response from Gemini.")
         return response.text
 
-    async def get_llm_response_pydantic(
+    async def get_llm_response_pydantic(  # noqa: PLR0913
         self,
         messages: str | list[str | Image],
         schema: type[PydanticModel],
@@ -112,7 +112,7 @@ class GeminiLLMService:
         retry=retry_if_exception_type(ServerError),  # The experimental models are unstable.
         reraise=True,
     )
-    async def _get_llm_response(
+    async def _get_llm_response(  # noqa: PLR0913
         self,
         messages: str | list[str | Image],
         schema: type[PydanticModel] | None,

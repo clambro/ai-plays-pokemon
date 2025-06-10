@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from database.db_config import db_sessionmaker
 from database.llm_messages.model import LLMMessageDBModel
@@ -16,7 +16,7 @@ async def create_llm_message(llm_message: LLMMessageCreate) -> None:
             prompt_tokens=llm_message.prompt_tokens,
             thought_tokens=llm_message.thought_tokens,
             response_tokens=llm_message.response_tokens,
-            created_at=datetime.now(),
+            created_at=datetime.now(UTC),
         )
         session.add(db_obj)
         await session.commit()

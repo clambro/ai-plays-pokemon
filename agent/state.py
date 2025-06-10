@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field
 
@@ -68,6 +69,9 @@ class AgentStore(BaseStoreWithEmulator[AgentState]):
         """Set the previous handler."""
         await self.set_state({"previous_handler": previous_handler})
 
-    async def set_should_retrieve_memory(self, should_retrieve_memory: bool) -> None:
+    async def set_should_retrieve_memory(
+        self,
+        should_retrieve_memory: Literal[True, False],
+    ) -> None:
         """Set the should retrieve memory."""
         await self.set_state({"should_retrieve_memory": should_retrieve_memory})

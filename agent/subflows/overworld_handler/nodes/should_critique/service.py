@@ -37,7 +37,8 @@ class ShouldCritiqueService:
                 prompt_name="should_critique_overworld_state",
                 thinking_tokens=None,
             )
-            return response.should_critique
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error determining if should critique. Skipping.\n{e}")
             return False
+        else:
+            return response.should_critique

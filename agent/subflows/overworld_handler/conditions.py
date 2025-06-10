@@ -1,3 +1,5 @@
+from typing import Literal
+
 from junjo import Condition
 
 from agent.subflows.overworld_handler.enums import OverworldTool
@@ -26,13 +28,13 @@ class ToolIs(Condition[OverworldHandlerState]):
 class ShouldCritique(Condition[OverworldHandlerState]):
     """A condition that checks if the agent should_critique value matches a value."""
 
-    def __init__(self, should_critique: bool) -> None:
-        self.should_critique = should_critique
+    def __init__(self, value: Literal[True, False]) -> None:
+        self.value = value
 
     def __str__(self) -> str:
         """Return the string representation of the condition."""
-        return f"ShouldCritique({self.should_critique})"
+        return f"ShouldCritique({self.value})"
 
     def evaluate(self, state: OverworldHandlerState) -> bool:
         """Evaluate the condition."""
-        return state.should_critique == self.should_critique
+        return state.should_critique == self.value

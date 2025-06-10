@@ -59,15 +59,15 @@ INT_TO_CHAR_MAP = {
     0xB8: "y",
     0xB9: "z",
     0xBA: "é",
-    0xBB: "'d",
-    0xBC: "'l",
-    0xBD: "'s",
-    0xBE: "'t",
-    0xBF: "'v",
+    0xBB: "d",  # Replacing 'd.
+    0xBC: "l",  # Replacing 'l.
+    0xBD: "s",  # Replacing 's.
+    0xBE: "t",  # Replacing 't.
+    0xBF: "v",  # Replacing 'v.
     0xE0: "'",
     0xE3: "-",
-    0xE4: "'r",
-    0xE5: "'m",
+    0xE4: "r",  # Replacing 'r.
+    0xE5: "m",  # Replacing 'm.
     0xE6: "?",
     0xE7: "!",
     0xE8: ".",
@@ -92,13 +92,14 @@ INT_TO_CHAR_MAP = {
     0xFE: "8",
     0xFF: "9",
 }
+_NAME_TERMINATOR = 0x50
 
 
 def get_text_from_byte_array(arr: list[int]) -> str:
     """Get a name from a list of bytes."""
     name_chars = []
     for letter in arr:
-        if letter == 0x50:  # Name terminator
+        if letter == _NAME_TERMINATOR:
             break
         name_chars.append(INT_TO_CHAR_MAP.get(letter, ""))
     return "".join(name_chars).strip()

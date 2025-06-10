@@ -8,8 +8,6 @@ Done?
 ### Clean-Up, Refactoring, and Testing
 * Make the title the primary key for LTM and drop the useless ID
 
-* Simplify linter setup
-
 * Might have to cave and promote the overworld handler to Gemini Pro, but add the exploration tool first to reduce costs.
 * Can probably get away with demoting all the text handlers to Gemini Flash Lite.
 

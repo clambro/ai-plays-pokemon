@@ -49,6 +49,10 @@ ignore = [
     "COM812",  # Enforce trailing commas (handled by the formatter).
     "EM101",  # Raw string in exception.
     "EM102",  # f-string in exception.
+    "TRY003",  # Avoid specifying long messages outside the exception class
+    "FIX002",  # Line contains TODO
+    "TD002",   # Missing author in TODO `# TODO(<author_name>): ...`
+    "TD003",   # Missing TODO link
 ]
 
 [tool.ruff.lint.flake8-quotes]

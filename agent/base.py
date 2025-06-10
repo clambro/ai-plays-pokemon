@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import TypeVar
 
 from junjo import BaseState, BaseStore
@@ -24,7 +24,7 @@ class BaseStoreWithEmulator(BaseStore[_StateWithEmulatorT]):
         the last save. Saving takes about two frames, so doing it too often messes with the game's
         audio.
         """
-        now = datetime.now()
+        now = datetime.now(UTC)
         state = await self.get_state()
         last_save_state_time = state.last_emulator_save_state_time
         if last_save_state_time and now - last_save_state_time < timedelta(seconds=1):

@@ -24,6 +24,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         rom_path: str,
         save_state: str | None = None,
         save_state_path: Path | None = None,
+        *,
         mute_sound: bool = False,
     ) -> None:
         """Initialize the emulator."""
@@ -82,7 +83,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         self._check_stopped()
         img = deepcopy(self._pyboy.screen.image)
         if not isinstance(img, Image.Image):
-            raise RuntimeError("No screenshot available")
+            raise TypeError("No screenshot available")
         # Putting this on its own thread is much slower than just calling it directly.
         return img.resize((img.width * 3, img.height * 3), resample=Image.Resampling.NEAREST)
 
@@ -109,8 +110,9 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         """Wait until all ongoing animations have finished."""
         logger.info("Checking for animations and waiting for them to finish.")
         successes = 0
+        required_successes = 5
         game_state = self.get_game_state()
-        while successes < 5:
+        while successes < required_successes:
             new_game_state = self.get_game_state()
             # The blinking cursor should not block progress, so we ignore it.
             if game_state.screen.tiles_without_cursor == new_game_state.screen.tiles_without_cursor:
