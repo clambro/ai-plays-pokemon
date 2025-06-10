@@ -82,12 +82,11 @@ def _read_level_cap(mem: PyBoyMemoryView, num_badges: int) -> int:
 
 
 _INT_TO_FACING_DIRECTION = {
-    # Zero is the default value at the start of the game.
-    0: FacingDirection.UP,
-    1: FacingDirection.UP,
+    0: FacingDirection.UP,  # Zero is the default value at the start of the game.
+    1: FacingDirection.RIGHT,
     2: FacingDirection.LEFT,
-    3: FacingDirection.DOWN,
-    4: FacingDirection.RIGHT,
+    4: FacingDirection.DOWN,
+    8: FacingDirection.UP,
 }
 _INT_TO_BADGE = {
     1 << 0: "BOULDERBADGE",
