@@ -7,13 +7,11 @@ Done?
 
 ### Clean-Up, Refactoring, and Testing
 * Make the title the primary key for LTM and drop the useless ID
-* Enums that involve memory info should be locked with the parsing logic, except when it's used in the database.
-* Turn the game state and related sub-states into pure dataclasses and create services that accept the game state for whatever functionailty is needed.
 
 * Simplify linter setup
 
 * Might have to cave and promote the overworld handler to Gemini Pro, but add the exploration tool first to reduce costs.
-* Can probably get away with categorically demoting the text handlers to Gemini Flash Lite.
+* Can probably get away with demoting all the text handlers to Gemini Flash Lite.
 
 * Fix the navigation tool: When Pikachu is on screen, bumping into it breaks the existing flow.
 
