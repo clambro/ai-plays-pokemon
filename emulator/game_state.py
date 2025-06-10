@@ -8,18 +8,19 @@ from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
 from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.map import Map, parse_map_state
+from emulator.parsers.player import Player, parse_player
 from emulator.parsers.pokemon import Pokemon, parse_player_pokemon
 from emulator.parsers.screen import Screen, parse_screen
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
 from emulator.parsers.warp import Warp, parse_warps
-from emulator.schemas import AsciiScreenWithEntities, DialogBox, PlayerState
+from emulator.schemas import AsciiScreenWithEntities, DialogBox
 
 
 class YellowLegacyGameState(BaseModel):
     """A snapshot of the Pokemon Yellow Legacy game state."""
 
-    player: PlayerState
+    player: Player
     party: list[Pokemon]
     map: Map
     sprites: dict[int, Sprite]
@@ -40,7 +41,7 @@ class YellowLegacyGameState(BaseModel):
         :return: A new game state.
         """
         return cls(
-            player=PlayerState.from_memory(mem),
+            player=parse_player(mem),
             party=parse_player_pokemon(mem),
             map=parse_map_state(mem),
             sprites=parse_sprites(mem),
@@ -59,7 +60,7 @@ class YellowLegacyGameState(BaseModel):
             out += f"Name: {self.player.name}\n"
         out += f"Money: {self.player.money}\n"
         if self.player.badges:
-            out += f"Badges Earned: {', '.join(b.name for b in self.player.badges)}\n"
+            out += f"Badges Earned: {', '.join(self.player.badges)}\n"
         out += f"Current Level Cap: {self.player.level_cap}\n"
         if self.party:
             out += "<party>\n"

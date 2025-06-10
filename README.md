@@ -7,11 +7,8 @@ Done?
 
 ### Clean-Up, Refactoring, and Testing
 * Make the title the primary key for LTM and drop the useless ID
-* Split the memory parsing logic from the schemas in the game state
 * Enums that involve memory info should be locked with the parsing logic, except when it's used in the database.
 * Turn the game state and related sub-states into pure dataclasses and create services that accept the game state for whatever functionailty is needed.
-* Separate pokemon party from the player state
-* In the game state, make the memory a private attribute and use it to lazy-load all the other states
 
 * Simplify linter setup
 
