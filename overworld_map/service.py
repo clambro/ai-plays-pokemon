@@ -45,7 +45,7 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
         if mem.entity_type == MapEntityType.SIGN
     }
 
-    overworld_map = OverworldMap(
+    return OverworldMap(
         id=map_memory.map_id,
         ascii_tiles=[list(row) for row in map_memory.tiles.split("\n")],
         known_sprites=sprites,
@@ -56,7 +56,6 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
         east_connection=game_state.map.east_connection,
         west_connection=game_state.map.west_connection,
     )
-    return overworld_map
 
 
 async def update_map_with_screen_info(

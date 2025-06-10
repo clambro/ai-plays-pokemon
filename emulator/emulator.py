@@ -1,7 +1,7 @@
 import asyncio
 import base64
 import io
-from contextlib import AbstractAsyncContextManager
+from contextlib import AbstractAsyncContextManager, suppress
 from copy import deepcopy
 from pathlib import Path
 
@@ -53,10 +53,8 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         self.stop()
         if self._tick_task:
             self._tick_task.cancel()
-            try:
+            with suppress(asyncio.CancelledError):
                 await self._tick_task
-            except asyncio.CancelledError:
-                pass
 
     def get_game_state(self) -> YellowLegacyGameState:
         """Get the current game state."""
@@ -86,8 +84,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         if not isinstance(img, Image.Image):
             raise RuntimeError("No screenshot available")
         # Putting this on its own thread is much slower than just calling it directly.
-        img = img.resize((img.width * 3, img.height * 3), resample=Image.Resampling.NEAREST)
-        return img
+        return img.resize((img.width * 3, img.height * 3), resample=Image.Resampling.NEAREST)
 
     async def press_buttons(
         self,
