@@ -29,7 +29,6 @@ def _get_installed_ruff_version() -> str:
     if result.returncode != 0:
         logger.error("Error: Could not get installed Ruff version")
         sys.exit(1)
-    # Extract version from output like "ruff 0.11.13"
     match = re.search(r"ruff (\d+\.\d+\.\d+)", result.stdout)
     if not match:
         logger.error("Error: Could not parse Ruff version from output")

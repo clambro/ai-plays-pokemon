@@ -16,4 +16,4 @@ class Vector(TypeDecorator):
 
     def process_result_value(self, value: bytes, dialect: dialect) -> list[float]:
         """Convert bytes back to list of floats."""
-        return list(struct.unpack(f"{len(value)//4}f", value))
+        return list(struct.unpack(f"{len(value) // 4}f", value))
