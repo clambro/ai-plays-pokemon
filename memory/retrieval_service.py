@@ -84,7 +84,7 @@ class MemoryRetrievalService:
         :return: A dictionary of the IDs and semantic similarity of the most relevant memories to
             the query.
         """
-        mem_ids, mem_embeddings = zip(*memory_embeddings.items())
+        mem_ids, mem_embeddings = zip(*memory_embeddings.items(), strict=True)
         mem_embeddings = np.array(mem_embeddings)
         similarities = np.dot(query_embedding, mem_embeddings.T) / (
             np.linalg.norm(query_embedding) * np.linalg.norm(mem_embeddings, axis=1)

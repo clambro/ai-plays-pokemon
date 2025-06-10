@@ -83,7 +83,7 @@ class AssignNameService:
         """Enter the name into the game."""
         for letter in name:
             game_state = self.emulator.get_game_state()
-            argwhere_letter = np.argwhere(LETTER_ARR == letter)
+            argwhere_letter = np.argwhere(letter == LETTER_ARR)
             if len(argwhere_letter) != 1:
                 raise ValueError(f"Invalid letter: {letter}")
 
