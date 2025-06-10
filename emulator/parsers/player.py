@@ -90,14 +90,14 @@ _INT_TO_FACING_DIRECTION = {
     4: FacingDirection.RIGHT,
 }
 _INT_TO_BADGE = {
-    1 << 0: "Boulder Badge",
-    1 << 1: "Cascade Badge",
-    1 << 2: "Thunder Badge",
-    1 << 3: "Rainbow Badge",
-    1 << 4: "Soul Badge",
-    1 << 5: "Marsh Badge",
-    1 << 6: "Volcano Badge",
-    1 << 7: "Earth Badge",
+    1 << 0: "BOULDERBADGE",
+    1 << 1: "CASCADEBADGE",
+    1 << 2: "THUNDERBADGE",
+    1 << 3: "RAINBOWBADGE",
+    1 << 4: "SOULBADGE",
+    1 << 5: "MARSHBADGE",
+    1 << 6: "VOLCANOBADGE",
+    1 << 7: "EARTHBADGE",
 }
 _INT_TO_LEVEL_CAP = {
     0: 12,
