@@ -1,6 +1,5 @@
-import re
-import subprocess
 import sys
+from importlib.metadata import version
 from pathlib import Path
 
 import yaml
@@ -9,7 +8,7 @@ from loguru import logger
 
 def main() -> None:
     """Check that the installed Ruff version matches the pre-commit Ruff version."""
-    installed = _get_installed_ruff_version()
+    installed = version("ruff")
     precommit = _get_precommit_ruff_version()
 
     if installed != precommit:
@@ -22,18 +21,6 @@ def main() -> None:
 
     logger.success(f"Ruff versions match: {installed}")
     sys.exit(0)
-
-
-def _get_installed_ruff_version() -> str:
-    result = subprocess.run(["ruff", "--version"], capture_output=True, text=True, check=False)  # noqa: S603, S607
-    if result.returncode != 0:
-        logger.error("Error: Could not get installed Ruff version")
-        sys.exit(1)
-    match = re.search(r"ruff (\d+\.\d+\.\d+)", result.stdout)
-    if not match:
-        logger.error("Error: Could not parse Ruff version from output")
-        sys.exit(1)
-    return match.group(1)
 
 
 def _get_precommit_ruff_version() -> str:
