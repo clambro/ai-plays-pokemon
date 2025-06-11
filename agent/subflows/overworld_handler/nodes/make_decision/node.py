@@ -26,6 +26,7 @@ class MakeDecisionNode(Node[OverworldHandlerStore]):
         service = MakeDecisionService(
             iteration=state.iteration,
             raw_memory=state.raw_memory,
+            current_map=state.current_map,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )

@@ -14,6 +14,11 @@ For reference, the walkable tiles types are {walkable_tiles}.
 
 {state}
 
+The following explored, walkable tiles are adjacent to unseen territory on the current map. They are therefore top candidates for exploration using the navigation tool. Note that it is not guaranteed that all of these tiles are accessible, but the navigation tool will inform you if you try to navigate to an inaccessible tile. If the section below is empty, then you have already explored all of the tiles on the current map.
+<exploration_candidates>
+{exploration_candidates}
+</exploration_candidates>
+
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
 - thoughts: Your written thoughts on the current game state and which button to press. Use the following thought process, and be thorough in your commentary:
     1. Consider your goals. What are you trying to accomplish?
