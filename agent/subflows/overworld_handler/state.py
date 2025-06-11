@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
@@ -64,7 +66,7 @@ class OverworldHandlerStore(BaseStoreWithEmulator[OverworldHandlerState]):
         """Set the current map."""
         await self.set_state({"current_map": current_map})
 
-    async def set_should_critique(self, should_critique: bool) -> None:
+    async def set_should_critique(self, should_critique: Literal[True, False]) -> None:
         """Set the should critique."""
         await self.set_state({"should_critique": should_critique})
 

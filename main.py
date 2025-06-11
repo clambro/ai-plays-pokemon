@@ -1,6 +1,6 @@
 import argparse
 import asyncio
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import aiofiles
@@ -17,17 +17,18 @@ from emulator.emulator import YellowLegacyEmulator
 
 async def main(
     rom_path: str,
-    mute_sound: bool,
     backup_folder: Path | None = None,
+    *,
+    mute_sound: bool = True,
 ) -> None:
     """
     Get the emulator ticking on an async thread, and iteratively run the agent.
 
     :param rom_path: The path to the ROM file.
-    :param mute_sound: Whether to mute the sound.
     :param backup_folder: Optional path to load a saved state from.
+    :param mute_sound: Whether to mute the sound.
     """
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     folder = OUTPUTS_FOLDER / timestamp
     await aiofiles.os.makedirs(folder, exist_ok=True)
 
@@ -61,4 +62,10 @@ if __name__ == "__main__":
     parser.add_argument("--backup-folder", type=Path, required=False)
     parser.add_argument("--mute-sound", action="store_true")
     args = parser.parse_args()
-    asyncio.run(main(args.rom_path, args.mute_sound, args.backup_folder))
+    asyncio.run(
+        main(
+            rom_path=args.rom_path,
+            backup_folder=args.backup_folder,
+            mute_sound=args.mute_sound,
+        )
+    )

@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import aiofiles
@@ -13,7 +13,7 @@ async def create_backup(agent_state: AgentState) -> None:
     """Save the current game state, agent state, and database to a backup folder."""
     logger.info(f"Creating backup at iteration {agent_state.iteration}.")
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     backup_folder = agent_state.folder / f"backup_{timestamp}_iter_{agent_state.iteration}"
     backup_folder.mkdir(parents=True, exist_ok=True)
 
@@ -42,9 +42,8 @@ async def _copy_dir_async(src: Path, dst: Path) -> None:
     dst.mkdir(parents=True, exist_ok=True)
 
     async def copy_file(src_file: Path, dst_file: Path) -> None:
-        async with aiofiles.open(src_file, "rb") as src_f:
-            async with aiofiles.open(dst_file, "wb") as dst_f:
-                await dst_f.write(await src_f.read())
+        async with aiofiles.open(src_file, "rb") as src_f, aiofiles.open(dst_file, "wb") as dst_f:
+            await dst_f.write(await src_f.read())
 
     files = [f for f in src.iterdir() if f.is_file()]
 

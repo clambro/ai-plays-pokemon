@@ -26,14 +26,13 @@ class PrepareAgentStateService:
         game_state = self.emulator.get_game_state()
         if game_state.battle.is_in_battle:
             return AgentStateHandler.BATTLE
-        elif (
+        if (
             game_state.is_text_on_screen()
             or game_state.map.height == 0  # Usually indicates a transition between cutscenes.
             or game_state.map.width == 0
         ):
             return AgentStateHandler.TEXT
-        else:
-            return AgentStateHandler.OVERWORLD
+        return AgentStateHandler.OVERWORLD
 
     async def should_retrieve_memory(
         self,

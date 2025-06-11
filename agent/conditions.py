@@ -1,3 +1,5 @@
+from typing import Literal
+
 from junjo import Condition
 
 from agent.enums import AgentStateHandler
@@ -26,7 +28,7 @@ class AgentHandlerIs(Condition[AgentState]):
 class ShouldRetrieveMemory(Condition[AgentState]):
     """A condition that checks if the agent should retrieve memory."""
 
-    def __init__(self, value: bool) -> None:
+    def __init__(self, value: Literal[True, False]) -> None:
         self.value = value
 
     def __str__(self) -> str:

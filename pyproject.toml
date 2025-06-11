@@ -27,68 +27,32 @@ tenacity = "^9.1.2"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.6.2"
-
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-src_paths = ["./"]
-line_length = 100
-
-[tool.black]
-line-length = 100
+ruff = "^0.11.13"
 
 [tool.ruff]
-exclude = [
-    "./.cache",
-    "./.git",
-    "./.idea",
-    "./.mypy_cache",
-    "./.pytest_cache",
-    "./.venv",
-    "./env",
-    "./cached_venv",
-    "./.vscode",
-    "*migrations*",
-]
+target-version = "py313"
 line-length = 100
 
 [tool.ruff.lint]
+select = ["ALL"]
 ignore = [
-    "ANN401",
-    "ANN101",
-    "ANN102",
-    "D100",
-    "D104",
-    "D105",
-    "D106",
-    "D107",
-    "D203",
-    "D205",
-    "D212",
-    "D400",
-    "D401",
-    "D417",
-]
-select = [
-    "ANN",
-    "ASYNC",
-    "B",
-    "BLE",
-    "C4",
-    "C9",
-    "D",
-    "E",
-    "ERA",
-    "F",
-    "ISC",
-    "N",
-    "PTH",
-    "Q",
-    "RUF",
-    "S",
-    "T20",
-    "UP",
-    "W",
+    "D100",  # Missing docstring in public module
+    "D104",  # Missing docstring in public package
+    "D105",  # Missing docstring in magic method
+    "D106",  # Missing docstring in public nested class
+    "D107",  # Missing docstring in __init__
+    "D203",  # 1 blank line required before class docstring
+    "D205",  # 1 blank line required between summary line and description
+    "D212",  # Multi-line docstring summary should start at the first line
+    "D401",  # First line of docstring should be in imperative mood: "{first_line}"
+    "INP001",  # File {filename} is part of an implicit namespace package. Add an __init__.py.
+    "COM812",  # Enforce trailing commas (handled by the formatter).
+    "EM101",  # Raw string in exception.
+    "EM102",  # f-string in exception.
+    "TRY003",  # Avoid specifying long messages outside the exception class
+    "FIX002",  # Line contains TODO
+    "TD002",   # Missing author in TODO `# TODO(<author_name>): ...`
+    "TD003",   # Missing TODO link
 ]
 
 [tool.ruff.lint.flake8-quotes]
@@ -98,13 +62,13 @@ inline-quotes = "double"
 max-complexity = 20
 
 [tool.ruff.lint.pep8-naming]
-classmethod-decorators = ["classmethod", "validator"]
+classmethod-decorators = ["validator"]
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401", "F403"]
-"test_*.py" = ["S101"]  # ignore assert statements in tests
-"conftest.py" = ["S101"]  # ignore assert statements in conftest
-"prompts.py" = ["E501"]  # ignore line length in prompts
+"__init__.py" = ["F401", "F403"]  # Ignore unused imports in inits.
+"test_*.py" = ["S101"]  # Ignore assert statements in tests
+"conftest.py" = ["S101"]  # Ignore assert statements in conftest
+"prompts.py" = ["E501"]  # Ignore line length in prompts
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

@@ -103,31 +103,10 @@ class YellowLegacyGameState(BaseModel):
 
     def get_ascii_screen(self) -> AsciiScreenWithEntities:
         """
-        Get an ASCII representation of the current screen, including the on-screen sprites and warp
+        Get an ASCII representation of the current screen, including the onscreen sprites and warp
         points.
         """
-        tiles = np.array(self.screen.tiles)
-        # Each block on screen is a 2x2 square of tiles.
-        blocks = []
-        for i in range(0, tiles.shape[0], 2):
-            row = []
-            for j in range(0, tiles.shape[1], 2):
-                b = tiles[i : i + 2, j : j + 2]
-                if np.any(b == self.map.water_tile):
-                    row.append(AsciiTiles.WATER)
-                elif np.isin(b, self.map.ledge_tiles).any():
-                    row.append(AsciiTiles.LEDGE)
-                elif np.any(b == self.map.grass_tile):
-                    row.append(AsciiTiles.GRASS)
-                elif b.flatten().tolist() == self.map.cut_tree_tiles:
-                    row.append(AsciiTiles.CUT_TREE)
-                elif not np.isin(b, self.map.walkable_tiles).any():
-                    row.append(AsciiTiles.WALL)
-                else:
-                    row.append(AsciiTiles.FREE)
-            blocks.append(row)
-        blocks = np.array(blocks)
-
+        blocks = self._get_background_blocks()
         blocks[PLAYER_OFFSET_Y, PLAYER_OFFSET_X] = AsciiTiles.PLAYER
 
         on_screen_sprites = []
@@ -137,9 +116,8 @@ class YellowLegacyGameState(BaseModel):
                 blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.SPRITE
 
         pikachu = self.pikachu
-        if pikachu.is_rendered:
-            if screen_coords := self.to_screen_coords(pikachu.y, pikachu.x):
-                blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.PIKACHU
+        if pikachu.is_rendered and (screen_coords := self.to_screen_coords(pikachu.y, pikachu.x)):
+            blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.PIKACHU
 
         on_screen_warps = []
         for w in self.warps.values():
@@ -160,7 +138,7 @@ class YellowLegacyGameState(BaseModel):
             signs=on_screen_signs,
         )
 
-    def is_text_on_screen(self, ignore_dialog_box: bool = False) -> bool:
+    def is_text_on_screen(self, *, ignore_dialog_box: bool = False) -> bool:
         """Check if there is text on the screen."""
         text = self.screen.text
         if ignore_dialog_box:
@@ -177,3 +155,27 @@ class YellowLegacyGameState(BaseModel):
             bottom_line=lines[16][1:-2].strip(),
             has_cursor=lines[16][-2] == "▼",
         )
+
+    def _get_background_blocks(self) -> np.ndarray:
+        """Get the background blocks on the screen without the entities."""
+        tiles = np.array(self.screen.tiles)
+        # Each block on screen is a 2x2 square of tiles.
+        blocks = []
+        for i in range(0, tiles.shape[0], 2):
+            row = []
+            for j in range(0, tiles.shape[1], 2):
+                b = tiles[i : i + 2, j : j + 2]
+                if np.any(b == self.map.water_tile):
+                    row.append(AsciiTiles.WATER)
+                elif np.isin(b, self.map.ledge_tiles).any():
+                    row.append(AsciiTiles.LEDGE)
+                elif np.any(b == self.map.grass_tile):
+                    row.append(AsciiTiles.GRASS)
+                elif b.flatten().tolist() == self.map.cut_tree_tiles:
+                    row.append(AsciiTiles.CUT_TREE)
+                elif not np.isin(b, self.map.walkable_tiles).any():
+                    row.append(AsciiTiles.WALL)
+                else:
+                    row.append(AsciiTiles.FREE)
+            blocks.append(row)
+        return np.array(blocks)

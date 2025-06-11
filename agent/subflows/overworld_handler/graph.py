@@ -38,7 +38,7 @@ def build_overworld_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Gra
             Edge(
                 should_critique,
                 critique,
-                ShouldCritique(True),
+                ShouldCritique(value=True),
             ),
             Edge(
                 critique,
@@ -47,7 +47,7 @@ def build_overworld_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Gra
             Edge(
                 should_critique,
                 decision_maker_overworld,
-                ShouldCritique(False),
+                ShouldCritique(value=False),
             ),
             Edge(
                 decision_maker_overworld,

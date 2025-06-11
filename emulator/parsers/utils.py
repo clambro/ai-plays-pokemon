@@ -1,6 +1,5 @@
 INT_TO_CHAR_MAP = {
     0x7F: " ",
-    #
     0x80: "A",
     0x81: "B",
     0x82: "C",
@@ -27,14 +26,12 @@ INT_TO_CHAR_MAP = {
     0x97: "X",
     0x98: "Y",
     0x99: "Z",
-    #
     0x9A: "(",
     0x9B: ")",
     0x9C: ":",
     0x9D: ";",
     0x9E: "[",
     0x9F: "]",
-    #
     0xA0: "a",
     0xA1: "b",
     0xA2: "c",
@@ -61,24 +58,19 @@ INT_TO_CHAR_MAP = {
     0xB7: "x",
     0xB8: "y",
     0xB9: "z",
-    #
     0xBA: "é",
-    0xBB: "'d",
-    0xBC: "'l",
-    0xBD: "'s",
-    0xBE: "'t",
-    0xBF: "'v",
-    #
+    0xBB: "d",  # Replacing 'd.
+    0xBC: "l",  # Replacing 'l.
+    0xBD: "s",  # Replacing 's.
+    0xBE: "t",  # Replacing 't.
+    0xBF: "v",  # Replacing 'v.
     0xE0: "'",
     0xE3: "-",
-    #
-    0xE4: "'r",
-    0xE5: "'m",
-    #
+    0xE4: "r",  # Replacing 'r.
+    0xE5: "m",  # Replacing 'm.
     0xE6: "?",
     0xE7: "!",
     0xE8: ".",
-    #
     0xEC: "▷",
     0xED: "▶",
     0xEE: "▼",
@@ -89,7 +81,6 @@ INT_TO_CHAR_MAP = {
     0xF3: "/",
     0xF4: ",",
     0xF5: "♀",
-    #
     0xF6: "0",
     0xF7: "1",
     0xF8: "2",
@@ -101,13 +92,14 @@ INT_TO_CHAR_MAP = {
     0xFE: "8",
     0xFF: "9",
 }
+_NAME_TERMINATOR = 0x50
 
 
 def get_text_from_byte_array(arr: list[int]) -> str:
     """Get a name from a list of bytes."""
     name_chars = []
     for letter in arr:
-        if letter == 0x50:  # Name terminator
+        if letter == _NAME_TERMINATOR:
             break
         name_chars.append(INT_TO_CHAR_MAP.get(letter, ""))
     return "".join(name_chars).strip()

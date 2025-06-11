@@ -21,11 +21,12 @@ class Screen(BaseModel):
     @property
     def is_dialog_box_on_screen(self) -> int:
         """Check if the dialog box is on the screen by checking for the correct corner tiles."""
+        top_left, top_right, bottom_left, bottom_right = 121, 123, 125, 126
         return (
-            self.tiles[12][0] == 121
-            and self.tiles[12][-1] == 123
-            and self.tiles[17][0] == 125
-            and self.tiles[17][-1] == 126
+            self.tiles[12][0] == top_left
+            and self.tiles[12][-1] == top_right
+            and self.tiles[17][0] == bottom_left
+            and self.tiles[17][-1] == bottom_right
         )
 
     @computed_field

@@ -10,10 +10,10 @@ class Vector(TypeDecorator):
     impl = LargeBinary
     cache_ok = True
 
-    def process_bind_param(self, value: list[float], dialect: dialect) -> bytes:
+    def process_bind_param(self, value: list[float], dialect: dialect) -> bytes:  # noqa: ARG002
         """Convert a list of floats to bytes."""
         return struct.pack(f"{len(value)}f", *value)
 
-    def process_result_value(self, value: bytes, dialect: dialect) -> list[float]:
+    def process_result_value(self, value: bytes, dialect: dialect) -> list[float]:  # noqa: ARG002
         """Convert bytes back to list of floats."""
-        return list(struct.unpack(f"{len(value)//4}f", value))
+        return list(struct.unpack(f"{len(value) // 4}f", value))

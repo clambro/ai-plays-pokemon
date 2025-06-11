@@ -13,7 +13,7 @@ class DetermineHandlerService:
         game_state = self.emulator.get_game_state()
         if not game_state.is_text_on_screen():
             # Should never happen in this handler, but gives us a chance to bail just in case.
-            return
+            return None
 
         dialog_box = game_state.get_dialog_box()
         if dialog_box:

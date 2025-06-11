@@ -60,7 +60,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             Edge(
                 prepare_agent_store,
                 update_long_term_memory,
-                ShouldRetrieveMemory(True),
+                ShouldRetrieveMemory(value=True),
             ),
             Edge(
                 update_long_term_memory,
@@ -73,7 +73,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             Edge(
                 prepare_agent_store,
                 post_retrieval_dummy,
-                ShouldRetrieveMemory(False),
+                ShouldRetrieveMemory(value=False),
             ),
             Edge(
                 retrieve_long_term_memory,
