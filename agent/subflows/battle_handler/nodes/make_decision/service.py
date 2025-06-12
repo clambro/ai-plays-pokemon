@@ -34,7 +34,7 @@ class MakeDecisionService:
         img = self.emulator.get_screenshot()
         game_state = self.emulator.get_game_state()
         state_string = self.state_string_builder(game_state)
-        prompt = MAKE_DECISION_PROMPT.format(state=state_string)
+        prompt = MAKE_DECISION_PROMPT.format(state=state_string, text=game_state.screen.text)
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[img, prompt],

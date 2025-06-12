@@ -6,6 +6,7 @@ Take a step back from playing the game for a moment. You have signaled that you 
 Common sources of error include (but are not limited to):
 - Misinterpreting the screenshot information
 - Misinterpreting the map information and trying to walk through walls
+- Misunderstanding warp tiles and trying to walk through them in the wrong direction
 - Incorrectly deciding that the screenshot or your own memory is more reliable than the infallible game data
 - Making false assumptions and failing to correct them
 - Not taking advantage of your available tools to help you with more complex tasks
