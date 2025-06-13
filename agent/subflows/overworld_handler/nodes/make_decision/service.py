@@ -94,7 +94,8 @@ class MakeDecisionService:
                     prev_direction=game_state.player.direction,
                 )
                 passed_action = await self._check_for_action(b)
-                if not passed_collision or not passed_action:
+                state_changed = await self._check_for_state_change()
+                if not passed_collision or not passed_action or state_changed:
                     break
 
         return Decision(
@@ -180,3 +181,8 @@ class MakeDecisionService:
             )
             return False
         return True
+
+    async def _check_for_state_change(self) -> bool:
+        """Check if the movement triggered a state change to dialog or a battle."""
+        game_state = self.emulator.get_game_state()
+        return game_state.is_text_on_screen() or game_state.battle.is_in_battle

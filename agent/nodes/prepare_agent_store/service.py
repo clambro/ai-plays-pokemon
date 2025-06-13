@@ -42,6 +42,10 @@ class PrepareAgentStateService:
         """Determine if the agent should retrieve memory."""
         return (
             self.iteration % ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL == 0
-            or handler != previous_handler
             or not self.long_term_memory.pieces
+            or {handler, previous_handler}
+            in (  # When transitioning in or out of a battle.
+                {AgentStateHandler.TEXT, AgentStateHandler.BATTLE},
+                {AgentStateHandler.OVERWORLD, AgentStateHandler.BATTLE},
+            )
         )

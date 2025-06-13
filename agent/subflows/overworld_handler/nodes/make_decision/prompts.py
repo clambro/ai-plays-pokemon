@@ -14,7 +14,7 @@ For reference, the walkable tiles types are {walkable_tiles}.
 
 {state}
 
-The following explored, walkable tiles are adjacent to unseen territory on the current map. They are therefore top candidates for exploration using the navigation tool. Note that it is not guaranteed that all of these tiles are accessible, but the navigation tool will inform you if you try to navigate to an inaccessible tile. If the section below is empty, then you have already explored all of the tiles on the current map.
+The following explored, walkable tiles are adjacent to unseen territory on the current map. They are therefore top candidates for exploration using the navigation tool. Note that it is not guaranteed that all of these tiles are accessible, but the navigation tool will inform you if you try to navigate to an inaccessible tile. If the section below is empty, then you have already explored all of the tiles on the current map. Using the navigation tool to navigate to these exploration candidates is the most efficient way to explore the current map.
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>

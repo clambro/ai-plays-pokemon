@@ -17,6 +17,6 @@ Here is the game memory's representation of the onscreen text. The text you see 
 </onscreen_text>
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your thoughts on the current game state and which button to press. These must be detailed and descriptive, accurately reflecting the information available to you and conveying your thought process. Consider all the information presented to you above; reflect on it, and then respond with your thoughts.
+- thoughts: Your thoughts on the current game state and which button to press. These must be detailed and descriptive, accurately reflecting the information available to you and conveying your thought process. What is the state of the battle? Where is the cursor? Consider all the information presented to you above; reflect on it, and then respond with your thoughts.
 - button: The button to press. Must be one of the available buttons above.
 """.strip()
