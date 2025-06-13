@@ -75,21 +75,27 @@ class MakeDecisionService:
                 tool=OverworldTool.NAVIGATION,
                 navigation_args=response.navigation_args,
             )
-        if response.button:
-            await self.emulator.press_buttons([response.button])
+        if response.buttons:
+            buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
-                    content=f"{thought} Pressed the '{response.button}' button.",
+                    content=(
+                        f"{thought} Selected the following buttons: {[str(b) for b in buttons]}."
+                    ),
                 ),
             )
-            await self._check_for_collision(
-                response.button,
-                prev_map_id=game_state.map.id,
-                prev_coords=(game_state.player.y, game_state.player.x),
-                prev_direction=game_state.player.direction,
-            )
-            await self._check_for_action(response.button)
+            for b in buttons:
+                await self.emulator.press_buttons([b])
+                passed_collision = await self._check_for_collision(
+                    button=b,
+                    prev_map_id=game_state.map.id,
+                    prev_coords=(game_state.player.y, game_state.player.x),
+                    prev_direction=game_state.player.direction,
+                )
+                passed_action = await self._check_for_action(b)
+                if not passed_collision or not passed_action:
+                    break
 
         return Decision(
             raw_memory=self.raw_memory,
@@ -125,10 +131,13 @@ class MakeDecisionService:
         prev_map_id: MapId,
         prev_coords: tuple[int, int],
         prev_direction: FacingDirection,
-    ) -> None:
-        """Check if the player bumped into a wall and add a note to the raw memory if so."""
+    ) -> bool:
+        """
+        Check if the player bumped into a wall and add a note to the raw memory if so.
+        Returns True if the check passed, False otherwise.
+        """
         if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN]:
-            return
+            return True
 
         await self.emulator.wait_for_animation_to_finish()
         game_state = self.emulator.get_game_state()
@@ -146,11 +155,16 @@ class MakeDecisionService:
                     ),
                 ),
             )
+            return False
+        return True
 
-    async def _check_for_action(self, button: Button) -> None:
-        """Check if the player hit the action button but nothing happened."""
+    async def _check_for_action(self, button: Button) -> bool:
+        """
+        Check if the player hit the action button but nothing happened.
+        Returns True if the check passed, False otherwise.
+        """
         if button != Button.A:
-            return
+            return True
 
         await self.emulator.wait_for_animation_to_finish()
         game_state = self.emulator.get_game_state()
@@ -164,3 +178,5 @@ class MakeDecisionService:
                     ),
                 ),
             )
+            return False
+        return True

@@ -12,12 +12,12 @@ class MakeDecisionResponse(BaseModel):
     """The response from the overworld decision maker prompt."""
 
     thoughts: str
-    button: Button | None = None
+    buttons: Button | list[Button] | None = None
     navigation_args: NavigationArgs | None = None
 
     @model_validator(mode="after")
     def _validate_exclusive_fields(self) -> Self:
-        if self.button is None and self.navigation_args is None:
+        if self.buttons is None and self.navigation_args is None:
             raise ValueError("Either button or navigation_args must be provided.")
         return self
 
