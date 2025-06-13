@@ -45,7 +45,7 @@ class OverworldWarp(Warp):
         description = self.description or "No description added yet."
         return (
             f"warp_{map_id}_{self.index} at ({self.y}, {self.x})"
-            f" leading to {self.destination}: {description}"
+            f" leading to {self.destination.name}: {description}"
         )
 
 

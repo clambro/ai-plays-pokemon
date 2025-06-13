@@ -31,7 +31,7 @@ class CritiqueService:
             [screenshot, prompt],
             schema=CritiqueResponse,
             prompt_name="critique_overworld_state",
-            thinking_tokens=512,
+            thinking_tokens=1024,
         )
         self.raw_memory.append(
             RawMemoryPiece(
