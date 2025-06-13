@@ -30,5 +30,5 @@ Reflect on the information provided to you and respond in the format given below
 - buttons: The button(s) to press, if applicable. This can be a single button, or a list of buttons to be pressed in sequence. You should generally prefer to press a single button at a time, but you can use a combination of buttons to, say, rotate the player and then interact with an object. Prefer the navigation tool over multiple button presses for moving around.
 - navigation_args: The coordinates to navigate to, if applicable.
 
-Exactly one of "buttons" or "navigation_args" must be provided. You must pick a tool to use. You are not in a cutscene or battle or reading text. You are standing still in the overworld, so doing nothing is not an option.
+Exactly one of "buttons" or "navigation_args" must be provided. You must pick a tool to use. You are not in a cutscene or battle or reading text. You are standing still in the overworld, and the game is awaiting your input, so doing nothing is not an option.
 """.strip()

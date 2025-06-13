@@ -18,7 +18,7 @@ from overworld_map.schemas import OverworldMap
 class MakeDecisionService:
     """A service that makes decisions based on the current game state in the overworld."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+    llm_service = GeminiLLMService(GeminiLLMEnum.PRO)
 
     def __init__(
         self,

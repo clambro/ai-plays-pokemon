@@ -11,7 +11,7 @@ from memory.raw_memory import RawMemory, RawMemoryPiece
 class DecisionMakerTextService:
     """A service that makes decisions based on the current game state in the text."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH_LITE)
+    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
 
     def __init__(
         self,

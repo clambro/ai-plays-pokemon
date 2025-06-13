@@ -8,9 +8,9 @@ The following sprites are visible on the screen right now. Here are the descript
 {entities}
 </sprites>
 
-Sprites are usually either people or item balls, but can also be other entities. You should note the kind of sprite in your description, as well as any other relevant information about it. If the sprite is a person, whom you have recently spoken to, you should note what they said in the description for the sprite.
+Sprites are usually either people or item balls, but can also be other objects or Pokemon. You should note the kind of sprite in your description, as well as any other relevant information about it. If the sprite is a person, whom you have recently spoken to, you should note what they said in the description of the sprite.
 
-Do not assume anything about who a sprite is (if it's a person), or what its contents are (if it's an item ball) unless you know for sure based on the information provided. Be explicit about not knowing in your description so that you will know to update your description when you learn more. The best way to learn more is to interact with the sprite using the action button.
+Do not assume anything about who or what a sprite is until you have interacted with it. Your vision via the screenshot is unreliable. Be explicit about not knowing in your description so that you will know to update your description when you learn more. The best way to learn more is to interact with the sprite using the action button.
 
 If you want to update your long-term memory with new information about any of these sprites, do so by returning an array of objects, where each object contains the sprite index (the one in square brackets above) and the new description. Do not include anything in your description about the position of the sprite; that information will be pulled from the game's memory as needed. Returning an empty array is a valid response and simply means that you don't want to update any of the sprite descriptions. If you have not learned anything new about any of the sprites, you should not update any of the descriptions.
 """.strip()
