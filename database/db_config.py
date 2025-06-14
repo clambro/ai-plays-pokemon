@@ -1,5 +1,6 @@
 # ruff: noqa: F401
 
+import aiofiles.os
 from loguru import logger
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -16,17 +17,16 @@ db_sessionmaker = async_sessionmaker(_engine, expire_on_commit=False)
 
 
 async def init_fresh_db() -> None:
-    """Initialize a fresh database by dropping all existing tables and recreating them."""
+    """Initialize a fresh database by deleting the database folder and recreating it."""
     logger.info(f"Initializing a fresh database at: {DB_URL}")
 
-    if DB_FILE_PATH.exists():
-        DB_FILE_PATH.unlink()
-    shm_file = DB_FILE_PATH.with_suffix(".shm")
-    if shm_file.exists():
-        shm_file.unlink()
-    wal_file = DB_FILE_PATH.with_suffix(".wal")
-    if wal_file.exists():
-        wal_file.unlink()
+    db_folder = DB_FILE_PATH.parent
+    if db_folder.exists():
+        for file in db_folder.iterdir():
+            if file.is_file():
+                await aiofiles.os.remove(file)
+        await aiofiles.os.rmdir(db_folder)
+    await aiofiles.os.makedirs(db_folder)
 
     # Import all models here to ensure they are registered with the engine.
     from database.llm_messages.model import LLMMessageDBModel
