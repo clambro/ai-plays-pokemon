@@ -7,6 +7,10 @@ from emulator.game_state import YellowLegacyGameState
 from emulator.schemas import Sign, Sprite, Warp
 from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
 
+DEFAULT_ENTITY_DESCRIPTION = (
+    "No description added yet. Approach and interact with this entity to add a description."
+)
+
 
 class OverworldSprite(Sprite):
     """A sprite on the overworld map, known to the player."""
@@ -20,7 +24,7 @@ class OverworldSprite(Sprite):
 
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sprite."""
-        description = self.description or "No description added yet."
+        description = self.description or DEFAULT_ENTITY_DESCRIPTION
         out = f"sprite_{map_id}_{self.index} at ({self.y}, {self.x}): {description}"
         if self.moves_randomly:
             out += (
@@ -42,7 +46,7 @@ class OverworldWarp(Warp):
 
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the warp."""
-        description = self.description or "No description added yet."
+        description = self.description or DEFAULT_ENTITY_DESCRIPTION
         return (
             f"warp_{map_id}_{self.index} at ({self.y}, {self.x})"
             f" leading to {self.destination.name}: {description}"
@@ -61,7 +65,7 @@ class OverworldSign(Sign):
 
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sign."""
-        description = self.description or "No description added yet."
+        description = self.description or DEFAULT_ENTITY_DESCRIPTION
         return f"sign_{map_id}_{self.index} at ({self.y}, {self.x}): {description}"
 
 

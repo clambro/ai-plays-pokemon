@@ -89,9 +89,9 @@ class UpdateMapService:
         prompt: str,
     ) -> None:
         """
-        Update the map memory of the entities of the given type, as long as they either have no
-        description in the map entity memory, or they are within `max_distance` blocks of the
-        player.
+        Update the map memory of the entities of the given type, as long as they are within
+        `max_distance` blocks of the player. Updating entities that are too far away introduces
+        hallucinations.
 
         :param entities: The entities to update.
         :param entity_type: The type of entity to update.
@@ -99,12 +99,11 @@ class UpdateMapService:
         :param game_state: The current game state.
         :param prompt: The prompt to use for the LLM.
         """
-        max_distance = 2
+        max_distance = 1
         updatable_entities = [
             e
             for e in entities
-            if e.description is None
-            or abs(e.y - game_state.player.y) + abs(e.x - game_state.player.x) <= max_distance
+            if abs(e.y - game_state.player.y) + abs(e.x - game_state.player.x) <= max_distance
         ]
         if not updatable_entities:
             return
