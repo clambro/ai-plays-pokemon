@@ -41,8 +41,9 @@ class NavigationService:
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
-                        f"Navigation failed. No walkable path found to target coordinates"
-                        f" {self.coords}."
+                        f"Navigation failed. No path found to target coordinates {self.coords}."
+                        f" This either means that the location is inaccessible, or that I have not"
+                        f" explored enough of the map to reveal the path."
                     ),
                 ),
             )
@@ -85,6 +86,17 @@ class NavigationService:
             return False
 
         target_tile = self.current_map.ascii_tiles_ndarray[self.coords.row, self.coords.col]
+        if target_tile == AsciiTiles.UNSEEN:
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    content=(
+                        f"Navigation failed. Target coordinates {self.coords} are unexplored."
+                        f" I must explore this area before I can navigate to it."
+                    ),
+                ),
+            )
+            return False
         if target_tile not in AsciiTiles.get_walkable_tiles():
             self.raw_memory.append(
                 RawMemoryPiece(
