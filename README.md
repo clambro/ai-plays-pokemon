@@ -9,8 +9,6 @@ Done?
 * Make the title the primary key for LTM and drop the useless ID
 * The create and update nodes for the LTM can be parallelized
 
-* Fix the navigation tool: When Pikachu is on screen, bumping into it breaks the existing flow.
-
 * Set up Junjo server and opentelemetry
 
 * Add tests to everything

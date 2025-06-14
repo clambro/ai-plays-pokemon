@@ -46,8 +46,10 @@ The tile directly to the left of you is "{{tile_left}}".
 The tile directly to the right of you is "{{tile_right}}".
 </player_position>
 
+<map_connections>
 The current map has the following connections:
 {{connections}}
+</map_connections>
 
 You have discovered the following sprites on the portion of the map that you have revealed so far. Do not make any assumptions about who or what a sprite is before you have interacted with it.
 <known_sprites>
