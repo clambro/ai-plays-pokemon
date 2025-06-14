@@ -9,6 +9,8 @@ Done?
 * Make the title the primary key for LTM and drop the useless ID
 * The create and update nodes for the LTM can be parallelized
 
+* Maybe make it so that sprite and sign descriptions are set on interaction instead of on proximity. Or maybe just get rid of the entity memories entirely?
+
 * Set up Junjo server and opentelemetry
 
 * Add tests to everything
