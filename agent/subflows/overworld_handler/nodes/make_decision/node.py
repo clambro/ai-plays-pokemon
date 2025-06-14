@@ -22,10 +22,13 @@ class MakeDecisionNode(Node[OverworldHandlerStore]):
             raise ValueError("Raw memory is not set")
         if state.iteration is None:
             raise ValueError("Iteration is not set")
+        if state.current_map is None:
+            raise ValueError("Current map is not set")
 
         service = MakeDecisionService(
             iteration=state.iteration,
             raw_memory=state.raw_memory,
+            current_map=state.current_map,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )

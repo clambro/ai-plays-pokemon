@@ -20,7 +20,7 @@ class AsciiTiles(StrEnum):
     @classmethod
     def get_walkable_tiles(cls) -> list["AsciiTiles"]:
         """Get the walkable tiles."""
-        return [cls.FREE, cls.GRASS, cls.WARP, cls.PIKACHU]
+        return [cls.FREE, cls.GRASS, cls.WARP, cls.PIKACHU, cls.PLAYER]
 
 
 class MapEntityType(StrEnum):

@@ -3,7 +3,7 @@ from loguru import logger
 from agent.schemas import NavigationArgs
 from common.enums import AsciiTiles, MapId
 from emulator.emulator import YellowLegacyEmulator
-from emulator.enums import Button
+from emulator.enums import Button, FacingDirection
 from emulator.game_state import YellowLegacyGameState
 from memory.raw_memory import RawMemory, RawMemoryPiece
 from overworld_map.schemas import OverworldMap
@@ -41,21 +41,23 @@ class NavigationService:
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
-                        f"Navigation failed. No walkable path found to target coordinates"
-                        f" {self.coords}."
+                        f"Navigation failed. No path found to target coordinates {self.coords}."
+                        f" This either means that the location is inaccessible, or that I have not"
+                        f" explored enough of the map to reveal the path."
                     ),
                 ),
             )
             return self.current_map, self.raw_memory
 
         starting_map_id = self.current_map.id
+        await self._handle_pikachu(path[0])
         for button in path:
             await self.emulator.press_buttons([button])
             await self.emulator.wait_for_animation_to_finish()
 
             prev_pos = (game_state.player.y, game_state.player.x)
             game_state = self.emulator.get_game_state()
-            if self.should_cancel_navigation(game_state, prev_pos, starting_map_id):
+            if self._should_cancel_navigation(game_state, prev_pos, starting_map_id):
                 return self.current_map, self.raw_memory
             # Can't update the map until we validate above that we haven't switched maps.
             self.current_map = await update_map_with_screen_info(
@@ -85,6 +87,17 @@ class NavigationService:
             return False
 
         target_tile = self.current_map.ascii_tiles_ndarray[self.coords.row, self.coords.col]
+        if target_tile == AsciiTiles.UNSEEN:
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    content=(
+                        f"Navigation failed. Target coordinates {self.coords} are unexplored."
+                        f" I must explore this area before I can navigate to it."
+                    ),
+                ),
+            )
+            return False
         if target_tile not in AsciiTiles.get_walkable_tiles():
             self.raw_memory.append(
                 RawMemoryPiece(
@@ -169,7 +182,50 @@ class NavigationService:
         # If we get here, no path was found
         return None
 
-    def should_cancel_navigation(
+    async def _handle_pikachu(self, button: Button) -> None:
+        """
+        Check if Pikachu is in the way and face it if so.
+
+        Pikachu can block your path on the very first step of navigation if you are not facing it
+        when you try to move.
+        """
+        game_state = self.emulator.get_game_state()
+        if not game_state.pikachu.is_rendered:
+            return
+
+        player_pos = (game_state.player.y, game_state.player.x)
+        facing = game_state.player.direction
+        pikachu_pos = (game_state.pikachu.y, game_state.pikachu.x)
+        if (
+            button == Button.UP
+            and player_pos[0] == pikachu_pos[0] + 1
+            and facing != FacingDirection.UP
+        ):
+            await self.emulator.press_buttons([Button.UP])
+            await self.emulator.wait_for_animation_to_finish()
+        elif (
+            button == Button.DOWN
+            and player_pos[0] == pikachu_pos[0] - 1
+            and facing != FacingDirection.DOWN
+        ):
+            await self.emulator.press_buttons([Button.DOWN])
+            await self.emulator.wait_for_animation_to_finish()
+        elif (
+            button == Button.LEFT
+            and player_pos[1] == pikachu_pos[1] + 1
+            and facing != FacingDirection.LEFT
+        ):
+            await self.emulator.press_buttons([Button.LEFT])
+            await self.emulator.wait_for_animation_to_finish()
+        elif (
+            button == Button.RIGHT
+            and player_pos[1] == pikachu_pos[1] - 1
+            and facing != FacingDirection.RIGHT
+        ):
+            await self.emulator.press_buttons([Button.RIGHT])
+            await self.emulator.wait_for_animation_to_finish()
+
+    def _should_cancel_navigation(
         self,
         game_state: YellowLegacyGameState,
         prev_pos: tuple[int, int],

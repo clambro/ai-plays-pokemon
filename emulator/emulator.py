@@ -84,8 +84,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         img = deepcopy(self._pyboy.screen.image)
         if not isinstance(img, Image.Image):
             raise TypeError("No screenshot available")
-        # Putting this on its own thread is much slower than just calling it directly.
-        return img.resize((img.width * 3, img.height * 3), resample=Image.Resampling.NEAREST)
+        return img
 
     async def press_buttons(
         self,

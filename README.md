@@ -7,11 +7,9 @@ Done?
 
 ### Clean-Up, Refactoring, and Testing
 * Make the title the primary key for LTM and drop the useless ID
+* The create and update nodes for the LTM can be parallelized
 
-* Might have to cave and promote the overworld handler to Gemini Pro, but add the exploration tool first to reduce costs.
-* Can probably get away with demoting all the text handlers to Gemini Flash Lite.
-
-* Fix the navigation tool: When Pikachu is on screen, bumping into it breaks the existing flow.
+* Maybe make it so that sprite and sign descriptions are set on interaction instead of on proximity. Or maybe just get rid of the entity memories entirely?
 
 * Set up Junjo server and opentelemetry
 

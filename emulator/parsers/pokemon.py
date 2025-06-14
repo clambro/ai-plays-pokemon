@@ -61,7 +61,7 @@ def _parse_player_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
         moves.append(PokemonMove(name=_INT_TO_MOVE_MAP[move_id], pp=pp))
 
     hp = (mem[0xD16B + increment] << 8) | mem[0xD16B + increment + 1]
-    max_hp = (mem[0xD16C + increment] << 8) | mem[0xD16C + increment + 1]
+    max_hp = (mem[0xD18C + increment] << 8) | mem[0xD18C + increment + 1]
 
     return Pokemon(
         name=name,
