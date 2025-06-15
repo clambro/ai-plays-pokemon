@@ -155,18 +155,25 @@ class OverworldMap(BaseModel):
 
     def _get_connection_notes(self) -> str:
         """Get a string representation of the map connections."""
+        if (
+            not self.north_connection
+            and not self.south_connection
+            and not self.east_connection
+            and not self.west_connection
+        ):
+            return (
+                "There are no direct connections to other maps on this map. The only way to leave"
+                " this map is via warp tiles."
+            )
         out = ""
-        if self.north_connection:
-            out += f"The map to the north is {self.north_connection.name}.\n"
-        if self.south_connection:
-            out += f"The map to the south is {self.south_connection.name}.\n"
-        if self.east_connection:
-            out += f"The map to the east is {self.east_connection.name}.\n"
-        if self.west_connection:
-            out += f"The map to the west is {self.west_connection.name}.\n"
-        if out:
-            return out.strip()
-        return (
-            "There are no direct connections to other maps on this map. The only way to leave this"
-            " map is via warp tiles."
-        )
+        for direction, connection in [
+            ("north", self.north_connection),
+            ("south", self.south_connection),
+            ("east", self.east_connection),
+            ("west", self.west_connection),
+        ]:
+            if connection is not None:
+                out += f"The map to the {direction} is {connection.name}.\n"
+            else:
+                out += f"There is no map connection to the {direction}.\n"
+        return out.strip()
