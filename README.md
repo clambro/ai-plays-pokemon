@@ -6,33 +6,29 @@
 Done?
 
 ### Clean-Up, Refactoring, and Testing
-* Make the title the primary key for LTM and drop the useless ID
-* The create and update nodes for the LTM can be parallelized
-
-* Maybe make it so that sprite and sign descriptions are set on interaction instead of on proximity. Or maybe just get rid of the entity memories entirely?
+* Add unit/integration tests
 
 * Set up Junjo server and opentelemetry
 
-* Add tests to everything
+* Add node tests for the LLM calls
 
 ### Useful Tools and Additions
-* Exploration tool to use the navigation tool to explore unseen areas on the current map by walking to the nearest accessible tile with an adjacent unseen tile.
+* Make the critic tool part of the overworld navigation step. Includes functionality for determining which tools are available at any given iteration. Maybe split this big prompt into two nodes: One to pick the tool, and one to use it. Allows me to greatly simplify the make decision prompt, which should reduce confusion.
 
-* Adding importance to goals might be helpful
+* Add a grid to the overworld screen and overlay collisions
 
-* Detailed subflow for battles
-* Make the critic tool part of the overworld navigation step? Includes functionality for determining which tools are available at any given iteration.
+* Detailed subflow for battles. Battle type (e.g. trainer, safari zone, etc.) is at 0xD05A, and the move menus are at 0xCCDB
+
+* Special navigation tool for moving between maps?
 * Add a tool to select moves or swap pokemon in battle, or use a ball in non-trainer battles
 * Add a tool for spinning around to find wild pokemon
 * Some kind of info about items and PC pokemon
 * Add a tool to rearrange the team
 * Tool to use items
-* Add a grid to the overworld screen and overlay collisions
 * Generate the overworld map legend dynamically
+* Adding importance to goals might be helpful
 
 ### Longer-Term Issues that I'll Have to Tackle Eventually
-* Subgraphs for different battle types (e.g. Safari Zone)? Battle type is at 0xD05A, and the move menus are at 0xCCDB
-
 * Add strength boulders to map screen -- 00:d717 wBoulderSpriteIndex
 * Tool for using fly
 * Handle surfing in navigation
@@ -46,7 +42,7 @@ Done?
 
 ## Notes
 * Numerical coords on screen? Dots to show past steps? Maybe when I have tests set up.
-* Some better way of doing RAG that doesn't involve reading everything into memory would be nice. Might need to switch DBs for this.
+* Some better way of doing RAG that doesn't involve reading everything into memory would be nice. Might need to switch DBs for this. Could also offer to delete LTM after 1000 iterations without retrieval to make this more efficient.
 
 ## Junjo Thoughts
 * If I edit a list in place does it change it in the state?
