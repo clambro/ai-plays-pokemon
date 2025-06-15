@@ -30,6 +30,7 @@ The map coordinates in row-column order start at (0, 0) in the top left corner. 
 
 <screen_position>
 The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that the you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size). This should help you navigate from one map to another.
+
 The top of the screen is currently at row {{screen_top}} in map coordinates.
 The bottom of the screen is currently at row {{screen_bottom}} in map coordinates.
 The left side of the screen is currently at column {{screen_left}} in map coordinates.
@@ -47,7 +48,6 @@ The tile directly to the right of you is "{{tile_right}}".
 </player_position>
 
 <map_connections>
-The current map has the following connections:
 {{connections}}
 </map_connections>
 

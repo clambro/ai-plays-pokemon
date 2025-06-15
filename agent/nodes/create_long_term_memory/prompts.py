@@ -21,6 +21,8 @@ The above are not exhaustive. You can create a new long-term memory object for a
 Guidelines for creating new long-term memory objects:
 - Titles must be in SCREAMING_SNAKE_CASE with no punctuation.
 - Never include coordinates in your content (e.g. for warp points, sprites, etc.). The game's memory will provide coordinate information as needed.
+- Do not create duplicate memories. If you already have a memory with a similar title to one that you might create here, do not create a new one. You will have the chance to edit existing memories elsewhere.
+- Titles must be unique.
 
 Your response must be in the JSON format described below, with the keys defined as follows:
 - title: The title of the new long-term memory object in SCREAMING_SNAKE_CASE with no punctuation.
