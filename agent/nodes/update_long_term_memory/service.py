@@ -57,7 +57,7 @@ class UpdateLongTermMemoryService:
                 embedding = await self.embedding_service.get_embedding(content, update_piece.title)
                 await update_long_term_memory(
                     LongTermMemoryUpdate(
-                        id=orig_piece.id,
+                        title=update_piece.title,
                         content=content,
                         importance=update_piece.importance,
                         iteration=self.iteration,

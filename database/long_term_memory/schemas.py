@@ -1,4 +1,4 @@
-from pydantic import UUID4, BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class LongTermMemoryCreate(BaseModel):
@@ -14,7 +14,6 @@ class LongTermMemoryCreate(BaseModel):
 class LongTermMemoryRead(BaseModel):
     """Read schema for long-term memory."""
 
-    id: UUID4
     title: str
     content: str
     importance: int = Field(ge=1, le=5)
@@ -26,7 +25,7 @@ class LongTermMemoryRead(BaseModel):
 class LongTermMemoryUpdate(BaseModel):
     """Update schema for long-term memory."""
 
-    id: UUID4
+    title: str
     content: str
     embedding: list[float]
     importance: int = Field(ge=1, le=5)
