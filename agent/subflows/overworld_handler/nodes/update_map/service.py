@@ -6,7 +6,6 @@ from PIL.Image import Image
 from agent.subflows.overworld_handler.nodes.update_map.prompts import (
     UPDATE_SIGNS_PROMPT,
     UPDATE_SPRITES_PROMPT,
-    UPDATE_WARPS_PROMPT,
 )
 from agent.subflows.overworld_handler.nodes.update_map.schemas import UpdateEntitiesResponse
 from common.enums import MapEntityType
@@ -16,7 +15,7 @@ from database.map_entity_memory.repository import update_map_entity_memory
 from database.map_entity_memory.schemas import MapEntityMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
-from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
+from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite
 from overworld_map.service import update_map_with_screen_info
 
 
@@ -64,13 +63,6 @@ class UpdateMapService:
                     UPDATE_SPRITES_PROMPT,
                 ),
                 self._update_entities(
-                    list(self.current_map.known_warps.values()),
-                    MapEntityType.WARP,
-                    screenshot,
-                    game_state,
-                    UPDATE_WARPS_PROMPT,
-                ),
-                self._update_entities(
                     list(self.current_map.known_signs.values()),
                     MapEntityType.SIGN,
                     screenshot,
@@ -82,16 +74,15 @@ class UpdateMapService:
 
     async def _update_entities(
         self,
-        entities: list[OverworldSprite | OverworldWarp | OverworldSign],
+        entities: list[OverworldSprite | OverworldSign],
         entity_type: MapEntityType,
         screenshot: Image,
         game_state: YellowLegacyGameState,
         prompt: str,
     ) -> None:
         """
-        Update the map memory of the entities of the given type, as long as they either have no
-        description in the map entity memory, or they are within `max_distance` blocks of the
-        player.
+        Update the map memory of the entities of the given type, as long as they are adjacent to
+        the player. Updating entities that are too far away introduces hallucinations.
 
         :param entities: The entities to update.
         :param entity_type: The type of entity to update.
@@ -99,12 +90,10 @@ class UpdateMapService:
         :param game_state: The current game state.
         :param prompt: The prompt to use for the LLM.
         """
-        max_distance = 2
         updatable_entities = [
             e
             for e in entities
-            if e.description is None
-            or abs(e.y - game_state.player.y) + abs(e.x - game_state.player.x) <= max_distance
+            if abs(e.y - game_state.player.y) + abs(e.x - game_state.player.x) <= 1
         ]
         if not updatable_entities:
             return

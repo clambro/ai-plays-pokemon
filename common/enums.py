@@ -1,21 +1,27 @@
-from enum import IntEnum, StrEnum
+from enum import Enum, IntEnum, StrEnum, auto
 
 
 class AsciiTiles(StrEnum):
-    """An enum for the ASCII representations of overworld map tiles."""
+    """
+    An enum for the ASCII representations of overworld map tiles.
 
-    UNSEEN = "?"
-    WALL = "x"
-    WATER = "~"
-    GRASS = "*"
-    LEDGE = "-"
-    FREE = "."
-    PLAYER = "P"
-    SPRITE = "S"
-    WARP = "W"
-    CUT_TREE = "T"
-    PIKACHU = "k"
-    SIGN = "!"
+    These HAVE to be one token each or the LLM will hallucinate. Use something like
+    `client.models.count_tokens(model=model, contents=tile.value * 10)`
+    to make sure they don't tile. Should probably add a test for this.
+    """
+
+    UNSEEN = "░"
+    WALL = "▉"
+    WATER = "≋"
+    GRASS = "❀"
+    LEDGE = "⎯"
+    FREE = "∙"
+    PLAYER = "☻"
+    SPRITE = "◆"
+    WARP = "⇆"
+    CUT_TREE = "┬"
+    PIKACHU = "◈"
+    SIGN = "‼"
 
     @classmethod
     def get_walkable_tiles(cls) -> list["AsciiTiles"]:
@@ -29,6 +35,14 @@ class MapEntityType(StrEnum):
     WARP = "warp"
     SPRITE = "sprite"
     SIGN = "sign"
+
+
+class WarpType(Enum):
+    """An enum for the different types of warp tiles."""
+
+    SINGLE = auto()
+    DOUBLE_VERTICAL = auto()
+    DOUBLE_HORIZONTAL = auto()
 
 
 class MapId(IntEnum):

@@ -86,6 +86,19 @@ class NavigationService:
             )
             return False
 
+        game_state = self.emulator.get_game_state()
+        if self.coords == (game_state.player.y, game_state.player.x):
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    content=(
+                        f"Navigation failed. Target coordinates {self.coords} are the same as my"
+                        f" current position. I am already there."
+                    ),
+                ),
+            )
+            return False
+
         target_tile = self.current_map.ascii_tiles_ndarray[self.coords.row, self.coords.col]
         if target_tile == AsciiTiles.UNSEEN:
             self.raw_memory.append(

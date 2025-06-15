@@ -1,5 +1,4 @@
 import numpy as np
-from pydantic import UUID4
 
 from common.constants import (
     DEFAULT_MIN_SEMANTIC_SIMILARITY,
@@ -9,7 +8,7 @@ from common.constants import (
 from common.embedding_service import GeminiEmbeddingService
 from database.long_term_memory.repository import (
     get_all_long_term_memory_embeddings,
-    get_long_term_memories_by_ids,
+    get_long_term_memories_by_titles,
 )
 from database.long_term_memory.schemas import LongTermMemoryRead
 
@@ -55,14 +54,14 @@ class MemoryRetrievalService:
         """
         embeddings = await get_all_long_term_memory_embeddings()
         if len(embeddings) <= self.num_memories:
-            return await get_long_term_memories_by_ids(list(embeddings.keys()), iteration)
+            return await get_long_term_memories_by_titles(list(embeddings.keys()), iteration)
 
         query_embedding = await embedding_service.get_embedding(query)
         top_similarities = await self._get_top_n_semantic_similarity(query_embedding, embeddings)
         if not top_similarities:
             return []
 
-        memories_to_rerank = await get_long_term_memories_by_ids(
+        memories_to_rerank = await get_long_term_memories_by_titles(
             list(top_similarities.keys()),
             iteration,
         )
@@ -74,8 +73,8 @@ class MemoryRetrievalService:
     async def _get_top_n_semantic_similarity(
         self,
         query_embedding: list[float],
-        memory_embeddings: dict[UUID4, list[float]],
-    ) -> dict[UUID4, float]:
+        memory_embeddings: dict[str, list[float]],
+    ) -> dict[str, float]:
         """
         Get the IDs and semantic similarity of the most relevant memories to the query.
 
@@ -100,7 +99,7 @@ class MemoryRetrievalService:
         self,
         iteration: int,
         memories: list[LongTermMemoryRead],
-        top_similarities: dict[UUID4, float],
+        top_similarities: dict[str, float],
     ) -> list[LongTermMemoryRead]:
         """
         Rerank the memories based on semantic similarity, recency, and importance.
@@ -113,7 +112,7 @@ class MemoryRetrievalService:
         scores = (
             (
                 memory,
-                top_similarities.get(memory.id, self.min_semantic_similarity)
+                top_similarities.get(memory.title, self.min_semantic_similarity)
                 * memory.importance
                 / max(memory.last_accessed_iteration - iteration, 1),
             )

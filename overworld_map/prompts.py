@@ -30,6 +30,7 @@ The map coordinates in row-column order start at (0, 0) in the top left corner. 
 
 <screen_position>
 The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that the you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size). This should help you navigate from one map to another.
+
 The top of the screen is currently at row {{screen_top}} in map coordinates.
 The bottom of the screen is currently at row {{screen_bottom}} in map coordinates.
 The left side of the screen is currently at column {{screen_left}} in map coordinates.
@@ -47,7 +48,6 @@ The tile directly to the right of you is "{{tile_right}}".
 </player_position>
 
 <map_connections>
-The current map has the following connections:
 {{connections}}
 </map_connections>
 
@@ -74,11 +74,10 @@ Navigation tips:
 - The orientation of the map and screen is always fixed, regardless of the direction that you are facing.
 - Warp tiles come in two varieties: single and double.
   - Single warp tiles (staircases, teleporters, doors, etc.) are activated by standing on them. If you are standing on a warp tile and not going anywhere, it means that you have just warped to this tile from somewhere else. If you want to go back to your previous location and are standing on a single warp tile, you have to walk off the tile and then back on it to warp back.
-  - Double warp tiles (two warp tiles side by side, usually a doormat) are more complicated. These tiles are usually found on the edge of a map, and have to be walked through perpendicularly over the edge of the map. (e.g. if you see a doube warp tile arranged vertically on the right edge of the map, you have to stand on one of the tiles and walk right, off the edge of the map; if you see a double warp tile arranged horizontally on the bottom edge of the map, you have to stand on one of the tiles and walk down, off the edge of the map; etc.). This is the only instance in which you are allowed to walk on a barrier tile.
-  - If you find yourself on a double warp tile and not getting anywhere, you need to walk into an adjacent tile of type "{AsciiTiles.WALL}" to exit the map. Consult the player_position section above to determine where that tile is.
+  - Double warp tiles (two warp tiles side by side, usually a doormat) are usually found on the edge of a map, and have to be walked through to warp. This is the only instance in which you are allowed to walk into a barrier tile.
   - Do not attempt to interact with a warp tile using the action button. You have to walk on or through the tile depending on its type to warp.
-- To connect from one map to another, you must either walk through a warp tile, or, *in outdoor maps only*, walk off the edge of the map. In outdoor maps, you will never be able to walk through a wall or barrier for any reason. You have to find where the edge of the map connects to the next map by looking at the ASCII screen.
-- If you are indoors, the edges of the map (indicated by a black void in the screenshot) are impassable. You cannot walk off the edge of an indoor map. The only exception to this is if you see two adjacent warp tiles on the edge of a map. In this case, you can walk through the warp tiles to enter the adjoining map. Warp tiles are the only way to move between maps indoors.
+- To connect from one map to another, you must either use a warp tile, or, *in outdoor maps only*, walk off the edge of the map. In outdoor maps, you will never be able to walk through a wall or barrier for any reason. You have to find where the edge of the map connects to the next map by looking at the ASCII screen.
+- If you are indoors, the edges of the map (indicated by a black void in the screenshot) are impassable. You cannot walk off the edge of an indoor map. The only exception to this is the case of double warp tiles, as described above. Warp tiles are the only way to move between maps indoors.
 - Your companion Pikachu will never block your movement. Unlike other sprites, you can walk through Pikachu, which will cause it to switch places with you. You can speak to Pikachu like any other sprite, but doing so only provides flavour text.
 - To interact with a sprite, you need to be directly adjacent to it, face it, and press the action button. The only exception to the direct adjacency rule is in poke-marts and pokemon centers where you interact with the clerk or nurse respectively from across the counter that is directly in front of them.
 - Note that some sprites move around, so their position may change between screenshots. Do not let this confuse you. The information that you have in the <known_sprites> section is the most accurate information available to you since it comes straight from the game's memory at this moment in time.

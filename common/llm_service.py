@@ -1,3 +1,4 @@
+import asyncio
 from enum import StrEnum
 from typing import TypeVar
 
@@ -22,6 +23,7 @@ from database.llm_messages.schemas import LLMMessageCreate
 
 PydanticModel = TypeVar("PydanticModel", bound=BaseModel)
 
+TIMEOUT = 60
 SAFETY_SETTINGS = [
     SafetySetting(category=cat, threshold=HarmBlockThreshold.BLOCK_NONE)
     for cat in HarmCategory
@@ -34,7 +36,7 @@ class GeminiLLMEnum(StrEnum):
 
     PRO = "gemini-2.5-pro-preview-06-05"
     FLASH = "gemini-2.5-flash-preview-04-17"
-    FLASH_LITE = "gemini-2.0-flash-lite"
+    FLASH_LITE = "gemini-2.0-flash-lite-001"
 
 
 class GeminiLLMService:
@@ -136,7 +138,7 @@ class GeminiLLMService:
         if isinstance(messages, str):
             messages = [messages]
         thinking_config = (
-            ThinkingConfig(thinking_budget=thinking_tokens) if thinking_tokens else None
+            ThinkingConfig(thinking_budget=thinking_tokens) if thinking_tokens is not None else None
         )
         content_config = GenerateContentConfig(
             system_instruction=system_prompt,
@@ -147,10 +149,13 @@ class GeminiLLMService:
         if schema:
             content_config.response_mime_type = "application/json"
             content_config.response_schema = schema
-        response = await self.client.aio.models.generate_content(
-            model=self.model,
-            contents=messages,  # type: ignore -- This is a Gemini API issue.
-            config=content_config,
+        response = await asyncio.wait_for(
+            self.client.aio.models.generate_content(
+                model=self.model,
+                contents=messages,  # type: ignore -- This is a Gemini API issue.
+                config=content_config,
+            ),
+            timeout=TIMEOUT,
         )
         if not response.text or not response.usage_metadata:
             raise ValueError("No response from Gemini.")

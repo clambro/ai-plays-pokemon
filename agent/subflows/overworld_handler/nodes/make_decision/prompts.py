@@ -24,7 +24,7 @@ Reflect on the information provided to you and respond in the format given below
     1. Consider your goals. What are you trying to accomplish?
     2. Consider the information provided in the raw memory. What has happened lately? If you feel like you're repeating yourself, or getting stuck in a loop, say so, and suggest a change of course.
     3. Consider the player information provided to you. What is your current situation?
-    4. Consider the map information provided to you. Where are you, and where do you want to go? Are there sprites or warp tiles that you haven't checked out yet? Is there unexplored territory that you can navigate to?
+    4. Consider the map information provided to you. Where are you, and where do you want to go? Are there sprites you haven't interacted with yet? Is there unexplored territory that you can navigate to?
     5. Consider the screenshot. What is currently on the screen? How does it help you contextualize your situation?
     6. Synthesize the above information, and decide which of the tools below to use in response.
 - buttons: The button(s) to press, if applicable. This can be a single button, or a list of buttons to be pressed in sequence. You should generally prefer to press a single button at a time, but you can use a combination of buttons to, say, rotate the player and then interact with an object. Prefer the navigation tool over multiple button presses for moving around.

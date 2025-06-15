@@ -1,4 +1,3 @@
-from pydantic import UUID4
 from sqlalchemy import select, update
 
 from database.db_config import db_sessionmaker
@@ -27,15 +26,15 @@ async def create_long_term_memory(create_schema: LongTermMemoryCreate) -> None:
         await session.refresh(db_obj)
 
 
-async def get_long_term_memories_by_ids(
-    ids: list[UUID4],
+async def get_long_term_memories_by_titles(
+    titles: list[str],
     iteration: int,
 ) -> list[LongTermMemoryRead]:
-    """Get long-term memories by their IDs."""
+    """Get long-term memories by their titles."""
     async with db_sessionmaker() as session:
         query = (
             update(LongTermMemoryDBModel)
-            .where(LongTermMemoryDBModel.id.in_(ids))
+            .where(LongTermMemoryDBModel.title.in_(titles))
             .values(last_accessed_iteration=iteration)
             .returning(LongTermMemoryDBModel)
         )
@@ -51,7 +50,7 @@ async def update_long_term_memory(update_schema: LongTermMemoryUpdate) -> None:
     async with db_sessionmaker() as session:
         query = (
             update(LongTermMemoryDBModel)
-            .where(LongTermMemoryDBModel.id == update_schema.id)
+            .where(LongTermMemoryDBModel.title == update_schema.title)
             .values(
                 content=update_schema.content,
                 embedding=update_schema.embedding,
@@ -73,10 +72,10 @@ async def get_all_long_term_memory_titles() -> list[str]:
         return list(db_objs)
 
 
-async def get_all_long_term_memory_embeddings() -> dict[UUID4, list[float]]:
+async def get_all_long_term_memory_embeddings() -> dict[str, list[float]]:
     """Get all long-term memory embeddings."""
     async with db_sessionmaker() as session:
-        query = select(LongTermMemoryDBModel.id, LongTermMemoryDBModel.embedding)
+        query = select(LongTermMemoryDBModel.title, LongTermMemoryDBModel.embedding)
         result = await session.execute(query)
         db_objs = result.all()
 

@@ -46,6 +46,10 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
         emulator=emulator,
     )
 
+    create_update_long_term_memory = RunConcurrent(
+        name="CreateUpdateLongTermMemory",
+        items=[create_long_term_memory, update_long_term_memory],
+    )
     do_updates = RunConcurrent(
         name="DoUpdates",
         items=[update_goals, update_summary_memory],
@@ -59,15 +63,11 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
         edges=[
             Edge(
                 prepare_agent_store,
-                update_long_term_memory,
+                create_update_long_term_memory,
                 ShouldRetrieveMemory(value=True),
             ),
             Edge(
-                update_long_term_memory,
-                create_long_term_memory,
-            ),
-            Edge(
-                create_long_term_memory,
+                create_update_long_term_memory,
                 retrieve_long_term_memory,
             ),
             Edge(

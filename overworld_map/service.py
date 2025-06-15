@@ -33,7 +33,7 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
 
     game_warps = game_state.warps
     warps = {
-        mem.entity_id: OverworldWarp.from_warp(game_warps[mem.entity_id], mem.description)
+        mem.entity_id: OverworldWarp.from_warp(game_warps[mem.entity_id])
         for mem in map_entity_memories
         if mem.entity_type == MapEntityType.WARP
     }

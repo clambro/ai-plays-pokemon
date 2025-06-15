@@ -2,10 +2,14 @@ import numpy as np
 from pydantic import BaseModel
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
-from common.enums import AsciiTiles, MapId
+from common.enums import AsciiTiles, MapId, WarpType
 from emulator.game_state import YellowLegacyGameState
 from emulator.schemas import Sign, Sprite, Warp
 from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
+
+DEFAULT_ENTITY_DESCRIPTION = (
+    "No description added yet. Approach and interact with this entity to add a description."
+)
 
 
 class OverworldSprite(Sprite):
@@ -20,7 +24,7 @@ class OverworldSprite(Sprite):
 
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sprite."""
-        description = self.description or "No description added yet."
+        description = self.description or DEFAULT_ENTITY_DESCRIPTION
         out = f"sprite_{map_id}_{self.index} at ({self.y}, {self.x}): {description}"
         if self.moves_randomly:
             out += (
@@ -28,25 +32,6 @@ class OverworldSprite(Sprite):
                 " to catch it. Sprites like this are not worth interacting with."
             )
         return out
-
-
-class OverworldWarp(Warp):
-    """A warp on the overworld map, known to the player."""
-
-    description: str | None
-
-    @classmethod
-    def from_warp(cls, warp: Warp, description: str | None) -> "OverworldWarp":
-        """Create an overworld warp from a warp and a description."""
-        return cls(**warp.model_dump(), description=description)
-
-    def to_string(self, map_id: MapId) -> str:
-        """Get a string representation of the warp."""
-        description = self.description or "No description added yet."
-        return (
-            f"warp_{map_id}_{self.index} at ({self.y}, {self.x})"
-            f" leading to {self.destination.name}: {description}"
-        )
 
 
 class OverworldSign(Sign):
@@ -61,8 +46,51 @@ class OverworldSign(Sign):
 
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sign."""
-        description = self.description or "No description added yet."
+        description = self.description or DEFAULT_ENTITY_DESCRIPTION
         return f"sign_{map_id}_{self.index} at ({self.y}, {self.x}): {description}"
+
+
+class OverworldWarp(Warp):
+    """
+    A warp on the overworld map, known to the player.
+
+    Unlike signs and sprites, warps are static. The description is immutable.
+    """
+
+    @property
+    def description(self) -> str:
+        """Get a description of the warp."""
+        if self.warp_type == WarpType.SINGLE:
+            return "This is a single warp tile. Stand on it to warp."
+        if self.warp_type == WarpType.DOUBLE_VERTICAL and self.x == 0:
+            return (
+                "This is a vertical double warp tile. Stand on either tile and walk LEFT to warp."
+            )
+        if self.warp_type == WarpType.DOUBLE_VERTICAL:
+            return (
+                "This is a vertical double warp tile. Stand on either tile and walk RIGHT to warp."
+            )
+        if self.warp_type == WarpType.DOUBLE_HORIZONTAL and self.y == 0:
+            return (
+                "This is a horizontal double warp tile. Stand on either tile and walk UP to warp."
+            )
+        if self.warp_type == WarpType.DOUBLE_HORIZONTAL:
+            return (
+                "This is a horizontal double warp tile. Stand on either tile and walk DOWN to warp."
+            )
+        raise ValueError(f"Unknown warp type: {self.warp_type}")
+
+    @classmethod
+    def from_warp(cls, warp: Warp) -> "OverworldWarp":
+        """Create an overworld warp from a warp and a description."""
+        return cls(**warp.model_dump())
+
+    def to_string(self, map_id: MapId) -> str:
+        """Get a string representation of the warp."""
+        return (
+            f"warp_{map_id}_{self.index} at ({self.y}, {self.x}) leading to"
+            f" {self.destination.name}. {self.description}"
+        )
 
 
 class OverworldMap(BaseModel):
@@ -71,8 +99,8 @@ class OverworldMap(BaseModel):
     id: MapId
     ascii_tiles: list[list[str]]
     known_sprites: dict[int, OverworldSprite]
-    known_warps: dict[int, OverworldWarp]
     known_signs: dict[int, OverworldSign]
+    known_warps: dict[int, OverworldWarp]
     north_connection: MapId | None
     south_connection: MapId | None
     east_connection: MapId | None
@@ -151,18 +179,25 @@ class OverworldMap(BaseModel):
 
     def _get_connection_notes(self) -> str:
         """Get a string representation of the map connections."""
+        if (
+            not self.north_connection
+            and not self.south_connection
+            and not self.east_connection
+            and not self.west_connection
+        ):
+            return (
+                "There are no direct connections to other maps on this map. The only way to leave"
+                " this map is via warp tiles."
+            )
         out = ""
-        if self.north_connection:
-            out += f"The map to the north is {self.north_connection.name}.\n"
-        if self.south_connection:
-            out += f"The map to the south is {self.south_connection.name}.\n"
-        if self.east_connection:
-            out += f"The map to the east is {self.east_connection.name}.\n"
-        if self.west_connection:
-            out += f"The map to the west is {self.west_connection.name}.\n"
-        if out:
-            return out.strip()
-        return (
-            "There are no direct connections to other maps on this map. The only way to leave this"
-            " map is via warp tiles."
-        )
+        for direction, connection in [
+            ("north", self.north_connection),
+            ("south", self.south_connection),
+            ("east", self.east_connection),
+            ("west", self.west_connection),
+        ]:
+            if connection is not None:
+                out += f"The map to the {direction} is {connection.name}.\n"
+            else:
+                out += f"There is no map connection to the {direction}.\n"
+        return out.strip()
