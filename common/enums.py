@@ -1,4 +1,4 @@
-from enum import IntEnum, StrEnum
+from enum import Enum, IntEnum, StrEnum, auto
 
 
 class AsciiTiles(StrEnum):
@@ -35,6 +35,14 @@ class MapEntityType(StrEnum):
     WARP = "warp"
     SPRITE = "sprite"
     SIGN = "sign"
+
+
+class WarpType(Enum):
+    """An enum for the different types of warp tiles."""
+
+    SINGLE = auto()
+    DOUBLE_VERTICAL = auto()
+    DOUBLE_HORIZONTAL = auto()
 
 
 class MapId(IntEnum):

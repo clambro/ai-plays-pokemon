@@ -2,7 +2,7 @@ import numpy as np
 from pydantic import BaseModel
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
-from common.enums import AsciiTiles, MapId
+from common.enums import AsciiTiles, MapId, WarpType
 from emulator.game_state import YellowLegacyGameState
 from emulator.schemas import Sign, Sprite, Warp
 from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
@@ -34,25 +34,6 @@ class OverworldSprite(Sprite):
         return out
 
 
-class OverworldWarp(Warp):
-    """A warp on the overworld map, known to the player."""
-
-    description: str | None
-
-    @classmethod
-    def from_warp(cls, warp: Warp, description: str | None) -> "OverworldWarp":
-        """Create an overworld warp from a warp and a description."""
-        return cls(**warp.model_dump(), description=description)
-
-    def to_string(self, map_id: MapId) -> str:
-        """Get a string representation of the warp."""
-        description = self.description or DEFAULT_ENTITY_DESCRIPTION
-        return (
-            f"warp_{map_id}_{self.index} at ({self.y}, {self.x})"
-            f" leading to {self.destination.name}: {description}"
-        )
-
-
 class OverworldSign(Sign):
     """A sign on the overworld map, known to the player."""
 
@@ -69,14 +50,57 @@ class OverworldSign(Sign):
         return f"sign_{map_id}_{self.index} at ({self.y}, {self.x}): {description}"
 
 
+class OverworldWarp(Warp):
+    """
+    A warp on the overworld map, known to the player.
+
+    Unlike signs and sprites, warps are static. The description is immutable.
+    """
+
+    @property
+    def description(self) -> str:
+        """Get a description of the warp."""
+        if self.warp_type == WarpType.SINGLE:
+            return "This is a single warp tile. Stand on it to warp."
+        if self.warp_type == WarpType.DOUBLE_VERTICAL and self.x == 0:
+            return (
+                "This is a vertical double warp tile. Stand on either tile and walk LEFT to warp."
+            )
+        if self.warp_type == WarpType.DOUBLE_VERTICAL:
+            return (
+                "This is a vertical double warp tile. Stand on either tile and walk RIGHT to warp."
+            )
+        if self.warp_type == WarpType.DOUBLE_HORIZONTAL and self.y == 0:
+            return (
+                "This is a horizontal double warp tile. Stand on either tile and walk UP to warp."
+            )
+        if self.warp_type == WarpType.DOUBLE_HORIZONTAL:
+            return (
+                "This is a horizontal double warp tile. Stand on either tile and walk DOWN to warp."
+            )
+        raise ValueError(f"Unknown warp type: {self.warp_type}")
+
+    @classmethod
+    def from_warp(cls, warp: Warp) -> "OverworldWarp":
+        """Create an overworld warp from a warp and a description."""
+        return cls(**warp.model_dump())
+
+    def to_string(self, map_id: MapId) -> str:
+        """Get a string representation of the warp."""
+        return (
+            f"warp_{map_id}_{self.index} at ({self.y}, {self.x}) leading to"
+            f" {self.destination.name}. {self.description}"
+        )
+
+
 class OverworldMap(BaseModel):
     """A map of a particular region of the overworld."""
 
     id: MapId
     ascii_tiles: list[list[str]]
     known_sprites: dict[int, OverworldSprite]
-    known_warps: dict[int, OverworldWarp]
     known_signs: dict[int, OverworldSign]
+    known_warps: dict[int, OverworldWarp]
     north_connection: MapId | None
     south_connection: MapId | None
     east_connection: MapId | None
