@@ -1,10 +1,8 @@
 from loguru import logger
 
 from agent.subflows.overworld_handler.enums import OverworldTool
-from agent.subflows.overworld_handler.nodes.make_decision.prompts import MAKE_DECISION_PROMPT
-from agent.subflows.overworld_handler.nodes.make_decision.schemas import (
-    MakeDecisionResponse,
-)
+from agent.subflows.overworld_handler.nodes.select_tool.prompts import SELECT_TOOL_PROMPT
+from agent.subflows.overworld_handler.nodes.select_tool.schemas import SelectToolResponse
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
@@ -12,8 +10,8 @@ from memory.raw_memory import RawMemory, RawMemoryPiece
 from overworld_map.schemas import OverworldMap
 
 
-class MakeDecisionService:
-    """A service that makes decisions based on the current game state in the overworld."""
+class SelectToolService:
+    """A service that selects a tool based on the current game state in the overworld."""
 
     llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
 
@@ -31,19 +29,19 @@ class MakeDecisionService:
         self.state_string_builder = state_string_builder
         self.emulator = emulator
 
-    async def make_decision(self) -> tuple[OverworldTool, RawMemory]:
-        """Make a decision based on the current overworld game state."""
+    async def select_tool(self) -> tuple[OverworldTool, RawMemory]:
+        """Select a tool based on the current overworld game state."""
         game_state = self.emulator.get_game_state()
         img = self.emulator.get_screenshot()
-        prompt = MAKE_DECISION_PROMPT.format(state=self.state_string_builder(game_state))
+        prompt = SELECT_TOOL_PROMPT.format(state=self.state_string_builder(game_state))
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[img, prompt],
-                schema=MakeDecisionResponse,
-                prompt_name="make_overworld_decision",
+                schema=SelectToolResponse,
+                prompt_name="select_overworld_tool",
             )
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"Error making decision. Defaulting to pressing buttons. {e}")
+            logger.warning(f"Error selecting tool. Defaulting to pressing buttons. {e}")
             return OverworldTool.PRESS_BUTTONS, self.raw_memory
 
         position = (game_state.player.y, game_state.player.x)
