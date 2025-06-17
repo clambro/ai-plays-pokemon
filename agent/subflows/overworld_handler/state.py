@@ -1,7 +1,5 @@
 from typing import Literal
 
-from pydantic import BaseModel
-
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from agent.state import AgentState
 from agent.subflows.overworld_handler.enums import OverworldTool
@@ -24,7 +22,6 @@ class OverworldHandlerState(BaseStateWithEmulator):
     current_map: OverworldMap | None = None
     should_critique: bool | None = None
     tool: OverworldTool | None = None
-    tool_args: BaseModel | None = None
     needs_generic_handling: bool | None = None
 
     def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
@@ -73,7 +70,3 @@ class OverworldHandlerStore(BaseStoreWithEmulator[OverworldHandlerState]):
     async def set_tool(self, tool: OverworldTool | None) -> None:
         """Set the tool."""
         await self.set_state({"tool": tool})
-
-    async def set_tool_args(self, tool_args: BaseModel | None) -> None:
-        """Set the tool args."""
-        await self.set_state({"tool_args": tool_args})

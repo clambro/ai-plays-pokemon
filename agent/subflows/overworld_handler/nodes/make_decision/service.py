@@ -1,8 +1,8 @@
 from loguru import logger
 
+from agent.subflows.overworld_handler.enums import OverworldTool
 from agent.subflows.overworld_handler.nodes.make_decision.prompts import MAKE_DECISION_PROMPT
 from agent.subflows.overworld_handler.nodes.make_decision.schemas import (
-    Decision,
     MakeDecisionResponse,
 )
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
@@ -31,7 +31,7 @@ class MakeDecisionService:
         self.state_string_builder = state_string_builder
         self.emulator = emulator
 
-    async def make_decision(self) -> Decision:
+    async def make_decision(self) -> tuple[OverworldTool, RawMemory]:
         """Make a decision based on the current overworld game state."""
         game_state = self.emulator.get_game_state()
         img = self.emulator.get_screenshot()
@@ -43,12 +43,8 @@ class MakeDecisionService:
                 prompt_name="make_overworld_decision",
             )
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"Error making decision. Skipping. {e}")
-            return Decision(
-                raw_memory=self.raw_memory,
-                tool=None,
-                navigation_args=None,
-            )
+            logger.warning(f"Error making decision. Defaulting to pressing buttons. {e}")
+            return OverworldTool.PRESS_BUTTONS, self.raw_memory
 
         position = (game_state.player.y, game_state.player.x)
         self.raw_memory.append(
@@ -60,8 +56,4 @@ class MakeDecisionService:
                 ),
             ),
         )
-        return Decision(
-            raw_memory=self.raw_memory,
-            tool=response.tool,
-            navigation_args=None,
-        )
+        return response.tool, self.raw_memory

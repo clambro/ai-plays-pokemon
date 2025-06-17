@@ -32,10 +32,9 @@ class MakeDecisionNode(Node[OverworldHandlerStore]):
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
-        decision = await service.make_decision()
+        tool, raw_memory = await service.make_decision()
 
-        await store.set_raw_memory(decision.raw_memory)
-        await store.set_tool(decision.tool)
-        await store.set_tool_args(decision.navigation_args)
+        await store.set_raw_memory(raw_memory)
+        await store.set_tool(tool)
 
         await store.set_emulator_save_state_from_emulator(self.emulator)
