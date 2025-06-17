@@ -13,7 +13,8 @@ Done?
 * Add node tests for the LLM calls
 
 ### Useful Tools and Additions
-* Make the critic tool part of the overworld navigation step. Includes functionality for determining which tools are available at any given iteration. Maybe split this big prompt into two nodes: One to pick the tool, and one to use it. Allows me to greatly simplify the make decision prompt, which should reduce confusion.
+* Get all accessible tiles in the nav tool, and point out the map boundary tiles
+* Add a coords data type
 
 * Add a grid to the overworld screen and overlay collisions
 
