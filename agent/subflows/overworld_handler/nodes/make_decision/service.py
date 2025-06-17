@@ -1,12 +1,10 @@
 from loguru import logger
 
-from agent.subflows.overworld_handler.enums import OverworldTool
 from agent.subflows.overworld_handler.nodes.make_decision.prompts import MAKE_DECISION_PROMPT
 from agent.subflows.overworld_handler.nodes.make_decision.schemas import (
     Decision,
     MakeDecisionResponse,
 )
-from common.enums import AsciiTiles
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
@@ -37,11 +35,7 @@ class MakeDecisionService:
         """Make a decision based on the current overworld game state."""
         game_state = self.emulator.get_game_state()
         img = self.emulator.get_screenshot()
-        prompt = MAKE_DECISION_PROMPT.format(
-            state=self.state_string_builder(game_state),
-            walkable_tiles=", ".join(f'"{t}"' for t in AsciiTiles.get_walkable_tiles()),
-            exploration_candidates=self._get_exploration_candidates(),
-        )
+        prompt = MAKE_DECISION_PROMPT.format(state=self.state_string_builder(game_state))
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[img, prompt],
@@ -66,42 +60,8 @@ class MakeDecisionService:
                 ),
             ),
         )
-        if response.navigation_args:
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=f"Navigating to {response.navigation_args}.",
-                ),
-            )
-            return Decision(
-                raw_memory=self.raw_memory,
-                tool=OverworldTool.NAVIGATION,
-                navigation_args=response.navigation_args,
-            )
         return Decision(
             raw_memory=self.raw_memory,
-            tool=OverworldTool.PRESS_BUTTONS,
+            tool=response.tool,
             navigation_args=None,
         )
-
-    def _get_exploration_candidates(self) -> str:
-        """Get all walkable tiles that are adjacent to an unseen tile."""
-        tiles = self.current_map.ascii_tiles_ndarray
-        walkable_tiles = AsciiTiles.get_walkable_tiles()
-
-        candidates = []
-        height, width = tiles.shape
-        for y in range(height):
-            for x in range(width):
-                if tiles[y, x] not in walkable_tiles:
-                    continue
-                for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-                    ny, nx = y + dy, x + dx
-                    if 0 <= ny < height and 0 <= nx < width and tiles[ny, nx] == AsciiTiles.UNSEEN:
-                        candidates.append((y, x))
-                        break
-
-        if not candidates:
-            return "No exploration candidates found."
-
-        return ", ".join(f"({y}, {x})" for y, x in candidates)
