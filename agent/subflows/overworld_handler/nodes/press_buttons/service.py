@@ -43,12 +43,13 @@ class PressButtonsService:
             return self.raw_memory
 
         buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
-        # The CoT here is usually very similar to the decision maker thought process, so we don't
-        # need to add it to the raw memory as it will likely be redundant.
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
-                content=(f"Selected the following buttons: {[str(b) for b in buttons]}."),
+                content=(
+                    f"{response.thoughts} Selected the following buttons:"
+                    f" {[str(b) for b in buttons]}."
+                ),
             ),
         )
         for b in buttons:

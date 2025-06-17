@@ -28,6 +28,6 @@ Give general guidance on where you want to go in your thoughts, but do not provi
 </tools>
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your brief thoughts on the current game state and which tool to use in response.
+- thoughts: Your brief thoughts on the current game state and which tool that you would like to use. Your reasoning should be concise and based on the uses listed for the tools above.
 - tool: The tool to use. Must be one of the tools listed above. Note that the JSON description below may name tools that are not described above. Ignore them. The only valid tools are the ones listed above in the <tools> section.
 """.strip()

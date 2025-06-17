@@ -92,12 +92,10 @@ class NavigationService:
             schema=NavigationResponse,
             prompt_name="determine_target_coords",
         )
-        # The CoT here is usually very similar to the decision maker thought process, so we don't
-        # need to add it to the raw memory as it will likely be redundant.
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
-                content=f"Navigating to ({response.row}, {response.col}).",
+                content=f"{response.thoughts} Navigating to {response.coords}.",
             ),
         )
         return response.coords
