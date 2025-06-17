@@ -5,6 +5,15 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 
 You have the following tools at your disposal:
 <tools>
+{tools}
+</tools>
+
+Reflect on the information provided to you and respond in the format given below. The relevant keys are:
+- thoughts: Your brief thoughts on the current game state and which tool that you would like to use. Your reasoning should be concise and based on the uses listed for the tools above.
+- tool: The tool to use. Must be one of the tools listed above. Note that the JSON description below may name tools that are not described above. Ignore them. The only valid tools are the ones listed above in the <tools> section.
+""".strip()
+
+BUTTON_TOOL_INFO = """
 <button_tool>
 The button tool allows you to submit one or more button presses to the emulator. It is useful for:
 - Interacting with entities in the game.
@@ -15,6 +24,9 @@ The button tool allows you to submit one or more button presses to the emulator.
 
 Give general guidance on which buttons to press in your thoughts, but do not provide specific button presses. The tool will determine the legal button presses and prompt you again to choose from them.
 </button_tool>
+""".strip()
+
+NAVIGATION_TOOL_INFO = """
 <navigation_tool>
 The navigation tool allows you to navigate to any revealed, accessible tile on the current map using an A* search algorithm. It is useful for:
 - Moving the player around the current map more than one tile at a time. This should be your primary mode of movement.
@@ -25,12 +37,10 @@ Note that the navigation tool cannot transition you from one map to another. It 
 
 Give general guidance on where you want to go in your thoughts, but do not provide specific coordinates. The tool will determine the legal navigation targets and prompt you again to choose from them.
 </navigation_tool>
+""".strip()
+
+CRITIQUE_TOOL_INFO = """
 <critique_tool>
 The critique tool is a powerful (but expensive!) tool to get an external model to critique your performance and help get you unstuck. Use it if you are stuck in a loop or failing to make progress towards your goals. If you seem to be moving forward and making progress towards your goals, you should not use the critique tool.
 </critique_tool>
-</tools>
-
-Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your brief thoughts on the current game state and which tool that you would like to use. Your reasoning should be concise and based on the uses listed for the tools above.
-- tool: The tool to use. Must be one of the tools listed above. Note that the JSON description below may name tools that are not described above. Ignore them. The only valid tools are the ones listed above in the <tools> section.
 """.strip()
