@@ -6,3 +6,4 @@ class OverworldTool(StrEnum):
 
     PRESS_BUTTONS = "press_buttons"
     NAVIGATION = "navigation"
+    CRITIQUE = "critique"

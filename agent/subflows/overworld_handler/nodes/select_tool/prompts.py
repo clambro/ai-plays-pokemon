@@ -25,6 +25,9 @@ Note that the navigation tool cannot transition you from one map to another. It 
 
 Give general guidance on where you want to go in your thoughts, but do not provide specific coordinates. The tool will determine the legal navigation targets and prompt you again to choose from them.
 </navigation_tool>
+<critique_tool>
+The critique tool is a powerful (but expensive!) tool to get an external model to critique your performance and help get you unstuck. Use it if you are stuck in a loop or failing to make progress towards your goals. If you seem to be moving forward and making progress towards your goals, you should not use the critique tool.
+</critique_tool>
 </tools>
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:

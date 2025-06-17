@@ -1,5 +1,3 @@
-from typing import Literal
-
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from agent.state import AgentState
 from agent.subflows.overworld_handler.enums import OverworldTool
@@ -20,7 +18,6 @@ class OverworldHandlerState(BaseStateWithEmulator):
     long_term_memory: LongTermMemory | None = None
     goals: Goals | None = None
     current_map: OverworldMap | None = None
-    should_critique: bool | None = None
     tool: OverworldTool | None = None
     needs_generic_handling: bool | None = None
 
@@ -62,10 +59,6 @@ class OverworldHandlerStore(BaseStoreWithEmulator[OverworldHandlerState]):
     async def set_current_map(self, current_map: OverworldMap) -> None:
         """Set the current map."""
         await self.set_state({"current_map": current_map})
-
-    async def set_should_critique(self, should_critique: Literal[True, False]) -> None:
-        """Set the should critique."""
-        await self.set_state({"should_critique": should_critique})
 
     async def set_tool(self, tool: OverworldTool | None) -> None:
         """Set the tool."""
