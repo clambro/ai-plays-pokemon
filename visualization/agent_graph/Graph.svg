@@ -10,149 +10,149 @@
 <title>G</title>
 <polygon fill="white" stroke="transparent" points="-4,4 -4,-283 1617,-283 1617,4 -4,4"/>
 <g id="clust1" class="cluster">
-<title>cluster_yr0N3b419Lz5syolfQg82</title>
+<title>cluster_SbPd8zF1jOcLdZIaj1o7U</title>
 <polygon fill="lightblue" stroke="blue" points="1419,-8 1419,-174 1611,-174 1611,-8 1419,-8"/>
 <text text-anchor="middle" x="1515" y="-158.8" font-family="Times,serif" font-size="14.00">DoUpdates (Concurrent)</text>
 </g>
 <g id="clust2" class="cluster">
-<title>cluster_HgsX5B4iz7p4IQap4c9br</title>
+<title>cluster_aWmpXflhcc3CPQmZPsPCQ</title>
 <polygon fill="lightblue" stroke="blue" points="294,-105 294,-271 638,-271 638,-105 294,-105"/>
 <text text-anchor="middle" x="466" y="-255.8" font-family="Times,serif" font-size="14.00">CreateUpdateLongTermMemory (Concurrent)</text>
 </g>
-<!-- yr0N3b419Lz5syolfQg82__entry -->
-<!-- yr0N3b419Lz5syolfQg82__exit -->
-<!-- JqnAI7C8dToOK1fTL5eZo -->
+<!-- SbPd8zF1jOcLdZIaj1o7U__entry -->
+<!-- SbPd8zF1jOcLdZIaj1o7U__exit -->
+<!-- he2k8dQjZM6TsJfSvsksp -->
 <g id="node3" class="node">
-<title>JqnAI7C8dToOK1fTL5eZo</title>
+<title>he2k8dQjZM6TsJfSvsksp</title>
 <path fill="lightblue" stroke="black" d="M1555,-106C1555,-106 1474,-106 1474,-106 1468,-106 1462,-100 1462,-94 1462,-94 1462,-82 1462,-82 1462,-76 1468,-70 1474,-70 1474,-70 1555,-70 1555,-70 1561,-70 1567,-76 1567,-82 1567,-82 1567,-94 1567,-94 1567,-100 1561,-106 1555,-106"/>
 <text text-anchor="middle" x="1514.5" y="-85.5" font-family="Helvetica,sans-Serif" font-size="10.00">UpdateGoalsNode</text>
 </g>
-<!-- 6ozgL30RaPGuxezzRLGLi -->
+<!-- nwybCbDR62OT69HjAoQV4 -->
 <g id="node4" class="node">
-<title>6ozgL30RaPGuxezzRLGLi</title>
+<title>nwybCbDR62OT69HjAoQV4</title>
 <path fill="lightblue" stroke="black" d="M1585,-52C1585,-52 1444,-52 1444,-52 1438,-52 1432,-46 1432,-40 1432,-40 1432,-28 1432,-28 1432,-22 1438,-16 1444,-16 1444,-16 1585,-16 1585,-16 1591,-16 1597,-22 1597,-28 1597,-28 1597,-40 1597,-40 1597,-46 1591,-52 1585,-52"/>
 <text text-anchor="middle" x="1514.5" y="-31.5" font-family="Helvetica,sans-Serif" font-size="10.00">UpdateSummaryMemoryNode</text>
 </g>
-<!-- HgsX5B4iz7p4IQap4c9br__entry -->
-<!-- HgsX5B4iz7p4IQap4c9br__exit -->
-<!-- pkJbi0LbEmPG9d462MI73 -->
-<g id="node11" class="node">
-<title>pkJbi0LbEmPG9d462MI73</title>
+<!-- aWmpXflhcc3CPQmZPsPCQ__entry -->
+<!-- aWmpXflhcc3CPQmZPsPCQ__exit -->
+<!-- Ox28C7l6gw4bOLzSzu2K6 -->
+<g id="node9" class="node">
+<title>Ox28C7l6gw4bOLzSzu2K6</title>
 <path fill="#efefef" stroke="black" d="M959,-194C959,-194 812,-194 812,-194 806,-194 800,-188 800,-182 800,-182 800,-170 800,-170 800,-164 806,-158 812,-158 812,-158 959,-158 959,-158 965,-158 971,-164 971,-170 971,-170 971,-182 971,-182 971,-188 965,-194 959,-194"/>
 <text text-anchor="middle" x="885.5" y="-173.5" font-family="Helvetica,sans-Serif" font-size="10.00">RetrieveLongTermMemoryNode</text>
 </g>
-<!-- HgsX5B4iz7p4IQap4c9br__exit&#45;&gt;pkJbi0LbEmPG9d462MI73 -->
+<!-- aWmpXflhcc3CPQmZPsPCQ__exit&#45;&gt;Ox28C7l6gw4bOLzSzu2K6 -->
 <g id="edge2" class="edge">
-<title>HgsX5B4iz7p4IQap4c9br__exit&#45;&gt;pkJbi0LbEmPG9d462MI73</title>
+<title>aWmpXflhcc3CPQmZPsPCQ__exit&#45;&gt;Ox28C7l6gw4bOLzSzu2K6</title>
 <path fill="none" stroke="black" d="M638,-212C688.32,-207.02 744.1,-199.08 789.84,-191.92"/>
 <polygon fill="black" stroke="black" points="790.41,-195.37 799.75,-190.36 789.32,-188.46 790.41,-195.37"/>
 </g>
-<!-- gh62H5SmLv3vY4DktEvdC -->
+<!-- dWaH9blcl3VRAF0IAEA00 -->
 <g id="node7" class="node">
-<title>gh62H5SmLv3vY4DktEvdC</title>
+<title>dWaH9blcl3VRAF0IAEA00</title>
 <path fill="lightblue" stroke="black" d="M534.5,-203C534.5,-203 396.5,-203 396.5,-203 390.5,-203 384.5,-197 384.5,-191 384.5,-191 384.5,-179 384.5,-179 384.5,-173 390.5,-167 396.5,-167 396.5,-167 534.5,-167 534.5,-167 540.5,-167 546.5,-173 546.5,-179 546.5,-179 546.5,-191 546.5,-191 546.5,-197 540.5,-203 534.5,-203"/>
 <text text-anchor="middle" x="465.5" y="-182.5" font-family="Helvetica,sans-Serif" font-size="10.00">CreateLongTermMemoryNode</text>
 </g>
-<!-- grWIOyXkE9Wqsh8H3tL78 -->
+<!-- GwIfGNU3582nqaitahiz3 -->
 <g id="node8" class="node">
-<title>grWIOyXkE9Wqsh8H3tL78</title>
+<title>GwIfGNU3582nqaitahiz3</title>
 <path fill="lightblue" stroke="black" d="M536,-149C536,-149 395,-149 395,-149 389,-149 383,-143 383,-137 383,-137 383,-125 383,-125 383,-119 389,-113 395,-113 395,-113 536,-113 536,-113 542,-113 548,-119 548,-125 548,-125 548,-137 548,-137 548,-143 542,-149 536,-149"/>
 <text text-anchor="middle" x="465.5" y="-128.5" font-family="Helvetica,sans-Serif" font-size="10.00">UpdateLongTermMemoryNode</text>
 </g>
-<!-- hwGOEpBNuby3kQ85Qic7Z -->
-<g id="node9" class="node">
-<title>hwGOEpBNuby3kQ85Qic7Z</title>
+<!-- O5a2kBnvhoVdp2GIS6O29 -->
+<g id="node14" class="node">
+<title>O5a2kBnvhoVdp2GIS6O29</title>
 <path fill="#efefef" stroke="black" d="M1077,-161C1077,-161 1020,-161 1020,-161 1014,-161 1008,-155 1008,-149 1008,-149 1008,-137 1008,-137 1008,-131 1014,-125 1020,-125 1020,-125 1077,-125 1077,-125 1083,-125 1089,-131 1089,-137 1089,-137 1089,-149 1089,-149 1089,-155 1083,-161 1077,-161"/>
 <text text-anchor="middle" x="1048.5" y="-140.5" font-family="Helvetica,sans-Serif" font-size="10.00">DummyNode</text>
 </g>
-<!-- hTcnekvwiawNXUFuoyRGi -->
+<!-- Ox28C7l6gw4bOLzSzu2K6&#45;&gt;O5a2kBnvhoVdp2GIS6O29 -->
+<g id="edge4" class="edge">
+<title>Ox28C7l6gw4bOLzSzu2K6&#45;&gt;O5a2kBnvhoVdp2GIS6O29</title>
+<path fill="none" stroke="black" d="M971.24,-158.63C980.29,-156.78 989.27,-154.94 997.71,-153.2"/>
+<polygon fill="black" stroke="black" points="998.63,-156.59 1007.72,-151.15 997.22,-149.73 998.63,-156.59"/>
+</g>
+<!-- ZIK0tlOd12h1HSrT8dbHK -->
 <g id="node10" class="node">
-<title>hTcnekvwiawNXUFuoyRGi</title>
+<title>ZIK0tlOd12h1HSrT8dbHK</title>
 <polygon fill="lightyellow" stroke="black" points="1375,-215 1262,-215 1262,-211 1258,-211 1258,-207 1262,-207 1262,-187 1258,-187 1258,-183 1262,-183 1262,-179 1375,-179 1375,-215"/>
 <polyline fill="none" stroke="black" points="1262,-211 1266,-211 1266,-207 1262,-207 "/>
 <polyline fill="none" stroke="black" points="1262,-187 1266,-187 1266,-183 1262,-183 "/>
 <text text-anchor="middle" x="1318.5" y="-194.5" font-family="Helvetica,sans-Serif" font-size="10.00">TextHandlerSubflow</text>
 </g>
-<!-- hwGOEpBNuby3kQ85Qic7Z&#45;&gt;hTcnekvwiawNXUFuoyRGi -->
-<g id="edge7" class="edge">
-<title>hwGOEpBNuby3kQ85Qic7Z&#45;&gt;hTcnekvwiawNXUFuoyRGi</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M1089.03,-152.91C1095.04,-154.33 1101.18,-155.74 1107,-157 1155.36,-167.48 1210.31,-177.87 1251.93,-185.43"/>
-<polygon fill="black" stroke="black" points="1251.48,-188.91 1261.94,-187.24 1252.73,-182.02 1251.48,-188.91"/>
-<text text-anchor="middle" x="1168" y="-182.8" font-family="Helvetica,sans-Serif" font-size="9.00">AgentHandlerIs(text)</text>
-</g>
-<!-- YaxBJReH54RipkYyCN7Bf -->
-<g id="node12" class="node">
-<title>YaxBJReH54RipkYyCN7Bf</title>
-<polygon fill="lightyellow" stroke="black" points="1379.5,-161 1257.5,-161 1257.5,-157 1253.5,-157 1253.5,-153 1257.5,-153 1257.5,-133 1253.5,-133 1253.5,-129 1257.5,-129 1257.5,-125 1379.5,-125 1379.5,-161"/>
-<polyline fill="none" stroke="black" points="1257.5,-157 1261.5,-157 1261.5,-153 1257.5,-153 "/>
-<polyline fill="none" stroke="black" points="1257.5,-133 1261.5,-133 1261.5,-129 1257.5,-129 "/>
-<text text-anchor="middle" x="1318.5" y="-140.5" font-family="Helvetica,sans-Serif" font-size="10.00">BattleHandlerSubflow</text>
-</g>
-<!-- hwGOEpBNuby3kQ85Qic7Z&#45;&gt;YaxBJReH54RipkYyCN7Bf -->
-<g id="edge6" class="edge">
-<title>hwGOEpBNuby3kQ85Qic7Z&#45;&gt;YaxBJReH54RipkYyCN7Bf</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M1089.04,-143C1130.59,-143 1196.79,-143 1247.25,-143"/>
-<polygon fill="black" stroke="black" points="1247.44,-146.5 1257.44,-143 1247.44,-139.5 1247.44,-146.5"/>
-<text text-anchor="middle" x="1168" y="-145.8" font-family="Helvetica,sans-Serif" font-size="9.00">AgentHandlerIs(battle)</text>
-</g>
-<!-- 0u67pB4PA9Fmq7XnnHjGl -->
-<g id="node13" class="node">
-<title>0u67pB4PA9Fmq7XnnHjGl</title>
-<polygon fill="lightyellow" stroke="black" points="1390,-107 1247,-107 1247,-103 1243,-103 1243,-99 1247,-99 1247,-79 1243,-79 1243,-75 1247,-75 1247,-71 1390,-71 1390,-107"/>
-<polyline fill="none" stroke="black" points="1247,-103 1251,-103 1251,-99 1247,-99 "/>
-<polyline fill="none" stroke="black" points="1247,-79 1251,-79 1251,-75 1247,-75 "/>
-<text text-anchor="middle" x="1318.5" y="-86.5" font-family="Helvetica,sans-Serif" font-size="10.00">OverworldHandlerSubflow</text>
-</g>
-<!-- hwGOEpBNuby3kQ85Qic7Z&#45;&gt;0u67pB4PA9Fmq7XnnHjGl -->
-<g id="edge5" class="edge">
-<title>hwGOEpBNuby3kQ85Qic7Z&#45;&gt;0u67pB4PA9Fmq7XnnHjGl</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M1089.03,-133.09C1095.04,-131.67 1101.18,-130.26 1107,-129 1149.64,-119.76 1197.4,-110.59 1236.63,-103.37"/>
-<polygon fill="black" stroke="black" points="1237.47,-106.77 1246.67,-101.53 1236.2,-99.89 1237.47,-106.77"/>
-<text text-anchor="middle" x="1168" y="-131.8" font-family="Helvetica,sans-Serif" font-size="9.00">AgentHandlerIs(overworld)</text>
-</g>
-<!-- hTcnekvwiawNXUFuoyRGi&#45;&gt;yr0N3b419Lz5syolfQg82__entry -->
+<!-- ZIK0tlOd12h1HSrT8dbHK&#45;&gt;SbPd8zF1jOcLdZIaj1o7U__entry -->
 <g id="edge8" class="edge">
-<title>hTcnekvwiawNXUFuoyRGi&#45;&gt;yr0N3b419Lz5syolfQg82__entry</title>
+<title>ZIK0tlOd12h1HSrT8dbHK&#45;&gt;SbPd8zF1jOcLdZIaj1o7U__entry</title>
 <path fill="none" stroke="black" d="M1375.09,-181.53C1385.84,-178.54 1397.41,-175.31 1409.14,-172.05"/>
 <polygon fill="black" stroke="black" points="1410.31,-175.36 1419,-169.3 1408.43,-168.61 1410.31,-175.36"/>
 </g>
-<!-- pkJbi0LbEmPG9d462MI73&#45;&gt;hwGOEpBNuby3kQ85Qic7Z -->
-<g id="edge4" class="edge">
-<title>pkJbi0LbEmPG9d462MI73&#45;&gt;hwGOEpBNuby3kQ85Qic7Z</title>
-<path fill="none" stroke="black" d="M971.24,-158.63C980.29,-156.78 989.27,-154.94 997.71,-153.2"/>
-<polygon fill="black" stroke="black" points="998.63,-156.59 1007.72,-151.15 997.22,-149.73 998.63,-156.59"/>
+<!-- 5bjAebVecgmlNztV017W9 -->
+<g id="node11" class="node">
+<title>5bjAebVecgmlNztV017W9</title>
+<polygon fill="lightyellow" stroke="black" points="1390,-161 1247,-161 1247,-157 1243,-157 1243,-153 1247,-153 1247,-133 1243,-133 1243,-129 1247,-129 1247,-125 1390,-125 1390,-161"/>
+<polyline fill="none" stroke="black" points="1247,-157 1251,-157 1251,-153 1247,-153 "/>
+<polyline fill="none" stroke="black" points="1247,-133 1251,-133 1251,-129 1247,-129 "/>
+<text text-anchor="middle" x="1318.5" y="-140.5" font-family="Helvetica,sans-Serif" font-size="10.00">OverworldHandlerSubflow</text>
 </g>
-<!-- YaxBJReH54RipkYyCN7Bf&#45;&gt;yr0N3b419Lz5syolfQg82__entry -->
-<g id="edge9" class="edge">
-<title>YaxBJReH54RipkYyCN7Bf&#45;&gt;yr0N3b419Lz5syolfQg82__entry</title>
-<path fill="none" stroke="black" d="M1379.55,-143C1388.95,-143 1398.89,-143 1408.93,-143"/>
+<!-- 5bjAebVecgmlNztV017W9&#45;&gt;SbPd8zF1jOcLdZIaj1o7U__entry -->
+<g id="edge10" class="edge">
+<title>5bjAebVecgmlNztV017W9&#45;&gt;SbPd8zF1jOcLdZIaj1o7U__entry</title>
+<path fill="none" stroke="black" d="M1390.09,-143C1396.26,-143 1402.59,-143 1408.97,-143"/>
 <polygon fill="black" stroke="black" points="1409,-146.5 1419,-143 1409,-139.5 1409,-146.5"/>
 </g>
-<!-- 0u67pB4PA9Fmq7XnnHjGl&#45;&gt;yr0N3b419Lz5syolfQg82__entry -->
-<g id="edge10" class="edge">
-<title>0u67pB4PA9Fmq7XnnHjGl&#45;&gt;yr0N3b419Lz5syolfQg82__entry</title>
-<path fill="none" stroke="black" d="M1369.62,-107.02C1376.54,-109.85 1383.5,-112.88 1390,-116 1399.68,-120.65 1403.09,-124.99 1409.52,-128.79"/>
-<polygon fill="black" stroke="black" points="1408.44,-132.14 1419,-133 1411.28,-125.74 1408.44,-132.14"/>
-</g>
-<!-- TLViOqSjzbyO6WTFPEfr4 -->
-<g id="node14" class="node">
-<title>TLViOqSjzbyO6WTFPEfr4</title>
+<!-- Zlt5TF7jMAVAwkV3JyDj3 -->
+<g id="node12" class="node">
+<title>Zlt5TF7jMAVAwkV3JyDj3</title>
 <path fill="#efefef" stroke="black" d="M122,-119C122,-119 12,-119 12,-119 6,-119 0,-113 0,-107 0,-107 0,-95 0,-95 0,-89 6,-83 12,-83 12,-83 122,-83 122,-83 128,-83 134,-89 134,-95 134,-95 134,-107 134,-107 134,-113 128,-119 122,-119"/>
 <text text-anchor="middle" x="67" y="-98.5" font-family="Helvetica,sans-Serif" font-size="10.00">PrepareAgentStoreNode</text>
 </g>
-<!-- TLViOqSjzbyO6WTFPEfr4&#45;&gt;HgsX5B4iz7p4IQap4c9br__entry -->
+<!-- Zlt5TF7jMAVAwkV3JyDj3&#45;&gt;aWmpXflhcc3CPQmZPsPCQ__entry -->
 <g id="edge1" class="edge">
-<title>TLViOqSjzbyO6WTFPEfr4&#45;&gt;HgsX5B4iz7p4IQap4c9br__entry</title>
+<title>Zlt5TF7jMAVAwkV3JyDj3&#45;&gt;aWmpXflhcc3CPQmZPsPCQ__entry</title>
 <path fill="none" stroke="black" stroke-dasharray="5,2" d="M91.07,-119.06C128.59,-147.31 206.49,-201.35 284.05,-226.88"/>
 <polygon fill="black" stroke="black" points="283.41,-230.35 294,-230 285.5,-223.67 283.41,-230.35"/>
 <text text-anchor="middle" x="218" y="-227.8" font-family="Helvetica,sans-Serif" font-size="9.00">ShouldRetrieveMemory(True)</text>
 </g>
-<!-- TLViOqSjzbyO6WTFPEfr4&#45;&gt;hwGOEpBNuby3kQ85Qic7Z -->
+<!-- Zlt5TF7jMAVAwkV3JyDj3&#45;&gt;O5a2kBnvhoVdp2GIS6O29 -->
 <g id="edge3" class="edge">
-<title>TLViOqSjzbyO6WTFPEfr4&#45;&gt;hwGOEpBNuby3kQ85Qic7Z</title>
+<title>Zlt5TF7jMAVAwkV3JyDj3&#45;&gt;O5a2kBnvhoVdp2GIS6O29</title>
 <path fill="none" stroke="black" stroke-dasharray="5,2" d="M134.32,-98.81C240.66,-95.78 455.91,-91.69 638,-101 768.03,-107.65 920.38,-126.11 997.42,-136.2"/>
 <polygon fill="black" stroke="black" points="997.41,-139.73 1007.79,-137.56 998.33,-132.79 997.41,-139.73"/>
 <text text-anchor="middle" x="715" y="-113.8" font-family="Helvetica,sans-Serif" font-size="9.00">ShouldRetrieveMemory(False)</text>
+</g>
+<!-- hrtvlYb1QpLSzgOvRMnQ4 -->
+<g id="node13" class="node">
+<title>hrtvlYb1QpLSzgOvRMnQ4</title>
+<polygon fill="lightyellow" stroke="black" points="1379.5,-107 1257.5,-107 1257.5,-103 1253.5,-103 1253.5,-99 1257.5,-99 1257.5,-79 1253.5,-79 1253.5,-75 1257.5,-75 1257.5,-71 1379.5,-71 1379.5,-107"/>
+<polyline fill="none" stroke="black" points="1257.5,-103 1261.5,-103 1261.5,-99 1257.5,-99 "/>
+<polyline fill="none" stroke="black" points="1257.5,-79 1261.5,-79 1261.5,-75 1257.5,-75 "/>
+<text text-anchor="middle" x="1318.5" y="-86.5" font-family="Helvetica,sans-Serif" font-size="10.00">BattleHandlerSubflow</text>
+</g>
+<!-- hrtvlYb1QpLSzgOvRMnQ4&#45;&gt;SbPd8zF1jOcLdZIaj1o7U__entry -->
+<g id="edge9" class="edge">
+<title>hrtvlYb1QpLSzgOvRMnQ4&#45;&gt;SbPd8zF1jOcLdZIaj1o7U__entry</title>
+<path fill="none" stroke="black" d="M1369.62,-107.02C1376.54,-109.85 1383.5,-112.88 1390,-116 1399.68,-120.65 1403.09,-124.99 1409.52,-128.79"/>
+<polygon fill="black" stroke="black" points="1408.44,-132.14 1419,-133 1411.28,-125.74 1408.44,-132.14"/>
+</g>
+<!-- O5a2kBnvhoVdp2GIS6O29&#45;&gt;ZIK0tlOd12h1HSrT8dbHK -->
+<g id="edge7" class="edge">
+<title>O5a2kBnvhoVdp2GIS6O29&#45;&gt;ZIK0tlOd12h1HSrT8dbHK</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M1089.03,-152.91C1095.04,-154.33 1101.18,-155.74 1107,-157 1155.36,-167.48 1210.31,-177.87 1251.93,-185.43"/>
+<polygon fill="black" stroke="black" points="1251.48,-188.91 1261.94,-187.24 1252.73,-182.02 1251.48,-188.91"/>
+<text text-anchor="middle" x="1168" y="-182.8" font-family="Helvetica,sans-Serif" font-size="9.00">AgentHandlerIs(text)</text>
+</g>
+<!-- O5a2kBnvhoVdp2GIS6O29&#45;&gt;5bjAebVecgmlNztV017W9 -->
+<g id="edge5" class="edge">
+<title>O5a2kBnvhoVdp2GIS6O29&#45;&gt;5bjAebVecgmlNztV017W9</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M1089.04,-143C1127.72,-143 1187.75,-143 1236.57,-143"/>
+<polygon fill="black" stroke="black" points="1236.8,-146.5 1246.8,-143 1236.8,-139.5 1236.8,-146.5"/>
+<text text-anchor="middle" x="1168" y="-145.8" font-family="Helvetica,sans-Serif" font-size="9.00">AgentHandlerIs(overworld)</text>
+</g>
+<!-- O5a2kBnvhoVdp2GIS6O29&#45;&gt;hrtvlYb1QpLSzgOvRMnQ4 -->
+<g id="edge6" class="edge">
+<title>O5a2kBnvhoVdp2GIS6O29&#45;&gt;hrtvlYb1QpLSzgOvRMnQ4</title>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M1089.03,-133.09C1095.04,-131.67 1101.18,-130.26 1107,-129 1153.69,-118.89 1206.5,-108.86 1247.55,-101.37"/>
+<polygon fill="black" stroke="black" points="1248.24,-104.8 1257.45,-99.57 1246.99,-97.91 1248.24,-104.8"/>
+<text text-anchor="middle" x="1168" y="-131.8" font-family="Helvetica,sans-Serif" font-size="9.00">AgentHandlerIs(battle)</text>
 </g>
 </g>
 </svg>
