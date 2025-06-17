@@ -13,7 +13,7 @@ from memory.raw_memory import RawMemory, RawMemoryPiece
 class PressButtonsService:
     """A service that presses buttons based on the current game state in the overworld."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH_LITE)
+    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
 
     def __init__(
         self,
@@ -36,37 +36,33 @@ class PressButtonsService:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[img, prompt],
                 schema=PressButtonsResponse,
-                thinking_tokens=None,
                 prompt_name="press_buttons",
             )
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error in the button pressing response. Skipping. {e}")
             return self.raw_memory
 
-        if response.buttons:
-            buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"{response.thoughts} Selected the following buttons:"
-                        f" {[str(b) for b in buttons]}."
-                    ),
-                ),
+        buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
+        # The CoT here is usually very similar to the decision maker thought process, so we don't
+        # need to add it to the raw memory as it will likely be redundant.
+        self.raw_memory.append(
+            RawMemoryPiece(
+                iteration=self.iteration,
+                content=(f"Selected the following buttons: {[str(b) for b in buttons]}."),
+            ),
+        )
+        for b in buttons:
+            await self.emulator.press_buttons([b])
+            passed_collision = await self._check_for_collision(
+                button=b,
+                prev_map_id=game_state.map.id,
+                prev_coords=(game_state.player.y, game_state.player.x),
+                prev_direction=game_state.player.direction,
             )
-            for b in buttons:
-                await self.emulator.press_buttons([b])
-                passed_collision = await self._check_for_collision(
-                    button=b,
-                    prev_map_id=game_state.map.id,
-                    prev_coords=(game_state.player.y, game_state.player.x),
-                    prev_direction=game_state.player.direction,
-                )
-                passed_action = await self._check_for_action(b)
-                state_changed = await self._check_for_state_change()
-                if not passed_collision or not passed_action or state_changed:
-                    break
-
+            passed_action = await self._check_for_action(b)
+            state_changed = await self._check_for_state_change()
+            if not passed_collision or not passed_action or state_changed:
+                break
         return self.raw_memory
 
     async def _check_for_collision(

@@ -12,6 +12,6 @@ The following (case-sensitive) buttons are available to you:
 - right: Used to move the player right.
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your written thoughts on the current game state and which buttons to press in response. Pay particular attention to the most recent raw memory, as that will tell you why you chose to use the button pressing tool.
+- thoughts: Your brief thoughts on which buttons to press and why.
 - buttons: The button(s) to press. This can either be a single button, or a list of buttons to be pressed in sequence. You should generally prefer to press a single button at a time, but you can use a combination of buttons to, say, rotate the player and then interact with an object.
 """.strip()
