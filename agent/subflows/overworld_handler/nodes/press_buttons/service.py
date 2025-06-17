@@ -31,7 +31,11 @@ class PressButtonsService:
         """Press buttons based on the current overworld game state."""
         game_state = self.emulator.get_game_state()
         img = self.emulator.get_screenshot()
-        prompt = PRESS_BUTTONS_PROMPT.format(state=self.state_string_builder(game_state))
+        last_memory = self.raw_memory.pieces.get(self.iteration) or ""
+        prompt = PRESS_BUTTONS_PROMPT.format(
+            state=self.state_string_builder(game_state),
+            last_memory=last_memory,
+        )
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[img, prompt],

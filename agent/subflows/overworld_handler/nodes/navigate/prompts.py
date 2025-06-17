@@ -10,6 +10,11 @@ The following explored, walkable tiles are adjacent to unseen territory on the c
 {exploration_candidates}
 </exploration_candidates>
 
+Your most recent raw memory is repeated below for reference. The "thoughts" in your response will be appended to the end of this memory:
+<memory>
+{last_memory}
+</memory>
+
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
 - thoughts: Your brief thoughts on where you would like to navigate to and why.
 - row: The row of the tile you would like to navigate to.

@@ -82,10 +82,12 @@ class NavigationService:
         """Determine the target coordinates to navigate to."""
         img = self.emulator.get_screenshot()
         game_state = self.emulator.get_game_state()
+        last_memory = self.raw_memory.pieces.get(self.iteration) or ""
         prompt = DETERMINE_TARGET_COORDS_PROMPT.format(
             state=self.state_string_builder(game_state),
             walkable_tiles=", ".join(f'"{t}"' for t in AsciiTiles.get_walkable_tiles()),
             exploration_candidates=self._get_exploration_candidates(),
+            last_memory=last_memory,
         )
         response = await self.llm_service.get_llm_response_pydantic(
             messages=[img, prompt],
