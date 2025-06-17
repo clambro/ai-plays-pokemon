@@ -7,6 +7,7 @@ from agent.subflows.overworld_handler.nodes.critique.node import CritiqueNode
 from agent.subflows.overworld_handler.nodes.load_map.node import LoadMapNode
 from agent.subflows.overworld_handler.nodes.make_decision.node import MakeDecisionNode
 from agent.subflows.overworld_handler.nodes.navigate.node import NavigationNode
+from agent.subflows.overworld_handler.nodes.press_buttons.node import PressButtonsNode
 from agent.subflows.overworld_handler.nodes.should_critique.node import ShouldCritiqueNode
 from agent.subflows.overworld_handler.nodes.update_map.node import UpdateMapNode
 from emulator.emulator import YellowLegacyEmulator
@@ -20,6 +21,7 @@ def build_overworld_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Gra
     update_map = UpdateMapNode(emulator)
     decision_maker_overworld = MakeDecisionNode(emulator)
     navigation = NavigationNode(emulator)
+    press_buttons = PressButtonsNode(emulator)
 
     dummy_sink = DummyNode()
 
@@ -56,11 +58,15 @@ def build_overworld_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Gra
             ),
             Edge(
                 decision_maker_overworld,
-                dummy_sink,
-                ToolIs(None),
+                press_buttons,
+                ToolIs(OverworldTool.PRESS_BUTTONS),
             ),
             Edge(
                 navigation,
+                dummy_sink,
+            ),
+            Edge(
+                press_buttons,
                 dummy_sink,
             ),
         ],

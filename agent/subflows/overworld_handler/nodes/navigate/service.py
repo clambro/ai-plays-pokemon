@@ -87,7 +87,7 @@ class NavigationService:
             return False
 
         game_state = self.emulator.get_game_state()
-        if self.coords == (game_state.player.y, game_state.player.x):
+        if self.coords.row == game_state.player.y and self.coords.col == game_state.player.x:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,

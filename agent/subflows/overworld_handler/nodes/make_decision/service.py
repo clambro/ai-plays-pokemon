@@ -6,11 +6,10 @@ from agent.subflows.overworld_handler.nodes.make_decision.schemas import (
     Decision,
     MakeDecisionResponse,
 )
-from common.enums import AsciiTiles, MapId
+from common.enums import AsciiTiles
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
-from emulator.enums import Button, FacingDirection
 from memory.raw_memory import RawMemory, RawMemoryPiece
 from overworld_map.schemas import OverworldMap
 
@@ -58,16 +57,20 @@ class MakeDecisionService:
             )
 
         position = (game_state.player.y, game_state.player.x)
-        thought = (
-            f"Current map: {game_state.map.id.name} at coordinates {position}, facing"
-            f" {game_state.player.direction.name}. {response.thoughts}"
+        self.raw_memory.append(
+            RawMemoryPiece(
+                iteration=self.iteration,
+                content=(
+                    f"Current map: {game_state.map.id.name} at coordinates {position}, facing"
+                    f" {game_state.player.direction.name}. {response.thoughts}"
+                ),
+            ),
         )
-
         if response.navigation_args:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
-                    content=f"{thought} Navigating to {response.navigation_args}.",
+                    content=f"Navigating to {response.navigation_args}.",
                 ),
             )
             return Decision(
@@ -75,32 +78,9 @@ class MakeDecisionService:
                 tool=OverworldTool.NAVIGATION,
                 navigation_args=response.navigation_args,
             )
-        if response.buttons:
-            buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"{thought} Selected the following buttons: {[str(b) for b in buttons]}."
-                    ),
-                ),
-            )
-            for b in buttons:
-                await self.emulator.press_buttons([b])
-                passed_collision = await self._check_for_collision(
-                    button=b,
-                    prev_map_id=game_state.map.id,
-                    prev_coords=(game_state.player.y, game_state.player.x),
-                    prev_direction=game_state.player.direction,
-                )
-                passed_action = await self._check_for_action(b)
-                state_changed = await self._check_for_state_change()
-                if not passed_collision or not passed_action or state_changed:
-                    break
-
         return Decision(
             raw_memory=self.raw_memory,
-            tool=None,
+            tool=OverworldTool.PRESS_BUTTONS,
             navigation_args=None,
         )
 
@@ -125,64 +105,3 @@ class MakeDecisionService:
             return "No exploration candidates found."
 
         return ", ".join(f"({y}, {x})" for y, x in candidates)
-
-    async def _check_for_collision(
-        self,
-        button: Button,
-        prev_map_id: MapId,
-        prev_coords: tuple[int, int],
-        prev_direction: FacingDirection,
-    ) -> bool:
-        """
-        Check if the player bumped into a wall and add a note to the raw memory if so.
-        Returns True if the check passed, False otherwise.
-        """
-        if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN]:
-            return True
-
-        await self.emulator.wait_for_animation_to_finish()
-        game_state = self.emulator.get_game_state()
-        if (
-            prev_map_id == game_state.map.id
-            and prev_coords == (game_state.player.y, game_state.player.x)
-            and prev_direction == game_state.player.direction
-        ):
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"My position did not change after pressing the '{button}' button. Did I"
-                        f" bump into something?"
-                    ),
-                ),
-            )
-            return False
-        return True
-
-    async def _check_for_action(self, button: Button) -> bool:
-        """
-        Check if the player hit the action button but nothing happened.
-        Returns True if the check passed, False otherwise.
-        """
-        if button != Button.A:
-            return True
-
-        await self.emulator.wait_for_animation_to_finish()
-        game_state = self.emulator.get_game_state()
-        if not game_state.is_text_on_screen():
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        "I pressed the action button but nothing happened. There must not be"
-                        " anything to interact with in the direction I am facing."
-                    ),
-                ),
-            )
-            return False
-        return True
-
-    async def _check_for_state_change(self) -> bool:
-        """Check if the movement triggered a state change to dialog or a battle."""
-        game_state = self.emulator.get_game_state()
-        return game_state.is_text_on_screen() or game_state.battle.is_in_battle
