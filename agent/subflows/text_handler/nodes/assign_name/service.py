@@ -52,7 +52,7 @@ class AssignNameService:
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
-                        f"I attempted to enter an invalid name: {e}."
+                        f"I attempted to enter an invalid name: {e}"
                         f" I need to pay closer attention to the rules and try again."
                     ),
                 ),
@@ -74,7 +74,6 @@ class AssignNameService:
             prompt,
             schema=NameResponse,
             prompt_name="get_name",
-            thinking_tokens=None,
         )
         self.raw_memory.append(RawMemoryPiece(iteration=self.iteration, content=response.thoughts))
         return response.name

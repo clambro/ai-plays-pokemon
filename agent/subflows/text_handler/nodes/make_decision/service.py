@@ -43,7 +43,6 @@ class DecisionMakerTextService:
                 messages=[img, prompt],
                 schema=DecisionMakerTextResponse,
                 prompt_name="make_text_decision",
-                thinking_tokens=None,
             )
             self.raw_memory.append(
                 RawMemoryPiece(
