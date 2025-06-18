@@ -14,7 +14,6 @@ Done?
 
 ### Useful Tools and Additions
 * Get all accessible tiles in the nav tool, and point out the map boundary tiles
-* Add a coords data type
 
 * Add a grid to the overworld screen and overlay collisions
 
@@ -37,6 +36,7 @@ Done?
 * Add a strength puzzle solver
 * Add event flags for tracking progress (00:d746 wEventFlags -- check the decomp for details)
 * Add team rocket spin puzzle tiles to navigation
+* Does riding the bike break navigation?
 
 * Some kind of twitch frontend
 * Custom music player to avoid the little async issues?
