@@ -199,14 +199,8 @@ class NavigationService:
 
         def _get_neighbors(pos: Coords) -> list[Coords]:
             neighbors = []
-            deltas = [
-                Coords(row=0, col=1),
-                Coords(row=1, col=0),
-                Coords(row=0, col=-1),
-                Coords(row=-1, col=0),
-            ]
-            for d in deltas:
-                new_pos = pos + d
+            for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+                new_pos = pos + (dy, dx)  # noqa: RUF005
                 if (
                     0 <= new_pos.row < self.current_map.height
                     and 0 <= new_pos.col < self.current_map.width
@@ -214,9 +208,9 @@ class NavigationService:
                     target_tile = self.current_map.ascii_tiles_ndarray[new_pos.row, new_pos.col]
                     if target_tile in AsciiTiles.get_walkable_tiles():
                         neighbors.append(new_pos)
-                    elif target_tile == AsciiTiles.LEDGE and d.y == 1:
+                    elif target_tile == AsciiTiles.LEDGE and dy == 1:
                         # Account for the fact that we can jump down ledges, skipping a tile.
-                        neighbors.append(new_pos + Coords(row=1, col=0))
+                        neighbors.append(new_pos + (1, 0))  # noqa: RUF005
             return neighbors
 
         open_set = {start_pos}
@@ -234,13 +228,13 @@ class NavigationService:
                     prev = came_from[current]
                     delta = current - prev
 
-                    if delta.y > 0:
+                    if delta.row > 0:
                         path.append(Button.DOWN)
-                    elif delta.y < 0:
+                    elif delta.row < 0:
                         path.append(Button.UP)
-                    elif delta.x > 0:
+                    elif delta.col > 0:
                         path.append(Button.RIGHT)
-                    elif delta.x < 0:
+                    elif delta.col < 0:
                         path.append(Button.LEFT)
 
                     current = prev

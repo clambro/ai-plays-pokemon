@@ -38,10 +38,14 @@ class Coords(BaseModel):
         """Hash the coordinate pair."""
         return hash((self.row, self.col))
 
-    def __add__(self, other: "Coords") -> "Coords":
+    def __add__(self, other: "Coords | tuple[int, int]") -> "Coords":
         """Add two coordinates together."""
-        return Coords(row=self.row + other.row, col=self.col + other.col)
+        if isinstance(other, Coords):
+            return Coords(row=self.row + other.row, col=self.col + other.col)
+        return Coords(row=self.row + other[0], col=self.col + other[1])
 
-    def __sub__(self, other: "Coords") -> "Coords":
+    def __sub__(self, other: "Coords | tuple[int, int]") -> "Coords":
         """Subtract two coordinates."""
-        return Coords(row=self.row - other.row, col=self.col - other.col)
+        if isinstance(other, Coords):
+            return Coords(row=self.row - other.row, col=self.col - other.col)
+        return Coords(row=self.row - other[0], col=self.col - other[1])

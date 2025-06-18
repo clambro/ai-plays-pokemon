@@ -99,7 +99,7 @@ class YellowLegacyGameState(BaseModel):
             or coords.col >= self.screen.right
         ):
             return None
-        return coords - Coords(row=self.screen.top, col=self.screen.left)
+        return coords - (self.screen.top, self.screen.left)
 
     def get_ascii_screen(self) -> AsciiScreenWithEntities:
         """
