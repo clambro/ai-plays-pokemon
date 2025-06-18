@@ -13,8 +13,6 @@ Done?
 * Add node tests for the LLM calls
 
 ### Useful Tools and Additions
-* Get all accessible tiles in the nav tool, and point out the map boundary tiles
-
 * Add a grid to the overworld screen and overlay collisions
 
 * Detailed subflow for battles. Battle type (e.g. trainer, safari zone, etc.) is at 0xD05A, and the move menus are at 0xCCDB
