@@ -8,16 +8,6 @@ class Coords(BaseModel):
     col: int
 
     @property
-    def y(self) -> int:
-        """Alias for row."""
-        return self.row
-
-    @property
-    def x(self) -> int:
-        """Alias for col."""
-        return self.col
-
-    @property
     def length(self) -> int:
         """Get the length in manhattan distance of the coordinate pair."""
         return abs(self.row) + abs(self.col)
