@@ -4,6 +4,7 @@ from agent.subflows.overworld_handler.nodes.press_buttons.prompts import PRESS_B
 from agent.subflows.overworld_handler.nodes.press_buttons.schemas import PressButtonsResponse
 from common.enums import MapId
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
+from common.schemas import Coords
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button, FacingDirection
@@ -61,7 +62,7 @@ class PressButtonsService:
             passed_collision = await self._check_for_collision(
                 button=b,
                 prev_map_id=game_state.map.id,
-                prev_coords=(game_state.player.y, game_state.player.x),
+                prev_coords=game_state.player.coords,
                 prev_direction=game_state.player.direction,
             )
             passed_action = await self._check_for_action(b)
@@ -74,7 +75,7 @@ class PressButtonsService:
         self,
         button: Button,
         prev_map_id: MapId,
-        prev_coords: tuple[int, int],
+        prev_coords: Coords,
         prev_direction: FacingDirection,
     ) -> bool:
         """
@@ -88,7 +89,7 @@ class PressButtonsService:
         game_state = self.emulator.get_game_state()
         if (
             prev_map_id == game_state.map.id
-            and prev_coords == (game_state.player.y, game_state.player.x)
+            and prev_coords == game_state.player.coords
             and prev_direction == game_state.player.direction
         ):
             self.raw_memory.append(

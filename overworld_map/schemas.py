@@ -25,7 +25,7 @@ class OverworldSprite(Sprite):
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sprite."""
         description = self.description or DEFAULT_ENTITY_DESCRIPTION
-        out = f"sprite_{map_id}_{self.index} at ({self.y}, {self.x}): {description}"
+        out = f"sprite_{map_id}_{self.index} at {self.coords}: {description}"
         if self.moves_randomly:
             out += (
                 " Warning: This sprite wanders randomly around the map. Your reactions are too slow"
@@ -47,7 +47,7 @@ class OverworldSign(Sign):
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sign."""
         description = self.description or DEFAULT_ENTITY_DESCRIPTION
-        return f"sign_{map_id}_{self.index} at ({self.y}, {self.x}): {description}"
+        return f"sign_{map_id}_{self.index} at {self.coords}: {description}"
 
 
 class OverworldWarp(Warp):
@@ -62,7 +62,7 @@ class OverworldWarp(Warp):
         """Get a description of the warp."""
         if self.warp_type == WarpType.SINGLE:
             return "This is a single warp tile. Stand on it to warp."
-        if self.warp_type == WarpType.DOUBLE_VERTICAL and self.x == 0:
+        if self.warp_type == WarpType.DOUBLE_VERTICAL and self.coords.col == 0:
             return (
                 "This is a vertical double warp tile. Stand on either tile and walk LEFT to warp."
             )
@@ -70,7 +70,7 @@ class OverworldWarp(Warp):
             return (
                 "This is a vertical double warp tile. Stand on either tile and walk RIGHT to warp."
             )
-        if self.warp_type == WarpType.DOUBLE_HORIZONTAL and self.y == 0:
+        if self.warp_type == WarpType.DOUBLE_HORIZONTAL and self.coords.row == 0:
             return (
                 "This is a horizontal double warp tile. Stand on either tile and walk UP to warp."
             )
@@ -88,8 +88,8 @@ class OverworldWarp(Warp):
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the warp."""
         return (
-            f"warp_{map_id}_{self.index} at ({self.y}, {self.x}) leading to"
-            f" {self.destination.name}. {self.description}"
+            f"warp_{map_id}_{self.index} at {self.coords} leading to {self.destination.name}."
+            f" {self.description}"
         )
 
 
@@ -145,8 +145,7 @@ class OverworldMap(BaseModel):
             known_signs=self._get_sign_notes(),
             explored_percentage=f"{explored_percentage:.0%}",
             ascii_screen="\n".join("".join(row) for row in screen),
-            player_y=game_state.player.y,
-            player_x=game_state.player.x,
+            player_coords=game_state.player.coords,
             player_direction=game_state.player.direction,
             tile_above=tile_above,
             tile_below=tile_below,

@@ -17,6 +17,11 @@ class Coords(BaseModel):
         """Alias for col."""
         return self.col
 
+    @property
+    def length(self) -> int:
+        """Get the length in manhattan distance of the coordinate pair."""
+        return abs(self.row) + abs(self.col)
+
     def __str__(self) -> str:
         return f"({self.row}, {self.col})"
 

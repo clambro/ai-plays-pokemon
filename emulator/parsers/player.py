@@ -1,6 +1,7 @@
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
+from common.schemas import Coords
 from emulator.enums import FacingDirection
 from emulator.parsers.utils import get_text_from_byte_array
 
@@ -9,8 +10,7 @@ class Player(BaseModel):
     """The state of the player character."""
 
     name: str
-    y: int
-    x: int
+    coords: Coords
     direction: FacingDirection
     money: int
     badges: list[str]
@@ -34,8 +34,7 @@ def parse_player(mem: PyBoyMemoryView) -> Player:
 
     return Player(
         name=name,
-        y=mem[0xD3AE],
-        x=mem[0xD3AF],
+        coords=Coords(row=mem[0xD3AE], col=mem[0xD3AF]),
         direction=_INT_TO_FACING_DIRECTION[mem[0xD577]],
         money=_read_money(mem),
         badges=badges,

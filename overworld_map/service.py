@@ -140,7 +140,7 @@ async def _add_remove_map_entities(
                 ),
             )
             for s in overworld_map.known_sprites.values()
-            if game_state.to_screen_coords(s.y, s.x) is not None and not s.is_rendered
+            if game_state.to_screen_coords(s.coords) is not None and not s.is_rendered
         ]
     )
     await asyncio.gather(*tasks)

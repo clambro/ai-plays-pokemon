@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles
+from common.schemas import Coords
 from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.map import Map, parse_map_state
 from emulator.parsers.player import Player, parse_player
@@ -84,22 +85,21 @@ class YellowLegacyGameState(BaseModel):
         out += "</player_info>"
         return out
 
-    def to_screen_coords(self, y: int, x: int) -> tuple[int, int] | None:
+    def to_screen_coords(self, coords: Coords) -> Coords | None:
         """
         Convert map coordinates to screen coordinates.
 
-        :param y: The map y coordinate.
-        :param x: The map x coordinate.
+        :param coords: The map coordinates.
         :return: The screen coordinates (y, x) or None if they're off screen.
         """
         if (
-            y < self.screen.top
-            or y >= self.screen.bottom
-            or x < self.screen.left
-            or x >= self.screen.right
+            coords.row < self.screen.top
+            or coords.row >= self.screen.bottom
+            or coords.col < self.screen.left
+            or coords.col >= self.screen.right
         ):
             return None
-        return (y - self.screen.top, x - self.screen.left)
+        return coords - Coords(row=self.screen.top, col=self.screen.left)
 
     def get_ascii_screen(self) -> AsciiScreenWithEntities:
         """
@@ -111,24 +111,24 @@ class YellowLegacyGameState(BaseModel):
 
         on_screen_sprites = []
         for s in self.sprites.values():
-            if s.is_rendered and (screen_coords := self.to_screen_coords(s.y, s.x)):
+            if s.is_rendered and (screen_coords := self.to_screen_coords(s.coords)):
                 on_screen_sprites.append(s)
-                blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.SPRITE
+                blocks[screen_coords.row, screen_coords.col] = AsciiTiles.SPRITE
 
         pikachu = self.pikachu
-        if pikachu.is_rendered and (screen_coords := self.to_screen_coords(pikachu.y, pikachu.x)):
-            blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.PIKACHU
+        if pikachu.is_rendered and (screen_coords := self.to_screen_coords(pikachu.coords)):
+            blocks[screen_coords.row, screen_coords.col] = AsciiTiles.PIKACHU
 
         on_screen_warps = []
         for w in self.warps.values():
-            if screen_coords := self.to_screen_coords(w.y, w.x):
-                blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.WARP
+            if screen_coords := self.to_screen_coords(w.coords):
+                blocks[screen_coords.row, screen_coords.col] = AsciiTiles.WARP
                 on_screen_warps.append(w)
 
         on_screen_signs = []
         for s in self.signs.values():
-            if screen_coords := self.to_screen_coords(s.y, s.x):
-                blocks[screen_coords[0], screen_coords[1]] = AsciiTiles.SIGN
+            if screen_coords := self.to_screen_coords(s.coords):
+                blocks[screen_coords.row, screen_coords.col] = AsciiTiles.SIGN
                 on_screen_signs.append(s)
 
         return AsciiScreenWithEntities(

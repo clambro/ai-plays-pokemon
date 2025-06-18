@@ -91,9 +91,7 @@ class UpdateMapService:
         :param prompt: The prompt to use for the LLM.
         """
         updatable_entities = [
-            e
-            for e in entities
-            if abs(e.y - game_state.player.y) + abs(e.x - game_state.player.x) <= 1
+            e for e in entities if (e.coords - game_state.player.coords).length <= 1
         ]
         if not updatable_entities:
             return
