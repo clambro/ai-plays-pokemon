@@ -24,6 +24,7 @@ Your most recent raw memory is repeated below for reference. The "thoughts" in y
 <memory>
 {last_memory}
 </memory>
+If you see coordinates in the <memory> section, do not treat them as mandatory. The full list of accessible coordinates was not available to you when you generated the memory, and you thus may have generated coordinates that are not accessible. Determine what the memory is trying to tell you and choose the best coordinates from the list of accessible coordinates above. Choosing inaccessible coordinates will result in an error.
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
 - thoughts: Your brief thoughts on where you would like to navigate to and why.
