@@ -31,6 +31,9 @@ class OverworldHandlerSubflow(
 
         if state.raw_memory is None:
             raise ValueError("Raw memory is not set")
+        if state.last_critique_iteration is None:
+            raise ValueError("Last critique iteration is not set")
 
         await parent_store.set_raw_memory(state.raw_memory)
         await parent_store.set_emulator_save_state_from_emulator(self.emulator)
+        await parent_store.set_last_critique_iteration(state.last_critique_iteration)

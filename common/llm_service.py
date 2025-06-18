@@ -29,14 +29,15 @@ SAFETY_SETTINGS = [
     for cat in HarmCategory
     if cat != HarmCategory.HARM_CATEGORY_UNSPECIFIED  # Can't unblock the unspecified category.
 ]
+MIN_THINKING_TOKENS = 512  # This is the minimum allowed for the 2.5 models.
 
 
 class GeminiLLMEnum(StrEnum):
     """Enum for the Gemini model names."""
 
-    PRO = "gemini-2.5-pro-preview-06-05"
-    FLASH = "gemini-2.5-flash-preview-04-17"
-    FLASH_LITE = "gemini-2.0-flash-lite-001"
+    PRO = "gemini-2.5-pro"
+    FLASH = "gemini-2.5-flash"
+    FLASH_LITE = "gemini-2.5-flash-lite-preview-06-17"
 
 
 class GeminiLLMService:
@@ -52,7 +53,7 @@ class GeminiLLMService:
         prompt_name: str,
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = 0.0,
-        thinking_tokens: int | None = 256,
+        thinking_tokens: int = MIN_THINKING_TOKENS,
     ) -> str:
         """
         Get a response from the Gemini LLM as a string.
@@ -84,7 +85,7 @@ class GeminiLLMService:
         prompt_name: str,
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = 0.0,
-        thinking_tokens: int | None = 256,
+        thinking_tokens: int = MIN_THINKING_TOKENS,
     ) -> PydanticModel:
         """
         Get a Pydantic model from the Gemini LLM, parsed from a JSON response.

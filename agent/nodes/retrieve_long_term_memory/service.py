@@ -33,7 +33,6 @@ class RetrieveLongTermMemoryService:
         query = await self.llm_service.get_llm_response(
             [screenshot, prompt],
             prompt_name="get_retrieval_query",
-            thinking_tokens=None,
         )
 
         pieces = await self.retrieval_service.get_most_relevant_memories(query, self.iteration)

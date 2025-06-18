@@ -1,7 +1,3 @@
-from typing import Literal
-
-from pydantic import BaseModel
-
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from agent.state import AgentState
 from agent.subflows.overworld_handler.enums import OverworldTool
@@ -22,10 +18,8 @@ class OverworldHandlerState(BaseStateWithEmulator):
     long_term_memory: LongTermMemory | None = None
     goals: Goals | None = None
     current_map: OverworldMap | None = None
-    should_critique: bool | None = None
     tool: OverworldTool | None = None
-    tool_args: BaseModel | None = None
-    needs_generic_handling: bool | None = None
+    last_critique_iteration: int | None = None
 
     def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
         """Get a string representation of the agent and game state to be used in prompts."""
@@ -55,6 +49,7 @@ class OverworldHandlerStore(BaseStoreWithEmulator[OverworldHandlerState]):
                 "summary_memory": parent_state.summary_memory,
                 "long_term_memory": parent_state.long_term_memory,
                 "goals": parent_state.goals,
+                "last_critique_iteration": parent_state.last_critique_iteration,
             },
         )
 
@@ -66,14 +61,10 @@ class OverworldHandlerStore(BaseStoreWithEmulator[OverworldHandlerState]):
         """Set the current map."""
         await self.set_state({"current_map": current_map})
 
-    async def set_should_critique(self, should_critique: Literal[True, False]) -> None:
-        """Set the should critique."""
-        await self.set_state({"should_critique": should_critique})
-
     async def set_tool(self, tool: OverworldTool | None) -> None:
         """Set the tool."""
         await self.set_state({"tool": tool})
 
-    async def set_tool_args(self, tool_args: BaseModel | None) -> None:
-        """Set the tool args."""
-        await self.set_state({"tool_args": tool_args})
+    async def set_last_critique_iteration(self, last_critique_iteration: int) -> None:
+        """Set the last critique iteration."""
+        await self.set_state({"last_critique_iteration": last_critique_iteration})

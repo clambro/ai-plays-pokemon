@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from loguru import logger
 from pydantic import BaseModel, Field
 
@@ -14,32 +16,41 @@ class RawMemoryPiece(BaseModel):
         """Get a string representation of the memory piece."""
         return f"[{self.iteration}]: {self.content}"
 
+    def add_content(self, content: str) -> None:
+        """Append content to the memory piece with a new line."""
+        self.content += "\n" + content
+
 
 class RawMemory(BaseModel):
     """The Agent's raw memory."""
 
     max_size: int = RAW_MEMORY_MAX_SIZE
-    pieces: list[RawMemoryPiece] = Field(default_factory=list)
+    pieces: OrderedDict[int, RawMemoryPiece] = Field(default_factory=OrderedDict)
 
     def __str__(self) -> str:
         """Get a string representation of the memory."""
         if not self.pieces:
             return ""
+        latest_iteration = list(self.pieces.keys())[-1]
         out = (
             f"Here are the raw thoughts you have had prior to this point. The bracketed number is"
             f" the incremented iteration number at which you had the thought. Higher numbers are"
-            f" more recent. The latest iteration is {self.pieces[-1].iteration}. Only the most"
-            f" recent {self.max_size} thoughts are displayed in this section. To give you an"
-            f" indication of the passage of time, each iteration takes roughly three seconds."
+            f" more recent. The latest iteration is {latest_iteration}. Only the most recent"
+            f" {self.max_size} thoughts are displayed in this section. To give you an indication of"
+            f" the passage of time, each iteration takes roughly three seconds."
         )
         out += "\n<raw_memory>\n"
-        out += "\n".join([str(piece) for piece in self.pieces])
+        out += "\n".join([str(piece) for piece in self.pieces.values()])
         out += "\n</raw_memory>"
         return out
 
     def append(self, *pieces: RawMemoryPiece) -> None:
         """Append a piece to the memory."""
-        self.pieces.extend(pieces)
-        self.pieces = self.pieces[-self.max_size :]
         for piece in pieces:
-            logger.info(f"[{piece.iteration}] New thought: {piece.content}")
+            if piece.iteration in self.pieces:
+                logger.info(f"Appending to thought: {piece.content}")
+                self.pieces[piece.iteration].add_content(piece.content)
+            else:
+                logger.info(f"Adding new thought: {piece}")
+                self.pieces[piece.iteration] = piece
+        self.pieces = OrderedDict(sorted(self.pieces.items(), key=lambda x: x[0])[-self.max_size :])

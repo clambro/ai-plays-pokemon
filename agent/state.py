@@ -17,6 +17,7 @@ class AgentState(BaseStateWithEmulator):
 
     folder: Path
     iteration: int = 0
+    last_critique_iteration: int = 0
     raw_memory: RawMemory = Field(default_factory=RawMemory)
     summary_memory: SummaryMemory = Field(default_factory=SummaryMemory)
     long_term_memory: LongTermMemory = Field(default_factory=LongTermMemory)
@@ -75,3 +76,7 @@ class AgentStore(BaseStoreWithEmulator[AgentState]):
     ) -> None:
         """Set the should retrieve memory."""
         await self.set_state({"should_retrieve_memory": should_retrieve_memory})
+
+    async def set_last_critique_iteration(self, last_critique_iteration: int) -> None:
+        """Set the last critique iteration."""
+        await self.set_state({"last_critique_iteration": last_critique_iteration})
