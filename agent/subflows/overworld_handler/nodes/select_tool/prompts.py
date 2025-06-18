@@ -31,6 +31,7 @@ NAVIGATION_TOOL_INFO = """
 The navigation tool allows you to navigate to any revealed, accessible tile on the current map using an A* search algorithm. It is useful for:
 - Moving the player around the current map more than one tile at a time. This should be your primary mode of movement.
 - Navigating directly to warp tiles.
+- Navigating to the boundaries of the current map so that you can transition to the next map in the next iteration
 - Revealing unexplored territory on the current map.
 
 Note that the navigation tool cannot transition you from one map to another. It can bring you to the edge of the current map, but you will need to use the button tool on your next iteration to transition to the next map.
@@ -41,6 +42,6 @@ Give general guidance on where you want to go in your thoughts, but do not provi
 
 CRITIQUE_TOOL_INFO = """
 <critique_tool>
-The critique tool is a powerful (but expensive!) tool to get an external model to critique your performance and help get you unstuck. Use it if you are stuck in a loop or failing to make progress towards your goals. If you seem to be moving forward and making progress towards your goals, you should not use the critique tool.
+The critique tool is a powerful but expensive tool to get an external model to critique your performance and help get you unstuck. Use it if you are confused, or stuck in a loop, or failing to make progress towards your goals.  A good indication that you are stuck is if you are repeating the same actions over and over again. Do not use the critique tool if you are confident in your actions and are making progress towards your goals.
 </critique_tool>
 """.strip()
