@@ -42,7 +42,7 @@ class NavigationService:
             logger.warning(f"Error determining target coordinates. Skipping. {e}")
             return self.current_map, self.raw_memory
 
-        if not self._validate_target_coords(coords):
+        if not self._validate_target_coords(coords, accessible_coords):
             logger.warning("Cancelling navigation due to invalid target coordinates.")
             return self.current_map, self.raw_memory
 
@@ -201,62 +201,19 @@ class NavigationService:
 
         return "\n".join(output)
 
-    def _validate_target_coords(self, coords: Coords) -> bool:
+    def _validate_target_coords(self, coords: Coords, accessible_coords: list[Coords]) -> bool:
         """Validate the target coordinates."""
-        if (
-            coords.row < 0
-            or coords.col < 0
-            or coords.row >= self.current_map.height
-            or coords.col >= self.current_map.width
-        ):
+        if coords not in accessible_coords:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
-                        f"Navigation failed. Target coordinates {coords} are outside of the"
-                        f" {self.current_map.id.name} map boundary."
+                        f"Navigation failed. The target coordinates {coords} are not in the list of"
+                        f" accessible coordinates that was provided to me."
                     ),
                 ),
             )
             return False
-
-        game_state = self.emulator.get_game_state()
-        if coords == game_state.player.coords:
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"Navigation failed. Target coordinates {coords} are the same as my"
-                        f" current position. I am already there."
-                    ),
-                ),
-            )
-            return False
-
-        target_tile = self.current_map.ascii_tiles_ndarray[coords.row, coords.col]
-        if target_tile == AsciiTiles.UNSEEN:
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"Navigation failed. Target coordinates {coords} are unexplored."
-                        f" I must explore this area before I can navigate to it."
-                    ),
-                ),
-            )
-            return False
-        if target_tile not in AsciiTiles.get_walkable_tiles():
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"Navigation failed. Target coordinates {coords} are on a"
-                        f' non-walkable tile of type "{target_tile}".'
-                    ),
-                ),
-            )
-            return False
-
         return True
 
     def _calculate_path_to_target(
