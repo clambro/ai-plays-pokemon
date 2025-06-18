@@ -4,6 +4,7 @@ from agent.subflows.overworld_handler.nodes.navigate.prompts import DETERMINE_TA
 from agent.subflows.overworld_handler.nodes.navigate.schemas import NavigationResponse
 from common.enums import AsciiTiles, MapId
 from common.llm_service import GeminiLLMEnum, GeminiLLMService
+from common.schemas import Coords
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button, FacingDirection
@@ -66,7 +67,7 @@ class NavigationService:
             await self.emulator.press_buttons([button])
             await self.emulator.wait_for_animation_to_finish()
 
-            prev_pos = (game_state.player.y, game_state.player.x)
+            prev_pos = game_state.player.coords
             game_state = self.emulator.get_game_state()
             if self._should_cancel_navigation(game_state, prev_pos, starting_map_id, coords):
                 return self.current_map, self.raw_memory
@@ -78,7 +79,7 @@ class NavigationService:
             )
         return self.current_map, self.raw_memory
 
-    async def _determine_target_coords(self) -> tuple[int, int]:
+    async def _determine_target_coords(self) -> Coords:
         """Determine the target coordinates to navigate to."""
         img = self.emulator.get_screenshot()
         game_state = self.emulator.get_game_state()
@@ -124,15 +125,19 @@ class NavigationService:
 
         return ", ".join(f"({y}, {x})" for y, x in candidates)
 
-    def _validate_target_coords(self, coords: tuple[int, int]) -> bool:
+    def _validate_target_coords(self, coords: Coords) -> bool:
         """Validate the target coordinates."""
-        row, col = coords
-        if row < 0 or col < 0 or row >= self.current_map.height or col >= self.current_map.width:
+        if (
+            coords.row < 0
+            or coords.col < 0
+            or coords.row >= self.current_map.height
+            or coords.col >= self.current_map.width
+        ):
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
-                        f"Navigation failed. Target coordinates ({row}, {col}) are outside of the"
+                        f"Navigation failed. Target coordinates {coords} are outside of the"
                         f" {self.current_map.id.name} map boundary."
                     ),
                 ),
@@ -140,25 +145,25 @@ class NavigationService:
             return False
 
         game_state = self.emulator.get_game_state()
-        if row == game_state.player.y and col == game_state.player.x:
+        if coords == game_state.player.coords:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
-                        f"Navigation failed. Target coordinates ({row}, {col}) are the same as my"
+                        f"Navigation failed. Target coordinates {coords} are the same as my"
                         f" current position. I am already there."
                     ),
                 ),
             )
             return False
 
-        target_tile = self.current_map.ascii_tiles_ndarray[row, col]
+        target_tile = self.current_map.ascii_tiles_ndarray[coords.row, coords.col]
         if target_tile == AsciiTiles.UNSEEN:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
-                        f"Navigation failed. Target coordinates ({row}, {col}) are unexplored."
+                        f"Navigation failed. Target coordinates {coords} are unexplored."
                         f" I must explore this area before I can navigate to it."
                     ),
                 ),
@@ -169,7 +174,7 @@ class NavigationService:
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
-                        f"Navigation failed. Target coordinates ({row}, {col}) are on a"
+                        f"Navigation failed. Target coordinates {coords} are on a"
                         f' non-walkable tile of type "{target_tile}".'
                     ),
                 ),
@@ -180,34 +185,36 @@ class NavigationService:
 
     def _calculate_path_to_target(
         self,
-        target_pos: tuple[int, int],
+        target_pos: Coords,
         game_state: YellowLegacyGameState,
     ) -> list[Button] | None:
         """
         Calculate the path to the target coordinates as a list of button presses using the A* search
         algorithm.
         """
-        start_pos = (game_state.player.y, game_state.player.x)
+        start_pos = game_state.player.coords
 
-        def _get_distance(a: tuple[int, int], b: tuple[int, int]) -> float:
-            return abs(a[0] - b[0]) + abs(a[1] - b[1])
+        def _get_distance(a: Coords, b: Coords) -> float:
+            return (a - b).length
 
-        def _get_neighbors(pos: tuple[int, int]) -> list[tuple[int, int]]:
-            y, x = pos
+        def _get_neighbors(pos: Coords) -> list[Coords]:
             neighbors = []
             for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-                new_y, new_x = y + dy, x + dx
-                if 0 <= new_y < self.current_map.height and 0 <= new_x < self.current_map.width:
-                    target_tile = self.current_map.ascii_tiles_ndarray[new_y, new_x]
+                new_pos = pos + (dy, dx)  # noqa: RUF005
+                if (
+                    0 <= new_pos.row < self.current_map.height
+                    and 0 <= new_pos.col < self.current_map.width
+                ):
+                    target_tile = self.current_map.ascii_tiles_ndarray[new_pos.row, new_pos.col]
                     if target_tile in AsciiTiles.get_walkable_tiles():
-                        neighbors.append((new_y, new_x))
+                        neighbors.append(new_pos)
                     elif target_tile == AsciiTiles.LEDGE and dy == 1:
                         # Account for the fact that we can jump down ledges, skipping a tile.
-                        neighbors.append((new_y + 1, new_x))
+                        neighbors.append(new_pos + (1, 0))  # noqa: RUF005
             return neighbors
 
         open_set = {start_pos}
-        came_from = {}
+        came_from: dict[Coords, Coords] = {}
         g_score = {start_pos: 0}
         f_score = {start_pos: _get_distance(start_pos, target_pos)}
 
@@ -219,18 +226,15 @@ class NavigationService:
                 path = []
                 while current in came_from:
                     prev = came_from[current]
-                    # Calculate direction
-                    dy = current[0] - prev[0]
-                    dx = current[1] - prev[1]
+                    delta = current - prev
 
-                    # Convert direction to button
-                    if dy > 0:
+                    if delta.row > 0:
                         path.append(Button.DOWN)
-                    elif dy < 0:
+                    elif delta.row < 0:
                         path.append(Button.UP)
-                    elif dx > 0:
+                    elif delta.col > 0:
                         path.append(Button.RIGHT)
-                    elif dx < 0:
+                    elif delta.col < 0:
                         path.append(Button.LEFT)
 
                     current = prev
@@ -262,33 +266,33 @@ class NavigationService:
         if not game_state.pikachu.is_rendered:
             return
 
-        player_pos = (game_state.player.y, game_state.player.x)
+        player_pos = game_state.player.coords
         facing = game_state.player.direction
-        pikachu_pos = (game_state.pikachu.y, game_state.pikachu.x)
+        pikachu_pos = game_state.pikachu.coords
         if (
             button == Button.UP
-            and player_pos[0] == pikachu_pos[0] + 1
+            and player_pos.row == pikachu_pos.row + 1
             and facing != FacingDirection.UP
         ):
             await self.emulator.press_buttons([Button.UP])
             await self.emulator.wait_for_animation_to_finish()
         elif (
             button == Button.DOWN
-            and player_pos[0] == pikachu_pos[0] - 1
+            and player_pos.row == pikachu_pos.row - 1
             and facing != FacingDirection.DOWN
         ):
             await self.emulator.press_buttons([Button.DOWN])
             await self.emulator.wait_for_animation_to_finish()
         elif (
             button == Button.LEFT
-            and player_pos[1] == pikachu_pos[1] + 1
+            and player_pos.col == pikachu_pos.col + 1
             and facing != FacingDirection.LEFT
         ):
             await self.emulator.press_buttons([Button.LEFT])
             await self.emulator.wait_for_animation_to_finish()
         elif (
             button == Button.RIGHT
-            and player_pos[1] == pikachu_pos[1] - 1
+            and player_pos.col == pikachu_pos.col - 1
             and facing != FacingDirection.RIGHT
         ):
             await self.emulator.press_buttons([Button.RIGHT])
@@ -297,12 +301,12 @@ class NavigationService:
     def _should_cancel_navigation(
         self,
         game_state: YellowLegacyGameState,
-        prev_pos: tuple[int, int],
+        prev_pos: Coords,
         starting_map_id: MapId,
-        target_pos: tuple[int, int],
+        target_pos: Coords,
     ) -> bool:
         """Check if we should cancel navigation."""
-        new_pos = (game_state.player.y, game_state.player.x)
+        new_pos = game_state.player.coords
         if new_pos == target_pos:
             logger.info("Navigation to target coordinates completed.")
             return True

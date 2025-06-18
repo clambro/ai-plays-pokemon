@@ -1,6 +1,8 @@
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
+from common.schemas import Coords
+
 _RANDOM_MOVEMENT = 0xFE
 _NOT_RENDERED = 0xFF
 
@@ -9,8 +11,7 @@ class Sprite(BaseModel):
     """A sprite on the current map."""
 
     index: int
-    y: int
-    x: int
+    coords: Coords
     is_rendered: bool
     moves_randomly: bool
 
@@ -32,8 +33,7 @@ def parse_sprites(mem: PyBoyMemoryView) -> dict[int, Sprite]:
         sprites[index] = Sprite(
             index=index,
             # Sprite coordinates start counting from 4 for some reason.
-            y=mem[0xC204 + i] - 4,
-            x=mem[0xC205 + i] - 4,
+            coords=Coords(row=mem[0xC204 + i] - 4, col=mem[0xC205 + i] - 4),
             is_rendered=mem[0xC102 + i] != _NOT_RENDERED,
             moves_randomly=mem[0xC206 + i] == _RANDOM_MOVEMENT,
         )
@@ -50,8 +50,7 @@ def parse_pikachu_sprite(mem: PyBoyMemoryView) -> Sprite:
     return Sprite(
         index=15,
         # Sprite coordinates start counting from 4 for some reason.
-        y=mem[0xC2F4] - 4,
-        x=mem[0xC2F5] - 4,
+        coords=Coords(row=mem[0xC2F4] - 4, col=mem[0xC2F5] - 4),
         is_rendered=mem[0xC1F2] != _NOT_RENDERED,
         moves_randomly=False,
     )

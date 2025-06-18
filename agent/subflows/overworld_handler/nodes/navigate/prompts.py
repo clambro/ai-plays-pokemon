@@ -17,6 +17,5 @@ Your most recent raw memory is repeated below for reference. The "thoughts" in y
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
 - thoughts: Your brief thoughts on where you would like to navigate to and why.
-- row: The row of the tile you would like to navigate to.
-- col: The column of the tile you would like to navigate to.
+- coords: The row-column coordinates of the tile you would like to navigate to.
 """.strip()

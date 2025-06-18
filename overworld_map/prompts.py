@@ -38,7 +38,7 @@ The right side of the screen is currently at column {{screen_right}} in map coor
 </screen_position>
 
 <player_position>
-You, the player, are at position ({{player_y}}, {{player_x}}) in map coordinates.
+You, the player, are at position {{player_coords}} in map coordinates.
 You are facing {{player_direction}}.
 
 The tile directly above you is "{{tile_above}}".
