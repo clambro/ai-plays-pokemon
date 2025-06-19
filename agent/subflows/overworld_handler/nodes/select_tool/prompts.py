@@ -9,7 +9,7 @@ You have the following tools at your disposal:
 </tools>
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your brief thoughts on the current game state and which tool that you would like to use. Your reasoning should be concise and based on the uses listed for the tools above.
+- thoughts: Your one sentence long thoughts on which tool that you would like to use given the information provided. Your reasoning should be concise and based on the uses listed above for the tools. The tool that you select will continue this thought for you.
 - tool: The tool to use. The only valid tools are the ones listed above in the <tools> section, and the specific name you must use to identify them is indicated by TOOL_NAME.
 """.strip()
 
@@ -18,7 +18,7 @@ BUTTON_TOOL_INFO = """
 TOOL_NAME: "press_buttons"
 
 The button tool allows you to submit one or more button presses to the emulator. It is useful for:
-- Interacting with entities in the game.
+- Interacting with entities in the game (speaking to NPCs, picking up items, reading signs, etc.).
 - Opening the main menu.
 - Rotating the player.
 - Moving the player one or two tiles at a time.

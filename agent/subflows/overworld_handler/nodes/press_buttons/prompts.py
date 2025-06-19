@@ -11,12 +11,12 @@ The following (case-sensitive) buttons are available to you:
 - left: Used to move the player left.
 - right: Used to move the player right.
 
-Your most recent raw memory is repeated below for reference. The "thoughts" in your response will be appended to the end of this memory:
-<memory>
+Your most recent raw memory is repeated below for reference. The "thoughts" in your response will be appended verbatim to the end of this memory, so there is no need to duplicate information.
+<last_memory>
 {last_memory}
-</memory>
+</last_memory>
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your brief thoughts on which buttons to press and why.
+- thoughts: Your one sentence long thoughts on which buttons to press given the information provided.
 - buttons: The button(s) to press. This can either be a single button, or a list of buttons to be pressed in sequence. You should generally prefer to press a single button at a time, but you can use a combination of buttons to, say, rotate the player and then interact with an object.
 """.strip()

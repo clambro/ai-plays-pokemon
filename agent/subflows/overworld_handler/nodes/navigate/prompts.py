@@ -20,13 +20,13 @@ If there are maps connected to the current map, the following section will guide
 {map_boundaries}
 </map_boundaries>
 
-Your most recent raw memory is repeated below for reference. The "thoughts" in your response will be appended to the end of this memory:
-<memory>
+Your most recent raw memory is repeated below for reference. The "thoughts" in your response will be appended verbatim to the end of this memory, so there is no need to duplicate information.
+<last_memory>
 {last_memory}
-</memory>
-If you see coordinates in the <memory> section, do not treat them as mandatory. The full list of accessible coordinates was not available to you when you generated the memory, and you thus may have generated coordinates that are not accessible. Determine what the memory is trying to tell you and choose the best coordinates from the list of accessible coordinates above. Choosing inaccessible coordinates will result in an error.
+</last_memory>
+If you see coordinates in the <last_memory> section, do not treat them as mandatory. The full list of accessible coordinates was not available to you when you generated the memory, and you thus may have generated coordinates that are not accessible. Determine what the memory is trying to tell you and choose the best coordinates from the list of accessible coordinates above. Choosing inaccessible coordinates will result in an error.
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your brief thoughts on where you would like to navigate to and why.
+- thoughts: Your one sentence long thoughts on which coordinates you would like to navigate to given the information provided.
 - coords: The row-column coordinates of the tile you would like to navigate to. Must be one of the accessible coordinates provided above.
 """.strip()
