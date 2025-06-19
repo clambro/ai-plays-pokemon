@@ -115,10 +115,12 @@ class AssignNameService:
         row_diff = letter_loc[0] - cursor_row
         col_diff = letter_loc[1] - cursor_col
 
-        # If moving more than half the width, it's shorter to go the other way
+        # If moving more than half the width, it's shorter to go the other way.
         num_cols = 9
-        if abs(col_diff) > num_cols // 2:
-            col_diff = (col_diff + num_cols) % num_cols - num_cols
+        if col_diff > num_cols // 2:
+            col_diff = col_diff - num_cols
+        elif col_diff < -num_cols // 2:
+            col_diff = col_diff + num_cols
 
         buttons = []
         if row_diff > 0:
