@@ -15,7 +15,7 @@ class NavigationNode(Node[OverworldHandlerStore]):
 
     async def service(self, store: OverworldHandlerStore) -> None:
         """The service for the node."""
-        logger.info("Navigating to the given coordinates...")
+        logger.info("Using the navigation tool...")
 
         state = await store.get_state()
         if state.iteration is None:
