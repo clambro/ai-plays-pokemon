@@ -37,22 +37,14 @@ class UpdateMapService:
         self.emulator = emulator
 
     async def update_map(self) -> OverworldMap:
-        """Update the current map with the latest screen info."""
+        """Update the current map and nearby entities with the latest screen info."""
+        screenshot = self.emulator.get_screenshot()
         game_state = self.emulator.get_game_state()
         self.current_map = await update_map_with_screen_info(
             self.iteration,
             game_state,
             self.current_map,
         )
-        return self.current_map
-
-    async def update_entities(self) -> None:
-        """
-        Update the map entity memory of the valid targets for updating, as defined in
-        _update_entities.
-        """
-        game_state = self.emulator.get_game_state()
-        screenshot = self.emulator.get_screenshot()
         await asyncio.gather(
             *[
                 self._update_entities(
@@ -71,6 +63,7 @@ class UpdateMapService:
                 ),
             ],
         )
+        return self.current_map
 
     async def _update_entities(
         self,
