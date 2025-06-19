@@ -18,7 +18,7 @@ BUTTON_TOOL_INFO = """
 TOOL_NAME: "press_buttons"
 
 The button tool allows you to submit one or more button presses to the emulator. It is useful for:
-- Interacting with entities in the game (speaking to NPCs, picking up items, reading signs, etc.).
+- Interacting with entities in the game (speaking to NPCs, picking up items, reading signs, activating objects, etc.).
 - Opening the main menu.
 - Rotating the player.
 - Moving the player one or two tiles at a time.
@@ -39,6 +39,8 @@ The navigation tool allows you to navigate to any revealed, accessible tile on t
 - Navigating to the boundaries of the current map
 
 Note that the navigation tool cannot transition you from one map to another. It can bring you to the edge of the current map, but you will need to use the button tool on your next iteration to transition to the next map.
+
+The navigation tool cannot be used to interact with entities.
 
 Give general guidance on where you want to go in your thoughts (e.g. to a given warp tile, to a given map boundary, to explore unexplored territory, towards a certain sprite, etc.), but do not provide specific coordinates. The navigation tool will determine the legal target coordinates and prompt you again to choose from them.
 </navigation_tool>
