@@ -44,13 +44,18 @@ class DecisionMakerTextService:
                 schema=DecisionMakerTextResponse,
                 prompt_name="make_text_decision",
             )
+            buttons = (
+                [str(b) for b in response.buttons]
+                if isinstance(response.buttons, list)
+                else [str(response.buttons)]
+            )
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
-                    content=str(response),
+                    content=f"{response.thoughts} Pressed the following buttons: {buttons}",
                 ),
             )
-            await self.emulator.press_buttons([response.button])
+            await self.emulator.press_buttons(buttons)
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
 
