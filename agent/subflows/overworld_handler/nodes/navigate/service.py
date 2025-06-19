@@ -175,9 +175,9 @@ class NavigationService:
             elif c.row == height - 1:
                 boundary_tiles[south].append(c)
             elif c.col == 0:
-                boundary_tiles[east].append(c)
-            elif c.col == width - 1:
                 boundary_tiles[west].append(c)
+            elif c.col == width - 1:
+                boundary_tiles[east].append(c)
 
         output = []
         game_map = self.emulator.get_game_state().map
