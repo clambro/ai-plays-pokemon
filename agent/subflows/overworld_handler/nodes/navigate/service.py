@@ -114,7 +114,8 @@ class NavigationService:
                         queue.append(ledge_pos)
                         accessible.append(ledge_pos)
 
-        return accessible
+        # Sorting makes this more readable for the LLM.
+        return sorted(accessible, key=lambda c: (c.row, c.col))
 
     async def _determine_target_coords(self, accessible_coords: list[Coords]) -> Coords:
         """Determine the target coordinates to navigate to."""
