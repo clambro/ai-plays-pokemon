@@ -5,7 +5,7 @@ from agent.nodes.update_goals.schemas import UpdateGoalsResponse
 from common.constants import ITERATIONS_PER_GOAL_UPDATE
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
-from llm.schemas import GeminiLLMEnum
+from llm.schemas import GeminiModel
 from llm.service import GeminiLLMService
 from memory.goals import Goals
 
@@ -13,7 +13,7 @@ from memory.goals import Goals
 class UpdateGoalsService:
     """Service for updating the goals."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+    llm_service = GeminiLLMService(GeminiModel.FLASH)
 
     def __init__(
         self,

@@ -7,7 +7,7 @@ from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
 from emulator.game_state import YellowLegacyGameState
-from llm.schemas import GeminiLLMEnum
+from llm.schemas import GeminiModel
 from llm.service import GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
@@ -23,7 +23,7 @@ LETTER_ARR = np.array(
 class AssignNameService:
     """A service that assigns a name to something in the game."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH_LITE)
+    llm_service = GeminiLLMService(GeminiModel.FLASH_LITE)
 
     def __init__(
         self,

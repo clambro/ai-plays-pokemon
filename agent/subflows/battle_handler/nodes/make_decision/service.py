@@ -4,7 +4,7 @@ from agent.subflows.battle_handler.nodes.make_decision.prompts import MAKE_DECIS
 from agent.subflows.battle_handler.nodes.make_decision.schemas import MakeDecisionResponse
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
-from llm.schemas import GeminiLLMEnum
+from llm.schemas import GeminiModel
 from llm.service import GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
@@ -12,7 +12,7 @@ from memory.raw_memory import RawMemory, RawMemoryPiece
 class MakeDecisionService:
     """A service that makes decisions based on the current game state in the battle."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+    llm_service = GeminiLLMService(GeminiModel.FLASH)
 
     def __init__(
         self,

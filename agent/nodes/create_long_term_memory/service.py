@@ -10,14 +10,14 @@ from database.long_term_memory.repository import (
 )
 from database.long_term_memory.schemas import LongTermMemoryCreate
 from emulator.emulator import YellowLegacyEmulator
-from llm.schemas import GeminiLLMEnum
+from llm.schemas import GeminiModel
 from llm.service import GeminiLLMService
 
 
 class CreateLongTermMemoryService:
     """Service for creating long-term memory."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+    llm_service = GeminiLLMService(GeminiModel.FLASH)
     embedding_service = GeminiEmbeddingService()
 
     def __init__(

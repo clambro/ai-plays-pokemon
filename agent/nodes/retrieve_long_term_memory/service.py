@@ -1,7 +1,7 @@
 from agent.nodes.retrieve_long_term_memory.prompts import GET_RETRIEVAL_QUERY_PROMPT
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
-from llm.schemas import GeminiLLMEnum
+from llm.schemas import GeminiModel
 from llm.service import GeminiLLMService
 from memory.long_term_memory import LongTermMemory
 from memory.retrieval_service import MemoryRetrievalService
@@ -10,7 +10,7 @@ from memory.retrieval_service import MemoryRetrievalService
 class RetrieveLongTermMemoryService:
     """Service for retrieving the long-term memory."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH_LITE)
+    llm_service = GeminiLLMService(GeminiModel.FLASH_LITE)
     retrieval_service = MemoryRetrievalService()
 
     def __init__(
