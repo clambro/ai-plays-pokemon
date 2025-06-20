@@ -10,7 +10,8 @@ from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button, FacingDirection
 from emulator.game_state import YellowLegacyGameState
-from llm.service import GeminiLLMEnum, GeminiLLMService
+from llm.schemas import GeminiLLMEnum
+from llm.service import GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 from overworld_map.schemas import OverworldMap
 from overworld_map.service import update_map_with_screen_info

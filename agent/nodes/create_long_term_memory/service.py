@@ -10,7 +10,8 @@ from database.long_term_memory.repository import (
 )
 from database.long_term_memory.schemas import LongTermMemoryCreate
 from emulator.emulator import YellowLegacyEmulator
-from llm.service import GeminiLLMEnum, GeminiLLMService
+from llm.schemas import GeminiLLMEnum
+from llm.service import GeminiLLMService
 
 
 class CreateLongTermMemoryService:

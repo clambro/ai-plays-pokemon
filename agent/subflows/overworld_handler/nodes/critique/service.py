@@ -2,7 +2,8 @@ from agent.subflows.overworld_handler.nodes.critique.prompts import CRITIQUE_PRO
 from agent.subflows.overworld_handler.nodes.critique.schemas import CritiqueResponse
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
-from llm.service import GeminiLLMEnum, GeminiLLMService
+from llm.schemas import GeminiLLMEnum
+from llm.service import GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
 

@@ -5,7 +5,8 @@ from agent.nodes.update_goals.schemas import UpdateGoalsResponse
 from common.constants import ITERATIONS_PER_GOAL_UPDATE
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
-from llm.service import GeminiLLMEnum, GeminiLLMService
+from llm.schemas import GeminiLLMEnum
+from llm.service import GeminiLLMService
 from memory.goals import Goals
 
 

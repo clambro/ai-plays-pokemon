@@ -1,5 +1,4 @@
 import asyncio
-from enum import StrEnum
 from typing import TypeVar
 
 from google import genai
@@ -20,6 +19,7 @@ from common.prompts import SYSTEM_PROMPT
 from common.settings import settings
 from database.llm_messages.repository import create_llm_message
 from database.llm_messages.schemas import LLMMessageCreate
+from llm.schemas import GeminiLLMEnum
 
 PydanticModel = TypeVar("PydanticModel", bound=BaseModel)
 
@@ -30,14 +30,6 @@ SAFETY_SETTINGS = [
     if cat != HarmCategory.HARM_CATEGORY_UNSPECIFIED  # Can't unblock the unspecified category.
 ]
 MIN_THINKING_TOKENS = 512  # This is the minimum allowed for the 2.5 models.
-
-
-class GeminiLLMEnum(StrEnum):
-    """Enum for the Gemini model names."""
-
-    PRO = "gemini-2.5-pro"
-    FLASH = "gemini-2.5-flash"
-    FLASH_LITE = "gemini-2.5-flash-lite-preview-06-17"
 
 
 class GeminiLLMService:

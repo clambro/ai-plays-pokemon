@@ -1,7 +1,8 @@
 from agent.nodes.retrieve_long_term_memory.prompts import GET_RETRIEVAL_QUERY_PROMPT
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
-from llm.service import GeminiLLMEnum, GeminiLLMService
+from llm.schemas import GeminiLLMEnum
+from llm.service import GeminiLLMService
 from memory.long_term_memory import LongTermMemory
 from memory.retrieval_service import MemoryRetrievalService
 

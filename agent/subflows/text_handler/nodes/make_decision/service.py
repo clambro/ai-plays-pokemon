@@ -4,7 +4,8 @@ from agent.subflows.text_handler.nodes.make_decision.prompts import DECISION_MAK
 from agent.subflows.text_handler.nodes.make_decision.schemas import DecisionMakerTextResponse
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
-from llm.service import GeminiLLMEnum, GeminiLLMService
+from llm.schemas import GeminiLLMEnum
+from llm.service import GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
 
