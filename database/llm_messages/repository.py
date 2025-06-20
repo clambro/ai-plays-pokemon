@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
 
+from sqlalchemy import func, select
+
 from database.db_config import db_sessionmaker
 from database.llm_messages.model import LLMMessageDBModel
 from database.llm_messages.schemas import LLMMessageCreate
@@ -22,3 +24,10 @@ async def create_llm_message(llm_message: LLMMessageCreate) -> None:
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)
+
+
+async def get_total_llm_cost() -> float:
+    """Get the total cost of all LLM messages."""
+    async with db_sessionmaker() as session:
+        result = await session.execute(select(func.sum(LLMMessageDBModel.cost)))
+        return result.scalar() or 0
