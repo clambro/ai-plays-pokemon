@@ -20,7 +20,7 @@ function updateDisplay(data) {
     badgesContainer.innerHTML = ''; // Clear old badges
     ALL_BADGES.forEach(badgeName => {
         const badgeImg = document.createElement('img');
-        badgeImg.src = `/static/badges/${badgeName.toLowerCase()}.png`;
+        badgeImg.src = `assets/badges/${badgeName.toLowerCase()}.png`;
         badgeImg.title = badgeName;
         badgeImg.className = 'badge-icon';
         if (data.badges.includes(badgeName)) {
@@ -62,41 +62,80 @@ function updateDisplay(data) {
     partyDiv.innerHTML = ''; // Clear old party
     if (data.party && data.party.length > 0) {
         data.party.forEach(pokemon => {
-            const hpPercent = (pokemon.hp / pokemon.max_hp) * 100;
-            let hpColor;
-            if (hpPercent > 50) hpColor = '#33ff33';
-            else if (hpPercent > 20) hpColor = '#fde64b';
-            else hpColor = '#ff3333';
-
-            const card = document.createElement('div');
-            card.className = 'pokemon-card';
-            if (pokemon.hp === 0) {
-                card.classList.add('fainted');
-            }
-
-
-            let movesHtml = pokemon.moves.map(move => `<li>${move}</li>`).join('');
-
-            card.innerHTML = `
-                <img class="pokemon-sprite" src="/static/pokemon_sprites/${pokemon.species.toLowerCase()}.png" alt="${pokemon.species}">
-                <div class="pokemon-header">
-                    <div class="pokemon-name" title="${pokemon.name}">${pokemon.name}</div>
-                    <div class="status">${pokemon.hp > 0 && pokemon.status ? pokemon.status : ''}</div>
-                </div>
-                <div class="pokemon-species">${pokemon.species} - <span class="pokemon-level">Lv.${pokemon.level}</span></div>
-                <div class="type-badge-container">
-                    ${pokemon.type1 ? `<span class="type-badge type-${pokemon.type1.toLowerCase()}">${pokemon.type1}</span>` : ''}
-                    ${pokemon.type2 ? `<span class="type-badge type-${pokemon.type2.toLowerCase()}">${pokemon.type2}</span>` : ''}
-                </div>
-                <div class="hp-bar">
-                    <div class="hp-fill" style="width: ${hpPercent}%; background-color: ${hpColor};"></div>
-                </div>
-                <div class="hp-text">${pokemon.hp} / ${pokemon.max_hp}</div>
-                <ul class="moves-list">${movesHtml}</ul>
-            `;
+            const card = createPokemonCard(pokemon);
             partyDiv.appendChild(card);
         });
     }
+}
+
+function createPokemonCard(pokemon) {
+    const template = document.getElementById('pokemon-card-template');
+    const card = template.content.cloneNode(true).querySelector('.pokemon-card');
+
+    // Calculate HP percentage and color
+    const hpPercent = (pokemon.hp / pokemon.max_hp) * 100;
+    let hpColor;
+    if (hpPercent > 50) hpColor = '#33ff33';
+    else if (hpPercent > 20) hpColor = '#fde64b';
+    else hpColor = '#ff3333';
+
+    // Add fainted class if needed
+    if (pokemon.hp === 0) {
+        card.classList.add('fainted');
+    }
+
+    // Set sprite
+    const sprite = card.querySelector('.pokemon-sprite');
+    sprite.src = `assets/pokemon/${pokemon.species.toLowerCase()}.png`;
+    sprite.alt = pokemon.species;
+
+    // Set name and status
+    const nameEl = card.querySelector('.pokemon-name');
+    nameEl.textContent = pokemon.name;
+    nameEl.title = pokemon.name;
+
+    const statusEl = card.querySelector('.status');
+    statusEl.textContent = pokemon.hp > 0 && pokemon.status ? pokemon.status : '';
+
+    // Set species and level
+    const speciesEl = card.querySelector('.pokemon-species');
+    speciesEl.textContent = `${pokemon.species} - Lv.${pokemon.level}`;
+
+    // Set type badges
+    const typeContainer = card.querySelector('.type-badge-container');
+    typeContainer.innerHTML = '';
+    if (pokemon.type1) {
+        const type1Badge = document.createElement('span');
+        type1Badge.className = `type-badge type-${pokemon.type1.toLowerCase()}`;
+        type1Badge.textContent = pokemon.type1;
+        typeContainer.appendChild(type1Badge);
+    }
+    if (pokemon.type2) {
+        const type2Badge = document.createElement('span');
+        type2Badge.className = `type-badge type-${pokemon.type2.toLowerCase()}`;
+        type2Badge.textContent = pokemon.type2;
+        typeContainer.appendChild(type2Badge);
+    }
+
+    // Set HP bar
+    const hpFill = card.querySelector('.hp-fill');
+    hpFill.style.width = `${hpPercent}%`;
+    hpFill.style.backgroundColor = hpColor;
+
+    // Set HP text
+    const hpText = card.querySelector('.hp-text');
+    hpText.textContent = `${pokemon.hp} / ${pokemon.max_hp}`;
+
+    // Set moves
+    const movesList = card.querySelector('.moves-list');
+    movesList.innerHTML = '';
+    pokemon.moves.forEach(move => {
+        const moveLi = document.createElement('li');
+        moveLi.textContent = move;
+        movesList.appendChild(moveLi);
+    });
+
+    return card;
 }
 
 async function fetchData() {
@@ -118,8 +157,8 @@ async function fetchData() {
                 { name: 'ECHO', species: 'Golbat', type1: 'POISON', type2: 'FLYING', level: 22, hp: 0, max_hp: 70, moves: ['Wing Attack', 'Confuse Ray', 'Bite', 'Haze'] },
                 { name: 'CRAG', species: 'Geodude', type1: 'ROCK', type2: 'GROUND', level: 18, hp: 45, max_hp: 45, moves: ['Tackle', 'Defense Curl', 'Rock Throw', 'Self-Destruct'] },
                 { name: 'NIGHTSHADE', species: 'Gloom', type1: 'GRASS', type2: 'POISON', level: 23, hp: 73, max_hp: 73, moves: ['Acid', 'Petal Dance', 'Sleep Powder', 'Absorb'] },
-                { name: 'PULSAR', species: 'Magnemite', type1: 'ELECTRIC', level: 18, hp: 36, max_hp: 36, status: "POISONED", moves: ['Tackle', 'Sonic Boom', 'Thunder Shock', 'Supersonic'] },
-                { name: 'SPARKY', species: 'Pikachu', type1: 'ELECTRIC', level: 24, hp: 68, max_hp: 68, moves: ['Thunder Shock', 'Growl', 'Thunder Wave', 'Quick Attack'] },
+                { name: 'PULSAR', species: 'Magnemite', type1: 'ELECTRIC', level: 18, hp: 0, max_hp: 36, moves: ['Tackle', 'Sonic Boom', 'Thunder Shock', 'Supersonic'] },
+                { name: 'SPARKY', species: 'Pikachu', type1: 'ELECTRIC', level: 24, hp: 68, max_hp: 68, status: "POISONED", moves: ['Thunder Shock', 'Growl', 'Thunder Wave', 'Quick Attack'] },
                 { name: 'SUBTERRA', species: 'Diglett', type1: 'GROUND', level: 18, hp: 18, max_hp: 52, moves: ['Scratch', 'Growl'] },
             ],
             goals: [
