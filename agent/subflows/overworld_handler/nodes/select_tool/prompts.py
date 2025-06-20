@@ -14,7 +14,7 @@ Reflect on the information provided to you and respond in the format given below
 """.strip()
 
 BUTTON_TOOL_INFO = """
-<button_tool>
+<press_buttons_tool>
 TOOL_NAME: "press_buttons"
 
 The button tool allows you to submit one or more button presses to the emulator. It is useful for:
@@ -25,7 +25,7 @@ The button tool allows you to submit one or more button presses to the emulator.
 - Transitioning from one map to another if you are at the edge of the current map or near/on a warp tile.
 
 Give general guidance on which buttons to press in your thoughts, but do not provide specific button presses. The tool will determine the legal button presses and prompt you again to choose from them.
-</button_tool>
+</press_buttons_tool>
 """.strip()
 
 NAVIGATION_TOOL_INFO = """
