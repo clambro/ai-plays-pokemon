@@ -1,3 +1,5 @@
+from itertools import groupby
+
 from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.navigate.prompts import DETERMINE_TARGET_COORDS_PROMPT
@@ -114,8 +116,7 @@ class NavigationService:
                         queue.append(ledge_pos)
                         accessible.append(ledge_pos)
 
-        # Sorting makes this more readable for the LLM.
-        return sorted(accessible, key=lambda c: (c.row, c.col))
+        return accessible
 
     async def _determine_target_coords(self, accessible_coords: list[Coords]) -> Coords:
         """Determine the target coordinates to navigate to."""
@@ -124,7 +125,7 @@ class NavigationService:
         last_memory = self.raw_memory.pieces.get(self.iteration) or ""
         prompt = DETERMINE_TARGET_COORDS_PROMPT.format(
             state=self.state_string_builder(game_state),
-            accessible_coords=", ".join(str(c) for c in accessible_coords),
+            accessible_coords=self._format_coordinates_grid(accessible_coords),
             exploration_candidates=self._get_exploration_candidates(accessible_coords),
             map_boundaries=self._get_map_boundary_tiles(accessible_coords),
             last_memory=last_memory,
@@ -142,6 +143,26 @@ class NavigationService:
         )
         return response.coords
 
+    def _format_coordinates_grid(self, coordinates: list[Coords]) -> str:
+        """
+        Format a list of coordinates as a grid string with rows separated by newlines.
+
+        [(0,0), (0,1), (1,0), (1,1), (1,2)]
+        ->
+        (0,0) (0,1)
+        (1,0) (1,1) (1,2)
+        """
+        if not coordinates:
+            return ""
+
+        coordinates = sorted(coordinates, key=lambda c: (c.row, c.col))
+        rows = []
+        for _, row_coords in groupby(coordinates, key=lambda c: c.row):
+            row_str = ", ".join(str(coord) for coord in row_coords)
+            rows.append(row_str)
+
+        return "\n".join(rows)
+
     def _get_exploration_candidates(self, accessible_coords: list[Coords]) -> str:
         """Get all accessible coords that are adjacent to an unseen tile."""
         candidates = []
@@ -157,7 +178,7 @@ class NavigationService:
         if not candidates:
             return "No exploration candidates found."
 
-        return ", ".join(str(c) for c in candidates)
+        return self._format_coordinates_grid(candidates)
 
     def _get_map_boundary_tiles(self, accessible_coords: list[Coords]) -> str:
         """Get all accessible coords that are on the map boundary."""
@@ -189,10 +210,10 @@ class NavigationService:
             (game_map.east_connection, east),
         ):
             if connection is not None and boundary_tiles[direction]:
+                coord_str = ", ".join(str(c) for c in boundary_tiles[direction])
                 output.append(
                     f"The {connection.name} map boundary at the far {direction} of the current map"
-                    f" is accessible from the following coordinates:"
-                    f"{', '.join(str(c) for c in boundary_tiles[direction])}"
+                    f" is accessible from {coord_str}."
                 )
             elif connection is not None:
                 output.append(
