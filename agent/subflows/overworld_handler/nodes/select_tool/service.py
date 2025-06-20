@@ -51,6 +51,7 @@ class SelectToolService:
                 schema=SelectToolResponse,
                 prompt_name="select_overworld_tool",
             )
+            tool = OverworldTool(response.tool)
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error selecting tool. Defaulting to pressing buttons. {e}")
             return OverworldTool.PRESS_BUTTONS, self.raw_memory
@@ -65,7 +66,7 @@ class SelectToolService:
                 ),
             ),
         )
-        return response.tool, self.raw_memory
+        return tool, self.raw_memory
 
     def _get_available_tool_info(self) -> str:
         """Get the information about the available tools."""

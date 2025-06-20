@@ -1,10 +1,14 @@
 from pydantic import BaseModel
 
-from agent.subflows.overworld_handler.enums import OverworldTool
-
 
 class SelectToolResponse(BaseModel):
-    """The response from the overworld tool selector prompt."""
+    """
+    The response from the overworld tool selector prompt.
+
+    We have to use a string instead of the enum for the `tool` parameter because only a subset of
+    the full tool set is available to the model. If we use the enum, the model will see tool names
+    in the JSON schema that it does not have access to, and can thus use them illegally.
+    """
 
     thoughts: str
-    tool: OverworldTool
+    tool: str

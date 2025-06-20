@@ -37,22 +37,14 @@ class UpdateMapService:
         self.emulator = emulator
 
     async def update_map(self) -> OverworldMap:
-        """Update the current map with the latest screen info."""
+        """Update the current map and nearby entities with the latest screen info."""
+        screenshot = self.emulator.get_screenshot()
         game_state = self.emulator.get_game_state()
         self.current_map = await update_map_with_screen_info(
             self.iteration,
             game_state,
             self.current_map,
         )
-        return self.current_map
-
-    async def update_entities(self) -> None:
-        """
-        Update the map entity memory of the valid targets for updating, as defined in
-        _update_entities.
-        """
-        game_state = self.emulator.get_game_state()
-        screenshot = self.emulator.get_screenshot()
         await asyncio.gather(
             *[
                 self._update_entities(
@@ -71,6 +63,7 @@ class UpdateMapService:
                 ),
             ],
         )
+        return self.current_map
 
     async def _update_entities(
         self,
@@ -81,8 +74,9 @@ class UpdateMapService:
         prompt: str,
     ) -> None:
         """
-        Update the map memory of the entities of the given type, as long as they are adjacent to
-        the player. Updating entities that are too far away introduces hallucinations.
+        Update the map memory of the entities of the given type, as long as they are within a
+        certain distance of the player. Updating entities that are too far away introduces
+        hallucinations.
 
         :param entities: The entities to update.
         :param entity_type: The type of entity to update.
@@ -90,8 +84,9 @@ class UpdateMapService:
         :param game_state: The current game state.
         :param prompt: The prompt to use for the LLM.
         """
+        max_distance = 2
         updatable_entities = [
-            e for e in entities if (e.coords - game_state.player.coords).length <= 1
+            e for e in entities if (e.coords - game_state.player.coords).length <= max_distance
         ]
         if not updatable_entities:
             return

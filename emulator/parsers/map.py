@@ -10,8 +10,8 @@ class Map(BaseModel):
     id: MapId
     height: int
     width: int
-    grass_tile: int
-    water_tile: int
+    grass_tile: int | None
+    water_tile: int | None
     ledge_tiles: list[int]
     cut_tree_tiles: list[int]
     walkable_tiles: list[int]
@@ -50,8 +50,8 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         id=MapId(mem[0xD3AB]),
         height=mem[0xD571],
         width=mem[0xD572],
-        grass_tile=mem[0xD582],
-        water_tile=mem[3, 0x68A5],
+        grass_tile=mem[0xD582] if tileset_id == 0 else None,
+        water_tile=mem[3, 0x68A5] if tileset_id == 0 else None,
         ledge_tiles=ledge_tiles,
         cut_tree_tiles=cut_tree_tiles,
         walkable_tiles=walkable_tiles,

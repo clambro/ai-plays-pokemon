@@ -165,11 +165,11 @@ class YellowLegacyGameState(BaseModel):
             row = []
             for j in range(0, tiles.shape[1], 2):
                 b = tiles[i : i + 2, j : j + 2]
-                if np.any(b == self.map.water_tile):
+                if self.map.water_tile and np.any(b == self.map.water_tile):
                     row.append(AsciiTiles.WATER)
                 elif np.isin(b, self.map.ledge_tiles).any():
                     row.append(AsciiTiles.LEDGE)
-                elif np.any(b == self.map.grass_tile):
+                elif self.map.grass_tile and np.any(b == self.map.grass_tile):
                     row.append(AsciiTiles.GRASS)
                 elif b.flatten().tolist() == self.map.cut_tree_tiles:
                     row.append(AsciiTiles.CUT_TREE)

@@ -13,20 +13,16 @@ Done?
 * Add node tests for the LLM calls
 
 ### Useful Tools and Additions
-* Get all accessible tiles in the nav tool, and point out the map boundary tiles
-
-* Add a grid to the overworld screen and overlay collisions
-
 * Detailed subflow for battles. Battle type (e.g. trainer, safari zone, etc.) is at 0xD05A, and the move menus are at 0xCCDB
+* Add tools to select moves or swap pokemon in battle, or use a ball in non-trainer battles
 
-* Special navigation tool for moving between maps?
-* Add a tool to select moves or swap pokemon in battle, or use a ball in non-trainer battles
+* Add money spent to the LLM prompt table
+
 * Add a tool for spinning around to find wild pokemon
 * Some kind of info about items and PC pokemon
 * Add a tool to rearrange the team
 * Tool to use items
 * Generate the overworld map legend dynamically
-* Adding importance to goals might be helpful
 
 ### Longer-Term Issues that I'll Have to Tackle Eventually
 * Add strength boulders to map screen -- 00:d717 wBoulderSpriteIndex
@@ -42,7 +38,7 @@ Done?
 * Custom music player to avoid the little async issues?
 
 ## Notes
-* Numerical coords on screen? Dots to show past steps? Maybe when I have tests set up.
+* Numerical coords on screen? Dots to show past steps? A grid to show collisions? Maybe when I have tests set up.
 * Some better way of doing RAG that doesn't involve reading everything into memory would be nice. Might need to switch DBs for this. Could also offer to delete LTM after 1000 iterations without retrieval to make this more efficient.
 
 ## Junjo Thoughts

@@ -1,3 +1,5 @@
+from itertools import groupby
+
 from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.navigate.prompts import DETERMINE_TARGET_COORDS_PROMPT
@@ -35,13 +37,14 @@ class NavigationService:
 
     async def navigate(self) -> tuple[OverworldMap, RawMemory]:
         """Determine the target coordinates and navigate to them."""
+        accessible_coords = self._get_accessible_coords()
         try:
-            coords = await self._determine_target_coords()
+            coords = await self._determine_target_coords(accessible_coords)
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error determining target coordinates. Skipping. {e}")
             return self.current_map, self.raw_memory
 
-        if not self._validate_target_coords(coords):
+        if not self._validate_target_coords(coords, accessible_coords):
             logger.warning("Cancelling navigation due to invalid target coordinates.")
             return self.current_map, self.raw_memory
 
@@ -79,15 +82,52 @@ class NavigationService:
             )
         return self.current_map, self.raw_memory
 
-    async def _determine_target_coords(self) -> Coords:
+    def _get_accessible_coords(self) -> list[Coords]:
+        """Recursively search outward from the player's position to find all accessible coords."""
+        game_state = self.emulator.get_game_state()
+        start_pos = game_state.player.coords
+        walkable_tiles = AsciiTiles.get_walkable_tiles()
+        visited = {start_pos}
+        queue = [start_pos]
+        accessible = []  # No need to return the starting position because we're already there.
+
+        while queue:
+            current = queue.pop(0)
+            for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+                new_pos = current + (dy, dx)  # noqa: RUF005
+                if (
+                    new_pos in visited
+                    or new_pos.row < 0
+                    or new_pos.row >= self.current_map.height
+                    or new_pos.col < 0
+                    or new_pos.col >= self.current_map.width
+                ):
+                    continue
+                target_tile = self.current_map.ascii_tiles_ndarray[new_pos.row, new_pos.col]
+                if target_tile in walkable_tiles:
+                    visited.add(new_pos)
+                    queue.append(new_pos)
+                    accessible.append(new_pos)
+                elif target_tile == AsciiTiles.LEDGE and dy == 1:
+                    # Jumping down a ledge skips a tile.
+                    ledge_pos = new_pos + (1, 0)  # noqa: RUF005
+                    if ledge_pos not in visited:
+                        visited.add(ledge_pos)
+                        queue.append(ledge_pos)
+                        accessible.append(ledge_pos)
+
+        return accessible
+
+    async def _determine_target_coords(self, accessible_coords: list[Coords]) -> Coords:
         """Determine the target coordinates to navigate to."""
         img = self.emulator.get_screenshot()
         game_state = self.emulator.get_game_state()
         last_memory = self.raw_memory.pieces.get(self.iteration) or ""
         prompt = DETERMINE_TARGET_COORDS_PROMPT.format(
             state=self.state_string_builder(game_state),
-            walkable_tiles=", ".join(f'"{t}"' for t in AsciiTiles.get_walkable_tiles()),
-            exploration_candidates=self._get_exploration_candidates(),
+            accessible_coords=self._format_coordinates_grid(accessible_coords),
+            exploration_candidates=self._get_exploration_candidates(accessible_coords),
+            map_boundaries=self._get_map_boundary_tiles(accessible_coords),
             last_memory=last_memory,
         )
         response = await self.llm_service.get_llm_response_pydantic(
@@ -103,84 +143,99 @@ class NavigationService:
         )
         return response.coords
 
-    def _get_exploration_candidates(self) -> str:
-        """Get all walkable tiles that are adjacent to an unseen tile."""
-        tiles = self.current_map.ascii_tiles_ndarray
-        walkable_tiles = AsciiTiles.get_walkable_tiles()
+    def _format_coordinates_grid(self, coordinates: list[Coords]) -> str:
+        """
+        Format a list of coordinates as a grid string with rows separated by newlines.
 
+        [(0,0), (0,1), (1,0), (1,1), (1,2)]
+        ->
+        (0,0) (0,1)
+        (1,0) (1,1) (1,2)
+        """
+        if not coordinates:
+            return ""
+
+        coordinates = sorted(coordinates, key=lambda c: (c.row, c.col))
+        rows = []
+        for _, row_coords in groupby(coordinates, key=lambda c: c.row):
+            row_str = ", ".join(str(coord) for coord in row_coords)
+            rows.append(row_str)
+
+        return "\n".join(rows)
+
+    def _get_exploration_candidates(self, accessible_coords: list[Coords]) -> str:
+        """Get all accessible coords that are adjacent to an unseen tile."""
         candidates = []
+        tiles = self.current_map.ascii_tiles_ndarray
         height, width = tiles.shape
-        for y in range(height):
-            for x in range(width):
-                if tiles[y, x] not in walkable_tiles:
-                    continue
-                for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-                    ny, nx = y + dy, x + dx
-                    if 0 <= ny < height and 0 <= nx < width and tiles[ny, nx] == AsciiTiles.UNSEEN:
-                        candidates.append((y, x))
-                        break
+        for c in accessible_coords:
+            for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+                ny, nx = c.row + dy, c.col + dx
+                if 0 <= ny < height and 0 <= nx < width and tiles[ny, nx] == AsciiTiles.UNSEEN:
+                    candidates.append(c)
+                    break
 
         if not candidates:
             return "No exploration candidates found."
 
-        return ", ".join(f"({y}, {x})" for y, x in candidates)
+        return self._format_coordinates_grid(candidates)
 
-    def _validate_target_coords(self, coords: Coords) -> bool:
-        """Validate the target coordinates."""
-        if (
-            coords.row < 0
-            or coords.col < 0
-            or coords.row >= self.current_map.height
-            or coords.col >= self.current_map.width
+    def _get_map_boundary_tiles(self, accessible_coords: list[Coords]) -> str:
+        """Get all accessible coords that are on the map boundary."""
+        tiles = self.current_map.ascii_tiles_ndarray
+        height, width = tiles.shape
+        north, south, east, west = "NORTH", "SOUTH", "EAST", "WEST"
+        boundary_tiles = {
+            north: [],
+            south: [],
+            east: [],
+            west: [],
+        }
+        for c in accessible_coords:
+            if c.row == 0:
+                boundary_tiles[north].append(c)
+            elif c.row == height - 1:
+                boundary_tiles[south].append(c)
+            elif c.col == 0:
+                boundary_tiles[west].append(c)
+            elif c.col == width - 1:
+                boundary_tiles[east].append(c)
+
+        output = []
+        game_map = self.emulator.get_game_state().map
+        for connection, direction in (
+            (game_map.north_connection, north),
+            (game_map.south_connection, south),
+            (game_map.west_connection, west),
+            (game_map.east_connection, east),
         ):
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"Navigation failed. Target coordinates {coords} are outside of the"
-                        f" {self.current_map.id.name} map boundary."
-                    ),
-                ),
-            )
-            return False
+            if connection is not None and boundary_tiles[direction]:
+                coord_str = ", ".join(str(c) for c in boundary_tiles[direction])
+                output.append(
+                    f"The {connection.name} map boundary at the far {direction} of the current map"
+                    f" is accessible from {coord_str}."
+                )
+            elif connection is not None:
+                output.append(
+                    f"You have not yet discovered a valid path to the {connection.name} map"
+                    f" boundary at the far {direction} of the current map."
+                )
 
-        game_state = self.emulator.get_game_state()
-        if coords == game_state.player.coords:
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"Navigation failed. Target coordinates {coords} are the same as my"
-                        f" current position. I am already there."
-                    ),
-                ),
-            )
-            return False
+        return "\n".join(output)
 
-        target_tile = self.current_map.ascii_tiles_ndarray[coords.row, coords.col]
-        if target_tile == AsciiTiles.UNSEEN:
+    def _validate_target_coords(self, coords: Coords, accessible_coords: list[Coords]) -> bool:
+        """Validate the target coordinates."""
+        if coords not in accessible_coords:
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
                     content=(
-                        f"Navigation failed. Target coordinates {coords} are unexplored."
-                        f" I must explore this area before I can navigate to it."
+                        f"Navigation failed. The target coordinates {coords} are not in the list of"
+                        f" accessible coordinates that was provided to me."
                     ),
                 ),
             )
             return False
-        if target_tile not in AsciiTiles.get_walkable_tiles():
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"Navigation failed. Target coordinates {coords} are on a"
-                        f' non-walkable tile of type "{target_tile}".'
-                    ),
-                ),
-            )
-            return False
-
         return True
 
     def _calculate_path_to_target(
