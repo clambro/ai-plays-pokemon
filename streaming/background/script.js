@@ -73,8 +73,9 @@ function updateDisplay(data) {
             goalsDiv.appendChild(goalEl);
         });
     } else {
-        goalsDiv.innerHTML = '<li class="no-data">Awaiting objectives...</li>';
+        goalsDiv.innerHTML = '<li class="no-data"></li>';
     }
+    goalsDiv.scrollTop = goalsDiv.scrollHeight;  // Auto-scroll to bottom
 
     // --- Log ---
     const logDiv = document.getElementById('log-content');
@@ -86,7 +87,7 @@ function updateDisplay(data) {
             logDiv.appendChild(p);
         });
     }
-
+    logDiv.scrollTop = logDiv.scrollHeight;  // Auto-scroll to bottom
 
     // --- Party ---
     const partyDiv = document.getElementById('party');

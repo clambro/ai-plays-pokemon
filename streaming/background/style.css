@@ -120,12 +120,14 @@ body {
     grid-area: log;
     display: flex;
     flex-direction: column;
+    min-height: 0;
 }
 
 .log-panel h3 {
     text-align: center;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
 }
 
 #log-content p {
@@ -137,6 +139,13 @@ body {
     overflow-y: auto;
     padding-top: 10px;
     font-size: 18px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    min-height: 0;
+}
+
+#log-content::-webkit-scrollbar {
+    display: none;
 }
 
 /* TODO: Add styles for log entries */
@@ -146,12 +155,14 @@ body {
     grid-area: goals;
     display: flex;
     flex-direction: column;
+    min-height: 0;
 }
 
 .goals-panel h3 {
     text-align: center;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
 }
 
 #goals {
@@ -159,6 +170,14 @@ body {
     padding-top: 10px;
     list-style-type: none;
     padding-left: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    min-height: 0;
+}
+
+#goals::-webkit-scrollbar {
+    display: none;
 }
 
 .goal {
@@ -209,8 +228,8 @@ body {
     justify-content: space-between;
     gap: 15px;
     align-items: stretch;
-    /* Makes cards equal height */
     padding-top: 10px;
+    height: 280px;
 }
 
 .pokemon-card {
@@ -219,11 +238,12 @@ body {
     border-radius: 6px;
     padding: 10px;
     flex: 1;
-    /* Make all cards share space equally */
     display: flex;
     flex-direction: column;
     text-align: center;
     transition: filter 0.3s ease, border-color 0.3s ease;
+    min-height: 260px;
+    max-height: 260px;
 }
 
 .pokemon-card.fainted {
@@ -235,6 +255,8 @@ body {
     background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
     border: 1px dashed var(--border-color);
     opacity: 0.3;
+    min-height: 260px;
+    max-height: 260px;
 }
 
 .pokemon-sprite {
