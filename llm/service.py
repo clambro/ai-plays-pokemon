@@ -144,7 +144,7 @@ class GeminiLLMService:
             content_config.response_schema = schema
         response = await asyncio.wait_for(
             self.client.aio.models.generate_content(
-                model=self.model.model,
+                model=self.model.model_id,
                 contents=messages,  # type: ignore -- This is a Gemini API issue.
                 config=content_config,
             ),
