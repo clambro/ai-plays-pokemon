@@ -7,7 +7,7 @@ function updateDisplay(data) {
     // --- Info Bar ---
     document.getElementById('money').textContent = `¥${data.money.toLocaleString()}`;
     document.getElementById('iteration').textContent = data.iteration;
-    document.getElementById('seen-caught').textContent = `${data.pokedex_seen}/${data.pokedex_caught}`;
+    document.getElementById('caught-seen').textContent = `${data.pokedex_caught}/${data.pokedex_seen}`;
     document.getElementById('total-cost').textContent = `$${data.total_cost.toFixed(2)}`;
 
     const hours = Math.floor(data.play_time_seconds / 3600);
