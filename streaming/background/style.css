@@ -128,11 +128,15 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
+#log-content p {
+    margin-bottom: 20px;
+}
+
 #log-content {
     flex-grow: 1;
     overflow-y: auto;
     padding-top: 10px;
-    font-size: 14px;
+    font-size: 18px;
 }
 
 /* TODO: Add styles for log entries */
@@ -186,7 +190,6 @@ body {
     color: var(--border-color);
     opacity: 0.6;
     margin-top: 30px;
-    /* Adjust to position vertically */
 }
 
 .game-window-placeholder .title {
@@ -284,7 +287,7 @@ body {
 }
 
 .hp-text {
-    font-size: 11px;
+    font-size: 14px;
     color: #ccc;
     margin-bottom: 8px;
 }
