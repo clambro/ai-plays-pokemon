@@ -14,7 +14,7 @@ from database.map_entity_memory.repository import update_map_entity_memory
 from database.map_entity_memory.schemas import MapEntityMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
-from llm.schemas import GeminiModel
+from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite
 from overworld_map.service import update_map_with_screen_info
@@ -23,7 +23,7 @@ from overworld_map.service import update_map_with_screen_info
 class UpdateMapService:
     """Service for updating the current map."""
 
-    llm_service = GeminiLLMService(GeminiModel.FLASH)
+    llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
 
     def __init__(
         self,

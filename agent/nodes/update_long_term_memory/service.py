@@ -7,7 +7,7 @@ from common.types import StateStringBuilderT
 from database.long_term_memory.repository import update_long_term_memory
 from database.long_term_memory.schemas import LongTermMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
-from llm.schemas import GeminiModel
+from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
 from memory.long_term_memory import LongTermMemory
 
@@ -15,7 +15,7 @@ from memory.long_term_memory import LongTermMemory
 class UpdateLongTermMemoryService:
     """Service for updating long-term memory."""
 
-    llm_service = GeminiLLMService(GeminiModel.FLASH)
+    llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
     embedding_service = GeminiEmbeddingService()
 
     def __init__(

@@ -11,7 +11,7 @@ from agent.subflows.overworld_handler.nodes.select_tool.schemas import SelectToo
 from common.constants import MIN_ITERATIONS_PER_CRITIQUE
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
-from llm.schemas import GeminiModel
+from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 from overworld_map.schemas import OverworldMap
@@ -20,7 +20,7 @@ from overworld_map.schemas import OverworldMap
 class SelectToolService:
     """A service that selects a tool based on the current game state in the overworld."""
 
-    llm_service = GeminiLLMService(GeminiModel.FLASH)
+    llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
 
     def __init__(  # noqa: PLR0913
         self,
