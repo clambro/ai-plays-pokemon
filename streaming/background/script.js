@@ -1,0 +1,139 @@
+const ALL_BADGES = [
+    "BOULDERBADGE", "CASCADEBADGE", "THUNDERBADGE", "RAINBOWBADGE",
+    "SOULBADGE", "MARSHBADGE", "VOLCANOBADGE", "EARTHBADGE"
+];
+
+function updateDisplay(data) {
+    // --- Info Bar ---
+    document.getElementById('money').textContent = `¥${data.money.toLocaleString()}`;
+    document.getElementById('iteration').textContent = data.iteration;
+    document.getElementById('seen-caught').textContent = `${data.pokedex_seen}/${data.pokedex_caught}`;
+    document.getElementById('total-cost').textContent = `$${data.total_cost.toFixed(2)}`;
+
+    const hours = Math.floor(data.play_time_seconds / 3600);
+    const minutes = Math.floor((data.play_time_seconds % 3600) / 60);
+    document.getElementById('play-time').textContent = `${hours}h ${minutes}m`;
+
+
+    // --- Badges ---
+    const badgesContainer = document.getElementById('badges-container');
+    badgesContainer.innerHTML = ''; // Clear old badges
+    ALL_BADGES.forEach(badgeName => {
+        const badgeImg = document.createElement('img');
+        badgeImg.src = `/static/badges/${badgeName.toLowerCase()}.png`;
+        badgeImg.title = badgeName;
+        badgeImg.className = 'badge-icon';
+        if (data.badges.includes(badgeName)) {
+            badgeImg.classList.add('earned');
+        }
+        badgesContainer.appendChild(badgeImg);
+    });
+
+
+    // --- Goals ---
+    const goalsDiv = document.getElementById('goals');
+    goalsDiv.innerHTML = ''; // Clear old goals
+    if (data.goals && data.goals.length > 0) {
+        data.goals.forEach((goal) => {
+            const goalEl = document.createElement('li');
+            goalEl.className = 'goal';
+            goalEl.textContent = goal;
+            goalsDiv.appendChild(goalEl);
+        });
+    } else {
+        goalsDiv.innerHTML = '<li class="no-data">Awaiting objectives...</li>';
+    }
+
+    // --- Log ---
+    // The log data needs to be added to the state payload first.
+    const logDiv = document.getElementById('log-content');
+    logDiv.innerHTML = '';
+    if (data.log && data.log.length > 0) {
+        data.log.forEach(entry => {
+            const p = document.createElement('p');
+            p.textContent = `[${entry.iteration}] ${entry.thought}`;
+            logDiv.appendChild(p);
+        });
+    }
+
+
+    // --- Party ---
+    const partyDiv = document.getElementById('party');
+    partyDiv.innerHTML = ''; // Clear old party
+    if (data.party && data.party.length > 0) {
+        data.party.forEach(pokemon => {
+            const hpPercent = (pokemon.hp / pokemon.max_hp) * 100;
+            let hpColor;
+            if (hpPercent > 50) hpColor = '#33ff33';
+            else if (hpPercent > 20) hpColor = '#fde64b';
+            else hpColor = '#ff3333';
+
+            const card = document.createElement('div');
+            card.className = 'pokemon-card';
+
+            let movesHtml = pokemon.moves.map(move => `<li>${move}</li>`).join('');
+
+            card.innerHTML = `
+                <img class="pokemon-sprite" src="/static/pokemon_sprites/${pokemon.species.toLowerCase()}.png" alt="${pokemon.species}">
+                <div class="pokemon-name" title="${pokemon.name}">${pokemon.name}</div>
+                <div class="pokemon-species">${pokemon.species} - <span class="pokemon-level">Lv.${pokemon.level}</span></div>
+                <div class="type-badge-container">
+                    ${pokemon.type1 ? `<span class="type-badge type-${pokemon.type1.toLowerCase()}">${pokemon.type1}</span>` : ''}
+                    ${pokemon.type2 ? `<span class="type-badge type-${pokemon.type2.toLowerCase()}">${pokemon.type2}</span>` : ''}
+                </div>
+                <div class="hp-bar">
+                    <div class="hp-fill" style="width: ${hpPercent}%; background-color: ${hpColor};"></div>
+                </div>
+                <div class="hp-text">${pokemon.hp} / ${pokemon.max_hp}</div>
+                <div class="status">${pokemon.status !== 'NONE' ? pokemon.status : ''}</div>
+                <ul class="moves-list">${movesHtml}</ul>
+            `;
+            partyDiv.appendChild(card);
+        });
+    }
+}
+
+async function fetchData() {
+    try {
+        // In a real scenario, you'd fetch this from your Python server
+        // const response = await fetch('/api/state.json');
+        // const data = await response.json();
+
+        // Using mock data for demonstration
+        const mockData = {
+            iteration: 15247,
+            money: 18143,
+            pokedex_seen: 45,
+            pokedex_caught: 21,
+            total_cost: 23.51,
+            play_time_seconds: 596153, // about 165 hours
+            badges: ["BOULDERBADGE", "CASCADEBADGE", "THUNDERBADGE"],
+            party: [
+                { name: 'ECHO', species: 'Golbat', type1: 'POISON', type2: 'FLYING', level: 22, hp: 22, max_hp: 70, status: 'POISON', moves: ['Wing Attack', 'Confuse Ray', 'Bite', 'Haze'] },
+                { name: 'CRAG', species: 'Geodude', type1: 'ROCK', type2: 'GROUND', level: 18, hp: 45, max_hp: 45, status: 'NONE', moves: ['Tackle', 'Defense Curl', 'Rock Throw', 'Self-Destruct'] },
+                { name: 'NIGHTSHADE', species: 'Gloom', type1: 'GRASS', type2: 'POISON', level: 23, hp: 73, max_hp: 73, status: 'NONE', moves: ['Acid', 'Petal Dance', 'Sleep Powder', 'Absorb'] },
+                { name: 'PULSAR', species: 'Magnemite', type1: 'ELECTRIC', level: 18, hp: 36, max_hp: 36, status: 'NONE', moves: ['Tackle', 'Sonic Boom', 'Thunder Shock', 'Supersonic'] },
+                { name: 'SPARKY', species: 'Pikachu', level: 24, hp: 68, max_hp: 68, status: 'NONE', moves: ['Thunder Shock', 'Growl', 'Thunder Wave', 'Quick Attack'] },
+                { name: 'SUBTERRA', species: 'Diglett', type1: 'GROUND', level: 18, hp: 18, max_hp: 52, status: 'NONE', moves: ['Scratch', 'Growl', 'Dig', 'Sand Attack'] },
+            ],
+            goals: [
+                "Travel through Rock Tunnel to reach Lavender Town.",
+                "Obtain HM05 (Flash).",
+                "Acquire a drink for the Saffron City guard."
+            ],
+            log: [
+                { iteration: 15247, thought: "Ugh, a random battle. My path traversal was interrupted. I'm facing a wild Diglett. My goal is to get out of here, not to battle. ECHO is a higher level, so I should be able to run away successfully. I'll use the select_battle_option tool to select RUN." },
+                { iteration: 15246, thought: "Oh, come on! Just when I was making good time. Another Diglett... alright, let's just get out of here. No time for battles right now!" }
+            ]
+        };
+
+        updateDisplay(mockData);
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
+
+// Initial load and periodic refresh
+fetchData();
+// setInterval(fetchData, 2000); // Uncomment this for live data from your server

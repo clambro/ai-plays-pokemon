@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>AI Plays Pokemon</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="stream-layout">
+        <header class="title-bar">
+            <h1>AI PLAYS POKEMON</h1>
+            <p>Pokemon Yellow Legacy: HARD MODE!</p>
+        </header>
+
+        <section class="info-bar panel">
+            <div class="info-item">
+                <div class="label">ITERATION</div>
+                <div class="value" id="iteration">0</div>
+            </div>
+            <div class="info-item">
+                <div class="label">PLAY TIME</div>
+                <div class="value" id="play-time">0h 0m</div>
+            </div>
+            <div class="info-item">
+                <div class="label">LLM COST</div>
+                <div class="value" id="total-cost">$0.00</div>
+            </div>
+            <div class="info-item">
+                <div class="label">MONEY</div>
+                <div class="value" id="money">¥0</div>
+            </div>
+            <div class="info-item">
+                <div class="label">BADGES</div>
+                <div class="value" id="badges-container">
+                    <!-- Badge icons will be injected here -->
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="label">SEEN/CAUGHT</div>
+                <div class="value" id="seen-caught">0/0</div>
+            </div>
+        </section>
+
+        <main class="log-panel panel">
+            <h3>AGENT LOG</h3>
+            <div id="log-content">
+                <!-- Log content will be dynamically inserted here -->
+            </div>
+        </main>
+
+        <aside class="goals-panel panel">
+            <h3>GOALS</h3>
+            <ul id="goals">
+                <!-- Goals will be dynamically inserted here -->
+                <li class="no-data">Awaiting objectives...</li>
+            </ul>
+        </aside>
+
+        <aside class="game-window-area">
+            <div class="game-window-placeholder">
+                <p class="title">GAME WINDOW</p>
+                <p class="subtitle">10:9 Aspect Ratio</p>
+            </div>
+        </aside>
+
+        <footer class="party-bar panel">
+            <div id="party">
+                <!-- Pokemon party cards will be dynamically inserted here -->
+            </div>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

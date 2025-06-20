@@ -1,0 +1,393 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap');
+
+:root {
+    --main-bg-color: #0f1923;
+    --panel-bg-color: rgba(10, 25, 47, 0.7);
+    --border-color: #00d4ff;
+    --text-color: #e6f1ff;
+    --highlight-color: #ffd700;
+    --font-body: 'Roboto Mono', monospace;
+    --font-title: 'Orbitron', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--main-bg-color);
+    color: var(--text-color);
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+}
+
+.stream-layout {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-columns: 1fr 380px 620px;
+    grid-template-areas:
+        "header header header"
+        "info info info"
+        "log goals game"
+        "party party party";
+    gap: 15px;
+    padding: 20px;
+}
+
+.panel {
+    background-color: var(--panel-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    backdrop-filter: blur(5px);
+}
+
+/* --- Header --- */
+.title-bar {
+    grid-area: header;
+    text-align: center;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: -5px;
+}
+
+.title-bar h1 {
+    font-family: var(--font-title);
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: var(--text-color);
+    text-shadow: 0 0 15px var(--border-color);
+}
+
+.title-bar p {
+    font-size: 20px;
+    color: var(--highlight-color);
+    letter-spacing: 2px;
+}
+
+/* --- Info Bar --- */
+.info-bar {
+    grid-area: info;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.info-item {
+    text-align: center;
+}
+
+.info-item .label {
+    font-size: 14px;
+    color: var(--border-color);
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.info-item .value {
+    font-family: var(--font-title);
+    font-size: 28px;
+    font-weight: 700;
+}
+
+#badges-container {
+    display: flex;
+    gap: 10px;
+}
+
+.badge-icon {
+    width: 32px;
+    height: 32px;
+    opacity: 0.3;
+    filter: grayscale(100%);
+}
+
+.badge-icon.earned {
+    opacity: 1;
+    filter: none;
+}
+
+
+/* --- Log Panel --- */
+.log-panel {
+    grid-area: log;
+    display: flex;
+    flex-direction: column;
+}
+
+.log-panel h3 {
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#log-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-top: 10px;
+    font-size: 14px;
+}
+
+/* TODO: Add styles for log entries */
+
+/* --- Goals Panel --- */
+.goals-panel {
+    grid-area: goals;
+    display: flex;
+    flex-direction: column;
+}
+
+.goals-panel h3 {
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#goals {
+    flex-grow: 1;
+    padding-top: 10px;
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.goal {
+    font-size: 14px;
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    margin-bottom: 8px;
+    margin-top: 30px;
+    /* Adjust to position vertically */
+}
+
+/* --- Game Window --- */
+.game-window-area {
+    grid-area: game;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.game-window-placeholder {
+    width: 600px;
+    height: 540px;
+    border: 2px dashed var(--border-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--border-color);
+    opacity: 0.6;
+    margin-top: 30px;
+    /* Adjust to position vertically */
+}
+
+.game-window-placeholder .title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.game-window-placeholder .subtitle {
+    font-size: 16px;
+}
+
+
+/* --- Party Bar --- */
+.party-bar {
+    grid-area: party;
+}
+
+#party {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    align-items: stretch;
+    /* Makes cards equal height */
+    padding-top: 10px;
+}
+
+.pokemon-card {
+    background: linear-gradient(145deg, #16213e, #0f1923);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px;
+    flex: 1;
+    /* Make all cards share space equally */
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.pokemon-sprite {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    image-rendering: pixelated;
+}
+
+.pokemon-name {
+    font-family: var(--font-title);
+    font-weight: bold;
+    color: var(--highlight-color);
+    font-size: 16px;
+    margin-top: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    color: var(--border-color);
+    margin-bottom: 5px;
+}
+
+.pokemon-species {
+    font-size: 12px;
+    color: var(--border-color);
+    margin-bottom: 5px;
+}
+
+.pokemon-level {
+    color: var(--border-color);
+    font-size: 12px;
+}
+
+.hp-bar {
+    background: #111;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 8px 0 4px;
+    border: 1px solid #000;
+}
+
+.hp-fill {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.hp-text {
+    font-size: 11px;
+    color: #ccc;
+}
+
+.status {
+    font-size: 11px;
+    color: #ff6b6b;
+    font-weight: bold;
+    height: 14px;
+    /* Reserve space to prevent layout shift */
+    margin-top: 4px;
+}
+
+.moves-list {
+    list-style: none;
+    padding: 0;
+    margin-top: auto;
+    /* Pushes moves to the bottom */
+    font-size: 11px;
+}
+
+.moves-list li {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+    padding: 2px 4px;
+    margin-top: 4px;
+}
+
+.type-badge-container {
+    height: 20px;
+    /* Reserve space */
+    margin-bottom: 5px;
+}
+
+.type-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.type-normal {
+    background: #A8A878;
+    color: white;
+}
+
+.type-fire {
+    background: #F08030;
+    color: white;
+}
+
+.type-water {
+    background: #6890F0;
+    color: white;
+}
+
+.type-electric {
+    background: #F8D030;
+    color: black;
+}
+
+.type-grass {
+    background: #78C850;
+    color: white;
+}
+
+.type-ice {
+    background: #98D8D8;
+    color: black;
+}
+
+.type-fighting {
+    background: #C03028;
+    color: white;
+}
+
+.type-poison {
+    background: #A040A0;
+    color: white;
+}
+
+.type-ground {
+    background: #E0C068;
+    color: black;
+}
+
+.type-flying {
+    background: #A890F0;
+    color: white;
+}
+
+.type-psychic {
+    background: #F85888;
+    color: white;
+}
+
+.type-bug {
+    background: #A8B820;
+    color: white;
+}
+
+.type-rock {
+    background: #B8A038;
+    color: white;
+}
+
+.type-ghost {
+    background: #705898;
+    color: white;
+}
+
+.type-dragon {
+    background: #7038F8;
+    color: white;
+}
