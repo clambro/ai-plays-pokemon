@@ -3,11 +3,11 @@ from loguru import logger
 from agent.subflows.overworld_handler.nodes.press_buttons.prompts import PRESS_BUTTONS_PROMPT
 from agent.subflows.overworld_handler.nodes.press_buttons.schemas import PressButtonsResponse
 from common.enums import MapId
-from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.schemas import Coords
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button, FacingDirection
+from llm.service import GeminiLLMEnum, GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
 

@@ -9,9 +9,9 @@ from agent.subflows.overworld_handler.nodes.select_tool.prompts import (
 )
 from agent.subflows.overworld_handler.nodes.select_tool.schemas import SelectToolResponse
 from common.constants import MIN_ITERATIONS_PER_CRITIQUE
-from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
+from llm.service import GeminiLLMEnum, GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 from overworld_map.schemas import OverworldMap
 

@@ -9,12 +9,12 @@ from agent.subflows.overworld_handler.nodes.update_map.prompts import (
 )
 from agent.subflows.overworld_handler.nodes.update_map.schemas import UpdateEntitiesResponse
 from common.enums import MapEntityType
-from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from database.map_entity_memory.repository import update_map_entity_memory
 from database.map_entity_memory.schemas import MapEntityMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
+from llm.service import GeminiLLMEnum, GeminiLLMService
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite
 from overworld_map.service import update_map_with_screen_info
 

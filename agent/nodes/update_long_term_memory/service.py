@@ -3,11 +3,11 @@ from loguru import logger
 from agent.nodes.update_long_term_memory.prompts import UPDATE_LONG_TERM_MEMORY_PROMPT
 from agent.nodes.update_long_term_memory.schemas import UpdateLongTermMemoryResponse, UpdateType
 from common.embedding_service import GeminiEmbeddingService
-from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from database.long_term_memory.repository import update_long_term_memory
 from database.long_term_memory.schemas import LongTermMemoryUpdate
 from emulator.emulator import YellowLegacyEmulator
+from llm.service import GeminiLLMEnum, GeminiLLMService
 from memory.long_term_memory import LongTermMemory
 
 

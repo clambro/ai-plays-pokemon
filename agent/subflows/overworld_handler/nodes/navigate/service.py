@@ -5,12 +5,12 @@ from loguru import logger
 from agent.subflows.overworld_handler.nodes.navigate.prompts import DETERMINE_TARGET_COORDS_PROMPT
 from agent.subflows.overworld_handler.nodes.navigate.schemas import NavigationResponse
 from common.enums import AsciiTiles, MapId
-from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.schemas import Coords
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button, FacingDirection
 from emulator.game_state import YellowLegacyGameState
+from llm.service import GeminiLLMEnum, GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 from overworld_map.schemas import OverworldMap
 from overworld_map.service import update_map_with_screen_info

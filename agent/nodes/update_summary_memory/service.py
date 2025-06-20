@@ -1,9 +1,9 @@
 from agent.nodes.update_summary_memory.prompts import UPDATE_SUMMARY_MEMORY_PROMPT
 from agent.nodes.update_summary_memory.schemas import UpdateSummaryMemoryResponse
 from common.constants import ITERATIONS_PER_SUMMARY_UPDATE, RAW_MEMORY_MAX_SIZE
-from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
+from llm.service import GeminiLLMEnum, GeminiLLMService
 from memory.summary_memory import SummaryMemory, SummaryMemoryPiece
 
 
