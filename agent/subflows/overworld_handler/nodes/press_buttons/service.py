@@ -59,19 +59,20 @@ class PressButtonsService:
         )
         for b in buttons:
             await self.emulator.press_buttons([b])
-            passed_collision = await self._check_for_collision(
+            await self.emulator.wait_for_animation_to_finish()
+            passed_collision = self._check_for_collision(
                 button=b,
                 prev_map_id=game_state.map.id,
                 prev_coords=game_state.player.coords,
                 prev_direction=game_state.player.direction,
             )
-            passed_action = await self._check_for_action(b)
-            state_changed = await self._check_for_state_change()
+            passed_action = self._check_for_action(b)
+            state_changed = self._check_for_state_change()
             if not passed_collision or not passed_action or state_changed:
                 break
         return self.raw_memory
 
-    async def _check_for_collision(
+    def _check_for_collision(
         self,
         button: Button,
         prev_map_id: MapId,
@@ -85,7 +86,6 @@ class PressButtonsService:
         if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN]:
             return True
 
-        await self.emulator.wait_for_animation_to_finish()
         game_state = self.emulator.get_game_state()
         if (
             prev_map_id == game_state.map.id
@@ -104,7 +104,7 @@ class PressButtonsService:
             return False
         return True
 
-    async def _check_for_action(self, button: Button) -> bool:
+    def _check_for_action(self, button: Button) -> bool:
         """
         Check if the player hit the action button but nothing happened.
         Returns True if the check passed, False otherwise.
@@ -112,7 +112,6 @@ class PressButtonsService:
         if button != Button.A:
             return True
 
-        await self.emulator.wait_for_animation_to_finish()
         game_state = self.emulator.get_game_state()
         if not game_state.is_text_on_screen():
             self.raw_memory.append(
@@ -127,7 +126,7 @@ class PressButtonsService:
             return False
         return True
 
-    async def _check_for_state_change(self) -> bool:
+    def _check_for_state_change(self) -> bool:
         """Check if the movement triggered a state change to dialog or a battle."""
         game_state = self.emulator.get_game_state()
         return game_state.is_text_on_screen() or game_state.battle.is_in_battle

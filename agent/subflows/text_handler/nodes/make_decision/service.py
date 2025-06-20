@@ -55,8 +55,18 @@ class DecisionMakerTextService:
                     content=f"{response.thoughts} Pressed the following buttons: {buttons}",
                 ),
             )
-            await self.emulator.press_buttons(buttons)
+            for b in buttons:
+                await self.emulator.press_buttons([b])
+                await self.emulator.wait_for_animation_to_finish()
+                if self._check_for_state_change():
+                    break
+
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
 
         return self.raw_memory
+
+    def _check_for_state_change(self) -> bool:
+        """Check if the movement triggered a state change to dialog or a battle."""
+        game_state = self.emulator.get_game_state()
+        return not game_state.is_text_on_screen() or game_state.battle.is_in_battle
