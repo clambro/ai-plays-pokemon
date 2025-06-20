@@ -18,6 +18,6 @@ Here is the game memory's representation of the onscreen text. The text you see 
 </onscreen_text>
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your thoughts on the current game state and which button(s) to press. These must be detailed and descriptive, accurately reflecting the information available to you and conveying your thought process. It is important that you note any text that you are reading in your thoughts, otherwise you will lose access to it in subsequent turns.
+- thoughts: Your thoughts on the current game state and which button(s) to press. Keep this to one or two sentences. It is important that you note any text that you are reading in your thoughts, otherwise you will lose access to it in subsequent turns.
 - buttons: The button(s) to press in sequence. Must be one or more of the available buttons above. You should generally only press one button at a time, but you may press multiple buttons in sequence to, say, move the cursor multiple times in a menu, or to move and then select an item in a single response.
 """.strip()
