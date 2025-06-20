@@ -13,7 +13,7 @@ from common.backup_service import create_backup, load_backup
 from common.constants import ITERATIONS_PER_BACKUP, OUTPUTS_FOLDER
 from database.db_config import init_fresh_db
 from emulator.emulator import YellowLegacyEmulator
-from streaming.background_server import BackgroundStreamServer
+from streaming.server import BackgroundStreamServer
 
 
 async def main(
