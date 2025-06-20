@@ -19,7 +19,7 @@ class LLMMessageCreate(BaseModel):
     @property
     def cost(self) -> float:
         """Get the cost of the message. Thought tokens are counted as output tokens."""
-        return (
+        return 1e-6 * (
             self.prompt_tokens * self.model.cost_1m_input_tokens
             + (self.thought_tokens + self.response_tokens) * self.model.cost_1m_output_tokens
-        ) / 1e6
+        )
