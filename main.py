@@ -13,6 +13,7 @@ from common.backup_service import create_backup, load_backup
 from common.constants import ITERATIONS_PER_BACKUP, OUTPUTS_FOLDER
 from database.db_config import init_fresh_db
 from emulator.emulator import YellowLegacyEmulator
+from streaming.background_server import BackgroundStreamServer
 
 
 async def main(
@@ -41,7 +42,10 @@ async def main(
         state = AgentState(folder=folder)
         emulator_state = None
 
-    async with YellowLegacyEmulator(rom_path, emulator_state, mute_sound=mute_sound) as emulator:
+    async with (
+        YellowLegacyEmulator(rom_path, emulator_state, mute_sound=mute_sound) as emulator,
+        BackgroundStreamServer(),
+    ):
         if not emulator_state:
             await asyncio.sleep(30)  # Some time to manually get to the new game screen.
         try:

@@ -188,4 +188,4 @@ async function fetchData() {
 
 // Initial load and periodic refresh
 fetchData();
-// setInterval(fetchData, 2000); // Uncomment this for live data from your server
+setInterval(fetchData, 1000);
