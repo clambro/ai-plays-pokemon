@@ -9,13 +9,14 @@ async def create_llm_message(llm_message: LLMMessageCreate) -> None:
     """Create a new LLM message."""
     async with db_sessionmaker() as session:
         db_obj = LLMMessageDBModel(
-            model=llm_message.model,
+            model=llm_message.model.model_id,
             prompt_name=llm_message.prompt_name,
             prompt=llm_message.prompt,
             response=llm_message.response,
             prompt_tokens=llm_message.prompt_tokens,
             thought_tokens=llm_message.thought_tokens,
             response_tokens=llm_message.response_tokens,
+            cost=llm_message.cost,
             created_at=datetime.now(UTC),
         )
         session.add(db_obj)

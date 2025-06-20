@@ -22,4 +22,4 @@ class LLMMessageCreate(BaseModel):
         return (
             self.prompt_tokens * self.model.cost_1m_input_tokens
             + (self.thought_tokens + self.response_tokens) * self.model.cost_1m_output_tokens
-        )
+        ) / 1e6
