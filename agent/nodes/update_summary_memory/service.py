@@ -1,16 +1,17 @@
 from agent.nodes.update_summary_memory.prompts import UPDATE_SUMMARY_MEMORY_PROMPT
 from agent.nodes.update_summary_memory.schemas import UpdateSummaryMemoryResponse
 from common.constants import ITERATIONS_PER_SUMMARY_UPDATE, RAW_MEMORY_MAX_SIZE
-from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
+from llm.schemas import GEMINI_FLASH_2_5
+from llm.service import GeminiLLMService
 from memory.summary_memory import SummaryMemory, SummaryMemoryPiece
 
 
 class UpdateSummaryMemoryService:
     """Service for updating the summary memory."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+    llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
 
     def __init__(
         self,

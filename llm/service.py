@@ -1,5 +1,4 @@
 import asyncio
-from enum import StrEnum
 from typing import TypeVar
 
 from google import genai
@@ -20,6 +19,7 @@ from common.prompts import SYSTEM_PROMPT
 from common.settings import settings
 from database.llm_messages.repository import create_llm_message
 from database.llm_messages.schemas import LLMMessageCreate
+from llm.schemas import GeminiModel
 
 PydanticModel = TypeVar("PydanticModel", bound=BaseModel)
 
@@ -32,18 +32,10 @@ SAFETY_SETTINGS = [
 MIN_THINKING_TOKENS = 512  # This is the minimum allowed for the 2.5 models.
 
 
-class GeminiLLMEnum(StrEnum):
-    """Enum for the Gemini model names."""
-
-    PRO = "gemini-2.5-pro"
-    FLASH = "gemini-2.5-flash"
-    FLASH_LITE = "gemini-2.5-flash-lite-preview-06-17"
-
-
 class GeminiLLMService:
     """Wrapper for the Gemini LLM API."""
 
-    def __init__(self, model: GeminiLLMEnum) -> None:
+    def __init__(self, model: GeminiModel) -> None:
         self.client = genai.Client(api_key=settings.gemini_api_key)
         self.model = model
 
@@ -152,7 +144,7 @@ class GeminiLLMService:
             content_config.response_schema = schema
         response = await asyncio.wait_for(
             self.client.aio.models.generate_content(
-                model=self.model,
+                model=self.model.model_id,
                 contents=messages,  # type: ignore -- This is a Gemini API issue.
                 config=content_config,
             ),

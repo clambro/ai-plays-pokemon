@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from pydantic import UUID4
-from sqlalchemy import UUID, DateTime, Integer, String
+from sqlalchemy import UUID, DateTime, Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import SQLAlchemyBase
@@ -21,4 +21,5 @@ class LLMMessageDBModel(SQLAlchemyBase):
     prompt_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
     thought_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
     response_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    cost: Mapped[float] = mapped_column(Float, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)

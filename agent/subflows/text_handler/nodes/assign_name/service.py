@@ -3,11 +3,12 @@ import numpy as np
 from agent.subflows.text_handler.nodes.assign_name.prompts import GET_NAME_PROMPT
 from agent.subflows.text_handler.nodes.assign_name.schemas import NameResponse
 from common.constants import GAME_TICKS_PER_SECOND
-from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button
 from emulator.game_state import YellowLegacyGameState
+from llm.schemas import GEMINI_FLASH_LITE_2_5
+from llm.service import GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
 LETTER_ARR = np.array(
@@ -22,7 +23,7 @@ LETTER_ARR = np.array(
 class AssignNameService:
     """A service that assigns a name to something in the game."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH_LITE)
+    llm_service = GeminiLLMService(GEMINI_FLASH_LITE_2_5)
 
     def __init__(
         self,

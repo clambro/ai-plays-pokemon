@@ -3,7 +3,6 @@ from loguru import logger
 from agent.nodes.create_long_term_memory.prompts import CREATE_LONG_TERM_MEMORY_PROMPT
 from agent.nodes.create_long_term_memory.schemas import CreateLongTermMemoryResponse
 from common.embedding_service import GeminiEmbeddingService
-from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from database.long_term_memory.repository import (
     create_long_term_memory,
@@ -11,12 +10,14 @@ from database.long_term_memory.repository import (
 )
 from database.long_term_memory.schemas import LongTermMemoryCreate
 from emulator.emulator import YellowLegacyEmulator
+from llm.schemas import GEMINI_FLASH_2_5
+from llm.service import GeminiLLMService
 
 
 class CreateLongTermMemoryService:
     """Service for creating long-term memory."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+    llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
     embedding_service = GeminiEmbeddingService()
 
     def __init__(

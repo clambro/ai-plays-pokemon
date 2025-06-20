@@ -5,12 +5,13 @@ from loguru import logger
 from agent.subflows.overworld_handler.nodes.navigate.prompts import DETERMINE_TARGET_COORDS_PROMPT
 from agent.subflows.overworld_handler.nodes.navigate.schemas import NavigationResponse
 from common.enums import AsciiTiles, MapId
-from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.schemas import Coords
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.enums import Button, FacingDirection
 from emulator.game_state import YellowLegacyGameState
+from llm.schemas import GEMINI_FLASH_2_5
+from llm.service import GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 from overworld_map.schemas import OverworldMap
 from overworld_map.service import update_map_with_screen_info
@@ -19,7 +20,7 @@ from overworld_map.service import update_map_with_screen_info
 class NavigationService:
     """The service for the navigation action."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+    llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
 
     def __init__(
         self,

@@ -1,8 +1,9 @@
 from agent.subflows.overworld_handler.nodes.critique.prompts import CRITIQUE_PROMPT
 from agent.subflows.overworld_handler.nodes.critique.schemas import CritiqueResponse
-from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
+from llm.schemas import GEMINI_PRO_2_5
+from llm.service import GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
 
@@ -20,7 +21,7 @@ class CritiqueService:
         self.raw_memory = raw_memory
         self.state_string_builder = state_string_builder
         self.emulator = emulator
-        self.llm_service = GeminiLLMService(GeminiLLMEnum.PRO)
+        self.llm_service = GeminiLLMService(GEMINI_PRO_2_5)
 
     async def critique(self) -> RawMemory:
         """Critique the current state of the game."""

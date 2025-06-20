@@ -3,16 +3,17 @@ from loguru import logger
 from agent.nodes.update_goals.prompts import UPDATE_GOALS_PROMPT
 from agent.nodes.update_goals.schemas import UpdateGoalsResponse
 from common.constants import ITERATIONS_PER_GOAL_UPDATE
-from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
+from llm.schemas import GEMINI_FLASH_2_5
+from llm.service import GeminiLLMService
 from memory.goals import Goals
 
 
 class UpdateGoalsService:
     """Service for updating the goals."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+    llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
 
     def __init__(
         self,

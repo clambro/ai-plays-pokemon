@@ -2,16 +2,17 @@ from loguru import logger
 
 from agent.subflows.battle_handler.nodes.make_decision.prompts import MAKE_DECISION_PROMPT
 from agent.subflows.battle_handler.nodes.make_decision.schemas import MakeDecisionResponse
-from common.llm_service import GeminiLLMEnum, GeminiLLMService
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
+from llm.schemas import GEMINI_FLASH_2_5
+from llm.service import GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
 
 class MakeDecisionService:
     """A service that makes decisions based on the current game state in the battle."""
 
-    llm_service = GeminiLLMService(GeminiLLMEnum.FLASH)
+    llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
 
     def __init__(
         self,
