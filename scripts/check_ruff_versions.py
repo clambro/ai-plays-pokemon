@@ -7,8 +7,12 @@ from loguru import logger
 
 
 def main() -> None:
-    """Check that the installed Ruff version matches the pre-commit Ruff version."""
+    """
+    Check that the installed Ruff version matches the pre-commit Ruff version. Ignore the patch
+    version. Only the major and minor versions matter for compatibility.
+    """
     installed = version("ruff")
+    installed = ".".join(installed.split(".")[:2])
     precommit = _get_precommit_ruff_version()
 
     if installed != precommit:
@@ -29,7 +33,8 @@ def _get_precommit_ruff_version() -> str:
 
     for repo in config["repos"]:
         if repo["repo"] == "https://github.com/astral-sh/ruff-pre-commit":
-            return repo["rev"].lstrip("v")
+            version = repo["rev"].lstrip("v")
+            return ".".join(version.split(".")[:2])
 
     logger.error("Error: Could not find Ruff in pre-commit config")
     sys.exit(1)
