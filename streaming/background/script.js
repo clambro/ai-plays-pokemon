@@ -45,7 +45,6 @@ function updateDisplay(data) {
     }
 
     // --- Log ---
-    // The log data needs to be added to the state payload first.
     const logDiv = document.getElementById('log-content');
     logDiv.innerHTML = '';
     if (data.log && data.log.length > 0) {
