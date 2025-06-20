@@ -44,7 +44,7 @@ async def main(
 
     async with (
         YellowLegacyEmulator(rom_path, emulator_state, mute_sound=mute_sound) as emulator,
-        BackgroundStreamServer(),
+        BackgroundStreamServer() as stream_server,
     ):
         if not emulator_state:
             await asyncio.sleep(30)  # Some time to manually get to the new game screen.
@@ -53,6 +53,7 @@ async def main(
                 workflow = build_agent_workflow(state, emulator)
                 await workflow.execute()
                 state = await workflow.get_state()
+                await stream_server.update(state, emulator.get_game_state())
                 if state.iteration % ITERATIONS_PER_BACKUP == 0:
                     await create_backup(state)
         except Exception:  # noqa: BLE001
