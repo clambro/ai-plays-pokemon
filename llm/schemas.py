@@ -36,11 +36,11 @@ class GeminiModel(Enum):
         return self.value.model_id
 
     @property
-    def cost_per_1m_input_tokens(self) -> float:
+    def cost_1m_input_tokens(self) -> float:
         """Get the cost per 1M input tokens."""
         return self.value.cost_1m_input_tokens
 
     @property
-    def cost_per_1m_output_tokens(self) -> float:
+    def cost_1m_output_tokens(self) -> float:
         """Get the cost per 1M output tokens."""
         return self.value.cost_1m_output_tokens
