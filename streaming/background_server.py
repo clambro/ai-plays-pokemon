@@ -93,7 +93,7 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
         self.app = web.Application()
         self.runner: web.AppRunner | None = None
         self.site: web.TCPSite | None = None
-        self._current_data: dict[str, Any] = {}
+        self._current_data: dict[str, Any] = MOCK_DATA  # TODO: Remove this.
         self._background_dir = Path("streaming/background")
 
         self.app.router.add_get("/", self._serve_index)

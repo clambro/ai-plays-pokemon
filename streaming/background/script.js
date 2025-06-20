@@ -1,7 +1,39 @@
+import { z } from 'https://esm.sh/zod@3.22.4';
+
 const ALL_BADGES = [
     "BOULDERBADGE", "CASCADEBADGE", "THUNDERBADGE", "RAINBOWBADGE",
     "SOULBADGE", "MARSHBADGE", "VOLCANOBADGE", "EARTHBADGE"
 ];
+
+const PokemonSchema = z.object({
+    name: z.string(),
+    species: z.string(),
+    type1: z.string().optional(),
+    type2: z.string().optional(),
+    level: z.number().int().positive(),
+    hp: z.number().int().min(0),
+    max_hp: z.number().int().positive(),
+    status: z.string().optional(),
+    moves: z.array(z.string())
+});
+
+const LogEntrySchema = z.object({
+    iteration: z.number().int().positive(),
+    thought: z.string()
+});
+
+const GameStateSchema = z.object({
+    iteration: z.number().int().positive(),
+    money: z.number().int().min(0),
+    pokedex_seen: z.number().int().min(0),
+    pokedex_caught: z.number().int().min(0),
+    total_cost: z.number().min(0),
+    play_time_seconds: z.number().int().min(0),
+    badges: z.array(z.string()),
+    party: z.array(PokemonSchema),
+    goals: z.array(z.string()),
+    log: z.array(LogEntrySchema)
+});
 
 function updateDisplay(data) {
     // --- Info Bar ---
@@ -149,11 +181,18 @@ function createPokemonCard(pokemon) {
 async function fetchData() {
     try {
         const response = await fetch('/api/state.json');
-        const data = await response.json();
-        updateDisplay(data);
+        const rawData = await response.json();
+
+        const validatedData = GameStateSchema.parse(rawData);
+        updateDisplay(validatedData);
 
     } catch (error) {
-        console.error('Error fetching data:', error);
+        if (error instanceof z.ZodError) {
+            console.error('Validation errors:', error.errors);
+        }
+        else {
+            console.error('Error fetching data:', error);
+        }
     }
 }
 
