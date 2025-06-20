@@ -3,7 +3,7 @@
 ## TODOs in rough order of importance
 
 ### Core Functionality
-Done?
+* Twitch/OBS integration
 
 ### Clean-Up, Refactoring, and Testing
 * Add unit/integration tests
@@ -15,8 +15,6 @@ Done?
 ### Useful Tools and Additions
 * Detailed subflow for battles. Battle type (e.g. trainer, safari zone, etc.) is at 0xD05A, and the move menus are at 0xCCDB
 * Add tools to select moves or swap pokemon in battle, or use a ball in non-trainer battles
-
-* Add money spent to the LLM prompt table
 
 * Add a tool for spinning around to find wild pokemon
 * Some kind of info about items and PC pokemon
@@ -30,11 +28,9 @@ Done?
 * Handle surfing in navigation
 * Navigation should avoid grass tiles where possible
 * Add a strength puzzle solver
-* Add event flags for tracking progress (00:d746 wEventFlags -- check the decomp for details)
 * Add team rocket spin puzzle tiles to navigation
 * Does riding the bike break navigation?
 
-* Some kind of twitch frontend
 * Custom music player to avoid the little async issues?
 
 ## Notes
