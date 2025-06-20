@@ -70,6 +70,10 @@ function updateDisplay(data) {
 
             const card = document.createElement('div');
             card.className = 'pokemon-card';
+            if (pokemon.hp === 0) {
+                card.classList.add('fainted');
+            }
+
 
             let movesHtml = pokemon.moves.map(move => `<li>${move}</li>`).join('');
 
@@ -85,7 +89,7 @@ function updateDisplay(data) {
                     <div class="hp-fill" style="width: ${hpPercent}%; background-color: ${hpColor};"></div>
                 </div>
                 <div class="hp-text">${pokemon.hp} / ${pokemon.max_hp}</div>
-                <div class="status">${pokemon.status !== 'NONE' ? pokemon.status : ''}</div>
+                <div class="status">${pokemon.status}</div>
                 <ul class="moves-list">${movesHtml}</ul>
             `;
             partyDiv.appendChild(card);
@@ -109,12 +113,12 @@ async function fetchData() {
             play_time_seconds: 596153, // about 165 hours
             badges: ["BOULDERBADGE", "CASCADEBADGE", "THUNDERBADGE"],
             party: [
-                { name: 'ECHO', species: 'Golbat', type1: 'POISON', type2: 'FLYING', level: 22, hp: 22, max_hp: 70, status: 'POISON', moves: ['Wing Attack', 'Confuse Ray', 'Bite', 'Haze'] },
-                { name: 'CRAG', species: 'Geodude', type1: 'ROCK', type2: 'GROUND', level: 18, hp: 45, max_hp: 45, status: 'NONE', moves: ['Tackle', 'Defense Curl', 'Rock Throw', 'Self-Destruct'] },
-                { name: 'NIGHTSHADE', species: 'Gloom', type1: 'GRASS', type2: 'POISON', level: 23, hp: 73, max_hp: 73, status: 'NONE', moves: ['Acid', 'Petal Dance', 'Sleep Powder', 'Absorb'] },
-                { name: 'PULSAR', species: 'Magnemite', type1: 'ELECTRIC', level: 18, hp: 36, max_hp: 36, status: 'NONE', moves: ['Tackle', 'Sonic Boom', 'Thunder Shock', 'Supersonic'] },
-                { name: 'SPARKY', species: 'Pikachu', level: 24, hp: 68, max_hp: 68, status: 'NONE', moves: ['Thunder Shock', 'Growl', 'Thunder Wave', 'Quick Attack'] },
-                { name: 'SUBTERRA', species: 'Diglett', type1: 'GROUND', level: 18, hp: 18, max_hp: 52, status: 'NONE', moves: ['Scratch', 'Growl', 'Dig', 'Sand Attack'] },
+                { name: 'ECHO', species: 'Golbat', type1: 'POISON', type2: 'FLYING', level: 22, hp: 0, max_hp: 70, status: '', moves: ['Wing Attack', 'Confuse Ray', 'Bite', 'Haze'] },
+                { name: 'CRAG', species: 'Geodude', type1: 'ROCK', type2: 'GROUND', level: 18, hp: 45, max_hp: 45, status: '', moves: ['Tackle', 'Defense Curl', 'Rock Throw', 'Self-Destruct'] },
+                { name: 'NIGHTSHADE', species: 'Gloom', type1: 'GRASS', type2: 'POISON', level: 23, hp: 73, max_hp: 73, status: '', moves: ['Acid', 'Petal Dance', 'Sleep Powder', 'Absorb'] },
+                { name: 'PULSAR', species: 'Magnemite', type1: 'ELECTRIC', level: 18, hp: 36, max_hp: 36, status: '', moves: ['Tackle', 'Sonic Boom', 'Thunder Shock', 'Supersonic'] },
+                { name: 'SPARKY', species: 'Pikachu', type1: 'ELECTRIC', level: 24, hp: 68, max_hp: 68, status: 'PSN', moves: ['Thunder Shock', 'Growl', 'Thunder Wave', 'Quick Attack'] },
+                { name: 'SUBTERRA', species: 'Diglett', type1: 'GROUND', level: 18, hp: 18, max_hp: 52, status: '', moves: ['Scratch', 'Growl'] },
             ],
             goals: [
                 "Travel through Rock Tunnel to reach Lavender Town.",
