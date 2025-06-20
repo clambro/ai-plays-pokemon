@@ -93,8 +93,9 @@ function createPokemonCard(pokemon) {
     }
 
     // Set sprite
+    const clean_name = pokemon.species.toLowerCase().replace(" ", "").replace("♀", "f").replace("♂", "m").replace("'", "");
     const sprite = card.querySelector('.pokemon-sprite');
-    sprite.src = `assets/pokemon/${pokemon.species.toLowerCase()}.png`;
+    sprite.src = `assets/pokemon/${clean_name}.png`;
     sprite.alt = pokemon.species;
 
     // Set name and status
