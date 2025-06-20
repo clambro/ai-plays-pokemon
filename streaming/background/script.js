@@ -60,11 +60,19 @@ function updateDisplay(data) {
     // --- Party ---
     const partyDiv = document.getElementById('party');
     partyDiv.innerHTML = ''; // Clear old party
-    if (data.party && data.party.length > 0) {
-        data.party.forEach(pokemon => {
-            const card = createPokemonCard(pokemon);
+
+    // Always show 6 cards, add empty placeholders if needed
+    const pokemonToShow = data.party || [];
+    for (let i = 0; i < 6; i++) {
+        if (i < pokemonToShow.length) {
+            const card = createPokemonCard(pokemonToShow[i]);
             partyDiv.appendChild(card);
-        });
+        } else {
+            // Add empty placeholder card
+            const emptyCard = document.createElement('div');
+            emptyCard.className = 'pokemon-card empty';
+            partyDiv.appendChild(emptyCard);
+        }
     }
 }
 
@@ -156,7 +164,6 @@ async function fetchData() {
             party: [
                 { name: 'ECHO', species: 'Golbat', type1: 'POISON', type2: 'FLYING', level: 22, hp: 0, max_hp: 70, moves: ['Wing Attack', 'Confuse Ray', 'Bite', 'Haze'] },
                 { name: 'CRAG', species: 'Geodude', type1: 'ROCK', type2: 'GROUND', level: 18, hp: 45, max_hp: 45, moves: ['Tackle', 'Defense Curl', 'Rock Throw', 'Self-Destruct'] },
-                { name: 'NIGHTSHADE', species: 'Gloom', type1: 'GRASS', type2: 'POISON', level: 23, hp: 73, max_hp: 73, moves: ['Acid', 'Petal Dance', 'Sleep Powder', 'Absorb'] },
                 { name: 'PULSAR', species: 'Magnemite', type1: 'ELECTRIC', level: 18, hp: 0, max_hp: 36, moves: ['Tackle', 'Sonic Boom', 'Thunder Shock', 'Supersonic'] },
                 { name: 'SPARKY', species: 'Pikachu', type1: 'ELECTRIC', level: 24, hp: 68, max_hp: 68, status: "POISONED", moves: ['Thunder Shock', 'Growl', 'Thunder Wave', 'Quick Attack'] },
                 { name: 'SUBTERRA', species: 'Diglett', type1: 'GROUND', level: 18, hp: 18, max_hp: 52, moves: ['Scratch', 'Growl'] },

@@ -233,11 +233,17 @@ body {
     border-color: #4a5568;
 }
 
+.pokemon-card.empty {
+    background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
+    border: 1px dashed var(--border-color);
+    opacity: 0.3;
+}
+
 .pokemon-sprite {
     width: 80px;
     height: 80px;
     margin: 0 auto;
-    image-rendering: pixelated;
+    image-rendering: crisp-edges;
 }
 
 .pokemon-header {
