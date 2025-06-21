@@ -15,6 +15,9 @@ class Player(BaseModel):
     money: int
     badges: list[str]
     level_cap: int
+    pokedex_caught: int
+    pokedex_seen: int
+    play_time_seconds: int
 
     model_config = ConfigDict(frozen=True)
 
@@ -32,6 +35,15 @@ def parse_player(mem: PyBoyMemoryView) -> Player:
 
     badges = _read_badges(mem)
 
+    play_time_hours = mem[0xDA40]
+    play_time_minutes = mem[0xDA42]
+    play_time_seconds = mem[0xDA43]
+    play_time_seconds += (play_time_hours * 3600) + (play_time_minutes * 60)
+
+    # Pokemon seen and caught are represented as one bit each in the following bytes.
+    pokedex_caught = sum(mem[i].bit_count() for i in range(0xD2F6, 0xD309))
+    pokedex_seen = sum(mem[i].bit_count() for i in range(0xD309, 0xD31C))
+
     return Player(
         name=name,
         coords=Coords(row=mem[0xD3AE], col=mem[0xD3AF]),
@@ -39,6 +51,9 @@ def parse_player(mem: PyBoyMemoryView) -> Player:
         money=_read_money(mem),
         badges=badges,
         level_cap=_read_level_cap(mem, len(badges)),
+        pokedex_caught=pokedex_caught,
+        pokedex_seen=pokedex_seen,
+        play_time_seconds=play_time_seconds,
     )
 
 

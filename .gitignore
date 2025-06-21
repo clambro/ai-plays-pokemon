@@ -176,3 +176,4 @@ cython_debug/
 notes/
 resources/
 outputs/
+streaming/**/assets/**/*.png

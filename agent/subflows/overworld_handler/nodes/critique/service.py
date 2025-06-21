@@ -38,10 +38,9 @@ class CritiqueService:
             RawMemoryPiece(
                 iteration=self.iteration,
                 content=(
-                    f"An exterior critic model has provided you with the following advice on your"
-                    f" progress. This is useful, high-quality information: {response.critique}"
+                    f"The critic model has provided me with the following advice on my progress:"
+                    f" {response.critique}"
                 ),
             ),
         )
-
         return self.raw_memory

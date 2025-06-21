@@ -111,24 +111,27 @@ class YellowLegacyGameState(BaseModel):
 
         on_screen_sprites = []
         for s in self.sprites.values():
-            if s.is_rendered and (screen_coords := self.to_screen_coords(s.coords)):
+            if s.is_rendered and (sc := self.to_screen_coords(s.coords)):
                 on_screen_sprites.append(s)
-                blocks[screen_coords.row, screen_coords.col] = AsciiTiles.SPRITE
+                blocks[sc.row, sc.col] = AsciiTiles.SPRITE
 
         pikachu = self.pikachu
-        if pikachu.is_rendered and (screen_coords := self.to_screen_coords(pikachu.coords)):
-            blocks[screen_coords.row, screen_coords.col] = AsciiTiles.PIKACHU
+        if pikachu.is_rendered and (sc := self.to_screen_coords(pikachu.coords)):
+            blocks[sc.row, sc.col] = AsciiTiles.PIKACHU
 
         on_screen_warps = []
         for w in self.warps.values():
-            if screen_coords := self.to_screen_coords(w.coords):
-                blocks[screen_coords.row, screen_coords.col] = AsciiTiles.WARP
+            sc = self.to_screen_coords(w.coords)
+            # There's a funny edge case with warps where they can be rendered on top of walls and
+            # are therefore inaccessible. An example is in map 50, when entering Viridian Forest.
+            if sc and blocks[sc.row, sc.col] != AsciiTiles.WALL:
+                blocks[sc.row, sc.col] = AsciiTiles.WARP
                 on_screen_warps.append(w)
 
         on_screen_signs = []
         for s in self.signs.values():
-            if screen_coords := self.to_screen_coords(s.coords):
-                blocks[screen_coords.row, screen_coords.col] = AsciiTiles.SIGN
+            if sc := self.to_screen_coords(s.coords):
+                blocks[sc.row, sc.col] = AsciiTiles.SIGN
                 on_screen_signs.append(s)
 
         return AsciiScreenWithEntities(

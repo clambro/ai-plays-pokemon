@@ -3,7 +3,7 @@
 ## TODOs in rough order of importance
 
 ### Core Functionality
-* Twitch/OBS integration
+Done?
 
 ### Clean-Up, Refactoring, and Testing
 * Add unit/integration tests
@@ -34,7 +34,7 @@
 * Custom music player to avoid the little async issues?
 
 ## Notes
-* Numerical coords on screen? Dots to show past steps? A grid to show collisions? Maybe when I have tests set up.
+* Numerical coords on screen? Dots to show past steps? A grid to show collisions? Maybe when I have tests set up. I'm convinced that the screenshot is effectively useless in the overworld.
 * Some better way of doing RAG that doesn't involve reading everything into memory would be nice. Might need to switch DBs for this. Could also offer to delete LTM after 1000 iterations without retrieval to make this more efficient.
 
 ## Junjo Thoughts

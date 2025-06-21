@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>AI Plays Pokemon</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="stream-layout">
+        <header class="title-bar">
+            <h1>AI PLAYS POKEMON</h1>
+            <p>Pokemon Yellow Legacy: HARD MODE!</p>
+        </header>
+
+        <section class="info-bar panel" role="region" aria-label="Session stats">
+            <dl class="info-item">
+                <dt class="label">ITERATION</dt>
+                <dd class="value" id="iteration">0</dd>
+            </dl>
+            <dl class="info-item">
+                <dt class="label">PLAY TIME</dt>
+                <dd class="value" id="play-time">0h 0m</dd>
+            </dl>
+            <dl class="info-item">
+                <dt class="label">LLM COST</dt>
+                <dd class="value" id="total-cost">$0.00</dd>
+            </dl>
+            <dl class="info-item">
+                <dt class="label">MONEY</dt>
+                <dd class="value" id="money">¥0</dd>
+            </dl>
+            <dl class="info-item">
+                <dt class="label">BADGES</dt>
+                <ul class="value" id="badges-container" role="list">
+                    <!-- Badge icons will be injected here -->
+                </ul>
+            </dl>
+            <dl class="info-item">
+                <dt class="label">CAUGHT/SEEN</dt>
+                <dd class="value" id="caught-seen">0/0</dd>
+            </dl>
+        </section>
+
+        <main class="log-panel panel">
+            <h2>AGENT LOG</h2>
+            <div id="log-content">
+                <!-- Log content will be dynamically inserted here -->
+            </div>
+        </main>
+
+        <aside class="goals-panel panel">
+            <h2>GOALS</h2>
+            <ul id="goals">
+                <!-- Goals will be dynamically inserted here -->
+            </ul>
+        </aside>
+
+        <aside class="game-window-area">
+            <div class="game-window-placeholder">
+                <p class="title">GAME WINDOW</p>
+                <p class="subtitle">10:9 Aspect Ratio</p>
+            </div>
+        </aside>
+
+        <footer class="party-bar panel">
+            <ul id="party" role="list">
+                <!-- Pokemon party cards will be dynamically inserted here -->
+            </ul>
+        </footer>
+    </div>
+
+    <!-- Template for Pokemon cards -->
+    <template id="pokemon-card-template">
+        <div class="pokemon-card">
+            <div class="card-top">
+                <img class="pokemon-sprite" src="" alt="">
+                <div class="pokemon-info">
+                    <div class="name-and-status">
+                        <div class="pokemon-name" title=""></div>
+                        <div class="status"></div>
+                    </div>
+                    <div class="pokemon-species"></div>
+                    <div class="type-badge-container">
+                        <!-- Type badges will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            <div class="hp-container">
+                <div class="hp-bar">
+                    <div class="hp-fill"></div>
+                </div>
+                <div class="hp-text"></div>
+            </div>
+            <ul class="moves-list">
+                <!-- Moves will be inserted here -->
+            </ul>
+        </div>
+    </template>
+
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>
