@@ -23,7 +23,7 @@ class Pokemon(BaseModel):
     level: int
     hp: int
     max_hp: int
-    status: str
+    status: str | None
     moves: list[PokemonMove]
 
     model_config = ConfigDict(frozen=True)
@@ -63,6 +63,9 @@ def _parse_player_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
     hp = (mem[0xD16B + increment] << 8) | mem[0xD16B + increment + 1]
     max_hp = (mem[0xD18C + increment] << 8) | mem[0xD18C + increment + 1]
 
+    status_loc = mem[0xD16E + increment]
+    status = _INT_TO_STATUS_MAP[status_loc] if status_loc != 0 else None
+
     return Pokemon(
         name=name,
         species=_INT_TO_SPECIES_MAP[species_id],
@@ -71,7 +74,7 @@ def _parse_player_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
         level=mem[0xD18B + increment],
         hp=hp,
         max_hp=max_hp,
-        status=_INT_TO_STATUS_MAP[mem[0xD16E + increment]],
+        status=status,
         moves=moves,
     )
 
@@ -249,7 +252,6 @@ _INT_TO_TYPE_MAP = {
     0x1A: "DRAGON",
 }
 _INT_TO_STATUS_MAP = {
-    0: "NONE",
     1 << 0: "ASLEEP",  # One for each turn of sleep, but we aren't supposed to know how many turns.
     1 << 1: "ASLEEP",
     1 << 2: "ASLEEP",

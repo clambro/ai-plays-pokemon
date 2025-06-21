@@ -8,12 +8,12 @@ const ALL_BADGES = [
 const PokemonSchema = z.object({
     name: z.string(),
     species: z.string(),
-    type1: z.string().optional(),
-    type2: z.string().optional(),
+    type1: z.string(),
+    type2: z.string().nullable(),
     level: z.number().int().positive(),
     hp: z.number().int().min(0),
     max_hp: z.number().int().positive(),
-    status: z.string().optional(),
+    status: z.string().nullable(),
     moves: z.array(z.string())
 });
 
@@ -145,12 +145,10 @@ function createPokemonCard(pokemon) {
     // Set type badges
     const typeContainer = card.querySelector('.type-badge-container');
     typeContainer.innerHTML = '';
-    if (pokemon.type1) {
-        const type1Badge = document.createElement('span');
-        type1Badge.className = `type-badge type-${pokemon.type1.toLowerCase()}`;
-        type1Badge.textContent = pokemon.type1;
-        typeContainer.appendChild(type1Badge);
-    }
+    const type1Badge = document.createElement('span');
+    type1Badge.className = `type-badge type-${pokemon.type1.toLowerCase()}`;
+    type1Badge.textContent = pokemon.type1;
+    typeContainer.appendChild(type1Badge);
     if (pokemon.type2) {
         const type2Badge = document.createElement('span');
         type2Badge.className = `type-badge type-${pokemon.type2.toLowerCase()}`;
@@ -183,6 +181,9 @@ async function fetchData() {
     try {
         const response = await fetch('/api/state.json');
         const rawData = await response.json();
+        if (Object.keys(rawData).length === 0) {
+            return;  // No data yet.
+        }
 
         const validatedData = GameStateSchema.parse(rawData);
         updateDisplay(validatedData);

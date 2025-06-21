@@ -73,7 +73,7 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
     async def _serve_state(self, request: Request) -> Response:  # noqa: ARG002
         """Serve the current state data as JSON."""
         if self._current_data is None:
-            return web.Response(text="No data available yet.")
+            return web.Response()
         return web.json_response(self._current_data.model_dump(mode="json"))
 
     async def update(self, agent_state: AgentState, game_state: YellowLegacyGameState) -> None:

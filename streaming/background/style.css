@@ -23,28 +23,31 @@ body {
     width: 1920px;
     height: 1080px;
     overflow: hidden;
+    margin: 0;
+    padding: 0;
 }
 
 .stream-layout {
     display: grid;
-    width: 100%;
-    height: 100%;
-    grid-template-rows: auto auto 1fr auto;
+    width: 1920px;
+    height: 1080px;
+    grid-template-rows: 100px 70px 1fr 280px;
     grid-template-columns: 1fr 380px 620px;
     grid-template-areas:
         "header header header"
         "info info info"
         "log goals game"
         "party party party";
-    gap: 15px;
-    padding: 20px;
+    gap: 12px;
+    padding: 12px;
+    box-sizing: border-box;
 }
 
 .panel {
     background-color: var(--panel-bg-color);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 15px;
+    padding: 12px;
     backdrop-filter: blur(5px);
 }
 
@@ -53,23 +56,30 @@ body {
     grid-area: header;
     text-align: center;
     border-bottom: 2px solid var(--border-color);
-    padding-bottom: 10px;
-    margin-bottom: -5px;
+    padding-bottom: 8px;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .title-bar h1 {
     font-family: var(--font-title);
-    font-size: 48px;
+    font-size: 42px;
     font-weight: 900;
-    letter-spacing: 4px;
+    letter-spacing: 3px;
     color: var(--text-color);
     text-shadow: 0 0 15px var(--border-color);
+    margin: 0;
+    line-height: 1;
 }
 
 .title-bar p {
-    font-size: 20px;
+    font-size: 18px;
     color: var(--highlight-color);
-    letter-spacing: 2px;
+    letter-spacing: 1px;
+    margin: 0;
+    line-height: 1;
 }
 
 /* --- Info Bar --- */
@@ -78,6 +88,7 @@ body {
     display: flex;
     justify-content: space-around;
     align-items: center;
+    padding: 8px 12px;
 }
 
 .info-item {
@@ -85,15 +96,15 @@ body {
 }
 
 .info-item .label {
-    font-size: 16px;
+    font-size: 15px;
     color: var(--border-color);
     letter-spacing: 1px;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
 }
 
 .info-item .value {
     font-family: var(--font-title);
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
 }
 
@@ -197,8 +208,8 @@ body {
 }
 
 .game-window-placeholder {
-    width: 600px;
-    height: 540px;
+    width: 580px;
+    height: 520px;
     border: 2px dashed var(--border-color);
     display: flex;
     flex-direction: column;
@@ -226,10 +237,10 @@ body {
 #party {
     display: flex;
     justify-content: space-between;
-    gap: 15px;
+    gap: 12px;
     align-items: stretch;
-    padding-top: 10px;
-    height: 280px;
+    padding-top: 8px;
+    height: 260px;
 }
 
 .pokemon-card {
@@ -242,8 +253,8 @@ body {
     flex-direction: column;
     text-align: center;
     transition: filter 0.3s ease, border-color 0.3s ease;
-    min-height: 260px;
-    max-height: 260px;
+    min-height: 240px;
+    max-height: 240px;
 }
 
 .pokemon-card.fainted {
@@ -255,13 +266,13 @@ body {
     background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
     border: 1px dashed var(--border-color);
     opacity: 0.3;
-    min-height: 260px;
-    max-height: 260px;
+    min-height: 240px;
+    max-height: 240px;
 }
 
 .pokemon-sprite {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
     margin: 0 auto;
     object-fit: contain;
 }
@@ -270,25 +281,25 @@ body {
     display: flex;
     justify-content: center;
     align-items: baseline;
-    gap: 10px;
-    margin-top: 8px;
+    gap: 8px;
+    margin-top: 6px;
 }
 
 .pokemon-name {
     font-family: var(--font-title);
     font-weight: bold;
     color: var(--highlight-color);
-    font-size: 20px;
+    font-size: 18px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .pokemon-species {
-    font-size: 16px;
+    font-size: 14px;
     color: var(--border-color);
-    margin-top: 4px;
-    margin-bottom: 8px;
+    margin-top: 3px;
+    margin-bottom: 6px;
     text-align: center;
 }
 
@@ -299,10 +310,10 @@ body {
 
 .hp-bar {
     background: #111;
-    height: 8px;
+    height: 7px;
     border-radius: 4px;
     overflow: hidden;
-    margin: 8px 0 4px;
+    margin: 6px 0 3px;
     border: 1px solid #000;
 }
 
@@ -312,13 +323,13 @@ body {
 }
 
 .hp-text {
-    font-size: 14px;
+    font-size: 13px;
     color: #ccc;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .status {
-    font-size: 14px;
+    font-size: 13px;
     color: #ff6b6b;
     font-weight: bold;
 }
@@ -326,11 +337,11 @@ body {
 .moves-list {
     list-style: none;
     padding: 0;
-    font-size: 12px;
-    margin-top: 8px;
+    font-size: 11px;
+    margin-top: 6px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 4px;
+    gap: 3px;
 }
 
 .moves-list li {

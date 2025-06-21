@@ -10,12 +10,13 @@ class PartyPokemonView(BaseModel):
 
     name: str
     species: str
-    type1: str | None = None
-    type2: str | None = None
+    type1: str
+    type2: str | None
     level: int
     hp: int
     max_hp: int
-    status: str | None = None
+    status: str | None
+    moves: list[str]
 
     @classmethod
     def from_game_state(cls, game_state: YellowLegacyGameState) -> list["PartyPokemonView"]:
@@ -30,6 +31,7 @@ class PartyPokemonView(BaseModel):
                 hp=pokemon.hp,
                 max_hp=pokemon.max_hp,
                 status=pokemon.status,
+                moves=[move.name for move in pokemon.moves],
             )
             for pokemon in game_state.party
         ]
