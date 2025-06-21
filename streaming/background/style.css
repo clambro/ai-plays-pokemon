@@ -271,8 +271,8 @@ body {
 }
 
 .pokemon-sprite {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 60px;
     margin: 0 auto;
     object-fit: contain;
 }
@@ -281,39 +281,39 @@ body {
     display: flex;
     justify-content: center;
     align-items: baseline;
-    gap: 8px;
-    margin-top: 6px;
+    gap: 6px;
+    margin-top: 4px;
 }
 
 .pokemon-name {
     font-family: var(--font-title);
     font-weight: bold;
     color: var(--highlight-color);
-    font-size: 18px;
+    font-size: 16px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .pokemon-species {
-    font-size: 14px;
+    font-size: 12px;
     color: var(--border-color);
-    margin-top: 3px;
-    margin-bottom: 6px;
+    margin-top: 2px;
+    margin-bottom: 5px;
     text-align: center;
 }
 
 .pokemon-level {
     color: var(--border-color);
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .hp-bar {
     background: #111;
-    height: 7px;
-    border-radius: 4px;
+    height: 6px;
+    border-radius: 3px;
     overflow: hidden;
-    margin: 6px 0 3px;
+    margin: 4px 0 2px;
     border: 1px solid #000;
 }
 
@@ -323,47 +323,50 @@ body {
 }
 
 .hp-text {
-    font-size: 13px;
+    font-size: 11px;
     color: #ccc;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .status {
-    font-size: 13px;
+    font-size: 11px;
     color: #ff6b6b;
     font-weight: bold;
+    margin-bottom: 2px;
 }
 
 .moves-list {
     list-style: none;
     padding: 0;
-    font-size: 11px;
-    margin-top: 6px;
+    font-size: 10px;
+    margin-top: 4px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 3px;
+    gap: 4px 4px;
+    flex-grow: 1;
+    align-content: start;
 }
 
 .moves-list li {
     background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 3px;
-    padding: 2px 4px;
+    border-radius: 2px;
+    padding: 2px 3px;
 }
 
 .type-badge-container {
-    height: 20px;
-    margin-bottom: 8px;
+    height: 18px;
+    margin-bottom: 5px;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
 }
 
 .type-badge {
     display: inline-block;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
     font-weight: bold;
     text-transform: uppercase;
     border: 1px solid rgba(255, 255, 255, 0.5);
