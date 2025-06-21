@@ -6,6 +6,7 @@ from agent.nodes.create_long_term_memory.node import CreateLongTermMemoryNode
 from agent.nodes.dummy.node import DummyNode
 from agent.nodes.prepare_agent_store.node import PrepareAgentStoreNode
 from agent.nodes.retrieve_long_term_memory.node import RetrieveLongTermMemoryNode
+from agent.nodes.update_background_stream.node import UpdateBackgroundStreamNode
 from agent.nodes.update_goals.node import UpdateGoalsNode
 from agent.nodes.update_long_term_memory.node import UpdateLongTermMemoryNode
 from agent.nodes.update_summary_memory.node import UpdateSummaryMemoryNode
@@ -29,6 +30,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     update_summary_memory = UpdateSummaryMemoryNode(emulator)
     create_long_term_memory = CreateLongTermMemoryNode(emulator)
     update_long_term_memory = UpdateLongTermMemoryNode(emulator)
+    update_background_stream = UpdateBackgroundStreamNode(emulator)
 
     battle_handler_subflow = BattleHandlerSubflow(
         graph=build_battle_handler_subflow_graph(emulator),
@@ -52,7 +54,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     )
     do_updates = RunConcurrent(
         name="DoUpdates",
-        items=[update_goals, update_summary_memory],
+        items=[update_goals, update_summary_memory, update_background_stream],
     )
 
     post_retrieval_dummy = DummyNode()

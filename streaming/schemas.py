@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from agent.state import AgentState
 from database.llm_messages.repository import get_total_llm_cost
 from emulator.game_state import YellowLegacyGameState
+from memory.raw_memory import RawMemory
 
 
 class PartyPokemonView(BaseModel):
@@ -44,15 +45,20 @@ class LogEntryView(BaseModel):
     thought: str
 
     @classmethod
-    def from_agent_state(cls, state: AgentState) -> list["LogEntryView"]:
-        """Create a view of the log entry from the agent state."""
+    def from_memory(cls, memory: RawMemory) -> list["LogEntryView"]:
+        """Create a view of the log entry from the memory."""
         return [
             cls(
                 iteration=piece.iteration,
                 thought=piece.content,
             )
-            for piece in state.raw_memory.pieces.values()
+            for piece in memory.pieces.values()
         ]
+
+    @classmethod
+    def from_agent_state(cls, state: AgentState) -> list["LogEntryView"]:
+        """Create a view of the log entry from the agent state."""
+        return cls.from_memory(state.raw_memory)
 
 
 class GameStateView(BaseModel):

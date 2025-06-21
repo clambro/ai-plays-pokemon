@@ -215,4 +215,4 @@ async function fetchData() {
 
 // Initial load and periodic refresh
 fetchData();
-setInterval(fetchData, 1000);
+setInterval(fetchData, 100);

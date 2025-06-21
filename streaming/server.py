@@ -8,11 +8,25 @@ from loguru import logger
 
 from agent.state import AgentState
 from emulator.game_state import YellowLegacyGameState
-from streaming.schemas import GameStateView
+from memory.raw_memory import RawMemory
+from streaming.schemas import GameStateView, LogEntryView
 
 
 class BackgroundStreamServer(AbstractAsyncContextManager):
     """Async context manager for hosting the background HTML page with live updates."""
+
+    # Global instance for dependency injection
+    _instance: "BackgroundStreamServer | None" = None
+
+    @classmethod
+    def get_instance(cls) -> "BackgroundStreamServer | None":
+        """Get the global instance of the stream server."""
+        return cls._instance
+
+    @classmethod
+    def _set_instance(cls, instance: "BackgroundStreamServer | None") -> None:
+        """Set the global instance of the stream server."""
+        cls._instance = instance
 
     def __init__(self, host: str = "localhost", port: int = 8080) -> None:
         """Initialize the background stream server."""
@@ -38,6 +52,8 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
         self.site = web.TCPSite(self.runner, self.host, self.port)
         await self.site.start()
 
+        self._set_instance(self)
+
         logger.info(f"Background server started at http://{self.host}:{self.port}")
         return self
 
@@ -47,6 +63,9 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
             await self.site.stop()
         if self.runner:
             await self.runner.cleanup()
+
+        self._set_instance(None)
+
         logger.info("Background server stopped")
 
     async def _serve_index(self, request: Request) -> Response:  # noqa: ARG002
@@ -76,6 +95,34 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
             return web.Response()
         return web.json_response(self._current_data.model_dump(mode="json"))
 
-    async def update(self, agent_state: AgentState, game_state: YellowLegacyGameState) -> None:
+    def update_log(self, memory: RawMemory) -> None:
+        """Update the current log data."""
+        if self._current_data is not None:
+            self._current_data.log = LogEntryView.from_memory(memory)
+        else:
+            logger.warning("Current data is not set. Cannot update log")
+
+    async def update_data(self, agent_state: AgentState, game_state: YellowLegacyGameState) -> None:
         """Update the current state data."""
         self._current_data = await GameStateView.from_states(agent_state, game_state)
+
+
+def update_background_log_from_memory(memory: RawMemory) -> None:
+    """Update the background log from the memory."""
+    server = BackgroundStreamServer.get_instance()
+    if server is not None:
+        server.update_log(memory)
+    else:
+        logger.warning("Stream server not available for update")
+
+
+async def update_background_from_states(
+    agent_state: AgentState,
+    game_state: YellowLegacyGameState,
+) -> None:
+    """Helper function to update the stream server from anywhere in the codebase."""
+    server = BackgroundStreamServer.get_instance()
+    if server is not None:
+        await server.update_data(agent_state, game_state)
+    else:
+        logger.warning("Stream server not available for update")
