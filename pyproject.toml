@@ -29,6 +29,7 @@ aiohttp = "^3.12.13"
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.6.2"
 ruff = "^0.12.0"
+pytest-asyncio = "^1.0.0"
 
 [tool.ruff]
 target-version = "py313"
