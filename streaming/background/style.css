@@ -254,6 +254,7 @@ body {
     transition: filter 0.3s ease, border-color 0.3s ease;
     min-height: 240px;
     max-height: 240px;
+    justify-content: space-between;
 }
 
 .pokemon-card.fainted {
@@ -276,22 +277,7 @@ body {
     display: flex;
     gap: 10px;
     align-items: stretch;
-}
-
-.name-and-status {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-}
-
-.pokemon-info {
     flex: 1;
-    text-align: center;
-    font-size: 14px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
 }
 
 .pokemon-sprite {
@@ -299,6 +285,26 @@ body {
     height: 80px;
     object-fit: contain;
     flex-shrink: 0;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pokemon-info {
+    flex: 2;
+    text-align: center;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.name-and-status {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
 }
 
 .pokemon-name {
@@ -319,6 +325,11 @@ body {
 .pokemon-level {
     color: var(--border-color);
     font-size: 14px;
+}
+
+.hp-container {
+    flex-shrink: 0;
+    margin: 8px 0;
 }
 
 .hp-bar {
@@ -347,8 +358,8 @@ body {
     align-items: center;
     justify-content: center;
     padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 10px;
+    border-radius: 6px;
+    font-size: 14px;
     font-weight: bold;
     color: white;
     text-shadow: 1px 1px 1px black;
@@ -392,7 +403,7 @@ body {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 4px;
-    flex-grow: 1;
+    flex: 1;
     align-content: flex-start;
 }
 

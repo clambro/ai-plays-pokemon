@@ -19,7 +19,7 @@ MOCK_DATA = GameStateView(
     party=[
         PartyPokemonView(
             name="ECHO",
-            species="Golbat",
+            species="GOLBAT",
             type1="POISON",
             type2="FLYING",
             status=None,
@@ -30,7 +30,7 @@ MOCK_DATA = GameStateView(
         ),
         PartyPokemonView(
             name="CRAG",
-            species="Geodude",
+            species="GEODUDE",
             type1="ROCK",
             type2="GROUND",
             status=None,
@@ -41,7 +41,7 @@ MOCK_DATA = GameStateView(
         ),
         PartyPokemonView(
             name="PULSAR",
-            species="Magnemite",
+            species="MAGNEMITE",
             type1="ELECTRIC",
             type2=None,
             status=None,
@@ -52,7 +52,7 @@ MOCK_DATA = GameStateView(
         ),
         PartyPokemonView(
             name="SPARKY",
-            species="Pikachu",
+            species="PIKACHU",
             type1="ELECTRIC",
             type2=None,
             level=24,
@@ -63,7 +63,7 @@ MOCK_DATA = GameStateView(
         ),
         PartyPokemonView(
             name="SUBTERRA",
-            species="Diglett",
+            species="DIGLETT",
             type1="GROUND",
             type2=None,
             status=None,
