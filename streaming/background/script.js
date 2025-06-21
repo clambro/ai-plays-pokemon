@@ -22,6 +22,14 @@ const LogEntrySchema = z.object({
     thought: z.string()
 });
 
+const statusMap = {
+    'POISONED': { abbr: 'PSN', class: 'psn' },
+    'BURNED': { abbr: 'BRN', class: 'brn' },
+    'PARALYZED': { abbr: 'PAR', class: 'par' },
+    'ASLEEP': { abbr: 'SLP', class: 'slp' },
+    'FROZEN': { abbr: 'FRZ', class: 'frz' },
+};
+
 const GameStateSchema = z.object({
     iteration: z.number().int().positive(),
     money: z.number().int().min(0),
@@ -136,7 +144,14 @@ function createPokemonCard(pokemon) {
     nameEl.title = pokemon.name;
 
     const statusEl = card.querySelector('.status');
-    statusEl.textContent = pokemon.hp > 0 && pokemon.status ? pokemon.status : '';
+    statusEl.className = 'status'; // Reset classes
+    if (pokemon.hp > 0 && pokemon.status) {
+        const statusInfo = statusMap[pokemon.status.toUpperCase()];
+        if (statusInfo) {
+            statusEl.textContent = statusInfo.abbr;
+            statusEl.classList.add(statusInfo.class);
+        }
+    }
 
     // Set species and level
     const speciesEl = card.querySelector('.pokemon-species');
@@ -168,11 +183,11 @@ function createPokemonCard(pokemon) {
     // Set moves
     const movesList = card.querySelector('.moves-list');
     movesList.innerHTML = '';
-    pokemon.moves.forEach(move => {
+    for (let i = 0; i < 4; i++) {
         const moveLi = document.createElement('li');
-        moveLi.textContent = move;
+        moveLi.textContent = pokemon.moves[i] ? pokemon.moves[i] : '---';
         movesList.appendChild(moveLi);
-    });
+    }
 
     return card;
 }
