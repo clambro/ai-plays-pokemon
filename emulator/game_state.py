@@ -170,7 +170,7 @@ class YellowLegacyGameState(BaseModel):
                 b = tiles[i : i + 2, j : j + 2]
                 if self.map.water_tile and np.any(b == self.map.water_tile):
                     row.append(AsciiTiles.WATER)
-                elif np.isin(b, self.map.ledge_tiles).any():
+                elif self._is_ledge(b):
                     row.append(AsciiTiles.LEDGE)
                 elif self.map.grass_tile and np.any(b == self.map.grass_tile):
                     row.append(AsciiTiles.GRASS)
@@ -182,3 +182,15 @@ class YellowLegacyGameState(BaseModel):
                     row.append(AsciiTiles.FREE)
             blocks.append(row)
         return np.array(blocks)
+
+    def _is_ledge(self, b: np.ndarray) -> bool:
+        """
+        Check if the block is a ledge.
+
+        A ledge is composed of ledge tiles on the bottom row of the block, and walkable tiles on the
+        top row.
+        """
+        return bool(
+            np.isin(b[1, :], self.map.ledge_tiles).all()
+            and np.isin(b[0, :], self.map.walkable_tiles).all()
+        )
