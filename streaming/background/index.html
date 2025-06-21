@@ -5,6 +5,11 @@
     <meta charset="utf-8">
     <title>AI Plays Pokemon</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
@@ -14,44 +19,44 @@
             <p>Pokemon Yellow Legacy: HARD MODE!</p>
         </header>
 
-        <section class="info-bar panel">
-            <div class="info-item">
-                <div class="label">ITERATION</div>
-                <div class="value" id="iteration">0</div>
-            </div>
-            <div class="info-item">
-                <div class="label">PLAY TIME</div>
-                <div class="value" id="play-time">0h 0m</div>
-            </div>
-            <div class="info-item">
-                <div class="label">LLM COST</div>
-                <div class="value" id="total-cost">$0.00</div>
-            </div>
-            <div class="info-item">
-                <div class="label">MONEY</div>
-                <div class="value" id="money">¥0</div>
-            </div>
-            <div class="info-item">
-                <div class="label">BADGES</div>
-                <div class="value" id="badges-container">
+        <section class="info-bar panel" role="region" aria-label="Session stats">
+            <dl class="info-item">
+                <dt class="label">ITERATION</dt>
+                <dd class="value" id="iteration">0</dd>
+            </dl>
+            <dl class="info-item">
+                <dt class="label">PLAY TIME</dt>
+                <dd class="value" id="play-time">0h 0m</dd>
+            </dl>
+            <dl class="info-item">
+                <dt class="label">LLM COST</dt>
+                <dd class="value" id="total-cost">$0.00</dd>
+            </dl>
+            <dl class="info-item">
+                <dt class="label">MONEY</dt>
+                <dd class="value" id="money">¥0</dd>
+            </dl>
+            <dl class="info-item">
+                <dt class="label">BADGES</dt>
+                <ul class="value" id="badges-container" role="list">
                     <!-- Badge icons will be injected here -->
-                </div>
-            </div>
-            <div class="info-item">
-                <div class="label">CAUGHT/SEEN</div>
-                <div class="value" id="caught-seen">0/0</div>
-            </div>
+                </ul>
+            </dl>
+            <dl class="info-item">
+                <dt class="label">CAUGHT/SEEN</dt>
+                <dd class="value" id="caught-seen">0/0</dd>
+            </dl>
         </section>
 
         <main class="log-panel panel">
-            <h3>AGENT LOG</h3>
+            <h2>AGENT LOG</h2>
             <div id="log-content">
                 <!-- Log content will be dynamically inserted here -->
             </div>
         </main>
 
         <aside class="goals-panel panel">
-            <h3>GOALS</h3>
+            <h2>GOALS</h2>
             <ul id="goals">
                 <!-- Goals will be dynamically inserted here -->
             </ul>
@@ -65,9 +70,9 @@
         </aside>
 
         <footer class="party-bar panel">
-            <div id="party">
+            <ul id="party" role="list">
                 <!-- Pokemon party cards will be dynamically inserted here -->
-            </div>
+            </ul>
         </footer>
     </div>
 

@@ -26,7 +26,7 @@ MOCK_DATA = GameStateView(
             level=22,
             hp=0,
             max_hp=70,
-            moves=["Wing Attack", "Confuse Ray", "Bite", "Haze"],
+            moves=["WING ATTACK", "CONFUSE RAY", "BITE", "HAZE"],
         ),
         PartyPokemonView(
             name="CRAG",
@@ -37,7 +37,7 @@ MOCK_DATA = GameStateView(
             level=18,
             hp=45,
             max_hp=45,
-            moves=["Tackle", "Defense Curl", "Rock Throw", "Self-Destruct"],
+            moves=["TACKLE", "DEFENSE CURL", "ROCK THROW", "SELF-DESTRUCT"],
         ),
         PartyPokemonView(
             name="PULSAR",
@@ -48,7 +48,7 @@ MOCK_DATA = GameStateView(
             level=18,
             hp=0,
             max_hp=36,
-            moves=["Tackle", "Sonic Boom", "Thunder Shock", "Supersonic"],
+            moves=["TACKLE", "SONIC BOOM", "THUNDER SHOCK", "SUPERSONIC"],
         ),
         PartyPokemonView(
             name="SPARKY",
@@ -59,7 +59,7 @@ MOCK_DATA = GameStateView(
             hp=68,
             max_hp=68,
             status="POISONED",
-            moves=["Thunder Shock", "Growl", "Thunder Wave", "Quick Attack"],
+            moves=["THUNDERSHOCK", "GROWL", "THUNDER WAVE", "QUICK ATTACK"],
         ),
         PartyPokemonView(
             name="SUBTERRA",
@@ -70,7 +70,7 @@ MOCK_DATA = GameStateView(
             level=18,
             hp=18,
             max_hp=52,
-            moves=["Scratch", "Growl"],
+            moves=["SCRATCH", "GROWL"],
         ),
     ],
     goals=[

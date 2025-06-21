@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap');
-
 :root {
     --main-bg-color: #0f1923;
     --panel-bg-color: rgba(10, 25, 47, 0.7);
@@ -56,11 +54,12 @@ body {
     grid-area: header;
     text-align: center;
     border-bottom: 2px solid var(--border-color);
-    padding-bottom: 8px;
+    padding: 8px 0;
     margin-bottom: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    gap: 4px;
 }
 
 .title-bar h1 {
@@ -134,7 +133,7 @@ body {
     min-height: 0;
 }
 
-.log-panel h3 {
+.log-panel h2 {
     text-align: center;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
@@ -169,7 +168,7 @@ body {
     min-height: 0;
 }
 
-.goals-panel h3 {
+.goals-panel h2 {
     text-align: center;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
@@ -209,7 +208,7 @@ body {
 
 .game-window-placeholder {
     width: 580px;
-    height: 522px;
+    aspect-ratio: 10/9;
     border: 2px dashed var(--border-color);
     display: flex;
     flex-direction: column;
@@ -254,25 +253,20 @@ body {
     display: flex;
     flex-direction: column;
     transition: filter 0.3s ease, border-color 0.3s ease;
-    min-height: 240px;
-    max-height: 240px;
+    height: 240px;
     justify-content: space-between;
 }
 
 .pokemon-card.fainted {
     filter: grayscale(80%) brightness(0.6);
     border-color: #4a5568;
-    opacity: 0.3;
-    min-height: 240px;
-    max-height: 240px;
+    opacity: 0.7;
 }
 
 .pokemon-card.empty {
     background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
     border: 1px dashed var(--border-color);
-    opacity: 0.3;
-    min-height: 240px;
-    max-height: 240px;
+    opacity: 0.7;
 }
 
 .card-top {
