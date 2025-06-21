@@ -6,7 +6,16 @@ import aiofiles
 from loguru import logger
 
 from agent.state import AgentState
-from common.constants import BACKUP_AGENT_STATE_NAME, DB_FILE_PATH, DB_FOLDER_NAME
+from common.constants import BACKUP_AGENT_STATE_NAME, DB_FILE_PATH, DB_FOLDER_NAME, OUTPUTS_FOLDER
+
+OUTPUT_PREFIX = "agent_"
+BACKUP_PREFIX = "backup_"
+
+
+async def get_output_folder() -> Path:
+    """Get the output folder for the current run."""
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+    return OUTPUTS_FOLDER / f"{OUTPUT_PREFIX}{timestamp}"
 
 
 async def create_backup(agent_state: AgentState) -> None:
@@ -14,7 +23,7 @@ async def create_backup(agent_state: AgentState) -> None:
     logger.info(f"Creating backup at iteration {agent_state.iteration}.")
 
     timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
-    backup_folder = agent_state.folder / f"backup_{timestamp}_iter_{agent_state.iteration}"
+    backup_folder = agent_state.folder / f"{BACKUP_PREFIX}{timestamp}_iter_{agent_state.iteration}"
     backup_folder.mkdir(parents=True, exist_ok=True)
 
     backup_db_folder = backup_folder / DB_FOLDER_NAME
@@ -35,6 +44,19 @@ async def load_backup(backup_folder: Path) -> AgentState:
     await _copy_dir_async(src=backup_db_folder, dst=DB_FILE_PATH.parent)
 
     return agent_state
+
+
+async def load_latest_backup() -> AgentState:
+    """Load the latest backup from the backups folder."""
+    subfolders = [
+        f for f in OUTPUTS_FOLDER.iterdir() if f.is_dir() and f.name.startswith(OUTPUT_PREFIX)
+    ]
+    latest_subfolder = max(subfolders, key=lambda f: f.name)
+    backups = [
+        f for f in latest_subfolder.iterdir() if f.is_dir() and f.name.startswith(BACKUP_PREFIX)
+    ]
+    latest_backup = max(backups, key=lambda f: f.name)
+    return await load_backup(latest_backup)
 
 
 async def _copy_dir_async(src: Path, dst: Path) -> None:

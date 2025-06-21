@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-from datetime import UTC, datetime
 from pathlib import Path
 
 import aiofiles
@@ -9,8 +8,8 @@ from loguru import logger
 
 from agent.app import build_agent_workflow
 from agent.state import AgentState
-from common.backup_service import create_backup, load_backup
-from common.constants import ITERATIONS_PER_BACKUP, OUTPUTS_FOLDER
+from common.backup_service import create_backup, get_output_folder, load_backup, load_latest_backup
+from common.constants import ITERATIONS_PER_BACKUP
 from database.db_config import init_fresh_db
 from emulator.emulator import YellowLegacyEmulator
 from streaming.server import BackgroundStreamServer
@@ -21,6 +20,7 @@ async def main(
     backup_folder: Path | None = None,
     *,
     mute_sound: bool = True,
+    load_latest: bool = False,
 ) -> None:
     """
     Get the emulator ticking on an async thread, and iteratively run the agent.
@@ -28,19 +28,27 @@ async def main(
     :param rom_path: The path to the ROM file.
     :param backup_folder: Optional path to load a saved state from.
     :param mute_sound: Whether to mute the sound.
+    :param load_latest: Whether to load the latest backup.
     """
-    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
-    folder = OUTPUTS_FOLDER / timestamp
-    await aiofiles.os.makedirs(folder, exist_ok=True)
+    if backup_folder and load_latest:
+        raise ValueError("Cannot load latest backup and specify a backup folder at the same time.")
+
+    folder = await get_output_folder()
 
     if backup_folder:
         state = await load_backup(backup_folder)
+        state.folder = folder
+        emulator_state = state.emulator_save_state
+    elif load_latest:
+        state = await load_latest_backup()
         state.folder = folder
         emulator_state = state.emulator_save_state
     else:
         await init_fresh_db()
         state = AgentState(folder=folder)
         emulator_state = None
+
+    await aiofiles.os.makedirs(folder)
 
     async with (
         YellowLegacyEmulator(rom_path, emulator_state, mute_sound=mute_sound) as emulator,
@@ -66,11 +74,13 @@ if __name__ == "__main__":
     parser.add_argument("--rom-path", type=str, required=True)
     parser.add_argument("--backup-folder", type=Path, required=False)
     parser.add_argument("--mute-sound", action="store_true")
+    parser.add_argument("--load-latest", action="store_true")
     args = parser.parse_args()
     asyncio.run(
         main(
             rom_path=args.rom_path,
             backup_folder=args.backup_folder,
             mute_sound=args.mute_sound,
+            load_latest=args.load_latest,
         )
     )
