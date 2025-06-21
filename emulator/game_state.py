@@ -107,7 +107,6 @@ class YellowLegacyGameState(BaseModel):
         points.
         """
         blocks = self._get_background_blocks()
-        blocks[PLAYER_OFFSET_Y, PLAYER_OFFSET_X] = AsciiTiles.PLAYER
 
         on_screen_sprites = []
         for s in self.sprites.values():
@@ -115,16 +114,12 @@ class YellowLegacyGameState(BaseModel):
                 on_screen_sprites.append(s)
                 blocks[sc.row, sc.col] = AsciiTiles.SPRITE
 
-        pikachu = self.pikachu
-        if pikachu.is_rendered and (sc := self.to_screen_coords(pikachu.coords)):
-            blocks[sc.row, sc.col] = AsciiTiles.PIKACHU
-
         on_screen_warps = []
         for w in self.warps.values():
             sc = self.to_screen_coords(w.coords)
             # There's a funny edge case with warps where they can be rendered on top of walls and
             # are therefore inaccessible. An example is in map 50, when entering Viridian Forest.
-            if sc and blocks[sc.row, sc.col] != AsciiTiles.WALL:
+            if sc and blocks[sc.row, sc.col] not in [AsciiTiles.WALL]:
                 blocks[sc.row, sc.col] = AsciiTiles.WARP
                 on_screen_warps.append(w)
 
@@ -133,6 +128,13 @@ class YellowLegacyGameState(BaseModel):
             if sc := self.to_screen_coords(s.coords):
                 blocks[sc.row, sc.col] = AsciiTiles.SIGN
                 on_screen_signs.append(s)
+
+        # The player and Pikachu must be drawn last so they're on top of everything else.
+        pikachu = self.pikachu
+        if pikachu.is_rendered and (sc := self.to_screen_coords(pikachu.coords)):
+            blocks[sc.row, sc.col] = AsciiTiles.PIKACHU
+
+        blocks[PLAYER_OFFSET_Y, PLAYER_OFFSET_X] = AsciiTiles.PLAYER
 
         return AsciiScreenWithEntities(
             screen=blocks.tolist(),
