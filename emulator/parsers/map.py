@@ -37,14 +37,16 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     cut_tree_tiles = [45, 46, 61, 62] if tileset_id == 0 else []
 
     walkable_tile_ptr = mem[0xD57D] | (mem[0xD57E] << 8)
-    walkable_tiles = []
+    tile_bank, tile_offset = divmod(walkable_tile_ptr, 0x4000)
 
+    walkable_tiles = []
     max_tiles = 0x180
     terminator = 0xFF
     for i in range(max_tiles):
-        if mem[walkable_tile_ptr + i] == terminator:
+        tile = mem[tile_bank, tile_offset + i]
+        if tile == terminator:
             break
-        walkable_tiles.append(mem[walkable_tile_ptr + i])
+        walkable_tiles.append(tile)
 
     return Map(
         id=MapId(mem[0xD3AB]),
