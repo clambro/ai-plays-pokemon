@@ -5,6 +5,14 @@ const ALL_BADGES = [
     "SOULBADGE", "MARSHBADGE", "VOLCANOBADGE", "EARTHBADGE"
 ];
 
+const statusMap = {
+    'POISONED': { abbr: 'PSN', class: 'psn' },
+    'BURNED': { abbr: 'BRN', class: 'brn' },
+    'PARALYZED': { abbr: 'PAR', class: 'par' },
+    'ASLEEP': { abbr: 'SLP', class: 'slp' },
+    'FROZEN': { abbr: 'FRZ', class: 'frz' },
+};
+
 const PokemonSchema = z.object({
     name: z.string(),
     species: z.string(),
@@ -21,14 +29,6 @@ const LogEntrySchema = z.object({
     iteration: z.number().int().positive(),
     thought: z.string()
 });
-
-const statusMap = {
-    'POISONED': { abbr: 'PSN', class: 'psn' },
-    'BURNED': { abbr: 'BRN', class: 'brn' },
-    'PARALYZED': { abbr: 'PAR', class: 'par' },
-    'ASLEEP': { abbr: 'SLP', class: 'slp' },
-    'FROZEN': { abbr: 'FRZ', class: 'frz' },
-};
 
 const GameStateSchema = z.object({
     iteration: z.number().int().positive(),
@@ -54,22 +54,12 @@ const refs = {
     goalsDiv: document.getElementById('goals'),
     logDiv: document.getElementById('log-content'),
     partyDiv: document.getElementById('party'),
-    template: document.getElementById('pokemon-card-template')
+    template: document.getElementById('pokemon-card-template'),
 };
 
-let latestData = null;
-let updateScheduled = false;
-
-function scheduleUpdate() {
-    if (!updateScheduled && latestData) {
-        updateScheduled = true;
-        requestAnimationFrame(() => {
-            updateDisplay(latestData);
-            updateScheduled = false;
-        });
-    }
-}
-
+/**
+ * @param {z.infer<typeof GameStateSchema>} data
+ */
 function updateDisplay(data) {
     const {
         money,
@@ -84,9 +74,24 @@ function updateDisplay(data) {
         party
     } = data;
 
+    if (
+        !refs.money
+        || !refs.iteration
+        || !refs.caughtSeen
+        || !refs.totalCost
+        || !refs.playTime
+        || !refs.badgesContainer
+        || !refs.goalsDiv
+        || !refs.logDiv
+        || !refs.partyDiv
+        || !refs.template
+    ) {
+        throw new Error('One or more elements not found');
+    }
+
     // --- Info Bar ---
     refs.money.textContent = `¥${money.toLocaleString()}`;
-    refs.iteration.textContent = iteration;
+    refs.iteration.textContent = iteration.toString();
     refs.caughtSeen.textContent = `${pokedex_caught}/${pokedex_seen}`;
     refs.totalCost.textContent = `$${total_cost.toFixed(2)}`;
     const hours = Math.floor(play_time_seconds / 3600);
@@ -123,7 +128,7 @@ function updateDisplay(data) {
     // --- Log ---
     const logFrag = document.createDocumentFragment();
     if (log && log.length) {
-        log.forEach(entry => {
+        log.forEach((entry) => {
             const p = document.createElement('p');
             p.textContent = `[${entry.iteration}] ${entry.thought}`;
             logFrag.appendChild(p);
@@ -146,8 +151,17 @@ function updateDisplay(data) {
     refs.partyDiv.replaceChildren(partyFrag);
 }
 
+/**
+ * @param {z.infer<typeof PokemonSchema>} pokemon
+ * @returns {HTMLElement}
+ */
 function createPokemonCard(pokemon) {
-    const card = refs.template.content.cloneNode(true).querySelector('.pokemon-card');
+    if (!refs.template) {
+        throw new Error('Template element not found');
+    }
+    const template = refs.template;
+    const cardFrag = template.content.cloneNode(true);
+    const card = cardFrag.querySelector('.pokemon-card');
 
     const hpPercent = (pokemon.hp / pokemon.max_hp) * 100;
     let hpColor;
@@ -228,8 +242,7 @@ async function fetchData() {
         if (!raw || Object.keys(raw).length === 0) return;
 
         const data = GameStateSchema.parse(raw);
-        latestData = data;
-        scheduleUpdate();
+        requestAnimationFrame(() => updateDisplay(data));
     } catch (err) {
         if (err instanceof z.ZodError) console.error('Validation errors:', err.errors);
         else console.error('Fetch error:', err);
