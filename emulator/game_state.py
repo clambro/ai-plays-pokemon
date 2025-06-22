@@ -174,9 +174,10 @@ class YellowLegacyGameState(BaseModel):
                     row.append(AsciiTiles.WATER)
                 elif ledge_type := self._get_ledge_type(b):
                     row.append(ledge_type)
-                elif self.map.grass_tile and np.all(b == self.map.grass_tile):
+                elif self.map.grass_tile and b[1, 0] == self.map.grass_tile:
+                    # In engine/battle/wild_encounters.asm, grass tiles only check the bottom left.
                     row.append(AsciiTiles.GRASS)
-                elif np.isin(b, self.map.cut_tree_tiles).all():
+                elif b.flatten().tolist() == self.map.cut_tree_tiles:
                     row.append(AsciiTiles.CUT_TREE)
                 elif np.isin(b, self.map.walkable_tiles).any():
                     row.append(AsciiTiles.FREE)
@@ -189,10 +190,11 @@ class YellowLegacyGameState(BaseModel):
         """
         Check if the block is a ledge.
 
-        A ledge is composed of ledge tiles on the bottom row of the block, and at least one walkable
-        tile on the top row.
+        A tile is defined as a ledge if at least one row/column follows the pattern of a ledge,
+        depending on the orientation of the ledge.
 
         :param block: The block to check, which is a 2x2 array of tile values.
+        :return: The type of ledge, or None if the block is not a ledge.
         """
         if (
             block[:, 0].tolist() in self.map.ledge_tiles_down
