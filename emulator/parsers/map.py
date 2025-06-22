@@ -19,6 +19,7 @@ class Map(BaseModel):
     ledge_tiles_down: list[list[int]]
     cut_tree_tiles: list[int]
     walkable_tiles: list[int]
+    special_collision_blocks: list[int]
     north_connection: MapId | None
     south_connection: MapId | None
     east_connection: MapId | None
@@ -64,6 +65,11 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
             break
         walkable_tiles.append(tile)
 
+    # This is super hacky, but there are some blocks which are not walkable, despite their
+    # bottom-left tile being walkable. The reason appears to be the inclusion of one or more of
+    # the following tiles, but I can't find anything in the decompiled ROM that explains why.
+    special_collision_blocks = _SPECIAL_COLLISION_BLOCKS.get(tileset_id, [])
+
     return Map(
         id=MapId(mem[0xD3AB]),
         height=mem[0xD571],
@@ -75,6 +81,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         ledge_tiles_down=ledge_tiles_down,
         cut_tree_tiles=cut_tree_tiles,
         walkable_tiles=walkable_tiles,
+        special_collision_blocks=special_collision_blocks,
         north_connection=MapId(mem[0xD3BE]) if mem[0xD3BE] != terminator else None,
         south_connection=MapId(mem[0xD3C9]) if mem[0xD3C9] != terminator else None,
         east_connection=MapId(mem[0xD3DF]) if mem[0xD3DF] != terminator else None,
@@ -117,4 +124,8 @@ _GRASS_TILE_MAP = {
     _Tileset.OVERWORLD: 0x52,
     _Tileset.FOREST: 0x20,
     _Tileset.PLATEAU: 0x45,
+}
+
+_SPECIAL_COLLISION_BLOCKS = {
+    _Tileset.CAVERN: [0x10, 0x17, 0x29, 0x31],
 }

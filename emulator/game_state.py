@@ -179,8 +179,11 @@ class YellowLegacyGameState(BaseModel):
                     row.append(AsciiTiles.GRASS)
                 elif b.flatten().tolist() == self.map.cut_tree_tiles:
                     row.append(AsciiTiles.CUT_TREE)
-                elif b[1, 0] in self.map.walkable_tiles:
-                    # Same bottom-left logic applies here.
+                elif (
+                    b[1, 0] in self.map.walkable_tiles
+                    and not np.isin(b, self.map.special_collision_blocks).any()
+                ):
+                    # Same bottom-left logic applies here, with special exceptions.
                     row.append(AsciiTiles.FREE)
                 else:
                     row.append(AsciiTiles.WALL)
