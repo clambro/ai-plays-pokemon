@@ -48,6 +48,7 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
     return OverworldMap(
         id=map_memory.map_id,
         ascii_tiles=[list(row) for row in map_memory.tiles.split("\n")],
+        blockages=game_state.get_ascii_screen().blockages,
         known_sprites=sprites,
         known_warps=warps,
         known_signs=signs,
@@ -200,6 +201,7 @@ async def _create_overworld_map_from_game_state(
     overworld_map = OverworldMap(
         id=game_state.map.id,
         ascii_tiles=tiles,
+        blockages=game_state.get_ascii_screen().blockages,
         known_sprites={},
         known_warps={},
         known_signs={},

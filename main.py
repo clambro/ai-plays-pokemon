@@ -16,7 +16,7 @@ from streaming.server import BackgroundStreamServer
 
 
 async def main(
-    rom_path: Path = Path(DEFAULT_ROM_PATH),
+    rom_path: Path,
     backup_folder: Path | None = None,
     *,
     mute_sound: bool = True,
@@ -71,7 +71,7 @@ async def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--rom-path", type=Path, required=False)
+    parser.add_argument("--rom-path", type=Path, required=False, default=Path(DEFAULT_ROM_PATH))
     parser.add_argument("--backup-folder", type=Path, required=False)
     parser.add_argument("--mute-sound", action="store_true")
     parser.add_argument("--load-latest", action="store_true")

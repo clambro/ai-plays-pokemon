@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum, StrEnum, auto
+from enum import Enum, IntEnum, IntFlag, StrEnum, auto
 
 
 class AsciiTiles(StrEnum):
@@ -54,6 +54,19 @@ class FacingDirection(StrEnum):
     DOWN = "down"
     LEFT = "left"
     RIGHT = "right"
+
+
+class BlockedDirection(IntFlag):
+    """
+    Represents blocked movement between otherwise walkable tiles. This is usually due to an
+    elevation difference making it impossible to move from one to the other, even though both are
+    walkable and adjacent to one another.
+    """
+
+    UP = 0b0001
+    DOWN = 0b0010
+    LEFT = 0b0100
+    RIGHT = 0b1000
 
 
 class Button(StrEnum):

@@ -4,7 +4,7 @@ from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.navigate.prompts import DETERMINE_TARGET_COORDS_PROMPT
 from agent.subflows.overworld_handler.nodes.navigate.schemas import NavigationResponse
-from common.enums import AsciiTiles, Button, FacingDirection, MapId
+from common.enums import AsciiTiles, BlockedDirection, Button, FacingDirection, MapId
 from common.schemas import Coords
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
@@ -104,7 +104,8 @@ class NavigationService:
                 ):
                     continue
                 target_tile = self.current_map.ascii_tiles_ndarray[new_pos.row, new_pos.col]
-                if target_tile in walkable_tiles:
+                move_blocked = self._is_blocked(current, dy, dx, game_state)
+                if target_tile in walkable_tiles and not move_blocked:
                     visited.add(new_pos)
                     queue.append(new_pos)
                     accessible.append(new_pos)
@@ -250,6 +251,25 @@ class NavigationService:
             return False
         return True
 
+    def _is_blocked(
+        self,
+        current: Coords,
+        dy: int,
+        dx: int,
+        game_state: YellowLegacyGameState,
+    ) -> bool:
+        """Check if the movement is blocked by a paired tile collision."""
+        blockages = game_state.get_ascii_screen().blockages[current.row][current.col]
+        if dy == 1:
+            return bool(blockages & BlockedDirection.DOWN)
+        if dy == -1:
+            return bool(blockages & BlockedDirection.UP)
+        if dx == 1:
+            return bool(blockages & BlockedDirection.RIGHT)
+        if dx == -1:
+            return bool(blockages & BlockedDirection.LEFT)
+        return False
+
     def _calculate_path_to_target(
         self,
         target_pos: Coords,
@@ -273,7 +293,8 @@ class NavigationService:
                     and 0 <= new_pos.col < self.current_map.width
                 ):
                     target_tile = self.current_map.ascii_tiles_ndarray[new_pos.row, new_pos.col]
-                    if target_tile in AsciiTiles.get_walkable_tiles():
+                    move_blocked = self._is_blocked(pos, dy, dx, game_state)
+                    if target_tile in AsciiTiles.get_walkable_tiles() and not move_blocked:
                         neighbors.append(new_pos)
                     # Account for the fact that we can jump ledges, skipping a tile.
                     elif target_tile == AsciiTiles.LEDGE_DOWN and dy == 1:

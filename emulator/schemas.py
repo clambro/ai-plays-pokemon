@@ -1,6 +1,7 @@
 import numpy as np
 from pydantic import BaseModel, ConfigDict
 
+from common.enums import BlockedDirection
 from emulator.parsers.sign import Sign
 from emulator.parsers.sprite import Sprite
 from emulator.parsers.warp import Warp
@@ -20,6 +21,7 @@ class AsciiScreenWithEntities(BaseModel):
     """An ASCII representation of a screen with entities on it."""
 
     screen: list[list[str]]
+    blockages: list[list[BlockedDirection]]
     sprites: list[Sprite]
     warps: list[Warp]
     signs: list[Sign]

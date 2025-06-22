@@ -4,8 +4,8 @@ import numpy as np
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
-from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
-from common.enums import AsciiTiles
+from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
+from common.enums import AsciiTiles, BlockedDirection
 from common.schemas import Coords
 from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.map import Map, parse_map_state
@@ -106,7 +106,7 @@ class YellowLegacyGameState(BaseModel):
         Get an ASCII representation of the current screen, including the onscreen sprites and warp
         points.
         """
-        blocks = self._get_background_blocks()
+        blocks, blockages = self._get_background_blocks()
 
         on_screen_sprites = []
         for s in self.sprites.values():
@@ -138,6 +138,7 @@ class YellowLegacyGameState(BaseModel):
 
         return AsciiScreenWithEntities(
             screen=blocks.tolist(),
+            blockages=blockages.tolist(),
             sprites=on_screen_sprites,
             warps=on_screen_warps,
             signs=on_screen_signs,
@@ -161,34 +162,39 @@ class YellowLegacyGameState(BaseModel):
             has_cursor=lines[16][-2] == "▼",
         )
 
-    def _get_background_blocks(self) -> np.ndarray:
-        """Get the background blocks on the screen without the entities."""
+    def _get_background_blocks(self) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Get the background blocks on the screen without the entities. Note special cases where
+        movement is blocked due to elevation differences.
+
+        :return: A tuple of the blocks and blockages.
+        """
         tiles = np.array(self.screen.tiles)
         # Each block on screen is a 2x2 square of tiles.
-        blocks = []
+        blocks = np.full((SCREEN_HEIGHT, SCREEN_WIDTH), AsciiTiles.WALL, dtype=AsciiTiles)
+        blockages = np.zeros_like(blocks, dtype=BlockedDirection)
         for i in range(0, tiles.shape[0], 2):
-            row = []
             for j in range(0, tiles.shape[1], 2):
                 b = tiles[i : i + 2, j : j + 2]
+                b_idx = (i // 2, j // 2)
                 if self.map.water_tile and np.isin(b, self.map.water_tile).any():
-                    row.append(AsciiTiles.WATER)
+                    blocks[b_idx] = AsciiTiles.WATER
                 elif ledge_type := self._get_ledge_type(b):
-                    row.append(ledge_type)
+                    blocks[b_idx] = ledge_type
                 elif self.map.grass_tile and b[1, 0] == self.map.grass_tile:
                     # In engine/battle/wild_encounters.asm, grass tiles only check the bottom left.
-                    row.append(AsciiTiles.GRASS)
+                    blocks[b_idx] = AsciiTiles.GRASS
                 elif b.flatten().tolist() == self.map.cut_tree_tiles:
-                    row.append(AsciiTiles.CUT_TREE)
+                    blocks[b_idx] = AsciiTiles.CUT_TREE
                 elif (
                     b[1, 0] in self.map.walkable_tiles
                     and not np.isin(b, self.map.special_collision_blocks).any()
                 ):
                     # Same bottom-left logic applies here, with special exceptions.
-                    row.append(AsciiTiles.FREE)
-                else:
-                    row.append(AsciiTiles.WALL)
-            blocks.append(row)
-        return np.array(blocks)
+                    blocks[b_idx] = AsciiTiles.FREE
+
+                blockages = self._get_blockage(i, j, tiles, blockages)
+        return np.array(blocks), np.array(blockages)
 
     def _get_ledge_type(self, block: np.ndarray) -> AsciiTiles | None:
         """
@@ -216,3 +222,31 @@ class YellowLegacyGameState(BaseModel):
         ):
             return AsciiTiles.LEDGE_RIGHT
         return None
+
+    def _get_blockage(self, i: int, j: int, tiles: np.ndarray, blockages: np.ndarray) -> np.ndarray:
+        """
+        Get the blockage for a given set of coordinates.
+
+        :param i: The row index of the block.
+        :param j: The column index of the block.
+        :param tiles: The tiles array.
+        :param blockages: The blockages array to update.
+        :return: The updated blockages array.
+        """
+        bi, bj = i // 2, j // 2
+        block = tiles[i : i + 2, j : j + 2]
+        if i - 2 >= 0 and j + 2 < tiles.shape[1]:
+            row_above = tiles[i - 1, j : j + 2]
+            first_pair = (block[0, 0], row_above[0])
+            second_pair = (block[0, 0], row_above[1])
+            if first_pair in self.map.collision_pairs or second_pair in self.map.collision_pairs:
+                blockages[bi, bj] |= BlockedDirection.UP
+                blockages[bi - 1, bj] |= BlockedDirection.DOWN
+        if i - 2 >= 0 and j - 2 >= 0:
+            col_left = tiles[i : i + 2, j - 2]
+            first_pair = (block[0, 0], col_left[0])
+            second_pair = (block[1, 0], col_left[1])
+            if first_pair in self.map.collision_pairs or second_pair in self.map.collision_pairs:
+                blockages[bi, bj] |= BlockedDirection.LEFT
+                blockages[bi, bj - 1] |= BlockedDirection.RIGHT
+        return blockages

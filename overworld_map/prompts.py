@@ -43,10 +43,10 @@ The right side of the screen is currently at column {{screen_right}} in map coor
 You, the player, are at position {{player_coords}} in map coordinates.
 You are facing {{player_direction}}.
 
-The tile directly above you is "{{tile_above}}".
-The tile directly below you is "{{tile_below}}".
-The tile directly to the left of you is "{{tile_left}}".
-The tile directly to the right of you is "{{tile_right}}".
+The tile directly above you is "{{tile_above}}"{{blocked_above}}.
+The tile directly below you is "{{tile_below}}"{{blocked_below}}.
+The tile directly to the left of you is "{{tile_left}}"{{blocked_left}}.
+The tile directly to the right of you is "{{tile_right}}"{{blocked_right}}.
 </player_position>
 
 <map_connections>

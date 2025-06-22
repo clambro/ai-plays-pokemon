@@ -2,7 +2,7 @@ import numpy as np
 from pydantic import BaseModel
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
-from common.enums import AsciiTiles, MapId, WarpType
+from common.enums import AsciiTiles, BlockedDirection, MapId, WarpType
 from emulator.game_state import YellowLegacyGameState
 from emulator.schemas import Sign, Sprite, Warp
 from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
@@ -98,6 +98,7 @@ class OverworldMap(BaseModel):
 
     id: MapId
     ascii_tiles: list[list[str]]
+    blockages: list[list[BlockedDirection]]
     known_sprites: dict[int, OverworldSprite]
     known_signs: dict[int, OverworldSign]
     known_warps: dict[int, OverworldWarp]
@@ -131,10 +132,10 @@ class OverworldMap(BaseModel):
         tiles = self.ascii_tiles_str
         explored_percentage = np.mean(self.ascii_tiles_ndarray != AsciiTiles.UNSEEN)
         screen = game_state.get_ascii_screen().ndarray
-        tile_above = screen[PLAYER_OFFSET_Y - 1, PLAYER_OFFSET_X]
-        tile_below = screen[PLAYER_OFFSET_Y + 1, PLAYER_OFFSET_X]
-        tile_left = screen[PLAYER_OFFSET_Y, PLAYER_OFFSET_X - 1]
-        tile_right = screen[PLAYER_OFFSET_Y, PLAYER_OFFSET_X + 1]
+        tile_above, blocked_above = self._get_tile_notes(BlockedDirection.UP)
+        tile_below, blocked_below = self._get_tile_notes(BlockedDirection.DOWN)
+        tile_left, blocked_left = self._get_tile_notes(BlockedDirection.LEFT)
+        tile_right, blocked_right = self._get_tile_notes(BlockedDirection.RIGHT)
         return OVERWORLD_MAP_STR_FORMAT.format(
             map_name=self.id.name,
             ascii_map=tiles,
@@ -148,15 +149,40 @@ class OverworldMap(BaseModel):
             player_coords=game_state.player.coords,
             player_direction=game_state.player.direction,
             tile_above=tile_above,
+            blocked_above=blocked_above,
             tile_below=tile_below,
+            blocked_below=blocked_below,
             tile_left=tile_left,
+            blocked_left=blocked_left,
             tile_right=tile_right,
+            blocked_right=blocked_right,
             screen_top=game_state.screen.top,
             screen_left=game_state.screen.left,
             screen_bottom=game_state.screen.bottom,
             screen_right=game_state.screen.right,
             connections=self._get_connection_notes(),
         )
+
+    def _get_tile_notes(self, direction: BlockedDirection) -> tuple[str, str]:
+        """
+        Get the adjacent tile and blocking notes for the player's current position in the given
+        direction.
+
+        :param blocked: The blocked direction.
+        :return: A tuple of the adjacent tile and blocking notes.
+        """
+        text = ", but your movement in this direction is blocked by an elevation difference."
+        row_col_map = {
+            BlockedDirection.UP: (PLAYER_OFFSET_Y - 1, PLAYER_OFFSET_X),
+            BlockedDirection.DOWN: (PLAYER_OFFSET_Y + 1, PLAYER_OFFSET_X),
+            BlockedDirection.LEFT: (PLAYER_OFFSET_Y, PLAYER_OFFSET_X - 1),
+            BlockedDirection.RIGHT: (PLAYER_OFFSET_Y, PLAYER_OFFSET_X + 1),
+        }
+        row, col = row_col_map[direction]
+
+        tile = self.ascii_tiles_ndarray[row, col]
+        blocked_text = text if self.blockages[row][col] & direction else ""
+        return tile, blocked_text
 
     def _get_sprite_notes(self) -> str:
         """Get the notes for the sprites on the map, sorted by index."""
