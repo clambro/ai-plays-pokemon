@@ -170,29 +170,43 @@ class YellowLegacyGameState(BaseModel):
             row = []
             for j in range(0, tiles.shape[1], 2):
                 b = tiles[i : i + 2, j : j + 2]
-                if self.map.water_tile and np.any(b == self.map.water_tile):
+                if self.map.water_tile and np.isin(b, self.map.water_tile).any():
                     row.append(AsciiTiles.WATER)
-                elif self._is_ledge(b):
-                    row.append(AsciiTiles.LEDGE)
-                elif self.map.grass_tile and np.any(b == self.map.grass_tile):
+                elif ledge_type := self._get_ledge_type(b):
+                    row.append(ledge_type)
+                elif self.map.grass_tile and np.all(b == self.map.grass_tile):
                     row.append(AsciiTiles.GRASS)
-                elif b.flatten().tolist() == self.map.cut_tree_tiles:
+                elif np.isin(b, self.map.cut_tree_tiles).all():
                     row.append(AsciiTiles.CUT_TREE)
-                elif not np.isin(b, self.map.walkable_tiles).any():
-                    row.append(AsciiTiles.WALL)
-                else:
+                elif np.isin(b, self.map.walkable_tiles).any():
                     row.append(AsciiTiles.FREE)
+                else:
+                    row.append(AsciiTiles.WALL)
             blocks.append(row)
         return np.array(blocks)
 
-    def _is_ledge(self, b: np.ndarray) -> bool:
+    def _get_ledge_type(self, block: np.ndarray) -> AsciiTiles | None:
         """
         Check if the block is a ledge.
 
-        A ledge is composed of ledge tiles on the bottom row of the block, and walkable tiles on the
-        top row.
+        A ledge is composed of ledge tiles on the bottom row of the block, and at least one walkable
+        tile on the top row.
+
+        :param block: The block to check, which is a 2x2 array of tile values.
         """
-        return bool(
-            np.isin(b[1, :], self.map.ledge_tiles).all()
-            and np.isin(b[0, :], self.map.walkable_tiles).all()
-        )
+        if (
+            block[:, 0].tolist() in self.map.ledge_tiles_down
+            or block[:, 1].tolist() in self.map.ledge_tiles_down
+        ):
+            return AsciiTiles.LEDGE
+        if (
+            block[0, :].tolist() in self.map.ledge_tiles_left
+            or block[1, :].tolist() in self.map.ledge_tiles_left
+        ):
+            return AsciiTiles.LEDGE
+        if (
+            block[0, :].tolist() in self.map.ledge_tiles_right
+            or block[1, :].tolist() in self.map.ledge_tiles_right
+        ):
+            return AsciiTiles.LEDGE
+        return None

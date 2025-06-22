@@ -1,3 +1,5 @@
+from enum import IntEnum
+
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
@@ -12,7 +14,9 @@ class Map(BaseModel):
     width: int
     grass_tile: int | None
     water_tile: int | None
-    ledge_tiles: list[int]
+    ledge_tiles_left: list[list[int]]
+    ledge_tiles_right: list[list[int]]
+    ledge_tiles_down: list[list[int]]
     cut_tree_tiles: list[int]
     walkable_tiles: list[int]
     north_connection: MapId | None
@@ -27,14 +31,26 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     """
     Parse the current map from a snapshot of the memory.
 
+    Tileset values all come from data/tilesets in the decompiled ROM.
+
     :param mem: The PyBoyMemoryView instance to create the map from.
     :return: A new map.
     """
-    tileset_id = mem[0xD3B4]
+    tileset_id = _Tileset(mem[0xD3B4])
 
-    # These were found by inspection.
-    ledge_tiles = [54, 55] if tileset_id == 0 else []
-    cut_tree_tiles = [45, 46, 61, 62] if tileset_id == 0 else []
+    if tileset_id == _Tileset.OVERWORLD:
+        ledge_tiles_left = [[0x27, 0x2C], [0x27, 0x39]]
+        ledge_tiles_right = [[0x2C, 0x0D], [0x2C, 0x1D]]
+        ledge_tiles_down = [[0x2C, 0x37], [0x39, 0x36], [0x39, 0x37]]
+        cut_tree_tiles = [0x32, 0x33, 0x34, 0x35, 0x60, 0x0B, 0x3C, 0x3F, 0x3D]
+    else:
+        ledge_tiles_left = []
+        ledge_tiles_right = []
+        ledge_tiles_down = []
+        cut_tree_tiles = []
+
+    water_tile = 0x14 if tileset_id in [0, 3, 5, 7, 15, 16, 19, 24, 25] else None
+    grass_tile = _GRASS_TILE_MAP.get(tileset_id)
 
     walkable_tile_ptr = mem[0xD57D] | (mem[0xD57E] << 8)
     tile_bank, tile_offset = divmod(walkable_tile_ptr, 0x4000)
@@ -52,9 +68,11 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         id=MapId(mem[0xD3AB]),
         height=mem[0xD571],
         width=mem[0xD572],
-        grass_tile=mem[0xD582] if tileset_id == 0 else None,
-        water_tile=mem[3, 0x68A5] if tileset_id == 0 else None,
-        ledge_tiles=ledge_tiles,
+        grass_tile=grass_tile,
+        water_tile=water_tile,
+        ledge_tiles_left=ledge_tiles_left,
+        ledge_tiles_right=ledge_tiles_right,
+        ledge_tiles_down=ledge_tiles_down,
         cut_tree_tiles=cut_tree_tiles,
         walkable_tiles=walkable_tiles,
         north_connection=MapId(mem[0xD3BE]) if mem[0xD3BE] != terminator else None,
@@ -62,3 +80,41 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         east_connection=MapId(mem[0xD3DF]) if mem[0xD3DF] != terminator else None,
         west_connection=MapId(mem[0xD3D4]) if mem[0xD3D4] != terminator else None,
     )
+
+
+class _Tileset(IntEnum):
+    """The tileset of the current map."""
+
+    OVERWORLD = 0
+    REDS_HOUSE_1 = 1
+    MART = 2
+    FOREST = 3
+    REDS_HOUSE_2 = 4
+    DOJO = 5
+    POKECENTER = 6
+    GYM = 7
+    HOUSE = 8
+    FOREST_GATE = 9
+    MUSEUM = 10
+    UNDERGROUND = 11
+    GATE = 12
+    SHIP = 13
+    SHIP_PORT = 14
+    CEMETERY = 15
+    INTERIOR = 16
+    CAVERN = 17
+    LOBBY = 18
+    MANSION = 19
+    LAB = 20
+    CLUB = 21
+    FACILITY = 22
+    BEACH_HOUSE = 23
+    PLATEAU = 24
+    BEACH = 25
+
+
+_GRASS_TILE_MAP = {
+    _Tileset.OVERWORLD: 0x52,
+    _Tileset.FOREST: 0x20,
+    _Tileset.PLATEAU: 0x45,
+}
