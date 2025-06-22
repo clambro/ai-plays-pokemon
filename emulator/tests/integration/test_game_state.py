@@ -88,6 +88,55 @@ async def test_get_ascii_screen_mt_moon_poke_center() -> None:
 
 
 @pytest.mark.integration
+async def test_get_ascii_screen_viridian_water() -> None:
+    """
+    Test that the ASCII screen is correct for Viridian City near the water.
+
+    Specifically making sure that the boundaries around water are rendered correctly, as well as
+    the cut tree.
+    """
+    await _helper_test_expected_screen(
+        state_filename="viridian_water.state",
+        expected_blockages=np.zeros(SCREEN_SHAPE),
+        expected_screen=[
+            "∙∙∙∙∙∙∙∙∙∙",
+            "∙∙∙∙∙∙∙◆∙∙",
+            "▉▉∙∙∙∙∙∙∙∙",
+            "∙∙┬∙∙∙∙∙∙∙",
+            "◆∙▉▉☻◈∙∙∙∙",
+            "∙∙≋≋≋≋≋≋∙∙",
+            "∙∙≋≋≋≋≋≋∙∙",
+            "∙∙≋≋≋≋≋≋∙∙",
+            "⍖⍖≋≋≋≋≋≋⍖∙",
+        ],
+    )
+
+
+@pytest.mark.integration
+async def test_get_ascii_screen_viridian_forest() -> None:
+    """
+    Test that the ASCII screen is correct for Viridian Forest.
+
+    Checking the unique tilemap used here.
+    """
+    await _helper_test_expected_screen(
+        state_filename="viridian_forest.state",
+        expected_blockages=np.zeros(SCREEN_SHAPE),
+        expected_screen=[
+            "❀∙∙❀▉▉▉▉▉▉",
+            "❀∙∙❀▉▉▉▉▉▉",
+            "❀∙∙❀❀❀❀❀❀‼",
+            "❀▉▉❀❀❀❀❀❀❀",
+            "∙▉▉∙☻∙∙∙∙∙",
+            "∙◆∙∙◈∙∙∙∙∙",
+            "∙∙∙∙▉▉▉▉▉▉",
+            "∙∙∙‼▉▉▉▉▉▉",
+            "∙∙∙∙▉▉▉▉▉▉",
+        ],
+    )
+
+
+@pytest.mark.integration
 async def _helper_test_expected_screen(
     state_filename: str,
     expected_blockages: np.ndarray,
