@@ -68,8 +68,10 @@ classmethod-decorators = ["validator"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]  # Ignore unused imports in inits.
-"test_*.py" = ["S101"]  # Ignore assert statements in tests
-"conftest.py" = ["S101"]  # Ignore assert statements in conftest
+"test_*.py" = [
+    "S101",  # Asserts.
+    "SLF001",  # Private member access.
+]
 "prompts.py" = ["E501"]  # Ignore line length in prompts
 
 [build-system]
