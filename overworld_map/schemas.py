@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTiles, BlockedDirection, MapId, WarpType
+from common.schemas import Coords
 from emulator.game_state import YellowLegacyGameState
 from emulator.schemas import Sign, Sprite, Warp
 from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
@@ -98,7 +99,7 @@ class OverworldMap(BaseModel):
 
     id: MapId
     ascii_tiles: list[list[str]]
-    blockages: list[list[BlockedDirection]]
+    blockages: dict[Coords, BlockedDirection]
     known_sprites: dict[int, OverworldSprite]
     known_signs: dict[int, OverworldSign]
     known_warps: dict[int, OverworldWarp]
@@ -131,7 +132,7 @@ class OverworldMap(BaseModel):
         """Return a string representation of the map."""
         tiles = self.ascii_tiles_str
         explored_percentage = np.mean(self.ascii_tiles_ndarray != AsciiTiles.UNSEEN)
-        screen = game_state.get_ascii_screen().ndarray
+        screen = game_state.get_ascii_screen().screen_ndarray
         tile_above, blocked_above = self._get_tile_notes(BlockedDirection.UP)
         tile_below, blocked_below = self._get_tile_notes(BlockedDirection.DOWN)
         tile_left, blocked_left = self._get_tile_notes(BlockedDirection.LEFT)
@@ -181,7 +182,8 @@ class OverworldMap(BaseModel):
         row, col = row_col_map[direction]
 
         tile = self.ascii_tiles_ndarray[row, col]
-        blocked_text = text if self.blockages[row][col] & direction else ""
+        blockage = self.blockages.get(Coords(row=row, col=col))
+        blocked_text = text if blockage and blockage & direction else ""
         return tile, blocked_text
 
     def _get_sprite_notes(self) -> str:

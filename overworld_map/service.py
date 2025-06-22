@@ -48,7 +48,7 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
     return OverworldMap(
         id=map_memory.map_id,
         ascii_tiles=[list(row) for row in map_memory.tiles.split("\n")],
-        blockages=game_state.get_ascii_screen().blockages,
+        blockages=map_memory.blockages,
         known_sprites=sprites,
         known_warps=warps,
         known_signs=signs,
@@ -153,7 +153,8 @@ async def _update_overworld_map_tiles(
     overworld_map: OverworldMap,
 ) -> None:
     """Update the overworld map with the current game state, revealing new tiles."""
-    ascii_screen = game_state.get_ascii_screen().ndarray
+    ascii_screen_with_entities = game_state.get_ascii_screen()
+    ascii_screen = ascii_screen_with_entities.screen_ndarray
     screen = game_state.screen
 
     top = screen.top
@@ -176,15 +177,18 @@ async def _update_overworld_map_tiles(
         ascii_screen = ascii_screen[:, : width - right]
         right = width
 
-    ascii_tiles = overworld_map.ascii_tiles_ndarray
-    ascii_tiles[top:bottom, left:right] = ascii_screen
-    overworld_map.ascii_tiles = ascii_tiles.tolist()
+    overworld_screen_tiles = overworld_map.ascii_tiles_ndarray
+    overworld_screen_tiles[top:bottom, left:right] = ascii_screen
+    overworld_map.ascii_tiles = overworld_screen_tiles.tolist()
+
+    overworld_map.blockages.update(ascii_screen_with_entities.blockages)
 
     await update_map_tiles(
         MapMemoryCreateUpdate(
             iteration=iteration,
             map_id=overworld_map.id,
             tiles=overworld_map.ascii_tiles_str,
+            blockages=overworld_map.blockages,
         ),
     )
 
@@ -194,14 +198,11 @@ async def _create_overworld_map_from_game_state(
     game_state: YellowLegacyGameState,
 ) -> OverworldMap:
     """Create a new overworld map from the game state."""
-    tiles = []
-    for _ in range(game_state.map.height):
-        row = [AsciiTiles.UNSEEN] * game_state.map.width
-        tiles.append(row)
+    tiles = [[AsciiTiles.UNSEEN.value] * game_state.map.width] * game_state.map.height
     overworld_map = OverworldMap(
         id=game_state.map.id,
         ascii_tiles=tiles,
-        blockages=game_state.get_ascii_screen().blockages,
+        blockages={},
         known_sprites={},
         known_warps={},
         known_signs={},
@@ -215,6 +216,7 @@ async def _create_overworld_map_from_game_state(
             iteration=iteration,
             map_id=overworld_map.id,
             tiles=overworld_map.ascii_tiles_str,
+            blockages=overworld_map.blockages,
         ),
     )
     return overworld_map

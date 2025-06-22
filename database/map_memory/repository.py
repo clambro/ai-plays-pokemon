@@ -12,6 +12,7 @@ async def create_map_memory(map_memory: MapMemoryCreateUpdate) -> MapMemoryRead:
         db_obj = MapMemoryDBModel(
             map_id=map_memory.map_id,
             tiles=map_memory.tiles,
+            blockages=map_memory.blockages,
             create_iteration=map_memory.iteration,
             update_iteration=map_memory.iteration,
         )

@@ -8,10 +8,10 @@ far more readable.
 
 from pathlib import Path
 
-import numpy as np
 import pytest
 
-from common.constants import SCREEN_SHAPE
+from common.enums import BlockedDirection
+from common.schemas import Coords
 from emulator.emulator import YellowLegacyEmulator
 
 
@@ -24,7 +24,7 @@ async def test_get_ascii_screen_viridian_flowers() -> None:
     """
     await _helper_test_expected_screen(
         state_filename="viridian_flowers.state",
-        expected_blockages=np.zeros(SCREEN_SHAPE),
+        expected_blockages={},
         expected_screen=[
             "∙∙∙▉▉▉▉∙∙∙",
             "∙∙∙▉⇆‼▉∙∙∙",
@@ -48,7 +48,7 @@ async def test_get_ascii_screen_mt_moon_corners() -> None:
     """
     await _helper_test_expected_screen(
         state_filename="mt_moon_corners.state",
-        expected_blockages=np.zeros(SCREEN_SHAPE),
+        expected_blockages={},
         expected_screen=[
             "∙∙∙▉▉∙∙▉▉∙",
             "∙∙∙▉▉∙∙▉▉∙",
@@ -72,7 +72,7 @@ async def test_get_ascii_screen_mt_moon_poke_center() -> None:
     """
     await _helper_test_expected_screen(
         state_filename="mt_moon_poke_center.state",
-        expected_blockages=np.zeros(SCREEN_SHAPE),
+        expected_blockages={},
         expected_screen=[
             "▉▉▉▉▉▉▉▉▉▉",
             "▉▉▉▉◆◆▉▉▉∙",
@@ -97,7 +97,7 @@ async def test_get_ascii_screen_viridian_water() -> None:
     """
     await _helper_test_expected_screen(
         state_filename="viridian_water.state",
-        expected_blockages=np.zeros(SCREEN_SHAPE),
+        expected_blockages={},
         expected_screen=[
             "∙∙∙∙∙∙∙∙∙∙",
             "∙∙∙∙∙∙∙◆∙∙",
@@ -121,7 +121,7 @@ async def test_get_ascii_screen_viridian_forest() -> None:
     """
     await _helper_test_expected_screen(
         state_filename="viridian_forest.state",
-        expected_blockages=np.zeros(SCREEN_SHAPE),
+        expected_blockages={},
         expected_screen=[
             "❀∙∙❀▉▉▉▉▉▉",
             "❀∙∙❀▉▉▉▉▉▉",
@@ -139,7 +139,7 @@ async def test_get_ascii_screen_viridian_forest() -> None:
 @pytest.mark.integration
 async def _helper_test_expected_screen(
     state_filename: str,
-    expected_blockages: np.ndarray,
+    expected_blockages: dict[Coords, BlockedDirection],
     expected_screen: list[str],
 ) -> None:
     """
@@ -159,5 +159,5 @@ async def _helper_test_expected_screen(
 
     screen = game_state.get_ascii_screen()
 
-    assert np.array_equal(screen.blockages, expected_blockages)
+    assert screen.blockages == expected_blockages
     assert str(screen).split("\n") == expected_screen
