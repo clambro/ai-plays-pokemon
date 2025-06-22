@@ -86,50 +86,58 @@ class NavigationService:
         """Recursively search outward from the player's position to find all accessible coords."""
         game_state = self.emulator.get_game_state()
         start_pos = game_state.player.coords
-        walkable_tiles = AsciiTiles.get_walkable_tiles()
         visited = {start_pos}
         queue = [start_pos]
         accessible = []  # No need to return the starting position because we're already there.
 
         while queue:
             current = queue.pop(0)
-            for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-                new_pos = current + (dy, dx)  # noqa: RUF005
-                if (
-                    new_pos in visited
-                    or new_pos.row < 0
-                    or new_pos.row >= self.current_map.height
-                    or new_pos.col < 0
-                    or new_pos.col >= self.current_map.width
-                ):
-                    continue
-                target_tile = self.current_map.ascii_tiles_ndarray[new_pos.row, new_pos.col]
-                move_blocked = self._is_blocked(current, dy, dx, game_state)
-                if target_tile in walkable_tiles and not move_blocked:
-                    visited.add(new_pos)
-                    queue.append(new_pos)
-                    accessible.append(new_pos)
-                # Jumping over a ledge skips a tile.
-                elif target_tile == AsciiTiles.LEDGE_DOWN and dy == 1:
-                    ledge_pos = new_pos + (1, 0)  # noqa: RUF005
-                    if ledge_pos not in visited:
-                        visited.add(ledge_pos)
-                        queue.append(ledge_pos)
-                        accessible.append(ledge_pos)
-                elif target_tile == AsciiTiles.LEDGE_LEFT and dx == -1:
-                    ledge_pos = new_pos + (0, -1)  # noqa: RUF005
-                    if ledge_pos not in visited:
-                        visited.add(ledge_pos)
-                        queue.append(ledge_pos)
-                        accessible.append(ledge_pos)
-                elif target_tile == AsciiTiles.LEDGE_RIGHT and dx == 1:
-                    ledge_pos = new_pos + (0, 1)  # noqa: RUF005
-                    if ledge_pos not in visited:
-                        visited.add(ledge_pos)
-                        queue.append(ledge_pos)
-                        accessible.append(ledge_pos)
+            for neighbor in self._get_neighbors(current):
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append(neighbor)
+                    accessible.append(neighbor)
 
         return accessible
+
+    def _get_neighbors(self, pos: Coords) -> list[Coords]:
+        """
+        Get all valid neighboring coordinates from a given position.
+
+        :param pos: The position to get neighbors for
+        :return: List of valid neighboring coordinates
+        """
+        neighbors = []
+        walkable_tiles = AsciiTiles.get_walkable_tiles()
+
+        for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+            new_pos = pos + (dy, dx)  # noqa: RUF005
+
+            if (
+                new_pos.row < 0
+                or new_pos.row >= self.current_map.height
+                or new_pos.col < 0
+                or new_pos.col >= self.current_map.width
+            ):
+                continue
+
+            target_tile = self.current_map.ascii_tiles_ndarray[new_pos.row, new_pos.col]
+            move_blocked = self._is_blocked(pos, dy, dx)
+
+            if target_tile in walkable_tiles and not move_blocked:
+                neighbors.append(new_pos)
+            # Jumping over a ledge skips a tile
+            elif target_tile == AsciiTiles.LEDGE_DOWN and dy == 1:
+                ledge_pos = new_pos + (1, 0)  # noqa: RUF005
+                neighbors.append(ledge_pos)
+            elif target_tile == AsciiTiles.LEDGE_LEFT and dx == -1:
+                ledge_pos = new_pos + (0, -1)  # noqa: RUF005
+                neighbors.append(ledge_pos)
+            elif target_tile == AsciiTiles.LEDGE_RIGHT and dx == 1:
+                ledge_pos = new_pos + (0, 1)  # noqa: RUF005
+                neighbors.append(ledge_pos)
+
+        return neighbors
 
     async def _determine_target_coords(self, accessible_coords: list[Coords]) -> Coords:
         """Determine the target coordinates to navigate to."""
@@ -251,15 +259,11 @@ class NavigationService:
             return False
         return True
 
-    def _is_blocked(
-        self,
-        current: Coords,
-        dy: int,
-        dx: int,
-        game_state: YellowLegacyGameState,
-    ) -> bool:
+    def _is_blocked(self, current: Coords, dy: int, dx: int) -> bool:
         """Check if the movement is blocked by a paired tile collision."""
-        blockages = game_state.get_ascii_screen().blockages[current.row][current.col]
+        blockages = self.current_map.blockages.get(current)
+        if not blockages:
+            return False
         if dy == 1:
             return bool(blockages & BlockedDirection.DOWN)
         if dy == -1:
@@ -281,34 +285,10 @@ class NavigationService:
         """
         start_pos = game_state.player.coords
 
-        def _get_distance(a: Coords, b: Coords) -> float:
-            return (a - b).length
-
-        def _get_neighbors(pos: Coords) -> list[Coords]:
-            neighbors = []
-            for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-                new_pos = pos + (dy, dx)  # noqa: RUF005
-                if (
-                    0 <= new_pos.row < self.current_map.height
-                    and 0 <= new_pos.col < self.current_map.width
-                ):
-                    target_tile = self.current_map.ascii_tiles_ndarray[new_pos.row, new_pos.col]
-                    move_blocked = self._is_blocked(pos, dy, dx, game_state)
-                    if target_tile in AsciiTiles.get_walkable_tiles() and not move_blocked:
-                        neighbors.append(new_pos)
-                    # Account for the fact that we can jump ledges, skipping a tile.
-                    elif target_tile == AsciiTiles.LEDGE_DOWN and dy == 1:
-                        neighbors.append(new_pos + (1, 0))  # noqa: RUF005
-                    elif target_tile == AsciiTiles.LEDGE_LEFT and dx == -1:
-                        neighbors.append(new_pos + (0, -1))  # noqa: RUF005
-                    elif target_tile == AsciiTiles.LEDGE_RIGHT and dx == 1:
-                        neighbors.append(new_pos + (0, 1))  # noqa: RUF005
-            return neighbors
-
         open_set = {start_pos}
         came_from: dict[Coords, Coords] = {}
         g_score = {start_pos: 0}
-        f_score = {start_pos: _get_distance(start_pos, target_pos)}
+        f_score = {start_pos: (start_pos - target_pos).length}
 
         while open_set:
             current = min(open_set, key=lambda pos: f_score.get(pos, float("inf")))
@@ -335,13 +315,13 @@ class NavigationService:
 
             open_set.remove(current)
 
-            for neighbor in _get_neighbors(current):
+            for neighbor in self._get_neighbors(current):
                 tentative_g_score = g_score[current] + 1
 
                 if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
                     came_from[neighbor] = current
                     g_score[neighbor] = tentative_g_score
-                    f_score[neighbor] = tentative_g_score + _get_distance(neighbor, target_pos)
+                    f_score[neighbor] = tentative_g_score + (neighbor - target_pos).length
                     open_set.add(neighbor)
 
         # If we get here, no path was found
