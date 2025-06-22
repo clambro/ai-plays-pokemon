@@ -198,15 +198,15 @@ class YellowLegacyGameState(BaseModel):
             block[:, 0].tolist() in self.map.ledge_tiles_down
             or block[:, 1].tolist() in self.map.ledge_tiles_down
         ):
-            return AsciiTiles.LEDGE
+            return AsciiTiles.LEDGE_DOWN
         if (
             block[0, :].tolist() in self.map.ledge_tiles_left
             or block[1, :].tolist() in self.map.ledge_tiles_left
         ):
-            return AsciiTiles.LEDGE
+            return AsciiTiles.LEDGE_LEFT
         if (
             block[0, :].tolist() in self.map.ledge_tiles_right
             or block[1, :].tolist() in self.map.ledge_tiles_right
         ):
-            return AsciiTiles.LEDGE
+            return AsciiTiles.LEDGE_RIGHT
         return None

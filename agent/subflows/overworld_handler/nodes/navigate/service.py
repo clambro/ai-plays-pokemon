@@ -108,9 +108,21 @@ class NavigationService:
                     visited.add(new_pos)
                     queue.append(new_pos)
                     accessible.append(new_pos)
-                elif target_tile == AsciiTiles.LEDGE and dy == 1:
-                    # Jumping down a ledge skips a tile.
+                # Jumping over a ledge skips a tile.
+                elif target_tile == AsciiTiles.LEDGE_DOWN and dy == 1:
                     ledge_pos = new_pos + (1, 0)  # noqa: RUF005
+                    if ledge_pos not in visited:
+                        visited.add(ledge_pos)
+                        queue.append(ledge_pos)
+                        accessible.append(ledge_pos)
+                elif target_tile == AsciiTiles.LEDGE_LEFT and dx == -1:
+                    ledge_pos = new_pos + (0, -1)  # noqa: RUF005
+                    if ledge_pos not in visited:
+                        visited.add(ledge_pos)
+                        queue.append(ledge_pos)
+                        accessible.append(ledge_pos)
+                elif target_tile == AsciiTiles.LEDGE_RIGHT and dx == 1:
+                    ledge_pos = new_pos + (0, 1)  # noqa: RUF005
                     if ledge_pos not in visited:
                         visited.add(ledge_pos)
                         queue.append(ledge_pos)
@@ -263,9 +275,13 @@ class NavigationService:
                     target_tile = self.current_map.ascii_tiles_ndarray[new_pos.row, new_pos.col]
                     if target_tile in AsciiTiles.get_walkable_tiles():
                         neighbors.append(new_pos)
-                    elif target_tile == AsciiTiles.LEDGE and dy == 1:
-                        # Account for the fact that we can jump down ledges, skipping a tile.
+                    # Account for the fact that we can jump ledges, skipping a tile.
+                    elif target_tile == AsciiTiles.LEDGE_DOWN and dy == 1:
                         neighbors.append(new_pos + (1, 0))  # noqa: RUF005
+                    elif target_tile == AsciiTiles.LEDGE_LEFT and dx == -1:
+                        neighbors.append(new_pos + (0, -1))  # noqa: RUF005
+                    elif target_tile == AsciiTiles.LEDGE_RIGHT and dx == 1:
+                        neighbors.append(new_pos + (0, 1))  # noqa: RUF005
             return neighbors
 
         open_set = {start_pos}

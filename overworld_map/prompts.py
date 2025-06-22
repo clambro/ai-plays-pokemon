@@ -18,7 +18,9 @@ You have explored {{explored_percentage}} of this map.
 - "{AsciiTiles.CUT_TREE}" - A tree.
 - "{AsciiTiles.WATER}" - Water.
 - "{AsciiTiles.GRASS}" - Tall grass, where wild Pokemon can be found.
-- "{AsciiTiles.LEDGE}" - A ledge that you can jump down from above. These tiles are only passable if you approach them from above and walk downwards.
+- "{AsciiTiles.LEDGE_DOWN}" - A ledge that you can jump down from above. These tiles are only passable if you approach them from above and walk downwards.
+- "{AsciiTiles.LEDGE_LEFT}" - A ledge that you can jump over leftwards. These tiles are only passable if you approach them from the right and walk leftwards.
+- "{AsciiTiles.LEDGE_RIGHT}" - A ledge that you can jump over rightwards. These tiles are only passable if you approach them from the left and walk rightwards.
 - "{AsciiTiles.SPRITE}" - A sprite that you can interact with. This could be an NPC, an item you can pick up, or some other interactable entity. You will need to use the screenshot to determine what the sprite is. You cannot walk through sprites, nor can you stand on top of them.
 - "{AsciiTiles.WARP}" - A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.
 - "{AsciiTiles.PLAYER}" - Your current location.
