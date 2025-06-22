@@ -30,6 +30,12 @@ aiohttp = "^3.12.13"
 pre-commit = "^3.6.2"
 ruff = "^0.12.0"
 pytest-asyncio = "^1.0.0"
+poethepoet = "^0.35.0"
+
+[tool.poe.tasks]
+unit_tests = "python -m pytest -k unit"
+integration_tests = "python -m pytest -k integration"
+node_tests = "python -m pytest -k node"
 
 [tool.ruff]
 target-version = "py313"
@@ -73,6 +79,16 @@ classmethod-decorators = ["validator"]
     "SLF001",  # Private member access.
 ]
 "prompts.py" = ["E501"]  # Ignore line length in prompts
+
+[tool.pytest.ini_options]
+python_files = "**/tests/**/test_*.py"
+asyncio_mode = "auto"
+markers =[
+    "unit: mark a test as a unit test.",
+    "integration: mark a test as an integration test",
+    "node: mark a test as a node test",
+]
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

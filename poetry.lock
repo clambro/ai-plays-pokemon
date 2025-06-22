@@ -1280,6 +1280,18 @@ files = [
 ]
 
 [[package]]
+name = "pastel"
+version = "0.2.1"
+description = "Bring colors to your terminal."
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+groups = ["dev"]
+files = [
+    {file = "pastel-0.2.1-py2.py3-none-any.whl", hash = "sha256:4349225fcdf6c2bb34d483e523475de5bb04a5c10ef711263452cb37d7dd4364"},
+    {file = "pastel-0.2.1.tar.gz", hash = "sha256:e6581ac04e973cac858828c6202c1e1e81fee1dc7de7683f3e1ffe0bfd8a573d"},
+]
+
+[[package]]
 name = "pillow"
 version = "11.2.1"
 description = "Python Imaging Library (Fork)"
@@ -1411,6 +1423,25 @@ files = [
 [package.extras]
 dev = ["pre-commit", "tox"]
 testing = ["coverage", "pytest", "pytest-benchmark"]
+
+[[package]]
+name = "poethepoet"
+version = "0.35.0"
+description = "A task runner that works well with poetry and uv."
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "poethepoet-0.35.0-py3-none-any.whl", hash = "sha256:bed5ae1fd63f179dfa67aabb93fa253d79695c69667c927d8b24ff378799ea75"},
+    {file = "poethepoet-0.35.0.tar.gz", hash = "sha256:b396ae862d7626e680bbd0985b423acf71634ce93a32d8b5f38340f44f5fbc3e"},
+]
+
+[package.dependencies]
+pastel = ">=0.2.1,<0.3.0"
+pyyaml = ">=6.0.2,<7.0"
+
+[package.extras]
+poetry-plugin = ["poetry (>=1.2.0,<3.0.0) ; python_version < \"4.0\""]
 
 [[package]]
 name = "pre-commit"
@@ -2540,4 +2571,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.14"
-content-hash = "d2a9d0e251f0930e2c5e1ef779a87ba37b129505bfae02eea99235a5856f76e3"
+content-hash = "cce22fb979adc2871b99de82cc4d27304904a8142a30d8ded1e8f32897e9e55c"
