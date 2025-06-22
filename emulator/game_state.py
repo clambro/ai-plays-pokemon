@@ -4,7 +4,7 @@ import numpy as np
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
-from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
+from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_SHAPE
 from common.enums import AsciiTiles, BlockedDirection
 from common.schemas import Coords
 from emulator.parsers.battle import Battle, parse_battle_state
@@ -171,7 +171,7 @@ class YellowLegacyGameState(BaseModel):
         """
         tiles = np.array(self.screen.tiles)
         # Each block on screen is a 2x2 square of tiles.
-        blocks = np.full((SCREEN_HEIGHT, SCREEN_WIDTH), AsciiTiles.WALL, dtype=AsciiTiles)
+        blocks = np.full(SCREEN_SHAPE, AsciiTiles.WALL, dtype=AsciiTiles)
         blockages = np.zeros_like(blocks, dtype=BlockedDirection)
         for i in range(0, tiles.shape[0], 2):
             for j in range(0, tiles.shape[1], 2):
@@ -237,15 +237,15 @@ class YellowLegacyGameState(BaseModel):
         block = tiles[i : i + 2, j : j + 2]
         if i - 2 >= 0 and j + 2 < tiles.shape[1]:
             row_above = tiles[i - 1, j : j + 2]
-            first_pair = (block[0, 0], row_above[0])
-            second_pair = (block[0, 0], row_above[1])
+            first_pair = {block[0, 0], row_above[0]}
+            second_pair = {block[0, 0], row_above[1]}
             if first_pair in self.map.collision_pairs or second_pair in self.map.collision_pairs:
                 blockages[bi, bj] |= BlockedDirection.UP
                 blockages[bi - 1, bj] |= BlockedDirection.DOWN
         if i - 2 >= 0 and j - 2 >= 0:
             col_left = tiles[i : i + 2, j - 2]
-            first_pair = (block[0, 0], col_left[0])
-            second_pair = (block[1, 0], col_left[1])
+            first_pair = {block[0, 0], col_left[0]}
+            second_pair = {block[1, 0], col_left[1]}
             if first_pair in self.map.collision_pairs or second_pair in self.map.collision_pairs:
                 blockages[bi, bj] |= BlockedDirection.LEFT
                 blockages[bi, bj - 1] |= BlockedDirection.RIGHT

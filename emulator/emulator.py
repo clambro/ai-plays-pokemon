@@ -33,7 +33,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
             raise ValueError("Cannot specify both save_state and save_state_path.")
 
         volume = 0 if mute_sound else 100
-        window = "headless" if headless else "SDL2"
+        window = "null" if headless else "SDL2"
         self._pyboy = PyBoy(rom_path, sound_volume=volume, window=window)
 
         if save_state:

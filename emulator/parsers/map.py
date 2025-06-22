@@ -19,7 +19,7 @@ class Map(BaseModel):
     ledge_tiles_down: list[list[int]]
     cut_tree_tiles: list[int]
     walkable_tiles: list[int]
-    collision_pairs: list[tuple[int, int]]
+    collision_pairs: list[frozenset[tuple[int, int]]]
     special_collision_blocks: list[int]
     north_connection: MapId | None
     south_connection: MapId | None
@@ -134,22 +134,22 @@ _GRASS_TILE_MAP = {
 
 _COLLISION_PAIRS = {
     _Tileset.CAVERN: [
-        (0x20, 0x05),
-        (0x41, 0x05),
-        (0x2A, 0x05),
-        (0x05, 0x21),
-        (0x14, 0x05),
+        frozenset([(0x20, 0x05)]),
+        frozenset([(0x41, 0x05)]),
+        frozenset([(0x2A, 0x05)]),
+        frozenset([(0x05, 0x21)]),
+        frozenset([(0x14, 0x05)]),
     ],
     _Tileset.FOREST: [
-        (0x30, 0x2E),
-        (0x52, 0x2E),
-        (0x55, 0x2E),
-        (0x56, 0x2E),
-        (0x20, 0x2E),
-        (0x5E, 0x2E),
-        (0x5F, 0x2E),
-        (0x14, 0x2E),
-        (0x48, 0x2E),
+        frozenset([(0x30, 0x2E)]),
+        frozenset([(0x52, 0x2E)]),
+        frozenset([(0x55, 0x2E)]),
+        frozenset([(0x56, 0x2E)]),
+        frozenset([(0x20, 0x2E)]),
+        frozenset([(0x5E, 0x2E)]),
+        frozenset([(0x5F, 0x2E)]),
+        frozenset([(0x14, 0x2E)]),
+        frozenset([(0x48, 0x2E)]),
     ],
 }
 
