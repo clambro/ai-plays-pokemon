@@ -9,7 +9,7 @@ from loguru import logger
 from PIL import Image
 from pyboy import PyBoy
 
-from common.constants import GAME_TICKS_PER_SECOND
+from common.constants import DEFAULT_ROM_PATH, GAME_TICKS_PER_SECOND
 from emulator.game_state import YellowLegacyGameState
 
 
@@ -21,17 +21,21 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
 
     def __init__(
         self,
-        rom_path: str,
+        rom_path: str = DEFAULT_ROM_PATH,
         save_state: str | None = None,
         save_state_path: Path | None = None,
         *,
         mute_sound: bool = False,
+        headless: bool = False,
     ) -> None:
         """Initialize the emulator."""
         if save_state and save_state_path:
             raise ValueError("Cannot specify both save_state and save_state_path.")
 
-        self._pyboy = PyBoy(rom_path, sound_volume=0 if mute_sound else 100)
+        volume = 0 if mute_sound else 100
+        window = "headless" if headless else "SDL2"
+        self._pyboy = PyBoy(rom_path, sound_volume=volume, window=window)
+
         if save_state:
             self._pyboy.load_state(io.BytesIO(base64.b64decode(save_state)))
         elif save_state_path:

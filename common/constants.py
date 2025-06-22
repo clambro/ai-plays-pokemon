@@ -1,5 +1,7 @@
 from pathlib import Path
 
+DEFAULT_ROM_PATH = "resources/ylegacy.gbc"
+
 GAME_TICKS_PER_SECOND = 60
 
 SCREEN_HEIGHT = 9
