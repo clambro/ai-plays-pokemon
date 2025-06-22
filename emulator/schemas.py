@@ -28,6 +28,10 @@ class AsciiScreenWithEntities(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
+    def __str__(self) -> str:
+        """Return a string representation of the screen."""
+        return "\n".join("".join(row) for row in self.screen)
+
     @property
     def ndarray(self) -> np.ndarray:
         """Convert the screen to a numpy array."""

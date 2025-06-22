@@ -177,3 +177,6 @@ notes/
 resources/
 outputs/
 streaming/**/assets/**/*.png
+
+# Don't commit save states.
+**.state
