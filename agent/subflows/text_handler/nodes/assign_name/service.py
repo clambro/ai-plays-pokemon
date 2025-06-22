@@ -3,9 +3,9 @@ import numpy as np
 from agent.subflows.text_handler.nodes.assign_name.prompts import GET_NAME_PROMPT
 from agent.subflows.text_handler.nodes.assign_name.schemas import NameResponse
 from common.constants import GAME_TICKS_PER_SECOND
+from common.enums import Button
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
-from emulator.enums import Button
 from emulator.game_state import YellowLegacyGameState
 from llm.schemas import GEMINI_FLASH_LITE_2_5
 from llm.service import GeminiLLMService
