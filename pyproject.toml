@@ -83,6 +83,9 @@ classmethod-decorators = ["validator"]
 [tool.pytest.ini_options]
 python_files = "**/tests/**/test_*.py"
 asyncio_mode = "auto"
+addopts = [
+    "--import-mode=importlib"
+]
 markers =[
     "unit: mark a test as a unit test.",
     "integration: mark a test as an integration test",

@@ -61,7 +61,7 @@ DUMMY_MAP = OverworldMap(
 )
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_get_accessible_coords_plateau() -> None:
     """Test that the accessible coords are correct for the plateau map."""
     map_data = deepcopy(DUMMY_MAP)
@@ -79,7 +79,7 @@ def test_get_accessible_coords_plateau() -> None:
     ]
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_get_accessible_coords_collision_pairs() -> None:
     """Test that the accessible coords are correct for the collision pairs map."""
     map_data = deepcopy(DUMMY_MAP)
@@ -94,7 +94,7 @@ def test_get_accessible_coords_collision_pairs() -> None:
     ]
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_get_exploration_candidates_plateau() -> None:
     """Test that the exploration candidates are correct for the plateau map."""
     map_data = deepcopy(DUMMY_MAP)
@@ -113,7 +113,7 @@ def test_get_exploration_candidates_plateau() -> None:
     ]
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_get_exploration_candidates_collision_pairs() -> None:
     """Test that the exploration candidates are correct for the collision pairs map."""
     map_data = deepcopy(DUMMY_MAP)
@@ -125,7 +125,7 @@ def test_get_exploration_candidates_collision_pairs() -> None:
     assert exploration_candidates == []
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_get_map_boundary_tiles_plateau() -> None:
     """Test that the map boundary tiles are correct for the plateau map if we add a map below."""
     map_data = deepcopy(DUMMY_MAP)
@@ -144,7 +144,7 @@ def test_get_map_boundary_tiles_plateau() -> None:
     }
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_get_map_boundary_tiles_collision_pairs() -> None:
     """Test that the map boundary tiles are correct for the collision pairs map."""
     map_data = deepcopy(DUMMY_MAP)
@@ -165,7 +165,7 @@ def test_get_map_boundary_tiles_collision_pairs() -> None:
     assert boundary_tiles[FacingDirection.UP] == []
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_calculate_path_to_target_plateau_jump_left() -> None:
     """Test that the path to the target is correct for the plateau map when jumping left."""
     map_data = deepcopy(DUMMY_MAP)
@@ -175,7 +175,7 @@ def test_calculate_path_to_target_plateau_jump_left() -> None:
     assert path == 3 * [Button.LEFT]
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_calculate_path_to_target_plateau_from_left_around() -> None:
     """
     Test that the path to the target is correct for the plateau map when walking from the left to
@@ -188,7 +188,7 @@ def test_calculate_path_to_target_plateau_from_left_around() -> None:
     assert path == 3 * [Button.DOWN] + 4 * [Button.RIGHT] + 3 * [Button.UP]
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_calculate_path_to_target_plateau_jump_right() -> None:
     """Test that the path to the target is correct for the plateau map when jumping right."""
     map_data = deepcopy(DUMMY_MAP)
@@ -198,7 +198,7 @@ def test_calculate_path_to_target_plateau_jump_right() -> None:
     assert path == 3 * [Button.RIGHT]
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_calculate_path_to_target_plateau_from_right_around() -> None:
     """
     Test that the path to the target is correct for the plateau map when walking from the right to
@@ -211,7 +211,7 @@ def test_calculate_path_to_target_plateau_from_right_around() -> None:
     assert path == 3 * [Button.DOWN] + 4 * [Button.LEFT] + 3 * [Button.UP]
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_calculate_path_to_target_plateau_jump_down() -> None:
     """Test that the path to the target is correct for the plateau map when jumping down."""
     map_data = deepcopy(DUMMY_MAP)
@@ -221,7 +221,7 @@ def test_calculate_path_to_target_plateau_jump_down() -> None:
     assert path == [Button.DOWN]
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_calculate_path_to_target_plateau_from_down_around() -> None:
     """
     Test that the path to the target is correct for the plateau map when walking from the down to
@@ -234,7 +234,7 @@ def test_calculate_path_to_target_plateau_from_down_around() -> None:
     assert path == [Button.RIGHT, Button.UP, Button.UP, Button.LEFT]
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_calculate_path_to_target_around_collision_pair() -> None:
     """
     Test that the path to the target is correct for the collision pairs map when walking around a
