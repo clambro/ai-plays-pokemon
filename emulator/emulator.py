@@ -74,8 +74,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
                 if not self._tick():
                     self.stop()
                     break
-            # Pass control back to the event loop for at least half a frame.
-            await asyncio.sleep(1 / GAME_TICKS_PER_SECOND / 2)
+            await asyncio.sleep(0.001)  # Pass control back to the event loop.
 
     def stop(self) -> None:
         """Stop the emulator."""
