@@ -137,6 +137,30 @@ async def test_get_ascii_screen_viridian_forest() -> None:
 
 
 @pytest.mark.integration
+async def test_get_ascii_screen_three_ledges() -> None:
+    """
+    Test that the ASCII screen is correct for the three ledges.
+
+    Checking the unique tilemap used here.
+    """
+    await _helper_test_expected_screen(
+        state_filename="three_ledges.state",
+        expected_blockages={},
+        expected_screen=[
+            "▉▉▉▉▉▉▉▉▉▉",
+            "▉▉▉▉▉▉▉▉▉▉",
+            "∙∙⍅∙∙∙∙⍆∙⍆",
+            "∙∙⍅∙∙∙∙⍆∙⍆",
+            "∙∙⍅∙☻∙∙⍆∙⍆",
+            "∙∙⍖⍖⍖∙⍖⍆∙⍆",
+            "∙∙∙∙∙∙∙∙∙⍆",
+            "∙∙∙∙∙∙∙∙∙⍆",
+            "∙∙∙∙∙∙∙∙∙⍆",
+        ],
+    )
+
+
+@pytest.mark.integration
 async def _helper_test_expected_screen(
     state_filename: str,
     expected_blockages: dict[Coords, BlockedDirection],
