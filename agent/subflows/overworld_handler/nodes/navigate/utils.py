@@ -16,12 +16,12 @@ def get_accessible_coords(start_pos: Coords, map_data: OverworldMap) -> list[Coo
 
     :param start_pos: Starting position to search from
     :param map_data: Map data containing tiles and blockages
-    :return: List of accessible coordinates (excluding start_pos)
+    :return: List of accessible coordinates, including start_pos (required for finding map
+        boundaries if you're standing on a boundary tile)
     """
     visited = {start_pos}
     queue = [start_pos]
-    accessible = []  # No need to return the starting position because we're already there.
-
+    accessible = [start_pos]
     while queue:
         current = queue.pop(0)
         for neighbor in _get_neighbors(current, map_data):

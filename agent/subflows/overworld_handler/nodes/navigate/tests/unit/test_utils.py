@@ -11,7 +11,7 @@ from copy import deepcopy
 import pytest
 
 from agent.subflows.overworld_handler.nodes.navigate import utils
-from common.enums import Button, FacingDirection, MapId
+from common.enums import BlockedDirection, Button, FacingDirection, MapId
 from common.schemas import Coords
 from overworld_map.schemas import OverworldMap
 
@@ -28,6 +28,24 @@ PLATEAU_MAP = [
     ]
 ]
 PLATEAU_CENTER = Coords(row=2, col=5)
+
+COLLISION_PAIRS_MAP = [
+    list(row)
+    for row in [
+        "∙∙∙",  # Position 2 in this row is inaccessible.
+        "∙∙∙",  # Position 0 in this row is inaccessible.
+        "∙∙∙",  # All positions in this row are accessible.
+    ]
+]
+COLLISION_PAIRS_BLOCKAGES = {
+    Coords(row=0, col=0): BlockedDirection.DOWN,
+    Coords(row=0, col=1): BlockedDirection.RIGHT,
+    Coords(row=0, col=2): BlockedDirection.LEFT | BlockedDirection.DOWN,
+    Coords(row=1, col=0): BlockedDirection.UP | BlockedDirection.RIGHT | BlockedDirection.DOWN,
+    Coords(row=1, col=1): BlockedDirection.LEFT,
+    Coords(row=1, col=2): BlockedDirection.UP,
+    Coords(row=2, col=0): BlockedDirection.UP,
+}
 
 DUMMY_MAP = OverworldMap(
     id=MapId.PALLET_TOWN,
@@ -53,11 +71,26 @@ def test_get_accessible_coords_plateau() -> None:
     assert _coords_to_binary_map(set(accessible_coords), 7, 11) == [
         "00000000000",
         "01011111010",
-        "01011011010",
+        "01011111010",
         "01011111011",
         "01000100010",
         "01111111110",
         "00000100000",
+    ]
+
+
+@pytest.mark.integration
+def test_get_accessible_coords_collision_pairs() -> None:
+    """Test that the accessible coords are correct for the collision pairs map."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = COLLISION_PAIRS_MAP
+    map_data.blockages = COLLISION_PAIRS_BLOCKAGES
+
+    accessible_coords = utils.get_accessible_coords(Coords(row=0, col=0), map_data)
+    assert _coords_to_binary_map(set(accessible_coords), 3, 3) == [
+        "110",
+        "011",
+        "111",
     ]
 
 
@@ -81,6 +114,18 @@ def test_get_exploration_candidates_plateau() -> None:
 
 
 @pytest.mark.integration
+def test_get_exploration_candidates_collision_pairs() -> None:
+    """Test that the exploration candidates are correct for the collision pairs map."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = COLLISION_PAIRS_MAP
+    map_data.blockages = COLLISION_PAIRS_BLOCKAGES
+
+    accessible_coords = utils.get_accessible_coords(Coords(row=0, col=0), map_data)
+    exploration_candidates = utils.get_exploration_candidates(accessible_coords, map_data)
+    assert exploration_candidates == []
+
+
+@pytest.mark.integration
 def test_get_map_boundary_tiles_plateau() -> None:
     """Test that the map boundary tiles are correct for the plateau map if we add a map below."""
     map_data = deepcopy(DUMMY_MAP)
@@ -97,6 +142,27 @@ def test_get_map_boundary_tiles_plateau() -> None:
         FacingDirection.RIGHT: [],
         FacingDirection.UP: [],
     }
+
+
+@pytest.mark.integration
+def test_get_map_boundary_tiles_collision_pairs() -> None:
+    """Test that the map boundary tiles are correct for the collision pairs map."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = COLLISION_PAIRS_MAP
+    map_data.blockages = COLLISION_PAIRS_BLOCKAGES
+    map_data.east_connection = MapId.ROUTE_1
+    map_data.west_connection = MapId.ROUTE_1
+
+    accessible_coords = utils.get_accessible_coords(Coords(row=0, col=0), map_data)
+    boundary_tiles = utils.get_map_boundary_tiles(accessible_coords, map_data)
+
+    assert boundary_tiles[FacingDirection.DOWN] == []
+    assert set(boundary_tiles[FacingDirection.LEFT]) == {Coords(row=0, col=0), Coords(row=2, col=0)}
+    assert set(boundary_tiles[FacingDirection.RIGHT]) == {
+        Coords(row=1, col=2),
+        Coords(row=2, col=2),
+    }
+    assert boundary_tiles[FacingDirection.UP] == []
 
 
 @pytest.mark.integration
@@ -166,6 +232,20 @@ def test_calculate_path_to_target_plateau_from_down_around() -> None:
 
     path = utils.calculate_path_to_target(Coords(row=5, col=4), Coords(row=3, col=4), map_data)
     assert path == [Button.RIGHT, Button.UP, Button.UP, Button.LEFT]
+
+
+@pytest.mark.integration
+def test_calculate_path_to_target_around_collision_pair() -> None:
+    """
+    Test that the path to the target is correct for the collision pairs map when walking around a
+    collision pair.
+    """
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = COLLISION_PAIRS_MAP
+    map_data.blockages = COLLISION_PAIRS_BLOCKAGES
+
+    path = utils.calculate_path_to_target(Coords(row=0, col=0), Coords(row=2, col=0), map_data)
+    assert path == [Button.RIGHT, Button.DOWN, Button.DOWN, Button.LEFT]
 
 
 def _coords_to_binary_map(coords: set[Coords], height: int, width: int) -> list[str]:
