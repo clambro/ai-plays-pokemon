@@ -98,7 +98,8 @@ class AssignNameService:
 
         await self.emulator.press_buttons([Button.START])  # Accept the name.
 
-    def _get_dir_buttons(self, letter_loc: tuple[int, int], cursor_loc: int) -> list[Button]:
+    @staticmethod
+    def _get_dir_buttons(letter_loc: tuple[int, int], cursor_loc: int) -> list[Button]:
         """
         Get the direction buttons to press to get to the letter.
 
