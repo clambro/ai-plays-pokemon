@@ -8,6 +8,7 @@ Done?
 ### Clean-Up, Refactoring, and Testing
 * Include the inventory in the player info or it will buy pokeballs forever
 * In the overworld warp, mention if the player has not visted a given map yet.
+* Move the check for animations to finish into the press buttons method and make it only do one button press at a time instead of a list. More stable, and I'm not using the list logic anyway.
 
 * Add unit/integration tests
     * Test background tile and blocking generation from game states for strength boulders, seafoam elevation, left/right ledges near cerulean
