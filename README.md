@@ -6,11 +6,19 @@
 Done?
 
 ### Clean-Up, Refactoring, and Testing
+* Include the inventory in the player info or it will buy pokeballs forever
+* In the overworld warp, mention if the player has not visted a given map yet.
+
 * Add unit/integration tests
+    * Test background tile and blocking generation from game states for strength boulders, seafoam elevation, left/right ledges near cerulean
+    * Test navigation for surfing and cutting trees
 
 * Set up Junjo server and opentelemetry
 
 * Add node tests for the LLM calls
+    * Ensure that the player/rival names are at most 7 characters instead of 10
+    * Tests for selecting tools
+    * Tests for multiple button presses
 
 ### Useful Tools and Additions
 * Detailed subflow for battles. Battle type (e.g. trainer, safari zone, etc.) is at 0xD05A, and the move menus are at 0xCCDB
