@@ -100,7 +100,6 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
 
         :param button: The button to press.
         :param hold_frames: The number of frames to hold each button.
-        :param frames_between: The number of frames to wait between each button.
         """
         self._check_stopped()
         async with self._button_lock:

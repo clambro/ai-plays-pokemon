@@ -72,9 +72,10 @@ async def update_map_with_screen_info(
 ) -> OverworldMap:
     """
     Update the overworld map with the current screen info. Double check that there is no text
-    on the screen before updating the map or you'll add weird artifacts to it.
+    on the screen and that the map ID matches the current game state before updating or you'll
+    create weird artifacts.
     """
-    if not game_state.is_text_on_screen():
+    if not game_state.is_text_on_screen() and overworld_map.id == game_state.map.id:
         await _add_remove_map_entities(iteration, game_state, overworld_map)
         await _update_overworld_map_tiles(iteration, game_state, overworld_map)
     return await get_overworld_map(iteration, game_state)
