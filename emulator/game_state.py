@@ -119,7 +119,7 @@ class YellowLegacyGameState(BaseModel):
             sc = self.to_screen_coords(w.coords)
             # There's a funny edge case with warps where they can be rendered on top of walls and
             # are therefore inaccessible. An example is in map 50, when entering Viridian Forest.
-            if sc and blocks[sc.row, sc.col] not in [AsciiTiles.WALL]:
+            if sc and blocks[sc.row, sc.col] != AsciiTiles.WALL:
                 blocks[sc.row, sc.col] = AsciiTiles.WARP
                 on_screen_warps.append(w)
 
