@@ -8,6 +8,7 @@ from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_SHAPE
 from common.enums import AsciiTiles, BlockedDirection
 from common.schemas import Coords
 from emulator.parsers.battle import Battle, parse_battle_state
+from emulator.parsers.inventory import Inventory, parse_inventory
 from emulator.parsers.map import Map, parse_map_state
 from emulator.parsers.player import Player, parse_player
 from emulator.parsers.pokemon import Pokemon, parse_player_pokemon
@@ -23,6 +24,7 @@ class YellowLegacyGameState(BaseModel):
 
     player: Player
     party: list[Pokemon]
+    inventory: Inventory
     map: Map
     sprites: dict[int, Sprite]
     pikachu: Sprite
@@ -44,6 +46,7 @@ class YellowLegacyGameState(BaseModel):
         return cls(
             player=parse_player(mem),
             party=parse_player_pokemon(mem),
+            inventory=parse_inventory(mem),
             map=parse_map_state(mem),
             sprites=parse_sprites(mem),
             pikachu=parse_pikachu_sprite(mem),
@@ -82,6 +85,11 @@ class YellowLegacyGameState(BaseModel):
                 out += "</moves>\n"
                 out += f"</pokemon_{i}>\n"
             out += "</party>\n"
+        if self.inventory.items:
+            out += "<inventory>\n"
+            for i in self.inventory.items:
+                out += f"- {i.name} (x{i.quantity})\n"
+            out += "</inventory>\n"
         out += "</player_info>"
         return out
 
