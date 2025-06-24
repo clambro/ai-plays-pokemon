@@ -7,7 +7,12 @@ from database.map_entity_memory.repository import (
     get_map_entity_memories_for_map,
 )
 from database.map_entity_memory.schemas import MapEntityMemoryCreate, MapEntityMemoryDelete
-from database.map_memory.repository import create_map_memory, get_map_memory, update_map_tiles
+from database.map_memory.repository import (
+    create_map_memory,
+    get_map_memory,
+    get_visited_maps,
+    update_map_tiles,
+)
 from database.map_memory.schemas import MapMemoryCreateUpdate
 from emulator.game_state import YellowLegacyGameState
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
@@ -32,8 +37,9 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
     }
 
     game_warps = game_state.warps
+    visited_maps = await get_visited_maps()
     warps = {
-        mem.entity_id: OverworldWarp.from_warp(game_warps[mem.entity_id])
+        mem.entity_id: OverworldWarp.from_warp(game_warps[mem.entity_id], visited_maps)
         for mem in map_entity_memories
         if mem.entity_type == MapEntityType.WARP and mem.entity_id in game_warps
     }

@@ -58,6 +58,8 @@ class OverworldWarp(Warp):
     Unlike signs and sprites, warps are static. The description is immutable.
     """
 
+    visited: bool
+
     @property
     def description(self) -> str:
         """Get a description of the warp."""
@@ -82,15 +84,18 @@ class OverworldWarp(Warp):
         raise ValueError(f"Unknown warp type: {self.warp_type}")
 
     @classmethod
-    def from_warp(cls, warp: Warp) -> "OverworldWarp":
-        """Create an overworld warp from a warp and a description."""
-        return cls(**warp.model_dump())
+    def from_warp(cls, warp: Warp, visited_maps: list[MapId]) -> "OverworldWarp":
+        """Create an overworld warp from a warp."""
+        # The OUTSIDE placeholder map is not in the DB, so we assume it's always visited.
+        visited = warp.destination in visited_maps or warp.destination == MapId.OUTSIDE
+        return cls(**warp.model_dump(), visited=visited)
 
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the warp."""
+        visited_text = "" if self.visited else "You have not been to this map yet. "
         return (
             f"warp_{map_id}_{self.index} at {self.coords} leading to {self.destination.name}."
-            f" {self.description}"
+            f" {visited_text}{self.description}"
         )
 
 
