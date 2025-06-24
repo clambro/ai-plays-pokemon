@@ -32,6 +32,7 @@ async def test_navigate_through_pikachu() -> None:
                 return_value=[],
             ),
             patch("database.map_memory.repository.update_map_tiles", return_value=None),
+            patch("overworld_map.service._add_remove_map_entities", return_value=None),
         ):
             overworld_map = await get_overworld_map(0, game_state)
             await update_map_with_screen_info(0, game_state, overworld_map)
