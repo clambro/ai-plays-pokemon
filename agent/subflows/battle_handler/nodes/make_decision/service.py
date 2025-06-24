@@ -52,7 +52,6 @@ class MakeDecisionService:
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
 
-        await self.emulator.wait_for_animation_to_finish()
         new_game_state = self.emulator.get_game_state()
         if new_game_state.screen.tiles == game_state.screen.tiles:
             self.raw_memory.append(
