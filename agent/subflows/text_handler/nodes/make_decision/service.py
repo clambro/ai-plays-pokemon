@@ -57,8 +57,7 @@ class DecisionMakerTextService:
                 ),
             )
             for b in buttons:
-                await self.emulator.press_buttons([b])
-                await self.emulator.wait_for_animation_to_finish()
+                await self.emulator.press_buttons(b)
                 if self._check_for_state_change():
                     break
 

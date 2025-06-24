@@ -9,7 +9,7 @@ from loguru import logger
 from PIL import Image
 from pyboy import PyBoy
 
-from common.constants import DEFAULT_ROM_PATH, GAME_TICKS_PER_SECOND
+from common.constants import DEFAULT_ROM_PATH
 from emulator.game_state import YellowLegacyGameState
 
 
@@ -91,22 +91,20 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
 
     async def press_buttons(
         self,
-        buttons: list[str],
+        button: str,
         hold_frames: int = 10,
-        frames_between: int = 10,
     ) -> None:
         """
-        Press the buttons in order.
+        Send a button press to the emulator and wait for any animations to finish.
 
-        :param buttons: The buttons to press.
+        :param button: The button to press.
         :param hold_frames: The number of frames to hold each button.
         :param frames_between: The number of frames to wait between each button.
         """
         self._check_stopped()
-        for button in buttons:
-            async with self._button_lock:
-                self._pyboy.button(button, hold_frames)
-            await asyncio.sleep(frames_between / GAME_TICKS_PER_SECOND)
+        async with self._button_lock:
+            self._pyboy.button(button, hold_frames)
+        await self.wait_for_animation_to_finish()
 
     async def wait_for_animation_to_finish(self) -> None:
         """Wait until all ongoing animations have finished."""

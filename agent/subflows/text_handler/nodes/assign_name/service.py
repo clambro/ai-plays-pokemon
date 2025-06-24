@@ -2,7 +2,6 @@ import numpy as np
 
 from agent.subflows.text_handler.nodes.assign_name.prompts import GET_NAME_PROMPT
 from agent.subflows.text_handler.nodes.assign_name.schemas import NameResponse
-from common.constants import GAME_TICKS_PER_SECOND
 from common.enums import Button
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
@@ -91,12 +90,11 @@ class AssignNameService:
             cursor_loc = game_state.screen.cursor_index
             dir_buttons = self._get_dir_buttons(letter_loc, cursor_loc)
 
-            await self.emulator.press_buttons(
-                [*dir_buttons, Button.A],
-                frames_between=GAME_TICKS_PER_SECOND // 2,
-            )
+            for b in dir_buttons:
+                await self.emulator.press_buttons(b)
+            await self.emulator.press_buttons(Button.A)
 
-        await self.emulator.press_buttons([Button.START])  # Accept the name.
+        await self.emulator.press_buttons(Button.START)  # Accept the name.
 
     @staticmethod
     def _get_dir_buttons(letter_loc: tuple[int, int], cursor_loc: int) -> list[Button]:

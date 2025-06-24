@@ -36,8 +36,7 @@ class HandleDialogBoxService:
         # last time to close the box.
         while dialog_box and (is_blinking_cursor or not is_text_outside_dialog_box):
             self._append_dialog_to_list(text, dialog_box)
-            await self.emulator.press_buttons([Button.A])
-            await self.emulator.wait_for_animation_to_finish()
+            await self.emulator.press_buttons(Button.A)
             await asyncio.sleep(0.5)  # Buffer to ensure that no new dialog boxes have opened.
 
             game_state = self.emulator.get_game_state()
