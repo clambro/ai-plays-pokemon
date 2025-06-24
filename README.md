@@ -6,7 +6,6 @@
 Done?
 
 ### Clean-Up, Refactoring, and Testing
-* Include the inventory in the player info or it will buy pokeballs forever
 * In the overworld warp, mention if the player has not visted a given map yet.
 * Put the emulator on a separate process entirely to fix the remaning async issues.
 
