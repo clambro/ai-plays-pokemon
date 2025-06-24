@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 
-from common.enums import MapId
+from common.enums import BlockedDirection, MapId
+from common.schemas import Coords
 
 
 class MapMemoryCreateUpdate(BaseModel):
@@ -8,6 +9,7 @@ class MapMemoryCreateUpdate(BaseModel):
 
     map_id: MapId
     tiles: str
+    blockages: dict[Coords, BlockedDirection]
     iteration: int
 
 
@@ -16,5 +18,6 @@ class MapMemoryRead(BaseModel):
 
     map_id: MapId
     tiles: str
+    blockages: dict[Coords, BlockedDirection]
 
     model_config = ConfigDict(from_attributes=True)

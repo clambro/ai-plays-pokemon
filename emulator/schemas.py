@@ -1,6 +1,8 @@
 import numpy as np
 from pydantic import BaseModel, ConfigDict
 
+from common.enums import BlockedDirection
+from common.schemas import Coords
 from emulator.parsers.sign import Sign
 from emulator.parsers.sprite import Sprite
 from emulator.parsers.warp import Warp
@@ -20,11 +22,16 @@ class AsciiScreenWithEntities(BaseModel):
     """An ASCII representation of a screen with entities on it."""
 
     screen: list[list[str]]
+    blockages: dict[Coords, BlockedDirection]
     sprites: list[Sprite]
     warps: list[Warp]
     signs: list[Sign]
 
     model_config = ConfigDict(frozen=True)
+
+    def __str__(self) -> str:
+        """Return a string representation of the screen."""
+        return "\n".join("".join(row) for row in self.screen)
 
     @property
     def ndarray(self) -> np.ndarray:

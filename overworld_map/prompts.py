@@ -18,7 +18,9 @@ You have explored {{explored_percentage}} of this map.
 - "{AsciiTiles.CUT_TREE}" - A tree.
 - "{AsciiTiles.WATER}" - Water.
 - "{AsciiTiles.GRASS}" - Tall grass, where wild Pokemon can be found.
-- "{AsciiTiles.LEDGE}" - A ledge that you can jump down from above. These tiles are only passable if you approach them from above and walk downwards.
+- "{AsciiTiles.LEDGE_DOWN}" - A ledge that you can jump down from above. These tiles are only passable if you approach them from above and walk downwards.
+- "{AsciiTiles.LEDGE_LEFT}" - A ledge that you can jump over leftwards. These tiles are only passable if you approach them from the right and walk leftwards.
+- "{AsciiTiles.LEDGE_RIGHT}" - A ledge that you can jump over rightwards. These tiles are only passable if you approach them from the left and walk rightwards.
 - "{AsciiTiles.SPRITE}" - A sprite that you can interact with. This could be an NPC, an item you can pick up, or some other interactable entity. You will need to use the screenshot to determine what the sprite is. You cannot walk through sprites, nor can you stand on top of them.
 - "{AsciiTiles.WARP}" - A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.
 - "{AsciiTiles.PLAYER}" - Your current location.
@@ -41,10 +43,10 @@ The right side of the screen is currently at column {{screen_right}} in map coor
 You, the player, are at position {{player_coords}} in map coordinates.
 You are facing {{player_direction}}.
 
-The tile directly above you is "{{tile_above}}".
-The tile directly below you is "{{tile_below}}".
-The tile directly to the left of you is "{{tile_left}}".
-The tile directly to the right of you is "{{tile_right}}".
+The tile directly above you is "{{tile_above}}"{{blocked_above}}.
+The tile directly below you is "{{tile_below}}"{{blocked_below}}.
+The tile directly to the left of you is "{{tile_left}}"{{blocked_left}}.
+The tile directly to the right of you is "{{tile_right}}"{{blocked_right}}.
 </player_position>
 
 <map_connections>

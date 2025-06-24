@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum, StrEnum, auto
+from enum import Enum, IntEnum, IntFlag, StrEnum, auto
 
 
 class AsciiTiles(StrEnum):
@@ -14,7 +14,9 @@ class AsciiTiles(StrEnum):
     WALL = "▉"
     WATER = "≋"
     GRASS = "❀"
-    LEDGE = "⎯"
+    LEDGE_DOWN = "⍖"
+    LEDGE_LEFT = "⍅"
+    LEDGE_RIGHT = "⍆"
     FREE = "∙"
     PLAYER = "☻"
     SPRITE = "◆"
@@ -43,6 +45,41 @@ class WarpType(Enum):
     SINGLE = auto()
     DOUBLE_VERTICAL = auto()
     DOUBLE_HORIZONTAL = auto()
+
+
+class FacingDirection(StrEnum):
+    """The direction the player is facing."""
+
+    UP = "up"
+    DOWN = "down"
+    LEFT = "left"
+    RIGHT = "right"
+
+
+class BlockedDirection(IntFlag):
+    """
+    Represents blocked movement between otherwise walkable tiles. This is usually due to an
+    elevation difference making it impossible to move from one to the other, even though both are
+    walkable and adjacent to one another.
+    """
+
+    UP = 0b0001
+    DOWN = 0b0010
+    LEFT = 0b0100
+    RIGHT = 0b1000
+
+
+class Button(StrEnum):
+    """The buttons that can be pressed in the game."""
+
+    A = "a"
+    B = "b"
+    START = "start"
+    SELECT = "select"
+    UP = "up"
+    DOWN = "down"
+    LEFT = "left"
+    RIGHT = "right"
 
 
 class MapId(IntEnum):

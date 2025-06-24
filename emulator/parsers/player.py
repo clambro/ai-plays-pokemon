@@ -1,8 +1,8 @@
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
+from common.enums import FacingDirection
 from common.schemas import Coords
-from emulator.enums import FacingDirection
 from emulator.parsers.utils import get_text_from_byte_array
 
 

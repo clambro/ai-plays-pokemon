@@ -1,101 +1,19 @@
 """
-Hacky script to shove some dummy data into the background server and spin it up so that I can
-quickly visualize styles and layouts.
+Hacky script to shove some dummy data from the tests into the background server and spin it up so
+that I can quickly visualize styles and layouts.
 """
 
 import asyncio
 
-from streaming.schemas import GameStateView, LogEntryView, PartyPokemonView
 from streaming.server import BackgroundStreamServer
-
-MOCK_DATA = GameStateView(
-    iteration=15247,
-    money=18143,
-    pokedex_seen=45,
-    pokedex_caught=21,
-    total_cost=23.51,
-    play_time_seconds=596153,  # about 165 hours
-    badges=["BOULDERBADGE", "CASCADEBADGE", "THUNDERBADGE"],
-    party=[
-        PartyPokemonView(
-            name="ECHO",
-            species="GOLBAT",
-            type1="POISON",
-            type2="FLYING",
-            status=None,
-            level=22,
-            hp=0,
-            max_hp=70,
-            moves=["WING ATTACK", "CONFUSE RAY", "BITE", "HAZE"],
-        ),
-        PartyPokemonView(
-            name="CRAG",
-            species="GEODUDE",
-            type1="ROCK",
-            type2="GROUND",
-            status=None,
-            level=18,
-            hp=45,
-            max_hp=45,
-            moves=["TACKLE", "DEFENSE CURL", "ROCK THROW", "SELF-DESTRUCT"],
-        ),
-        PartyPokemonView(
-            name="PULSAR",
-            species="MAGNEMITE",
-            type1="ELECTRIC",
-            type2=None,
-            status=None,
-            level=18,
-            hp=0,
-            max_hp=36,
-            moves=["TACKLE", "SONIC BOOM", "THUNDER SHOCK", "SUPERSONIC"],
-        ),
-        PartyPokemonView(
-            name="SPARKY",
-            species="PIKACHU",
-            type1="ELECTRIC",
-            type2=None,
-            level=24,
-            hp=68,
-            max_hp=68,
-            status="POISONED",
-            moves=["THUNDERSHOCK", "GROWL", "THUNDER WAVE", "QUICK ATTACK"],
-        ),
-        PartyPokemonView(
-            name="SUBTERRA",
-            species="DIGLETT",
-            type1="GROUND",
-            type2=None,
-            status=None,
-            level=18,
-            hp=18,
-            max_hp=52,
-            moves=["SCRATCH", "GROWL"],
-        ),
-    ],
-    goals=[
-        "Travel through Rock Tunnel to reach Lavender Town.",
-        "Obtain HM05 (Flash).",
-        "Acquire a drink for the Saffron City guard",
-    ],
-    log=[
-        LogEntryView(
-            iteration=15246,
-            thought="Ugh, a random battle. My path traversal was interrupted. I'm facing a wild Diglett. My goal is to get out of here, not to battle. ECHO is a higher level, so I should be able to run away successfully. I'll use the select_battle_option tool to select RUN.",  # noqa: E501
-        ),
-        LogEntryView(
-            iteration=15247,
-            thought="Oh, come on! Just when I was making good time. Another Diglett... alright, let's just get out of here. No time for battles right now!",  # noqa: E501
-        ),
-    ],
-)
+from streaming.tests.integration.test_server import MOCK_DATA
 
 
 async def main() -> None:
     """Run the server with mock data for a few seconds."""
     async with BackgroundStreamServer() as server:
         server._current_data = MOCK_DATA  # noqa: SLF001
-        await asyncio.sleep(10)
+        await asyncio.sleep(30)
 
 
 if __name__ == "__main__":

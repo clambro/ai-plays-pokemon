@@ -9,14 +9,14 @@ from loguru import logger
 from agent.app import build_agent_workflow
 from agent.state import AgentState
 from common.backup_service import create_backup, get_output_folder, load_backup, load_latest_backup
-from common.constants import ITERATIONS_PER_BACKUP
+from common.constants import DEFAULT_ROM_PATH, ITERATIONS_PER_BACKUP
 from database.db_config import init_fresh_db
 from emulator.emulator import YellowLegacyEmulator
 from streaming.server import BackgroundStreamServer
 
 
 async def main(
-    rom_path: str,
+    rom_path: Path,
     backup_folder: Path | None = None,
     *,
     mute_sound: bool = True,
@@ -51,7 +51,7 @@ async def main(
     await aiofiles.os.makedirs(folder)
 
     async with (
-        YellowLegacyEmulator(rom_path, emulator_state, mute_sound=mute_sound) as emulator,
+        YellowLegacyEmulator(str(rom_path), emulator_state, mute_sound=mute_sound) as emulator,
         BackgroundStreamServer() as stream_server,
     ):
         await stream_server.update_data(state, emulator.get_game_state())  # Initialize the view.
@@ -71,7 +71,7 @@ async def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--rom-path", type=str, required=True)
+    parser.add_argument("--rom-path", type=Path, required=False, default=Path(DEFAULT_ROM_PATH))
     parser.add_argument("--backup-folder", type=Path, required=False)
     parser.add_argument("--mute-sound", action="store_true")
     parser.add_argument("--load-latest", action="store_true")

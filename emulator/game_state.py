@@ -4,8 +4,8 @@ import numpy as np
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
-from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
-from common.enums import AsciiTiles
+from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_SHAPE
+from common.enums import AsciiTiles, BlockedDirection
 from common.schemas import Coords
 from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.map import Map, parse_map_state
@@ -106,18 +106,13 @@ class YellowLegacyGameState(BaseModel):
         Get an ASCII representation of the current screen, including the onscreen sprites and warp
         points.
         """
-        blocks = self._get_background_blocks()
-        blocks[PLAYER_OFFSET_Y, PLAYER_OFFSET_X] = AsciiTiles.PLAYER
+        blocks, blockages = self._get_background_blocks()
 
         on_screen_sprites = []
         for s in self.sprites.values():
             if s.is_rendered and (sc := self.to_screen_coords(s.coords)):
                 on_screen_sprites.append(s)
                 blocks[sc.row, sc.col] = AsciiTiles.SPRITE
-
-        pikachu = self.pikachu
-        if pikachu.is_rendered and (sc := self.to_screen_coords(pikachu.coords)):
-            blocks[sc.row, sc.col] = AsciiTiles.PIKACHU
 
         on_screen_warps = []
         for w in self.warps.values():
@@ -134,8 +129,16 @@ class YellowLegacyGameState(BaseModel):
                 blocks[sc.row, sc.col] = AsciiTiles.SIGN
                 on_screen_signs.append(s)
 
+        # The player and Pikachu must be drawn last so they're on top of everything else.
+        pikachu = self.pikachu
+        if pikachu.is_rendered and (sc := self.to_screen_coords(pikachu.coords)):
+            blocks[sc.row, sc.col] = AsciiTiles.PIKACHU
+
+        blocks[PLAYER_OFFSET_Y, PLAYER_OFFSET_X] = AsciiTiles.PLAYER
+
         return AsciiScreenWithEntities(
             screen=blocks.tolist(),
+            blockages=blockages,
             sprites=on_screen_sprites,
             warps=on_screen_warps,
             signs=on_screen_signs,
@@ -159,26 +162,98 @@ class YellowLegacyGameState(BaseModel):
             has_cursor=lines[16][-2] == "▼",
         )
 
-    def _get_background_blocks(self) -> np.ndarray:
-        """Get the background blocks on the screen without the entities."""
+    def _get_background_blocks(self) -> tuple[np.ndarray, dict[Coords, BlockedDirection]]:
+        """
+        Get the background blocks on the screen without the entities. Note special cases where
+        movement is blocked due to elevation differences.
+
+        :return: A tuple of the blocks and blockages.
+        """
         tiles = np.array(self.screen.tiles)
         # Each block on screen is a 2x2 square of tiles.
-        blocks = []
+        blocks = np.full(SCREEN_SHAPE, AsciiTiles.WALL, dtype=AsciiTiles)
+        blockages: dict[Coords, BlockedDirection] = {}
         for i in range(0, tiles.shape[0], 2):
-            row = []
             for j in range(0, tiles.shape[1], 2):
                 b = tiles[i : i + 2, j : j + 2]
-                if self.map.water_tile and np.any(b == self.map.water_tile):
-                    row.append(AsciiTiles.WATER)
-                elif np.isin(b, self.map.ledge_tiles).any():
-                    row.append(AsciiTiles.LEDGE)
-                elif self.map.grass_tile and np.any(b == self.map.grass_tile):
-                    row.append(AsciiTiles.GRASS)
+                b_idx = (i // 2, j // 2)
+                if self.map.water_tile and np.isin(b, self.map.water_tile).any():
+                    blocks[b_idx] = AsciiTiles.WATER
+                elif ledge_type := self._get_ledge_type(b):
+                    blocks[b_idx] = ledge_type
+                elif self.map.grass_tile and b[1, 0] == self.map.grass_tile:
+                    # In engine/battle/wild_encounters.asm, grass tiles only check the bottom left.
+                    blocks[b_idx] = AsciiTiles.GRASS
                 elif b.flatten().tolist() == self.map.cut_tree_tiles:
-                    row.append(AsciiTiles.CUT_TREE)
-                elif not np.isin(b, self.map.walkable_tiles).any():
-                    row.append(AsciiTiles.WALL)
-                else:
-                    row.append(AsciiTiles.FREE)
-            blocks.append(row)
-        return np.array(blocks)
+                    blocks[b_idx] = AsciiTiles.CUT_TREE
+                elif (
+                    b[1, 0] in self.map.walkable_tiles
+                    and not np.isin(b, self.map.special_collision_blocks).any()
+                ):
+                    # Same bottom-left logic applies here, with special exceptions.
+                    blocks[b_idx] = AsciiTiles.FREE
+
+                blockages = self._get_blockage(i, j, tiles, blockages)
+        return np.array(blocks), blockages
+
+    def _get_ledge_type(self, block: np.ndarray) -> AsciiTiles | None:
+        """
+        Check if the block is a ledge.
+
+        A tile is defined as a ledge if at least one row/column follows the pattern of a ledge,
+        depending on the orientation of the ledge.
+
+        :param block: The block to check, which is a 2x2 array of tile values.
+        :return: The type of ledge, or None if the block is not a ledge.
+        """
+        if (
+            block[:, 0].tolist() in self.map.ledge_tiles_down
+            or block[:, 1].tolist() in self.map.ledge_tiles_down
+        ):
+            return AsciiTiles.LEDGE_DOWN
+        if (
+            block[0, :].tolist() in self.map.ledge_tiles_left
+            or block[1, :].tolist() in self.map.ledge_tiles_left
+        ):
+            return AsciiTiles.LEDGE_LEFT
+        if (
+            block[0, :].tolist() in self.map.ledge_tiles_right
+            or block[1, :].tolist() in self.map.ledge_tiles_right
+        ):
+            return AsciiTiles.LEDGE_RIGHT
+        return None
+
+    def _get_blockage(
+        self,
+        i: int,
+        j: int,
+        tiles: np.ndarray,
+        blockages: dict[Coords, BlockedDirection],
+    ) -> dict[Coords, BlockedDirection]:
+        """
+        Get the blockage for a given set of coordinates.
+
+        :param i: The row index of the block.
+        :param j: The column index of the block.
+        :param tiles: The tiles array.
+        :param blockages: The blockages dictionary to update.
+        :return: The updated blockages dictionary.
+        """
+        bi, bj = i // 2, j // 2  # Block indices, as opposed to tile indices.
+        block = tiles[i : i + 2, j : j + 2]
+
+        if i - 2 >= 0 and j + 2 < tiles.shape[1]:
+            row_above = tiles[i - 1, j : j + 2]
+            first_pair = {block[0, 0], row_above[0]}
+            second_pair = {block[0, 0], row_above[1]}
+            if first_pair in self.map.collision_pairs or second_pair in self.map.collision_pairs:
+                blockages[Coords(row=bi, col=bj)] |= BlockedDirection.UP
+                blockages[Coords(row=bi - 1, col=bj)] |= BlockedDirection.DOWN
+        if i - 2 >= 0 and j - 2 >= 0:
+            col_left = tiles[i : i + 2, j - 2]
+            first_pair = {block[0, 0], col_left[0]}
+            second_pair = {block[1, 0], col_left[1]}
+            if first_pair in self.map.collision_pairs or second_pair in self.map.collision_pairs:
+                blockages[Coords(row=bi, col=bj)] |= BlockedDirection.LEFT
+                blockages[Coords(row=bi, col=bj - 1)] |= BlockedDirection.RIGHT
+        return blockages

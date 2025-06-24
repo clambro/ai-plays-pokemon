@@ -1,3 +1,5 @@
+from enum import IntEnum
+
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
@@ -12,9 +14,13 @@ class Map(BaseModel):
     width: int
     grass_tile: int | None
     water_tile: int | None
-    ledge_tiles: list[int]
+    ledge_tiles_left: list[list[int]]
+    ledge_tiles_right: list[list[int]]
+    ledge_tiles_down: list[list[int]]
     cut_tree_tiles: list[int]
     walkable_tiles: list[int]
+    collision_pairs: list[frozenset[tuple[int, int]]]
+    special_collision_blocks: list[int]
     north_connection: MapId | None
     south_connection: MapId | None
     east_connection: MapId | None
@@ -27,36 +33,126 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     """
     Parse the current map from a snapshot of the memory.
 
+    Tileset values all come from data/tilesets in the decompiled ROM.
+
     :param mem: The PyBoyMemoryView instance to create the map from.
     :return: A new map.
     """
-    tileset_id = mem[0xD3B4]
+    tileset_id = _Tileset(mem[0xD3B4])
 
-    # These were found by inspection.
-    ledge_tiles = [54, 55] if tileset_id == 0 else []
-    cut_tree_tiles = [45, 46, 61, 62] if tileset_id == 0 else []
+    if tileset_id == _Tileset.OVERWORLD:
+        ledge_tiles_left = [[0x27, 0x2C], [0x27, 0x39]]
+        ledge_tiles_right = [[0x2C, 0x0D], [0x2C, 0x1D], [0x1D, 0x24]]
+        ledge_tiles_down = [[0x2C, 0x37], [0x39, 0x36], [0x39, 0x37]]
+        cut_tree_tiles = [0x2D, 0x2E, 0x3D, 0x3E]
+    else:
+        ledge_tiles_left = []
+        ledge_tiles_right = []
+        ledge_tiles_down = []
+        cut_tree_tiles = []
+
+    water_tile = 0x14 if tileset_id in [0, 3, 5, 7, 15, 16, 19, 24, 25] else None
+    grass_tile = _GRASS_TILE_MAP.get(tileset_id)
 
     walkable_tile_ptr = mem[0xD57D] | (mem[0xD57E] << 8)
-    walkable_tiles = []
+    tile_bank, tile_offset = divmod(walkable_tile_ptr, 0x4000)
 
+    walkable_tiles = []
     max_tiles = 0x180
     terminator = 0xFF
     for i in range(max_tiles):
-        if mem[walkable_tile_ptr + i] == terminator:
+        tile = mem[tile_bank, tile_offset + i]
+        if tile == terminator:
             break
-        walkable_tiles.append(mem[walkable_tile_ptr + i])
+        walkable_tiles.append(tile)
+
+    # This is a list of tile pairs that are considered to be colliding, even though both tiles are
+    # walkable. It's used to represent elevation differences.
+    collision_pairs = _COLLISION_PAIRS.get(tileset_id, [])
+
+    # This is super hacky, but there are some blocks which are not walkable, despite their
+    # bottom-left tile being walkable. The reason appears to be the inclusion of one or more of
+    # the following tiles, but I can't find anything in the decompiled ROM that explains why.
+    special_collision_blocks = _SPECIAL_COLLISION_BLOCKS.get(tileset_id, [])
 
     return Map(
         id=MapId(mem[0xD3AB]),
         height=mem[0xD571],
         width=mem[0xD572],
-        grass_tile=mem[0xD582] if tileset_id == 0 else None,
-        water_tile=mem[3, 0x68A5] if tileset_id == 0 else None,
-        ledge_tiles=ledge_tiles,
+        grass_tile=grass_tile,
+        water_tile=water_tile,
+        ledge_tiles_left=ledge_tiles_left,
+        ledge_tiles_right=ledge_tiles_right,
+        ledge_tiles_down=ledge_tiles_down,
         cut_tree_tiles=cut_tree_tiles,
         walkable_tiles=walkable_tiles,
+        collision_pairs=collision_pairs,
+        special_collision_blocks=special_collision_blocks,
         north_connection=MapId(mem[0xD3BE]) if mem[0xD3BE] != terminator else None,
         south_connection=MapId(mem[0xD3C9]) if mem[0xD3C9] != terminator else None,
         east_connection=MapId(mem[0xD3DF]) if mem[0xD3DF] != terminator else None,
         west_connection=MapId(mem[0xD3D4]) if mem[0xD3D4] != terminator else None,
     )
+
+
+class _Tileset(IntEnum):
+    """The tileset of the current map."""
+
+    OVERWORLD = 0
+    REDS_HOUSE_1 = 1
+    MART = 2
+    FOREST = 3
+    REDS_HOUSE_2 = 4
+    DOJO = 5
+    POKECENTER = 6
+    GYM = 7
+    HOUSE = 8
+    FOREST_GATE = 9
+    MUSEUM = 10
+    UNDERGROUND = 11
+    GATE = 12
+    SHIP = 13
+    SHIP_PORT = 14
+    CEMETERY = 15
+    INTERIOR = 16
+    CAVERN = 17
+    LOBBY = 18
+    MANSION = 19
+    LAB = 20
+    CLUB = 21
+    FACILITY = 22
+    BEACH_HOUSE = 23
+    PLATEAU = 24
+    BEACH = 25
+
+
+_GRASS_TILE_MAP = {
+    _Tileset.OVERWORLD: 0x52,
+    _Tileset.FOREST: 0x20,
+    _Tileset.PLATEAU: 0x45,
+}
+
+_COLLISION_PAIRS = {
+    _Tileset.CAVERN: [
+        frozenset([(0x20, 0x05)]),
+        frozenset([(0x41, 0x05)]),
+        frozenset([(0x2A, 0x05)]),
+        frozenset([(0x05, 0x21)]),
+        frozenset([(0x14, 0x05)]),
+    ],
+    _Tileset.FOREST: [
+        frozenset([(0x30, 0x2E)]),
+        frozenset([(0x52, 0x2E)]),
+        frozenset([(0x55, 0x2E)]),
+        frozenset([(0x56, 0x2E)]),
+        frozenset([(0x20, 0x2E)]),
+        frozenset([(0x5E, 0x2E)]),
+        frozenset([(0x5F, 0x2E)]),
+        frozenset([(0x14, 0x2E)]),
+        frozenset([(0x48, 0x2E)]),
+    ],
+}
+
+_SPECIAL_COLLISION_BLOCKS = {
+    _Tileset.CAVERN: [0x10, 0x17, 0x29, 0x31],
+}

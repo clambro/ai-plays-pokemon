@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from emulator.enums import Button
+from common.enums import Button
 
 
 class PressButtonsResponse(BaseModel):

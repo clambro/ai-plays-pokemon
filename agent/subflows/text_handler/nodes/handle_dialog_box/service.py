@@ -1,7 +1,7 @@
 import asyncio
 
+from common.enums import Button
 from emulator.emulator import YellowLegacyEmulator
-from emulator.enums import Button
 from emulator.schemas import DialogBox
 from memory.raw_memory import RawMemory, RawMemoryPiece
 

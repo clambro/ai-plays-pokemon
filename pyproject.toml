@@ -29,6 +29,13 @@ aiohttp = "^3.12.13"
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.6.2"
 ruff = "^0.12.0"
+pytest-asyncio = "^1.0.0"
+poethepoet = "^0.35.0"
+
+[tool.poe.tasks]
+unit_tests = "python -m pytest -k unit"
+integration_tests = "python -m pytest -k integration"
+node_tests = "python -m pytest -k node"
 
 [tool.ruff]
 target-version = "py313"
@@ -67,9 +74,24 @@ classmethod-decorators = ["validator"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]  # Ignore unused imports in inits.
-"test_*.py" = ["S101"]  # Ignore assert statements in tests
-"conftest.py" = ["S101"]  # Ignore assert statements in conftest
+"test_*.py" = [
+    "S101",  # Asserts.
+    "SLF001",  # Private member access.
+]
 "prompts.py" = ["E501"]  # Ignore line length in prompts
+
+[tool.pytest.ini_options]
+python_files = "**/tests/**/test_*.py"
+asyncio_mode = "auto"
+addopts = [
+    "--import-mode=importlib"
+]
+markers =[
+    "unit: mark a test as a unit test.",
+    "integration: mark a test as an integration test",
+    "node: mark a test as a node test",
+]
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
