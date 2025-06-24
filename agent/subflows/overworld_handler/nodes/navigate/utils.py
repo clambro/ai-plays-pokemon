@@ -5,89 +5,41 @@ This module contains the core algorithmic functions for navigation, separate fro
 concerns to make them easier to test.
 """
 
+import asyncio
+
 from common.enums import AsciiTiles, BlockedDirection, Button, FacingDirection
 from common.schemas import Coords
 from overworld_map.schemas import OverworldMap
 
 
-def get_accessible_coords(start_pos: Coords, map_data: OverworldMap) -> list[Coords]:
+async def get_accessible_coords(start_pos: Coords, map_data: OverworldMap) -> list[Coords]:
     """
-    Recursively search outward from the player's position to find all accessible coords.
+    Recursively search outward from the player's position to find all accessible coords. Do this
+    on a thread because it's pretty slow.
 
     :param start_pos: Starting position to search from
     :param map_data: Map data containing tiles and blockages
     :return: List of accessible coordinates, including start_pos (required for finding map
         boundaries if you're standing on a boundary tile)
     """
-    visited = {start_pos}
-    queue = [start_pos]
-    accessible = [start_pos]
-    while queue:
-        current = queue.pop(0)
-        for neighbor in _get_neighbors(current, map_data):
-            if neighbor not in visited:
-                visited.add(neighbor)
-                queue.append(neighbor)
-                accessible.append(neighbor)
-
-    return accessible
+    return await asyncio.to_thread(_get_accessible_coords, start_pos, map_data)
 
 
-def calculate_path_to_target(
+async def calculate_path_to_target(
     start_pos: Coords,
     target_pos: Coords,
     map_data: OverworldMap,
 ) -> list[Button] | None:
     """
     Calculate the path to the target coordinates as a list of button presses using the A* search
-    algorithm.
+    algorithm. Do this on a thread because it's pretty slow.
 
     :param start_pos: Starting position
     :param target_pos: Target position
     :param map_data: Map data containing tiles and blockages
     :return: List of button presses to reach target, or None if no path found
     """
-    open_set = {start_pos}
-    came_from: dict[Coords, Coords] = {}
-    g_score = {start_pos: 0}
-    f_score = {start_pos: (start_pos - target_pos).length}
-
-    while open_set:
-        current = min(open_set, key=lambda pos: f_score.get(pos, float("inf")))
-
-        if current == target_pos:
-            # Reconstruct path and convert to button presses
-            path = []
-            while current in came_from:
-                prev = came_from[current]
-                delta = current - prev
-
-                if delta.row > 0:
-                    path.append(Button.DOWN)
-                elif delta.row < 0:
-                    path.append(Button.UP)
-                elif delta.col > 0:
-                    path.append(Button.RIGHT)
-                elif delta.col < 0:
-                    path.append(Button.LEFT)
-
-                current = prev
-
-            return list(reversed(path))  # Reverse to get start->target order
-
-        open_set.remove(current)
-
-        for neighbor in _get_neighbors(current, map_data):
-            tentative_g_score = g_score[current] + 1
-
-            if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
-                came_from[neighbor] = current
-                g_score[neighbor] = tentative_g_score
-                f_score[neighbor] = tentative_g_score + (neighbor - target_pos).length
-                open_set.add(neighbor)
-
-    # If we get here, no path was found
-    return None
+    return await asyncio.to_thread(_calculate_path_to_target, start_pos, target_pos, map_data)
 
 
 def get_exploration_candidates(
@@ -146,6 +98,79 @@ def get_map_boundary_tiles(
             boundary_tiles[FacingDirection.RIGHT].append(c)
 
     return boundary_tiles
+
+
+def _get_accessible_coords(start_pos: Coords, map_data: OverworldMap) -> list[Coords]:
+    """Recursively search outward from the player's position to find all accessible coords."""
+    visited = {start_pos}
+    queue = [start_pos]
+    accessible = [start_pos]
+    while queue:
+        current = queue.pop(0)
+        for neighbor in _get_neighbors(current, map_data):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+                accessible.append(neighbor)
+
+    return accessible
+
+
+def _calculate_path_to_target(
+    start_pos: Coords,
+    target_pos: Coords,
+    map_data: OverworldMap,
+) -> list[Button] | None:
+    """
+    Calculate the path to the target coordinates as a list of button presses using the A* search
+    algorithm.
+
+    :param start_pos: Starting position
+    :param target_pos: Target position
+    :param map_data: Map data containing tiles and blockages
+    :return: List of button presses to reach target, or None if no path found
+    """
+    open_set = {start_pos}
+    came_from: dict[Coords, Coords] = {}
+    g_score = {start_pos: 0}
+    f_score = {start_pos: (start_pos - target_pos).length}
+
+    while open_set:
+        current = min(open_set, key=lambda pos: f_score.get(pos, float("inf")))
+
+        if current == target_pos:
+            # Reconstruct path and convert to button presses
+            path = []
+            while current in came_from:
+                prev = came_from[current]
+                delta = current - prev
+
+                if delta.row > 0:
+                    path.append(Button.DOWN)
+                elif delta.row < 0:
+                    path.append(Button.UP)
+                elif delta.col > 0:
+                    path.append(Button.RIGHT)
+                elif delta.col < 0:
+                    path.append(Button.LEFT)
+
+                current = prev
+
+            return list(reversed(path))  # Reverse to get start->target order
+
+        open_set.remove(current)
+
+        for neighbor in _get_neighbors(current, map_data):
+            tentative_g_score = g_score[current] + 1
+
+            if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g_score
+                f_score[neighbor] = tentative_g_score + (neighbor - target_pos).length
+                open_set.add(neighbor)
+
+    # If we get here, no path was found
+    return None
 
 
 def _get_neighbors(pos: Coords, map_data: OverworldMap) -> list[Coords]:

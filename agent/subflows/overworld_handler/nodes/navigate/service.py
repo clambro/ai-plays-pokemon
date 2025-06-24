@@ -42,7 +42,10 @@ class NavigationService:
     async def navigate(self) -> tuple[OverworldMap, RawMemory]:
         """Determine the target coordinates and navigate to them."""
         game_state = self.emulator.get_game_state()
-        accessible_coords = utils.get_accessible_coords(game_state.player.coords, self.current_map)
+        accessible_coords = await utils.get_accessible_coords(
+            game_state.player.coords,
+            self.current_map,
+        )
         try:
             coords = await self._determine_target_coords(accessible_coords)
         except Exception as e:  # noqa: BLE001
@@ -62,7 +65,11 @@ class NavigationService:
             )
             return self.current_map, self.raw_memory
 
-        path = utils.calculate_path_to_target(game_state.player.coords, coords, self.current_map)
+        path = await utils.calculate_path_to_target(
+            game_state.player.coords,
+            coords,
+            self.current_map,
+        )
         if not path:
             logger.warning("No path found to target coordinates.")
             self.raw_memory.append(
@@ -103,7 +110,6 @@ class NavigationService:
             self.current_map,
         )
         boundary_tiles = utils.get_map_boundary_tiles(accessible_coords, self.current_map)
-        map_connections = formatting.get_map_connections(self.current_map)
 
         # Format data for LLM.
         formatted_accessible_coords = formatting.format_coordinates_grid(accessible_coords)
@@ -112,7 +118,7 @@ class NavigationService:
         )
         formatted_map_boundaries = formatting.format_map_boundary_tiles(
             boundary_tiles,
-            map_connections,
+            formatting.get_map_connections(self.current_map),
         )
 
         # Get model response.
