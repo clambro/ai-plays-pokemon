@@ -154,7 +154,7 @@ async def _update_overworld_map_tiles(
 ) -> None:
     """Update the overworld map with the current game state, revealing new tiles."""
     ascii_screen_with_entities = game_state.get_ascii_screen()
-    ascii_screen = ascii_screen_with_entities.screen_ndarray
+    ascii_screen = ascii_screen_with_entities.ndarray
     screen = game_state.screen
 
     top = screen.top

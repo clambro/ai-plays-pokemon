@@ -34,6 +34,6 @@ class AsciiScreenWithEntities(BaseModel):
         return "\n".join("".join(row) for row in self.screen)
 
     @property
-    def screen_ndarray(self) -> np.ndarray:
+    def ndarray(self) -> np.ndarray:
         """Convert the screen to a numpy array."""
         return np.asarray(self.screen)

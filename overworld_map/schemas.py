@@ -132,7 +132,7 @@ class OverworldMap(BaseModel):
         """Return a string representation of the map."""
         tiles = self.ascii_tiles_str
         explored_percentage = np.mean(self.ascii_tiles_ndarray != AsciiTiles.UNSEEN)
-        screen = game_state.get_ascii_screen().screen_ndarray
+        screen = game_state.get_ascii_screen().ndarray
         tile_above, blocked_above = self._get_tile_notes(BlockedDirection.UP)
         tile_below, blocked_below = self._get_tile_notes(BlockedDirection.DOWN)
         tile_left, blocked_left = self._get_tile_notes(BlockedDirection.LEFT)
