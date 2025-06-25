@@ -6,6 +6,7 @@ Take a step back from playing the game for a moment. You have signaled that you 
 Common sources of error include (but are not limited to):
 - Misinterpreting the screenshot information
 - Misinterpreting the map information. If this is the case, use your increased intelligence to explain the misinterpretation and correct it.
+- Mislabeling who or what a sprite is. If this is the case, use your increased intelligence to explain the mislabeling and correct it.
 - Incorrectly deciding that the screenshot or your own memory is more reliable than the game data
 - Making false assumptions and failing to correct them
 - Not taking advantage of your available tools to help you with more complex tasks

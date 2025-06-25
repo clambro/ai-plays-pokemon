@@ -2,8 +2,10 @@ from loguru import logger
 
 from agent.subflows.text_handler.nodes.make_decision.prompts import DECISION_MAKER_TEXT_PROMPT
 from agent.subflows.text_handler.nodes.make_decision.schemas import DecisionMakerTextResponse
+from common.enums import Button
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
+from emulator.game_state import YellowLegacyGameState
 from llm.schemas import GEMINI_FLASH_LITE_2_5
 from llm.service import GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
@@ -45,20 +47,20 @@ class DecisionMakerTextService:
                 schema=DecisionMakerTextResponse,
                 prompt_name="make_text_decision",
             )
-            buttons = (
-                [str(b) for b in response.buttons]
-                if isinstance(response.buttons, list)
-                else [str(response.buttons)]
-            )
+            buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
             self.raw_memory.append(
                 RawMemoryPiece(
                     iteration=self.iteration,
-                    content=f"{response.thoughts} Pressed the following buttons: {buttons}",
+                    content=(
+                        f"{response.thoughts} Selected the following buttons:"
+                        f" {[str(b) for b in buttons]}"
+                    ),
                 ),
             )
             for b in buttons:
+                game_state = self.emulator.get_game_state()
                 await self.emulator.press_buttons(b)
-                if self._check_for_state_change():
+                if self._check_for_state_change() or self._check_for_failed_action(b, game_state):
                     break
 
         except Exception as e:  # noqa: BLE001
@@ -67,6 +69,22 @@ class DecisionMakerTextService:
         return self.raw_memory
 
     def _check_for_state_change(self) -> bool:
-        """Check if the movement triggered a state change to dialog or a battle."""
+        """Check if the button press triggered a state change to dialog or a battle."""
         game_state = self.emulator.get_game_state()
         return not game_state.is_text_on_screen() or game_state.battle.is_in_battle
+
+    def _check_for_failed_action(self, button: Button, game_state: YellowLegacyGameState) -> bool:
+        """Check if the screen is unchanged following an action."""
+        new_state = self.emulator.get_game_state()
+        state_changed = new_state.screen.tiles == game_state.screen.tiles
+        if state_changed:
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    content=(
+                        f"I pressed the {button} button, but nothing happened."
+                        f" Have I made a mistake?"
+                    ),
+                ),
+            )
+        return state_changed

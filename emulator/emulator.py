@@ -10,6 +10,7 @@ from PIL import Image
 from pyboy import PyBoy
 
 from common.constants import DEFAULT_ROM_PATH
+from common.enums import Button
 from emulator.game_state import YellowLegacyGameState
 
 
@@ -91,7 +92,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
 
     async def press_buttons(
         self,
-        button: str,
+        button: Button,
         hold_frames: int = 10,
     ) -> None:
         """
@@ -99,7 +100,6 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
 
         :param button: The button to press.
         :param hold_frames: The number of frames to hold each button.
-        :param frames_between: The number of frames to wait between each button.
         """
         self._check_stopped()
         async with self._button_lock:

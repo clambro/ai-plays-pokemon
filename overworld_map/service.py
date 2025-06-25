@@ -7,7 +7,12 @@ from database.map_entity_memory.repository import (
     get_map_entity_memories_for_map,
 )
 from database.map_entity_memory.schemas import MapEntityMemoryCreate, MapEntityMemoryDelete
-from database.map_memory.repository import create_map_memory, get_map_memory, update_map_tiles
+from database.map_memory.repository import (
+    create_map_memory,
+    get_map_memory,
+    get_visited_maps,
+    update_map_tiles,
+)
 from database.map_memory.schemas import MapMemoryCreateUpdate
 from emulator.game_state import YellowLegacyGameState
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
@@ -32,8 +37,9 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
     }
 
     game_warps = game_state.warps
+    visited_maps = await get_visited_maps()
     warps = {
-        mem.entity_id: OverworldWarp.from_warp(game_warps[mem.entity_id])
+        mem.entity_id: OverworldWarp.from_warp(game_warps[mem.entity_id], visited_maps)
         for mem in map_entity_memories
         if mem.entity_type == MapEntityType.WARP and mem.entity_id in game_warps
     }
@@ -66,9 +72,10 @@ async def update_map_with_screen_info(
 ) -> OverworldMap:
     """
     Update the overworld map with the current screen info. Double check that there is no text
-    on the screen before updating the map or you'll add weird artifacts to it.
+    on the screen and that the map ID matches the current game state before updating or you'll
+    create weird artifacts.
     """
-    if not game_state.is_text_on_screen():
+    if not game_state.is_text_on_screen() and overworld_map.id == game_state.map.id:
         await _add_remove_map_entities(iteration, game_state, overworld_map)
         await _update_overworld_map_tiles(iteration, game_state, overworld_map)
     return await get_overworld_map(iteration, game_state)

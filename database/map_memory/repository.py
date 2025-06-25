@@ -36,6 +36,14 @@ async def get_map_memory(map_id: MapId) -> MapMemoryRead | None:
     return MapMemoryRead.model_validate(db_obj)
 
 
+async def get_visited_maps() -> list[MapId]:
+    """Get all visited maps."""
+    async with db_sessionmaker() as session:
+        query = select(MapMemoryDBModel.map_id)
+        result = await session.execute(query)
+        return [MapId(map_id) for map_id in result.scalars().all()]
+
+
 async def update_map_tiles(map_memory: MapMemoryCreateUpdate) -> MapMemoryRead:
     """Update the tiles of a map memory."""
     async with db_sessionmaker() as session:
