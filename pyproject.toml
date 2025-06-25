@@ -2,35 +2,41 @@
 name = "ai-plays-pokemon"
 version = "0.1.0"
 description = ""
-authors = [{name = "Costa Lambrinoudis", email = "clambro.git@gmail.com"}]
-license = { file = "LICENSE" }
+authors = [{ name = "Costa Lambrinoudis", email = "clambro.git@gmail.com" }]
+requires-python = ">=3.13,<3.14"
 readme = "README.md"
+license = { file = "LICENSE" }
+dependencies = [
+    "pyboy>=2.5.2,<3",
+    "numpy>=2.2.5,<3",
+    "pillow>=11.2.1,<12",
+    "pydantic>=2.11.3,<3",
+    "loguru>=0.7.3,<0.8",
+    "google-genai>=1.13.0,<2",
+    "dotenv>=0.9.9,<0.10",
+    "pydantic-settings>=2.9.1,<3",
+    "aiofiles>=24.1.0,<25",
+    "junjo[graphviz]>=0.46.0,<0.47",
+    "sqlalchemy>=2.0.40,<3",
+    "aiosqlite>=0.21.0,<0.22",
+    "tenacity>=9.1.2,<10",
+    "aiohttp>=3.12.13,<4",
+]
 
-[tool.poetry]
-package-mode = false
+[dependency-groups]
+dev = [
+    "pre-commit>=3.6.2,<4",
+    "ruff>=0.12.0,<0.13",
+    "pytest-asyncio>=1.0.0,<2",
+    "poethepoet>=0.35.0,<0.36",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.13,<3.14"
-pyboy = {extras = ["pyboy-core"], version = "^2.5.2"}
-numpy = "^2.2.5"
-pillow = "^11.2.1"
-pydantic = "^2.11.3"
-loguru = "^0.7.3"
-google-genai = "^1.13.0"
-dotenv = "^0.9.9"
-pydantic-settings = "^2.9.1"
-aiofiles = "^24.1.0"
-junjo = {extras = ["graphviz"], version = "^0.46.0"}
-sqlalchemy = "^2.0.40"
-aiosqlite = "^0.21.0"
-tenacity = "^9.1.2"
-aiohttp = "^3.12.13"
+[tool.uv]
+package = false
 
-[tool.poetry.group.dev.dependencies]
-pre-commit = "^3.6.2"
-ruff = "^0.12.0"
-pytest-asyncio = "^1.0.0"
-poethepoet = "^0.35.0"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.poe.tasks]
 unit_tests = "python -m pytest -k unit"
@@ -91,8 +97,3 @@ markers =[
     "integration: mark a test as an integration test",
     "node: mark a test as a node test",
 ]
-
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
