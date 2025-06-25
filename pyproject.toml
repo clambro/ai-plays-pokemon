@@ -7,7 +7,7 @@ requires-python = ">=3.13,<3.14"
 readme = "README.md"
 license = { file = "LICENSE" }
 dependencies = [
-    "pyboy[pyboy-core]>=2.5.2,<3",
+    "pyboy>=2.5.2,<3",
     "numpy>=2.2.5,<3",
     "pillow>=11.2.1,<12",
     "pydantic>=2.11.3,<3",
