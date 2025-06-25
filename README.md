@@ -8,9 +8,9 @@
 
 * Add strength boulders to map screen -- 00:d717 wBoulderSpriteIndex
 * Handle surfing in navigation + tests
-* Handle cut trees in navigationn + tests
-* Handle the bike in navigationn + tests
-* Handle spin tiles in navigationn + tests
+* Handle cut trees in navigation + tests
+* Handle the bike in navigation + tests
+* Handle spin tiles in navigation + tests
 
 * Test background tile and blocking generation from game states for strength boulders and seafoam elevation
 
@@ -34,11 +34,11 @@
 * Tool to use items
 * Generate the overworld map legend dynamically
 * Some kind of info about PC pokemon/items?
-* Tool for using fly
 
 ### Backlog
 * Numerical coords on screen? Dots to show past steps? A grid to show collisions? Maybe when I have tests set up. I'm convinced that the screenshot is effectively useless in the overworld.
 * Some better way of doing RAG that doesn't involve reading everything into memory would be nice. Might need to switch DBs for this. Could also offer to delete LTM after 1000 iterations without retrieval to make this more efficient.
+* Tool for using fly
 
 ## Junjo Thoughts
 * Visualization is not idempotent because the dot file changes
