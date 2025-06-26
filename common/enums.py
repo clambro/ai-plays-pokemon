@@ -63,10 +63,10 @@ class BlockedDirection(IntFlag):
     walkable and adjacent to one another.
     """
 
-    UP = 0b0001
-    DOWN = 0b0010
-    LEFT = 0b0100
-    RIGHT = 0b1000
+    UP = 1 << 0
+    DOWN = 1 << 1
+    LEFT = 1 << 2
+    RIGHT = 1 << 3
 
 
 class Button(StrEnum):
@@ -80,6 +80,15 @@ class Button(StrEnum):
     DOWN = "down"
     LEFT = "left"
     RIGHT = "right"
+
+
+class BattleType(StrEnum):
+    """The type of battle."""
+
+    WILD = "wild"
+    TRAINER = "trainer"
+    SAFARI_ZONE = "safari_zone"
+    OTHER = "other"
 
 
 class MapId(IntEnum):

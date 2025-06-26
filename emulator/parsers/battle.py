@@ -64,6 +64,14 @@ def parse_battle_state(mem: PyBoyMemoryView) -> Battle:
         enemy_pokemon = parse_enemy_battle_pokemon(mem)
 
     num_enemy_pokemon = mem[0xD89B] if battle_type == BattleType.TRAINER else None
+    if num_enemy_pokemon:
+        num_remaining_enemy_pokemon = 0
+        for i in range(num_enemy_pokemon):
+            increment = i * 0x2C
+            enemy_hp = (mem[0xD8A4 + increment] << 8) | mem[0xD8A5 + increment]
+            if enemy_hp > 0:
+                num_remaining_enemy_pokemon += 1
+        num_enemy_pokemon = num_remaining_enemy_pokemon
 
     return Battle(
         is_in_battle=is_in_battle,
