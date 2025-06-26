@@ -1,3 +1,5 @@
+import math
+
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
@@ -29,17 +31,88 @@ class Pokemon(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-def parse_player_pokemon(mem: PyBoyMemoryView) -> list[Pokemon]:
+class EnemyPokemon(BaseModel):
+    """The state of an enemy pokemon in the battle."""
+
+    species: str
+    level: int
+    hp_pct: float
+    status: str | None
+
+
+def parse_party_pokemon(mem: PyBoyMemoryView) -> list[Pokemon]:
     """Parse the player's pokemon from the memory."""
     party = []
     for i in range(mem[0xD162]):
-        pokemon = _parse_player_pokemon(mem, i)
+        pokemon = _parse_party_pokemon(mem, i)
         if pokemon is not None:
             party.append(pokemon)
     return party
 
 
-def _parse_player_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
+def parse_player_battle_pokemon(mem: PyBoyMemoryView) -> Pokemon | None:
+    """Parse a single player pokemon from the memory."""
+    species_id = mem[0xD013]
+    if species_id == 0:
+        return None
+
+    name = get_text_from_byte_array(mem[0xD008:0xD013])
+
+    type1 = _INT_TO_TYPE_MAP[mem[0xD018]]
+    type2 = _INT_TO_TYPE_MAP[mem[0xD019]]
+    type2 = type2 if type1 != type2 else None  # Monotype pokemon have the same type for both.
+
+    moves = []
+    for i in range(4):
+        move_id = mem[0xD01B + i]
+        if move_id == 0:
+            continue
+        pp = mem[0xD02C + i]
+        moves.append(PokemonMove(name=_INT_TO_MOVE_MAP[move_id], pp=pp))
+
+    hp = (mem[0xD014] << 8) | mem[0xD015]
+    max_hp = (mem[0xD022] << 8) | mem[0xD023]
+
+    status_loc = mem[0xD022]
+    status = _INT_TO_STATUS_MAP[status_loc] if status_loc != 0 else None
+
+    return Pokemon(
+        name=name,
+        species=_INT_TO_SPECIES_MAP[species_id],
+        type1=type1,
+        type2=type2,
+        level=mem[0xD021],
+        hp=hp,
+        max_hp=max_hp,
+        status=status,
+        moves=moves,
+    )
+
+
+def parse_enemy_battle_pokemon(mem: PyBoyMemoryView) -> EnemyPokemon | None:
+    """Parse the enemy's pokemon from the memory."""
+    species_id = mem[0xCFE4]
+    if species_id == 0:
+        return None
+
+    hp = (mem[0xCFE5] << 8) | mem[0xCFE6]
+    max_hp = (mem[0xCFF3] << 8) | mem[0xCFF4]
+
+    # The gen 1 health bar is 48 pixels long, so about 2% resolution for health percentage.
+    hp_pct = math.ceil(hp / max_hp * 50) * 2
+
+    status_loc = mem[0xCFF3]
+    status = _INT_TO_STATUS_MAP[status_loc] if status_loc != 0 else None
+
+    return EnemyPokemon(
+        species=_INT_TO_SPECIES_MAP[species_id],
+        level=mem[0xCFF2],
+        hp_pct=hp_pct,
+        status=status,
+    )
+
+
+def _parse_party_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
     """Parse a single player pokemon from the memory."""
     increment = index * 0x2C
     species_id = mem[0xD16A + increment]
