@@ -6,8 +6,8 @@ from emulator.schemas import DialogBox
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
 
-class HandleDialogBoxService:
-    """A service that handles reading the dialog box if it is present."""
+class HandleSubsequentTextService:
+    """Handles reading the subsequent text (if present) after a tool has been used."""
 
     def __init__(
         self,
@@ -19,39 +19,36 @@ class HandleDialogBoxService:
         self.raw_memory = raw_memory
         self.emulator = emulator
 
-    async def handle_dialog_box(self) -> RawMemory:
+    async def handle_subsequent_text(self) -> RawMemory:
         """Handle reading the dialog box."""
-        game_state = self.emulator.get_game_state()
-        dialog_box = game_state.get_dialog_box()
-        if not dialog_box:
-            # Should never happen if we're in this handler, but just in case we need to bail.
-            return self.raw_memory
-
         text: list[str] = []
-        is_blinking_cursor = True
-        is_text_outside_dialog_box = True
-
-        # The blinking cursor means that the dialog box is still scrolling. If there's no cursor
-        # and no other text on screen, then the dialog box is done scrolling and we can hit A one
-        # last time to close the box.
-        while dialog_box and (is_blinking_cursor or not is_text_outside_dialog_box):
-            self._append_dialog_to_list(text, dialog_box)
-            await self.emulator.press_button(Button.A)
-            await asyncio.sleep(0.5)  # Buffer to ensure that no new dialog boxes have opened.
-
+        await self.emulator.wait_for_animation_to_finish()
+        while True:
             game_state = self.emulator.get_game_state()
             dialog_box = game_state.get_dialog_box()
-            is_blinking_cursor = await self._is_blinking_cursor_on_screen()
-            is_text_outside_dialog_box = game_state.is_text_on_screen(ignore_dialog_box=True)
+            if not dialog_box:
+                break
+            self._append_dialog_to_list(text, dialog_box)
 
-        joined_text = " ".join(text)
-        end_text = "The dialog box is now closed." if not dialog_box else ""
+            if await self._is_blinking_cursor_on_screen():
+                await self.emulator.press_button(Button.A)
+                continue
+
+            prev_state = game_state
+            await self.emulator.wait_for_animation_to_finish()  # Check for auto-scrolling text.
+            game_state = self.emulator.get_game_state()
+            if game_state.screen.text == prev_state.screen.text:
+                break  # Nothing is scrolling, so we're done.
+
+        joined_text = " ".join(text).strip()
+        if not joined_text:
+            return self.raw_memory
+
         self.raw_memory.append(
             RawMemoryPiece(
                 iteration=self.iteration,
                 content=(
-                    f'The following text was read from the main dialog box: "{joined_text}"'
-                    f" {end_text}"
+                    f'The following text was read from the battle dialog box: "{joined_text}"'
                 ),
             ),
         )

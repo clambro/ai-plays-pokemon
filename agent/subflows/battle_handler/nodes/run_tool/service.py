@@ -28,10 +28,10 @@ class RunToolService:
             return self.raw_memory
 
         if cursor_pos.col == 0:
-            await self.emulator.press_buttons(Button.RIGHT)
+            await self.emulator.press_button(Button.RIGHT)
         if cursor_pos.row == 0:
-            await self.emulator.press_buttons(Button.DOWN)
-        await self.emulator.press_buttons(Button.A)
+            await self.emulator.press_button(Button.DOWN)
+        await self.emulator.press_button(Button.A, wait_for_animation=False)
 
         self.raw_memory.append(
             RawMemoryPiece(

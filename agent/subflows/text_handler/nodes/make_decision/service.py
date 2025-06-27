@@ -59,7 +59,7 @@ class DecisionMakerTextService:
             )
             for b in buttons:
                 game_state = self.emulator.get_game_state()
-                await self.emulator.press_buttons(b)
+                await self.emulator.press_button(b)
                 if self._check_for_state_change() or self._check_for_failed_action(b, game_state):
                     break
 

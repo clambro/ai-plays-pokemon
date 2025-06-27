@@ -90,21 +90,26 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
             raise TypeError("No screenshot available")
         return img
 
-    async def press_buttons(
+    async def press_button(
         self,
         button: Button,
         hold_frames: int = 10,
+        *,
+        wait_for_animation: bool = True,
     ) -> None:
         """
         Send a button press to the emulator and wait for any animations to finish.
 
         :param button: The button to press.
         :param hold_frames: The number of frames to hold each button.
+        :param wait_for_animation: Whether to wait for animations to finish. You usually want this,
+            but you can skip it if you have bespoke handling for subsequent activity.
         """
         self._check_stopped()
         async with self._button_lock:
             self._pyboy.button(button, hold_frames)
-        await self.wait_for_animation_to_finish()
+        if wait_for_animation:
+            await self.wait_for_animation_to_finish()
 
     async def wait_for_animation_to_finish(self) -> None:
         """Wait until all ongoing animations have finished."""

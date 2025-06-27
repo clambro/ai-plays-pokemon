@@ -48,7 +48,7 @@ class MakeDecisionService:
                     content=str(response),
                 ),
             )
-            await self.emulator.press_buttons(response.button)
+            await self.emulator.press_button(response.button, wait_for_animation=False)
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
 

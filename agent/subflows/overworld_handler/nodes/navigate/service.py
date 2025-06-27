@@ -87,7 +87,7 @@ class NavigationService:
         starting_map_id = self.current_map.id
         await self._handle_pikachu(path[0])
         for button in path:
-            await self.emulator.press_buttons(button)
+            await self.emulator.press_button(button)
 
             prev_pos = game_state.player.coords
             game_state = self.emulator.get_game_state()
@@ -164,25 +164,25 @@ class NavigationService:
             and player_pos.row == pikachu_pos.row + 1
             and facing != FacingDirection.UP
         ):
-            await self.emulator.press_buttons(Button.UP)
+            await self.emulator.press_button(Button.UP)
         elif (
             button == Button.DOWN
             and player_pos.row == pikachu_pos.row - 1
             and facing != FacingDirection.DOWN
         ):
-            await self.emulator.press_buttons(Button.DOWN)
+            await self.emulator.press_button(Button.DOWN)
         elif (
             button == Button.LEFT
             and player_pos.col == pikachu_pos.col + 1
             and facing != FacingDirection.LEFT
         ):
-            await self.emulator.press_buttons(Button.LEFT)
+            await self.emulator.press_button(Button.LEFT)
         elif (
             button == Button.RIGHT
             and player_pos.col == pikachu_pos.col - 1
             and facing != FacingDirection.RIGHT
         ):
-            await self.emulator.press_buttons(Button.RIGHT)
+            await self.emulator.press_button(Button.RIGHT)
 
     def _should_cancel_navigation(
         self,

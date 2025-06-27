@@ -58,7 +58,7 @@ class PressButtonsService:
             ),
         )
         for b in buttons:
-            await self.emulator.press_buttons(b)
+            await self.emulator.press_button(b)
             passed_collision = self._check_for_collision(
                 button=b,
                 prev_map_id=game_state.map.id,

@@ -33,10 +33,10 @@ class FightToolService:
 
         # Open the FIGHT menu and update the game state.
         if cursor_pos.col == 1:
-            await self.emulator.press_buttons(Button.LEFT)
+            await self.emulator.press_button(Button.LEFT)
         if cursor_pos.row == 1:
-            await self.emulator.press_buttons(Button.UP)
-        await self.emulator.press_buttons(Button.A)
+            await self.emulator.press_button(Button.UP)
+        await self.emulator.press_button(Button.A)
         game_state = self.emulator.get_game_state()
 
         cursor_index = self._get_move_menu_cursor_index(game_state)
@@ -48,11 +48,11 @@ class FightToolService:
         idx_diff = cursor_index - self.tool_args.move_index
         if idx_diff > 0:
             for _ in range(idx_diff):
-                await self.emulator.press_buttons(Button.UP)
+                await self.emulator.press_button(Button.UP)
         elif idx_diff < 0:
             for _ in range(-idx_diff):
-                await self.emulator.press_buttons(Button.DOWN)
-        await self.emulator.press_buttons(Button.A)
+                await self.emulator.press_button(Button.DOWN)
+        await self.emulator.press_button(Button.A, wait_for_animation=False)
 
         self.raw_memory.append(
             RawMemoryPiece(
