@@ -74,9 +74,10 @@ class SwitchPokemonToolService:
     @staticmethod
     def _get_pkmn_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:
         """Get the cursor index in the Pokemon menu."""
-        if "Choose a POKéMON." not in game_state.screen.text:
-            return None  # Pokemon menu is not open.
-        return _CURSOR_POS_TO_ROW_MAP.get(game_state.screen.cursor_index)
+        menu_idx = game_state.screen.menu_item_index
+        if "Choose a POKéMON." not in game_state.screen.text or menu_idx >= len(game_state.party):
+            return None
+        return menu_idx
 
     @staticmethod
     def _get_switch_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:
