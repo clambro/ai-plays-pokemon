@@ -29,6 +29,7 @@ class SwitchPokemonToolArgs(BaseModel):
 class ThrowBallToolArgs(BaseModel):
     """The arguments for the throw ball tool."""
 
+    item_index: int
     ball: PokeballItem
 
     def to_string(self) -> str:

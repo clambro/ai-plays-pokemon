@@ -15,6 +15,7 @@ class Screen(BaseModel):
     tiles: list[list[int]]  # Each block on screen is a 2x2 square of tiles.
     cursor_index: int
     menu_item_index: int
+    list_scroll_offset: int
 
     model_config = ConfigDict(frozen=True)
 
@@ -73,4 +74,5 @@ def parse_screen(mem: PyBoyMemoryView) -> Screen:
         tiles=tiles,
         cursor_index=mem[0xCC30],
         menu_item_index=mem[0xCC26],
+        list_scroll_offset=mem[0xCC36],
     )
