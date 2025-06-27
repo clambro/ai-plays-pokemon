@@ -1,3 +1,5 @@
+from loguru import logger
+
 from agent.subflows.battle_handler.schemas import (
     BattleToolArgs,
     RunToolArgs,
@@ -5,6 +7,7 @@ from agent.subflows.battle_handler.schemas import (
     ThrowBallToolArgs,
     UseMoveToolArgs,
 )
+from agent.subflows.battle_handler.utils import is_fight_menu_open
 from common.enums import BattleType, PokeballItem
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
@@ -27,7 +30,7 @@ class DetermineHandlerService:
         if (
             not battle_state.is_in_battle
             or battle_state.battle_type not in [BattleType.TRAINER, BattleType.WILD]
-            or not self._is_fight_menu_open(game_state)
+            or not is_fight_menu_open(game_state)
         ):
             return None
 
@@ -36,18 +39,8 @@ class DetermineHandlerService:
             # Edge case if no Pokemon in the party, zero PP, and either no balls or trainer battle.
             return None
 
+        logger.info(f"The following battle options are available: {[str(a) for a in args]}")
         return None
-
-    @staticmethod
-    def _is_fight_menu_open(game_state: YellowLegacyGameState) -> bool:
-        """
-        Check if the fight menu is open.
-
-        :param game_state: The game state.
-        :return: True if the fight menu is open, False otherwise.
-        """
-        screen_text = game_state.screen.text.replace(" ", "").replace("\n", "")
-        return "FIGHTPKMNITEMRUN" in screen_text
 
     @staticmethod
     def _get_legal_args(game_state: YellowLegacyGameState) -> list[BattleToolArgs]:

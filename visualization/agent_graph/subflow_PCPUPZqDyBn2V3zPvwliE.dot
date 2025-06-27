@@ -1,6 +1,0 @@
-digraph "subflow_PCPUPZqDyBn2V3zPvwliE" {
-  rankdir=LR;
-  compound=true;
-  node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
-  edge [fontname="Helvetica", fontsize=9];
-}

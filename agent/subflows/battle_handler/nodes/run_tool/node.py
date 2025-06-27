@@ -1,13 +1,13 @@
 from junjo import Node
 from loguru import logger
 
-from agent.subflows.battle_handler.nodes.determine_handler.service import DetermineHandlerService
+from agent.subflows.battle_handler.nodes.run_tool.service import RunToolService
 from agent.subflows.battle_handler.state import BattleHandlerStore
 from emulator.emulator import YellowLegacyEmulator
 
 
-class DetermineHandlerNode(Node[BattleHandlerStore]):
-    """Determine the handler for the current game state in the battle."""
+class RunToolNode(Node[BattleHandlerStore]):
+    """Run away from the battle."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
         self.emulator = emulator
@@ -15,7 +15,7 @@ class DetermineHandlerNode(Node[BattleHandlerStore]):
 
     async def service(self, store: BattleHandlerStore) -> None:
         """The service for the node."""
-        logger.info("Running the battle decision maker...")
+        logger.info("Running the run tool...")
 
         state = await store.get_state()
         if state.iteration is None:
@@ -23,9 +23,13 @@ class DetermineHandlerNode(Node[BattleHandlerStore]):
         if state.raw_memory is None:
             raise ValueError("Raw memory is not set")
 
-        service = DetermineHandlerService(emulator=self.emulator)
+        service = RunToolService(
+            iteration=state.iteration,
+            raw_memory=state.raw_memory,
+            emulator=self.emulator,
+        )
 
-        tool_args = await service.determine_handler()
+        raw_memory = await service.run_away()
 
-        await store.set_tool_args(tool_args)
+        await store.set_raw_memory(raw_memory)
         await store.set_emulator_save_state_from_emulator(self.emulator)
