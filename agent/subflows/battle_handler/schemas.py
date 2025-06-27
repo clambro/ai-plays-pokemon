@@ -6,6 +6,7 @@ from common.enums import PokeballItem
 class UseMoveToolArgs(BaseModel):
     """The arguments for the use move tool."""
 
+    move_index: int
     move_name: str
 
     def to_string(self) -> str:

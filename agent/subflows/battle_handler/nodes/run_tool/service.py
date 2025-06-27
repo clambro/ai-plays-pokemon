@@ -29,7 +29,7 @@ class RunToolService:
 
         if cursor_pos.col == 0:
             await self.emulator.press_buttons(Button.RIGHT)
-        elif cursor_pos.row == 0:
+        if cursor_pos.row == 0:
             await self.emulator.press_buttons(Button.DOWN)
         await self.emulator.press_buttons(Button.A)
 

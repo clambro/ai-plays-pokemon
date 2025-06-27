@@ -56,8 +56,8 @@ class DetermineHandlerService:
         if player_pokemon:
             args.extend(
                 [
-                    UseMoveToolArgs(move_name=move.name)
-                    for move in player_pokemon.moves
+                    UseMoveToolArgs(move_index=i, move_name=move.name)
+                    for i, move in enumerate(player_pokemon.moves)
                     if move.pp > 0
                 ]
             )
