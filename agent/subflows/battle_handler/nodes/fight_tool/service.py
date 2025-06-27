@@ -44,11 +44,12 @@ class FightToolService:
             return self.raw_memory
 
         # Use the move.
-        if cursor_index > self.tool_args.move_index:
-            for _ in range(cursor_index - self.tool_args.move_index):
+        idx_diff = cursor_index - self.tool_args.move_index
+        if idx_diff > 0:
+            for _ in range(idx_diff):
                 await self.emulator.press_buttons(Button.UP)
-        elif cursor_index < self.tool_args.move_index:
-            for _ in range(self.tool_args.move_index - cursor_index):
+        elif idx_diff < 0:
+            for _ in range(-idx_diff):
                 await self.emulator.press_buttons(Button.DOWN)
         await self.emulator.press_buttons(Button.A)
 
