@@ -23,9 +23,15 @@ class DetermineHandlerNode(Node[BattleHandlerStore]):
         if state.raw_memory is None:
             raise ValueError("Raw memory is not set")
 
-        service = DetermineHandlerService(emulator=self.emulator)
+        service = DetermineHandlerService(
+            iteration=state.iteration,
+            raw_memory=state.raw_memory,
+            state_string_builder=state.to_prompt_string,
+            emulator=self.emulator,
+        )
 
-        tool_args = await service.determine_handler()
+        raw_memory, tool_args = await service.determine_handler()
 
+        await store.set_raw_memory(raw_memory)
         await store.set_tool_args(tool_args)
         await store.set_emulator_save_state_from_emulator(self.emulator)

@@ -28,7 +28,7 @@ def build_battle_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Graph:
     dummy_sink = DummyNode()
     return Graph(
         source=determine_handler,
-        sink=make_decision,
+        sink=dummy_sink,
         edges=[
             Edge(determine_handler, make_decision, ToolArgsIs(None)),
             Edge(determine_handler, fight_tool, ToolArgsIs(FightToolArgs)),

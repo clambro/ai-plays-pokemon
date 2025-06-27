@@ -1,5 +1,5 @@
-from loguru import logger
-
+from agent.subflows.battle_handler.nodes.determine_handler.prompts import CHOOSE_ARGS_PROMPT
+from agent.subflows.battle_handler.nodes.determine_handler.schemas import DetermineArgsResponse
 from agent.subflows.battle_handler.schemas import (
     BattleToolArgs,
     FightToolArgs,
@@ -9,17 +9,32 @@ from agent.subflows.battle_handler.schemas import (
 )
 from agent.subflows.battle_handler.utils import is_fight_menu_open
 from common.enums import BattleType, PokeballItem
+from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
+from llm.schemas import GEMINI_FLASH_2_5
+from llm.service import GeminiLLMService
+from memory.raw_memory import RawMemory, RawMemoryPiece
 
 
 class DetermineHandlerService:
     """A service that determines the handler for the current game state in the battle."""
 
-    def __init__(self, emulator: YellowLegacyEmulator) -> None:
+    llm_service = GeminiLLMService(model=GEMINI_FLASH_2_5)
+
+    def __init__(
+        self,
+        iteration: int,
+        raw_memory: RawMemory,
+        state_string_builder: StateStringBuilderT,
+        emulator: YellowLegacyEmulator,
+    ) -> None:
+        self.iteration = iteration
+        self.raw_memory = raw_memory
+        self.state_string_builder = state_string_builder
         self.emulator = emulator
 
-    async def determine_handler(self) -> BattleToolArgs | None:
+    async def determine_handler(self) -> tuple[RawMemory, BattleToolArgs | None]:
         """
         Determine the handler for the current game state in the battle.
 
@@ -32,15 +47,30 @@ class DetermineHandlerService:
             or battle_state.battle_type not in [BattleType.TRAINER, BattleType.WILD]
             or not is_fight_menu_open(game_state)
         ):
-            return None
+            return self.raw_memory, None
 
         args = self._get_legal_args(game_state)
         if not args:
             # Edge case if no Pokemon in the party, zero PP, and either no balls or trainer battle.
-            return None
+            return self.raw_memory, None
 
-        logger.info(f"The following battle options are available: {[str(a) for a in args]}")
-        return None
+        try:
+            thoughts, action = await self._choose_args(args, game_state)
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    content=f'{thoughts} I chose the following battle action: "{action}"',
+                )
+            )
+        except Exception as e:  # noqa: BLE001
+            action = None
+            self.raw_memory.append(
+                RawMemoryPiece(
+                    iteration=self.iteration,
+                    content=f"I received the following error when choosing a battle action: {e}",
+                )
+            )
+        return self.raw_memory, action
 
     @staticmethod
     def _get_legal_args(game_state: YellowLegacyGameState) -> list[BattleToolArgs]:
@@ -76,3 +106,23 @@ class DetermineHandlerService:
                         break
             args.append(RunToolArgs())
         return args
+
+    async def _choose_args(
+        self,
+        args: list[BattleToolArgs],
+        game_state: YellowLegacyGameState,
+    ) -> tuple[str, BattleToolArgs]:
+        """Choose the action to take based on the available arguments."""
+        img = self.emulator.get_screenshot()
+        actions = "\n".join([f"[{i}]: {a}" for i, a in enumerate(args)])
+        prompt = CHOOSE_ARGS_PROMPT.format(
+            state=self.state_string_builder(game_state),
+            text=game_state.screen.text,
+            actions=actions,
+        )
+        response = await self.llm_service.get_llm_response_pydantic(
+            messages=[img, prompt],
+            schema=DetermineArgsResponse,
+            prompt_name="determine_battle_args",
+        )
+        return response.thoughts, args[response.index]

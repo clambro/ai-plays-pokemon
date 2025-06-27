@@ -9,8 +9,7 @@ class FightToolArgs(BaseModel):
     move_index: int
     move_name: str
 
-    def to_string(self) -> str:
-        """Convert the arguments to a string."""
+    def __str__(self) -> str:
         return f"Use {self.move_name}."
 
 
@@ -21,8 +20,7 @@ class SwitchPokemonToolArgs(BaseModel):
     name: str
     species: str
 
-    def to_string(self) -> str:
-        """Convert the arguments to a string."""
+    def __str__(self) -> str:
         return f"Switch to {self.name} ({self.species})."
 
 
@@ -32,16 +30,14 @@ class ThrowBallToolArgs(BaseModel):
     item_index: int
     ball: PokeballItem
 
-    def to_string(self) -> str:
-        """Convert the arguments to a string."""
+    def __str__(self) -> str:
         return f"Throw a {self.ball}."
 
 
 class RunToolArgs(BaseModel):
     """The arguments for the run tool."""
 
-    def to_string(self) -> str:
-        """Convert the arguments to a string."""
+    def __str__(self) -> str:
         return "Run."
 
 
