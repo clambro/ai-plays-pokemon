@@ -1,6 +1,8 @@
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel
 
+from common.enums import PokeballItem
+
 
 class InventoryItem(BaseModel):
     """An item in the player's inventory."""
@@ -29,10 +31,10 @@ def parse_inventory(mem: PyBoyMemoryView) -> Inventory:
 
 
 _INT_TO_ITEM_MAP = {
-    0x01: "MASTER BALL",
-    0x02: "ULTRA BALL",
-    0x03: "GREAT BALL",
-    0x04: "POKE BALL",
+    0x01: PokeballItem.MASTER_BALL,
+    0x02: PokeballItem.ULTRA_BALL,
+    0x03: PokeballItem.GREAT_BALL,
+    0x04: PokeballItem.POKE_BALL,
     0x05: "TOWN MAP",
     0x06: "BICYCLE",
     0x07: "SURFBOARD",

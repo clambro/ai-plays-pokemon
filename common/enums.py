@@ -82,6 +82,15 @@ class Button(StrEnum):
     RIGHT = "right"
 
 
+class PokeballItem(StrEnum):
+    """The different types of pokeballs."""
+
+    POKE_BALL = "POKE BALL"
+    GREAT_BALL = "GREAT BALL"
+    ULTRA_BALL = "ULTRA BALL"
+    MASTER_BALL = "MASTER BALL"
+
+
 class BattleType(StrEnum):
     """The type of battle."""
 
