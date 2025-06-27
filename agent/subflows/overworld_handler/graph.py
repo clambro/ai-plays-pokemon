@@ -27,40 +27,13 @@ def build_overworld_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Gra
         source=load_map,
         sink=dummy_sink,
         edges=[
-            Edge(
-                load_map,
-                update_map,
-            ),
-            Edge(
-                update_map,
-                select_tool,
-            ),
-            Edge(
-                select_tool,
-                press_buttons,
-                ToolIs(OverworldTool.PRESS_BUTTONS),
-            ),
-            Edge(
-                select_tool,
-                navigation,
-                ToolIs(OverworldTool.NAVIGATION),
-            ),
-            Edge(
-                select_tool,
-                critique,
-                ToolIs(OverworldTool.CRITIQUE),
-            ),
-            Edge(
-                press_buttons,
-                dummy_sink,
-            ),
-            Edge(
-                navigation,
-                dummy_sink,
-            ),
-            Edge(
-                critique,
-                dummy_sink,
-            ),
+            Edge(load_map, update_map),
+            Edge(update_map, select_tool),
+            Edge(select_tool, press_buttons, ToolIs(OverworldTool.PRESS_BUTTONS)),
+            Edge(select_tool, navigation, ToolIs(OverworldTool.NAVIGATION)),
+            Edge(select_tool, critique, ToolIs(OverworldTool.CRITIQUE)),
+            Edge(press_buttons, dummy_sink),
+            Edge(navigation, dummy_sink),
+            Edge(critique, dummy_sink),
         ],
     )

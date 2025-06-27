@@ -6,6 +6,7 @@ from agent.subflows.battle_handler.nodes.determine_handler.node import Determine
 from agent.subflows.battle_handler.nodes.fight_tool.node import FightToolNode
 from agent.subflows.battle_handler.nodes.make_decision.node import MakeDecisionNode
 from agent.subflows.battle_handler.nodes.run_tool.node import RunToolNode
+from agent.subflows.battle_handler.nodes.switch_pokemon_tool.node import SwitchPokemonToolNode
 from agent.subflows.battle_handler.schemas import (
     FightToolArgs,
     RunToolArgs,
@@ -20,6 +21,7 @@ def build_battle_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Graph:
     determine_handler = DetermineHandlerNode(emulator)
     make_decision = MakeDecisionNode(emulator)
     fight_tool = FightToolNode(emulator)
+    switch_pokemon_tool = SwitchPokemonToolNode(emulator)
     run_tool = RunToolNode(emulator)
     dummy_sink = DummyNode()
     return Graph(
@@ -28,10 +30,11 @@ def build_battle_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Graph:
         edges=[
             Edge(determine_handler, make_decision, ToolArgsIs(None)),
             Edge(determine_handler, fight_tool, ToolArgsIs(FightToolArgs)),
-            Edge(determine_handler, make_decision, ToolArgsIs(SwitchPokemonToolArgs)),
+            Edge(determine_handler, switch_pokemon_tool, ToolArgsIs(SwitchPokemonToolArgs)),
             Edge(determine_handler, make_decision, ToolArgsIs(ThrowBallToolArgs)),
             Edge(determine_handler, run_tool, ToolArgsIs(RunToolArgs)),
             Edge(fight_tool, dummy_sink),
+            Edge(switch_pokemon_tool, dummy_sink),
             Edge(run_tool, dummy_sink),
             Edge(make_decision, dummy_sink),
         ],
