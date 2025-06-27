@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from common.enums import PokeballItem
 
 
-class UseMoveToolArgs(BaseModel):
+class FightToolArgs(BaseModel):
     """The arguments for the use move tool."""
 
     move_index: int
@@ -44,4 +44,4 @@ class RunToolArgs(BaseModel):
         return "Run."
 
 
-BattleToolArgs = UseMoveToolArgs | SwitchPokemonToolArgs | ThrowBallToolArgs | RunToolArgs
+BattleToolArgs = FightToolArgs | SwitchPokemonToolArgs | ThrowBallToolArgs | RunToolArgs

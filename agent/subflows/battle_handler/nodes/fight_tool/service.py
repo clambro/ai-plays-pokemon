@@ -1,6 +1,6 @@
 from loguru import logger
 
-from agent.subflows.battle_handler.schemas import UseMoveToolArgs
+from agent.subflows.battle_handler.schemas import FightToolArgs
 from agent.subflows.battle_handler.utils import get_cursor_pos_in_fight_menu
 from common.enums import Button
 from emulator.emulator import YellowLegacyEmulator
@@ -15,7 +15,7 @@ class FightToolService:
         self,
         iteration: int,
         raw_memory: RawMemory,
-        tool_args: UseMoveToolArgs,
+        tool_args: FightToolArgs,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration

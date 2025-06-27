@@ -2,10 +2,10 @@ from loguru import logger
 
 from agent.subflows.battle_handler.schemas import (
     BattleToolArgs,
+    FightToolArgs,
     RunToolArgs,
     SwitchPokemonToolArgs,
     ThrowBallToolArgs,
-    UseMoveToolArgs,
 )
 from agent.subflows.battle_handler.utils import is_fight_menu_open
 from common.enums import BattleType, PokeballItem
@@ -56,7 +56,7 @@ class DetermineHandlerService:
         if player_pokemon:
             args.extend(
                 [
-                    UseMoveToolArgs(move_index=i, move_name=move.name)
+                    FightToolArgs(move_index=i, move_name=move.name)
                     for i, move in enumerate(player_pokemon.moves)
                     if move.pp > 0
                 ]

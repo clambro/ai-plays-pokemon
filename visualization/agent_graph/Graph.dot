@@ -3,44 +3,44 @@ digraph "G" {
   compound=true;
   node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
   edge [fontname="Helvetica", fontsize=9];
-  subgraph "cluster_ROh4b9rPiLZR8FRXu5Ws0" {
+  subgraph "cluster_KJrK4onyPbi4SnZy2JfD8" {
     label="DoUpdates (Concurrent)";
     style="filled"; fillcolor="lightblue"; color="blue";
     node [fillcolor="lightblue", style="filled,rounded"];
-    "ROh4b9rPiLZR8FRXu5Ws0__entry" [label="", shape=point, width=0.01, style=invis];
-    "ROh4b9rPiLZR8FRXu5Ws0__exit"  [label="", shape=point, width=0.01, style=invis];
-    R2gjnZK2jJIonHdh735mK [label="UpdateGoalsNode"];
-    LIymbs8aFT8sixNbxOi6x [label="UpdateSummaryMemoryNode"];
-    ef8JZMll6fiZbA6isvKZR [label="UpdateBackgroundStreamNode"];
+    "KJrK4onyPbi4SnZy2JfD8__entry" [label="", shape=point, width=0.01, style=invis];
+    "KJrK4onyPbi4SnZy2JfD8__exit"  [label="", shape=point, width=0.01, style=invis];
+    V2DcO0D45S9Hm4mLIsbej [label="UpdateGoalsNode"];
+    TtEZHFsxiSB5uAwiruHLR [label="UpdateSummaryMemoryNode"];
+    UHz4k6ykpJKYQUsXaj359 [label="UpdateBackgroundStreamNode"];
   }
-  subgraph "cluster_vkIfMjcxQSDinRBwNXA87" {
+  subgraph "cluster_nJYT4ImdVZ8cYNwdsShXa" {
     label="CreateUpdateLongTermMemory (Concurrent)";
     style="filled"; fillcolor="lightblue"; color="blue";
     node [fillcolor="lightblue", style="filled,rounded"];
-    "vkIfMjcxQSDinRBwNXA87__entry" [label="", shape=point, width=0.01, style=invis];
-    "vkIfMjcxQSDinRBwNXA87__exit"  [label="", shape=point, width=0.01, style=invis];
-    "8JvvkMiXwtxAixeD9rvfa" [label="CreateLongTermMemoryNode"];
-    etaww1i1ND2a3ibXAuwZn [label="UpdateLongTermMemoryNode"];
+    "nJYT4ImdVZ8cYNwdsShXa__entry" [label="", shape=point, width=0.01, style=invis];
+    "nJYT4ImdVZ8cYNwdsShXa__exit"  [label="", shape=point, width=0.01, style=invis];
+    LbEjOSYP5w8u4qs5iXCvG [label="CreateLongTermMemoryNode"];
+    tnVED0lVvZcmlXKIxIaaD [label="UpdateLongTermMemoryNode"];
   }
-  "85mMIVAgKyqICc2UKvbeU" [label="PrepareAgentStoreNode"];
-  LIymbs8aFT8sixNbxOi6x [label="UpdateSummaryMemoryNode"];
-  ycaKppBU8FhEJ6475tIlu [label="TextHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
-  bIdvvnXZvz8Is1MfSYbAy [label="BattleHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
-  R2gjnZK2jJIonHdh735mK [label="UpdateGoalsNode"];
-  "8JvvkMiXwtxAixeD9rvfa" [label="CreateLongTermMemoryNode"];
-  g5zJknwT6kuxiYzIDjmsU [label="RetrieveLongTermMemoryNode"];
-  etaww1i1ND2a3ibXAuwZn [label="UpdateLongTermMemoryNode"];
-  U07Mu0bBpQoGO8nXY5Nzr [label="OverworldHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
-  Hn3C6lkV9pvptlZGymCwm [label="DummyNode"];
-  ef8JZMll6fiZbA6isvKZR [label="UpdateBackgroundStreamNode"];
-  "85mMIVAgKyqICc2UKvbeU" -> vkIfMjcxQSDinRBwNXA87__entry [lhead="cluster_vkIfMjcxQSDinRBwNXA87", style="dashed", label="ShouldRetrieveMemory(True)"];
-  vkIfMjcxQSDinRBwNXA87__exit -> g5zJknwT6kuxiYzIDjmsU [ltail="cluster_vkIfMjcxQSDinRBwNXA87", style="solid"];
-  "85mMIVAgKyqICc2UKvbeU" -> Hn3C6lkV9pvptlZGymCwm [style="dashed", label="ShouldRetrieveMemory(False)"];
-  g5zJknwT6kuxiYzIDjmsU -> Hn3C6lkV9pvptlZGymCwm [style="solid"];
-  Hn3C6lkV9pvptlZGymCwm -> U07Mu0bBpQoGO8nXY5Nzr [style="dashed", label="AgentHandlerIs(overworld)"];
-  Hn3C6lkV9pvptlZGymCwm -> bIdvvnXZvz8Is1MfSYbAy [style="dashed", label="AgentHandlerIs(battle)"];
-  Hn3C6lkV9pvptlZGymCwm -> ycaKppBU8FhEJ6475tIlu [style="dashed", label="AgentHandlerIs(text)"];
-  ycaKppBU8FhEJ6475tIlu -> ROh4b9rPiLZR8FRXu5Ws0__entry [lhead="cluster_ROh4b9rPiLZR8FRXu5Ws0", style="solid"];
-  bIdvvnXZvz8Is1MfSYbAy -> ROh4b9rPiLZR8FRXu5Ws0__entry [lhead="cluster_ROh4b9rPiLZR8FRXu5Ws0", style="solid"];
-  U07Mu0bBpQoGO8nXY5Nzr -> ROh4b9rPiLZR8FRXu5Ws0__entry [lhead="cluster_ROh4b9rPiLZR8FRXu5Ws0", style="solid"];
+  UHz4k6ykpJKYQUsXaj359 [label="UpdateBackgroundStreamNode"];
+  LbEjOSYP5w8u4qs5iXCvG [label="CreateLongTermMemoryNode"];
+  tnVED0lVvZcmlXKIxIaaD [label="UpdateLongTermMemoryNode"];
+  sLvE5hklHdvZKJbGzCMt1 [label="PrepareAgentStoreNode"];
+  r8fEJUOFChbjT1oJaQhpP [label="BattleHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
+  "0sCD6rNSY73o64RQPb5Su" [label="RetrieveLongTermMemoryNode"];
+  dWxdr0pT7NGwAloWrEExw [label="DummyNode"];
+  V2DcO0D45S9Hm4mLIsbej [label="UpdateGoalsNode"];
+  TtEZHFsxiSB5uAwiruHLR [label="UpdateSummaryMemoryNode"];
+  kKVYSAk8Ljg9hnzj1Q3ce [label="OverworldHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
+  jpk7acUuZ3k5trwDycvoP [label="TextHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
+  sLvE5hklHdvZKJbGzCMt1 -> nJYT4ImdVZ8cYNwdsShXa__entry [lhead="cluster_nJYT4ImdVZ8cYNwdsShXa", style="dashed", label="ShouldRetrieveMemory(True)"];
+  nJYT4ImdVZ8cYNwdsShXa__exit -> "0sCD6rNSY73o64RQPb5Su" [ltail="cluster_nJYT4ImdVZ8cYNwdsShXa", style="solid"];
+  sLvE5hklHdvZKJbGzCMt1 -> dWxdr0pT7NGwAloWrEExw [style="dashed", label="ShouldRetrieveMemory(False)"];
+  "0sCD6rNSY73o64RQPb5Su" -> dWxdr0pT7NGwAloWrEExw [style="solid"];
+  dWxdr0pT7NGwAloWrEExw -> kKVYSAk8Ljg9hnzj1Q3ce [style="dashed", label="AgentHandlerIs(overworld)"];
+  dWxdr0pT7NGwAloWrEExw -> r8fEJUOFChbjT1oJaQhpP [style="dashed", label="AgentHandlerIs(battle)"];
+  dWxdr0pT7NGwAloWrEExw -> jpk7acUuZ3k5trwDycvoP [style="dashed", label="AgentHandlerIs(text)"];
+  jpk7acUuZ3k5trwDycvoP -> KJrK4onyPbi4SnZy2JfD8__entry [lhead="cluster_KJrK4onyPbi4SnZy2JfD8", style="solid"];
+  r8fEJUOFChbjT1oJaQhpP -> KJrK4onyPbi4SnZy2JfD8__entry [lhead="cluster_KJrK4onyPbi4SnZy2JfD8", style="solid"];
+  kKVYSAk8Ljg9hnzj1Q3ce -> KJrK4onyPbi4SnZy2JfD8__entry [lhead="cluster_KJrK4onyPbi4SnZy2JfD8", style="solid"];
 }

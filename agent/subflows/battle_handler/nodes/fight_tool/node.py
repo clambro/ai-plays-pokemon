@@ -2,7 +2,7 @@ from junjo import Node
 from loguru import logger
 
 from agent.subflows.battle_handler.nodes.fight_tool.service import FightToolService
-from agent.subflows.battle_handler.schemas import UseMoveToolArgs
+from agent.subflows.battle_handler.schemas import FightToolArgs
 from agent.subflows.battle_handler.state import BattleHandlerStore
 from emulator.emulator import YellowLegacyEmulator
 
@@ -23,7 +23,7 @@ class FightToolNode(Node[BattleHandlerStore]):
             raise ValueError("Iteration is not set")
         if state.raw_memory is None:
             raise ValueError("Raw memory is not set")
-        if not isinstance(state.tool_args, UseMoveToolArgs):
+        if not isinstance(state.tool_args, FightToolArgs):
             raise TypeError("Tool args is not a UseMoveToolArgs")
 
         service = FightToolService(
