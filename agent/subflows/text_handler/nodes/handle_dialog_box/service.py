@@ -69,9 +69,13 @@ class HandleDialogBoxService:
         """
         top_line = dialog_box.top_line
         bottom_line = dialog_box.bottom_line
-        if not text or (top_line and top_line != text[-1]):
+        prev_lines = [
+            text[-1] if text else None,
+            text[-2] if len(text) > 1 else None,
+        ]
+        if not text or (top_line and top_line not in prev_lines):
             text.append(top_line)
-        if not text or (bottom_line and bottom_line != text[-1]):
+        if not text or (bottom_line and bottom_line not in prev_lines):
             text.append(bottom_line)
 
     async def _is_blinking_cursor_on_screen(self) -> bool:

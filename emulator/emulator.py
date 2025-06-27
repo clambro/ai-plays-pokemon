@@ -93,7 +93,6 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
     async def press_button(
         self,
         button: Button,
-        hold_frames: int = 10,
         *,
         wait_for_animation: bool = True,
     ) -> None:
@@ -106,6 +105,8 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
             but you can skip it if you have bespoke handling for subsequent activity.
         """
         self._check_stopped()
+        # If we're deferring animation handling, we want to exit as quickly as possible.
+        hold_frames = 10 if wait_for_animation else 1
         async with self._button_lock:
             self._pyboy.button(button, hold_frames)
         if wait_for_animation:

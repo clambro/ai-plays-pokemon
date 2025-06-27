@@ -35,10 +35,11 @@ class HandleSubsequentTextService:
                 continue
 
             prev_state = game_state
-            await self.emulator.wait_for_animation_to_finish()  # Check for auto-scrolling text.
+            await self.emulator.wait_for_animation_to_finish()
+            await self.emulator.wait_for_animation_to_finish()
             game_state = self.emulator.get_game_state()
             if game_state.screen.text == prev_state.screen.text:
-                break  # Nothing is scrolling, so we're done.
+                break  # Nothing is scrolling, and no animations are happening, so we're done.
 
         joined_text = " ".join(text).strip()
         if not joined_text:
@@ -66,9 +67,13 @@ class HandleSubsequentTextService:
         """
         top_line = dialog_box.top_line
         bottom_line = dialog_box.bottom_line
-        if not text or (top_line and top_line != text[-1]):
+        prev_lines = [
+            text[-1] if text else None,
+            text[-2] if len(text) > 1 else None,
+        ]
+        if not text or (top_line and top_line not in prev_lines):
             text.append(top_line)
-        if not text or (bottom_line and bottom_line != text[-1]):
+        if not text or (bottom_line and bottom_line not in prev_lines):
             text.append(bottom_line)
 
     async def _is_blinking_cursor_on_screen(self) -> bool:
