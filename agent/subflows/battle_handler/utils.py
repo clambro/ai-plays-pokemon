@@ -9,7 +9,7 @@ def is_fight_menu_open(game_state: YellowLegacyGameState) -> bool:
     :param game_state: The game state.
     :return: True if the fight menu is open, False otherwise.
     """
-    screen_text = game_state.screen.text.replace(" ", "").replace("\n", "")
+    screen_text = game_state.screen.text.replace(" ", "").replace("\n", "").replace("▶", "")
     return "FIGHTPKMNITEMRUN" in screen_text
 
 

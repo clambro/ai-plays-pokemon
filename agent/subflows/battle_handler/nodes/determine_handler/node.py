@@ -15,7 +15,7 @@ class DetermineHandlerNode(Node[BattleHandlerStore]):
 
     async def service(self, store: BattleHandlerStore) -> None:
         """The service for the node."""
-        logger.info("Running the battle decision maker...")
+        logger.info("Determining the battle action...")
 
         state = await store.get_state()
         if state.iteration is None:

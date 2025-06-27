@@ -31,15 +31,16 @@ class ThrowBallToolService:
             logger.warning("The fight menu is not open. Skipping.")
             return self.raw_memory
 
-        # Open the ITEM menu.
+        # Open the ITEM menu and update the game state.
         if cursor_pos.col == 1:
             await self.emulator.press_buttons(Button.LEFT)
         if cursor_pos.row == 0:
             await self.emulator.press_buttons(Button.DOWN)
         await self.emulator.press_buttons(Button.A)
+        game_state = self.emulator.get_game_state()
 
         cursor_index = self._get_item_menu_cursor_index(game_state)
-        if not cursor_index:
+        if cursor_index is None:
             logger.warning("The item menu is not open. Skipping.")
             return self.raw_memory
 

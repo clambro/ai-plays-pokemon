@@ -31,19 +31,20 @@ class SwitchPokemonToolService:
             logger.warning("The fight menu is not open. Skipping.")
             return self.raw_memory
 
-        # Open the PKMN menu.
+        # Open the PKMN menu and update the game state.
         if cursor_pos.col == 0:
             await self.emulator.press_buttons(Button.RIGHT)
         if cursor_pos.row == 1:
             await self.emulator.press_buttons(Button.UP)
         await self.emulator.press_buttons(Button.A)
+        game_state = self.emulator.get_game_state()
 
         cursor_index = self._get_pkmn_menu_cursor_index(game_state)
-        if not cursor_index:
+        if cursor_index is None:
             logger.warning("The Pokemon menu is not open. Skipping.")
             return self.raw_memory
 
-        # Move the cursor to the Pokemon.
+        # Move the cursor to the Pokemon and update the game state.
         idx_diff = cursor_index - self.tool_args.party_index
         if idx_diff > 0:
             for _ in range(idx_diff):
@@ -52,6 +53,7 @@ class SwitchPokemonToolService:
             for _ in range(-idx_diff):
                 await self.emulator.press_buttons(Button.DOWN)
         await self.emulator.press_buttons(Button.A)
+        game_state = self.emulator.get_game_state()
 
         cursor_index = self._get_switch_menu_cursor_index(game_state)
         if cursor_index is None:

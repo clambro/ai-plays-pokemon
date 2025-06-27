@@ -31,15 +31,16 @@ class FightToolService:
             logger.warning("The fight menu is not open. Skipping.")
             return self.raw_memory
 
-        # Open the FIGHT menu.
+        # Open the FIGHT menu and update the game state.
         if cursor_pos.col == 1:
             await self.emulator.press_buttons(Button.LEFT)
         if cursor_pos.row == 1:
             await self.emulator.press_buttons(Button.UP)
         await self.emulator.press_buttons(Button.A)
+        game_state = self.emulator.get_game_state()
 
         cursor_index = self._get_move_menu_cursor_index(game_state)
-        if not cursor_index:
+        if cursor_index is None:
             logger.warning("The move menu is not open. Skipping.")
             return self.raw_memory
 
@@ -67,7 +68,7 @@ class FightToolService:
         text = game_state.screen.text
         if text.split("\n")[9][1:6] != "TYPE/":
             return None  # Move menu is not open because the type of the move is not shown.
-        if not game_state.battle.player_pokemon:
+        if game_state.battle.player_pokemon is None:
             return None  # No active Pokemon. Shouldn't happen.
 
         for i, move in enumerate(game_state.battle.player_pokemon.moves):
