@@ -1,12 +1,10 @@
-from loguru import logger
-from subflows.battle_handler.schemas import (
+from agent.subflows.battle_handler.schemas import (
     BattleToolArgs,
     RunToolArgs,
     SwitchPokemonToolArgs,
     ThrowBallToolArgs,
     UseMoveToolArgs,
 )
-
 from common.enums import BattleType, PokeballItem
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
@@ -38,7 +36,6 @@ class DetermineHandlerService:
             # Edge case if no Pokemon in the party, zero PP, and either no balls or trainer battle.
             return None
 
-        logger.info(args)
         return None
 
     @staticmethod
