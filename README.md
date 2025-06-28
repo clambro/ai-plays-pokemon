@@ -1,5 +1,15 @@
 # ai-plays-pokemon
 
+## Licence & Affiliation Notice
+
+All original source code in this repository is released under the [MIT Licence](LICENSE).
+
+This is an unofficial, fan-made project, for educational purposes only. The code enclosed in this repository is designed to work with Pokemon games but does not include any ROMs, save states, or game sprites. Users are responsible for ensuring they own legitimate copies of Pokémon games and comply with all applicable laws and terms of service.
+
+"Pokémon", Pokémon character names, and all related marks are trademarks of Nintendo, Game Freak, Creatures Inc., and The Pokémon Company. I am not affiliated with, endorsed, sponsored, or specifically approved by any of these entities.
+
+---
+
 ## TODOs in rough order of importance
 
 ### Required for Release
