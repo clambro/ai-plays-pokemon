@@ -31,12 +31,12 @@ class AsciiTiles(StrEnum):
         return [cls.FREE, cls.GRASS, cls.WARP, cls.PIKACHU, cls.PLAYER]
 
 
-class MapEntityType(StrEnum):
+class MapEntityType(Enum):
     """An enum for the different types of map entities."""
 
-    WARP = "warp"
-    SPRITE = "sprite"
-    SIGN = "sign"
+    WARP = auto()
+    SPRITE = auto()
+    SIGN = auto()
 
 
 class WarpType(Enum):
@@ -50,10 +50,10 @@ class WarpType(Enum):
 class FacingDirection(StrEnum):
     """The direction the player is facing."""
 
-    UP = "up"
-    DOWN = "down"
-    LEFT = "left"
-    RIGHT = "right"
+    UP = "UP"
+    DOWN = "DOWN"
+    LEFT = "LEFT"
+    RIGHT = "RIGHT"
 
 
 class BlockedDirection(IntFlag):
@@ -91,13 +91,13 @@ class PokeballItem(StrEnum):
     MASTER_BALL = "MASTER BALL"
 
 
-class BattleType(StrEnum):
+class BattleType(Enum):
     """The type of battle."""
 
-    WILD = "wild"
-    TRAINER = "trainer"
-    SAFARI_ZONE = "safari_zone"
-    OTHER = "other"
+    WILD = auto()
+    TRAINER = auto()
+    SAFARI_ZONE = auto()
+    OTHER = auto()
 
 
 class MapId(IntEnum):

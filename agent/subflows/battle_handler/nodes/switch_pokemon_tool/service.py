@@ -92,13 +92,3 @@ class SwitchPokemonToolService:
         if "▶CANCEL" in text:
             return 2
         return None
-
-
-_CURSOR_POS_TO_ROW_MAP = {  # Very unusual pattern...
-    180: 0,
-    220: 1,
-    4: 2,
-    44: 3,
-    84: 4,
-    124: 5,
-}

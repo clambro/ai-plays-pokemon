@@ -6,7 +6,7 @@ from common.enums import Button
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
-from llm.schemas import GEMINI_FLASH_LITE_2_5
+from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
@@ -14,7 +14,7 @@ from memory.raw_memory import RawMemory, RawMemoryPiece
 class DecisionMakerTextService:
     """A service that makes decisions based on the current game state in the text."""
 
-    llm_service = GeminiLLMService(GEMINI_FLASH_LITE_2_5)
+    llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
 
     def __init__(
         self,

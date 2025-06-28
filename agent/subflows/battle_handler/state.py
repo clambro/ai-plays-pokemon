@@ -27,6 +27,7 @@ class BattleHandlerState(BaseStateWithEmulator):
                 str(self.long_term_memory),
                 str(self.goals),
                 game_state.player_info,
+                game_state.battle_info,
             ),
         )
 
