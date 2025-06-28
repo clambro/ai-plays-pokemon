@@ -103,7 +103,7 @@ class UpdateMapService:
             response = await self.llm_service.get_llm_response_pydantic(
                 messages=[screenshot, prompt],
                 schema=UpdateEntitiesResponse,
-                prompt_name=f"update_{entity_type.value.lower()}s",
+                prompt_name=f"update_{entity_type.name.lower()}s",
             )
             await asyncio.gather(
                 *[

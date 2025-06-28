@@ -14,19 +14,24 @@ class Screen(BaseModel):
     right: int
     tiles: list[list[int]]  # Each block on screen is a 2x2 square of tiles.
     cursor_index: int
+    menu_item_index: int
+    list_scroll_offset: int
 
     model_config = ConfigDict(frozen=True)
 
     @computed_field
     @property
     def is_dialog_box_on_screen(self) -> int:
-        """Check if the dialog box is on the screen by checking for the correct corner tiles."""
-        top_left, top_right, bottom_left, bottom_right = 121, 123, 125, 126
+        """Check if the dialog box is on the screen by checking for the correct border tiles."""
+        top_left, top_right, bottom_left, bottom_right = 0x79, 0x7B, 0x7D, 0x7E
+        horizontal_border = 0x7A
         return (
             self.tiles[12][0] == top_left
             and self.tiles[12][-1] == top_right
             and self.tiles[17][0] == bottom_left
             and self.tiles[17][-1] == bottom_right
+            and all(t == horizontal_border for t in self.tiles[12][1:-1])
+            and all(t == horizontal_border for t in self.tiles[17][1:-1])
         )
 
     @computed_field
@@ -71,4 +76,6 @@ def parse_screen(mem: PyBoyMemoryView) -> Screen:
         right=right,
         tiles=tiles,
         cursor_index=mem[0xCC30],
+        menu_item_index=mem[0xCC26],
+        list_scroll_offset=mem[0xCC36],
     )

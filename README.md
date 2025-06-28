@@ -2,16 +2,15 @@
 
 ## TODOs in rough order of importance
 
-### Core Functionality
-Done?
+### Required for Release
+* ASCII tile token count tests
+* Add strength boulders to map screen -- 00:d717 wBoulderSpriteIndex
+* Handle surfing in navigation + tests
+* Handle cut trees in navigation + tests
+* Handle the bike in navigation + tests
+* Handle spin tiles in navigation + tests
 
-### Clean-Up, Refactoring, and Testing
-* In the overworld warp, mention if the player has not visted a given map yet.
-* Put the emulator on a separate process entirely to fix the remaning async issues.
-
-* Add unit/integration tests
-    * Test background tile and blocking generation from game states for strength boulders and seafoam elevation
-    * Test navigation for surfing and cutting trees
+* Test background tile and blocking generation from game states for strength boulders and seafoam elevation
 
 * Set up Junjo server and opentelemetry
 
@@ -20,9 +19,16 @@ Done?
     * Tests for selecting tools
     * Tests for multiple button presses
 
-### Useful Tools and Additions
-* Detailed subflow for battles. Battle type (e.g. trainer, safari zone, etc.) is at 0xD05A, and the move menus are at 0xCCDB
-* Add tools to select moves or swap pokemon in battle, or use a ball in non-trainer battles
+* Some kind of VM to run everything on
+
+### Nice to Have
+* Make the raw/summary memory append one at a time and remove the need for RawMemoryPiece everywhere
+
+* Add a strength puzzle solver + tests
+
+* Navigation should avoid grass tiles where possible + tests
+
+* Put the emulator on a separate process entirely to fix the remaning async issues.
 
 * Add a tool for spinning around to find wild pokemon
 * Add a tool to rearrange the team
@@ -30,23 +36,12 @@ Done?
 * Generate the overworld map legend dynamically
 * Some kind of info about PC pokemon/items?
 
-### Longer-Term Issues that I'll Have to Tackle Eventually
-* Add strength boulders to map screen -- 00:d717 wBoulderSpriteIndex
-* Tool for using fly
-* Handle surfing in navigation
-* Navigation should avoid grass tiles where possible
-* Add a strength puzzle solver
-* Add team rocket spin puzzle tiles to navigation
-* Does riding the bike break navigation?
-
-* Custom music player to avoid the little async issues?
-
-## Notes
+### Backlog
 * Numerical coords on screen? Dots to show past steps? A grid to show collisions? Maybe when I have tests set up. I'm convinced that the screenshot is effectively useless in the overworld.
 * Some better way of doing RAG that doesn't involve reading everything into memory would be nice. Might need to switch DBs for this. Could also offer to delete LTM after 1000 iterations without retrieval to make this more efficient.
+* Tool for using fly
 
 ## Junjo Thoughts
-* If I edit a list in place does it change it in the state?
 * Visualization is not idempotent because the dot file changes
 * Subflow visualizations don't have consistent file names
 * Trivial subgraphs with a single node and no edges don't display anything

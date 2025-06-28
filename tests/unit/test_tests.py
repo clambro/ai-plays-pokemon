@@ -24,7 +24,7 @@ def test_all_tests_have_marker(valid_markers: set[str]) -> None:
     """Test that all tests in have exactly one marker that matches the test's parent folder."""
     errors = []
     total_tests = 0
-    for filepath in Path().glob("**/tests/**/test_*.py"):
+    for filepath in Path().glob("[!.]*/tests/[!.]*/test_*.py"):  # Ignore hidden files/folders.
         test_functions = _get_test_functions_with_markers(filepath, valid_markers)
         total_tests += len(test_functions)
         for func in test_functions:

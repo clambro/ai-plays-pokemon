@@ -1,8 +1,8 @@
 import asyncio
 
+from agent.utils import append_dialog_to_list_inplace, is_blinking_cursor_on_screen
 from common.enums import Button
 from emulator.emulator import YellowLegacyEmulator
-from emulator.schemas import DialogBox
 from memory.raw_memory import RawMemory, RawMemoryPiece
 
 
@@ -35,13 +35,13 @@ class HandleDialogBoxService:
         # and no other text on screen, then the dialog box is done scrolling and we can hit A one
         # last time to close the box.
         while dialog_box and (is_blinking_cursor or not is_text_outside_dialog_box):
-            self._append_dialog_to_list(text, dialog_box)
-            await self.emulator.press_buttons(Button.A)
+            append_dialog_to_list_inplace(text, dialog_box)
+            await self.emulator.press_button(Button.A)
             await asyncio.sleep(0.5)  # Buffer to ensure that no new dialog boxes have opened.
 
             game_state = self.emulator.get_game_state()
             dialog_box = game_state.get_dialog_box()
-            is_blinking_cursor = await self._is_blinking_cursor_on_screen()
+            is_blinking_cursor = await is_blinking_cursor_on_screen(self.emulator)
             is_text_outside_dialog_box = game_state.is_text_on_screen(ignore_dialog_box=True)
 
         joined_text = " ".join(text)
@@ -56,34 +56,3 @@ class HandleDialogBoxService:
             ),
         )
         return self.raw_memory
-
-    @staticmethod
-    def _append_dialog_to_list(text: list[str], dialog_box: DialogBox) -> None:
-        """
-        Append the dialog box text to the text list in place, accounting for the case where the
-        current top line is the same as the previous bottom line due to the dialog box scrolling
-        the text up.
-
-        :param text: The list of text to append to.
-        :param dialog_box: The dialog box to append.
-        """
-        top_line = dialog_box.top_line
-        bottom_line = dialog_box.bottom_line
-        if not text or (top_line and top_line != text[-1]):
-            text.append(top_line)
-        if not text or (bottom_line and bottom_line != text[-1]):
-            text.append(bottom_line)
-
-    async def _is_blinking_cursor_on_screen(self) -> bool:
-        """Check if the blinking cursor is on screen."""
-        counter = 0
-        blink_wait_time = 0.1
-        max_counter = 6  # Cursor blinks on/off a bit more than 2x per second.
-        while counter < max_counter:
-            await asyncio.sleep(blink_wait_time)
-            game_state = self.emulator.get_game_state()
-            dialog_box = game_state.get_dialog_box()
-            if dialog_box and dialog_box.has_cursor:
-                break
-            counter += 1
-        return counter < max_counter

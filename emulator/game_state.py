@@ -5,13 +5,13 @@ from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_SHAPE
-from common.enums import AsciiTiles, BlockedDirection
+from common.enums import AsciiTiles, BattleType, BlockedDirection
 from common.schemas import Coords
 from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.inventory import Inventory, parse_inventory
 from emulator.parsers.map import Map, parse_map_state
 from emulator.parsers.player import Player, parse_player
-from emulator.parsers.pokemon import Pokemon, parse_player_pokemon
+from emulator.parsers.pokemon import Pokemon, parse_party_pokemon
 from emulator.parsers.screen import Screen, parse_screen
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
@@ -45,7 +45,7 @@ class YellowLegacyGameState(BaseModel):
         """
         return cls(
             player=parse_player(mem),
-            party=parse_player_pokemon(mem),
+            party=parse_party_pokemon(mem),
             inventory=parse_inventory(mem),
             map=parse_map_state(mem),
             sprites=parse_sprites(mem),
@@ -91,6 +91,52 @@ class YellowLegacyGameState(BaseModel):
                 out += f"- {i.name} (x{i.quantity})\n"
             out += "</inventory>\n"
         out += "</player_info>"
+        return out
+
+    @property
+    def battle_info(self) -> str:
+        """Get a string representation of the battle state."""
+        if not self.battle.is_in_battle:
+            return ""
+        if self.battle.battle_type == BattleType.OTHER:
+            return "<battle_info>You are in a special battle, possibly a cutscene.</battle_info>"
+
+        out = "<battle_info>\n"
+        if self.battle.battle_type == BattleType.SAFARI_ZONE:
+            out += "You are in a Safari Zone battle.\n"
+        elif self.battle.battle_type == BattleType.TRAINER:
+            out += "You are in a trainer battle.\n"
+        elif self.battle.battle_type == BattleType.WILD:
+            out += "You are in a battle against a wild Pokemon.\n"
+
+        if self.battle.player_pokemon and self.battle.battle_type != BattleType.SAFARI_ZONE:
+            out += "<player_pokemon>\n"
+            out += f"Name: {self.battle.player_pokemon.name}\n"
+            out += f"Species: {self.battle.player_pokemon.species}\n"
+            out += f"Level: {self.battle.player_pokemon.level}\n"
+            out += f"HP: {self.battle.player_pokemon.hp} / {self.battle.player_pokemon.max_hp}\n"
+            out += f"Status Ailment: {self.battle.player_pokemon.status}\n"
+            out += "<moves>\n"
+            for m in self.battle.player_pokemon.moves:
+                out += f"- {m.name} (PP: {m.pp})\n"
+            out += "</moves>\n"
+            out += "</player_pokemon>\n"
+
+        if self.battle.enemy_pokemon:
+            out += "<enemy_pokemon>\n"
+            out += f"Name: {self.battle.enemy_pokemon.species}\n"
+            out += f"Level: {self.battle.enemy_pokemon.level}\n"
+            out += f"HP Percentage: {self.battle.enemy_pokemon.hp_pct:.0f}%\n"
+            out += f"Status Ailment: {self.battle.enemy_pokemon.status}\n"
+            out += "</enemy_pokemon>\n"
+
+        if self.battle.num_enemy_pokemon:
+            out += (
+                f"The enemy trainer has {self.battle.num_enemy_pokemon} Pokemon remaining, "
+                "including the one you're battling.\n"
+            )
+
+        out += "</battle_info>"
         return out
 
     def to_screen_coords(self, coords: Coords) -> Coords | None:

@@ -1,5 +1,6 @@
 from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
 from agent.state import AgentState
+from agent.subflows.battle_handler.schemas import BattleToolArgs
 from emulator.emulator import YellowLegacyGameState
 from memory.goals import Goals
 from memory.long_term_memory import LongTermMemory
@@ -15,6 +16,7 @@ class BattleHandlerState(BaseStateWithEmulator):
     summary_memory: SummaryMemory | None = None
     long_term_memory: LongTermMemory | None = None
     goals: Goals | None = None
+    tool_args: BattleToolArgs | None = None
 
     def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
         """Get a string representation of the agent and game state to be used in prompts."""
@@ -25,6 +27,7 @@ class BattleHandlerState(BaseStateWithEmulator):
                 str(self.long_term_memory),
                 str(self.goals),
                 game_state.player_info,
+                game_state.battle_info,
             ),
         )
 
@@ -47,3 +50,7 @@ class BattleHandlerStore(BaseStoreWithEmulator[BattleHandlerState]):
     async def set_raw_memory(self, raw_memory: RawMemory) -> None:
         """Set the raw memory."""
         await self.set_state({"raw_memory": raw_memory})
+
+    async def set_tool_args(self, tool_args: BattleToolArgs | None) -> None:
+        """Set the tool args."""
+        await self.set_state({"tool_args": tool_args})

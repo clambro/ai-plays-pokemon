@@ -68,19 +68,9 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
                 create_update_long_term_memory,
                 ShouldRetrieveMemory(value=True),
             ),
-            Edge(
-                create_update_long_term_memory,
-                retrieve_long_term_memory,
-            ),
-            Edge(
-                prepare_agent_store,
-                post_retrieval_dummy,
-                ShouldRetrieveMemory(value=False),
-            ),
-            Edge(
-                retrieve_long_term_memory,
-                post_retrieval_dummy,
-            ),
+            Edge(create_update_long_term_memory, retrieve_long_term_memory),
+            Edge(prepare_agent_store, post_retrieval_dummy, ShouldRetrieveMemory(value=False)),
+            Edge(retrieve_long_term_memory, post_retrieval_dummy),
             Edge(
                 post_retrieval_dummy,
                 overworld_handler_subflow,
@@ -92,21 +82,10 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
                 AgentHandlerIs(AgentStateHandler.BATTLE),
             ),
             Edge(
-                post_retrieval_dummy,
-                text_handler_subflow,
-                AgentHandlerIs(AgentStateHandler.TEXT),
+                post_retrieval_dummy, text_handler_subflow, AgentHandlerIs(AgentStateHandler.TEXT)
             ),
-            Edge(
-                text_handler_subflow,
-                do_updates,
-            ),
-            Edge(
-                battle_handler_subflow,
-                do_updates,
-            ),
-            Edge(
-                overworld_handler_subflow,
-                do_updates,
-            ),
+            Edge(text_handler_subflow, do_updates),
+            Edge(battle_handler_subflow, do_updates),
+            Edge(overworld_handler_subflow, do_updates),
         ],
     )

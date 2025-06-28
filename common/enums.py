@@ -31,12 +31,12 @@ class AsciiTiles(StrEnum):
         return [cls.FREE, cls.GRASS, cls.WARP, cls.PIKACHU, cls.PLAYER]
 
 
-class MapEntityType(StrEnum):
+class MapEntityType(Enum):
     """An enum for the different types of map entities."""
 
-    WARP = "warp"
-    SPRITE = "sprite"
-    SIGN = "sign"
+    WARP = auto()
+    SPRITE = auto()
+    SIGN = auto()
 
 
 class WarpType(Enum):
@@ -50,10 +50,10 @@ class WarpType(Enum):
 class FacingDirection(StrEnum):
     """The direction the player is facing."""
 
-    UP = "up"
-    DOWN = "down"
-    LEFT = "left"
-    RIGHT = "right"
+    UP = "UP"
+    DOWN = "DOWN"
+    LEFT = "LEFT"
+    RIGHT = "RIGHT"
 
 
 class BlockedDirection(IntFlag):
@@ -63,10 +63,10 @@ class BlockedDirection(IntFlag):
     walkable and adjacent to one another.
     """
 
-    UP = 0b0001
-    DOWN = 0b0010
-    LEFT = 0b0100
-    RIGHT = 0b1000
+    UP = 1 << 0
+    DOWN = 1 << 1
+    LEFT = 1 << 2
+    RIGHT = 1 << 3
 
 
 class Button(StrEnum):
@@ -80,6 +80,24 @@ class Button(StrEnum):
     DOWN = "down"
     LEFT = "left"
     RIGHT = "right"
+
+
+class PokeballItem(StrEnum):
+    """The different types of pokeballs."""
+
+    POKE_BALL = "POKE BALL"
+    GREAT_BALL = "GREAT BALL"
+    ULTRA_BALL = "ULTRA BALL"
+    MASTER_BALL = "MASTER BALL"
+
+
+class BattleType(Enum):
+    """The type of battle."""
+
+    WILD = auto()
+    TRAINER = auto()
+    SAFARI_ZONE = auto()
+    OTHER = auto()
 
 
 class MapId(IntEnum):

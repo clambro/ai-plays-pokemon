@@ -1,0 +1,21 @@
+digraph "subflow_bPAeyDDISh8PB9tGSTM8y" {
+  rankdir=LR;
+  compound=true;
+  node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9];
+  krxA8BqzcYud4ATCvC8mi [label="UpdateMapNode"];
+  IbYTMN7GubGbz9jERTR2a [label="DummyNode"];
+  Ve0BpCgWPt17OMti1tDMY [label="CritiqueNode"];
+  "8lC0FOVO0pMbJJsovk0Kh" [label="PressButtonsNode"];
+  BJI3MvXYONIBilKmNunOC [label="NavigationNode"];
+  RZuXJkTpxriMr4ZLQpMXI [label="SelectToolNode"];
+  FF0ac3n5VrwqBTRiwsdgF [label="LoadMapNode"];
+  FF0ac3n5VrwqBTRiwsdgF -> krxA8BqzcYud4ATCvC8mi [style="solid"];
+  krxA8BqzcYud4ATCvC8mi -> RZuXJkTpxriMr4ZLQpMXI [style="solid"];
+  RZuXJkTpxriMr4ZLQpMXI -> "8lC0FOVO0pMbJJsovk0Kh" [style="dashed", label="ToolIs(press_buttons)"];
+  RZuXJkTpxriMr4ZLQpMXI -> BJI3MvXYONIBilKmNunOC [style="dashed", label="ToolIs(navigation)"];
+  RZuXJkTpxriMr4ZLQpMXI -> Ve0BpCgWPt17OMti1tDMY [style="dashed", label="ToolIs(critique)"];
+  "8lC0FOVO0pMbJJsovk0Kh" -> IbYTMN7GubGbz9jERTR2a [style="solid"];
+  BJI3MvXYONIBilKmNunOC -> IbYTMN7GubGbz9jERTR2a [style="solid"];
+  Ve0BpCgWPt17OMti1tDMY -> IbYTMN7GubGbz9jERTR2a [style="solid"];
+}

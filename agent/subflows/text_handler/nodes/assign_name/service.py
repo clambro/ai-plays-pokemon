@@ -91,10 +91,10 @@ class AssignNameService:
             dir_buttons = self._get_dir_buttons(letter_loc, cursor_loc)
 
             for b in dir_buttons:
-                await self.emulator.press_buttons(b)
-            await self.emulator.press_buttons(Button.A)
+                await self.emulator.press_button(b)
+            await self.emulator.press_button(Button.A)
 
-        await self.emulator.press_buttons(Button.START)  # Accept the name.
+        await self.emulator.press_button(Button.START)  # Accept the name.
 
     @staticmethod
     def _get_dir_buttons(letter_loc: tuple[int, int], cursor_loc: int) -> list[Button]:
