@@ -14,7 +14,7 @@ from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory, RawMemoryPiece
+from memory.raw_memory import RawMemory
 
 
 class DetermineHandlerService:
@@ -56,19 +56,15 @@ class DetermineHandlerService:
 
         try:
             thoughts, action = await self._choose_args(args, game_state)
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=f'{thoughts} I chose the following battle action: "{action}"',
-                )
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=f'{thoughts} I chose the following battle action: "{action}"',
             )
         except Exception as e:  # noqa: BLE001
             action = None
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=f"I received the following error when choosing a battle action: {e}",
-                )
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=f"I received the following error when choosing a battle action: {e}",
             )
         return self.raw_memory, action
 

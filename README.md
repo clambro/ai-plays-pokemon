@@ -22,8 +22,6 @@
 * Some kind of VM to run everything on
 
 ### Nice to Have
-* Make the raw/summary memory append one at a time and remove the need for RawMemoryPiece everywhere
-
 * Add a strength puzzle solver + tests
 
 * Navigation should avoid grass tiles where possible + tests

@@ -44,17 +44,16 @@ class RawMemory(BaseModel):
         out += "\n</raw_memory>"
         return out
 
-    def append(self, *pieces: RawMemoryPiece) -> None:
+    def add_memory(self, iteration: int, content: str) -> None:
         """Append a piece to the memory."""
         # Injecting the dependency here to avoid circular imports.
         from streaming.server import update_background_log_from_memory  # noqa: PLC0415
 
-        for piece in pieces:
-            if piece.iteration in self.pieces:
-                logger.info(f"Appending to thought: {piece.content}")
-                self.pieces[piece.iteration].add_content(piece.content)
-            else:
-                logger.info(f"Adding new thought: {piece}")
-                self.pieces[piece.iteration] = piece
+        if iteration in self.pieces:
+            logger.info(f"Appending to thought: {content}")
+            self.pieces[iteration].add_content(content)
+        else:
+            logger.info(f"Adding new thought: [{iteration}]: {content}")
+            self.pieces[iteration] = RawMemoryPiece(iteration=iteration, content=content)
         self.pieces = OrderedDict(sorted(self.pieces.items(), key=lambda x: x[0])[-self.max_size :])
         update_background_log_from_memory(self)

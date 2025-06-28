@@ -5,7 +5,7 @@ from agent.subflows.battle_handler.utils import get_cursor_pos_in_fight_menu
 from common.enums import Button
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
-from memory.raw_memory import RawMemory, RawMemoryPiece
+from memory.raw_memory import RawMemory
 
 
 class SwitchPokemonToolService:
@@ -65,11 +65,9 @@ class SwitchPokemonToolService:
             await self.emulator.press_button(Button.UP)
         await self.emulator.press_button(Button.A, wait_for_animation=False)
 
-        self.raw_memory.append(
-            RawMemoryPiece(
-                iteration=self.iteration,
-                content=f"Attempted to to switch to {self.tool_args.name}.",
-            ),
+        self.raw_memory.add_memory(
+            iteration=self.iteration,
+            content=f"Attempted to to switch to {self.tool_args.name}.",
         )
         return self.raw_memory
 

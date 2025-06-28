@@ -5,7 +5,7 @@ from agent.subflows.battle_handler.utils import get_cursor_pos_in_fight_menu
 from common.enums import Button
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
-from memory.raw_memory import RawMemory, RawMemoryPiece
+from memory.raw_memory import RawMemory
 
 
 class ThrowBallToolService:
@@ -54,11 +54,9 @@ class ThrowBallToolService:
                 await self.emulator.press_button(Button.DOWN)
         await self.emulator.press_button(Button.A, wait_for_animation=False)
 
-        self.raw_memory.append(
-            RawMemoryPiece(
-                iteration=self.iteration,
-                content=f"Attempted to throw a {self.tool_args.ball}.",
-            ),
+        self.raw_memory.add_memory(
+            iteration=self.iteration,
+            content=f"Attempted to throw a {self.tool_args.ball}.",
         )
         return self.raw_memory
 

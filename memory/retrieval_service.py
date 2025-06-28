@@ -8,7 +8,7 @@ from common.constants import (
 from common.embedding_service import GeminiEmbeddingService
 from database.long_term_memory.repository import (
     get_all_long_term_memory_embeddings,
-    get_long_term_memories_by_titles,
+    get_long_term_memories,
 )
 from database.long_term_memory.schemas import LongTermMemoryRead
 
@@ -54,17 +54,14 @@ class MemoryRetrievalService:
         """
         embeddings = await get_all_long_term_memory_embeddings()
         if len(embeddings) <= self.num_memories:
-            return await get_long_term_memories_by_titles(list(embeddings.keys()), iteration)
+            return await get_long_term_memories(list(embeddings.keys()), iteration)
 
         query_embedding = await embedding_service.get_embedding(query)
         top_similarities = await self._get_top_n_semantic_similarity(query_embedding, embeddings)
         if not top_similarities:
             return []
 
-        memories_to_rerank = await get_long_term_memories_by_titles(
-            list(top_similarities.keys()),
-            iteration,
-        )
+        memories_to_rerank = await get_long_term_memories(list(top_similarities.keys()), iteration)
         if len(memories_to_rerank) <= self.num_memories:
             return memories_to_rerank
 

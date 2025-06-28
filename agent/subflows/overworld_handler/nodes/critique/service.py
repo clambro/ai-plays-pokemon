@@ -4,7 +4,7 @@ from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_PRO_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory, RawMemoryPiece
+from memory.raw_memory import RawMemory
 
 
 class CritiqueService:
@@ -34,13 +34,11 @@ class CritiqueService:
             prompt_name="critique_overworld_state",
             thinking_tokens=1024,
         )
-        self.raw_memory.append(
-            RawMemoryPiece(
-                iteration=self.iteration,
-                content=(
-                    f"The critic model has provided me with the following advice on my progress:"
-                    f" {response.critique}"
-                ),
+        self.raw_memory.add_memory(
+            iteration=self.iteration,
+            content=(
+                f"The critic model has provided me with the following advice on my progress:"
+                f" {response.critique}"
             ),
         )
         return self.raw_memory

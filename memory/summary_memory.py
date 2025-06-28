@@ -45,7 +45,7 @@ class SummaryMemory(BaseModel):
         out += "\n</summary_memory>"
         return out
 
-    def append(self, iteration: int, *pieces: SummaryMemoryPiece) -> None:
+    def add_memories(self, iteration: int, *pieces: SummaryMemoryPiece) -> None:
         """Append pieces to the memory, dropping the most decayed pieces if necessary."""
         self.pieces.extend(pieces)
         self.pieces = sorted(self.pieces, key=lambda x: x.get_decay_value(iteration))
