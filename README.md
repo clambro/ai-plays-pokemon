@@ -3,9 +3,7 @@
 ## TODOs in rough order of importance
 
 ### Required for Release
-* Detailed subflow for battles. Battle type (e.g. trainer, safari zone, etc.) is at 0xD05A, and the move menus are at 0xCCDB
-* Add tools to select moves or swap pokemon in battle, or use a ball in non-trainer battles
-
+* ASCII tile token count tests
 * Add strength boulders to map screen -- 00:d717 wBoulderSpriteIndex
 * Handle surfing in navigation + tests
 * Handle cut trees in navigation + tests
@@ -24,10 +22,13 @@
 * Some kind of VM to run everything on
 
 ### Nice to Have
-* Put the emulator on a separate process entirely to fix the remaning async issues.
-* Navigation should avoid grass tiles where possible + tests
+* Make the raw/summary memory append one at a time and remove the need for RawMemoryPiece everywhere
 
 * Add a strength puzzle solver + tests
+
+* Navigation should avoid grass tiles where possible + tests
+
+* Put the emulator on a separate process entirely to fix the remaning async issues.
 
 * Add a tool for spinning around to find wild pokemon
 * Add a tool to rearrange the team
