@@ -324,10 +324,15 @@ _INT_TO_TYPE_MAP = {
     0x19: "ICE",
     0x1A: "DRAGON",
 }
+_ASLEEP = "ASLEEP"
 _INT_TO_STATUS_MAP = {
-    0b1: "ASLEEP",  # One for each turn of sleep, but we aren't supposed to know how many turns.
-    0b11: "ASLEEP",
-    0b111: "ASLEEP",
+    0b1: _ASLEEP,  # One for each turn of sleep, but we aren't supposed to know how many turns.
+    0b10: _ASLEEP,
+    0b11: _ASLEEP,
+    0b100: _ASLEEP,
+    0b101: _ASLEEP,
+    0b110: _ASLEEP,
+    0b111: _ASLEEP,
     1 << 3: "POISONED",
     1 << 4: "BURNED",
     1 << 5: "FROZEN",
