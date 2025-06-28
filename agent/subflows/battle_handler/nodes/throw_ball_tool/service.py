@@ -65,12 +65,7 @@ class ThrowBallToolService:
     @staticmethod
     def _get_item_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:
         """Get the cursor index in the item menu."""
-        dialog_box = game_state.get_dialog_box()
-        if dialog_box is None:
-            return None
-
-        dialog_text = dialog_box.top_line + dialog_box.bottom_line
         idx = game_state.screen.menu_item_index + game_state.screen.list_scroll_offset
-        if dialog_text or idx >= len(game_state.inventory.items):
-            return None  # Item menu is not open.
+        if idx >= len(game_state.inventory.items):
+            return None
         return idx
