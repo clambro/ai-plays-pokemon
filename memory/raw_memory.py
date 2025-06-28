@@ -44,7 +44,7 @@ class RawMemory(BaseModel):
         out += "\n</raw_memory>"
         return out
 
-    def append(self, iteration: int, content: str) -> None:
+    def add_memory(self, iteration: int, content: str) -> None:
         """Append a piece to the memory."""
         # Injecting the dependency here to avoid circular imports.
         from streaming.server import update_background_log_from_memory  # noqa: PLC0415

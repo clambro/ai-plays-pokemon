@@ -56,13 +56,13 @@ class DetermineHandlerService:
 
         try:
             thoughts, action = await self._choose_args(args, game_state)
-            self.raw_memory.append(
+            self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content=f'{thoughts} I chose the following battle action: "{action}"',
             )
         except Exception as e:  # noqa: BLE001
             action = None
-            self.raw_memory.append(
+            self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content=f"I received the following error when choosing a battle action: {e}",
             )

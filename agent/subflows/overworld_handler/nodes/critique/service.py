@@ -34,7 +34,7 @@ class CritiqueService:
             prompt_name="critique_overworld_state",
             thinking_tokens=1024,
         )
-        self.raw_memory.append(
+        self.raw_memory.add_memory(
             iteration=self.iteration,
             content=(
                 f"The critic model has provided me with the following advice on my progress:"

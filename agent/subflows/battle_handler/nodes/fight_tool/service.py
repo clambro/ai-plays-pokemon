@@ -54,7 +54,7 @@ class FightToolService:
                 await self.emulator.press_button(Button.DOWN)
         await self.emulator.press_button(Button.A, wait_for_animation=False)
 
-        self.raw_memory.append(
+        self.raw_memory.add_memory(
             iteration=self.iteration, content=f"Attempted to to use {self.tool_args.move_name}."
         )
         return self.raw_memory

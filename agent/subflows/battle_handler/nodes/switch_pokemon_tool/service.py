@@ -65,7 +65,7 @@ class SwitchPokemonToolService:
             await self.emulator.press_button(Button.UP)
         await self.emulator.press_button(Button.A, wait_for_animation=False)
 
-        self.raw_memory.append(
+        self.raw_memory.add_memory(
             iteration=self.iteration,
             content=f"Attempted to to switch to {self.tool_args.name}.",
         )

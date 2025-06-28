@@ -42,7 +42,7 @@ class MakeDecisionService:
                 schema=MakeDecisionResponse,
                 prompt_name="make_battle_decision",
             )
-            self.raw_memory.append(iteration=self.iteration, content=str(response))
+            self.raw_memory.add_memory(iteration=self.iteration, content=str(response))
             await self.emulator.press_button(response.button, wait_for_animation=False)
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")

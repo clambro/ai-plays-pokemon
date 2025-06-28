@@ -44,7 +44,7 @@ class HandleSubsequentTextService:
         if not joined_text:
             return self.raw_memory
 
-        self.raw_memory.append(
+        self.raw_memory.add_memory(
             iteration=self.iteration,
             content=f'The following text was read from the battle dialog box: "{joined_text}"',
         )

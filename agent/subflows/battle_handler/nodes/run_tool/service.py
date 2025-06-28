@@ -33,7 +33,7 @@ class RunToolService:
             await self.emulator.press_button(Button.DOWN)
         await self.emulator.press_button(Button.A, wait_for_animation=False)
 
-        self.raw_memory.append(
+        self.raw_memory.add_memory(
             iteration=self.iteration,
             content="Attempted to run away from the battle.",
         )

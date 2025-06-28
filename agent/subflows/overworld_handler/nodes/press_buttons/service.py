@@ -48,7 +48,7 @@ class PressButtonsService:
             return self.raw_memory
 
         buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
-        self.raw_memory.append(
+        self.raw_memory.add_memory(
             iteration=self.iteration,
             content=(
                 f"{response.thoughts} Selected the following buttons: {[str(b) for b in buttons]}."
@@ -88,7 +88,7 @@ class PressButtonsService:
             and prev_coords == game_state.player.coords
             and prev_direction == game_state.player.direction
         ):
-            self.raw_memory.append(
+            self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content=(
                     f"My position did not change after pressing the '{button}' button. Did I"
@@ -108,7 +108,7 @@ class PressButtonsService:
 
         game_state = self.emulator.get_game_state()
         if not game_state.is_text_on_screen():
-            self.raw_memory.append(
+            self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content=(
                     "I pressed the action button but nothing happened. There must not be"

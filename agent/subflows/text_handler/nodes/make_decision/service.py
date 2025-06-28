@@ -48,7 +48,7 @@ class DecisionMakerTextService:
                 prompt_name="make_text_decision",
             )
             buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
-            self.raw_memory.append(
+            self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content=(
                     f"{response.thoughts} Selected the following buttons:"
@@ -76,7 +76,7 @@ class DecisionMakerTextService:
         new_state = self.emulator.get_game_state()
         state_changed = new_state.screen.tiles == game_state.screen.tiles
         if state_changed:
-            self.raw_memory.append(
+            self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content=(
                     f"I pressed the {button} button, but nothing happened. Have I made a mistake?"

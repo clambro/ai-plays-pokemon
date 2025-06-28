@@ -46,7 +46,7 @@ class HandleDialogBoxService:
 
         joined_text = " ".join(text)
         end_text = "The dialog box is now closed." if not dialog_box else ""
-        self.raw_memory.append(
+        self.raw_memory.add_memory(
             iteration=self.iteration,
             content=(
                 f'The following text was read from the main dialog box: "{joined_text}" {end_text}'

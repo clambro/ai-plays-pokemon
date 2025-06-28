@@ -57,7 +57,7 @@ class SelectToolService:
             logger.warning(f"Error selecting tool. Defaulting to pressing buttons. {e}")
             return OverworldTool.PRESS_BUTTONS, self.raw_memory
 
-        self.raw_memory.append(
+        self.raw_memory.add_memory(
             iteration=self.iteration,
             content=(
                 f"Current map: {game_state.map.id.name} at coordinates"

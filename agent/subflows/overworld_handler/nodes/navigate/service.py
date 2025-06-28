@@ -54,7 +54,7 @@ class NavigationService:
 
         if coords not in accessible_coords:
             logger.warning("Cancelling navigation due to invalid target coordinates.")
-            self.raw_memory.append(
+            self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content=(
                     f"Navigation failed. The target coordinates {coords} are not in the list of"
@@ -70,7 +70,7 @@ class NavigationService:
         )
         if not path:
             logger.warning("No path found to target coordinates.")
-            self.raw_memory.append(
+            self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content=(
                     f"Navigation failed. No path found to target coordinates {coords}."
@@ -133,7 +133,7 @@ class NavigationService:
             schema=NavigationResponse,
             prompt_name="determine_target_coords",
         )
-        self.raw_memory.append(
+        self.raw_memory.add_memory(
             iteration=self.iteration,
             content=f"{response.thoughts} Navigating to {response.coords}.",
         )
@@ -192,14 +192,14 @@ class NavigationService:
             return True
         if prev_pos == new_pos:
             logger.warning("Navigation interrupted. Cancelling.")
-            self.raw_memory.append(
+            self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content=f"Navigation to {target_pos} interrupted at position {new_pos}.",
             )
             return True
         if game_state.map.id != starting_map_id:
             logger.warning("Map changed during navigation. Cancelling.")
-            self.raw_memory.append(
+            self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content="The map has changed during navigation. Cancelling further steps.",
             )

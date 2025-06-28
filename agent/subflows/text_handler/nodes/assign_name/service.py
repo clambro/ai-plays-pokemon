@@ -48,7 +48,7 @@ class AssignNameService:
             name = await self._get_desired_name(game_state)
             await self._enter_name(name)
         except Exception as e:  # noqa: BLE001
-            self.raw_memory.append(
+            self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content=(
                     f"I attempted to enter an invalid name: {e}"
@@ -57,7 +57,7 @@ class AssignNameService:
             )
             return self.raw_memory
 
-        self.raw_memory.append(
+        self.raw_memory.add_memory(
             iteration=self.iteration,
             content=f"Successfully entered the name {name}.",
         )
@@ -71,7 +71,7 @@ class AssignNameService:
             schema=NameResponse,
             prompt_name="get_name",
         )
-        self.raw_memory.append(iteration=self.iteration, content=response.thoughts)
+        self.raw_memory.add_memory(iteration=self.iteration, content=response.thoughts)
         return response.name
 
     async def _enter_name(self, name: str) -> None:
