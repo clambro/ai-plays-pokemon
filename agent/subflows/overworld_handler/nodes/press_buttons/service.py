@@ -8,7 +8,7 @@ from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory, RawMemoryPiece
+from memory.raw_memory import RawMemory
 
 
 class PressButtonsService:
@@ -49,12 +49,9 @@ class PressButtonsService:
 
         buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
         self.raw_memory.append(
-            RawMemoryPiece(
-                iteration=self.iteration,
-                content=(
-                    f"{response.thoughts} Selected the following buttons:"
-                    f" {[str(b) for b in buttons]}."
-                ),
+            iteration=self.iteration,
+            content=(
+                f"{response.thoughts} Selected the following buttons: {[str(b) for b in buttons]}."
             ),
         )
         for b in buttons:
@@ -92,12 +89,10 @@ class PressButtonsService:
             and prev_direction == game_state.player.direction
         ):
             self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"My position did not change after pressing the '{button}' button. Did I"
-                        f" bump into something?"
-                    ),
+                iteration=self.iteration,
+                content=(
+                    f"My position did not change after pressing the '{button}' button. Did I"
+                    f" bump into something?"
                 ),
             )
             return False
@@ -114,12 +109,10 @@ class PressButtonsService:
         game_state = self.emulator.get_game_state()
         if not game_state.is_text_on_screen():
             self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        "I pressed the action button but nothing happened. There must not be"
-                        " anything to interact with in the direction I am facing."
-                    ),
+                iteration=self.iteration,
+                content=(
+                    "I pressed the action button but nothing happened. There must not be"
+                    " anything to interact with in the direction I am facing."
                 ),
             )
             return False

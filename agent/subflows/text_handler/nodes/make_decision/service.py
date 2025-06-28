@@ -8,7 +8,7 @@ from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory, RawMemoryPiece
+from memory.raw_memory import RawMemory
 
 
 class DecisionMakerTextService:
@@ -49,12 +49,10 @@ class DecisionMakerTextService:
             )
             buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
             self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"{response.thoughts} Selected the following buttons:"
-                        f" {[str(b) for b in buttons]}"
-                    ),
+                iteration=self.iteration,
+                content=(
+                    f"{response.thoughts} Selected the following buttons:"
+                    f" {[str(b) for b in buttons]}"
                 ),
             )
             for b in buttons:
@@ -79,12 +77,9 @@ class DecisionMakerTextService:
         state_changed = new_state.screen.tiles == game_state.screen.tiles
         if state_changed:
             self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"I pressed the {button} button, but nothing happened."
-                        f" Have I made a mistake?"
-                    ),
+                iteration=self.iteration,
+                content=(
+                    f"I pressed the {button} button, but nothing happened. Have I made a mistake?"
                 ),
             )
         return state_changed

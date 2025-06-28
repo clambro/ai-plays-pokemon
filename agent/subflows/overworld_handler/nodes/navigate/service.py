@@ -10,7 +10,7 @@ from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory, RawMemoryPiece
+from memory.raw_memory import RawMemory
 from overworld_map.schemas import OverworldMap
 from overworld_map.service import update_map_with_screen_info
 
@@ -55,12 +55,10 @@ class NavigationService:
         if coords not in accessible_coords:
             logger.warning("Cancelling navigation due to invalid target coordinates.")
             self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"Navigation failed. The target coordinates {coords} are not in the list of"
-                        f" accessible coordinates that was provided to me."
-                    ),
+                iteration=self.iteration,
+                content=(
+                    f"Navigation failed. The target coordinates {coords} are not in the list of"
+                    f" accessible coordinates that was provided to me."
                 ),
             )
             return self.current_map, self.raw_memory
@@ -73,13 +71,11 @@ class NavigationService:
         if not path:
             logger.warning("No path found to target coordinates.")
             self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"Navigation failed. No path found to target coordinates {coords}."
-                        f" This either means that the location is inaccessible, or that I have not"
-                        f" explored enough of the map to reveal the path."
-                    ),
+                iteration=self.iteration,
+                content=(
+                    f"Navigation failed. No path found to target coordinates {coords}."
+                    f" This either means that the location is inaccessible, or that I have not"
+                    f" explored enough of the map to reveal the path."
                 ),
             )
             return self.current_map, self.raw_memory
@@ -138,10 +134,8 @@ class NavigationService:
             prompt_name="determine_target_coords",
         )
         self.raw_memory.append(
-            RawMemoryPiece(
-                iteration=self.iteration,
-                content=f"{response.thoughts} Navigating to {response.coords}.",
-            ),
+            iteration=self.iteration,
+            content=f"{response.thoughts} Navigating to {response.coords}.",
         )
         return response.coords
 
@@ -199,19 +193,15 @@ class NavigationService:
         if prev_pos == new_pos:
             logger.warning("Navigation interrupted. Cancelling.")
             self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(f"Navigation to {target_pos} interrupted at position {new_pos}."),
-                ),
+                iteration=self.iteration,
+                content=f"Navigation to {target_pos} interrupted at position {new_pos}.",
             )
             return True
         if game_state.map.id != starting_map_id:
             logger.warning("Map changed during navigation. Cancelling.")
             self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content="The map has changed during navigation. Cancelling further steps.",
-                ),
+                iteration=self.iteration,
+                content="The map has changed during navigation. Cancelling further steps.",
             )
             return True
         return False

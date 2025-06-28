@@ -1,7 +1,7 @@
 from agent.utils import append_dialog_to_list_inplace, is_blinking_cursor_on_screen
 from common.enums import Button
 from emulator.emulator import YellowLegacyEmulator
-from memory.raw_memory import RawMemory, RawMemoryPiece
+from memory.raw_memory import RawMemory
 
 
 class HandleSubsequentTextService:
@@ -45,11 +45,7 @@ class HandleSubsequentTextService:
             return self.raw_memory
 
         self.raw_memory.append(
-            RawMemoryPiece(
-                iteration=self.iteration,
-                content=(
-                    f'The following text was read from the battle dialog box: "{joined_text}"'
-                ),
-            ),
+            iteration=self.iteration,
+            content=f'The following text was read from the battle dialog box: "{joined_text}"',
         )
         return self.raw_memory

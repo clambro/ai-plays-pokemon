@@ -6,7 +6,7 @@ from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory, RawMemoryPiece
+from memory.raw_memory import RawMemory
 
 
 class MakeDecisionService:
@@ -42,12 +42,7 @@ class MakeDecisionService:
                 schema=MakeDecisionResponse,
                 prompt_name="make_battle_decision",
             )
-            self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=str(response),
-                ),
-            )
+            self.raw_memory.append(iteration=self.iteration, content=str(response))
             await self.emulator.press_button(response.button, wait_for_animation=False)
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")

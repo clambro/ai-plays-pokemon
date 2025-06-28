@@ -13,7 +13,7 @@ from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory, RawMemoryPiece
+from memory.raw_memory import RawMemory
 from overworld_map.schemas import OverworldMap
 
 
@@ -58,13 +58,11 @@ class SelectToolService:
             return OverworldTool.PRESS_BUTTONS, self.raw_memory
 
         self.raw_memory.append(
-            RawMemoryPiece(
-                iteration=self.iteration,
-                content=(
-                    f"Current map: {game_state.map.id.name} at coordinates"
-                    f" {game_state.player.coords}, facing {game_state.player.direction.name}."
-                    f" {response.thoughts}"
-                ),
+            iteration=self.iteration,
+            content=(
+                f"Current map: {game_state.map.id.name} at coordinates"
+                f" {game_state.player.coords}, facing {game_state.player.direction.name}."
+                f" {response.thoughts}"
             ),
         )
         return tool, self.raw_memory

@@ -8,7 +8,7 @@ from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
 from llm.schemas import GEMINI_FLASH_LITE_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory, RawMemoryPiece
+from memory.raw_memory import RawMemory
 
 LETTER_ARR = np.array(
     [
@@ -49,21 +49,17 @@ class AssignNameService:
             await self._enter_name(name)
         except Exception as e:  # noqa: BLE001
             self.raw_memory.append(
-                RawMemoryPiece(
-                    iteration=self.iteration,
-                    content=(
-                        f"I attempted to enter an invalid name: {e}"
-                        f" I need to pay closer attention to the rules and try again."
-                    ),
+                iteration=self.iteration,
+                content=(
+                    f"I attempted to enter an invalid name: {e}"
+                    f" I need to pay closer attention to the rules and try again."
                 ),
             )
             return self.raw_memory
 
         self.raw_memory.append(
-            RawMemoryPiece(
-                iteration=self.iteration,
-                content=f"Successfully entered the name {name}.",
-            ),
+            iteration=self.iteration,
+            content=f"Successfully entered the name {name}.",
         )
         return self.raw_memory
 
@@ -75,7 +71,7 @@ class AssignNameService:
             schema=NameResponse,
             prompt_name="get_name",
         )
-        self.raw_memory.append(RawMemoryPiece(iteration=self.iteration, content=response.thoughts))
+        self.raw_memory.append(iteration=self.iteration, content=response.thoughts)
         return response.name
 
     async def _enter_name(self, name: str) -> None:
