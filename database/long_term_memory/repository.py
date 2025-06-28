@@ -26,7 +26,7 @@ async def create_long_term_memory(create_schema: LongTermMemoryCreate) -> None:
         await session.refresh(db_obj)
 
 
-async def get_long_term_memories_by_titles(
+async def get_long_term_memories(
     titles: list[str],
     iteration: int,
 ) -> list[LongTermMemoryRead]:
