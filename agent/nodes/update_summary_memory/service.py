@@ -41,7 +41,7 @@ class UpdateSummaryMemoryService:
             UpdateSummaryMemoryResponse,
             prompt_name="update_summary_memory",
         )
-        self.summary_memory.append(
+        self.summary_memory.add_memories(
             self.iteration,
             *[
                 SummaryMemoryPiece(
