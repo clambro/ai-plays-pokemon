@@ -260,6 +260,49 @@ async def test_calculate_path_to_target_around_collision_pair() -> None:
     assert path == [Button.RIGHT, Button.DOWN, Button.DOWN, Button.LEFT]
 
 
+@pytest.mark.unit
+async def test_calculate_path_around_grass() -> None:
+    """Test that the pathing properly avoids the grass tile, even though it's not optimal."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = [
+        list(row)
+        for row in [
+            "∙❀∙",
+            "∙∙∙",
+        ]
+    ]
+
+    path = await utils.calculate_path_to_target(
+        Coords(row=0, col=0),
+        Coords(row=0, col=2),
+        map_data,
+    )
+    assert path == [Button.DOWN, Button.RIGHT, Button.RIGHT, Button.UP]
+
+
+@pytest.mark.unit
+async def test_calculate_path_through_grass() -> None:
+    """
+    Test that the pathing still goes through the grass tile if it's the only way to get to the
+    target.
+    """
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = [
+        list(row)
+        for row in [
+            "∙❀∙",
+            "∙❀∙",
+        ]
+    ]
+
+    path = await utils.calculate_path_to_target(
+        Coords(row=0, col=0),
+        Coords(row=0, col=2),
+        map_data,
+    )
+    assert path == [Button.RIGHT, Button.RIGHT]
+
+
 def _coords_to_binary_map(coords: set[Coords], height: int, width: int) -> list[str]:
     """Convert a coords to a binary string for more visual matching."""
     return [

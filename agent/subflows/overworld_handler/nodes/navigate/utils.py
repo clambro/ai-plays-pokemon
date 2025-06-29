@@ -134,6 +134,7 @@ def _calculate_path_to_target(
     came_from: dict[Coords, Coords] = {}
     g_score = {start_pos: 0}
     f_score = {start_pos: (start_pos - target_pos).length}
+    tile_arr = map_data.ascii_tiles_ndarray
 
     while open_set:
         current = min(open_set, key=lambda pos: f_score.get(pos, float("inf")))
@@ -161,7 +162,9 @@ def _calculate_path_to_target(
         open_set.remove(current)
 
         for neighbor in _get_neighbors(current, map_data):
-            tentative_g_score = g_score[current] + 1
+            # Bias movement away from grass tiles.
+            increment = 5 if tile_arr[neighbor.row, neighbor.col] == AsciiTiles.GRASS else 1
+            tentative_g_score = g_score[current] + increment
 
             if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
                 came_from[neighbor] = current

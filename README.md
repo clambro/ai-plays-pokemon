@@ -34,8 +34,6 @@ This is an unofficial, fan-made project, for educational purposes only. The code
 ### Nice to Have
 * Add a strength puzzle solver + tests
 
-* Navigation should avoid grass tiles where possible + tests
-
 * Put the emulator on a separate process entirely to fix the remaning async issues.
 
 * Add a tool for spinning around to find wild pokemon
