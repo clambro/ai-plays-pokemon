@@ -218,6 +218,7 @@ class NavigationService:
         # Use the HM, which takes exactly four button presses for both cut and surf.
         for _ in range(4):
             await self.emulator.press_button(Button.A)
+        await self.emulator.press_button(button)  # Move to the tile.
 
     def _should_cancel_navigation(
         self,
