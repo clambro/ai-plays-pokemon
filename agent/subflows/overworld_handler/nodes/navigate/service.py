@@ -42,9 +42,11 @@ class NavigationService:
     async def navigate(self) -> tuple[OverworldMap, RawMemory]:
         """Determine the target coordinates and navigate to them."""
         game_state = self.emulator.get_game_state()
+        hm_tiles = game_state.get_hm_tiles()
         accessible_coords = await utils.get_accessible_coords(
             game_state.player.coords,
             self.current_map,
+            hm_tiles,
         )
         try:
             coords = await self._determine_target_coords(accessible_coords)
@@ -67,6 +69,7 @@ class NavigationService:
             game_state.player.coords,
             coords,
             self.current_map,
+            hm_tiles,
         )
         if not path:
             logger.warning("No path found to target coordinates.")

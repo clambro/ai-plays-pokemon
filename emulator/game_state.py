@@ -139,19 +139,15 @@ class YellowLegacyGameState(BaseModel):
         out += "</battle_info>"
         return out
 
-    @property
-    def can_use_cut(self) -> bool:
-        """Check if the player can use the cut move."""
-        has_cut = any(m.name == "CUT" for p in self.party for m in p.moves)
-        has_boulderbadge = Badge.BOULDERBADGE in self.player.badges
-        return has_cut and has_boulderbadge
-
-    @property
-    def can_use_surf(self) -> bool:
-        """Check if the player can use the surf move."""
-        has_surf = any(m.name == "SURF" for p in self.party for m in p.moves)
-        has_soulbadge = Badge.SOULBADGE in self.player.badges
-        return has_surf and has_soulbadge
+    def get_hm_tiles(self) -> list[AsciiTiles]:
+        """Get the tiles that are accessible using the player's current HMs and movepool."""
+        hm_tiles = []
+        movepool = [m.name for p in self.party for m in p.moves]
+        if "CUT" in movepool and Badge.BOULDERBADGE in self.player.badges:
+            hm_tiles.append(AsciiTiles.CUT_TREE)
+        if "SURF" in movepool and Badge.SOULBADGE in self.player.badges:
+            hm_tiles.append(AsciiTiles.WATER)
+        return hm_tiles
 
     def to_screen_coords(self, coords: Coords) -> Coords | None:
         """

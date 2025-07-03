@@ -12,23 +12,29 @@ from common.schemas import Coords
 from overworld_map.schemas import OverworldMap
 
 
-async def get_accessible_coords(start_pos: Coords, map_data: OverworldMap) -> list[Coords]:
+async def get_accessible_coords(
+    start_pos: Coords,
+    map_data: OverworldMap,
+    hm_tiles: list[AsciiTiles],
+) -> list[Coords]:
     """
     Recursively search outward from the player's position to find all accessible coords. Do this
     on a thread because it's pretty slow.
 
     :param start_pos: Starting position to search from
     :param map_data: Map data containing tiles and blockages
+    :param walkable_tiles: List of tiles that are accessible using the player's current HMs.
     :return: List of accessible coordinates, including start_pos (required for finding map
         boundaries if you're standing on a boundary tile)
     """
-    return await asyncio.to_thread(_get_accessible_coords, start_pos, map_data)
+    return await asyncio.to_thread(_get_accessible_coords, start_pos, map_data, hm_tiles)
 
 
 async def calculate_path_to_target(
     start_pos: Coords,
     target_pos: Coords,
     map_data: OverworldMap,
+    hm_tiles: list[AsciiTiles],
 ) -> list[Button] | None:
     """
     Calculate the path to the target coordinates as a list of button presses using the A* search
@@ -37,9 +43,16 @@ async def calculate_path_to_target(
     :param start_pos: Starting position
     :param target_pos: Target position
     :param map_data: Map data containing tiles and blockages
+    :param hm_tiles: List of tiles that are accessible using the player's current HMs.
     :return: List of button presses to reach target, or None if no path found
     """
-    return await asyncio.to_thread(_calculate_path_to_target, start_pos, target_pos, map_data)
+    return await asyncio.to_thread(
+        _calculate_path_to_target,
+        start_pos,
+        target_pos,
+        map_data,
+        hm_tiles,
+    )
 
 
 def get_exploration_candidates(
@@ -100,14 +113,18 @@ def get_map_boundary_tiles(
     return boundary_tiles
 
 
-def _get_accessible_coords(start_pos: Coords, map_data: OverworldMap) -> list[Coords]:
+def _get_accessible_coords(
+    start_pos: Coords,
+    map_data: OverworldMap,
+    hm_tiles: list[AsciiTiles],
+) -> list[Coords]:
     """Recursively search outward from the player's position to find all accessible coords."""
     visited = {start_pos}
     queue = [start_pos]
     accessible = [start_pos]
     while queue:
         current = queue.pop(0)
-        for neighbor in _get_neighbors(current, map_data):
+        for neighbor in _get_neighbors(current, map_data, hm_tiles):
             if neighbor not in visited:
                 visited.add(neighbor)
                 queue.append(neighbor)
@@ -120,6 +137,7 @@ def _calculate_path_to_target(
     start_pos: Coords,
     target_pos: Coords,
     map_data: OverworldMap,
+    hm_tiles: list[AsciiTiles],
 ) -> list[Button] | None:
     """
     Calculate the path to the target coordinates as a list of button presses using the A* search
@@ -128,6 +146,7 @@ def _calculate_path_to_target(
     :param start_pos: Starting position
     :param target_pos: Target position
     :param map_data: Map data containing tiles and blockages
+    :param hm_tiles: List of tiles that are accessible using the player's current HMs.
     :return: List of button presses to reach target, or None if no path found
     """
     open_set = {start_pos}
@@ -161,7 +180,7 @@ def _calculate_path_to_target(
 
         open_set.remove(current)
 
-        for neighbor in _get_neighbors(current, map_data):
+        for neighbor in _get_neighbors(current, map_data, hm_tiles):
             # Bias movement away from grass tiles.
             increment = 5 if tile_arr[neighbor.row, neighbor.col] == AsciiTiles.GRASS else 1
             tentative_g_score = g_score[current] + increment
@@ -176,12 +195,17 @@ def _calculate_path_to_target(
     return None
 
 
-def _get_neighbors(pos: Coords, map_data: OverworldMap) -> list[Coords]:
+def _get_neighbors(
+    pos: Coords,
+    map_data: OverworldMap,
+    hm_tiles: list[AsciiTiles],
+) -> list[Coords]:
     """
     Get all valid neighboring coordinates from a given position.
 
     :param pos: The position to get neighbors for
     :param map_data: Map data containing tiles and blockages
+    :param hm_tiles: List of tiles that are accessible using the player's current HMs.
     :return: List of valid neighboring coordinates
     """
     neighbors = []
@@ -213,6 +237,8 @@ def _get_neighbors(pos: Coords, map_data: OverworldMap) -> list[Coords]:
         elif target_tile == AsciiTiles.LEDGE_RIGHT and dx == 1:
             ledge_pos = new_pos + (0, 1)  # noqa: RUF005
             neighbors.append(ledge_pos)
+        elif target_tile == AsciiTiles.CUT_TREE and AsciiTiles.CUT_TREE in hm_tiles:
+            neighbors.append(new_pos)
 
     return neighbors
 
