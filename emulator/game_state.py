@@ -5,7 +5,7 @@ from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_SHAPE
-from common.enums import AsciiTiles, BattleType, BlockedDirection
+from common.enums import AsciiTiles, Badge, BattleType, BlockedDirection
 from common.schemas import Coords
 from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.inventory import Inventory, parse_inventory
@@ -138,6 +138,20 @@ class YellowLegacyGameState(BaseModel):
 
         out += "</battle_info>"
         return out
+
+    @property
+    def can_use_cut(self) -> bool:
+        """Check if the player can use the cut move."""
+        has_cut = any(m.name == "CUT" for p in self.party for m in p.moves)
+        has_boulderbadge = Badge.BOULDERBADGE in self.player.badges
+        return has_cut and has_boulderbadge
+
+    @property
+    def can_use_surf(self) -> bool:
+        """Check if the player can use the surf move."""
+        has_surf = any(m.name == "SURF" for p in self.party for m in p.moves)
+        has_soulbadge = Badge.SOULBADGE in self.player.badges
+        return has_surf and has_soulbadge
 
     def to_screen_coords(self, coords: Coords) -> Coords | None:
         """

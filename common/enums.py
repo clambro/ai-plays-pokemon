@@ -98,6 +98,19 @@ class BattleType(Enum):
     OTHER = auto()
 
 
+class Badge(StrEnum):
+    """The different types of badges."""
+
+    BOULDERBADGE = "BOULDERBADGE"
+    CASCADEBADGE = "CASCADEBADGE"
+    THUNDERBADGE = "THUNDERBADGE"
+    RAINBOWBADGE = "RAINBOWBADGE"
+    SOULBADGE = "SOULBADGE"
+    MARSHBADGE = "MARSHBADGE"
+    VOLCANOBADGE = "VOLCANOBADGE"
+    EARTHBADGE = "EARTHBADGE"
+
+
 class MapId(IntEnum):
     """Enum for mapping location IDs to their names."""
 
