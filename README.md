@@ -15,7 +15,6 @@ This is an unofficial, fan-made project, for educational purposes only. The code
 ### Required for Release
 * Add strength boulders to map screen -- 00:d717 wBoulderSpriteIndex
 * Handle surfing in navigation + tests
-* Handle cut trees in navigation + tests
 * Handle the bike in navigation + tests
 * Handle spin tiles in navigation + tests
 
@@ -28,18 +27,21 @@ This is an unofficial, fan-made project, for educational purposes only. The code
     * Tests for selecting tools
     * Tests for multiple button presses
 
+* Twitch integration for dealing with ad breaks
 * Some kind of VM to run everything on
 
 ### Nice to Have
 * Add a strength puzzle solver + tests
 
-* Put the emulator on a separate process entirely to fix the remaning async issues.
+* Add twitch chat integration so that viewers can talk to the AI (trivial once the twitch integration for ads is set up)
 
 * Add a tool for spinning around to find wild pokemon
 * Add a tool to rearrange the team
-* Tool to use items
+* Add a tool to use items
 * Generate the overworld map legend dynamically
 * Some kind of info about PC pokemon/items?
+
+* Put the emulator on a separate process entirely to fix the remaning async audio issues.
 
 ### Backlog
 * Numerical coords on screen? Dots to show past steps? A grid to show collisions? Maybe when I have tests set up. I'm convinced that the screenshot is effectively useless in the overworld.
