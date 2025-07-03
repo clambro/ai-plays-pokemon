@@ -97,6 +97,30 @@ async def test_get_accessible_coords_collision_pairs() -> None:
 
 
 @pytest.mark.unit
+async def test_get_accessible_coords_cut_tree_no_hm() -> None:
+    """Test that the accessible coords are correct for the cut tree map with no HMs."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = CUT_TREE_MAP
+
+    accessible_coords = await utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
+    assert _coords_to_binary_map(set(accessible_coords), 1, 3) == ["100"]
+
+
+@pytest.mark.unit
+async def test_get_accessible_coords_cut_tree_with_hm() -> None:
+    """Test that the accessible coords are correct for the cut tree map with an HM."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = CUT_TREE_MAP
+
+    accessible_coords = await utils.get_accessible_coords(
+        Coords(row=0, col=0),
+        map_data,
+        [AsciiTiles.CUT_TREE],
+    )
+    assert _coords_to_binary_map(set(accessible_coords), 1, 3) == ["111"]
+
+
+@pytest.mark.unit
 async def test_get_exploration_candidates_plateau() -> None:
     """Test that the exploration candidates are correct for the plateau map."""
     map_data = deepcopy(DUMMY_MAP)
@@ -123,32 +147,6 @@ async def test_get_exploration_candidates_collision_pairs() -> None:
     map_data.blockages = COLLISION_PAIRS_BLOCKAGES
 
     accessible_coords = await utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
-    exploration_candidates = utils.get_exploration_candidates(accessible_coords, map_data)
-    assert exploration_candidates == []
-
-
-@pytest.mark.unit
-async def test_get_exploration_candidates_cut_tree_no_hm() -> None:
-    """Test that the exploration candidates are correct for the cut tree map with no HMs."""
-    map_data = deepcopy(DUMMY_MAP)
-    map_data.ascii_tiles = CUT_TREE_MAP
-
-    accessible_coords = await utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
-    exploration_candidates = utils.get_exploration_candidates(accessible_coords, map_data)
-    assert exploration_candidates == []
-
-
-@pytest.mark.unit
-async def test_get_exploration_candidates_cut_tree_with_hm() -> None:
-    """Test that the exploration candidates are correct for the cut tree map with an HM."""
-    map_data = deepcopy(DUMMY_MAP)
-    map_data.ascii_tiles = CUT_TREE_MAP
-
-    accessible_coords = await utils.get_accessible_coords(
-        Coords(row=0, col=0),
-        map_data,
-        [AsciiTiles.CUT_TREE],
-    )
     exploration_candidates = utils.get_exploration_candidates(accessible_coords, map_data)
     assert exploration_candidates == []
 

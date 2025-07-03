@@ -225,7 +225,10 @@ def _get_neighbors(
         target_tile = map_data.ascii_tiles_ndarray[new_pos.row, new_pos.col]
         move_blocked = _is_blocked(pos, dy, dx, map_data)
 
-        if target_tile in walkable_tiles and not move_blocked:
+        if not move_blocked and (
+            target_tile in walkable_tiles
+            or (target_tile == AsciiTiles.CUT_TREE and AsciiTiles.CUT_TREE in hm_tiles)
+        ):
             neighbors.append(new_pos)
         # Jumping over a ledge skips a tile
         elif target_tile == AsciiTiles.LEDGE_DOWN and dy == 1:
@@ -237,8 +240,6 @@ def _get_neighbors(
         elif target_tile == AsciiTiles.LEDGE_RIGHT and dx == 1:
             ledge_pos = new_pos + (0, 1)  # noqa: RUF005
             neighbors.append(ledge_pos)
-        elif target_tile == AsciiTiles.CUT_TREE and AsciiTiles.CUT_TREE in hm_tiles:
-            neighbors.append(new_pos)
 
     return neighbors
 
