@@ -11,7 +11,7 @@ from copy import deepcopy
 import pytest
 
 from agent.subflows.overworld_handler.nodes.navigate import utils
-from common.enums import BlockedDirection, Button, FacingDirection, MapId
+from common.enums import AsciiTiles, BlockedDirection, Button, FacingDirection, MapId
 from common.schemas import Coords
 from overworld_map.schemas import OverworldMap
 
@@ -46,6 +46,8 @@ COLLISION_PAIRS_BLOCKAGES = {
     Coords(row=1, col=2): BlockedDirection.UP,
     Coords(row=2, col=0): BlockedDirection.UP,
 }
+
+CUT_TREE_MAP = [list("∙┬∙")]
 
 DUMMY_MAP = OverworldMap(
     id=MapId.PALLET_TOWN,
@@ -121,6 +123,32 @@ async def test_get_exploration_candidates_collision_pairs() -> None:
     map_data.blockages = COLLISION_PAIRS_BLOCKAGES
 
     accessible_coords = await utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
+    exploration_candidates = utils.get_exploration_candidates(accessible_coords, map_data)
+    assert exploration_candidates == []
+
+
+@pytest.mark.unit
+async def test_get_exploration_candidates_cut_tree_no_hm() -> None:
+    """Test that the exploration candidates are correct for the cut tree map with no HMs."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = CUT_TREE_MAP
+
+    accessible_coords = await utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
+    exploration_candidates = utils.get_exploration_candidates(accessible_coords, map_data)
+    assert exploration_candidates == []
+
+
+@pytest.mark.unit
+async def test_get_exploration_candidates_cut_tree_with_hm() -> None:
+    """Test that the exploration candidates are correct for the cut tree map with an HM."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = CUT_TREE_MAP
+
+    accessible_coords = await utils.get_accessible_coords(
+        Coords(row=0, col=0),
+        map_data,
+        [AsciiTiles.CUT_TREE],
+    )
     exploration_candidates = utils.get_exploration_candidates(accessible_coords, map_data)
     assert exploration_candidates == []
 
@@ -304,6 +332,21 @@ async def test_calculate_path_through_grass() -> None:
         Coords(row=0, col=2),
         map_data,
         [],
+    )
+    assert path == [Button.RIGHT, Button.RIGHT]
+
+
+@pytest.mark.unit
+async def test_calculate_path_through_cut_tree() -> None:
+    """Test that we can path through a cut tree if we have the right HMs."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = CUT_TREE_MAP
+
+    path = await utils.calculate_path_to_target(
+        Coords(row=0, col=0),
+        Coords(row=0, col=2),
+        map_data,
+        [AsciiTiles.CUT_TREE],
     )
     assert path == [Button.RIGHT, Button.RIGHT]
 
