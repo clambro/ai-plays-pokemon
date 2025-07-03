@@ -190,34 +190,32 @@ class NavigationService:
         tile_arr = self.current_map.ascii_tiles_ndarray
         player_pos = game_state.player.coords
         if button == Button.UP:
-            return tile_arr[player_pos.row + 1, player_pos.col]
-        if button == Button.DOWN:
             return tile_arr[player_pos.row - 1, player_pos.col]
+        if button == Button.DOWN:
+            return tile_arr[player_pos.row + 1, player_pos.col]
         if button == Button.LEFT:
-            return tile_arr[player_pos.row, player_pos.col + 1]
-        return tile_arr[player_pos.row, player_pos.col - 1]
+            return tile_arr[player_pos.row, player_pos.col - 1]
+        return tile_arr[player_pos.row, player_pos.col + 1]
 
     async def _handle_hm_use(self, button: Button) -> None:
         """Handle using an HM to access a tile."""
         game_state = self.emulator.get_game_state()
         facing = game_state.player.direction
 
-        # Rotate to face the target. Skipping the animation taps the button to rotate instead of
-        # taking a full step.
+        # Rotate to face the target.
         if button == Button.UP and facing != FacingDirection.UP:
-            await self.emulator.press_button(Button.UP, wait_for_animation=False)
+            await self.emulator.press_button(Button.UP)
         elif button == Button.DOWN and facing != FacingDirection.DOWN:
-            await self.emulator.press_button(Button.DOWN, wait_for_animation=False)
+            await self.emulator.press_button(Button.DOWN)
         elif button == Button.LEFT and facing != FacingDirection.LEFT:
-            await self.emulator.press_button(Button.LEFT, wait_for_animation=False)
+            await self.emulator.press_button(Button.LEFT)
         elif button == Button.RIGHT and facing != FacingDirection.RIGHT:
-            await self.emulator.press_button(Button.RIGHT, wait_for_animation=False)
-
-        await self.emulator.wait_for_animation_to_finish()  # Wait for the rotation to finish.
+            await self.emulator.press_button(Button.RIGHT)
 
         # Use the HM, which takes exactly four button presses for both cut and surf.
         for _ in range(4):
             await self.emulator.press_button(Button.A)
+        await self.emulator.wait_for_animation_to_finish()  # HM animation takes a little while.
         await self.emulator.press_button(button)  # Move to the tile.
 
     def _should_cancel_navigation(
