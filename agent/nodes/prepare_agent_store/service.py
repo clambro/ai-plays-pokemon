@@ -47,7 +47,7 @@ class PrepareAgentStateService:
         previous_handler: AgentStateHandler | None,
     ) -> bool:
         """Determine if the agent should retrieve memory."""
-        should_retrieve = (
+        return (
             self.iterations_since_last_ltm_retrieval >= ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL
             or not self.long_term_memory.pieces
             or (
@@ -58,8 +58,3 @@ class PrepareAgentStateService:
                 )
             )
         )
-        if should_retrieve:
-            self.iterations_since_last_ltm_retrieval = 0
-        else:
-            self.iterations_since_last_ltm_retrieval += 1
-        return should_retrieve
