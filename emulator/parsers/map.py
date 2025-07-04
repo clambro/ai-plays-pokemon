@@ -124,6 +124,7 @@ class _Tileset(IntEnum):
     BEACH_HOUSE = 23
     PLATEAU = 24
     BEACH = 25
+    PLACEHOLDER = 128  # Required to avoid crashes if you load a saved game, but shouldn't be used.
 
 
 _GRASS_TILE_MAP = {
