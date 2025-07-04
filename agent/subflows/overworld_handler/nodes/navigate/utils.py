@@ -7,7 +7,7 @@ concerns to make them easier to test.
 
 import asyncio
 
-from common.enums import AsciiTiles, BlockedDirection, Button, FacingDirection
+from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection
 from common.schemas import Coords
 from overworld_map.schemas import OverworldMap
 
@@ -15,7 +15,7 @@ from overworld_map.schemas import OverworldMap
 async def get_accessible_coords(
     start_pos: Coords,
     map_data: OverworldMap,
-    hm_tiles: list[AsciiTiles],
+    hm_tiles: list[AsciiTile],
 ) -> list[Coords]:
     """
     Recursively search outward from the player's position to find all accessible coords. Do this
@@ -34,7 +34,7 @@ async def calculate_path_to_target(
     start_pos: Coords,
     target_pos: Coords,
     map_data: OverworldMap,
-    hm_tiles: list[AsciiTiles],
+    hm_tiles: list[AsciiTile],
 ) -> list[Button] | None:
     """
     Calculate the path to the target coordinates as a list of button presses using the A* search
@@ -73,7 +73,7 @@ def get_exploration_candidates(
     for c in accessible_coords:
         for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
             ny, nx = c.row + dy, c.col + dx
-            if 0 <= ny < height and 0 <= nx < width and tiles[ny, nx] == AsciiTiles.UNSEEN:
+            if 0 <= ny < height and 0 <= nx < width and tiles[ny, nx] == AsciiTile.UNSEEN:
                 candidates.append(c)
                 break
 
@@ -116,7 +116,7 @@ def get_map_boundary_tiles(
 def _get_accessible_coords(
     start_pos: Coords,
     map_data: OverworldMap,
-    hm_tiles: list[AsciiTiles],
+    hm_tiles: list[AsciiTile],
 ) -> list[Coords]:
     """Recursively search outward from the player's position to find all accessible coords."""
     visited = {start_pos}
@@ -137,7 +137,7 @@ def _calculate_path_to_target(
     start_pos: Coords,
     target_pos: Coords,
     map_data: OverworldMap,
-    hm_tiles: list[AsciiTiles],
+    hm_tiles: list[AsciiTile],
 ) -> list[Button] | None:
     """
     Calculate the path to the target coordinates as a list of button presses using the A* search
@@ -182,7 +182,7 @@ def _calculate_path_to_target(
 
         for neighbor in _get_neighbors(current, map_data, hm_tiles):
             # Bias movement away from grass tiles.
-            increment = 5 if tile_arr[neighbor.row, neighbor.col] == AsciiTiles.GRASS else 1
+            increment = 5 if tile_arr[neighbor.row, neighbor.col] == AsciiTile.GRASS else 1
             tentative_g_score = g_score[current] + increment
 
             if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
@@ -198,7 +198,7 @@ def _calculate_path_to_target(
 def _get_neighbors(
     pos: Coords,
     map_data: OverworldMap,
-    hm_tiles: list[AsciiTiles],
+    hm_tiles: list[AsciiTile],
 ) -> list[Coords]:
     """
     Get all valid neighboring coordinates from a given position.
@@ -209,7 +209,7 @@ def _get_neighbors(
     :return: List of valid neighboring coordinates
     """
     neighbors = []
-    walkable_tiles = AsciiTiles.get_walkable_tiles()
+    walkable_tiles = AsciiTile.get_walkable_tiles()
 
     for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
         new_pos = pos + (dy, dx)  # noqa: RUF005
@@ -227,17 +227,17 @@ def _get_neighbors(
 
         if not move_blocked and (
             target_tile in walkable_tiles
-            or (target_tile == AsciiTiles.CUT_TREE and AsciiTiles.CUT_TREE in hm_tiles)
+            or (target_tile == AsciiTile.CUT_TREE and AsciiTile.CUT_TREE in hm_tiles)
         ):
             neighbors.append(new_pos)
         # Jumping over a ledge skips a tile
-        elif target_tile == AsciiTiles.LEDGE_DOWN and dy == 1:
+        elif target_tile == AsciiTile.LEDGE_DOWN and dy == 1:
             ledge_pos = new_pos + (1, 0)  # noqa: RUF005
             neighbors.append(ledge_pos)
-        elif target_tile == AsciiTiles.LEDGE_LEFT and dx == -1:
+        elif target_tile == AsciiTile.LEDGE_LEFT and dx == -1:
             ledge_pos = new_pos + (0, -1)  # noqa: RUF005
             neighbors.append(ledge_pos)
-        elif target_tile == AsciiTiles.LEDGE_RIGHT and dx == 1:
+        elif target_tile == AsciiTile.LEDGE_RIGHT and dx == 1:
             ledge_pos = new_pos + (0, 1)  # noqa: RUF005
             neighbors.append(ledge_pos)
 

@@ -1,7 +1,7 @@
 import pytest
 from google import genai
 
-from common.enums import AsciiTiles
+from common.enums import AsciiTile
 from common.settings import settings
 from llm.schemas import GEMINI_FLASH_2_5
 
@@ -19,7 +19,7 @@ def test_one_token_per_tile() -> None:
     num_repeats = 10
     expected_tokens = num_repeats + 3  # Two newlines and an end of prompt token.
     errors = []
-    for tile in AsciiTiles:
+    for tile in AsciiTile:
         contents = "\n" + tile.value * num_repeats + "\n"
         response = _client.models.count_tokens(model=GEMINI_FLASH_2_5.model_id, contents=contents)
         if response.total_tokens != expected_tokens:

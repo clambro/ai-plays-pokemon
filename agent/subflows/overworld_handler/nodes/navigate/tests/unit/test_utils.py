@@ -11,7 +11,7 @@ from copy import deepcopy
 import pytest
 
 from agent.subflows.overworld_handler.nodes.navigate import utils
-from common.enums import AsciiTiles, BlockedDirection, Button, FacingDirection, MapId
+from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, MapId
 from common.schemas import Coords
 from overworld_map.schemas import OverworldMap
 
@@ -115,7 +115,7 @@ async def test_get_accessible_coords_cut_tree_with_hm() -> None:
     accessible_coords = await utils.get_accessible_coords(
         Coords(row=0, col=0),
         map_data,
-        [AsciiTiles.CUT_TREE],
+        [AsciiTile.CUT_TREE],
     )
     assert _coords_to_binary_map(set(accessible_coords), 1, 3) == ["111"]
 
@@ -344,7 +344,7 @@ async def test_calculate_path_through_cut_tree() -> None:
         Coords(row=0, col=0),
         Coords(row=0, col=2),
         map_data,
-        [AsciiTiles.CUT_TREE],
+        [AsciiTile.CUT_TREE],
     )
     assert path == [Button.RIGHT, Button.RIGHT]
 

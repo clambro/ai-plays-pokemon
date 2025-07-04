@@ -3,7 +3,7 @@ from loguru import logger
 from agent.subflows.overworld_handler.nodes.navigate import formatting, utils
 from agent.subflows.overworld_handler.nodes.navigate.prompts import DETERMINE_TARGET_COORDS_PROMPT
 from agent.subflows.overworld_handler.nodes.navigate.schemas import NavigationResponse
-from common.enums import AsciiTiles, Button, FacingDirection, MapId
+from common.enums import AsciiTile, Button, FacingDirection, MapId
 from common.schemas import Coords
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
@@ -185,7 +185,7 @@ class NavigationService:
         ):
             await self.emulator.press_button(Button.RIGHT)
 
-    def _get_next_tile(self, button: Button, game_state: YellowLegacyGameState) -> AsciiTiles:
+    def _get_next_tile(self, button: Button, game_state: YellowLegacyGameState) -> AsciiTile:
         """Get the next tile type that the player will move to."""
         tile_arr = self.current_map.ascii_tiles_ndarray
         player_pos = game_state.player.coords

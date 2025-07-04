@@ -1,6 +1,6 @@
 import asyncio
 
-from common.enums import AsciiTiles, MapEntityType
+from common.enums import AsciiTile, MapEntityType
 from database.map_entity_memory.repository import (
     create_map_entity_memory,
     delete_map_entity_memory,
@@ -205,7 +205,7 @@ async def _create_overworld_map_from_game_state(
     game_state: YellowLegacyGameState,
 ) -> OverworldMap:
     """Create a new overworld map from the game state."""
-    tiles = [[AsciiTiles.UNSEEN.value] * game_state.map.width] * game_state.map.height
+    tiles = [[AsciiTile.UNSEEN.value] * game_state.map.width] * game_state.map.height
     overworld_map = OverworldMap(
         id=game_state.map.id,
         ascii_tiles=tiles,

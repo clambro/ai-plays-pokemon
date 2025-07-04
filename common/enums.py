@@ -1,7 +1,7 @@
 from enum import Enum, IntEnum, IntFlag, StrEnum, auto
 
 
-class AsciiTiles(StrEnum):
+class AsciiTile(StrEnum):
     """
     An enum for the ASCII representations of overworld map tiles.
 
@@ -24,7 +24,7 @@ class AsciiTiles(StrEnum):
     SIGN = "‼"
 
     @classmethod
-    def get_walkable_tiles(cls) -> list["AsciiTiles"]:
+    def get_walkable_tiles(cls) -> list["AsciiTile"]:
         """Get the walkable tiles."""
         return [cls.FREE, cls.GRASS, cls.WARP, cls.PIKACHU, cls.PLAYER]
 

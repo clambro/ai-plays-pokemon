@@ -2,7 +2,7 @@ import numpy as np
 from pydantic import BaseModel
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
-from common.enums import AsciiTiles, BlockedDirection, MapId, WarpType
+from common.enums import AsciiTile, BlockedDirection, MapId, WarpType
 from common.schemas import Coords
 from emulator.game_state import YellowLegacyGameState
 from emulator.schemas import Sign, Sprite, Warp
@@ -136,7 +136,7 @@ class OverworldMap(BaseModel):
     def to_string(self, game_state: YellowLegacyGameState) -> str:
         """Return a string representation of the map."""
         tiles = self.ascii_tiles_str
-        explored_percentage = np.mean(self.ascii_tiles_ndarray != AsciiTiles.UNSEEN)
+        explored_percentage = np.mean(self.ascii_tiles_ndarray != AsciiTile.UNSEEN)
         tile_above, blocked_above = self._get_tile_notes(BlockedDirection.UP)
         tile_below, blocked_below = self._get_tile_notes(BlockedDirection.DOWN)
         tile_left, blocked_left = self._get_tile_notes(BlockedDirection.LEFT)
