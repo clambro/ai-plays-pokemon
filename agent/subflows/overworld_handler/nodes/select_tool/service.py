@@ -4,6 +4,7 @@ from agent.subflows.overworld_handler.enums import OverworldTool
 from agent.subflows.overworld_handler.nodes.select_tool.prompts import (
     BUTTON_TOOL_INFO,
     CRITIQUE_TOOL_INFO,
+    NAVIGATION_TOOL_BIKING_INFO,
     NAVIGATION_TOOL_INFO,
     SELECT_TOOL_PROMPT,
 )
@@ -11,6 +12,7 @@ from agent.subflows.overworld_handler.nodes.select_tool.schemas import SelectToo
 from common.constants import MIN_ITERATIONS_PER_CRITIQUE
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
+from emulator.game_state import YellowLegacyGameState
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
 from memory.raw_memory import RawMemory
@@ -44,7 +46,7 @@ class SelectToolService:
         img = self.emulator.get_screenshot()
         prompt = SELECT_TOOL_PROMPT.format(
             state=self.state_string_builder(game_state),
-            tools=self._get_available_tool_info(),
+            tools=self._get_available_tool_info(game_state),
         )
         try:
             response = await self.llm_service.get_llm_response_pydantic(
@@ -67,9 +69,13 @@ class SelectToolService:
         )
         return tool, self.raw_memory
 
-    def _get_available_tool_info(self) -> str:
+    def _get_available_tool_info(self, game_state: YellowLegacyGameState) -> str:
         """Get the information about the available tools."""
-        info = [BUTTON_TOOL_INFO, NAVIGATION_TOOL_INFO]  # These two are always available.
+        info = [BUTTON_TOOL_INFO]  # Always available.
+        if game_state.player.is_biking:
+            info.append(NAVIGATION_TOOL_BIKING_INFO)
+        else:
+            info.append(NAVIGATION_TOOL_INFO)
 
         if self.iteration - self.last_critique_iteration >= MIN_ITERATIONS_PER_CRITIQUE:
             info.append(CRITIQUE_TOOL_INFO)

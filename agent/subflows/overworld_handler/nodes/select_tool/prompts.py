@@ -46,6 +46,12 @@ Give general guidance on where you want to go in your thoughts (e.g. to a given 
 </navigation_tool>
 """.strip()
 
+NAVIGATION_TOOL_BIKING_INFO = """
+<warning>
+You have lost access to the navigation tool because you are riding a bike. If you would like to use the navigation tool, you must first dismount your bike. If you are unable to dismount your bike because you are on Cycling Road, then you must use the button tool to move around the map.
+</warning>
+""".strip()
+
 CRITIQUE_TOOL_INFO = """
 <critique_tool>
 TOOL_NAME: "critique"
