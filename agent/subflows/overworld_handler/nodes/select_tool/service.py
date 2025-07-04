@@ -29,14 +29,14 @@ class SelectToolService:
         iteration: int,
         raw_memory: RawMemory,
         current_map: OverworldMap,
-        last_critique_iteration: int,
+        iterations_since_last_critique: int,
         state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.current_map = current_map
-        self.last_critique_iteration = last_critique_iteration
+        self.iterations_since_last_critique = iterations_since_last_critique
         self.state_string_builder = state_string_builder
         self.emulator = emulator
 
@@ -77,7 +77,7 @@ class SelectToolService:
         else:
             info.append(NAVIGATION_TOOL_INFO)
 
-        if self.iteration - self.last_critique_iteration >= MIN_ITERATIONS_PER_CRITIQUE:
+        if self.iterations_since_last_critique >= MIN_ITERATIONS_PER_CRITIQUE:
             info.append(CRITIQUE_TOOL_INFO)
 
         return "\n".join(info)

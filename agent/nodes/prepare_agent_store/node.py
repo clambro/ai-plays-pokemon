@@ -22,7 +22,7 @@ class PrepareAgentStoreNode(Node[AgentStore]):
 
         state = await store.get_state()
         service = PrepareAgentStateService(
-            iteration=state.iteration,
+            iterations_since_last_ltm_retrieval=state.iterations_since_last_ltm_retrieval,
             long_term_memory=state.long_term_memory,
             emulator=self.emulator,
         )
