@@ -32,5 +32,5 @@ class CritiqueNode(Node[OverworldHandlerStore]):
         raw_memory = await service.critique()
 
         await store.set_raw_memory(raw_memory)
-        await store.set_last_critique_iteration(state.iteration)
+        await store.set_iterations_since_last_critique(0)
         await store.set_emulator_save_state_from_emulator(self.emulator)

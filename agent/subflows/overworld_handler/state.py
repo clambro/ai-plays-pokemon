@@ -19,7 +19,7 @@ class OverworldHandlerState(BaseStateWithEmulator):
     goals: Goals | None = None
     current_map: OverworldMap | None = None
     tool: OverworldTool | None = None
-    last_critique_iteration: int | None = None
+    iterations_since_last_critique: int | None = None
 
     def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
         """Get a string representation of the agent and game state to be used in prompts."""
@@ -49,7 +49,7 @@ class OverworldHandlerStore(BaseStoreWithEmulator[OverworldHandlerState]):
                 "summary_memory": parent_state.summary_memory,
                 "long_term_memory": parent_state.long_term_memory,
                 "goals": parent_state.goals,
-                "last_critique_iteration": parent_state.last_critique_iteration,
+                "iterations_since_last_critique": parent_state.iterations_since_last_critique,
             },
         )
 
@@ -65,6 +65,6 @@ class OverworldHandlerStore(BaseStoreWithEmulator[OverworldHandlerState]):
         """Set the tool."""
         await self.set_state({"tool": tool})
 
-    async def set_last_critique_iteration(self, last_critique_iteration: int) -> None:
-        """Set the last critique iteration."""
-        await self.set_state({"last_critique_iteration": last_critique_iteration})
+    async def set_iterations_since_last_critique(self, iterations_since_last_critique: int) -> None:
+        """Set the iterations since the last critique."""
+        await self.set_state({"iterations_since_last_critique": iterations_since_last_critique})

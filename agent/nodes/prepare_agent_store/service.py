@@ -9,11 +9,11 @@ class PrepareAgentStateService:
 
     def __init__(
         self,
-        iteration: int,
+        iterations_since_last_ltm_retrieval: int,
         long_term_memory: LongTermMemory,
         emulator: YellowLegacyEmulator,
     ) -> None:
-        self.iteration = iteration
+        self.iterations_since_last_ltm_retrieval = iterations_since_last_ltm_retrieval
         self.long_term_memory = long_term_memory
         self.emulator = emulator
 
@@ -48,11 +48,13 @@ class PrepareAgentStateService:
     ) -> bool:
         """Determine if the agent should retrieve memory."""
         return (
-            self.iteration % ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL == 0
+            self.iterations_since_last_ltm_retrieval >= ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL
             or not self.long_term_memory.pieces
-            or {handler, previous_handler}
-            in (  # When transitioning in or out of a battle.
-                {AgentStateHandler.TEXT, AgentStateHandler.BATTLE},
-                {AgentStateHandler.OVERWORLD, AgentStateHandler.BATTLE},
+            or (
+                {handler, previous_handler}
+                in (  # When transitioning in or out of a battle.
+                    {AgentStateHandler.TEXT, AgentStateHandler.BATTLE},
+                    {AgentStateHandler.OVERWORLD, AgentStateHandler.BATTLE},
+                )
             )
         )

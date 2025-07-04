@@ -16,7 +16,6 @@ This is an unofficial, fan-made project for educational purposes only. The code 
 * Add strength boulders to map screen -- 00:d717 wBoulderSpriteIndex
 * Handle surfing in navigation + tests
 * Handle spin tiles in navigation + tests
-* Disable navigation if riding the bike. I'm not dealing with that.
 
 * Test background tile and blocking generation from game states for strength boulders and seafoam elevation
 

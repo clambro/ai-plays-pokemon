@@ -5,6 +5,9 @@ from common.enums import Badge, FacingDirection
 from common.schemas import Coords
 from emulator.parsers.utils import get_text_from_byte_array
 
+_BIKING_STATE = 1
+_SURFING_STATE = 2
+
 
 class Player(BaseModel):
     """The state of the player character."""
@@ -12,6 +15,8 @@ class Player(BaseModel):
     name: str
     coords: Coords
     direction: FacingDirection
+    is_biking: bool
+    is_surfing: bool
     money: int
     badges: list[Badge]
     level_cap: int
@@ -33,6 +38,10 @@ def parse_player(mem: PyBoyMemoryView) -> Player:
     if name == "NINTEN":
         name = ""  # This is a hack. It's the default name in memory before you choose a name.
 
+    walk_bike_surf_state = mem[0xD6FF]
+    is_biking = walk_bike_surf_state == _BIKING_STATE
+    is_surfing = walk_bike_surf_state == _SURFING_STATE
+
     badges = _read_badges(mem)
 
     play_time_hours = mem[0xDA40]
@@ -48,6 +57,8 @@ def parse_player(mem: PyBoyMemoryView) -> Player:
         name=name,
         coords=Coords(row=mem[0xD3AE], col=mem[0xD3AF]),
         direction=_INT_TO_FACING_DIRECTION[mem[0xD577]],
+        is_biking=is_biking,
+        is_surfing=is_surfing,
         money=_read_money(mem),
         badges=badges,
         level_cap=_read_level_cap(mem, len(badges)),
