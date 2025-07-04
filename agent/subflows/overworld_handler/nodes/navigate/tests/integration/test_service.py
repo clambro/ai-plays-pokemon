@@ -46,9 +46,48 @@ async def test_navigate_through_pikachu() -> None:
         )
 
         service._determine_target_coords = AsyncMock(return_value=Coords(row=28, col=21))
-        overworld_map, raw_memory = await service.navigate()
+        overworld_map, _ = await service.navigate()
 
         game_state = emulator.get_game_state()
         assert game_state.player.coords == Coords(row=28, col=21)
         assert game_state.player.direction == FacingDirection.LEFT
         assert game_state.pikachu.coords == Coords(row=28, col=22)
+
+
+@pytest.mark.integration
+async def test_navigate_through_cut_tree() -> None:
+    """Test rotating towards and navigating through a cut tree."""
+    save_file = Path(__file__).parent / "saves" / "cut_tree.state"
+    async with YellowLegacyEmulator(
+        save_state_path=save_file,
+        mute_sound=True,
+        headless=True,
+    ) as emulator:
+        game_state = emulator.get_game_state()
+        assert game_state.player.coords == Coords(row=17, col=17)
+
+        with (
+            patch("database.map_memory.repository.get_map_memory", return_value=None),
+            patch(
+                "database.map_entity_memory.repository.get_map_entity_memories_for_map",
+                return_value=[],
+            ),
+            patch("database.map_memory.repository.update_map_tiles", return_value=None),
+            patch("overworld_map.service._add_remove_map_entities", return_value=None),
+        ):
+            overworld_map = await get_overworld_map(0, game_state)
+            await update_map_with_screen_info(0, game_state, overworld_map)
+
+        service = NavigationService(
+            iteration=0,
+            emulator=emulator,
+            current_map=overworld_map,
+            raw_memory=RawMemory(),
+            state_string_builder=MagicMock(),
+        )
+
+        service._determine_target_coords = AsyncMock(return_value=Coords(row=20, col=15))
+        overworld_map, _ = await service.navigate()
+
+        game_state = emulator.get_game_state()
+        assert game_state.player.coords == Coords(row=20, col=15)

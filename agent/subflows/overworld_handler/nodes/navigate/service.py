@@ -3,7 +3,7 @@ from loguru import logger
 from agent.subflows.overworld_handler.nodes.navigate import formatting, utils
 from agent.subflows.overworld_handler.nodes.navigate.prompts import DETERMINE_TARGET_COORDS_PROMPT
 from agent.subflows.overworld_handler.nodes.navigate.schemas import NavigationResponse
-from common.enums import Button, FacingDirection, MapId
+from common.enums import AsciiTile, Button, FacingDirection, MapId
 from common.schemas import Coords
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
@@ -42,9 +42,11 @@ class NavigationService:
     async def navigate(self) -> tuple[OverworldMap, RawMemory]:
         """Determine the target coordinates and navigate to them."""
         game_state = self.emulator.get_game_state()
+        hm_tiles = game_state.get_hm_tiles()
         accessible_coords = await utils.get_accessible_coords(
             game_state.player.coords,
             self.current_map,
+            hm_tiles,
         )
         try:
             coords = await self._determine_target_coords(accessible_coords)
@@ -67,6 +69,7 @@ class NavigationService:
             game_state.player.coords,
             coords,
             self.current_map,
+            hm_tiles,
         )
         if not path:
             logger.warning("No path found to target coordinates.")
@@ -83,7 +86,11 @@ class NavigationService:
         starting_map_id = self.current_map.id
         await self._handle_pikachu(path[0])
         for button in path:
-            await self.emulator.press_button(button)
+            next_tile = self._get_next_tile(button, game_state)
+            if next_tile in hm_tiles:
+                await self._handle_hm_use(button)
+            else:
+                await self.emulator.press_button(button)
 
             prev_pos = game_state.player.coords
             game_state = self.emulator.get_game_state()
@@ -177,6 +184,39 @@ class NavigationService:
             and facing != FacingDirection.RIGHT
         ):
             await self.emulator.press_button(Button.RIGHT)
+
+    def _get_next_tile(self, button: Button, game_state: YellowLegacyGameState) -> AsciiTile:
+        """Get the next tile type that the player will move to."""
+        tile_arr = self.current_map.ascii_tiles_ndarray
+        player_pos = game_state.player.coords
+        if button == Button.UP:
+            return tile_arr[player_pos.row - 1, player_pos.col]
+        if button == Button.DOWN:
+            return tile_arr[player_pos.row + 1, player_pos.col]
+        if button == Button.LEFT:
+            return tile_arr[player_pos.row, player_pos.col - 1]
+        return tile_arr[player_pos.row, player_pos.col + 1]
+
+    async def _handle_hm_use(self, button: Button) -> None:
+        """Handle using an HM to access a tile."""
+        game_state = self.emulator.get_game_state()
+        facing = game_state.player.direction
+
+        # Rotate to face the target.
+        if button == Button.UP and facing != FacingDirection.UP:
+            await self.emulator.press_button(Button.UP)
+        elif button == Button.DOWN and facing != FacingDirection.DOWN:
+            await self.emulator.press_button(Button.DOWN)
+        elif button == Button.LEFT and facing != FacingDirection.LEFT:
+            await self.emulator.press_button(Button.LEFT)
+        elif button == Button.RIGHT and facing != FacingDirection.RIGHT:
+            await self.emulator.press_button(Button.RIGHT)
+
+        # Use the HM, which takes exactly four button presses for both cut and surf.
+        for _ in range(4):
+            await self.emulator.press_button(Button.A)
+        await self.emulator.wait_for_animation_to_finish()  # HM animation takes a little while.
+        await self.emulator.press_button(button)  # Move to the tile.
 
     def _should_cancel_navigation(
         self,

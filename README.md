@@ -1,14 +1,22 @@
 # ai-plays-pokemon
 
+## Licence & Affiliation Notice
+
+All original source code in this repository is released under the [MIT Licence](LICENSE).
+
+This is an unofficial, fan-made project for educational purposes only. The code enclosed in this repository is designed to work with Pokemon games but does not include any ROMs, save states, or game sprites. Users are responsible for ensuring they own legitimate copies of Pokémon games and comply with all applicable laws and terms of service.
+
+"Pokémon", Pokémon character names, and all related marks are trademarks of Nintendo, Game Freak, Creatures Inc., and The Pokémon Company. I am not affiliated with, endorsed, sponsored, or specifically approved by any of these entities.
+
+---
+
 ## TODOs in rough order of importance
 
 ### Required for Release
-* ASCII tile token count tests
 * Add strength boulders to map screen -- 00:d717 wBoulderSpriteIndex
 * Handle surfing in navigation + tests
-* Handle cut trees in navigation + tests
-* Handle the bike in navigation + tests
 * Handle spin tiles in navigation + tests
+* Disable navigation if riding the bike. I'm not dealing with that.
 
 * Test background tile and blocking generation from game states for strength boulders and seafoam elevation
 
@@ -19,20 +27,21 @@
     * Tests for selecting tools
     * Tests for multiple button presses
 
+* Twitch integration for dealing with ad breaks
 * Some kind of VM to run everything on
 
 ### Nice to Have
 * Add a strength puzzle solver + tests
 
-* Navigation should avoid grass tiles where possible + tests
-
-* Put the emulator on a separate process entirely to fix the remaning async issues.
+* Add twitch chat integration so that viewers can talk to the AI (trivial once the twitch integration for ads is set up)
 
 * Add a tool for spinning around to find wild pokemon
 * Add a tool to rearrange the team
-* Tool to use items
+* Add a tool to use items
 * Generate the overworld map legend dynamically
 * Some kind of info about PC pokemon/items?
+
+* Put the emulator on a separate process entirely to fix the remaning async audio issues.
 
 ### Backlog
 * Numerical coords on screen? Dots to show past steps? A grid to show collisions? Maybe when I have tests set up. I'm convinced that the screenshot is effectively useless in the overworld.

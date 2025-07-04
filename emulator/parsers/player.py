@@ -1,7 +1,7 @@
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
-from common.enums import FacingDirection
+from common.enums import Badge, FacingDirection
 from common.schemas import Coords
 from emulator.parsers.utils import get_text_from_byte_array
 
@@ -13,7 +13,7 @@ class Player(BaseModel):
     coords: Coords
     direction: FacingDirection
     money: int
-    badges: list[str]
+    badges: list[Badge]
     level_cap: int
     pokedex_caught: int
     pokedex_seen: int
@@ -77,7 +77,7 @@ def _read_money(mem: PyBoyMemoryView) -> int:
     )
 
 
-def _read_badges(mem: PyBoyMemoryView) -> list[str]:
+def _read_badges(mem: PyBoyMemoryView) -> list[Badge]:
     """Read the player's badges from the memory."""
     badge_byte = mem[0xD3A3]
     badges = []
@@ -103,14 +103,14 @@ _INT_TO_FACING_DIRECTION = {
     8: FacingDirection.UP,
 }
 _INT_TO_BADGE = {
-    1 << 0: "BOULDERBADGE",
-    1 << 1: "CASCADEBADGE",
-    1 << 2: "THUNDERBADGE",
-    1 << 3: "RAINBOWBADGE",
-    1 << 4: "SOULBADGE",
-    1 << 5: "MARSHBADGE",
-    1 << 6: "VOLCANOBADGE",
-    1 << 7: "EARTHBADGE",
+    1 << 0: Badge.BOULDERBADGE,
+    1 << 1: Badge.CASCADEBADGE,
+    1 << 2: Badge.THUNDERBADGE,
+    1 << 3: Badge.RAINBOWBADGE,
+    1 << 4: Badge.SOULBADGE,
+    1 << 5: Badge.MARSHBADGE,
+    1 << 6: Badge.VOLCANOBADGE,
+    1 << 7: Badge.EARTHBADGE,
 }
 _INT_TO_LEVEL_CAP = {
     0: 12,

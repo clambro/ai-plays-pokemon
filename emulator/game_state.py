@@ -5,7 +5,7 @@ from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_SHAPE
-from common.enums import AsciiTiles, BattleType, BlockedDirection
+from common.enums import AsciiTile, Badge, BattleType, BlockedDirection
 from common.schemas import Coords
 from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.inventory import Inventory, parse_inventory
@@ -139,6 +139,15 @@ class YellowLegacyGameState(BaseModel):
         out += "</battle_info>"
         return out
 
+    def get_hm_tiles(self) -> list[AsciiTile]:
+        """Get the tiles that are accessible using the player's current HMs and movepool."""
+        hm_tiles = []
+        movepool = [m.name for p in self.party for m in p.moves]
+        if "CUT" in movepool and Badge.BOULDERBADGE in self.player.badges:
+            hm_tiles.append(AsciiTile.CUT_TREE)
+        # TODO: Surf with the Soul Badge.
+        return hm_tiles
+
     def to_screen_coords(self, coords: Coords) -> Coords | None:
         """
         Convert map coordinates to screen coordinates.
@@ -166,29 +175,29 @@ class YellowLegacyGameState(BaseModel):
         for s in self.sprites.values():
             if s.is_rendered and (sc := self.to_screen_coords(s.coords)):
                 on_screen_sprites.append(s)
-                blocks[sc.row, sc.col] = AsciiTiles.SPRITE
+                blocks[sc.row, sc.col] = AsciiTile.SPRITE
 
         on_screen_warps = []
         for w in self.warps.values():
             sc = self.to_screen_coords(w.coords)
             # There's a funny edge case with warps where they can be rendered on top of walls and
             # are therefore inaccessible. An example is in map 50, when entering Viridian Forest.
-            if sc and blocks[sc.row, sc.col] != AsciiTiles.WALL:
-                blocks[sc.row, sc.col] = AsciiTiles.WARP
+            if sc and blocks[sc.row, sc.col] != AsciiTile.WALL:
+                blocks[sc.row, sc.col] = AsciiTile.WARP
                 on_screen_warps.append(w)
 
         on_screen_signs = []
         for s in self.signs.values():
             if sc := self.to_screen_coords(s.coords):
-                blocks[sc.row, sc.col] = AsciiTiles.SIGN
+                blocks[sc.row, sc.col] = AsciiTile.SIGN
                 on_screen_signs.append(s)
 
         # The player and Pikachu must be drawn last so they're on top of everything else.
         pikachu = self.pikachu
         if pikachu.is_rendered and (sc := self.to_screen_coords(pikachu.coords)):
-            blocks[sc.row, sc.col] = AsciiTiles.PIKACHU
+            blocks[sc.row, sc.col] = AsciiTile.PIKACHU
 
-        blocks[PLAYER_OFFSET_Y, PLAYER_OFFSET_X] = AsciiTiles.PLAYER
+        blocks[PLAYER_OFFSET_Y, PLAYER_OFFSET_X] = AsciiTile.PLAYER
 
         return AsciiScreenWithEntities(
             screen=blocks.tolist(),
@@ -225,32 +234,32 @@ class YellowLegacyGameState(BaseModel):
         """
         tiles = np.array(self.screen.tiles)
         # Each block on screen is a 2x2 square of tiles.
-        blocks = np.full(SCREEN_SHAPE, AsciiTiles.WALL, dtype=AsciiTiles)
+        blocks = np.full(SCREEN_SHAPE, AsciiTile.WALL, dtype=AsciiTile)
         blockages: dict[Coords, BlockedDirection] = {}
         for i in range(0, tiles.shape[0], 2):
             for j in range(0, tiles.shape[1], 2):
                 b = tiles[i : i + 2, j : j + 2]
                 b_idx = (i // 2, j // 2)
                 if self.map.water_tile and np.isin(b, self.map.water_tile).any():
-                    blocks[b_idx] = AsciiTiles.WATER
+                    blocks[b_idx] = AsciiTile.WATER
                 elif ledge_type := self._get_ledge_type(b):
                     blocks[b_idx] = ledge_type
                 elif self.map.grass_tile and b[1, 0] == self.map.grass_tile:
                     # In engine/battle/wild_encounters.asm, grass tiles only check the bottom left.
-                    blocks[b_idx] = AsciiTiles.GRASS
+                    blocks[b_idx] = AsciiTile.GRASS
                 elif b.flatten().tolist() == self.map.cut_tree_tiles:
-                    blocks[b_idx] = AsciiTiles.CUT_TREE
+                    blocks[b_idx] = AsciiTile.CUT_TREE
                 elif (
                     b[1, 0] in self.map.walkable_tiles
                     and not np.isin(b, self.map.special_collision_blocks).any()
                 ):
                     # Same bottom-left logic applies here, with special exceptions.
-                    blocks[b_idx] = AsciiTiles.FREE
+                    blocks[b_idx] = AsciiTile.FREE
 
                 blockages = self._get_blockage(i, j, tiles, blockages)
         return np.array(blocks), blockages
 
-    def _get_ledge_type(self, block: np.ndarray) -> AsciiTiles | None:
+    def _get_ledge_type(self, block: np.ndarray) -> AsciiTile | None:
         """
         Check if the block is a ledge.
 
@@ -264,17 +273,17 @@ class YellowLegacyGameState(BaseModel):
             block[:, 0].tolist() in self.map.ledge_tiles_down
             or block[:, 1].tolist() in self.map.ledge_tiles_down
         ):
-            return AsciiTiles.LEDGE_DOWN
+            return AsciiTile.LEDGE_DOWN
         if (
             block[0, :].tolist() in self.map.ledge_tiles_left
             or block[1, :].tolist() in self.map.ledge_tiles_left
         ):
-            return AsciiTiles.LEDGE_LEFT
+            return AsciiTile.LEDGE_LEFT
         if (
             block[0, :].tolist() in self.map.ledge_tiles_right
             or block[1, :].tolist() in self.map.ledge_tiles_right
         ):
-            return AsciiTiles.LEDGE_RIGHT
+            return AsciiTile.LEDGE_RIGHT
         return None
 
     def _get_blockage(

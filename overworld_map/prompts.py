@@ -1,5 +1,5 @@
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
-from common.enums import AsciiTiles
+from common.enums import AsciiTile
 
 OVERWORLD_MAP_STR_FORMAT = f"""
 <map_info>
@@ -12,20 +12,20 @@ Map name: {{map_name}}
 </whole_map>
 You have explored {{explored_percentage}} of this map.
 <legend>
-- "{AsciiTiles.UNSEEN}" - Tiles that you have not yet explored. Move toward these tiles to reveal them.
-- "{AsciiTiles.FREE}" - A walkable tile with nothing noteworthy in it.
-- "{AsciiTiles.WALL}" - A barrier (usually a wall or an object) that you cannot pass through.
-- "{AsciiTiles.CUT_TREE}" - A tree.
-- "{AsciiTiles.WATER}" - Water.
-- "{AsciiTiles.GRASS}" - Tall grass, where wild Pokemon can be found.
-- "{AsciiTiles.LEDGE_DOWN}" - A ledge that you can jump down from above. These tiles are only passable if you approach them from above and walk downwards.
-- "{AsciiTiles.LEDGE_LEFT}" - A ledge that you can jump over leftwards. These tiles are only passable if you approach them from the right and walk leftwards.
-- "{AsciiTiles.LEDGE_RIGHT}" - A ledge that you can jump over rightwards. These tiles are only passable if you approach them from the left and walk rightwards.
-- "{AsciiTiles.SPRITE}" - A sprite that you can interact with. This could be an NPC, an item you can pick up, or some other interactable entity. You will need to use the screenshot to determine what the sprite is. You cannot walk through sprites, nor can you stand on top of them.
-- "{AsciiTiles.WARP}" - A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.
-- "{AsciiTiles.PLAYER}" - Your current location.
-- "{AsciiTiles.PIKACHU}" - Your companion Pikachu that follows you around. May or may not be present on the map. Pikachu will always be standing on a walkable tile if present.
-- "{AsciiTiles.SIGN}" - An object that you can interact with to read something. Usually a signpost, but could be a TV, radio, or other object. The main distinction between signs and sprites is that signs are static. They will never move, and their text will never change. Signs are usually interacted with from below, and cannot be walked through.
+- "{AsciiTile.UNSEEN}" - Tiles that you have not yet explored. Move toward these tiles to reveal them.
+- "{AsciiTile.FREE}" - A walkable tile with nothing noteworthy in it.
+- "{AsciiTile.WALL}" - A barrier (usually a wall or an object) that you cannot pass through.
+- "{AsciiTile.CUT_TREE}" - A tree.
+- "{AsciiTile.WATER}" - Water.
+- "{AsciiTile.GRASS}" - Tall grass, where wild Pokemon can be found.
+- "{AsciiTile.LEDGE_DOWN}" - A ledge that you can jump down from above. These tiles are only passable if you approach them from above and walk downwards.
+- "{AsciiTile.LEDGE_LEFT}" - A ledge that you can jump over leftwards. These tiles are only passable if you approach them from the right and walk leftwards.
+- "{AsciiTile.LEDGE_RIGHT}" - A ledge that you can jump over rightwards. These tiles are only passable if you approach them from the left and walk rightwards.
+- "{AsciiTile.SPRITE}" - A sprite that you can interact with. This could be an NPC, an item you can pick up, or some other interactable entity. You will need to use the screenshot to determine what the sprite is. You cannot walk through sprites, nor can you stand on top of them.
+- "{AsciiTile.WARP}" - A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.
+- "{AsciiTile.PLAYER}" - Your current location.
+- "{AsciiTile.PIKACHU}" - Your companion Pikachu that follows you around. May or may not be present on the map. Pikachu will always be standing on a walkable tile if present.
+- "{AsciiTile.SIGN}" - An object that you can interact with to read something. Usually a signpost, but could be a TV, radio, or other object. The main distinction between signs and sprites is that signs are static. They will never move, and their text will never change. Signs are usually interacted with from below, and cannot be walked through.
 </legend>
 
 The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map is {{height}}x{{width}} blocks.

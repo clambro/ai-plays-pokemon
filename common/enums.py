@@ -1,22 +1,20 @@
 from enum import Enum, IntEnum, IntFlag, StrEnum, auto
 
 
-class AsciiTiles(StrEnum):
+class AsciiTile(StrEnum):
     """
     An enum for the ASCII representations of overworld map tiles.
 
-    These HAVE to be one token each or the LLM will hallucinate. Use something like
-    `client.models.count_tokens(model=model, contents=tile.value * 10)`
-    to make sure they don't tile. Should probably add a test for this.
+    These HAVE to be one token each or the LLM will hallucinate. There's a test to validate this.
     """
 
     UNSEEN = "░"
     WALL = "▉"
     WATER = "≋"
     GRASS = "❀"
-    LEDGE_DOWN = "⍖"
-    LEDGE_LEFT = "⍅"
-    LEDGE_RIGHT = "⍆"
+    LEDGE_DOWN = "⌄"
+    LEDGE_LEFT = "⌊"
+    LEDGE_RIGHT = "⌋"
     FREE = "∙"
     PLAYER = "☻"
     SPRITE = "◆"
@@ -26,7 +24,7 @@ class AsciiTiles(StrEnum):
     SIGN = "‼"
 
     @classmethod
-    def get_walkable_tiles(cls) -> list["AsciiTiles"]:
+    def get_walkable_tiles(cls) -> list["AsciiTile"]:
         """Get the walkable tiles."""
         return [cls.FREE, cls.GRASS, cls.WARP, cls.PIKACHU, cls.PLAYER]
 
@@ -98,6 +96,19 @@ class BattleType(Enum):
     TRAINER = auto()
     SAFARI_ZONE = auto()
     OTHER = auto()
+
+
+class Badge(StrEnum):
+    """The different types of badges."""
+
+    BOULDERBADGE = "BOULDERBADGE"
+    CASCADEBADGE = "CASCADEBADGE"
+    THUNDERBADGE = "THUNDERBADGE"
+    RAINBOWBADGE = "RAINBOWBADGE"
+    SOULBADGE = "SOULBADGE"
+    MARSHBADGE = "MARSHBADGE"
+    VOLCANOBADGE = "VOLCANOBADGE"
+    EARTHBADGE = "EARTHBADGE"
 
 
 class MapId(IntEnum):
