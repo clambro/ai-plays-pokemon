@@ -4,9 +4,9 @@
 
 All original source code in this repository is released under the [MIT Licence](LICENSE).
 
-This is an unofficial, fan-made project for educational purposes only. The code enclosed in this repository is designed to work with Pokemon games but does not include any ROMs, save states, or game sprites. Users are responsible for ensuring they own legitimate copies of Pokémon games and comply with all applicable laws and terms of service.
+This is an unofficial, fan-made project for educational purposes only. The code in this repository is designed to work with Pokemon games but does not include any ROMs, save states, or game sprites. Users are responsible for ensuring they own legitimate copies of Pokémon games and comply with all applicable laws and terms of service.
 
-"Pokémon", Pokémon character names, and all related marks are trademarks of Nintendo, Game Freak, Creatures Inc., and The Pokémon Company. I am not affiliated with, endorsed, sponsored, or specifically approved by any of these entities.
+"Pokémon", Pokémon character names, and all related marks are owned by Nintendo, Game Freak, Creatures Inc., and The Pokémon Company. I am not affiliated with, endorsed, sponsored, or specifically approved by any of these entities.
 
 ---
 
@@ -15,7 +15,7 @@ This is an unofficial, fan-made project for educational purposes only. The code 
 ### Required for Release
 * Add strength boulders to map screen -- 00:d717 wBoulderSpriteIndex
 * Handle surfing in navigation + tests
-* Handle spin tiles in navigation + tests
+* Add a test for reading the spinners in the 8th gym
 
 * Test background tile and blocking generation from game states for strength boulders and seafoam elevation
 
