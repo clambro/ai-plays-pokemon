@@ -30,9 +30,8 @@ class OverworldSprite(Sprite):
         )
         if self.moves_randomly:
             out += (
-                " Warning: This sprite is a person who wanders randomly around the map. Your"
-                " reactions are too slow to catch them. Sprites like this are not worth"
-                " interacting with."
+                " Warning: This sprite wanders randomly around the map. Your reactions are too slow"
+                " to catch them. Sprites like this are not worth interacting with."
             )
         out += f" Your description is: {self.description or DEFAULT_ENTITY_DESCRIPTION}"
         return out
