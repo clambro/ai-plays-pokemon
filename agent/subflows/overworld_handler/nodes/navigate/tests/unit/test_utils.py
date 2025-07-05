@@ -49,6 +49,18 @@ COLLISION_PAIRS_BLOCKAGES = {
 
 CUT_TREE_MAP = [list("∙┬∙")]
 
+SPINNER_MAP = [
+    list(row)
+    for row in [
+        "∙∙▉⇩∙",
+        "⇩▉∙⇩←",
+        "∙∙∙░░",
+        "∙⊙←░∙",
+        "→∙⇧∙∙",
+        "∙▉∙∙∙",
+    ]
+]
+
 DUMMY_MAP = OverworldMap(
     id=MapId.PALLET_TOWN,
     ascii_tiles=[[]],
@@ -118,6 +130,23 @@ async def test_get_accessible_coords_cut_tree_with_hm() -> None:
         [AsciiTile.CUT_TREE],
     )
     assert _coords_to_binary_map(set(accessible_coords), 1, 3) == ["111"]
+
+
+@pytest.mark.unit
+async def test_get_accessible_coords_spinner() -> None:
+    """Test that the accessible coords are correct for the spinner map."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = SPINNER_MAP
+
+    accessible_coords = await utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
+    assert _coords_to_binary_map(set(accessible_coords), 6, 5) == [
+        "11000",
+        "00110",
+        "11100",
+        "11000",
+        "01000",
+        "00000",
+    ]
 
 
 @pytest.mark.unit
@@ -347,6 +376,21 @@ async def test_calculate_path_through_cut_tree() -> None:
         [AsciiTile.CUT_TREE],
     )
     assert path == [Button.RIGHT, Button.RIGHT]
+
+
+@pytest.mark.unit
+async def test_calculate_path_through_spinners() -> None:
+    """Test that we can path through spinners."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = SPINNER_MAP
+
+    path = await utils.calculate_path_to_target(
+        Coords(row=0, col=0),
+        Coords(row=3, col=1),
+        map_data,
+        [],
+    )
+    assert path == [Button.DOWN]
 
 
 def _coords_to_binary_map(coords: set[Coords], height: int, width: int) -> list[str]:
