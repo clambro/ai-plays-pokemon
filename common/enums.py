@@ -22,11 +22,27 @@ class AsciiTile(StrEnum):
     CUT_TREE = "┬"
     PIKACHU = "◈"
     SIGN = "‼"
+    SPINNER_UP = "⇧"
+    SPINNER_DOWN = "⇩"
+    SPINNER_LEFT = "←"
+    SPINNER_RIGHT = "→"
+    SPINNER_STOP = "⊙"
 
     @classmethod
     def get_walkable_tiles(cls) -> list["AsciiTile"]:
         """Get the walkable tiles."""
-        return [cls.FREE, cls.GRASS, cls.WARP, cls.PIKACHU, cls.PLAYER]
+        return [
+            cls.FREE,
+            cls.GRASS,
+            cls.WARP,
+            cls.PIKACHU,
+            cls.PLAYER,
+            cls.SPINNER_UP,
+            cls.SPINNER_DOWN,
+            cls.SPINNER_LEFT,
+            cls.SPINNER_RIGHT,
+            cls.SPINNER_STOP,
+        ]
 
 
 class MapEntityType(Enum):
