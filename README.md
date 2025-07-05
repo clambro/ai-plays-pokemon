@@ -13,7 +13,6 @@ This is an unofficial, fan-made project for educational purposes only. The code 
 ## TODOs in rough order of importance
 
 ### Required for Release
-* Add strength boulders to map screen -- 00:d717 wBoulderSpriteIndex
 * Handle surfing in navigation + tests
 * Add a test for reading the spinners in the 8th gym
 
