@@ -25,18 +25,16 @@ class OverworldSprite(Sprite):
 
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sprite."""
-        description = self.description or DEFAULT_ENTITY_DESCRIPTION
-        out = f"sprite_{map_id}_{self.index} at {self.coords}: {description}"
+        out = (
+            f'sprite_{map_id}_{self.index} at {self.coords}. This sprite is labeled "{self.name}".'
+        )
         if self.moves_randomly:
             out += (
                 " Warning: This sprite is a person who wanders randomly around the map. Your"
                 " reactions are too slow to catch them. Sprites like this are not worth"
                 " interacting with."
             )
-        elif self.is_item_ball:
-            out += " Note: This sprite is an item ball."
-        elif self.is_boulder:
-            out += " Note: This sprite is a boulder."
+        out += f" Your description is: {self.description or DEFAULT_ENTITY_DESCRIPTION}"
         return out
 
 
