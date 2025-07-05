@@ -185,6 +185,30 @@ async def test_get_ascii_screen_rocket_spinners() -> None:
 
 
 @pytest.mark.integration
+async def test_get_ascii_screen_gym4_tree() -> None:
+    """
+    Test that the ASCII screen is correct for the cut trees in Gym 4.
+
+    Checking the unique tilemap used here.
+    """
+    await _helper_test_expected_screen(
+        state_filename="gym4_tree.state",
+        expected_blockages={},
+        expected_screen=[
+            "∙◆▉∙∙∙∙┬∙◆",
+            "∙∙▉∙∙∙∙▉∙∙",
+            "∙∙▉▉▉┬▉▉∙∙",
+            "∙∙▉▉∙∙▉▉∙∙",
+            "∙∙▉▉☻∙▉▉∙∙",
+            "∙∙∙∙◈∙∙◆∙▉",
+            "▉∙◆∙∙∙∙∙∙∙",
+            "∙∙▉▉∙∙▉▉∙∙",
+            "∙∙▉▉∙∙▉▉∙∙",
+        ],
+    )
+
+
+@pytest.mark.integration
 async def _helper_test_expected_screen(
     state_filename: str,
     expected_blockages: dict[Coords, BlockedDirection],
