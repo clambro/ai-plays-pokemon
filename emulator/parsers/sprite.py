@@ -66,7 +66,7 @@ _ID_TO_SPRITE_NAME = {
     0x02: "RIVAL",
     0x03: "PROFESSOR OAK",
     0x04: "YOUNGSTER",
-    0x05: "MONSTER",
+    0x05: "POKEMON",
     0x06: "COOLTRAINER ♀",
     0x07: "COOLTRAINER ♂",
     0x08: "LITTLE GIRL",
@@ -175,7 +175,7 @@ _ID_TO_SPRITE_NAME = {
     0x6F: "OLD AMBER",
     # 70 is unused.
     # 71 is unused.
-    0x72: "GAMBLER ASLEEP",
+    0x72: "SLEEPING GAMBLER",
     0x73: "JOLTEON",
     0x74: "FLAREON",
     0x75: "WIGGLYTUFF",
