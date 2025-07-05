@@ -11,7 +11,7 @@ class Sprite(BaseModel):
     """A sprite on the current map."""
 
     index: int
-    name: str
+    label: str
     coords: Coords
     is_rendered: bool
     moves_randomly: bool
@@ -34,7 +34,7 @@ def parse_sprites(mem: PyBoyMemoryView) -> dict[int, Sprite]:
         index = i // 0x10
         sprites[index] = Sprite(
             index=index,
-            name=_ID_TO_SPRITE_NAME.get(picture_id, "UNKNOWN"),
+            label=_ID_TO_SPRITE_LABEL.get(picture_id, "UNKNOWN"),
             # Sprite coordinates start counting from 4 for some reason.
             coords=Coords(row=mem[0xC204 + i] - 4, col=mem[0xC205 + i] - 4),
             is_rendered=mem[0xC102 + i] != _NOT_RENDERED,
@@ -52,7 +52,7 @@ def parse_pikachu_sprite(mem: PyBoyMemoryView) -> Sprite:
     """
     return Sprite(
         index=15,
-        name="PIKACHU",
+        label="PIKACHU",
         # Sprite coordinates start counting from 4 for some reason.
         coords=Coords(row=mem[0xC2F4] - 4, col=mem[0xC2F5] - 4),
         is_rendered=mem[0xC1F2] != _NOT_RENDERED,
@@ -60,7 +60,7 @@ def parse_pikachu_sprite(mem: PyBoyMemoryView) -> Sprite:
     )
 
 
-_ID_TO_SPRITE_NAME = {
+_ID_TO_SPRITE_LABEL = {
     # Zero is the null sprite indicating the end of the sprite list.
     # One is the player sprite, which will never be parsed as a sprite.
     0x02: "RIVAL",

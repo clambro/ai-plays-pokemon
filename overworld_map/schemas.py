@@ -26,7 +26,7 @@ class OverworldSprite(Sprite):
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sprite."""
         out = (
-            f'sprite_{map_id}_{self.index} at {self.coords}. This sprite is labeled "{self.name}".'
+            f'sprite_{map_id}_{self.index} at {self.coords}. This sprite is labeled "{self.label}".'
         )
         if self.moves_randomly:
             out += (
