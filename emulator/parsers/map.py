@@ -6,6 +6,21 @@ from pydantic import BaseModel, ConfigDict
 from common.enums import MapId
 
 
+class SpinnerTileIds(BaseModel):
+    """
+    The tiles that are used for the spinner.
+
+    These are the flattened 4-tile sequences in the order
+    [top-left, top-right, bottom-left, bottom-right]
+    """
+
+    up: tuple[int, int, int, int]
+    down: tuple[int, int, int, int]
+    left: tuple[int, int, int, int]
+    right: tuple[int, int, int, int]
+    stop: tuple[int, int, int, int]
+
+
 class Map(BaseModel):
     """The state of the current map."""
 
@@ -14,10 +29,11 @@ class Map(BaseModel):
     width: int
     grass_tile: int | None
     water_tile: int | None
-    ledge_tiles_left: list[list[int]]
-    ledge_tiles_right: list[list[int]]
-    ledge_tiles_down: list[list[int]]
-    cut_tree_tiles: list[int]
+    ledge_tiles_left: list[tuple[int, int]]
+    ledge_tiles_right: list[tuple[int, int]]
+    ledge_tiles_down: list[tuple[int, int]]
+    spinner_tiles: SpinnerTileIds | None
+    cut_tree_tiles: tuple[int, int, int, int] | None
     walkable_tiles: list[int]
     collision_pairs: list[frozenset[tuple[int, int]]]
     special_collision_blocks: list[int]
@@ -41,15 +57,15 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     tileset_id = _Tileset(mem[0xD3B4])
 
     if tileset_id == _Tileset.OVERWORLD:
-        ledge_tiles_left = [[0x27, 0x2C], [0x27, 0x39]]
-        ledge_tiles_right = [[0x2C, 0x0D], [0x2C, 0x1D], [0x1D, 0x24]]
-        ledge_tiles_down = [[0x2C, 0x37], [0x39, 0x36], [0x39, 0x37]]
-        cut_tree_tiles = [0x2D, 0x2E, 0x3D, 0x3E]
+        ledge_tiles_left = [(0x27, 0x2C), (0x27, 0x39)]
+        ledge_tiles_right = [(0x2C, 0x0D), (0x2C, 0x1D), (0x1D, 0x24)]
+        ledge_tiles_down = [(0x2C, 0x37), (0x39, 0x36), (0x39, 0x37)]
+        cut_tree_tiles = (0x2D, 0x2E, 0x3D, 0x3E)
     else:
         ledge_tiles_left = []
         ledge_tiles_right = []
         ledge_tiles_down = []
-        cut_tree_tiles = []
+        cut_tree_tiles = None
 
     water_tile = 0x14 if tileset_id in [0, 3, 5, 7, 15, 16, 19, 24, 25] else None
     grass_tile = _GRASS_TILE_MAP.get(tileset_id)
@@ -88,6 +104,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         walkable_tiles=walkable_tiles,
         collision_pairs=collision_pairs,
         special_collision_blocks=special_collision_blocks,
+        spinner_tiles=_SPINNER_TILE_MAP.get(tileset_id),
         north_connection=MapId(mem[0xD3BE]) if mem[0xD3BE] != terminator else None,
         south_connection=MapId(mem[0xD3C9]) if mem[0xD3C9] != terminator else None,
         east_connection=MapId(mem[0xD3DF]) if mem[0xD3DF] != terminator else None,
@@ -156,4 +173,21 @@ _COLLISION_PAIRS = {
 
 _SPECIAL_COLLISION_BLOCKS = {
     _Tileset.CAVERN: [0x10, 0x17, 0x29, 0x31],
+}
+
+_SPINNER_TILE_MAP = {
+    _Tileset.FACILITY: SpinnerTileIds(
+        up=(0x21, 0x31, 0x21, 0x31),
+        down=(0x20, 0x30, 0x20, 0x30),
+        left=(0x21, 0x21, 0x20, 0x20),
+        right=(0x31, 0x31, 0x30, 0x30),
+        stop=(0x5E, 0x5E, 0x5E, 0x5E),
+    ),
+    _Tileset.GYM: SpinnerTileIds(
+        up=(0x3C, 0x3D, 0x3C, 0x3D),
+        down=(0x4C, 0x4D, 0x4C, 0x4D),
+        left=(0x3C, 0x3C, 0x4C, 0x4C),
+        right=(0x3D, 0x3D, 0x4D, 0x4D),
+        stop=(0x3F, 0x3F, 0x3F, 0x3F),
+    ),
 }

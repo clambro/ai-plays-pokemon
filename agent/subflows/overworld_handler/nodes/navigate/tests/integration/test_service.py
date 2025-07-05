@@ -25,28 +25,10 @@ async def test_navigate_through_pikachu() -> None:
         assert game_state.pikachu.coords == Coords(row=28, col=22)
         assert game_state.player.direction == FacingDirection.RIGHT
 
-        with (
-            patch("database.map_memory.repository.get_map_memory", return_value=None),
-            patch(
-                "database.map_entity_memory.repository.get_map_entity_memories_for_map",
-                return_value=[],
-            ),
-            patch("database.map_memory.repository.update_map_tiles", return_value=None),
-            patch("overworld_map.service._add_remove_map_entities", return_value=None),
-        ):
-            overworld_map = await get_overworld_map(0, game_state)
-            await update_map_with_screen_info(0, game_state, overworld_map)
-
-        service = NavigationService(
-            iteration=0,
-            emulator=emulator,
-            current_map=overworld_map,
-            raw_memory=RawMemory(),
-            state_string_builder=MagicMock(),
-        )
+        service = await _get_nav_service(emulator)
 
         service._determine_target_coords = AsyncMock(return_value=Coords(row=28, col=21))
-        overworld_map, _ = await service.navigate()
+        await service.navigate()
 
         game_state = emulator.get_game_state()
         assert game_state.player.coords == Coords(row=28, col=21)
@@ -66,28 +48,55 @@ async def test_navigate_through_cut_tree() -> None:
         game_state = emulator.get_game_state()
         assert game_state.player.coords == Coords(row=17, col=17)
 
-        with (
-            patch("database.map_memory.repository.get_map_memory", return_value=None),
-            patch(
-                "database.map_entity_memory.repository.get_map_entity_memories_for_map",
-                return_value=[],
-            ),
-            patch("database.map_memory.repository.update_map_tiles", return_value=None),
-            patch("overworld_map.service._add_remove_map_entities", return_value=None),
-        ):
-            overworld_map = await get_overworld_map(0, game_state)
-            await update_map_with_screen_info(0, game_state, overworld_map)
-
-        service = NavigationService(
-            iteration=0,
-            emulator=emulator,
-            current_map=overworld_map,
-            raw_memory=RawMemory(),
-            state_string_builder=MagicMock(),
-        )
+        service = await _get_nav_service(emulator)
 
         service._determine_target_coords = AsyncMock(return_value=Coords(row=20, col=15))
-        overworld_map, _ = await service.navigate()
+        await service.navigate()
 
         game_state = emulator.get_game_state()
         assert game_state.player.coords == Coords(row=20, col=15)
+
+
+@pytest.mark.integration
+async def test_navigate_through_spinners() -> None:
+    """Test navigating through spinners."""
+    save_file = Path(__file__).parent / "saves" / "rocket_spinners.state"
+    async with YellowLegacyEmulator(
+        save_state_path=save_file,
+        mute_sound=True,
+        headless=True,
+    ) as emulator:
+        game_state = emulator.get_game_state()
+        assert game_state.player.coords == Coords(row=13, col=4)
+
+        service = await _get_nav_service(emulator)
+
+        service._determine_target_coords = AsyncMock(return_value=Coords(row=16, col=8))
+        await service.navigate()
+
+        game_state = emulator.get_game_state()
+        assert game_state.player.coords == Coords(row=16, col=8)
+
+
+async def _get_nav_service(emulator: YellowLegacyEmulator) -> NavigationService:
+    """Helper function to get a navigation service with the proper mocks."""
+    game_state = emulator.get_game_state()
+    with (
+        patch("database.map_memory.repository.get_map_memory", return_value=None),
+        patch(
+            "database.map_entity_memory.repository.get_map_entity_memories_for_map",
+            return_value=[],
+        ),
+        patch("database.map_memory.repository.update_map_tiles", return_value=None),
+        patch("overworld_map.service._add_remove_map_entities", return_value=None),
+    ):
+        overworld_map = await get_overworld_map(0, game_state)
+        await update_map_with_screen_info(0, game_state, overworld_map)
+
+    return NavigationService(
+        iteration=0,
+        emulator=emulator,
+        current_map=overworld_map,
+        raw_memory=RawMemory(),
+        state_string_builder=MagicMock(),
+    )

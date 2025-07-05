@@ -239,7 +239,9 @@ class YellowLegacyGameState(BaseModel):
         for i in range(0, tiles.shape[0], 2):
             for j in range(0, tiles.shape[1], 2):
                 b = tiles[i : i + 2, j : j + 2]
+                b_flat = tuple(b.flatten().tolist())
                 b_idx = (i // 2, j // 2)
+
                 if self.map.water_tile and np.isin(b, self.map.water_tile).any():
                     blocks[b_idx] = AsciiTile.WATER
                 elif ledge_type := self._get_ledge_type(b):
@@ -247,8 +249,10 @@ class YellowLegacyGameState(BaseModel):
                 elif self.map.grass_tile and b[1, 0] == self.map.grass_tile:
                     # In engine/battle/wild_encounters.asm, grass tiles only check the bottom left.
                     blocks[b_idx] = AsciiTile.GRASS
-                elif b.flatten().tolist() == self.map.cut_tree_tiles:
+                elif b_flat == self.map.cut_tree_tiles:
                     blocks[b_idx] = AsciiTile.CUT_TREE
+                elif spinner_type := self._get_spinner_type(b_flat):
+                    blocks[b_idx] = spinner_type
                 elif (
                     b[1, 0] in self.map.walkable_tiles
                     and not np.isin(b, self.map.special_collision_blocks).any()
@@ -269,22 +273,35 @@ class YellowLegacyGameState(BaseModel):
         :param block: The block to check, which is a 2x2 array of tile values.
         :return: The type of ledge, or None if the block is not a ledge.
         """
-        if (
-            block[:, 0].tolist() in self.map.ledge_tiles_down
-            or block[:, 1].tolist() in self.map.ledge_tiles_down
-        ):
+        top = tuple(block[0, :].tolist())
+        bottom = tuple(block[1, :].tolist())
+        left = tuple(block[:, 0].tolist())
+        right = tuple(block[:, 1].tolist())
+
+        if left in self.map.ledge_tiles_down or right in self.map.ledge_tiles_down:
             return AsciiTile.LEDGE_DOWN
-        if (
-            block[0, :].tolist() in self.map.ledge_tiles_left
-            or block[1, :].tolist() in self.map.ledge_tiles_left
-        ):
+        if top in self.map.ledge_tiles_left or bottom in self.map.ledge_tiles_left:
             return AsciiTile.LEDGE_LEFT
-        if (
-            block[0, :].tolist() in self.map.ledge_tiles_right
-            or block[1, :].tolist() in self.map.ledge_tiles_right
-        ):
+        if top in self.map.ledge_tiles_right or bottom in self.map.ledge_tiles_right:
             return AsciiTile.LEDGE_RIGHT
         return None
+
+    def _get_spinner_type(self, flat_block: tuple[int, int, int, int]) -> AsciiTile | None:
+        """Get the type of spinner for a given block."""
+        if self.map.spinner_tiles is None:
+            return None
+        tile = None
+        if flat_block == self.map.spinner_tiles.up:
+            tile = AsciiTile.SPINNER_UP
+        elif flat_block == self.map.spinner_tiles.down:
+            tile = AsciiTile.SPINNER_DOWN
+        elif flat_block == self.map.spinner_tiles.left:
+            tile = AsciiTile.SPINNER_LEFT
+        elif flat_block == self.map.spinner_tiles.right:
+            tile = AsciiTile.SPINNER_RIGHT
+        elif flat_block == self.map.spinner_tiles.stop:
+            tile = AsciiTile.SPINNER_STOP
+        return tile
 
     def _get_blockage(
         self,
