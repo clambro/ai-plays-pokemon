@@ -60,7 +60,6 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         ledge_tiles_left = [(0x27, 0x2C), (0x27, 0x39)]
         ledge_tiles_right = [(0x2C, 0x0D), (0x2C, 0x1D), (0x1D, 0x24)]
         ledge_tiles_down = [(0x2C, 0x37), (0x39, 0x36), (0x39, 0x37)]
-        cut_tree_tiles = (0x2D, 0x2E, 0x3D, 0x3E)
     else:
         ledge_tiles_left = []
         ledge_tiles_right = []
@@ -69,6 +68,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
 
     water_tile = 0x14 if tileset_id in [0, 3, 5, 7, 15, 16, 19, 24, 25] else None
     grass_tile = _GRASS_TILE_MAP.get(tileset_id)
+    cut_tree_tiles = _CUT_TREE_TILE_MAP.get(tileset_id)
 
     walkable_tile_ptr = mem[0xD57D] | (mem[0xD57E] << 8)
     tile_bank, tile_offset = divmod(walkable_tile_ptr, 0x4000)
@@ -173,6 +173,11 @@ _COLLISION_PAIRS = {
 
 _SPECIAL_COLLISION_BLOCKS = {
     _Tileset.CAVERN: [0x10, 0x17, 0x29, 0x31],
+}
+
+_CUT_TREE_TILE_MAP = {
+    _Tileset.OVERWORLD: (0x2D, 0x2E, 0x3D, 0x3E),
+    _Tileset.GYM: (0x40, 0x41, 0x50, 0x51),
 }
 
 _SPINNER_TILE_MAP = {
