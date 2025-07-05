@@ -7,6 +7,8 @@ concerns to make them easier to test.
 
 import asyncio
 
+import numpy as np
+
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection
 from common.schemas import Coords
 from overworld_map.schemas import OverworldMap
@@ -210,6 +212,7 @@ def _get_neighbors(
     """
     neighbors = []
     walkable_tiles = AsciiTile.get_walkable_tiles()
+    spinner_tiles = AsciiTile.get_spinner_tiles()
 
     for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
         new_pos = pos + (dy, dx)  # noqa: RUF005
@@ -222,10 +225,10 @@ def _get_neighbors(
         ):
             continue
 
-        target_tile = map_data.ascii_tiles_ndarray[new_pos.row, new_pos.col]
-        move_blocked = _is_blocked(pos, dy, dx, map_data)
+        tiles = map_data.ascii_tiles_ndarray
+        target_tile = tiles[new_pos.row, new_pos.col]
 
-        if not move_blocked and (
+        if not _is_blocked(pos, dy, dx, map_data) and (
             target_tile in walkable_tiles
             or (target_tile == AsciiTile.CUT_TREE and AsciiTile.CUT_TREE in hm_tiles)
         ):
@@ -240,6 +243,9 @@ def _get_neighbors(
         elif target_tile == AsciiTile.LEDGE_RIGHT and dx == 1:
             ledge_pos = new_pos + (0, 1)  # noqa: RUF005
             neighbors.append(ledge_pos)
+        elif target_tile in spinner_tiles:
+            destination = _get_spinner_destination(new_pos, tiles)
+            neighbors.append(destination)
 
     return neighbors
 
@@ -258,3 +264,31 @@ def _is_blocked(current: Coords, dy: int, dx: int, map_data: OverworldMap) -> bo
     if dx == -1:
         return bool(blockages & BlockedDirection.LEFT)
     return False
+
+
+def _get_spinner_destination(pos: Coords, tiles: np.ndarray) -> Coords:
+    """Get the destination of a spinner tile."""
+    tile = tiles[pos.row, pos.col]
+    direction = _SPINNER_DIRECTION_MAP[tile]
+
+    while True:
+        new_pos = pos + direction
+        new_tile = tiles[new_pos.row, new_pos.col]
+        # Unseen is an edge case. We don't know where it goes, but we can't follow it any further.
+        # Assume we stop just before it. This breaks navigation, but there's nothing we can do
+        # until the tile is revealed on the next Agent iteration.
+        if new_tile == AsciiTile.UNSEEN:
+            return pos
+        if new_tile == AsciiTile.SPINNER_STOP:
+            return new_pos
+        if new_tile in AsciiTile.get_spinner_tiles():
+            direction = _SPINNER_DIRECTION_MAP[new_tile]
+        pos = new_pos
+
+
+_SPINNER_DIRECTION_MAP = {
+    AsciiTile.SPINNER_UP: Coords(row=-1, col=0),
+    AsciiTile.SPINNER_DOWN: Coords(row=1, col=0),
+    AsciiTile.SPINNER_LEFT: Coords(row=0, col=-1),
+    AsciiTile.SPINNER_RIGHT: Coords(row=0, col=1),
+}
