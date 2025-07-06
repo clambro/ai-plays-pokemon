@@ -317,21 +317,30 @@ class YellowLegacyGameState(BaseModel):
         Get the blockage for a given set of coordinates by checking if the tiles in the bottom-left
         corner of this block and the one above it are in a collision pair.
 
+        Comparisons for collisions, as elsewhere in Pokemon Yellow, are done using the bottom-left
+        tile of each block.
+
         :param i: The tile row index of the upper-left corner of the block.
         :param j: The tile column index of the upper-left corner of the block.
         :param tiles: The tiles array.
         :param blockages: The blockages dictionary to update.
         :return: The updated blockages dictionary.
         """
-        if i - 2 < 0:
-            return blockages
+        bi, bj = i // 2, j // 2  # Block indices, as opposed to tile indices.
+        block_tile = tiles[i + 1, j]  # The bottom-left tile of the block is the one used to check.
 
-        block_bot_left = tiles[i + 1, j]
-        block_above_bot_left = tiles[i - 1, j]
-        pair = {block_bot_left, block_above_bot_left}
-        if pair in self.map.collision_pairs:
-            bi, bj = i // 2, j // 2  # Block indices, as opposed to tile indices.
-            blockages[Coords(row=bi, col=bj)] |= BlockedDirection.UP
-            blockages[Coords(row=bi - 1, col=bj)] |= BlockedDirection.DOWN
+        if i - 2 >= 0:
+            block_above_tile = tiles[i - 1, j]
+            pair = {block_tile, block_above_tile}
+            if pair in self.map.collision_pairs:
+                blockages[Coords(row=bi, col=bj)] |= BlockedDirection.UP
+                blockages[Coords(row=bi - 1, col=bj)] |= BlockedDirection.DOWN
+
+        if j - 2 >= 0:
+            block_left_tile = tiles[i + 1, j - 2]
+            pair = {block_left_tile, block_tile}
+            if pair in self.map.collision_pairs:
+                blockages[Coords(row=bi, col=bj)] |= BlockedDirection.LEFT
+                blockages[Coords(row=bi, col=bj - 1)] |= BlockedDirection.RIGHT
 
         return blockages

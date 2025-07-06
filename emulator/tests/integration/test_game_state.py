@@ -42,23 +42,54 @@ async def test_get_ascii_screen_viridian_flowers() -> None:
 @pytest.mark.integration
 async def test_get_ascii_screen_mt_moon_corners() -> None:
     """
-    Test that the ASCII screen is correct for Mt. Moon near all the weird corner edge cases.
+    Test that the ASCII screen is correct for all the weird blocking corners in Mt Moon.
 
     Specifically making sure that the special tile exceptions in caverns are accounted for.
     """
     await _helper_test_expected_screen(
         state_filename="mt_moon_corners.state",
-        expected_blockages={},
+        expected_blockages={
+            Coords(row=0, col=4): BlockedDirection.RIGHT,
+            Coords(row=0, col=5): BlockedDirection.LEFT,
+            Coords(row=1, col=4): BlockedDirection.RIGHT,
+            Coords(row=1, col=5): BlockedDirection.LEFT,
+            Coords(row=2, col=4): BlockedDirection.RIGHT,
+            Coords(row=2, col=5): BlockedDirection.LEFT,
+            Coords(row=0, col=8): BlockedDirection.RIGHT,
+            Coords(row=0, col=9): BlockedDirection.LEFT,
+            Coords(row=2, col=8): BlockedDirection.RIGHT,
+            Coords(row=2, col=9): BlockedDirection.LEFT,
+            Coords(row=3, col=8): BlockedDirection.RIGHT,
+            Coords(row=3, col=9): BlockedDirection.LEFT,
+            Coords(row=4, col=8): BlockedDirection.RIGHT,
+            Coords(row=4, col=9): BlockedDirection.LEFT,
+            Coords(row=6, col=8): BlockedDirection.RIGHT,
+            Coords(row=6, col=9): BlockedDirection.LEFT,
+            Coords(row=8, col=8): BlockedDirection.RIGHT,
+            Coords(row=8, col=9): BlockedDirection.LEFT,
+            Coords(row=2, col=0): BlockedDirection.UP,
+            Coords(row=1, col=0): BlockedDirection.DOWN,
+            Coords(row=2, col=1): BlockedDirection.UP,
+            Coords(row=1, col=1): BlockedDirection.DOWN,
+            Coords(row=2, col=2): BlockedDirection.UP,
+            Coords(row=1, col=2): BlockedDirection.DOWN,
+            Coords(row=8, col=2): BlockedDirection.UP,
+            Coords(row=7, col=2): BlockedDirection.DOWN,
+            Coords(row=8, col=3): BlockedDirection.UP,
+            Coords(row=7, col=3): BlockedDirection.DOWN,
+            Coords(row=8, col=6): BlockedDirection.UP,
+            Coords(row=7, col=6): BlockedDirection.DOWN,
+        },
         expected_screen=[
-            "∙∙∙▉▉∙∙▉▉∙",
-            "∙∙∙▉▉∙∙▉▉∙",
-            "▉▉▉▉▉∙∙▉▉∙",
-            "▉▉▉▉▉∙∙▉▉∙",
-            "∙∙∙∙☻◈∙▉▉∙",
+            "∙∙∙▉∙∙∙▉∙∙",
+            "∙∙∙▉∙∙∙▉▉∙",
+            "∙∙∙▉∙∙∙▉∙∙",
+            "▉▉▉▉▉∙∙▉∙∙",
+            "∙∙∙∙☻◈∙▉∙∙",
             "‼◆∙∙∙∙∙▉▉∙",
+            "∙∙∙∙∙∙∙▉∙∙",
             "∙∙∙∙∙∙∙▉▉∙",
-            "∙∙∙∙∙∙∙▉▉∙",
-            "∙▉▉▉▉▉▉▉▉∙",
+            "∙▉∙∙▉▉∙∙∙∙",
         ],
     )
 
@@ -138,11 +169,7 @@ async def test_get_ascii_screen_viridian_forest() -> None:
 
 @pytest.mark.integration
 async def test_get_ascii_screen_three_ledges() -> None:
-    """
-    Test that the ASCII screen is correct for the three ledges.
-
-    Checking the unique tilemap used here.
-    """
+    """Test that the ASCII screen is correct for the three ledges."""
     await _helper_test_expected_screen(
         state_filename="three_ledges.state",
         expected_blockages={},
@@ -162,11 +189,7 @@ async def test_get_ascii_screen_three_ledges() -> None:
 
 @pytest.mark.integration
 async def test_get_ascii_screen_rocket_spinners() -> None:
-    """
-    Test that the ASCII screen is correct for the Rocket Spinners.
-
-    Checking the unique tilemap used here.
-    """
+    """Test that the ASCII screen is correct for the Rocket Spinners."""
     await _helper_test_expected_screen(
         state_filename="rocket_spinners.state",
         expected_blockages={},
@@ -186,11 +209,7 @@ async def test_get_ascii_screen_rocket_spinners() -> None:
 
 @pytest.mark.integration
 async def test_get_ascii_screen_gym4_tree() -> None:
-    """
-    Test that the ASCII screen is correct for the cut trees in Gym 4.
-
-    Checking the unique tilemap used here.
-    """
+    """Test that the ASCII screen is correct for the cut trees in Gym 4."""
     await _helper_test_expected_screen(
         state_filename="gym4_tree.state",
         expected_blockages={},
@@ -210,11 +229,7 @@ async def test_get_ascii_screen_gym4_tree() -> None:
 
 @pytest.mark.integration
 async def test_get_ascii_screen_seafoam_collisions() -> None:
-    """
-    Test that the ASCII screen is correct for the collisions in Seafoam Islands.
-
-    Checking the unique tilemap used here.
-    """
+    """Test that the ASCII screen is correct for the collisions in Seafoam Islands."""
     await _helper_test_expected_screen(
         state_filename="seafoam_collisions.state",
         expected_blockages={
@@ -237,11 +252,7 @@ async def test_get_ascii_screen_seafoam_collisions() -> None:
 
 @pytest.mark.integration
 async def test_get_ascii_screen_seafoam_boulder_holes() -> None:
-    """
-    Test that the ASCII screen is correct for the boulder holes in Seafoam Islands.
-
-    Checking the unique tilemap used here.
-    """
+    """Test that the ASCII screen is correct for the boulder holes in Seafoam Islands."""
     await _helper_test_expected_screen(
         state_filename="seafoam_boulder_holes.state",
         expected_blockages={},
@@ -282,5 +293,5 @@ async def _helper_test_expected_screen(
 
     screen = game_state.get_ascii_screen()
 
-    assert screen.blockages == expected_blockages
     assert str(screen).split("\n") == expected_screen
+    assert screen.blockages == expected_blockages
