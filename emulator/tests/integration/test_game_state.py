@@ -209,6 +209,33 @@ async def test_get_ascii_screen_gym4_tree() -> None:
 
 
 @pytest.mark.integration
+async def test_get_ascii_screen_seafoam_collisions() -> None:
+    """
+    Test that the ASCII screen is correct for the collisions in Seafoam Islands.
+
+    Checking the unique tilemap used here.
+    """
+    await _helper_test_expected_screen(
+        state_filename="seafoam_collisions.state",
+        expected_blockages={
+            **{Coords(row=1, col=c): BlockedDirection.DOWN for c in range(2, 9)},
+            **{Coords(row=2, col=c): BlockedDirection.UP for c in range(2, 9)},
+        },
+        expected_screen=[
+            "≋≋≋≋≋≋≋≋≋▉",
+            "≋≋≋≋≋≋≋≋≋▉",
+            "≋▉∙∙∙∙∙∙∙∙",
+            "≋▉∙∙∙∙⇆∙∙∙",
+            "≋▉∙◈☻∙∙∙∙∙",
+            "≋▉∙∙∙∙∙∙∙∙",
+            "≋▉∙∙∙∙∙∙∙∙",
+            "≋▉∙▉▉▉▉▉∙∙",
+            "≋≋≋≋≋≋≋▉∙∙",
+        ],
+    )
+
+
+@pytest.mark.integration
 async def _helper_test_expected_screen(
     state_filename: str,
     expected_blockages: dict[Coords, BlockedDirection],

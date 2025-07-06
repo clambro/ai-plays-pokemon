@@ -35,8 +35,7 @@ class Map(BaseModel):
     spinner_tiles: SpinnerTileIds | None
     cut_tree_tiles: tuple[int, int, int, int] | None
     walkable_tiles: list[int]
-    collision_pairs: list[frozenset[tuple[int, int]]]
-    special_collision_blocks: list[int]
+    collision_pairs: list[frozenset[int]]
     north_connection: MapId | None
     south_connection: MapId | None
     east_connection: MapId | None
@@ -86,11 +85,6 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     # walkable. It's used to represent elevation differences.
     collision_pairs = _COLLISION_PAIRS.get(tileset_id, [])
 
-    # This is super hacky, but there are some blocks which are not walkable, despite their
-    # bottom-left tile being walkable. The reason appears to be the inclusion of one or more of
-    # the following tiles, but I can't find anything in the decompiled ROM that explains why.
-    special_collision_blocks = _SPECIAL_COLLISION_BLOCKS.get(tileset_id, [])
-
     return Map(
         id=MapId(mem[0xD3AB]),
         height=mem[0xD571],
@@ -103,7 +97,6 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         cut_tree_tiles=cut_tree_tiles,
         walkable_tiles=walkable_tiles,
         collision_pairs=collision_pairs,
-        special_collision_blocks=special_collision_blocks,
         spinner_tiles=_SPINNER_TILE_MAP.get(tileset_id),
         north_connection=MapId(mem[0xD3BE]) if mem[0xD3BE] != terminator else None,
         south_connection=MapId(mem[0xD3C9]) if mem[0xD3C9] != terminator else None,
@@ -152,27 +145,23 @@ _GRASS_TILE_MAP = {
 
 _COLLISION_PAIRS = {
     _Tileset.CAVERN: [
-        frozenset([(0x20, 0x05)]),
-        frozenset([(0x41, 0x05)]),
-        frozenset([(0x2A, 0x05)]),
-        frozenset([(0x05, 0x21)]),
-        frozenset([(0x14, 0x05)]),
+        frozenset([0x20, 0x05]),
+        frozenset([0x41, 0x05]),
+        frozenset([0x2A, 0x05]),
+        frozenset([0x05, 0x21]),
+        frozenset([0x14, 0x05]),
     ],
     _Tileset.FOREST: [
-        frozenset([(0x30, 0x2E)]),
-        frozenset([(0x52, 0x2E)]),
-        frozenset([(0x55, 0x2E)]),
-        frozenset([(0x56, 0x2E)]),
-        frozenset([(0x20, 0x2E)]),
-        frozenset([(0x5E, 0x2E)]),
-        frozenset([(0x5F, 0x2E)]),
-        frozenset([(0x14, 0x2E)]),
-        frozenset([(0x48, 0x2E)]),
+        frozenset([0x30, 0x2E]),
+        frozenset([0x52, 0x2E]),
+        frozenset([0x55, 0x2E]),
+        frozenset([0x56, 0x2E]),
+        frozenset([0x20, 0x2E]),
+        frozenset([0x5E, 0x2E]),
+        frozenset([0x5F, 0x2E]),
+        frozenset([0x14, 0x2E]),
+        frozenset([0x48, 0x2E]),
     ],
-}
-
-_SPECIAL_COLLISION_BLOCKS = {
-    _Tileset.CAVERN: [0x10, 0x17, 0x29, 0x31],
 }
 
 _CUT_TREE_TILE_MAP = {
