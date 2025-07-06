@@ -66,7 +66,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         ledge_tiles_down = []
         cut_tree_tiles = None
 
-    water_tile = 0x14 if tileset_id in [0, 3, 5, 7, 15, 16, 19, 24, 25] else None
+    water_tile = 0x14 if tileset_id in [0, 3, 5, 7, 15, 16, 17, 19, 24, 25] else None
     grass_tile = _GRASS_TILE_MAP.get(tileset_id)
     cut_tree_tiles = _CUT_TREE_TILE_MAP.get(tileset_id)
 
