@@ -20,6 +20,7 @@ class AsciiTile(StrEnum):
     SPRITE = "◆"
     WARP = "⇆"
     CUT_TREE = "┬"
+    BOULDER_HOLE = "◌"
     PIKACHU = "◈"
     SIGN = "‼"
     SPINNER_UP = "⇧"

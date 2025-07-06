@@ -236,6 +236,30 @@ async def test_get_ascii_screen_seafoam_collisions() -> None:
 
 
 @pytest.mark.integration
+async def test_get_ascii_screen_seafoam_boulder_holes() -> None:
+    """
+    Test that the ASCII screen is correct for the boulder holes in Seafoam Islands.
+
+    Checking the unique tilemap used here.
+    """
+    await _helper_test_expected_screen(
+        state_filename="seafoam_boulder_holes.state",
+        expected_blockages={},
+        expected_screen=[
+            "▉▉∙∙∙∙∙∙∙∙",
+            "▉▉∙∙∙∙∙∙∙∙",
+            "▉▉∙∙∙∙∙∙∙∙",
+            "▉▉∙∙∙∙∙∙▉▉",
+            "▉▉∙∙☻◈⇆∙▉∙",
+            "▉▉▉▉▉▉▉▉▉∙",
+            "▉∙∙∙∙∙◆∙▉◆",
+            "▉∙∙∙◆▉∙∙∙∙",
+            "▉∙∙∙◌▉∙◌∙∙",
+        ],
+    )
+
+
+@pytest.mark.integration
 async def _helper_test_expected_screen(
     state_filename: str,
     expected_blockages: dict[Coords, BlockedDirection],

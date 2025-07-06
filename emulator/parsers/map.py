@@ -34,6 +34,7 @@ class Map(BaseModel):
     ledge_tiles_down: list[tuple[int, int]]
     spinner_tiles: SpinnerTileIds | None
     cut_tree_tiles: tuple[int, int, int, int] | None
+    boulder_hole_tiles: tuple[int, int, int, int] | None
     walkable_tiles: list[int]
     collision_pairs: list[frozenset[int]]
     north_connection: MapId | None
@@ -68,6 +69,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     water_tile = 0x14 if tileset_id in [0, 3, 5, 7, 15, 16, 17, 19, 24, 25] else None
     grass_tile = _GRASS_TILE_MAP.get(tileset_id)
     cut_tree_tiles = _CUT_TREE_TILE_MAP.get(tileset_id)
+    boulder_hole_tiles = (0x2F, 0x2F, 0x22, 0x22) if tileset_id == _Tileset.CAVERN else None
 
     walkable_tile_ptr = mem[0xD57D] | (mem[0xD57E] << 8)
     tile_bank, tile_offset = divmod(walkable_tile_ptr, 0x4000)
@@ -95,6 +97,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         ledge_tiles_right=ledge_tiles_right,
         ledge_tiles_down=ledge_tiles_down,
         cut_tree_tiles=cut_tree_tiles,
+        boulder_hole_tiles=boulder_hole_tiles,
         walkable_tiles=walkable_tiles,
         collision_pairs=collision_pairs,
         spinner_tiles=_SPINNER_TILE_MAP.get(tileset_id),
