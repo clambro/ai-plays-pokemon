@@ -135,7 +135,14 @@ class Badge(StrEnum):
 
 
 class MapId(IntEnum):
-    """Enum for mapping location IDs to their names."""
+    """
+    Enum for mapping location IDs to their names.
+
+    There are several IDs in the list below that are listed as "unused" in the game, but sometimes
+    they appear as targets for warp tiles in elevators, or if you try to access the map ID mid-warp
+    or during a cutscene. They should never have DB memory associated with them. We include a
+    blanket UNKNOWN ID for them here to avoid crashes.
+    """
 
     PALLET_TOWN = 0x00
     VIRIDIAN_CITY = 0x01
@@ -360,4 +367,11 @@ class MapId(IntEnum):
     BRUNOS_ROOM = 0xF6
     AGATHAS_ROOM = 0xF7
     SUMMER_BEACH_HOUSE = 0xF8
+
     OUTSIDE = 0xFF  # Used by indoor warp tiles to indicate that they lead outside.
+    UNKNOWN = -1  # Used to catch all unused values.
+
+    @classmethod
+    def _missing_(cls, _: int) -> "MapId":
+        """Handle unknown map IDs by returning UNKNOWN."""
+        return cls.UNKNOWN
