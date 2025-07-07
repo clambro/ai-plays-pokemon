@@ -88,7 +88,7 @@ class NavigationService:
         for button in path:
             next_tile = self._get_next_tile(button, game_state)
             if next_tile in hm_tiles:
-                await self._handle_hm_use(button)
+                await self._handle_hm_use(button, game_state)
             else:
                 await self.emulator.press_button(button)
 
@@ -197,9 +197,12 @@ class NavigationService:
             return tile_arr[player_pos.row, player_pos.col - 1]
         return tile_arr[player_pos.row, player_pos.col + 1]
 
-    async def _handle_hm_use(self, button: Button) -> None:
+    async def _handle_hm_use(self, button: Button, game_state: YellowLegacyGameState) -> None:
         """Handle using an HM to access a tile."""
-        game_state = self.emulator.get_game_state()
+        if game_state.player.is_surfing:
+            await self.emulator.press_button(button)
+            return  # Already surfing. Just continue normally.
+
         facing = game_state.player.direction
 
         # Rotate to face the target.
@@ -215,8 +218,11 @@ class NavigationService:
         # Use the HM, which takes exactly four button presses for both cut and surf.
         for _ in range(4):
             await self.emulator.press_button(Button.A)
-        await self.emulator.wait_for_animation_to_finish()  # HM animation takes a little while.
-        await self.emulator.press_button(button)  # Move to the tile.
+        await self.emulator.wait_for_animation_to_finish()  # Extra time for the HM use animation.
+
+        game_state = self.emulator.get_game_state()
+        if not game_state.player.is_surfing:  # Starting to surf moves the player automatically.
+            await self.emulator.press_button(button)
 
     def _should_cancel_navigation(
         self,

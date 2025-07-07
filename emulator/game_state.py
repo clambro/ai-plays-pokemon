@@ -146,7 +146,8 @@ class YellowLegacyGameState(BaseModel):
         movepool = [m.name for p in self.party for m in p.moves]
         if "CUT" in movepool and Badge.BOULDERBADGE in self.player.badges:
             hm_tiles.append(AsciiTile.CUT_TREE)
-        # TODO: Surf with the Soul Badge.
+        if "SURF" in movepool and Badge.SOULBADGE in self.player.badges:
+            hm_tiles.append(AsciiTile.WATER)
         return hm_tiles
 
     def to_screen_coords(self, coords: Coords) -> Coords | None:

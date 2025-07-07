@@ -228,17 +228,16 @@ def _get_neighbors(
         if not _is_blocked(pos, dy, dx, map_data) and (
             target_tile in walkable_tiles
             or (target_tile == AsciiTile.CUT_TREE and AsciiTile.CUT_TREE in hm_tiles)
+            or (target_tile == AsciiTile.WATER and AsciiTile.WATER in hm_tiles)
         ):
             neighbors.append((new_pos, button))
-        # Jumping over a ledge skips a tile
-        elif target_tile == AsciiTile.LEDGE_DOWN and dy == 1:
-            ledge_pos = new_pos + (1, 0)  # noqa: RUF005
-            neighbors.append((ledge_pos, button))
-        elif target_tile == AsciiTile.LEDGE_LEFT and dx == -1:
-            ledge_pos = new_pos + (0, -1)  # noqa: RUF005
-            neighbors.append((ledge_pos, button))
-        elif target_tile == AsciiTile.LEDGE_RIGHT and dx == 1:
-            ledge_pos = new_pos + (0, 1)  # noqa: RUF005
+        elif (
+            (target_tile == AsciiTile.LEDGE_DOWN and dy == 1)
+            or (target_tile == AsciiTile.LEDGE_LEFT and dx == -1)
+            or (target_tile == AsciiTile.LEDGE_RIGHT and dx == 1)
+        ):
+            # Jumping over a ledge skips a tile.
+            ledge_pos = new_pos + (dy, dx)  # noqa: RUF005
             neighbors.append((ledge_pos, button))
         elif target_tile in spinner_tiles:
             destination = _get_spinner_destination(new_pos, tiles)
