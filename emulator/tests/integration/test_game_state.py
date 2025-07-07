@@ -271,6 +271,26 @@ async def test_get_ascii_screen_seafoam_boulder_holes() -> None:
 
 
 @pytest.mark.integration
+async def test_get_ascii_screen_gym8_spinners() -> None:
+    """Test that the ASCII screen is correct for the spinners in Gym 8."""
+    await _helper_test_expected_screen(
+        state_filename="gym8_spinners.state",
+        expected_blockages={},
+        expected_screen=[
+            "∙∙∙∙∙▉◆▉∙∙",
+            "∙∙∙∙∙▉⇩▉∙∙",
+            "∙◆∙∙∙▉∙▉⊙⇧",
+            "▉▉▉▉◈∙⊙∙∙∙",
+            "∙∙∙⊙☻∙∙∙∙∙",
+            "∙∙∙⊙∙▉∙∙▉∙",
+            "▉▉▉▉∙▉◆∙▉∙",
+            "∙∙∙←∙∙∙∙∙∙",
+            "∙∙∙←∙∙⇆⇆∙∙",
+        ],
+    )
+
+
+@pytest.mark.integration
 async def _helper_test_expected_screen(
     state_filename: str,
     expected_blockages: dict[Coords, BlockedDirection],

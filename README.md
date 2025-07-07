@@ -13,8 +13,6 @@ This is an unofficial, fan-made project, for educational purposes only. The code
 ## TODOs in rough order of importance
 
 ### Required for Release
-* Add a test for reading the spinners in the 8th gym
-
 * Set up Junjo server and opentelemetry
 
 * Add node tests for the LLM calls
