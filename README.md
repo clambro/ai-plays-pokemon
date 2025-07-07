@@ -13,14 +13,12 @@ This is an unofficial, fan-made project, for educational purposes only. The code
 ## TODOs in rough order of importance
 
 ### Required for Release
-* Handle surfing in navigation + tests
 * Add a test for reading the spinners in the 8th gym
-
-* Test background tile and blocking generation from game states for strength boulders and seafoam elevation
 
 * Set up Junjo server and opentelemetry
 
 * Add node tests for the LLM calls
+    * Maybe make it so that the emulator state is saved only once at the end of each iteration, and any LLM tests are run on the full e2e loop. Would greatly improve the async issues.
     * Ensure that the player/rival names are at most 7 characters instead of 10
     * Tests for selecting tools
     * Tests for multiple button presses
@@ -30,13 +28,13 @@ This is an unofficial, fan-made project, for educational purposes only. The code
 
 ### Nice to Have
 * Add a strength puzzle solver + tests
+* Generate the overworld map legend dynamically
 
 * Add twitch chat integration so that viewers can talk to the AI (trivial once the twitch integration for ads is set up)
 
 * Add a tool for spinning around to find wild pokemon
 * Add a tool to rearrange the team
 * Add a tool to use items
-* Generate the overworld map legend dynamically
 * Some kind of info about PC pokemon/items?
 
 * Put the emulator on a separate process entirely to fix the remaning async audio issues.
