@@ -291,6 +291,26 @@ async def test_get_ascii_screen_gym8_spinners() -> None:
 
 
 @pytest.mark.integration
+async def test_get_ascii_screen_victory_road_pressure_plate() -> None:
+    """Test that the ASCII screen is correct for a pressure plate in Victory Road."""
+    await _helper_test_expected_screen(
+        state_filename="victory_road_plate.state",
+        expected_blockages={},
+        expected_screen=[
+            "▉∙∙▉▉▉▉▉▉▉",
+            "▉∙∙▉▉∙∙∙▉▉",
+            "∙∙◆▉∙∙∙∙▉▉",
+            "▉▉▉▉∙▉∙□▉▉",
+            "∙∙∙◈☻∙∙▉▉▉",
+            "▉▉∙∙∙∙∙▉▉▉",
+            "▉▉∙∙▉▉▉▉▉▉",
+            "▉▉▉▉▉▉▉▉▉▉",
+            "▉▉▉▉▉▉▉▉▉▉",
+        ],
+    )
+
+
+@pytest.mark.integration
 async def _helper_test_expected_screen(
     state_filename: str,
     expected_blockages: dict[Coords, BlockedDirection],

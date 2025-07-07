@@ -256,6 +256,8 @@ class YellowLegacyGameState(BaseModel):
                     blocks[b_idx] = AsciiTile.CUT_TREE
                 elif b_flat == self.map.boulder_hole_tiles:
                     blocks[b_idx] = AsciiTile.BOULDER_HOLE
+                elif b_flat == self.map.pressure_plate_tiles:
+                    blocks[b_idx] = AsciiTile.PRESSURE_PLATE
                 elif spinner_type := self._get_spinner_type(b_flat):
                     blocks[b_idx] = spinner_type
                 elif b[1, 0] in self.map.walkable_tiles:
