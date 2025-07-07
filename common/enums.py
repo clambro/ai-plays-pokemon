@@ -32,7 +32,19 @@ class AsciiTile(StrEnum):
     @classmethod
     def get_walkable_tiles(cls) -> list["AsciiTile"]:
         """Get the walkable tiles."""
-        return [cls.FREE, cls.GRASS, cls.WARP, cls.PIKACHU, cls.PLAYER]
+        return [
+            cls.FREE,
+            cls.GRASS,
+            cls.WARP,
+            cls.BOULDER_HOLE,
+            cls.PIKACHU,
+            cls.PLAYER,
+            cls.SPINNER_UP,
+            cls.SPINNER_DOWN,
+            cls.SPINNER_LEFT,
+            cls.SPINNER_RIGHT,
+            cls.SPINNER_STOP,
+        ]
 
     @classmethod
     def get_spinner_tiles(cls) -> list["AsciiTile"]:
