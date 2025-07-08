@@ -78,6 +78,27 @@ async def test_navigate_through_spinners() -> None:
         assert game_state.player.coords == Coords(row=16, col=8)
 
 
+@pytest.mark.integration
+async def test_navigate_through_water() -> None:
+    """Test navigating through water."""
+    save_file = Path(__file__).parent / "saves" / "celadon_water.state"
+    async with YellowLegacyEmulator(
+        save_state_path=save_file,
+        mute_sound=True,
+        headless=True,
+    ) as emulator:
+        game_state = emulator.get_game_state()
+        assert game_state.player.coords == Coords(row=20, col=19)
+
+        service = await _get_nav_service(emulator)
+
+        service._determine_target_coords = AsyncMock(return_value=Coords(row=16, col=21))
+        await service.navigate()
+
+        game_state = emulator.get_game_state()
+        assert game_state.player.coords == Coords(row=16, col=21)
+
+
 async def _get_nav_service(emulator: YellowLegacyEmulator) -> NavigationService:
     """Helper function to get a navigation service with the proper mocks."""
     game_state = emulator.get_game_state()

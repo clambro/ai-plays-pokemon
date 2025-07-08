@@ -49,6 +49,8 @@ COLLISION_PAIRS_BLOCKAGES = {
 
 CUT_TREE_MAP = [list("∙┬∙")]
 
+SURF_MAP = [list("∙≋∙")]
+
 SPINNER_MAP = [
     list(row)
     for row in [
@@ -128,6 +130,30 @@ async def test_get_accessible_coords_cut_tree_with_hm() -> None:
         Coords(row=0, col=0),
         map_data,
         [AsciiTile.CUT_TREE],
+    )
+    assert _coords_to_binary_map(set(accessible_coords), 1, 3) == ["111"]
+
+
+@pytest.mark.unit
+async def test_get_accessible_coords_surf_no_hm() -> None:
+    """Test that the accessible coords are correct for the surf map with no HMs."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = SURF_MAP
+
+    accessible_coords = await utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
+    assert _coords_to_binary_map(set(accessible_coords), 1, 3) == ["100"]
+
+
+@pytest.mark.unit
+async def test_get_accessible_coords_surf_with_hm() -> None:
+    """Test that the accessible coords are correct for the surf map with an HM."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = SURF_MAP
+
+    accessible_coords = await utils.get_accessible_coords(
+        Coords(row=0, col=0),
+        map_data,
+        [AsciiTile.WATER],
     )
     assert _coords_to_binary_map(set(accessible_coords), 1, 3) == ["111"]
 
@@ -374,6 +400,21 @@ async def test_calculate_path_through_cut_tree() -> None:
         Coords(row=0, col=2),
         map_data,
         [AsciiTile.CUT_TREE],
+    )
+    assert path == [Button.RIGHT, Button.RIGHT]
+
+
+@pytest.mark.unit
+async def test_calculate_path_through_water() -> None:
+    """Test that we can path through water if we have the right HMs."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = SURF_MAP
+
+    path = await utils.calculate_path_to_target(
+        Coords(row=0, col=0),
+        Coords(row=0, col=2),
+        map_data,
+        [AsciiTile.WATER],
     )
     assert path == [Button.RIGHT, Button.RIGHT]
 

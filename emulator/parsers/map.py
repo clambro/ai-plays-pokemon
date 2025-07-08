@@ -34,9 +34,10 @@ class Map(BaseModel):
     ledge_tiles_down: list[tuple[int, int]]
     spinner_tiles: SpinnerTileIds | None
     cut_tree_tiles: tuple[int, int, int, int] | None
+    boulder_hole_tiles: tuple[int, int, int, int] | None
+    pressure_plate_tiles: tuple[int, int, int, int] | None
     walkable_tiles: list[int]
-    collision_pairs: list[frozenset[tuple[int, int]]]
-    special_collision_blocks: list[int]
+    collision_pairs: list[frozenset[int]]
     north_connection: MapId | None
     south_connection: MapId | None
     east_connection: MapId | None
@@ -66,9 +67,11 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         ledge_tiles_down = []
         cut_tree_tiles = None
 
-    water_tile = 0x14 if tileset_id in [0, 3, 5, 7, 15, 16, 19, 24, 25] else None
+    water_tile = 0x14 if tileset_id in [0, 3, 5, 7, 15, 16, 17, 19, 24, 25] else None
     grass_tile = _GRASS_TILE_MAP.get(tileset_id)
     cut_tree_tiles = _CUT_TREE_TILE_MAP.get(tileset_id)
+    boulder_hole_tiles = (0x2F, 0x2F, 0x22, 0x22) if tileset_id == _Tileset.CAVERN else None
+    pressure_plate_tiles = (0x2B, 0x2C, 0x2D, 0x2E) if tileset_id == _Tileset.CAVERN else None
 
     walkable_tile_ptr = mem[0xD57D] | (mem[0xD57E] << 8)
     tile_bank, tile_offset = divmod(walkable_tile_ptr, 0x4000)
@@ -86,11 +89,6 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     # walkable. It's used to represent elevation differences.
     collision_pairs = _COLLISION_PAIRS.get(tileset_id, [])
 
-    # This is super hacky, but there are some blocks which are not walkable, despite their
-    # bottom-left tile being walkable. The reason appears to be the inclusion of one or more of
-    # the following tiles, but I can't find anything in the decompiled ROM that explains why.
-    special_collision_blocks = _SPECIAL_COLLISION_BLOCKS.get(tileset_id, [])
-
     return Map(
         id=MapId(mem[0xD3AB]),
         height=mem[0xD571],
@@ -101,9 +99,10 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         ledge_tiles_right=ledge_tiles_right,
         ledge_tiles_down=ledge_tiles_down,
         cut_tree_tiles=cut_tree_tiles,
+        boulder_hole_tiles=boulder_hole_tiles,
+        pressure_plate_tiles=pressure_plate_tiles,
         walkable_tiles=walkable_tiles,
         collision_pairs=collision_pairs,
-        special_collision_blocks=special_collision_blocks,
         spinner_tiles=_SPINNER_TILE_MAP.get(tileset_id),
         north_connection=MapId(mem[0xD3BE]) if mem[0xD3BE] != terminator else None,
         south_connection=MapId(mem[0xD3C9]) if mem[0xD3C9] != terminator else None,
@@ -152,27 +151,23 @@ _GRASS_TILE_MAP = {
 
 _COLLISION_PAIRS = {
     _Tileset.CAVERN: [
-        frozenset([(0x20, 0x05)]),
-        frozenset([(0x41, 0x05)]),
-        frozenset([(0x2A, 0x05)]),
-        frozenset([(0x05, 0x21)]),
-        frozenset([(0x14, 0x05)]),
+        frozenset([0x20, 0x05]),
+        frozenset([0x41, 0x05]),
+        frozenset([0x2A, 0x05]),
+        frozenset([0x05, 0x21]),
+        frozenset([0x14, 0x05]),
     ],
     _Tileset.FOREST: [
-        frozenset([(0x30, 0x2E)]),
-        frozenset([(0x52, 0x2E)]),
-        frozenset([(0x55, 0x2E)]),
-        frozenset([(0x56, 0x2E)]),
-        frozenset([(0x20, 0x2E)]),
-        frozenset([(0x5E, 0x2E)]),
-        frozenset([(0x5F, 0x2E)]),
-        frozenset([(0x14, 0x2E)]),
-        frozenset([(0x48, 0x2E)]),
+        frozenset([0x30, 0x2E]),
+        frozenset([0x52, 0x2E]),
+        frozenset([0x55, 0x2E]),
+        frozenset([0x56, 0x2E]),
+        frozenset([0x20, 0x2E]),
+        frozenset([0x5E, 0x2E]),
+        frozenset([0x5F, 0x2E]),
+        frozenset([0x14, 0x2E]),
+        frozenset([0x48, 0x2E]),
     ],
-}
-
-_SPECIAL_COLLISION_BLOCKS = {
-    _Tileset.CAVERN: [0x10, 0x17, 0x29, 0x31],
 }
 
 _CUT_TREE_TILE_MAP = {

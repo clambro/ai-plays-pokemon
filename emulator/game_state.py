@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Self
 
 import numpy as np
@@ -145,7 +146,8 @@ class YellowLegacyGameState(BaseModel):
         movepool = [m.name for p in self.party for m in p.moves]
         if "CUT" in movepool and Badge.BOULDERBADGE in self.player.badges:
             hm_tiles.append(AsciiTile.CUT_TREE)
-        # TODO: Surf with the Soul Badge.
+        if "SURF" in movepool and Badge.SOULBADGE in self.player.badges:
+            hm_tiles.append(AsciiTile.WATER)
         return hm_tiles
 
     def to_screen_coords(self, coords: Coords) -> Coords | None:
@@ -235,7 +237,8 @@ class YellowLegacyGameState(BaseModel):
         tiles = np.array(self.screen.tiles)
         # Each block on screen is a 2x2 square of tiles.
         blocks = np.full(SCREEN_SHAPE, AsciiTile.WALL, dtype=AsciiTile)
-        blockages: dict[Coords, BlockedDirection] = {}
+        blockages: defaultdict[Coords, BlockedDirection] = defaultdict(lambda: BlockedDirection(0))
+
         for i in range(0, tiles.shape[0], 2):
             for j in range(0, tiles.shape[1], 2):
                 b = tiles[i : i + 2, j : j + 2]
@@ -251,17 +254,20 @@ class YellowLegacyGameState(BaseModel):
                     blocks[b_idx] = AsciiTile.GRASS
                 elif b_flat == self.map.cut_tree_tiles:
                     blocks[b_idx] = AsciiTile.CUT_TREE
+                elif b_flat == self.map.boulder_hole_tiles:
+                    blocks[b_idx] = AsciiTile.BOULDER_HOLE
+                elif b_flat == self.map.pressure_plate_tiles:
+                    blocks[b_idx] = AsciiTile.PRESSURE_PLATE
                 elif spinner_type := self._get_spinner_type(b_flat):
                     blocks[b_idx] = spinner_type
-                elif (
-                    b[1, 0] in self.map.walkable_tiles
-                    and not np.isin(b, self.map.special_collision_blocks).any()
-                ):
+                elif b[1, 0] in self.map.walkable_tiles:
                     # Same bottom-left logic applies here, with special exceptions.
                     blocks[b_idx] = AsciiTile.FREE
 
                 blockages = self._get_blockage(i, j, tiles, blockages)
-        return np.array(blocks), blockages
+
+        # Remove the default behaviour so we can query blockages without adding new ones.
+        return np.array(blocks), dict(blockages)
 
     def _get_ledge_type(self, block: np.ndarray) -> AsciiTile | None:
         """
@@ -308,32 +314,36 @@ class YellowLegacyGameState(BaseModel):
         i: int,
         j: int,
         tiles: np.ndarray,
-        blockages: dict[Coords, BlockedDirection],
-    ) -> dict[Coords, BlockedDirection]:
+        blockages: defaultdict[Coords, BlockedDirection],
+    ) -> defaultdict[Coords, BlockedDirection]:
         """
-        Get the blockage for a given set of coordinates.
+        Get the blockage for a given set of coordinates by checking if the tiles in the bottom-left
+        corner of this block and the one above it are in a collision pair.
 
-        :param i: The row index of the block.
-        :param j: The column index of the block.
+        Comparisons for collisions, as elsewhere in Pokemon Yellow, are done using the bottom-left
+        tile of each block.
+
+        :param i: The tile row index of the upper-left corner of the block.
+        :param j: The tile column index of the upper-left corner of the block.
         :param tiles: The tiles array.
         :param blockages: The blockages dictionary to update.
         :return: The updated blockages dictionary.
         """
         bi, bj = i // 2, j // 2  # Block indices, as opposed to tile indices.
-        block = tiles[i : i + 2, j : j + 2]
+        block_tile = tiles[i + 1, j]  # The bottom-left tile of the block is the one used to check.
 
-        if i - 2 >= 0 and j + 2 < tiles.shape[1]:
-            row_above = tiles[i - 1, j : j + 2]
-            first_pair = {block[0, 0], row_above[0]}
-            second_pair = {block[0, 0], row_above[1]}
-            if first_pair in self.map.collision_pairs or second_pair in self.map.collision_pairs:
+        if i - 2 >= 0:
+            block_above_tile = tiles[i - 1, j]
+            pair = {block_tile, block_above_tile}
+            if pair in self.map.collision_pairs:
                 blockages[Coords(row=bi, col=bj)] |= BlockedDirection.UP
                 blockages[Coords(row=bi - 1, col=bj)] |= BlockedDirection.DOWN
-        if i - 2 >= 0 and j - 2 >= 0:
-            col_left = tiles[i : i + 2, j - 2]
-            first_pair = {block[0, 0], col_left[0]}
-            second_pair = {block[1, 0], col_left[1]}
-            if first_pair in self.map.collision_pairs or second_pair in self.map.collision_pairs:
+
+        if j - 2 >= 0:
+            block_left_tile = tiles[i + 1, j - 2]
+            pair = {block_left_tile, block_tile}
+            if pair in self.map.collision_pairs:
                 blockages[Coords(row=bi, col=bj)] |= BlockedDirection.LEFT
                 blockages[Coords(row=bi, col=bj - 1)] |= BlockedDirection.RIGHT
+
         return blockages

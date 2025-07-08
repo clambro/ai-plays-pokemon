@@ -26,6 +26,13 @@ You have explored {{explored_percentage}} of this map.
 - "{AsciiTile.PLAYER}" - Your current location.
 - "{AsciiTile.PIKACHU}" - Your companion Pikachu that follows you around. May or may not be present on the map. Pikachu will always be standing on a walkable tile if present.
 - "{AsciiTile.SIGN}" - An object that you can interact with to read something. Usually a signpost, but could be a TV, radio, or other object. The main distinction between signs and sprites is that signs are static. They will never move, and their text will never change. Signs are usually interacted with from below, and cannot be walked through.
+- "{AsciiTile.BOULDER_HOLE}" - A hole in the ground that you can fall through by standing on it. You can also push boulders into these holes to drop them to the floor below.
+- "{AsciiTile.PRESSURE_PLATE}" - A pressure plate that you can activate by pushing a boulder onto it.
+- "{AsciiTile.SPINNER_UP}" - A spinner tile that moves you upwards.
+- "{AsciiTile.SPINNER_DOWN}" - A spinner tile that moves you downwards.
+- "{AsciiTile.SPINNER_LEFT}" - A spinner tile that moves you leftwards.
+- "{AsciiTile.SPINNER_RIGHT}" - A spinner tile that moves you rightwards.
+- "{AsciiTile.SPINNER_STOP}" - The tile that stops your spinner movement.
 </legend>
 
 The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map is {{height}}x{{width}} blocks.

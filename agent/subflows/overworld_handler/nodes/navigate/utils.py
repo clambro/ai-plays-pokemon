@@ -210,6 +210,10 @@ def _get_neighbors(
     walkable_tiles = AsciiTile.get_walkable_tiles()
     spinner_tiles = AsciiTile.get_spinner_tiles()
 
+    tiles = map_data.ascii_tiles_ndarray
+    if tiles[pos.row, pos.col] in [AsciiTile.WARP, AsciiTile.BOULDER_HOLE]:
+        return []  # You can walk on these tiles, but they have no neighbours because they warp you.
+
     for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
         new_pos = pos + (dy, dx)  # noqa: RUF005
         button = _DIRECTION_BUTTON_MAP[(dy, dx)]
@@ -222,27 +226,25 @@ def _get_neighbors(
         ):
             continue
 
-        tiles = map_data.ascii_tiles_ndarray
         target_tile = tiles[new_pos.row, new_pos.col]
 
-        if not _is_blocked(pos, dy, dx, map_data) and (
-            target_tile in walkable_tiles
-            or (target_tile == AsciiTile.CUT_TREE and AsciiTile.CUT_TREE in hm_tiles)
+        if (
+            (target_tile == AsciiTile.LEDGE_DOWN and dy == 1)
+            or (target_tile == AsciiTile.LEDGE_LEFT and dx == -1)
+            or (target_tile == AsciiTile.LEDGE_RIGHT and dx == 1)
         ):
-            neighbors.append((new_pos, button))
-        # Jumping over a ledge skips a tile
-        elif target_tile == AsciiTile.LEDGE_DOWN and dy == 1:
-            ledge_pos = new_pos + (1, 0)  # noqa: RUF005
-            neighbors.append((ledge_pos, button))
-        elif target_tile == AsciiTile.LEDGE_LEFT and dx == -1:
-            ledge_pos = new_pos + (0, -1)  # noqa: RUF005
-            neighbors.append((ledge_pos, button))
-        elif target_tile == AsciiTile.LEDGE_RIGHT and dx == 1:
-            ledge_pos = new_pos + (0, 1)  # noqa: RUF005
+            # Jumping over a ledge skips a tile.
+            ledge_pos = new_pos + (dy, dx)  # noqa: RUF005
             neighbors.append((ledge_pos, button))
         elif target_tile in spinner_tiles:
             destination = _get_spinner_destination(new_pos, tiles)
             neighbors.append((destination, button))
+        elif not _is_blocked(pos, dy, dx, map_data) and (
+            target_tile in walkable_tiles
+            or (target_tile == AsciiTile.CUT_TREE and AsciiTile.CUT_TREE in hm_tiles)
+            or (target_tile == AsciiTile.WATER and AsciiTile.WATER in hm_tiles)
+        ):
+            neighbors.append((new_pos, button))
 
     return neighbors
 
