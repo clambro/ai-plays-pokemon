@@ -1,4 +1,5 @@
-from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
+from junjo import BaseState, BaseStore
+
 from agent.state import AgentState
 from agent.subflows.text_handler.enums import TextHandler
 from emulator.game_state import YellowLegacyGameState
@@ -8,7 +9,7 @@ from memory.raw_memory import RawMemory
 from memory.summary_memory import SummaryMemory
 
 
-class TextHandlerState(BaseStateWithEmulator):
+class TextHandlerState(BaseState):
     """The state used in the text handler graph workflow."""
 
     iteration: int | None = None
@@ -31,7 +32,7 @@ class TextHandlerState(BaseStateWithEmulator):
         )
 
 
-class TextHandlerStore(BaseStoreWithEmulator[TextHandlerState]):
+class TextHandlerStore(BaseStore[TextHandlerState]):
     """Concrete store for the text handler state."""
 
     async def set_state_from_parent(self, parent_state: AgentState) -> None:

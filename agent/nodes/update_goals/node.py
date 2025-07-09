@@ -28,4 +28,3 @@ class UpdateGoalsNode(Node[AgentStore]):
         goals = await service.update_goals()
 
         await store.set_goals(goals)
-        await store.set_emulator_save_state_from_emulator(self.emulator)

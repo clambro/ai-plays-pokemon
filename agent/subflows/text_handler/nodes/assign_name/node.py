@@ -32,4 +32,3 @@ class AssignNameNode(Node[TextHandlerStore]):
         raw_memory = await service.assign_name()
 
         await store.set_raw_memory(raw_memory)
-        await store.set_emulator_save_state_from_emulator(self.emulator)

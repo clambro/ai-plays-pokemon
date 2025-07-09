@@ -21,4 +21,3 @@ class DetermineHandlerNode(Node[TextHandlerStore]):
         handler = await service.determine_handler()
 
         await store.set_handler(handler)
-        await store.set_emulator_save_state_from_emulator(self.emulator)

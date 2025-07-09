@@ -25,4 +25,3 @@ class LoadMapNode(Node[OverworldHandlerStore]):
         current_map = await service.load_map()
 
         await store.set_current_map(current_map)
-        await store.set_emulator_save_state_from_emulator(self.emulator)

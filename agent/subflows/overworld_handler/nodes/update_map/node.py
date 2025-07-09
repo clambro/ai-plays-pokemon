@@ -32,4 +32,3 @@ class UpdateMapNode(Node[OverworldHandlerStore]):
         current_map = await service.update_map()
 
         await store.set_current_map(current_map)
-        await store.set_emulator_save_state_from_emulator(self.emulator)

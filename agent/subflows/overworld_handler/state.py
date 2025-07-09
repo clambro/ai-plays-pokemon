@@ -1,4 +1,5 @@
-from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
+from junjo import BaseState, BaseStore
+
 from agent.state import AgentState
 from agent.subflows.overworld_handler.enums import OverworldTool
 from emulator.game_state import YellowLegacyGameState
@@ -9,7 +10,7 @@ from memory.summary_memory import SummaryMemory
 from overworld_map.schemas import OverworldMap
 
 
-class OverworldHandlerState(BaseStateWithEmulator):
+class OverworldHandlerState(BaseState):
     """The state used in the overworld handler graph workflow."""
 
     iteration: int | None = None
@@ -37,7 +38,7 @@ class OverworldHandlerState(BaseStateWithEmulator):
         )
 
 
-class OverworldHandlerStore(BaseStoreWithEmulator[OverworldHandlerState]):
+class OverworldHandlerStore(BaseStore[OverworldHandlerState]):
     """Concrete store for the overworld handler state."""
 
     async def set_state_from_parent(self, parent_state: AgentState) -> None:

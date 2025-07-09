@@ -28,4 +28,3 @@ class UpdateSummaryMemoryNode(Node[AgentStore]):
         summary_memory = await service.update_summary_memory()
 
         await store.set_summary_memory(summary_memory)
-        await store.set_emulator_save_state_from_emulator(self.emulator)

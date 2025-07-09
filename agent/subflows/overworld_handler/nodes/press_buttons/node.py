@@ -32,4 +32,3 @@ class PressButtonsNode(Node[OverworldHandlerStore]):
         raw_memory = await service.press_buttons()
 
         await store.set_raw_memory(raw_memory)
-        await store.set_emulator_save_state_from_emulator(self.emulator)

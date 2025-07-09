@@ -41,4 +41,3 @@ class PrepareAgentStoreNode(Node[AgentStore]):
         await store.set_iterations_since_last_ltm_retrieval(
             state.iterations_since_last_ltm_retrieval + 1  # Is set to zero in the retrieval step.
         )
-        await store.set_emulator_save_state_from_emulator(self.emulator)

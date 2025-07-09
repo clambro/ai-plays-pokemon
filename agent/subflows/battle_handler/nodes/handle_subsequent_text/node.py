@@ -33,4 +33,3 @@ class HandleSubsequentTextNode(Node[BattleHandlerStore]):
         raw_memory = await service.handle_subsequent_text()
 
         await store.set_raw_memory(raw_memory)
-        await store.set_emulator_save_state_from_emulator(self.emulator)
