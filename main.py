@@ -12,6 +12,7 @@ from common.backup_service import create_backup, get_output_folder, load_backup,
 from common.constants import DEFAULT_ROM_PATH, ITERATIONS_PER_BACKUP
 from database.db_config import init_fresh_db
 from emulator.emulator import YellowLegacyEmulator
+from otel_config import setup_telemetry
 from streaming.server import BackgroundStreamServer
 
 
@@ -32,6 +33,8 @@ async def main(
     """
     if backup_folder and load_latest:
         raise ValueError("Cannot load latest backup and specify a backup folder at the same time.")
+
+    setup_telemetry()
 
     folder = await get_output_folder()
 
