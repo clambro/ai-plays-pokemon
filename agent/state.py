@@ -1,4 +1,3 @@
-from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Literal
 
@@ -29,7 +28,6 @@ class AgentState(BaseState):
     previous_handler: AgentStateHandler | None = None
     should_retrieve_memory: bool | None = None
     emulator_save_state: str | None = None
-    last_emulator_save_state_time: datetime | None = None
 
     def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
         """Get a string representation of the agent and game state to be used in prompts."""
@@ -97,14 +95,8 @@ class AgentStore(BaseStore[AgentState]):
 
     async def set_emulator_save_state_from_emulator(self, emulator: YellowLegacyEmulator) -> None:
         """
-        Set the emulator save state from the emulator, as long as it's been at least 1 second since
-        the last save. Saving takes about two frames, so doing it too often messes with the game's
-        audio, and it also hammers the telemetry.
+        Set the emulator save state from the emulator. Do this sparingly. Saving takes about two
+        frames, so doing it too often messes with the game's audio, and it also hammers the
+        telemetry.
         """
-        now = datetime.now(UTC)
-        state = await self.get_state()
-        last_save_state_time = state.last_emulator_save_state_time
-        if last_save_state_time and now - last_save_state_time < timedelta(seconds=1):
-            return
         await self.set_state({"emulator_save_state": await emulator.get_emulator_save_state()})
-        await self.set_state({"last_emulator_save_state_time": now})
