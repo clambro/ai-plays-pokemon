@@ -6,6 +6,7 @@ services:
     volumes:
       - ./.dbdata/sqlite:/dbdata/sqlite
       - ./.dbdata/duckdb:/dbdata/duckdb
+      - ./.env:/.env
     ports:
       - "1323:1323"
       - "50051:50051"
@@ -34,23 +35,6 @@ services:
     depends_on:
       junjo-server-backend:
         condition: service_healthy
-
-  junjo-jaeger:
-    image: jaegertracing/jaeger:2.3.0
-    container_name: junjo-jaeger
-    volumes:
-      - ./jaeger/config.yml:/jaeger/config.yml # Mount the config file
-      - jaeger_badger_store:/data/jaeger/badger/jaeger
-      - jaeger_badger_store_archive:/data/jaeger/badger/jaeger_archive
-    command: --config /jaeger/config.yml
-    user: root # Currently requires root for writing to the vol (track: https://github.com/jaegertracing/jaeger/issues/6458)
-    networks:
-      - junjo-network
-
-volumes:
-  jaeger_badger_store:
-  jaeger_badger_store_archive:
-
 
 networks:
   junjo-network:
