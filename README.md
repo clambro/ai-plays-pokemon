@@ -13,21 +13,13 @@ This is an unofficial, fan-made project, for educational purposes only. The code
 ## TODOs in rough order of importance
 
 ### Required for Release
-* Set up Junjo server and opentelemetry
+* Add a sokoban puzzle solver + tests
+* Generate the overworld map legend dynamically
 
-* Add node tests for the LLM calls
-    * Maybe make it so that the emulator state is saved only once at the end of each iteration, and any LLM tests are run on the full e2e loop. Would greatly improve the async issues.
-    * Ensure that the player/rival names are at most 7 characters instead of 10
-    * Tests for selecting tools
-    * Tests for multiple button presses
-
-* Twitch integration for dealing with ad breaks
 * Some kind of VM to run everything on
 
 ### Nice to Have
-* Add a strength puzzle solver + tests
-* Generate the overworld map legend dynamically
-
+* Twitch integration for dealing with ad breaks. I won't be able to schedule them myself unless I reach the affiliate tier, so for now just check if one is coming in the next ten seconds and wait if so.
 * Add twitch chat integration so that viewers can talk to the AI (trivial once the twitch integration for ads is set up)
 
 * Add a tool for spinning around to find wild pokemon
