@@ -1,4 +1,5 @@
-from agent.base import BaseStateWithEmulator, BaseStoreWithEmulator
+from junjo import BaseState, BaseStore
+
 from agent.state import AgentState
 from agent.subflows.battle_handler.schemas import BattleToolArgs
 from emulator.emulator import YellowLegacyGameState
@@ -8,7 +9,7 @@ from memory.raw_memory import RawMemory
 from memory.summary_memory import SummaryMemory
 
 
-class BattleHandlerState(BaseStateWithEmulator):
+class BattleHandlerState(BaseState):
     """The state used in the battle handler graph workflow."""
 
     iteration: int | None = None
@@ -32,7 +33,7 @@ class BattleHandlerState(BaseStateWithEmulator):
         )
 
 
-class BattleHandlerStore(BaseStoreWithEmulator[BattleHandlerState]):
+class BattleHandlerStore(BaseStore[BattleHandlerState]):
     """Concrete store for the battle handler state."""
 
     async def set_state_from_parent(self, parent_state: AgentState) -> None:

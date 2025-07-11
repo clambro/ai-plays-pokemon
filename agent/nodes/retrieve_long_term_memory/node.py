@@ -29,4 +29,3 @@ class RetrieveLongTermMemoryNode(Node[AgentStore]):
 
         await store.set_long_term_memory(long_term_memory)
         await store.set_iterations_since_last_ltm_retrieval(0)
-        await store.set_emulator_save_state_from_emulator(self.emulator)

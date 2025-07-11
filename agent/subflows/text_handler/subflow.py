@@ -31,4 +31,3 @@ class TextHandlerSubflow(Subflow[TextHandlerState, TextHandlerStore, AgentState,
             raise ValueError("Raw memory is not set")
 
         await parent_store.set_raw_memory(state.raw_memory)
-        await parent_store.set_emulator_save_state_from_emulator(self.emulator)

@@ -12,6 +12,7 @@ from common.backup_service import create_backup, get_output_folder, load_backup,
 from common.constants import DEFAULT_ROM_PATH, ITERATIONS_PER_BACKUP
 from database.db_config import init_fresh_db
 from emulator.emulator import YellowLegacyEmulator
+from otel_config import setup_telemetry
 from streaming.server import BackgroundStreamServer
 
 
@@ -21,6 +22,7 @@ async def main(
     *,
     mute_sound: bool = True,
     load_latest: bool = False,
+    track_telemetry: bool = False,
 ) -> None:
     """
     Get the emulator ticking on an async thread, and iteratively run the agent.
@@ -29,9 +31,13 @@ async def main(
     :param backup_folder: Optional path to load a saved state from.
     :param mute_sound: Whether to mute the sound.
     :param load_latest: Whether to load the latest backup.
+    :param track_telemetry: Whether to track telemetry.
     """
     if backup_folder and load_latest:
         raise ValueError("Cannot load latest backup and specify a backup folder at the same time.")
+
+    if track_telemetry:
+        setup_telemetry()
 
     folder = await get_output_folder()
 
@@ -75,6 +81,7 @@ if __name__ == "__main__":
     parser.add_argument("--backup-folder", type=Path, required=False)
     parser.add_argument("--mute-sound", action="store_true")
     parser.add_argument("--load-latest", action="store_true")
+    parser.add_argument("--track-telemetry", action="store_true")
     args = parser.parse_args()
     asyncio.run(
         main(
@@ -82,5 +89,6 @@ if __name__ == "__main__":
             backup_folder=args.backup_folder,
             mute_sound=args.mute_sound,
             load_latest=args.load_latest,
+            track_telemetry=args.track_telemetry,
         )
     )

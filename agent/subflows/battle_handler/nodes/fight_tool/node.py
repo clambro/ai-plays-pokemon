@@ -36,4 +36,3 @@ class FightToolNode(Node[BattleHandlerStore]):
         raw_memory = await service.fight()
 
         await store.set_raw_memory(raw_memory)
-        await store.set_emulator_save_state_from_emulator(self.emulator)

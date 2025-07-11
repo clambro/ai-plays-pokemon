@@ -35,5 +35,4 @@ class OverworldHandlerSubflow(
             raise ValueError("Iterations since last critique is not set")
 
         await parent_store.set_raw_memory(state.raw_memory)
-        await parent_store.set_emulator_save_state_from_emulator(self.emulator)
         await parent_store.set_iterations_since_last_critique(state.iterations_since_last_critique)

@@ -34,4 +34,3 @@ class DetermineHandlerNode(Node[BattleHandlerStore]):
 
         await store.set_raw_memory(raw_memory)
         await store.set_tool_args(tool_args)
-        await store.set_emulator_save_state_from_emulator(self.emulator)

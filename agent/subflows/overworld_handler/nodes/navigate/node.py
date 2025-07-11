@@ -36,4 +36,3 @@ class NavigationNode(Node[OverworldHandlerStore]):
 
         await store.set_current_map(current_map)
         await store.set_raw_memory(raw_memory)
-        await store.set_emulator_save_state_from_emulator(self.emulator)
