@@ -6,11 +6,23 @@ from common.enums import AsciiTile, BlockedDirection, MapId, WarpType
 from common.schemas import Coords
 from emulator.game_state import YellowLegacyGameState
 from emulator.schemas import Sign, Sprite, Warp
-from overworld_map.prompts import OVERWORLD_MAP_STR_FORMAT
+from overworld_map.prompts import LEGEND_MAP, OVERWORLD_MAP_STR_FORMAT
 
 DEFAULT_ENTITY_DESCRIPTION = (
     "No description added yet. Approach and interact with this entity to add a description."
 )
+_ALWAYS_VISIBLE_TILES = {
+    AsciiTile.UNSEEN,
+    AsciiTile.WALL,
+    AsciiTile.WATER,
+    AsciiTile.GRASS,
+    AsciiTile.FREE,
+    AsciiTile.PLAYER,
+    AsciiTile.SPRITE,
+    AsciiTile.WARP,
+    AsciiTile.PIKACHU,
+    AsciiTile.SIGN,
+}
 
 
 class OverworldSprite(Sprite):
@@ -138,6 +150,7 @@ class OverworldMap(BaseModel):
     def to_string(self, game_state: YellowLegacyGameState) -> str:
         """Return a string representation of the map."""
         tiles = self.ascii_tiles_str
+        legend = self._get_legend()
         explored_percentage = np.mean(self.ascii_tiles_ndarray != AsciiTile.UNSEEN)
         tile_above, blocked_above = self._get_tile_notes(BlockedDirection.UP)
         tile_below, blocked_below = self._get_tile_notes(BlockedDirection.DOWN)
@@ -146,6 +159,7 @@ class OverworldMap(BaseModel):
         return OVERWORLD_MAP_STR_FORMAT.format(
             map_name=self.id.name,
             ascii_map=tiles,
+            legend=legend,
             height=self.height,
             width=self.width,
             known_sprites=self._get_sprite_notes(),
@@ -169,6 +183,11 @@ class OverworldMap(BaseModel):
             screen_right=game_state.screen.right,
             connections=self._get_connection_notes(),
         )
+
+    def _get_legend(self) -> str:
+        """Get a string representation of the legend based on the tiles on the map."""
+        tiles = {AsciiTile(t) for row in self.ascii_tiles for t in row} | _ALWAYS_VISIBLE_TILES
+        return "\n".join(f'- "{t}": {LEGEND_MAP[t]}' for t in tiles)
 
     def _get_tile_notes(self, direction: BlockedDirection) -> tuple[str, str]:
         """
