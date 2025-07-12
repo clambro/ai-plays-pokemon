@@ -12,33 +12,13 @@ Map name: {{map_name}}
 </whole_map>
 You have explored {{explored_percentage}} of this map.
 <legend>
-- "{AsciiTile.UNSEEN}" - Tiles that you have not yet explored. Move toward these tiles to reveal them.
-- "{AsciiTile.FREE}" - A walkable tile with nothing noteworthy in it.
-- "{AsciiTile.WALL}" - A barrier (usually a wall or an object) that you cannot pass through.
-- "{AsciiTile.CUT_TREE}" - A tree.
-- "{AsciiTile.WATER}" - Water.
-- "{AsciiTile.GRASS}" - Tall grass, where wild Pokemon can be found.
-- "{AsciiTile.LEDGE_DOWN}" - A ledge that you can jump down from above. These tiles are only passable if you approach them from above and walk downwards.
-- "{AsciiTile.LEDGE_LEFT}" - A ledge that you can jump over leftwards. These tiles are only passable if you approach them from the right and walk leftwards.
-- "{AsciiTile.LEDGE_RIGHT}" - A ledge that you can jump over rightwards. These tiles are only passable if you approach them from the left and walk rightwards.
-- "{AsciiTile.SPRITE}" - A sprite that you can interact with. This could be an NPC, an item you can pick up, or some other interactable entity. You will need to use the screenshot to determine what the sprite is. You cannot walk through sprites, nor can you stand on top of them.
-- "{AsciiTile.WARP}" - A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.
-- "{AsciiTile.PLAYER}" - Your current location.
-- "{AsciiTile.PIKACHU}" - Your companion Pikachu that follows you around. May or may not be present on the map. Pikachu will always be standing on a walkable tile if present.
-- "{AsciiTile.SIGN}" - An object that you can interact with to read something. Usually a signpost, but could be a TV, radio, or other object. The main distinction between signs and sprites is that signs are static. They will never move, and their text will never change. Signs are usually interacted with from below, and cannot be walked through.
-- "{AsciiTile.BOULDER_HOLE}" - A hole in the ground that you can fall through by standing on it. You can also push boulders into these holes to drop them to the floor below.
-- "{AsciiTile.PRESSURE_PLATE}" - A pressure plate that you can activate by pushing a boulder onto it.
-- "{AsciiTile.SPINNER_UP}" - A spinner tile that moves you upwards.
-- "{AsciiTile.SPINNER_DOWN}" - A spinner tile that moves you downwards.
-- "{AsciiTile.SPINNER_LEFT}" - A spinner tile that moves you leftwards.
-- "{AsciiTile.SPINNER_RIGHT}" - A spinner tile that moves you rightwards.
-- "{AsciiTile.SPINNER_STOP}" - The tile that stops your spinner movement.
+{{legend}}
 </legend>
 
-The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map is {{height}}x{{width}} blocks.
+The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map in row-column order is {{height}}x{{width}} blocks.
 
 <screen_position>
-The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that the you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size). This should help you navigate from one map to another.
+The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size). This should help you navigate from one map to another.
 
 The top of the screen is currently at row {{screen_top}} in map coordinates.
 The bottom of the screen is currently at row {{screen_bottom}} in map coordinates.
@@ -87,8 +67,8 @@ Navigation tips:
   - Do not attempt to interact with a warp tile using the action button. You have to walk on or through the tile depending on its type to warp.
 - To connect from one map to another, you must either use a warp tile, or, *in outdoor maps only*, walk off the edge of the map. In outdoor maps, you will never be able to walk through a wall or barrier for any reason. You have to find where the edge of the map connects to the next map by looking at the ASCII screen.
 - If you are indoors, the edges of the map (indicated by a black void in the screenshot) are impassable. You cannot walk off the edge of an indoor map. The only exception to this is the case of double warp tiles, as described above. Warp tiles are the only way to move between maps indoors.
-- Your companion Pikachu will never block your movement. Unlike other sprites, you can walk through Pikachu, which will cause it to switch places with you. You can speak to Pikachu like any other sprite, but doing so only provides flavour text.
 - To interact with a sprite, you need to be directly adjacent to it, face it, and press the action button. The only exception to the direct adjacency rule is in poke-marts and pokemon centers where you interact with the clerk or nurse respectively from across the counter that is directly in front of them.
+- If you want to interact with a sprite, you should move to the tile adjacent to it. Do not attempt to move onto the sprite's tile. You cannot walk on or through sprites (except for Pikachu, as described above).
 - Note that some sprites move around, so their position may change between screenshots. Do not let this confuse you. The information that you have in the <known_sprites> section is the most accurate information available to you since it comes straight from the game's memory at this moment in time.
 - It is generally not worth interacting with sprites and signs more than once. They usually do not change between interactions.
 - There are no ghost walls or mislabeled tiles in the above maps. If you find your movement unexpectedly blocked by a wall or barrier, you are almost certainly misinterpreting the map. The map is always correct.
@@ -97,3 +77,27 @@ Navigation tips:
 Note that this ASCII information comes straight from the game's memory and is therefore perfectly reliable. Screenshot images can be misinterpreted, so use the ASCII map and screen to determine the exact location of any sprites or tiles, and consider the screenshot image as supplemental information to help you visually interpret the ASCII.
 </map_info>
 """.strip()
+
+LEGEND_MAP = {
+    AsciiTile.UNSEEN: "Tiles that you have not yet explored. Move toward these tiles to reveal them.",
+    AsciiTile.WALL: "A barrier (usually a wall or an object) that you cannot pass through.",
+    AsciiTile.WATER: "Water.",
+    AsciiTile.GRASS: "Tall grass, where wild Pokemon can be found.",
+    AsciiTile.LEDGE_DOWN: "A ledge that you can jump down from above. These tiles are only passable if you approach them from above and walk downwards.",
+    AsciiTile.LEDGE_LEFT: "A ledge that you can jump over from right to left. These tiles are only passable if you approach them from the right and walk leftwards.",
+    AsciiTile.LEDGE_RIGHT: "A ledge that you can jump over from left to right. These tiles are only passable if you approach them from the left and walk rightwards.",
+    AsciiTile.FREE: "A walkable tile with nothing noteworthy in it.",
+    AsciiTile.PLAYER: "Your current location.",
+    AsciiTile.SPRITE: "A sprite that you can interact with from an adjacent tile. This could be an NPC, an item you can pick up, or some other interactable entity. You cannot walk through sprites, nor can you stand on top of them.",
+    AsciiTile.WARP: "A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.",
+    AsciiTile.CUT_TREE: "A tree that can be cut down.",
+    AsciiTile.BOULDER_HOLE: "A hole in the ground that you can fall through by standing on it. You can also push boulders into these holes to drop them to the floor below.",
+    AsciiTile.PRESSURE_PLATE: "A pressure plate that you can activate by pushing a boulder onto it.",
+    AsciiTile.PIKACHU: "Your companion Pikachu that follows you around. Unlike other sprites, you can walk through Pikachu, which will cause it to switch places with you. You can speak to Pikachu like any other sprite, but doing so only provides flavour text.",
+    AsciiTile.SIGN: "An object that you can interact with to read something. Usually a signpost, but could be a TV, radio, or other object. The main distinction between signs and sprites is that signs are static. They will never move, and their text will never change. Signs are usually interacted with from below, and cannot be walked through.",
+    AsciiTile.SPINNER_UP: "A spinner tile that moves you upwards.",
+    AsciiTile.SPINNER_DOWN: "A spinner tile that moves you downwards.",
+    AsciiTile.SPINNER_LEFT: "A spinner tile that moves you leftwards.",
+    AsciiTile.SPINNER_RIGHT: "A spinner tile that moves you rightwards.",
+    AsciiTile.SPINNER_STOP: "The tile that stops your spinner movement.",
+}

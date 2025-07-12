@@ -14,7 +14,6 @@ This is an unofficial, fan-made project, for educational purposes only. The code
 
 ### Required for Release
 * Add a sokoban puzzle solver + tests
-* Generate the overworld map legend dynamically
 
 * Some kind of VM to run everything on
 
