@@ -11,7 +11,7 @@ from agent.subflows.overworld_handler.nodes.select_tool.prompts import (
 )
 from agent.subflows.overworld_handler.nodes.select_tool.schemas import SelectToolResponse
 from common.constants import MIN_ITERATIONS_PER_CRITIQUE
-from common.enums import AsciiTile
+from common.enums import AsciiTile, SpriteLabel
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
@@ -84,7 +84,7 @@ class SelectToolService:
 
         tiles = [t for row in self.current_map.ascii_tiles for t in row]
         if (
-            any(s.label == "BOULDER" for s in self.current_map.known_sprites.values())
+            any(s.label == SpriteLabel.BOULDER for s in self.current_map.known_sprites.values())
             and (AsciiTile.BOULDER_HOLE in tiles or AsciiTile.PRESSURE_PLATE in tiles)
             and game_state.can_use_strength
         ):

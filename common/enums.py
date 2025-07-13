@@ -113,6 +113,12 @@ class PokeballItem(StrEnum):
     MASTER_BALL = "MASTER BALL"
 
 
+class SpriteLabel(StrEnum):
+    """Sprites labels that we need to refer to by name. The rest are unused after being parsed."""
+
+    BOULDER = "BOULDER"
+
+
 class BattleType(Enum):
     """The type of battle."""
 
