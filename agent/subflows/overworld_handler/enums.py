@@ -7,3 +7,4 @@ class OverworldTool(StrEnum):
     PRESS_BUTTONS = "press_buttons"
     NAVIGATION = "navigation"
     CRITIQUE = "critique"
+    SOKOBAN_SOLVER = "sokoban_solver"
