@@ -7,9 +7,11 @@ from agent.subflows.overworld_handler.nodes.select_tool.prompts import (
     NAVIGATION_TOOL_BIKING_INFO,
     NAVIGATION_TOOL_INFO,
     SELECT_TOOL_PROMPT,
+    SOKOBAN_SOLVER_TOOL_INFO,
 )
 from agent.subflows.overworld_handler.nodes.select_tool.schemas import SelectToolResponse
 from common.constants import MIN_ITERATIONS_PER_CRITIQUE
+from common.enums import AsciiTile
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
@@ -79,5 +81,13 @@ class SelectToolService:
 
         if self.iterations_since_last_critique >= MIN_ITERATIONS_PER_CRITIQUE:
             info.append(CRITIQUE_TOOL_INFO)
+
+        tiles = [t for row in self.current_map.ascii_tiles for t in row]
+        if (
+            any(s.label == "BOULDER" for s in self.current_map.known_sprites.values())
+            and (AsciiTile.BOULDER_HOLE in tiles or AsciiTile.PRESSURE_PLATE in tiles)
+            and game_state.can_use_strength
+        ):
+            info.append(SOKOBAN_SOLVER_TOOL_INFO)
 
         return "\n".join(info)

@@ -40,7 +40,7 @@ The navigation tool allows you to navigate to any revealed, accessible tile on t
 
 Note that the navigation tool cannot transition you from one map to another. It can bring you to the edge of the current map, but you will need to use the button tool on your next iteration to transition to the next map.
 
-The navigation tool cannot be used to interact with entities.
+The navigation tool cannot be used to interact with entities, but it can be used to move to the tile next to them so that you can interact with them via the button tool on the next iteration.
 
 Give general guidance on where you want to go in your thoughts (e.g. to a given warp tile, to a given map boundary, to explore unexplored territory, towards a certain sprite, etc.), but do not provide specific coordinates. The navigation tool will determine the legal target coordinates and prompt you again to choose from them.
 </navigation_tool>
@@ -50,6 +50,14 @@ NAVIGATION_TOOL_BIKING_INFO = """
 <warning>
 You have lost access to the navigation tool because you are riding a bike. If you would like to use the navigation tool, you must first dismount your bike. If you are unable to dismount your bike because you are on Cycling Road, then you must use the button tool to move around the map.
 </warning>
+""".strip()
+
+SOKOBAN_SOLVER_TOOL_INFO = """
+<sokoban_solver_tool>
+TOOL_NAME: "sokoban_solver"
+
+The Sokoban solver tool will automatically solve the onscreen Sokoban puzzle for you, or inform you if the puzzle is not currently solvable.
+</sokoban_solver_tool>
 """.strip()
 
 CRITIQUE_TOOL_INFO = """
