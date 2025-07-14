@@ -1,3 +1,5 @@
+import asyncio
+
 from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.sokoban_solver.schemas import SokobanMap
@@ -34,7 +36,9 @@ class SokobanSolverService:
             logger.warning("No boulders or goals found in Sokoban map. Bailing.")
             return  # This shouldn't happen, but we need the option to bail if it does.
 
-        solution = await self._solve_sokoban(sokoban_map)
+        # This can get expensive, so we run it on its own thread.
+        solution = await asyncio.to_thread(self._solve_sokoban, sokoban_map)
+
         if not solution:
             self.raw_memory.add_memory(
                 iteration=self.iteration,
@@ -73,7 +77,7 @@ class SokobanSolverService:
 
         return SokobanMap(tiles=simplified_tiles, boulders=boulders, goals=goals)
 
-    async def _solve_sokoban(self, sokoban_map: SokobanMap) -> list[Button] | None:
+    def _solve_sokoban(self, sokoban_map: SokobanMap) -> list[Button] | None:
         """
         Solve the Sokoban puzzle using BFS on the state space. This could be optimized, but the
         state spaces in Pokemon are small and simple enough that this is likely fine.

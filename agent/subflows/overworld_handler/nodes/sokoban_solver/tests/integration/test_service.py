@@ -21,7 +21,7 @@ async def test_solve_sokoban_puzzle() -> None:
     async with YellowLegacyEmulator(
         save_state_path=save_file,
         mute_sound=True,
-        headless=False,
+        headless=True,
     ) as emulator:
         game_state = emulator.get_game_state()
         assert game_state.player.coords == Coords(row=14, col=12)
