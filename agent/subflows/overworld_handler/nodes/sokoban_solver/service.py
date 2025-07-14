@@ -1,7 +1,7 @@
-from collections import deque
+from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.sokoban_solver.schemas import SokobanMap
-from common.enums import AsciiTile, Button, SpriteLabel
+from common.enums import AsciiTile, BlockedDirection, Button, SpriteLabel
 from common.schemas import Coords
 from emulator.emulator import YellowLegacyEmulator
 from memory.raw_memory import RawMemory
@@ -31,6 +31,7 @@ class SokobanSolverService:
         sokoban_map = self._get_simplified_map()
 
         if not sokoban_map.boulders or not sokoban_map.goals:
+            logger.warning("No boulders or goals found in Sokoban map. Bailing.")
             return  # This shouldn't happen, but we need the option to bail if it does.
 
         solution = await self._solve_sokoban(sokoban_map)
@@ -53,7 +54,7 @@ class SokobanSolverService:
         boulders = {
             sprite.coords
             for sprite in self.current_map.known_sprites.values()
-            if sprite.label == SpriteLabel.BOULDER
+            if sprite.label == SpriteLabel.BOULDER and sprite.is_rendered
         }
         simplified_tiles = []
         goals = set()
@@ -67,43 +68,60 @@ class SokobanSolverService:
                 else:
                     simplified_row.append(WALL_TILE)
             simplified_tiles.append(simplified_row)
+        for b in boulders:
+            simplified_tiles[b.row][b.col] = FREE_TILE
 
         return SokobanMap(tiles=simplified_tiles, boulders=boulders, goals=goals)
 
     async def _solve_sokoban(self, sokoban_map: SokobanMap) -> list[Button] | None:
         """
         Solve the Sokoban puzzle using BFS on the state space. This could be optimized, but the
-        state spaces in Pokemon are small and simple enough that this is fine.
+        state spaces in Pokemon are small and simple enough that this is likely fine.
         """
         player_pos = self.emulator.get_game_state().player.coords
         initial_state = (player_pos, frozenset(sokoban_map.boulders))
 
-        queue = deque([(initial_state, [])])
+        queue = [(initial_state, [])]
         visited = {initial_state}
 
         while queue:
-            (current_player_pos, current_boulders), path = queue.popleft()
-            if current_boulders == sokoban_map.goals:  # Puzzle solved.
+            (current_player_pos, current_boulders), path = queue.pop(0)
+            if current_boulders & sokoban_map.goals:  # At least one goal is solved.
                 return path
 
-            for direction in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-                button = _DIRECTION_TO_BUTTON_MAP[direction]
+            # There's thankfully no special neighbour logic here. Unlike the general navigation
+            # service, the Sokoban puzzles never involve spinner tiles, surfing, or ledges.
+            for direction in [
+                Coords(row=0, col=1),
+                Coords(row=1, col=0),
+                Coords(row=0, col=-1),
+                Coords(row=-1, col=0),
+            ]:
                 new_player_pos = current_player_pos + direction
-                if not self._is_tile_free(new_player_pos, sokoban_map):
+                if not self._is_movement_possible(new_player_pos, direction, sokoban_map):
                     continue
 
+                button = _DIRECTION_TO_BUTTON_MAP[direction]
                 if new_player_pos in current_boulders:  # Pushing a boulder.
                     new_boulder_pos = new_player_pos + direction
-                    is_boulder_tile_free = self._is_tile_free(new_boulder_pos, sokoban_map)
-                    if new_boulder_pos not in current_boulders and is_boulder_tile_free:
-                        new_boulders = set(current_boulders)
-                        new_boulders.remove(new_player_pos)
-                        new_boulders.add(new_boulder_pos)
-                        new_state = (new_player_pos, frozenset(new_boulders))
+                    is_boulder_tile_free = self._is_movement_possible(
+                        new_boulder_pos,
+                        direction,
+                        sokoban_map,
+                    )
+                    if new_boulder_pos in current_boulders or not is_boulder_tile_free:
+                        continue  # Push is illegal.
 
-                        if new_state not in visited:
-                            visited.add(new_state)
-                            queue.append((new_state, [*path, button]))
+                    new_boulders = set(current_boulders)
+                    new_boulders.remove(new_player_pos)
+                    new_boulders.add(new_boulder_pos)
+                    # Pushing a boulder doesn't change the player's position!
+                    new_state = (current_player_pos, frozenset(new_boulders))
+
+                    if new_state not in visited:
+                        visited.add(new_state)
+                        queue.append((new_state, [*path, button]))
+
                 else:  # Regular walking.
                     new_state = (new_player_pos, current_boulders)
                     if new_state not in visited:
@@ -112,13 +130,19 @@ class SokobanSolverService:
 
         return None  # No solution found.
 
-    def _is_tile_free(self, pos: Coords, sokoban_map: SokobanMap) -> bool:
-        """Check if a position is valid (within bounds and walkable)."""
+    def _is_movement_possible(
+        self,
+        pos: Coords,
+        direction: Coords,
+        sokoban_map: SokobanMap,
+    ) -> bool:
+        """Check if a position is valid (within bounds, walkable, and not blocked)."""
         if (
             pos.row < 0
             or pos.row >= len(sokoban_map.tiles)
             or pos.col < 0
             or pos.col >= len(sokoban_map.tiles[0])
+            or self._is_blocked(pos, direction.row, direction.col)
         ):
             return False
         return sokoban_map.tiles[pos.row][pos.col] == FREE_TILE
@@ -137,7 +161,9 @@ class SokobanSolverService:
                 is_strength_active = True
 
             await self.emulator.press_button(button)
-            await self.emulator.wait_for_animation_to_finish()  # Wait for the boulder to move.
+            # The boulder pushing animation is not continuous, so wait twice to be safe.
+            await self.emulator.wait_for_animation_to_finish()
+            await self.emulator.wait_for_animation_to_finish()
             game_state = self.emulator.get_game_state()
             if (
                 game_state.player.coords == prev_game_state.player.coords
@@ -155,11 +181,26 @@ class SokobanSolverService:
             content="Successfully executed Sokoban solution.",
         )
 
+    def _is_blocked(self, current: Coords, dy: int, dx: int) -> bool:
+        """Check if the movement is blocked by a paired tile collision."""
+        blockages = self.current_map.blockages.get(current)
+        if not blockages:
+            return False
+        if dy == 1:
+            return bool(blockages & BlockedDirection.DOWN)
+        if dy == -1:
+            return bool(blockages & BlockedDirection.UP)
+        if dx == 1:
+            return bool(blockages & BlockedDirection.RIGHT)
+        if dx == -1:
+            return bool(blockages & BlockedDirection.LEFT)
+        return False
+
 
 _BUTTON_TO_DIRECTION_MAP = {
-    Button.RIGHT: (0, 1),
-    Button.LEFT: (0, -1),
-    Button.DOWN: (1, 0),
-    Button.UP: (-1, 0),
+    Button.RIGHT: Coords(row=0, col=1),
+    Button.LEFT: Coords(row=0, col=-1),
+    Button.DOWN: Coords(row=1, col=0),
+    Button.UP: Coords(row=-1, col=0),
 }
 _DIRECTION_TO_BUTTON_MAP = {v: k for k, v in _BUTTON_TO_DIRECTION_MAP.items()}

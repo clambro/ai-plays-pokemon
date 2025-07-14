@@ -38,6 +38,7 @@ class AsciiTile(StrEnum):
             cls.GRASS,
             cls.WARP,
             cls.BOULDER_HOLE,
+            cls.PRESSURE_PLATE,
             cls.PIKACHU,
             cls.PLAYER,
             cls.SPINNER_UP,

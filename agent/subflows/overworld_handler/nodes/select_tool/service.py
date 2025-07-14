@@ -83,11 +83,12 @@ class SelectToolService:
             info.append(CRITIQUE_TOOL_INFO)
 
         tiles = [t for row in self.current_map.ascii_tiles for t in row]
-        if (
-            any(s.label == SpriteLabel.BOULDER for s in self.current_map.known_sprites.values())
-            and (AsciiTile.BOULDER_HOLE in tiles or AsciiTile.PRESSURE_PLATE in tiles)
-            and game_state.can_use_strength
-        ):
+        has_goal = any(t in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE) for t in tiles)
+        has_boulder = any(
+            s.label == SpriteLabel.BOULDER and s.is_rendered
+            for s in self.current_map.known_sprites.values()
+        )
+        if has_boulder and has_goal:
             info.append(SOKOBAN_SOLVER_TOOL_INFO)
 
         return "\n".join(info)
