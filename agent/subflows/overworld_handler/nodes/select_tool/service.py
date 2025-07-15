@@ -88,7 +88,7 @@ class SelectToolService:
             s.label == SpriteLabel.BOULDER and s.is_rendered
             for s in self.current_map.known_sprites.values()
         )
-        if has_boulder and has_goal:
+        if has_boulder and has_goal and game_state.can_use_strength:
             info.append(SOKOBAN_SOLVER_TOOL_INFO)
 
         return "\n".join(info)

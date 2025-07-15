@@ -3,9 +3,10 @@ import asyncio
 from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.sokoban_solver.schemas import SokobanMap
-from common.enums import AsciiTile, BlockedDirection, Button, SpriteLabel
+from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, SpriteLabel
 from common.schemas import Coords
 from emulator.emulator import YellowLegacyEmulator
+from emulator.game_state import YellowLegacyGameState
 from memory.raw_memory import RawMemory
 from overworld_map.schemas import OverworldMap
 
@@ -158,6 +159,7 @@ class SokobanSolverService:
         for button in solution:
             next_pos = prev_game_state.player.coords + _BUTTON_TO_DIRECTION_MAP[button]
             if not is_strength_active and next_pos in sokoban_map.boulders:
+                await self._face_next_pos(button, prev_game_state)
                 await self.emulator.press_button(Button.A)  # Activate strength.
                 await self.emulator.press_button(Button.B)  # Dismiss the dialog box.
                 await self.emulator.press_button(Button.B)
@@ -199,6 +201,22 @@ class SokobanSolverService:
         if dx == -1:
             return bool(blockages & BlockedDirection.LEFT)
         return False
+
+    async def _face_next_pos(
+        self,
+        button: Button,
+        game_state: YellowLegacyGameState,
+    ) -> None:
+        """Face the next position."""
+        if (
+            (button == Button.RIGHT and game_state.player.direction != FacingDirection.RIGHT)
+            or (button == Button.LEFT and game_state.player.direction != FacingDirection.LEFT)
+            or (button == Button.DOWN and game_state.player.direction != FacingDirection.DOWN)
+            or (button == Button.UP and game_state.player.direction != FacingDirection.UP)
+        ):
+            # Skipping the wait here ensures that we rotate instead of walking.
+            await self.emulator.press_button(button, wait_for_animation=False)
+            await self.emulator.wait_for_animation_to_finish()
 
 
 _BUTTON_TO_DIRECTION_MAP = {
