@@ -6,6 +6,7 @@
 - What is Yellow Legacy? What is hard mode?
 - [Link to philosophy document](docs/philosophy.md)
 - Link to live stream
+- Buy me a coffee
 
 ## Technical Architecture
 
