@@ -1,4 +1,49 @@
-# ai-plays-pokemon
+# AI Workflow for Pokemon Yellow Legacy: Hard Mode!
+
+## Project Overview
+
+- What is this?
+- What is Yellow Legacy? What is hard mode?
+- Link to philosophy document
+- Link to live stream
+
+## Technical Architecture
+
+- Modular, production architecture
+- Junjo workflow
+- Full async async Python
+- Google Gemini LLMs
+- Emulator: PyBoy-based emulator with custom game state parsing
+- Memory Systems: Multi-tier memory (raw, summary, long-term) with RAG retrieval
+- Backup and restore logic
+- Decision Making: Modular subflows for battle, text, and overworld handling
+- Live Streaming: Real-time web interface showing agent progress
+- Link to architecture deep dive
+
+## Installation and Setup
+
+- Python and uv (note that the tests will fail without the save states that I can't share)
+- Getting the ROM
+- Env variables for Gemini and Junjo Server
+
+## Usage
+
+- Explain main.py and all its parameters
+- Backup/restore functionality
+- Live streaming server on localhost:8080
+
+## FAQs
+
+- Why Yellow Legacy?
+- Didn't GPP already do this?
+- Why use Junjo over other frameworks?
+- Why are you using Gemini Flash instead of Pro?
+- Why are the tests failing?
+- Can it play other Pokemon games? Will you adapt it to other games?
+- Do you intend to keep working on this?
+- How much does it cost to run?
+- How fast does it play?
+- Can I use this code?
 
 ## Licence & Affiliation Notice
 
@@ -7,27 +52,3 @@ All original source code in this repository is released under the [MIT Licence](
 This is an unofficial, fan-made project, for educational purposes only. The code in this repository is designed to work with Pokemon games but does not include any ROMs, save states, or game sprites. Users are responsible for ensuring they own legitimate copies of Pokémon games and comply with all applicable laws and terms of service.
 
 "Pokémon", Pokémon character names, and all related marks are owned by Nintendo, Game Freak, Creatures Inc., and The Pokémon Company. I am not affiliated with, endorsed, sponsored, or specifically approved by any of these entities.
-
----
-
-## TODOs in rough order of importance
-
-### Required for Release
-* Some kind of VM to run everything on
-* A proper readme file
-* Some kind of post about the philosophy behind this and an explanation of how it all works
-
-### Nice to Have
-* Twitch integration for dealing with ad breaks. I won't be able to schedule them myself unless I reach the affiliate tier, so for now just check if one is coming in the next ten seconds and wait if so.
-* Add twitch chat integration so that viewers can talk to the AI (trivial once the twitch integration for ads is set up)
-
-* Add a tool for spinning around to find wild pokemon
-* Add a tool to rearrange the team
-* Add a tool to use items
-* Some kind of info about PC pokemon/items?
-
-* Put the emulator on a separate process entirely to fix the remaning async audio issues.
-
-* Some better way of doing RAG that doesn't involve reading everything into memory would be nice. Might need to switch DBs for this. Could also offer to delete LTM after 1000 iterations without retrieval to make this more efficient.
-
-* Tool for using fly
