@@ -4,21 +4,20 @@
 
 - What is this?
 - What is Yellow Legacy? What is hard mode?
-- Link to philosophy document
+- [Link to philosophy document](docs/philosophy.md)
 - Link to live stream
 
 ## Technical Architecture
 
-- Modular, production architecture
-- Junjo workflow
-- Full async async Python
+- Modular, production architecture: Async, type-safe
+- Junjo workflow and server
 - Google Gemini LLMs
 - Emulator: PyBoy-based emulator with custom game state parsing
 - Memory Systems: Multi-tier memory (raw, summary, long-term) with RAG retrieval
 - Backup and restore logic
 - Decision Making: Modular subflows for battle, text, and overworld handling
 - Live Streaming: Real-time web interface showing agent progress
-- Link to architecture deep dive
+- [Link to architecture deep dive](docs/architecture.md)
 
 ## Installation and Setup
 
