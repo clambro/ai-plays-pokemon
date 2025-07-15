@@ -105,28 +105,35 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
             but you can skip it if you have bespoke handling for subsequent activity.
         """
         self._check_stopped()
-        # If we're deferring animation handling, we want to exit as quickly as possible.
-        hold_frames = 10 if wait_for_animation else 1
+        # If we're deferring animation handling, we want to exit as quickly as possible. Two frames
+        # seems to be the minimum to guarantee that the button press is registered.
+        hold_frames = 10 if wait_for_animation else 2
         async with self._button_lock:
             self._pyboy.button(button, hold_frames)
         if wait_for_animation:
             await self.wait_for_animation_to_finish()
 
     async def wait_for_animation_to_finish(self) -> None:
-        """Wait until all ongoing animations have finished."""
+        """
+        Wait until all ongoing animations have finished.
+
+        The various hyperparameters here are a bit wishy-washy. I determined emperically that they
+        work pretty well, but they're probably not optimal, especially since different scenarios
+        have different animation speeds.
+        """
         logger.info("Checking for animations and waiting for them to finish.")
+        self._check_stopped()
         successes = 0
-        required_successes = 5
-        game_state = self.get_game_state()
+        required_successes = 10
         while successes < required_successes:
+            game_state = self.get_game_state()
+            await asyncio.sleep(0.15)
             new_game_state = self.get_game_state()
             # The blinking cursor should not block progress, so we ignore it.
             if game_state.screen.tiles_without_cursor == new_game_state.screen.tiles_without_cursor:
                 successes += 1
             else:
                 successes = 0
-            game_state = new_game_state
-            await asyncio.sleep(0.1)
 
     async def get_emulator_save_state(self) -> str:
         """Get the current save state as a Base64 encoded string."""

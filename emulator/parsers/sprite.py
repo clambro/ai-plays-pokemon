@@ -1,6 +1,7 @@
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
+from common.enums import SpriteLabel
 from common.schemas import Coords
 
 _RANDOM_MOVEMENT = 0xFE
@@ -168,7 +169,7 @@ _ID_TO_SPRITE_LABEL = {
     0x68: "VAPOREON",
     0x69: "POKE BALL",
     0x6A: "FOSSIL",
-    0x6B: "BOULDER",
+    0x6B: SpriteLabel.BOULDER,
     0x6C: "PAPER",
     0x6D: "POKEDEX",
     0x6E: "CLIPBOARD",

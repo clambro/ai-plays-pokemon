@@ -13,9 +13,9 @@ This is an unofficial, fan-made project, for educational purposes only. The code
 ## TODOs in rough order of importance
 
 ### Required for Release
-* Add a sokoban puzzle solver + tests
-
 * Some kind of VM to run everything on
+* A proper readme file
+* Some kind of post about the philosophy behind this and an explanation of how it all works
 
 ### Nice to Have
 * Twitch integration for dealing with ad breaks. I won't be able to schedule them myself unless I reach the affiliate tier, so for now just check if one is coming in the next ten seconds and wait if so.
@@ -28,12 +28,6 @@ This is an unofficial, fan-made project, for educational purposes only. The code
 
 * Put the emulator on a separate process entirely to fix the remaning async audio issues.
 
-### Backlog
-* Numerical coords on screen? Dots to show past steps? A grid to show collisions? Maybe when I have tests set up. I'm convinced that the screenshot is effectively useless in the overworld.
 * Some better way of doing RAG that doesn't involve reading everything into memory would be nice. Might need to switch DBs for this. Could also offer to delete LTM after 1000 iterations without retrieval to make this more efficient.
-* Tool for using fly
 
-## Junjo Thoughts
-* Visualization is not idempotent because the dot file changes
-* Subflow visualizations don't have consistent file names
-* Trivial subgraphs with a single node and no edges don't display anything
+* Tool for using fly

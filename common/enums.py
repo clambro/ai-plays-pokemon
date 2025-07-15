@@ -38,6 +38,7 @@ class AsciiTile(StrEnum):
             cls.GRASS,
             cls.WARP,
             cls.BOULDER_HOLE,
+            cls.PRESSURE_PLATE,
             cls.PIKACHU,
             cls.PLAYER,
             cls.SPINNER_UP,
@@ -111,6 +112,12 @@ class PokeballItem(StrEnum):
     GREAT_BALL = "GREAT BALL"
     ULTRA_BALL = "ULTRA BALL"
     MASTER_BALL = "MASTER BALL"
+
+
+class SpriteLabel(StrEnum):
+    """Sprites labels that we need to refer to by name. The rest are unused after being parsed."""
+
+    BOULDER = "BOULDER"
 
 
 class BattleType(Enum):

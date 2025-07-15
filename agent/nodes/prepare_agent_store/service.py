@@ -18,14 +18,7 @@ class PrepareAgentStateService:
         self.emulator = emulator
 
     async def wait_for_animations(self) -> None:
-        """
-        Wait until all animations have finished so that we can begin the Agent loop.
-
-        We run the check twice to be absolutely sure. Some cutscenes have a slight delay between
-        actions, and missing that can break the map memory by changing the map half-way through the
-        agent loop.
-        """
-        await self.emulator.wait_for_animation_to_finish()
+        """Wait until all animations have finished so that we can begin the Agent loop."""
         await self.emulator.wait_for_animation_to_finish()
 
     async def determine_handler(self) -> AgentStateHandler:

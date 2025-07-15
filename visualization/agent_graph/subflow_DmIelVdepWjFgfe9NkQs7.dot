@@ -1,0 +1,24 @@
+digraph "subflow_DmIelVdepWjFgfe9NkQs7" {
+  rankdir=LR;
+  compound=true;
+  node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9];
+  JdLo07wushwKWc7q2KzG8 [label="NavigationNode"];
+  "7LEdEx6aTO93xzCUs9ISi" [label="DummyNode"];
+  KvKKT1BB4lup2olh4gAs4 [label="CritiqueNode"];
+  sKD3GXFXMgn2g4pYCfjZS [label="SokobanSolverNode"];
+  zgNWBhWWoUA3oIUfrO8bo [label="PressButtonsNode"];
+  I0mzRS7LKgSklICNgPxWP [label="LoadMapNode"];
+  prLEWbjcrFNZllkSTBl89 [label="UpdateMapNode"];
+  keQ9XnTgIjthnRX9FrjtN [label="SelectToolNode"];
+  I0mzRS7LKgSklICNgPxWP -> prLEWbjcrFNZllkSTBl89 [style="solid"];
+  prLEWbjcrFNZllkSTBl89 -> keQ9XnTgIjthnRX9FrjtN [style="solid"];
+  keQ9XnTgIjthnRX9FrjtN -> zgNWBhWWoUA3oIUfrO8bo [style="dashed", label="ToolIs(press_buttons)"];
+  keQ9XnTgIjthnRX9FrjtN -> JdLo07wushwKWc7q2KzG8 [style="dashed", label="ToolIs(navigation)"];
+  keQ9XnTgIjthnRX9FrjtN -> KvKKT1BB4lup2olh4gAs4 [style="dashed", label="ToolIs(critique)"];
+  keQ9XnTgIjthnRX9FrjtN -> sKD3GXFXMgn2g4pYCfjZS [style="dashed", label="ToolIs(sokoban_solver)"];
+  zgNWBhWWoUA3oIUfrO8bo -> "7LEdEx6aTO93xzCUs9ISi" [style="solid"];
+  JdLo07wushwKWc7q2KzG8 -> "7LEdEx6aTO93xzCUs9ISi" [style="solid"];
+  KvKKT1BB4lup2olh4gAs4 -> "7LEdEx6aTO93xzCUs9ISi" [style="solid"];
+  sKD3GXFXMgn2g4pYCfjZS -> "7LEdEx6aTO93xzCUs9ISi" [style="solid"];
+}
