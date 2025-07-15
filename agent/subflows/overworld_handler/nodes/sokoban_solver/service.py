@@ -12,6 +12,7 @@ from overworld_map.schemas import OverworldMap
 
 FREE_TILE = "F"
 WALL_TILE = "W"
+WARP_TILE = "P"
 
 
 class SokobanSolverService:
@@ -68,7 +69,10 @@ class SokobanSolverService:
             for col_idx, t in enumerate(row):
                 if t in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE):
                     goals.add(Coords(row=row_idx, col=col_idx))
-                if t in AsciiTile.get_walkable_tiles():
+
+                if t in (AsciiTile.WARP, AsciiTile.BOULDER_HOLE):
+                    simplified_row.append(WARP_TILE)
+                elif t in AsciiTile.get_walkable_tiles():
                     simplified_row.append(FREE_TILE)
                 else:
                     simplified_row.append(WALL_TILE)
@@ -103,7 +107,12 @@ class SokobanSolverService:
                 Coords(row=-1, col=0),
             ]:
                 new_player_pos = current_player_pos + direction
-                if not self._is_movement_possible(new_player_pos, direction, sokoban_map):
+                if not self._is_movement_possible(
+                    new_player_pos,
+                    direction,
+                    sokoban_map,
+                    is_boulder=False,
+                ):
                     continue
 
                 button = _DIRECTION_TO_BUTTON_MAP[direction]
@@ -113,6 +122,7 @@ class SokobanSolverService:
                         new_boulder_pos,
                         direction,
                         sokoban_map,
+                        is_boulder=True,
                     )
                     if new_boulder_pos in current_boulders or not is_boulder_tile_free:
                         continue  # Push is illegal.
@@ -140,6 +150,8 @@ class SokobanSolverService:
         pos: Coords,
         direction: Coords,
         sokoban_map: SokobanMap,
+        *,
+        is_boulder: bool,
     ) -> bool:
         """Check if a position is valid (within bounds, walkable, and not blocked)."""
         if (
@@ -150,41 +162,46 @@ class SokobanSolverService:
             or self._is_blocked(pos, direction.row, direction.col)
         ):
             return False
-        return sokoban_map.tiles[pos.row][pos.col] == FREE_TILE
+        valid_tiles = (FREE_TILE,)
+        if is_boulder:
+            # Boulders can be pushed onto warp tiles, but the player should avoid them.
+            valid_tiles += (WARP_TILE,)
+        return sokoban_map.tiles[pos.row][pos.col] in valid_tiles
 
     async def _execute_solution(self, solution: list[Button], sokoban_map: SokobanMap) -> None:
         """Execute the solution by pressing buttons."""
         is_strength_active = False
-        prev_game_state = self.emulator.get_game_state()
         for button in solution:
-            next_pos = prev_game_state.player.coords + _BUTTON_TO_DIRECTION_MAP[button]
+            game_state = self.emulator.get_game_state()
+            next_pos = game_state.player.coords + _BUTTON_TO_DIRECTION_MAP[button]
+
             if not is_strength_active and next_pos in sokoban_map.boulders:
-                await self._face_next_pos(button, prev_game_state)
+                await self._face_next_pos(button, game_state)
                 await self.emulator.press_button(Button.A)  # Activate strength.
                 await self.emulator.press_button(Button.B)  # Dismiss the dialog box.
                 await self.emulator.press_button(Button.B)
                 await self.emulator.press_button(Button.B)
                 is_strength_active = True
+            elif next_pos == game_state.pikachu.coords:
+                # We have to face Pikachu before we can walk through it.
+                await self._face_next_pos(button, game_state)
 
             await self.emulator.press_button(button)
-            # The boulder pushing animation is not continuous, so wait twice to be safe.
-            await self.emulator.wait_for_animation_to_finish()
-            await self.emulator.wait_for_animation_to_finish()
-            game_state = self.emulator.get_game_state()
+            next_game_state = self.emulator.get_game_state()
             if (
-                game_state.player.coords == prev_game_state.player.coords
-                and game_state.sprites == prev_game_state.sprites
+                next_game_state.player.coords == game_state.player.coords
+                and next_game_state.sprites == game_state.sprites
             ):
                 self.raw_memory.add_memory(
                     iteration=self.iteration,
                     content="Sokoban solver was interrupted. Skipping further execution.",
                 )
                 return
-            prev_game_state = game_state
+            next_game_state = game_state
 
         self.raw_memory.add_memory(
             iteration=self.iteration,
-            content="Successfully executed Sokoban solution.",
+            content="Successfully executed a Sokoban solution.",
         )
 
     def _is_blocked(self, current: Coords, dy: int, dx: int) -> bool:
@@ -214,7 +231,7 @@ class SokobanSolverService:
             or (button == Button.DOWN and game_state.player.direction != FacingDirection.DOWN)
             or (button == Button.UP and game_state.player.direction != FacingDirection.UP)
         ):
-            # Skipping the wait here ensures that we rotate instead of walking.
+            # Skipping the wait here ensures that we pivot instead of walking.
             await self.emulator.press_button(button, wait_for_animation=False)
             await self.emulator.wait_for_animation_to_finish()
 

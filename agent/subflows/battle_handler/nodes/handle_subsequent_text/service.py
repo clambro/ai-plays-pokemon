@@ -33,8 +33,6 @@ class HandleSubsequentTextService:
                 continue
 
             prev_state = game_state
-            # Double check for animations because there's sometimes a slight pause between them.
-            await self.emulator.wait_for_animation_to_finish()
             await self.emulator.wait_for_animation_to_finish()
             game_state = self.emulator.get_game_state()
             if game_state.screen.text == prev_state.screen.text:
