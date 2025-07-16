@@ -127,7 +127,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         required_successes = 5
         while successes < required_successes:
             game_state = self.get_game_state()
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.15)
             new_game_state = self.get_game_state()
             # The blinking cursor should not block progress, so we ignore it.
             if game_state.screen.tiles_without_cursor == new_game_state.screen.tiles_without_cursor:
