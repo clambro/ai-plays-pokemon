@@ -195,17 +195,18 @@ class OverworldMap(BaseModel):
 
     def _get_facing_tile_notes(self, game_state: YellowLegacyGameState) -> tuple[str, Coords]:
         """Get tile and coords of the tile the player is facing."""
-        coords = game_state.player.coords
-        direction = game_state.player.direction
-        row_col_map = {
-            FacingDirection.UP: (coords.row - 1, coords.col),
-            FacingDirection.DOWN: (coords.row + 1, coords.col),
-            FacingDirection.LEFT: (coords.row, coords.col - 1),
-            FacingDirection.RIGHT: (coords.row, coords.col + 1),
+        offset_map = {
+            FacingDirection.UP: Coords(row=-1, col=0),
+            FacingDirection.DOWN: Coords(row=1, col=0),
+            FacingDirection.LEFT: Coords(row=0, col=-1),
+            FacingDirection.RIGHT: Coords(row=0, col=1),
         }
-        row, col = row_col_map[direction]
-        tile = self.ascii_tiles[row][col]
-        return tile, Coords(row=row, col=col)
+        offset = offset_map[game_state.player.direction]
+        screen_coords = Coords(row=PLAYER_OFFSET_Y, col=PLAYER_OFFSET_X) + offset
+        map_coords = game_state.player.coords + offset
+        # We need to check the screen for adjacency because the tile may be on the next map.
+        tile = game_state.get_ascii_screen().screen[screen_coords.row][screen_coords.col]
+        return tile, map_coords
 
     def _get_tile_notes(
         self,
