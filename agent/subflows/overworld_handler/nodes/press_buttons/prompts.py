@@ -4,7 +4,7 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 {state}
 
 The following (case-sensitive) buttons are available to you:
-- a: The action button. Used to interact with objects in the game. The object you interact with will be the tile directly adjacent to you, in the direction that you are facing. The only exception to this is if you are interacting with a clerk at a mart or a nurse at a Pokemon Center. In these cases, you will use the action button on the counter in front of the clerk or nurse.
+- a: The action button. Used to interact with objects in the game. The object you interact with will be the tile directly adjacent to you, in the direction that you are facing. The only exception to this is if you are interacting with a clerk at a mart or a nurse at a Pokemon Center. In these cases, you will use the action button on the counter in front of the clerk or nurse. Make sure you are facing the direction of the object you are interacting with before pressing the action button.
 - start: Used to open the main menu.
 - up: Used to move the player upwards.
 - down: Used to move the player downwards.
