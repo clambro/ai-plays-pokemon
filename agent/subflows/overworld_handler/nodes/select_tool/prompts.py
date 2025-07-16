@@ -20,11 +20,10 @@ TOOL_NAME: "press_buttons"
 The button tool allows you to submit one or more button presses to the emulator. It is useful for:
 - Interacting with entities in the game (speaking to NPCs, picking up items, reading signs, activating objects, etc.).
 - Opening the main menu.
-- Rotating the player.
-- Moving the player one or two tiles at a time.
-- Transitioning from one map to another if you are at the edge of the current map or near/on a warp tile.
+- Changing the direction that you are facing.
+- Transitioning from one map to another if you are at the edge of the current map or on/near a warp tile.
 
-Do not use the button tool for navigation if the navigation tool is available, unless you are trying to transition to a different map.
+The button tool can be used to move around the map, but it is not as reliable as the navigation tool. Do not use the button tool for general navigation if the navigation tool is available.
 
 Give general guidance on which buttons to press in your thoughts, but do not provide specific button presses. The tool will determine the legal button presses and prompt you again to choose from them.
 </press_buttons_tool>
@@ -40,7 +39,7 @@ The navigation tool allows you to navigate to any revealed, accessible tile on t
 - Navigating directly to warp tiles.
 - Navigating to the boundaries of the current map
 
-Note that the navigation tool cannot transition you from one map to another. It can bring you to the edge of the current map, but you will need to use the button tool on your next iteration to transition to the next map.
+Note that the navigation tool cannot transition you from one map to another. It can bring you to the edge of the current map, but you will need to use the button tool on your next iteration to transition to the next map. Once you have switched maps, you can go back to using the navigation tool to move around the new map.
 
 The navigation tool cannot be used to interact with entities, but it can be used to move to the tile next to them so that you can interact with them via the button tool on the next iteration.
 
