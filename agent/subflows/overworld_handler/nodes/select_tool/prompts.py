@@ -24,6 +24,8 @@ The button tool allows you to submit one or more button presses to the emulator.
 - Moving the player one or two tiles at a time.
 - Transitioning from one map to another if you are at the edge of the current map or near/on a warp tile.
 
+Do not use the button tool for navigation if the navigation tool is available, unless you are trying to transition to a different map.
+
 Give general guidance on which buttons to press in your thoughts, but do not provide specific button presses. The tool will determine the legal button presses and prompt you again to choose from them.
 </press_buttons_tool>
 """.strip()
