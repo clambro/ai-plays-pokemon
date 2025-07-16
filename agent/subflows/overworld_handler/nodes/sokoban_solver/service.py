@@ -187,6 +187,12 @@ class SokobanSolverService:
                 await self._face_next_pos(button, game_state)
 
             await self.emulator.press_button(button)
+            if next_pos in sokoban_map.boulders:
+                sokoban_map.boulders.remove(next_pos)
+                sokoban_map.boulders.add(next_pos + _BUTTON_TO_DIRECTION_MAP[button])
+                # The boulders have an irregular animation, so we add an extra wait.
+                await self.emulator.wait_for_animation_to_finish()
+
             next_game_state = self.emulator.get_game_state()
             if (
                 next_game_state.player.coords == game_state.player.coords

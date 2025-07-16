@@ -18,7 +18,13 @@ class PrepareAgentStateService:
         self.emulator = emulator
 
     async def wait_for_animations(self) -> None:
-        """Wait until all animations have finished so that we can begin the Agent loop."""
+        """
+        Wait until all animations have finished so that we can begin the Agent loop.
+
+        We run the check twice to be absolutely sure. Some cutscenes have a slight delay between
+        actions, and missing that can cause weird downstream issues.
+        """
+        await self.emulator.wait_for_animation_to_finish()
         await self.emulator.wait_for_animation_to_finish()
 
     async def determine_handler(self) -> AgentStateHandler:
