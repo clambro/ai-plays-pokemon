@@ -126,7 +126,7 @@ class NavigationService:
         )
         formatted_map_boundaries = formatting.format_map_boundary_tiles(
             boundary_tiles,
-            formatting.get_map_connections(self.current_map),
+            self.current_map,
         )
 
         # Get model response.
