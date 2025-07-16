@@ -190,8 +190,8 @@ class SokobanSolverService:
             if next_pos in sokoban_map.boulders:
                 sokoban_map.boulders.remove(next_pos)
                 sokoban_map.boulders.add(next_pos + _BUTTON_TO_DIRECTION_MAP[button])
-                # The boulders have an irregular animation, so we add an extra wait.
-                await self.emulator.wait_for_animation_to_finish()
+                # The boulders have a slow, irregular animation, so we add an extra wait.
+                await asyncio.sleep(1)
 
             next_game_state = self.emulator.get_game_state()
             if (
