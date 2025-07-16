@@ -28,7 +28,7 @@ The right side of the screen is currently at column {{screen_right}} in map coor
 
 <player_position>
 You, the player, are at position {{player_coords}} in map coordinates.
-You are facing {{player_direction}}.
+You are facing {{player_direction}}. The tile you are facing is "{{facing_tile}}" at position {{facing_tile_coords}}.
 
 The tile directly above you is "{{tile_above}}"{{blocked_above}}.
 The tile directly below you is "{{tile_below}}"{{blocked_below}}.
@@ -55,7 +55,7 @@ You have discovered the following signs on the portion of the map that you have 
 {{known_signs}}
 </known_signs>
 
-Note that your notes for the above sprites, warps, and signs are only as accurate as your own memories are. The positional information comes from the game's memory, but the descriptions are based on your own observations and therefore fallible.
+Note that your descriptions of the above sprites, warps, and signs are only as accurate as your own memories are. The positional information, destinations of warp tiles, and labels of sprites come from the game's memory, but the descriptions are based on your own observations and are therefore fallible.
 
 Navigation tips:
 - You should explore as much of the map as possible to reveal the unexplored tiles, as they may be hiding important sprites or warp tiles. Tiles are considered explored once they are on screen, so move towards the unexplored tiles to reveal them.
@@ -67,11 +67,12 @@ Navigation tips:
   - Do not attempt to interact with a warp tile using the action button. You have to walk on or through the tile depending on its type to warp.
 - To connect from one map to another, you must either use a warp tile, or, *in outdoor maps only*, walk off the edge of the map. In outdoor maps, you will never be able to walk through a wall or barrier for any reason. You have to find where the edge of the map connects to the next map by looking at the ASCII screen.
 - If you are indoors, the edges of the map (indicated by a black void in the screenshot) are impassable. You cannot walk off the edge of an indoor map. The only exception to this is the case of double warp tiles, as described above. Warp tiles are the only way to move between maps indoors.
-- To interact with a sprite, you need to be directly adjacent to it, face it, and press the action button. The only exception to the direct adjacency rule is in Poke Marts, Pokemon Centers, or guard stations where you interact with the clerk/nurse/guard respectively from across the counter. In these cases, you must stand two tiles away from the sprite (horizontally or vertically depending on the counter, but not diagonally), face it across the counter (an adjacent "{AsciiTile.WALL}" tile), and press the action button.
+- Pay attention to the "leading to" description in each warp tile. This comes straight from the game's memory and will tell you which map you will be warped to from that tile.
+- To interact with a sprite, you need to be directly adjacent to it, face it, and press the action button. The only exception to the direct adjacency rule is in Poke Marts, Pokemon Centers, or gates where you interact with the clerk/nurse/guard respectively from across the counter. In these cases, you must stand two tiles away from the sprite (horizontally or vertically depending on the counter, but not diagonally), face it across the counter (an adjacent "{AsciiTile.WALL}" tile), and press the action button.
 - If you want to interact with a sprite, you should move to the tile adjacent to it. Do not attempt to move onto the sprite's tile. You cannot walk on or through sprites (except for Pikachu, as described above).
 - Note that some sprites move around, so their position may change between screenshots. Do not let this confuse you. The information that you have in the <known_sprites> section is the most accurate information available to you since it comes straight from the game's memory at this moment in time.
 - It is generally not worth interacting with sprites and signs more than once. They usually do not change between interactions.
-- There are no ghost walls or mislabeled tiles in the above maps. If you find your movement unexpectedly blocked by a wall or barrier, you are almost certainly misinterpreting the map. The map is always correct.
+- Pay attention to the "sprite is labeled" section in each sprite. This will tell you what the sprite is labeled as in the game's memory, and should help you determine what the sprite is.
 - Focus on the map when you are trying to navigate within a map. Focus on the screen when you are trying to navigate between maps.
 
 Note that this ASCII information comes straight from the game's memory and is therefore perfectly reliable. Screenshot images can be misinterpreted, so use the ASCII map and screen to determine the exact location of any sprites or tiles, and consider the screenshot image as supplemental information to help you visually interpret the ASCII.

@@ -2,7 +2,7 @@ import numpy as np
 from pydantic import BaseModel
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
-from common.enums import AsciiTile, BlockedDirection, MapId, WarpType
+from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpType
 from common.schemas import Coords
 from emulator.game_state import YellowLegacyGameState
 from emulator.schemas import AsciiScreenWithEntities, Sign, Sprite, Warp
@@ -152,6 +152,7 @@ class OverworldMap(BaseModel):
         tiles = self.ascii_tiles_str
         legend = self._get_legend()
         screen = game_state.get_ascii_screen()
+        facing_tile, facing_tile_coords = self._get_facing_tile_notes(game_state)
         explored_percentage = np.mean(self.ascii_tiles_ndarray != AsciiTile.UNSEEN)
         tile_above, blocked_above = self._get_tile_notes(BlockedDirection.UP, screen)
         tile_below, blocked_below = self._get_tile_notes(BlockedDirection.DOWN, screen)
@@ -170,6 +171,8 @@ class OverworldMap(BaseModel):
             ascii_screen=screen,
             player_coords=game_state.player.coords,
             player_direction=game_state.player.direction,
+            facing_tile=facing_tile,
+            facing_tile_coords=facing_tile_coords,
             tile_above=tile_above,
             blocked_above=blocked_above,
             tile_below=tile_below,
@@ -189,6 +192,20 @@ class OverworldMap(BaseModel):
         """Get a string representation of the legend based on the tiles on the map."""
         tiles = {AsciiTile(t) for row in self.ascii_tiles for t in row} | _ALWAYS_VISIBLE_TILES
         return "\n".join(f'- "{t}": {LEGEND_MAP[t]}' for t in tiles)
+
+    def _get_facing_tile_notes(self, game_state: YellowLegacyGameState) -> tuple[str, Coords]:
+        """Get tile and coords of the tile the player is facing."""
+        coords = game_state.player.coords
+        direction = game_state.player.direction
+        row_col_map = {
+            FacingDirection.UP: (coords.row - 1, coords.col),
+            FacingDirection.DOWN: (coords.row + 1, coords.col),
+            FacingDirection.LEFT: (coords.row, coords.col - 1),
+            FacingDirection.RIGHT: (coords.row, coords.col + 1),
+        }
+        row, col = row_col_map[direction]
+        tile = self.ascii_tiles[row][col]
+        return tile, Coords(row=row, col=col)
 
     def _get_tile_notes(
         self,

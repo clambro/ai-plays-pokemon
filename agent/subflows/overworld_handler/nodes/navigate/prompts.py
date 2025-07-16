@@ -24,9 +24,9 @@ Your most recent raw memory is repeated below for reference. The "thoughts" in y
 <last_memory>
 {last_memory}
 </last_memory>
-If you see coordinates in the <last_memory> section, do not treat them as mandatory. The full list of accessible coordinates was not available to you when you generated the memory, and you thus may have generated coordinates that are not accessible. Determine what the memory is trying to tell you and choose the best coordinates from the list of accessible coordinates above. Choosing inaccessible coordinates will result in an error.
+If you see coordinates in the <last_memory> section, do not treat them as mandatory. The full list of accessible coordinates was not available to you when you generated the memory, and you thus may have requested coordinates that are not accessible. You have a lot more information available to you in this prompt than you did when the above memory was generated, so you are allowed to overrule it if the request does not make sense. Determine what the memory is trying to tell you and choose the best coordinates from the list of accessible coordinates above. Choosing inaccessible coordinates will result in an error.
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your one sentence long thoughts on which coordinates you would like to navigate to given the information provided.
+- thoughts: Your one sentence long thoughts on which coordinates you would like to navigate to given the information provided. These thoughts will be appended verbatim to the end of the <last_memory> in your raw memory, so try to continue the thought process from there.
 - coords: The row-column coordinates of the tile you would like to navigate to. Must be one of the accessible coordinates provided above.
 """.strip()
