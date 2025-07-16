@@ -5,7 +5,7 @@ from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTile, BlockedDirection, MapId, WarpType
 from common.schemas import Coords
 from emulator.game_state import YellowLegacyGameState
-from emulator.schemas import Sign, Sprite, Warp
+from emulator.schemas import AsciiScreenWithEntities, Sign, Sprite, Warp
 from overworld_map.prompts import LEGEND_MAP, OVERWORLD_MAP_STR_FORMAT
 
 DEFAULT_ENTITY_DESCRIPTION = (
@@ -151,11 +151,12 @@ class OverworldMap(BaseModel):
         """Return a string representation of the map."""
         tiles = self.ascii_tiles_str
         legend = self._get_legend()
+        screen = game_state.get_ascii_screen()
         explored_percentage = np.mean(self.ascii_tiles_ndarray != AsciiTile.UNSEEN)
-        tile_above, blocked_above = self._get_tile_notes(BlockedDirection.UP)
-        tile_below, blocked_below = self._get_tile_notes(BlockedDirection.DOWN)
-        tile_left, blocked_left = self._get_tile_notes(BlockedDirection.LEFT)
-        tile_right, blocked_right = self._get_tile_notes(BlockedDirection.RIGHT)
+        tile_above, blocked_above = self._get_tile_notes(BlockedDirection.UP, screen)
+        tile_below, blocked_below = self._get_tile_notes(BlockedDirection.DOWN, screen)
+        tile_left, blocked_left = self._get_tile_notes(BlockedDirection.LEFT, screen)
+        tile_right, blocked_right = self._get_tile_notes(BlockedDirection.RIGHT, screen)
         return OVERWORLD_MAP_STR_FORMAT.format(
             map_name=self.id.name,
             ascii_map=tiles,
@@ -166,7 +167,7 @@ class OverworldMap(BaseModel):
             known_warps=self._get_warp_notes(),
             known_signs=self._get_sign_notes(),
             explored_percentage=f"{explored_percentage:.0%}",
-            ascii_screen=game_state.get_ascii_screen(),
+            ascii_screen=screen,
             player_coords=game_state.player.coords,
             player_direction=game_state.player.direction,
             tile_above=tile_above,
@@ -189,12 +190,17 @@ class OverworldMap(BaseModel):
         tiles = {AsciiTile(t) for row in self.ascii_tiles for t in row} | _ALWAYS_VISIBLE_TILES
         return "\n".join(f'- "{t}": {LEGEND_MAP[t]}' for t in tiles)
 
-    def _get_tile_notes(self, direction: BlockedDirection) -> tuple[str, str]:
+    def _get_tile_notes(
+        self,
+        direction: BlockedDirection,
+        screen: AsciiScreenWithEntities,
+    ) -> tuple[str, str]:
         """
         Get the adjacent tile and blocking notes for the player's current position in the given
         direction.
 
         :param blocked: The blocked direction.
+        :param screen: The ASCII screen with entities.
         :return: A tuple of the adjacent tile and blocking notes.
         """
         text = ", but your movement in this direction is blocked by an elevation difference."
@@ -206,8 +212,8 @@ class OverworldMap(BaseModel):
         }
         row, col = row_col_map[direction]
 
-        tile = self.ascii_tiles_ndarray[row, col]
-        blockage = self.blockages.get(Coords(row=row, col=col))
+        tile = screen.screen[row][col]
+        blockage = screen.blockages.get(Coords(row=row, col=col))
         blocked_text = text if blockage and blockage & direction else ""
         return tile, blocked_text
 
