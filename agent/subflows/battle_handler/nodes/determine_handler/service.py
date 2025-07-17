@@ -97,7 +97,7 @@ class DetermineHandlerService:
         if game_state.battle.battle_type == BattleType.WILD:
             for ball in PokeballItem:
                 for i, item in enumerate(game_state.inventory.items):
-                    if item.name == ball.name:
+                    if item.name == ball.value:
                         args.append(ThrowBallToolArgs(item_index=i, ball=ball))
                         break
             args.append(RunToolArgs())
