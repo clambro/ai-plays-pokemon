@@ -26,7 +26,7 @@ The button tool allows you to submit one or more button presses to the emulator.
 
 The button tool can be used to move around the map, but it is not as reliable as the navigation tool. Do not use the button tool for general navigation if the navigation tool is available.
 
-If you are standing next to an entity and wish to interact with it, just say so. Do not list the specific button presses that this requires. The button tool will handle this for you.
+If you are standing next to an entity and wish to interact with it, just say so. Do not list the specific button presses that this requires. The button tool will handle this for you. The same goes for rotating in place to find wild Pokemon, just say that you want to rotate in place and the tool will handle the rest.
 
 Give general guidance on which buttons to press in your thoughts, but do not provide specific button presses. The tool will determine the legal button presses and prompt you again to choose from them.
 </press_buttons_tool>
@@ -47,6 +47,8 @@ Note that the navigation tool cannot transition you from one map to another. It 
 The navigation tool cannot be used to interact with entities, but it can be used to move to the tile next to them so that you can interact with them via the button tool on the next iteration.
 
 The navigation tool intentionally tries to avoid random encounters with wild Pokemon for smoother navigation, and is thus not an efficient way to find wild Pokemon.
+
+Do not attempt to navigate to the tile that you are currently standing on. This does nothing.
 
 The navigation tool has access to a list of good exploration candidates in maps that are not fully explored. Asking the navigation tool to move to an exploration candidate is the fastest way to explore the map. You do not know where the exploration candidates are. Only the tool knows them, so don't provide any hallucinated exploration coordinates. Give a general description of where you want to go, specifically mention that you want to head to "an exploration candidate," and the tool will determine the best tile to move to.
 

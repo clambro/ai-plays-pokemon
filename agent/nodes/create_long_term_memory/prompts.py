@@ -23,6 +23,8 @@ Guidelines for creating new long-term memory objects:
 - Never include coordinates in your content (e.g. for warp points, sprites, etc.). The game's memory will provide coordinate information as needed.
 - Do not create duplicate memories. If you already have a memory with a similar title to one that you might create here, do not create a new one. You will have the chance to edit existing memories elsewhere.
 - Titles must be unique.
+- Long term memory objects should be concise and to the point. A couple paragraphs max.
+- Long term memory objects should not include mundane information, like wild Pokemon that were defeated or individual moves that were used. A good rule of thumb is that everything in your long term memory should still be relevant a thousand iterations from now. If it isn't, it probably does not need to be in there.
 
 Your response must be in the JSON format described below, with the keys defined as follows:
 - title: The title of the new long-term memory object in SCREAMING_SNAKE_CASE with no punctuation.

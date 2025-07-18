@@ -39,7 +39,7 @@ class NavigationService:
         self.raw_memory = raw_memory
         self.state_string_builder = state_string_builder
 
-    async def navigate(self) -> tuple[OverworldMap, RawMemory]:
+    async def navigate(self) -> tuple[OverworldMap, RawMemory]:  # noqa: PLR0911
         """Determine the target coordinates and navigate to them."""
         game_state = self.emulator.get_game_state()
         hm_tiles = game_state.get_hm_tiles()
@@ -58,6 +58,17 @@ class NavigationService:
             self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content=f"I tried to navigate to {coords}, but I'm already there!",
+            )
+            return self.current_map, self.raw_memory
+        if self.current_map.ascii_tiles[coords.row][coords.col] == AsciiTile.SPRITE:
+            logger.warning("Cancelling navigation due to sprite tile.")
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=(
+                    f"Navigation failed. The target coordinates {coords} are occupied by a sprite."
+                    f" If I want to interact with the sprite, I have to navigate to a tile adjacent"
+                    f" to it and then use the button tool to interact with it."
+                ),
             )
             return self.current_map, self.raw_memory
         if coords not in accessible_coords:
