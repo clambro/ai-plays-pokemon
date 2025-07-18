@@ -90,7 +90,7 @@ class DetermineHandlerService:
             args.extend(
                 [
                     SwitchPokemonToolArgs(party_index=i, name=p.name, species=p.species)
-                    for i, p in enumerate(game_state.party, start=1)
+                    for i, p in enumerate(game_state.party)
                     if p != player_pokemon
                 ]
             )
