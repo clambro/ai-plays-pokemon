@@ -1,0 +1,27 @@
+digraph "subflow_WQ9rYxUhB1KhxJy926ErG" {
+  rankdir=LR;
+  compound=true;
+  node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9];
+  zcZHOwNWq2iGXHoq7Unfq [label="SwapFirstPokemonNode"];
+  gHyT5eDnD6lClyG2wvvC7 [label="LoadMapNode"];
+  XZ5083abt8b32kurKDpZJ [label="SokobanSolverNode"];
+  hGeOtfjwzMNi8REWR5bw5 [label="DummyNode"];
+  "76e5x9HAiY82aOdBFbFwa" [label="PressButtonsNode"];
+  QA6qvRMD3nsmvuQfLgcWs [label="SelectToolNode"];
+  Jo6vs7O77dL8VK4HDMq8m [label="NavigationNode"];
+  sKYQmMABoQMMWV2OKaFXy [label="UpdateMapNode"];
+  Jm2Evym7wNGGa0sn3gtSQ [label="CritiqueNode"];
+  gHyT5eDnD6lClyG2wvvC7 -> sKYQmMABoQMMWV2OKaFXy [style="solid"];
+  sKYQmMABoQMMWV2OKaFXy -> QA6qvRMD3nsmvuQfLgcWs [style="solid"];
+  QA6qvRMD3nsmvuQfLgcWs -> "76e5x9HAiY82aOdBFbFwa" [style="dashed", label="ToolIs(press_buttons)"];
+  QA6qvRMD3nsmvuQfLgcWs -> Jo6vs7O77dL8VK4HDMq8m [style="dashed", label="ToolIs(navigation)"];
+  QA6qvRMD3nsmvuQfLgcWs -> zcZHOwNWq2iGXHoq7Unfq [style="dashed", label="ToolIs(swap_first_pokemon)"];
+  QA6qvRMD3nsmvuQfLgcWs -> XZ5083abt8b32kurKDpZJ [style="dashed", label="ToolIs(sokoban_solver)"];
+  QA6qvRMD3nsmvuQfLgcWs -> Jm2Evym7wNGGa0sn3gtSQ [style="dashed", label="ToolIs(critique)"];
+  "76e5x9HAiY82aOdBFbFwa" -> hGeOtfjwzMNi8REWR5bw5 [style="solid"];
+  Jo6vs7O77dL8VK4HDMq8m -> hGeOtfjwzMNi8REWR5bw5 [style="solid"];
+  zcZHOwNWq2iGXHoq7Unfq -> hGeOtfjwzMNi8REWR5bw5 [style="solid"];
+  XZ5083abt8b32kurKDpZJ -> hGeOtfjwzMNi8REWR5bw5 [style="solid"];
+  Jm2Evym7wNGGa0sn3gtSQ -> hGeOtfjwzMNi8REWR5bw5 [style="solid"];
+}

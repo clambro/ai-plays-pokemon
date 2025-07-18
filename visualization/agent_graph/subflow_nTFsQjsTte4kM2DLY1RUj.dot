@@ -1,0 +1,18 @@
+digraph "subflow_nTFsQjsTte4kM2DLY1RUj" {
+  rankdir=LR;
+  compound=true;
+  node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9];
+  r8C5n5YZGjcdk5noUXuPw [label="AssignNameNode"];
+  uLGVmI8wz4cWu1leLHFI4 [label="HandleDialogBoxNode"];
+  oV1u0VWW0zxIOWYSNaKZp [label="MakeDecisionNode"];
+  MBZqRNb17kyvsYXXvjUGi [label="DummyNode"];
+  c6Wq1TxDB65XJpJinzXim [label="DetermineHandlerNode"];
+  c6Wq1TxDB65XJpJinzXim -> uLGVmI8wz4cWu1leLHFI4 [style="dashed", label="HandlerIs(dialog_box)"];
+  c6Wq1TxDB65XJpJinzXim -> r8C5n5YZGjcdk5noUXuPw [style="dashed", label="HandlerIs(name)"];
+  c6Wq1TxDB65XJpJinzXim -> oV1u0VWW0zxIOWYSNaKZp [style="dashed", label="HandlerIs(generic)"];
+  c6Wq1TxDB65XJpJinzXim -> MBZqRNb17kyvsYXXvjUGi [style="dashed", label="HandlerIs(None)"];
+  uLGVmI8wz4cWu1leLHFI4 -> MBZqRNb17kyvsYXXvjUGi [style="solid"];
+  r8C5n5YZGjcdk5noUXuPw -> MBZqRNb17kyvsYXXvjUGi [style="solid"];
+  oV1u0VWW0zxIOWYSNaKZp -> MBZqRNb17kyvsYXXvjUGi [style="solid"];
+}
