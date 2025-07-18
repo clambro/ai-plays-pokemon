@@ -46,6 +46,8 @@ The navigation tool cannot be used to interact with entities, but it can be used
 
 The navigation tool intentionally tries to avoid random encounters with wild Pokemon for smoother navigation, and is thus not an efficient way to find wild Pokemon.
 
+The navigation tool has access to a list of good exploration candidates in maps that are not fully explored. Asking the navigation tool to move to an exploration candidate is the fastest way to explore the map. You do not know where the exploration candidates are. Only the tool knows them, so don't provide any hallucinated exploration coordinates. Give a general description of where you want to go, specifically mention that you want to head to "an exploration candidate," and the tool will determine the best tile to move to.
+
 Give general guidance on where you want to go in your thoughts (e.g. to a given warp tile, to a given map boundary, to explore unexplored territory, towards a certain sprite, etc.), but do not provide specific coordinates. The navigation tool will determine the legal target coordinates and prompt you again to choose from them.
 </navigation_tool>
 """.strip()
