@@ -26,6 +26,8 @@ The button tool allows you to submit one or more button presses to the emulator.
 
 The button tool can be used to move around the map, but it is not as reliable as the navigation tool. Do not use the button tool for general navigation if the navigation tool is available.
 
+If you are standing next to an entity and wish to interact with it, just say so. Do not list the specific button presses that this requires. The button tool will handle this for you.
+
 Give general guidance on which buttons to press in your thoughts, but do not provide specific button presses. The tool will determine the legal button presses and prompt you again to choose from them.
 </press_buttons_tool>
 """.strip()
