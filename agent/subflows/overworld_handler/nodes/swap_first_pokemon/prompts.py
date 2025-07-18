@@ -30,10 +30,10 @@ Species: Rattata
 </example_input>
 
 <example_output>
-{
+{{
     "thoughts": "Zippy the Pikachu is currently in position 0, and I want Shelly the Squirtle to be the first Pokemon in my party. It is currently in position 1, so I will return 1.",
     "index": 1
-}
+}}
 </example_output>
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:

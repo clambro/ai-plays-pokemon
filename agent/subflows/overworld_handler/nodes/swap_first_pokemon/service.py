@@ -50,8 +50,12 @@ class SwapFirstPokemonService:
 
     async def _get_swap_index(self) -> int:
         """Get the index of the Pokemon to swap with the first Pokemon."""
-        last_memory = self.raw_memory.pieces.get(self.iteration) or ""
-        prompt = SWAP_FIRST_POKEMON_PROMPT.format(last_memory=last_memory)
+        game_state = self.emulator.get_game_state()
+        last_memory = self.raw_memory.pieces[self.iteration]
+        prompt = SWAP_FIRST_POKEMON_PROMPT.format(
+            thought=last_memory,
+            party_info=game_state.party_info,
+        )
         response = await self.llm_service.get_llm_response_pydantic(
             messages=prompt,
             schema=SwapFirstPokemonResponse,
@@ -65,38 +69,58 @@ class SwapFirstPokemonService:
         if game_state.is_text_on_screen():
             raise SwapPokemonError("Can't swap Pokemon in a non-overworld state.")
 
-        # Open the start menu.
+        # Splitting into sub-steps for easier debugging. Otherwise the various game states become
+        # too difficult to keep track of.
+        await self._open_start_menu()
+        await self._open_pokemon_menu()
+        await self._select_pokemon(pokemon_index)
+        await self._select_switch_option()
+        await self._swap_pokemon()
+
+    async def _open_start_menu(self) -> None:
+        """Open the start menu."""
         await self.emulator.press_button(Button.START)
         game_state = self.emulator.get_game_state()
         screen_text = game_state.screen.text
         if "POKéDEX" not in screen_text and "POKéMON" not in screen_text:
             raise SwapPokemonError("Failed to open the START menu.")
 
-        # Open the POKéMON menu.
+    async def _open_pokemon_menu(self) -> None:
+        """Open the POKéMON menu."""
+        game_state = self.emulator.get_game_state()
         idx_diff = game_state.screen.menu_item_index - 1
         await self._move_cursor(idx_diff)
+
+        screen_text = self.emulator.get_game_state().screen.text
         if "▶POKéMON" not in screen_text:
             raise SwapPokemonError("Failed to open the POKéMON menu.")
         await self.emulator.press_button(Button.A)
-        game_state = self.emulator.get_game_state()
-        if "Choose a POKéMON." not in game_state.screen.text:
+
+        screen_text = self.emulator.get_game_state().screen.text
+        if "Choose a POKéMON." not in screen_text:
             raise SwapPokemonError("Failed to open the POKéMON menu.")
 
-        # Move the cursor to the Pokemon.
+    async def _select_pokemon(self, pokemon_index: int) -> None:
+        """Move the cursor to the Pokemon at the given index."""
+        game_state = self.emulator.get_game_state()
         idx_diff = game_state.screen.menu_item_index - pokemon_index
         await self._move_cursor(idx_diff)
         await self.emulator.press_button(Button.A)
 
-        # Select the SWITCH option.
-        for _ in range(5):
-            await self.emulator.press_button(Button.DOWN)  # Go to the bottom of the menu.
+    async def _select_switch_option(self) -> None:
+        """Select the SWITCH option."""
+        for _ in range(6):  # Go to the bottom of the menu.
+            await self.emulator.press_button(Button.DOWN)
         await self.emulator.press_button(Button.UP)  # Go up to the SWITCH option.
-        game_state = self.emulator.get_game_state()
+
+        screen_text = self.emulator.get_game_state().screen.text
         if "▶SWITCH" not in screen_text:
             raise SwapPokemonError("Failed to open the SWITCH menu.")
         await self.emulator.press_button(Button.A)
 
-        # Move the cursor to position 0 and swap.
+    async def _swap_pokemon(self) -> None:
+        """Swap the Pokemon at position 0 with the Pokemon at position 1."""
+        game_state = self.emulator.get_game_state()
         idx_diff = game_state.screen.menu_item_index - 0
         await self._move_cursor(idx_diff)
         await self.emulator.press_button(Button.A)
