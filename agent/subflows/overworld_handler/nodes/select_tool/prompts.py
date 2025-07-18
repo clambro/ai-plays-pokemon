@@ -22,6 +22,7 @@ The button tool allows you to submit one or more button presses to the emulator.
 - Opening the main menu.
 - Changing the direction that you are facing.
 - Transitioning from one map to another if you are at the edge of the current map or on/near a warp tile.
+- Rotating in place repeatedly in tall grass to find wild Pokemon. If you are doing this and failing to find wild Pokemon, you may not be standing in a place where wild Pokemon can be found.
 
 The button tool can be used to move around the map, but it is not as reliable as the navigation tool. Do not use the button tool for general navigation if the navigation tool is available.
 
@@ -42,6 +43,8 @@ The navigation tool allows you to navigate to any revealed, accessible tile on t
 Note that the navigation tool cannot transition you from one map to another. It can bring you to the edge of the current map, but you will need to use the button tool on your next iteration to transition to the next map. Once you have switched maps, you can go back to using the navigation tool to move around the new map.
 
 The navigation tool cannot be used to interact with entities, but it can be used to move to the tile next to them so that you can interact with them via the button tool on the next iteration.
+
+The navigation tool intentionally tries to avoid random encounters with wild Pokemon for smoother navigation, and is thus not an efficient way to find wild Pokemon.
 
 Give general guidance on where you want to go in your thoughts (e.g. to a given warp tile, to a given map boundary, to explore unexplored territory, towards a certain sprite, etc.), but do not provide specific coordinates. The navigation tool will determine the legal target coordinates and prompt you again to choose from them.
 </navigation_tool>
