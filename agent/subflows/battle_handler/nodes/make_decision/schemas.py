@@ -10,4 +10,4 @@ class MakeDecisionResponse(BaseModel):
     buttons: list[Button]
 
     def __str__(self) -> str:
-        return f"{self.thoughts} Pressed the following button(s): {self.buttons}."
+        return f"{self.thoughts} Pressed the following button(s): {[str(b) for b in self.buttons]}."
