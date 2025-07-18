@@ -43,7 +43,11 @@ class MakeDecisionService:
                 prompt_name="make_battle_decision",
             )
             self.raw_memory.add_memory(iteration=self.iteration, content=str(response))
-            await self.emulator.press_button(response.button, wait_for_animation=False)
+            for i, button in enumerate(response.buttons):
+                # We skip the wait on the last press so we can go immediately to the next node.
+                wait_for_animation = i < len(response.buttons) - 1
+                await self.emulator.press_button(button, wait_for_animation=wait_for_animation)
+
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error making decision. Skipping. {e}")
         return self.raw_memory

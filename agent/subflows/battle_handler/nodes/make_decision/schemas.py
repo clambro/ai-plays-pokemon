@@ -7,7 +7,7 @@ class MakeDecisionResponse(BaseModel):
     """The response from the battle handler make decision prompt."""
 
     thoughts: str
-    button: Button
+    buttons: list[Button]
 
     def __str__(self) -> str:
-        return f'{self.thoughts} Pressed the "{self.button}" button.'
+        return f"{self.thoughts} Pressed the following button(s): {self.buttons}."
