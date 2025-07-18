@@ -470,7 +470,7 @@ _INT_TO_MOVE_MAP = {
     0x81: "SWIFT",
     0x82: "SKULL BASH",
     0x83: "SPIKE CANNON",
-    0x84: "CONSTRUCT",
+    0x84: "CONSTRICT",
     0x85: "AMNESIA",
     0x86: "KINESIS",
     0x87: "SOFTBOILED",

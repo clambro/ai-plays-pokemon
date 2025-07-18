@@ -146,6 +146,15 @@ class YellowLegacyGameState(BaseModel):
         movepool = [m.name for p in self.party for m in p.moves]
         return "STRENGTH" in movepool and Badge.RAINBOWBADGE in self.player.badges
 
+    def is_naming_screen(self) -> bool:
+        """
+        Check if the current screen is the naming screen, meaning that there is no open dialog box
+        and the letters for typing the name are on screen.
+        """
+        name_first_row = "A B C D E F G H I"
+        onscreen_text = self.screen.text.replace("▶", "")  # Ignore the cursor.
+        return not self.get_dialog_box() and name_first_row in onscreen_text
+
     def get_hm_tiles(self) -> list[AsciiTile]:
         """Get the tiles that are accessible using the player's current HMs and movepool."""
         hm_tiles = []
