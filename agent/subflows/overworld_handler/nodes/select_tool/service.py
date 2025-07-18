@@ -8,6 +8,7 @@ from agent.subflows.overworld_handler.nodes.select_tool.prompts import (
     NAVIGATION_TOOL_INFO,
     SELECT_TOOL_PROMPT,
     SOKOBAN_SOLVER_TOOL_INFO,
+    SWAP_FIRST_POKEMON_TOOL_INFO,
 )
 from agent.subflows.overworld_handler.nodes.select_tool.schemas import SelectToolResponse
 from common.constants import MIN_ITERATIONS_PER_CRITIQUE
@@ -79,8 +80,8 @@ class SelectToolService:
         else:
             info.append(NAVIGATION_TOOL_INFO)
 
-        if self.iterations_since_last_critique >= MIN_ITERATIONS_PER_CRITIQUE:
-            info.append(CRITIQUE_TOOL_INFO)
+        if len(game_state.party) > 1:
+            info.append(SWAP_FIRST_POKEMON_TOOL_INFO)
 
         tiles = [t for row in self.current_map.ascii_tiles for t in row]
         has_goal = any(t in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE) for t in tiles)
@@ -90,5 +91,8 @@ class SelectToolService:
         )
         if has_boulder and has_goal and game_state.can_use_strength:
             info.append(SOKOBAN_SOLVER_TOOL_INFO)
+
+        if self.iterations_since_last_critique >= MIN_ITERATIONS_PER_CRITIQUE:
+            info.append(CRITIQUE_TOOL_INFO)
 
         return "\n".join(info)

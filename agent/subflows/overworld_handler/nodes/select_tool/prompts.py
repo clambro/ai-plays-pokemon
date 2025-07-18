@@ -60,6 +60,20 @@ You have lost access to the navigation tool because you are riding a bike. If yo
 </warning>
 """.strip()
 
+SWAP_FIRST_POKEMON_TOOL_INFO = """
+<swap_first_pokemon_tool>
+TOOL_NAME: "swap_first_pokemon"
+
+The swap first Pokemon tool allows you to swap the first Pokemon in your party with another Pokemon in your party.
+
+This tool is useful for:
+- Leading with a particular Pokemon before a major battle.
+- Training a specific Pokemon by having it come out first in battle.
+
+You can use this tool at any time, but don't overdo it. You should only use it before major battles, or when doing so would help you achieve your goals. If you want to use this tool, be very explicit in your thoughts about which Pokemon you would like to put in the first position. If you are happy with the order of your party, don't use this tool.
+</swap_first_pokemon_tool>
+""".strip()
+
 SOKOBAN_SOLVER_TOOL_INFO = """
 <sokoban_solver_tool>
 TOOL_NAME: "sokoban_solver"
