@@ -18,5 +18,5 @@ The (case-sensitive) available buttons are:
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
 - thoughts: Your thoughts on the current game state and which button to press. What is the state of the battle? Where is the cursor? Consider all the information presented to you above; reflect on it, and then respond with your thoughts. Limit this to one or two sentences.
-- button: The button to press. Must be one of the available buttons above.
+- buttons: The button(s) to press in sequence. Must be one or more of the available buttons above. You should generally only press one button at a time, but you may press multiple buttons in sequence to, say, move the cursor multiple times in a menu.
 """.strip()

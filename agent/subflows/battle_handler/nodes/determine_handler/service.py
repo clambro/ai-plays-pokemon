@@ -90,14 +90,14 @@ class DetermineHandlerService:
             args.extend(
                 [
                     SwitchPokemonToolArgs(party_index=i, name=p.name, species=p.species)
-                    for i, p in enumerate(game_state.party, start=1)
-                    if p != player_pokemon
+                    for i, p in enumerate(game_state.party)
+                    if p != player_pokemon and p.hp > 0
                 ]
             )
         if game_state.battle.battle_type == BattleType.WILD:
             for ball in PokeballItem:
                 for i, item in enumerate(game_state.inventory.items):
-                    if item.name == ball.name:
+                    if item.name == ball.value:
                         args.append(ThrowBallToolArgs(item_index=i, ball=ball))
                         break
             args.append(RunToolArgs())

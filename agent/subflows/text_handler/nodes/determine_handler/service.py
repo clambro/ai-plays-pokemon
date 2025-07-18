@@ -22,9 +22,7 @@ class DetermineHandlerService:
                 return TextHandler.GENERIC  # Usually indicates a menu or a yes/no question.
             return TextHandler.DIALOG_BOX
 
-        name_first_row = "A B C D E F G H I"
-        onscreen_text = game_state.screen.text.replace("▶", "")  # Ignore the cursor.
-        if not dialog_box and name_first_row in onscreen_text:
+        if game_state.is_naming_screen():
             return TextHandler.NAME
 
         return TextHandler.GENERIC

@@ -7,7 +7,7 @@ algorithmic logic to make them easier to test.
 
 from itertools import groupby
 
-from common.enums import FacingDirection, MapId
+from common.enums import FacingDirection
 from common.schemas import Coords
 from overworld_map.schemas import OverworldMap
 
@@ -49,7 +49,7 @@ def format_exploration_candidates(candidates: list[Coords]) -> str:
 
 def format_map_boundary_tiles(
     boundary_tiles: dict[FacingDirection, list[Coords]],
-    map_connections: dict[FacingDirection, MapId | None],
+    map_data: OverworldMap,
 ) -> str:
     """
     Format map boundary tiles for LLM consumption.
@@ -59,33 +59,24 @@ def format_map_boundary_tiles(
     :return: Formatted string for LLM
     """
     output = []
+    map_connections = {
+        FacingDirection.UP: ("NORTH", map_data.north_connection),
+        FacingDirection.DOWN: ("SOUTH", map_data.south_connection),
+        FacingDirection.RIGHT: ("EAST", map_data.east_connection),
+        FacingDirection.LEFT: ("WEST", map_data.west_connection),
+    }
 
-    for direction, connection in map_connections.items():
-        if connection is not None and boundary_tiles[direction]:
-            coord_str = ", ".join(str(c) for c in boundary_tiles[direction])
+    for facing_dir, (cardinal_dir, connection) in map_connections.items():
+        if connection is not None and boundary_tiles[facing_dir]:
+            coord_str = ", ".join(str(c) for c in boundary_tiles[facing_dir])
             output.append(
-                f"The {connection.name} map boundary at the far {direction} of the current map"
+                f"The {connection.name} map boundary at the far {cardinal_dir} of the current map"
                 f" is accessible from {coord_str}."
             )
         elif connection is not None:
             output.append(
                 f"You have not yet discovered a valid path to the {connection.name} map"
-                f" boundary at the far {direction} of the current map."
+                f" boundary at the far {cardinal_dir} of the current map."
             )
 
     return "\n".join(output)
-
-
-def get_map_connections(map_data: OverworldMap) -> dict[FacingDirection, MapId | None]:
-    """
-    Extract connections from map data as a dictionary mapping directions to connected map IDs.
-
-    :param map_data: Map data containing connection information
-    :return: Dictionary mapping directions to connected map IDs
-    """
-    return {
-        FacingDirection.UP: map_data.north_connection,
-        FacingDirection.DOWN: map_data.south_connection,
-        FacingDirection.RIGHT: map_data.east_connection,
-        FacingDirection.LEFT: map_data.west_connection,
-    }

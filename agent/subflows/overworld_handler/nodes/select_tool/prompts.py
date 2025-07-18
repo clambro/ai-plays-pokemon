@@ -20,9 +20,13 @@ TOOL_NAME: "press_buttons"
 The button tool allows you to submit one or more button presses to the emulator. It is useful for:
 - Interacting with entities in the game (speaking to NPCs, picking up items, reading signs, activating objects, etc.).
 - Opening the main menu.
-- Rotating the player.
-- Moving the player one or two tiles at a time.
-- Transitioning from one map to another if you are at the edge of the current map or near/on a warp tile.
+- Changing the direction that you are facing.
+- Transitioning from one map to another if you are at the edge of the current map or on/near a warp tile.
+- Rotating in place repeatedly in tall grass to find wild Pokemon. If you are doing this and failing to find wild Pokemon, you may not be standing in a place where wild Pokemon can be found.
+
+The button tool can be used to move around the map, but it is not as reliable as the navigation tool. Do not use the button tool for general navigation if the navigation tool is available.
+
+If you are standing next to an entity and wish to interact with it, just say so. Do not list the specific button presses that this requires. The button tool will handle this for you.
 
 Give general guidance on which buttons to press in your thoughts, but do not provide specific button presses. The tool will determine the legal button presses and prompt you again to choose from them.
 </press_buttons_tool>
@@ -38,9 +42,13 @@ The navigation tool allows you to navigate to any revealed, accessible tile on t
 - Navigating directly to warp tiles.
 - Navigating to the boundaries of the current map
 
-Note that the navigation tool cannot transition you from one map to another. It can bring you to the edge of the current map, but you will need to use the button tool on your next iteration to transition to the next map.
+Note that the navigation tool cannot transition you from one map to another. It can bring you to the edge of the current map, but you will need to use the button tool on your next iteration to transition to the next map. Once you have switched maps, you can go back to using the navigation tool to move around the new map.
 
 The navigation tool cannot be used to interact with entities, but it can be used to move to the tile next to them so that you can interact with them via the button tool on the next iteration.
+
+The navigation tool intentionally tries to avoid random encounters with wild Pokemon for smoother navigation, and is thus not an efficient way to find wild Pokemon.
+
+The navigation tool has access to a list of good exploration candidates in maps that are not fully explored. Asking the navigation tool to move to an exploration candidate is the fastest way to explore the map. You do not know where the exploration candidates are. Only the tool knows them, so don't provide any hallucinated exploration coordinates. Give a general description of where you want to go, specifically mention that you want to head to "an exploration candidate," and the tool will determine the best tile to move to.
 
 Give general guidance on where you want to go in your thoughts (e.g. to a given warp tile, to a given map boundary, to explore unexplored territory, towards a certain sprite, etc.), but do not provide specific coordinates. The navigation tool will determine the legal target coordinates and prompt you again to choose from them.
 </navigation_tool>

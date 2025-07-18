@@ -54,6 +54,12 @@ class NavigationService:
             logger.warning(f"Error determining target coordinates. Skipping. {e}")
             return self.current_map, self.raw_memory
 
+        if coords == game_state.player.coords:
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=f"I tried to navigate to {coords}, but I'm already there!",
+            )
+            return self.current_map, self.raw_memory
         if coords not in accessible_coords:
             logger.warning("Cancelling navigation due to invalid target coordinates.")
             self.raw_memory.add_memory(
@@ -120,7 +126,7 @@ class NavigationService:
         )
         formatted_map_boundaries = formatting.format_map_boundary_tiles(
             boundary_tiles,
-            formatting.get_map_connections(self.current_map),
+            self.current_map,
         )
 
         # Get model response.

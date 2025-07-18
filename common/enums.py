@@ -188,8 +188,8 @@ class MapId(IntEnum):
     ROUTE_23 = 0x22
     ROUTE_24 = 0x23
     ROUTE_25 = 0x24
-    YOUR_HOUSE_1F = 0x25
-    YOUR_HOUSE_2F = 0x26
+    MY_HOUSE_1F = 0x25
+    MY_HOUSE_2F = 0x26
     RIVALS_HOUSE = 0x27
     OAKS_LAB = 0x28
     VIRIDIAN_POKECENTER = 0x29

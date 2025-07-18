@@ -19,7 +19,7 @@ Remember that a good goal must be SMART:
 - Achievable: The goal must be doable within the confines of the game.
   - Bad: "Get my whole team to level 100" (not possible before becoming the Champion due to the level cap)
   - Good: "Catch a [pokemon] in [location]" (assuming that you have seen that pokemon at that location)
-- Relevant: The goal must be relevant to your ultimate goal of collecting all eight badges and becoming the Champion.
+- Relevant: The goal must be relevant to your ultimate goal of collecting all eight badges and becoming the Champion. Completing the Pokedex is not relevant to this goal, except insofar as you need to catch Pokemon to build your team.
   - Bad: "Catch 100 Magikarp" (silly and pointless)
   - Good: "Get my team up to the current level cap of level [level] before challenging [major opponent]"
 - Time-bound: The least-relevant of the SMART criteria for your purposes, but try to ensure that your goals have clear temporal boundaries when relevant.
