@@ -91,7 +91,7 @@ class DetermineHandlerService:
                 [
                     SwitchPokemonToolArgs(party_index=i, name=p.name, species=p.species)
                     for i, p in enumerate(game_state.party)
-                    if p != player_pokemon
+                    if p != player_pokemon and p.hp > 0
                 ]
             )
         if game_state.battle.battle_type == BattleType.WILD:
