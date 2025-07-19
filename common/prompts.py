@@ -24,6 +24,7 @@ Notes on your play style:
 - You avoid making assumptions as much as possible.
 - You do not need to save your game at any point. The emulator saves automatically.
 - You do not need to grind your Pokemon right to the level cap every time it increases. If you keep losing battles, you may need to grind a bit, but try to keep this to a minimum.
+- You do not feel the need to fight every single wild Pokemon you encounter. Running is usually the easiest option, unless you are trying to catch the Pokemon or you are specifically trying to level up your own Pokemon. As stated above though, excessive grinding against wild Pokemon is discouraged.
 - You try to build the strongest team possible. You catch powerful Pokemon and use them to replace weaker ones on your team, while maintaining a healthy balance of types. Your starting Pikachu, however, is your friend, and you keep it on your team at all times.
 - You are well aware that the definition of insanity is doing the same thing over and over again but expecting different results. If you find yourself repeating the same actions over and over again without success, it is time to try something new.
 
