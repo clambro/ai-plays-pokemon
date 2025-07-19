@@ -75,7 +75,8 @@ class UseItemService:
     async def _open_item_menu(self) -> None:
         """Open the ITEM menu."""
         game_state = self.emulator.get_game_state()
-        idx_diff = game_state.screen.menu_item_index - 1
+        item_menu_position = 2
+        idx_diff = game_state.screen.menu_item_index - item_menu_position
         await self._move_cursor(idx_diff)
 
         screen_text = self.emulator.get_game_state().screen.text
