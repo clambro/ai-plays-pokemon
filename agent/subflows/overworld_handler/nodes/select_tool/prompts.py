@@ -9,8 +9,8 @@ You have the following tools at your disposal:
 </tools>
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your one sentence long thoughts on which tool that you would like to use given the information provided. Your reasoning should be concise and based on the uses listed above for the tools. The tool that you select will continue this thought for you.
-- tool: The tool to use. The only valid tools are the ones listed above in the <tools> section, and the specific name you must use to identify them is indicated by TOOL_NAME.
+- thoughts: Your one sentence long thoughts on which tool that you would like to use given the information provided. Be sure to consider all the tools at your disposal. Your reasoning should be concise and based on the uses listed above for the tools. The tool that you select will continue this thought for you.
+- tool: The tool to use. The only valid tools are the ones listed above in the <tools> section, and the specific name you must use to identify them is indicated by TOOL_NAME. Submitting a tool that is not listed above will result in an error.
 """.strip()
 
 BUTTON_TOOL_INFO = """
