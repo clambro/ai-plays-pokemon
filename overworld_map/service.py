@@ -200,7 +200,7 @@ async def _update_overworld_map_tiles(
             iteration=iteration,
             map_id=overworld_map.id,
             tiles=overworld_map.ascii_tiles_str,
-            blockages=overworld_map.blockages,
+            blockages={str(coord): block for coord, block in overworld_map.blockages.items()},
         ),
     )
 
@@ -228,7 +228,7 @@ async def _create_overworld_map_from_game_state(
             iteration=iteration,
             map_id=overworld_map.id,
             tiles=overworld_map.ascii_tiles_str,
-            blockages=overworld_map.blockages,
+            blockages={str(coord): block for coord, block in overworld_map.blockages.items()},
         ),
     )
     return overworld_map
