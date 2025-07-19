@@ -188,7 +188,12 @@ async def _update_overworld_map_tiles(
     overworld_screen_tiles[top:bottom, left:right] = ascii_screen
     overworld_map.ascii_tiles = overworld_screen_tiles.tolist()
 
-    overworld_map.blockages.update(ascii_screen_with_entities.blockages)
+    overworld_map.blockages.update(
+        {  # We have to convert the blockages from screen coordinates to map coordinates.
+            coord + (top, left): block  # noqa: RUF005
+            for coord, block in ascii_screen_with_entities.blockages.items()
+        }
+    )
 
     await update_map_tiles(
         MapMemoryCreateUpdate(

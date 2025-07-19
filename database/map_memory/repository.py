@@ -52,6 +52,7 @@ async def update_map_tiles(map_memory: MapMemoryCreateUpdate) -> MapMemoryRead:
             .where(MapMemoryDBModel.map_id == map_memory.map_id)
             .values(
                 tiles=map_memory.tiles,
+                blockages=map_memory.blockages,
                 update_iteration=map_memory.iteration,
             )
             .returning(MapMemoryDBModel)

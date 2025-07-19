@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from typing import Any
+
+from pydantic import BaseModel, model_serializer, model_validator
 
 
 class Coords(BaseModel):
@@ -6,6 +8,21 @@ class Coords(BaseModel):
 
     row: int
     col: int
+
+    @model_serializer
+    def _to_tuple(self) -> tuple[int, int]:
+        """Serialize the coordinate pair to a hashable tuple to avoid errors."""
+        return (self.row, self.col)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _from_tuple(cls, data: Any) -> Any:  # noqa: ANN401
+        """Validate the coordinate pair from a tuple."""
+        if isinstance(data, str):
+            data = tuple(int(x) for x in data.strip("()").split(","))
+        if isinstance(data, tuple) and len(data) == 2:  # noqa: PLR2004
+            return {"row": data[0], "col": data[1]}
+        return data
 
     @property
     def length(self) -> int:
