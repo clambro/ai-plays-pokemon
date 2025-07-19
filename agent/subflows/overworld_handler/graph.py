@@ -44,6 +44,7 @@ def build_overworld_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Gra
             Edge(press_buttons, dummy_sink),
             Edge(navigation, dummy_sink),
             Edge(swap_first_pokemon, dummy_sink),
+            Edge(use_item, dummy_sink),
             Edge(sokoban_solver, dummy_sink),
             Edge(critique, dummy_sink),
         ],
