@@ -71,8 +71,9 @@ The swap first Pokemon tool allows you to swap the first Pokemon in your party w
 This tool is useful for:
 - Leading with a particular Pokemon before a major battle.
 - Training a specific Pokemon by having it come out first in battle.
+- Keeping your party members at roughly the same level as one-another by changing which Pokemon is the first to see action in battle.
 
-You can use this tool at any time, but don't overdo it. You should only use it before major battles, or when doing so would help you achieve your goals. If you want to use this tool, be very explicit in your thoughts about which Pokemon you would like to put in the first position. If you are happy with the order of your party, don't use this tool.
+If you want to use this tool, be very explicit in your thoughts about which Pokemon you would like to put in the first position. If you are happy with the order of your party, don't use this tool.
 </swap_first_pokemon_tool>
 """.strip()
 
