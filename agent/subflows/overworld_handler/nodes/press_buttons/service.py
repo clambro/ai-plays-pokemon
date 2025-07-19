@@ -125,6 +125,15 @@ class PressButtonsService:
                 ),
             )
             return False
+        if dialog_box := game_state.get_dialog_box():
+            # Some dialog boxes (e.g. if you pick up an item) disappear automatically before we can
+            # start a new agent loop to parse them, so we have to capture them immediately.
+            text = f"{dialog_box.top_line} {dialog_box.bottom_line}".strip()
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=f'I pressed the action button and a dialog box opened, saying: "{text}"',
+            )
+            return False
         return True
 
     def _check_for_state_change(self) -> bool:
