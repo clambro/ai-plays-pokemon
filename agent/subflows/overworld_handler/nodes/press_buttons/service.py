@@ -55,6 +55,7 @@ class PressButtonsService:
             ),
         )
         for b in buttons:
+            game_state = self.emulator.get_game_state()
             await self.emulator.press_button(b)
             passed_collision = self._check_for_collision(
                 button=b,
@@ -83,9 +84,17 @@ class PressButtonsService:
             return True
 
         game_state = self.emulator.get_game_state()
+        if prev_map_id != game_state.map.id:
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=(
+                    f"I changed maps after pressing the '{button}' button."
+                    f" Cancelling further steps."
+                ),
+            )
+            return False
         if (
-            prev_map_id == game_state.map.id
-            and prev_coords == game_state.player.coords
+            prev_coords == game_state.player.coords
             and prev_direction == game_state.player.direction
         ):
             self.raw_memory.add_memory(
