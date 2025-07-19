@@ -65,7 +65,8 @@ class MemoryRetrievalService:
         if len(memories_to_rerank) <= self.num_memories:
             return memories_to_rerank
 
-        return self._rerank_memories(iteration, memories_to_rerank, top_similarities)
+        reranked_memories = self._rerank_memories(iteration, memories_to_rerank, top_similarities)
+        return reranked_memories[: self.num_memories]
 
     async def _get_top_n_semantic_similarity(
         self,
