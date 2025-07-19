@@ -59,7 +59,7 @@ class SwapFirstPokemonService:
         response = await self.llm_service.get_llm_response_pydantic(
             messages=prompt,
             schema=SwapFirstPokemonResponse,
-            prompt_name="swap_first_pokemon",
+            prompt_name="get_swap_index",
         )
         return response.index
 
@@ -82,7 +82,7 @@ class SwapFirstPokemonService:
         await self.emulator.press_button(Button.START)
         game_state = self.emulator.get_game_state()
         screen_text = game_state.screen.text
-        if "POKéDEX" not in screen_text and "POKéMON" not in screen_text:
+        if "POKéDEX" not in screen_text or "POKéMON" not in screen_text:
             raise SwapPokemonError("Failed to open the START menu.")
 
     async def _open_pokemon_menu(self) -> None:
