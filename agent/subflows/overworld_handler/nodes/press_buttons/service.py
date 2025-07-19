@@ -55,6 +55,7 @@ class PressButtonsService:
             ),
         )
         for b in buttons:
+            game_state = self.emulator.get_game_state()
             await self.emulator.press_button(b)
             passed_collision = self._check_for_collision(
                 button=b,
@@ -83,9 +84,17 @@ class PressButtonsService:
             return True
 
         game_state = self.emulator.get_game_state()
+        if prev_map_id != game_state.map.id:
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=(
+                    f"I changed maps after pressing the '{button}' button."
+                    f" Cancelling further steps."
+                ),
+            )
+            return False
         if (
-            prev_map_id == game_state.map.id
-            and prev_coords == game_state.player.coords
+            prev_coords == game_state.player.coords
             and prev_direction == game_state.player.direction
         ):
             self.raw_memory.add_memory(
@@ -114,6 +123,15 @@ class PressButtonsService:
                     "I pressed the action button but nothing happened. There must not be"
                     " anything to interact with in the direction I am facing."
                 ),
+            )
+            return False
+        if dialog_box := game_state.get_dialog_box():
+            # Some dialog boxes (e.g. if you pick up an item) disappear automatically before we can
+            # start a new agent loop to parse them, so we have to capture them immediately.
+            text = f"{dialog_box.top_line} {dialog_box.bottom_line}".strip()
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=f'I pressed the action button and a dialog box opened, saying: "{text}"',
             )
             return False
         return True

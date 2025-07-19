@@ -41,11 +41,7 @@ async def test_get_ascii_screen_viridian_flowers() -> None:
 
 @pytest.mark.integration
 async def test_get_ascii_screen_mt_moon_corners() -> None:
-    """
-    Test that the ASCII screen is correct for all the weird blocking corners in Mt Moon.
-
-    Specifically making sure that the special tile exceptions in caverns are accounted for.
-    """
+    """Test that the ASCII screen is correct for all the weird blocking corners in Mt Moon."""
     await _helper_test_expected_screen(
         state_filename="mt_moon_corners.state",
         expected_blockages={
@@ -90,6 +86,32 @@ async def test_get_ascii_screen_mt_moon_corners() -> None:
             "∙∙∙∙∙∙∙▉∙∙",
             "∙∙∙∙∙∙∙▉▉∙",
             "∙▉∙∙▉▉∙∙∙∙",
+        ],
+    )
+
+
+@pytest.mark.integration
+async def test_get_ascii_screen_mt_moon_corners_2() -> None:
+    """
+    Test that the ASCII screen is correct for all the weird blocking corners in Mt Moon in a
+    different part of the map.
+    """
+    await _helper_test_expected_screen(
+        state_filename="mt_moon_corners_2.state",
+        expected_blockages={
+            **{Coords(row=r, col=3): BlockedDirection.RIGHT for r in range(3, 9)},
+            **{Coords(row=r, col=4): BlockedDirection.LEFT for r in range(3, 9)},
+        },
+        expected_screen=[
+            "▉▉▉▉▉▉▉▉▉▉",
+            "▉▉▉∙▉∙∙∙∙∙",
+            "▉▉▉∙▉▉▉▉▉▉",
+            "▉▉▉∙◆∙∙∙∙∙",
+            "▉▉▉∙☻∙∙∙∙∙",
+            "▉▉▉∙◈∙∙∙∙∙",
+            "▉▉▉∙∙∙∙⇆∙∙",
+            "▉▉▉∙∙∙∙◆∙∙",
+            "▉▉▉∙∙∙∙∙∙∙",
         ],
     )
 

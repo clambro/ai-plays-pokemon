@@ -6,5 +6,7 @@ class OverworldTool(StrEnum):
 
     PRESS_BUTTONS = "press_buttons"
     NAVIGATION = "navigation"
-    CRITIQUE = "critique"
+    SWAP_FIRST_POKEMON = "swap_first_pokemon"
+    USE_ITEM = "use_item"
     SOKOBAN_SOLVER = "sokoban_solver"
+    CRITIQUE = "critique"

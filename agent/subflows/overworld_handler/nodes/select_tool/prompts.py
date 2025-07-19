@@ -9,8 +9,8 @@ You have the following tools at your disposal:
 </tools>
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your one sentence long thoughts on which tool that you would like to use given the information provided. Your reasoning should be concise and based on the uses listed above for the tools. The tool that you select will continue this thought for you.
-- tool: The tool to use. The only valid tools are the ones listed above in the <tools> section, and the specific name you must use to identify them is indicated by TOOL_NAME.
+- thoughts: Your one sentence long thoughts on which tool that you would like to use given the information provided. Be sure to consider all the tools at your disposal. Your reasoning should be concise and based on the uses listed above for the tools. The tool that you select will continue this thought for you.
+- tool: The tool to use. The only valid tools are the ones listed above in the <tools> section, and the specific name you must use to identify them is indicated by TOOL_NAME. Submitting a tool that is not listed above will result in an error.
 """.strip()
 
 BUTTON_TOOL_INFO = """
@@ -26,7 +26,7 @@ The button tool allows you to submit one or more button presses to the emulator.
 
 The button tool can be used to move around the map, but it is not as reliable as the navigation tool. Do not use the button tool for general navigation if the navigation tool is available.
 
-If you are standing next to an entity and wish to interact with it, just say so. Do not list the specific button presses that this requires. The button tool will handle this for you.
+If you are standing next to an entity and wish to interact with it, just say so. Do not list the specific button presses that this requires. The button tool will handle this for you. The same goes for rotating in place to find wild Pokemon, just say that you want to rotate in place and the tool will handle the rest.
 
 Give general guidance on which buttons to press in your thoughts, but do not provide specific button presses. The tool will determine the legal button presses and prompt you again to choose from them.
 </press_buttons_tool>
@@ -48,6 +48,8 @@ The navigation tool cannot be used to interact with entities, but it can be used
 
 The navigation tool intentionally tries to avoid random encounters with wild Pokemon for smoother navigation, and is thus not an efficient way to find wild Pokemon.
 
+Do not attempt to navigate to the tile that you are currently standing on. This does nothing.
+
 The navigation tool has access to a list of good exploration candidates in maps that are not fully explored. Asking the navigation tool to move to an exploration candidate is the fastest way to explore the map. You do not know where the exploration candidates are. Only the tool knows them, so don't provide any hallucinated exploration coordinates. Give a general description of where you want to go, specifically mention that you want to head to "an exploration candidate," and the tool will determine the best tile to move to.
 
 Give general guidance on where you want to go in your thoughts (e.g. to a given warp tile, to a given map boundary, to explore unexplored territory, towards a certain sprite, etc.), but do not provide specific coordinates. The navigation tool will determine the legal target coordinates and prompt you again to choose from them.
@@ -58,6 +60,34 @@ NAVIGATION_TOOL_BIKING_INFO = """
 <warning>
 You have lost access to the navigation tool because you are riding a bike. If you would like to use the navigation tool, you must first dismount your bike. If you are unable to dismount your bike because you are on Cycling Road, then you must use the button tool to move around the map.
 </warning>
+""".strip()
+
+SWAP_FIRST_POKEMON_TOOL_INFO = """
+<swap_first_pokemon_tool>
+TOOL_NAME: "swap_first_pokemon"
+
+The swap first Pokemon tool allows you to swap the first Pokemon in your party with another Pokemon in your party.
+
+This tool is useful for:
+- Leading with a particular Pokemon before a major battle.
+- Training a specific Pokemon by having it come out first in battle.
+- Keeping your party members at roughly the same level as one-another by changing which Pokemon is the first to see action in battle.
+
+If you want to use this tool, be very explicit in your thoughts about which Pokemon you would like to put in the first position. If you are happy with the order of your party, don't use this tool.
+</swap_first_pokemon_tool>
+""".strip()
+
+USE_ITEM_TOOL_INFO = """
+<use_item_tool>
+TOOL_NAME: "use_item"
+
+The use item tool allows you to use an item from your inventory in the overworld. It is useful for:
+- Using helpful items like REPEL, ESCAPE ROPE, evolution stones, etc.
+- Teaching a TM or HM to a Pokemon.
+- Using a healing item like a POTION or a REVIVE. This is still allowed outside of battle in hard mode.
+
+If you want to use this tool, be very explicit in your thoughts about which item you would like to use. If the item requires a target Pokemon to use it on, be explicit about which Pokemon you want to use it on.
+</use_item_tool>
 """.strip()
 
 SOKOBAN_SOLVER_TOOL_INFO = """

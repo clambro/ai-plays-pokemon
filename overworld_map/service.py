@@ -171,6 +171,15 @@ async def _update_overworld_map_tiles(
     height = game_state.map.height
     width = game_state.map.width
 
+    # We have to convert the blockages from screen coordinates to map coordinates before we crop.
+    overworld_map.blockages.update(
+        {
+            coord + (top, left): block  # noqa: RUF005
+            for coord, block in ascii_screen_with_entities.blockages.items()
+        }
+    )
+
+    # Crop the screen to the area that's part of the current map.
     if top < 0:
         ascii_screen = ascii_screen[-top:]
         top = 0
@@ -188,14 +197,12 @@ async def _update_overworld_map_tiles(
     overworld_screen_tiles[top:bottom, left:right] = ascii_screen
     overworld_map.ascii_tiles = overworld_screen_tiles.tolist()
 
-    overworld_map.blockages.update(ascii_screen_with_entities.blockages)
-
     await update_map_tiles(
         MapMemoryCreateUpdate(
             iteration=iteration,
             map_id=overworld_map.id,
             tiles=overworld_map.ascii_tiles_str,
-            blockages=overworld_map.blockages,
+            blockages={str(coord): block for coord, block in overworld_map.blockages.items()},
         ),
     )
 
@@ -223,7 +230,7 @@ async def _create_overworld_map_from_game_state(
             iteration=iteration,
             map_id=overworld_map.id,
             tiles=overworld_map.ascii_tiles_str,
-            blockages=overworld_map.blockages,
+            blockages={str(coord): block for coord, block in overworld_map.blockages.items()},
         ),
     )
     return overworld_map

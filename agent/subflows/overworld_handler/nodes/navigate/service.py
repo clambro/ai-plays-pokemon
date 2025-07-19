@@ -54,21 +54,8 @@ class NavigationService:
             logger.warning(f"Error determining target coordinates. Skipping. {e}")
             return self.current_map, self.raw_memory
 
-        if coords == game_state.player.coords:
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
-                content=f"I tried to navigate to {coords}, but I'm already there!",
-            )
-            return self.current_map, self.raw_memory
-        if coords not in accessible_coords:
+        if not await self._validate_target_coords(game_state, coords, accessible_coords):
             logger.warning("Cancelling navigation due to invalid target coordinates.")
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
-                content=(
-                    f"Navigation failed. The target coordinates {coords} are not in the list of"
-                    f" accessible coordinates that was provided to me."
-                ),
-            )
             return self.current_map, self.raw_memory
 
         path = await utils.calculate_path_to_target(
@@ -151,6 +138,54 @@ class NavigationService:
             content=f"{response.thoughts} Navigating to {response.coords}.",
         )
         return response.coords
+
+    async def _validate_target_coords(
+        self,
+        game_state: YellowLegacyGameState,
+        coords: Coords,
+        accessible_coords: list[Coords],
+    ) -> bool:
+        """Validate the target coordinates. Return True if the coordinates are valid."""
+        if (
+            coords.row < 0
+            or coords.col < 0
+            or coords.row >= self.current_map.height
+            or coords.col >= self.current_map.width
+        ):
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=(
+                    f"Navigation failed. The target coordinates {coords} are outside the current"
+                    f" map bounds. The navigation tool cannot cross map boundaries."
+                ),
+            )
+            return False
+        if coords == game_state.player.coords:
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=f"I tried to navigate to {coords}, but I'm already there!",
+            )
+            return False
+        if self.current_map.ascii_tiles[coords.row][coords.col] == AsciiTile.SPRITE:
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=(
+                    f"Navigation failed. The target coordinates {coords} are occupied by a sprite."
+                    f" If I want to interact with the sprite, I have to navigate to a tile adjacent"
+                    f" to it and then use the button tool to interact with it."
+                ),
+            )
+            return False
+        if coords not in accessible_coords:
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=(
+                    f"Navigation failed. The target coordinates {coords} are not in the list of"
+                    f" accessible coordinates that was provided to me."
+                ),
+            )
+            return False
+        return True
 
     async def _handle_pikachu(self, button: Button) -> None:
         """
@@ -240,7 +275,10 @@ class NavigationService:
         """Check if we should cancel navigation."""
         new_pos = game_state.player.coords
         if new_pos == target_pos:
-            logger.info("Navigation to target coordinates completed.")
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=f"Successfully navigated to {target_pos}.",
+            )
             return True
         if prev_pos == new_pos:
             logger.warning("Navigation interrupted. Cancelling.")
