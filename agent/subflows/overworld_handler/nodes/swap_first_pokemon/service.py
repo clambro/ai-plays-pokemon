@@ -77,6 +77,10 @@ class SwapFirstPokemonService:
         await self._select_switch_option()
         await self._swap_pokemon()
 
+        # Exit the menu.
+        await self.emulator.press_button(Button.B)
+        await self.emulator.press_button(Button.B)
+
     async def _open_start_menu(self) -> None:
         """Open the start menu."""
         await self.emulator.press_button(Button.START)
