@@ -67,31 +67,38 @@ class YellowLegacyGameState(BaseModel):
         if self.player.badges:
             out += f"Badges Earned: {', '.join(self.player.badges)}\n"
         out += f"Current Level Cap: {self.player.level_cap}\n"
-        if self.party:
-            out += "<party>\n"
-            for i, p in enumerate(self.party, start=1):
-                out += f"<pokemon_{i}>\n"
-                out += f"Name: {p.name}\n"
-                out += f"Species: {p.species}\n"
-                if p.type2:
-                    out += f"Type: {p.type1} / {p.type2}\n"
-                else:
-                    out += f"Type: {p.type1}\n"
-                out += f"Level: {p.level}\n"
-                out += f"HP: {p.hp} / {p.max_hp}\n"
-                out += f"Status Ailment: {p.status}\n"
-                out += "<moves>\n"
-                for m in p.moves:
-                    out += f"- {m.name} (PP: {m.pp})\n"
-                out += "</moves>\n"
-                out += f"</pokemon_{i}>\n"
-            out += "</party>\n"
+        out += self.party_info
         if self.inventory.items:
             out += "<inventory>\n"
             for i in self.inventory.items:
                 out += f"- {i.name} (x{i.quantity})\n"
             out += "</inventory>\n"
         out += "</player_info>"
+        return out
+
+    @property
+    def party_info(self) -> str:
+        """Get a string representation of the party."""
+        if not self.party:
+            return ""
+        out = "<party>\n"
+        for i, p in enumerate(self.party, start=0):
+            out += f"<pokemon_{i}>\n"
+            out += f"Name: {p.name}\n"
+            out += f"Species: {p.species}\n"
+            if p.type2:
+                out += f"Type: {p.type1} / {p.type2}\n"
+            else:
+                out += f"Type: {p.type1}\n"
+            out += f"Level: {p.level}\n"
+            out += f"HP: {p.hp} / {p.max_hp}\n"
+            out += f"Status Ailment: {p.status}\n"
+            out += "<moves>\n"
+            for m in p.moves:
+                out += f"- {m.name} (PP: {m.pp})\n"
+            out += "</moves>\n"
+            out += f"</pokemon_{i}>\n"
+        out += "</party>\n"
         return out
 
     @property
