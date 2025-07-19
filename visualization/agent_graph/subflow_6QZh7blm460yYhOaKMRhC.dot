@@ -1,0 +1,23 @@
+digraph "subflow_6QZh7blm460yYhOaKMRhC" {
+  rankdir=LR;
+  compound=true;
+  node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9];
+  "5Werz7NrL9omxUOFDbMhn" [label="MakeDecisionNode"];
+  "7QGmj60HRdnad1VfVVEoL" [label="DetermineHandlerNode"];
+  LJ5n1A1PmmcQAPV2M02Q4 [label="HandleSubsequentTextNode"];
+  wXD3ZduppxkCkB1cXVXpo [label="ThrowBallToolNode"];
+  fBdx53OzqyoSPHH0xBdhi [label="SwitchPokemonToolNode"];
+  lvOddLuM0KMvn5M9J9npz [label="RunToolNode"];
+  oMt3U2NJznxPDIIjNN5Rp [label="FightToolNode"];
+  "7QGmj60HRdnad1VfVVEoL" -> "5Werz7NrL9omxUOFDbMhn" [style="dashed", label="ToolArgsIs(None)"];
+  "7QGmj60HRdnad1VfVVEoL" -> oMt3U2NJznxPDIIjNN5Rp [style="dashed", label="ToolArgsIs(FightToolArgs)"];
+  "7QGmj60HRdnad1VfVVEoL" -> fBdx53OzqyoSPHH0xBdhi [style="dashed", label="ToolArgsIs(SwitchPokemonToolArgs)"];
+  "7QGmj60HRdnad1VfVVEoL" -> wXD3ZduppxkCkB1cXVXpo [style="dashed", label="ToolArgsIs(ThrowBallToolArgs)"];
+  "7QGmj60HRdnad1VfVVEoL" -> lvOddLuM0KMvn5M9J9npz [style="dashed", label="ToolArgsIs(RunToolArgs)"];
+  oMt3U2NJznxPDIIjNN5Rp -> LJ5n1A1PmmcQAPV2M02Q4 [style="solid"];
+  fBdx53OzqyoSPHH0xBdhi -> LJ5n1A1PmmcQAPV2M02Q4 [style="solid"];
+  wXD3ZduppxkCkB1cXVXpo -> LJ5n1A1PmmcQAPV2M02Q4 [style="solid"];
+  lvOddLuM0KMvn5M9J9npz -> LJ5n1A1PmmcQAPV2M02Q4 [style="solid"];
+  "5Werz7NrL9omxUOFDbMhn" -> LJ5n1A1PmmcQAPV2M02Q4 [style="solid"];
+}
