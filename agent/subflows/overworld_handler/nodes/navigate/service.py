@@ -275,7 +275,10 @@ class NavigationService:
         """Check if we should cancel navigation."""
         new_pos = game_state.player.coords
         if new_pos == target_pos:
-            logger.info("Navigation to target coordinates completed.")
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=f"Successfully navigated to {target_pos}.",
+            )
             return True
         if prev_pos == new_pos:
             logger.warning("Navigation interrupted. Cancelling.")
