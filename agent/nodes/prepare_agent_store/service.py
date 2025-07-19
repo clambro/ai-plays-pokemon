@@ -42,20 +42,9 @@ class PrepareAgentStateService:
             return AgentStateHandler.TEXT
         return AgentStateHandler.OVERWORLD
 
-    async def should_retrieve_memory(
-        self,
-        handler: AgentStateHandler,
-        previous_handler: AgentStateHandler | None,
-    ) -> bool:
+    async def should_retrieve_memory(self) -> bool:
         """Determine if the agent should retrieve memory."""
         return (
             self.iterations_since_last_ltm_retrieval >= ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL
             or not self.long_term_memory.pieces
-            or (
-                {handler, previous_handler}
-                in (  # When transitioning in or out of a battle.
-                    {AgentStateHandler.TEXT, AgentStateHandler.BATTLE},
-                    {AgentStateHandler.OVERWORLD, AgentStateHandler.BATTLE},
-                )
-            )
         )
