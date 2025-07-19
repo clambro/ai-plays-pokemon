@@ -9,6 +9,7 @@ from agent.subflows.overworld_handler.nodes.select_tool.prompts import (
     SELECT_TOOL_PROMPT,
     SOKOBAN_SOLVER_TOOL_INFO,
     SWAP_FIRST_POKEMON_TOOL_INFO,
+    USE_ITEM_TOOL_INFO,
 )
 from agent.subflows.overworld_handler.nodes.select_tool.schemas import SelectToolResponse
 from common.constants import MIN_ITERATIONS_PER_CRITIQUE
@@ -82,6 +83,9 @@ class SelectToolService:
 
         if len(game_state.party) > 1:
             info.append(SWAP_FIRST_POKEMON_TOOL_INFO)
+
+        if len(game_state.inventory.items) > 0:
+            info.append(USE_ITEM_TOOL_INFO)
 
         tiles = [t for row in self.current_map.ascii_tiles for t in row]
         has_goal = any(t in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE) for t in tiles)

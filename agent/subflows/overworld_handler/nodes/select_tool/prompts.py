@@ -77,6 +77,19 @@ If you want to use this tool, be very explicit in your thoughts about which Poke
 </swap_first_pokemon_tool>
 """.strip()
 
+USE_ITEM_TOOL_INFO = """
+<use_item_tool>
+TOOL_NAME: "use_item"
+
+The use item tool allows you to use an item from your inventory in the overworld. It is useful for:
+- Using helpful items like REPEL, ESCAPE ROPE, evolution stones, etc.
+- Teaching a TM or HM to a Pokemon.
+- Using a healing item like a POTION or a REVIVE. This is still allowed outside of battle in hard mode.
+
+If you want to use this tool, be very explicit in your thoughts about which item you would like to use. If the item requires a target Pokemon to use it on, be explicit about which Pokemon you want to use it on.
+</use_item_tool>
+""".strip()
+
 SOKOBAN_SOLVER_TOOL_INFO = """
 <sokoban_solver_tool>
 TOOL_NAME: "sokoban_solver"
