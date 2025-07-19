@@ -29,10 +29,7 @@ class PrepareAgentStoreNode(Node[AgentStore]):
 
         await service.wait_for_animations()
         handler = await service.determine_handler()
-        should_retrieve_memory = await service.should_retrieve_memory(
-            handler=handler,
-            previous_handler=state.handler,
-        )
+        should_retrieve_memory = await service.should_retrieve_memory()
 
         await store.set_iteration(state.iteration + 1)
         await store.set_iterations_since_last_critique(state.iterations_since_last_critique + 1)

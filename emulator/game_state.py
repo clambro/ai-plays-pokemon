@@ -282,8 +282,7 @@ class YellowLegacyGameState(BaseModel):
                     blocks[b_idx] = AsciiTile.PRESSURE_PLATE
                 elif spinner_type := self._get_spinner_type(b_flat):
                     blocks[b_idx] = spinner_type
-                elif b[1, 0] in self.map.walkable_tiles:
-                    # Same bottom-left logic applies here, with special exceptions.
+                elif b[1, 0] in self.map.walkable_tiles:  # Same bottom-left logic applies here.
                     blocks[b_idx] = AsciiTile.FREE
 
                 blockages = self._get_blockage(i, j, tiles, blockages)

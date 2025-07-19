@@ -18,6 +18,7 @@ Guidelines for updating long-term memory objects:
 - Never include coordinates in your content (e.g. for warp points, sprites, etc.). The game's memory will provide coordinate information as needed.
 - Each piece of long-term memory is meant to be a document containing polished notes on a specific topic. Do not fill your content with useless noise straight from your raw and summary memories. Everything in your long-term memory should be useful to you. You still have the raw and summary memories to refer to separately if you need to.
 - Keep your long-term memory documents concise and to the point. A couple paragraphs max.
+- If a piece of long-term memory is getting too long (more than a couple paragraphs), rewrite the whole thing in a more concise manner, stripping out any unnecessary information and focusing on the most important details.
 - You do not need to add mundane information to your long term memory, like wild pokemon that were defeated or individual moves that were used. A good rule of thumb is that everything in your long term memory should still be relevant a thousand iterations from now. If it isn't, it probably does not need to be in there.
 - You can only update the long-term memory objects that are listed above. Attempting to update a long-term memory object that is not listed above will result in an error.
 
