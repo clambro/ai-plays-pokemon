@@ -19,28 +19,86 @@ If you want to learn more about how this all works, check out:
 
 ## Installation and Setup
 
-- Python and uv (note that the tests will fail without the save states that I can't share)
-- Getting the ROM
-- Env variables for Gemini and Junjo Server
+### Prerequisites
 
-## Usage
+- Python 3.13
+- [The uv package manager](https://docs.astral.sh/uv/) for installing dependencies
+- The Pokémon Yellow Legacy ROM
 
-- Explain main.py and all its parameters
-- Backup/restore functionality
-- Live streaming server on localhost:8080
+### Installation
+
+1. Clone this repository
+
+2. Install the dependencies with `uv sync`
+
+3. Set up your environment variables:
+   Make a copy of the `.env.example` file and name it `.env`. You'll need to add a Gemini API key to get the LLM service to work. If you want to use [Jujno server](https://github.com/mdrideout/junjo-server) for telemetry, you'll have to create an API key for that as well.
+
+**Note:** If you try to run the integration tests, many of them will fail because they depend on save states that I am not licensed to share.
+
+## Running the Workflow
+
+### Basic Usage
+
+Run the AI workflow with the default settings using
+
+```bash
+python -m main
+```
+
+This will:
+- Use the ROM at `resources/ylegacy.gbc` (default)
+- Start a fresh game session
+- Launch the live-updaing background display at `http://localhost:8080`
+- Create automatic backups every 100 iterations
+
+### Command Line Options
+
+- `--rom-path PATH`: Specify a custom path to your ROM file
+- `--backup-folder PATH`: Load a specific backup state
+- `--load-latest`: Automatically load the most recent backup
+- `--mute-sound`: Mute the emulator sound
+- `--track-telemetry`: Enable telemetry tracking (requires Junjo server)
+
+Other useful constants can be found (and edited) in `common/constants.py`.
+
+### Backup and Restore
+
+The system automatically creates backups every 100 iterations in the `outputs/` folder. Each backup contains the AI workflow state, the complete game state, and a copy of the SQLite database so that you can resume play from the moment the backup was taken. Crashes and manually exiting the emulator will also trigger a backup.
 
 ## FAQs
 
-- Why Yellow Legacy?
-- Didn't GPP already do this?
-- Why use Junjo over other frameworks?
-- Why are you using Gemini Flash instead of Pro?
-- Why are the tests failing?
-- Can it play other Pokémon games? Will you adapt it to other games?
-- Do you intend to keep working on this?
-- How much does it cost to run?
-- How fast does it play?
-- Can I use this code?
+### Why Yellow Legacy?
+
+Partly nostalgia since Pokemon Yellow was the first video game I ever played, but largely because its hard mode prevents the AI from winning by grinding a single Pokemon to level 100. I also think that the team behind Yellow Legacy basically perfected the Gen 1 experience and I wanted to highlight their excellent work.
+
+### Didn't Gemini Plays Pokemon already do this?
+
+Great minds think alike! This project, like [Gemini Plays Pokemon](https://www.twitch.tv/gemini_plays_pokemon), was inspired by [Claude Plays Pokemon](https://www.twitch.tv/claudeplayspokemon). I started working on an AI workflow for hard mode Yellow Legacy before I'd ever heard of Gemini Plays Pokemon, but that project did release first. Our approaches to the problem, however, are completely different from one-another's. For more on this, chcek out [my article on the philosophy behind this project](docs/philosophy.md).
+
+### Why use Junjo over other frameworks?
+
+Full disclosure: The creator of Junjo is a coworker and friend of mine. Personal sentiments aside though, Junjo prioritizes asynchronous execution and type safety with Pydantic, which I view as mandatory for any AI workflow. Many other orchestrators fail these criteria, or treat them as an afterthought. I also appreciate its lightweight, unopinionated design philosophy. It facilitates your work rather than imposing rigid abstractions that are challenging to edit or debug.
+
+### Why are you using Gemini Flash instead of Pro?
+
+I'm not made of money! Gemini Pro is 4x the price of Gemini Flash. It clearly outperformed Flash in my testing, obviously, but it cannot achieve its goals in 1/4th as many iterations, and is thus not worth the cost. It's also much slower than Flash, leading to a less smooth viewing experience. My only regret in using Flash is not being able to get away with using Flash-Lite instead! There is more discussion along these lines in [the philosophy article](docs/philosophy.md), but a big part of this project is the idea that a smaller model, properly orchestrated in modular, specific tasks, can dramatically outperform a larger model.
+
+### Can it play other Pokémon games?
+
+Not natively. You would have to create new parsers for the memory locations in whichever game you're trying to adapt it to, and probably tweak some of the timing and navigation logic, but it's certainly possible to adapt this to another Gen 1 or Gen 2 game. PyBoy, unfortunately, only runs GameBoy and GameBoy Color games, so you would need to find another solution to go beyond Gen 2.
+
+### Do you intend to keep working on this?
+
+I'd like to see it beat the game, and I'll try to support it so that it does (assuming the costs don't become too excessive first), but aside from that I think I'm done for now. I've been wanting to do some kind of "AI plays Pokemon" project for years, and I've had a ton of fun working on it, but I'd like to move on to some other projects now. 
+
+### How much does it cost to run?
+
+For a full 24 hour day of streaming to Twitch from a VM, you're looking at roughly (in USD): $70 for the LLM API calls, $3 for the VM itself, and $10 for network traffic. So around $85 per day in total.
+
+### How fast does it play?
+
+In my testing, it managed to beat Brock in just under five hours. This will fluctuate wildly depending on the decisions it makes in the early game, however.
 
 ## Licence & Affiliation Notice
 
