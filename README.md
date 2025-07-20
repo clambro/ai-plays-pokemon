@@ -70,11 +70,11 @@ The system automatically creates backups every 100 iterations in the `outputs/` 
 
 ### Why Yellow Legacy?
 
-Partly nostalgia since Pokemon Yellow was the first video game I ever played, but largely because its hard mode prevents the AI from winning by grinding a single Pokemon to level 100. I also think that the team behind Yellow Legacy basically perfected the Gen 1 experience and I wanted to highlight their excellent work.
+Partly nostalgia since Pokémon Yellow was the first video game I ever played, but largely because its hard mode prevents the AI from winning by grinding a single Pokémon to level 100. I also think that the team behind Yellow Legacy basically perfected the Gen 1 experience and I wanted to highlight their excellent work.
 
-### Didn't Gemini Plays Pokemon already do this?
+### Didn't Gemini Plays Pokémon already do this?
 
-Great minds think alike! This project, like [Gemini Plays Pokemon](https://www.twitch.tv/gemini_plays_pokemon), was inspired by [Claude Plays Pokemon](https://www.twitch.tv/claudeplayspokemon). I started working on an AI workflow for hard mode Yellow Legacy before I'd ever heard of Gemini Plays Pokemon, but that project did release first. Our approaches to the problem, however, are completely different from one-another's. For more on this, chcek out [my article on the philosophy behind this project](docs/philosophy.md).
+Great minds think alike! This project, like [Gemini Plays Pokémon](https://www.twitch.tv/gemini_plays_Pokémon), was inspired by [Claude Plays Pokémon](https://www.twitch.tv/claudeplaysPokémon). I started working on an AI workflow for hard mode Yellow Legacy before I'd ever heard of Gemini Plays Pokémon, but that project did release first. Our approaches to the problem, however, are completely different from one-another's. For more on this, chcek out [my article on the philosophy behind this project](docs/philosophy.md).
 
 ### Why use Junjo over other frameworks?
 
@@ -90,7 +90,7 @@ Not natively. You would have to create new parsers for the memory locations in w
 
 ### Do you intend to keep working on this?
 
-I'd like to see it beat the game, and I'll try to support it so that it does (assuming the costs don't become too excessive first), but aside from that I think I'm done for now. I've been wanting to do some kind of "AI plays Pokemon" project for years, and I've had a ton of fun working on it, but I'd like to move on to some other projects now. 
+I'd like to see it beat the game, and I'll try to support it so that it does (assuming the costs don't become too excessive first), but aside from that I think I'm done for now. I've been wanting to do some kind of "AI plays Pokémon" project for years, and I've had a ton of fun working on it, but I'd like to move on to some other projects now. 
 
 ### How much does it cost to run?
 
