@@ -64,7 +64,7 @@ Other useful constants can be found (and edited) in `common/constants.py`.
 
 ### Backup and Restore
 
-The system automatically creates backups every 100 iterations in the `outputs/` folder. Each backup contains the AI workflow state, the complete game state, and a copy of the SQLite database so that you can resume play from the moment the backup was taken. Crashes and manually exiting the emulator will also trigger a backup.
+The system automatically creates backups every 100 iterations in the `outputs/` folder. Each backup contains the AI workflow state, the game state, and a copy of the SQLite database so that you can resume play from the moment the backup was taken. Crashes and manually exiting the emulator will also trigger a backup.
 
 ## FAQs
 
@@ -74,23 +74,23 @@ Partly nostalgia since Pokémon Yellow was the first video game I ever played, b
 
 ### Didn't Gemini Plays Pokémon already do this?
 
-Great minds think alike! This project, like [Gemini Plays Pokémon](https://www.twitch.tv/gemini_plays_Pokémon), was inspired by [Claude Plays Pokémon](https://www.twitch.tv/claudeplaysPokémon). I started working on an AI workflow for hard mode Yellow Legacy before I'd ever heard of Gemini Plays Pokémon, but that project did release first. Our approaches to the problem, however, are completely different from one-another's. For more on this, chcek out [my article on the philosophy behind this project](docs/philosophy.md).
+Great minds think alike! This project, like [Gemini Plays Pokémon](https://www.twitch.tv/gemini_plays_Pokémon), was inspired by [Claude Plays Pokémon](https://www.twitch.tv/claudeplaysPokémon). I started working on an AI workflow for hard mode Yellow Legacy before I'd ever heard of Gemini Plays Pokémon, but that project did release before this one. Our approaches to the problem, however, are completely different from one-another's. For more on this, check out [my article on the philosophy behind this project](docs/philosophy.md).
 
 ### Why use Junjo over other frameworks?
 
-Full disclosure: The creator of Junjo is a coworker and friend of mine. Personal sentiments aside though, Junjo prioritizes asynchronous execution and type safety with Pydantic, which I view as mandatory for any AI workflow. Many other orchestrators fail these criteria, or treat them as an afterthought. I also appreciate its lightweight, unopinionated design philosophy. It facilitates your work rather than imposing rigid abstractions that are challenging to edit or debug.
+Full disclosure: The creator of Junjo is a coworker and friend of mine. Personal sentiments aside, Junjo prioritizes asynchronous execution and type safety with Pydantic, which I view as mandatory for any AI workflow. Many other orchestrators treat these criteria as an afterthought, or fail them altogether. I also appreciate Junjo's lightweight, unopinionated design philosophy. It facilitates your work rather than imposing rigid abstractions that are challenging to edit or debug.
 
 ### Why are you using Gemini Flash instead of Pro?
 
-I'm not made of money! Gemini Pro is 4x the price of Gemini Flash. It clearly outperformed Flash in my testing, obviously, but it cannot achieve its goals in 1/4th as many iterations, and is thus not worth the cost. It's also much slower than Flash, leading to a less smooth viewing experience. My only regret in using Flash is not being able to get away with using Flash-Lite instead! There is more discussion along these lines in [the philosophy article](docs/philosophy.md), but a big part of this project is the idea that a smaller model, properly orchestrated in modular, specific tasks, can dramatically outperform a larger model.
+I'm not made of money! Gemini Pro is 4x the price of Gemini Flash. It outperformed Flash in my testing, obviously, but it cannot achieve its goals in 1/4th as many iterations, and is thus not worth the cost. It's also much slower than Flash, leading to a less enjoyable viewing experience. My only regret in using Flash is not being able to get away with using Flash-Lite instead! There is more discussion in [the philosophy article](docs/philosophy.md), but a big part of this project is the idea that a smaller model, properly orchestrated to do specific tasks, can dramatically outperform a larger model.
 
 ### Can it play other Pokémon games?
 
-Not natively. You would have to create new parsers for the memory locations in whichever game you're trying to adapt it to, and probably tweak some of the timing and navigation logic, but it's certainly possible to adapt this to another Gen 1 or Gen 2 game. PyBoy, unfortunately, only runs GameBoy and GameBoy Color games, so you would need to find another solution to go beyond Gen 2.
+Not natively. You would have to create new parsers for the memory locations in whichever game you're trying to adapt it to, and probably tweak some of the timing and navigation logic, but it's certainly possible to adapt this to another Gen 1 or Gen 2 game. PyBoy, unfortunately, only runs GameBoy and GameBoy Color games, so you would need to find another emulator to go beyond Gen 2.
 
 ### Do you intend to keep working on this?
 
-I'd like to see it beat the game, and I'll try to support it so that it does (assuming the costs don't become too excessive first), but aside from that I think I'm done for now. I've been wanting to do some kind of "AI plays Pokémon" project for years, and I've had a ton of fun working on it, but I'd like to move on to some other projects now. 
+I'd like to see it beat the game, and I'll try to support it so that it does (assuming the costs don't become too excessive first), but aside from that I think I'm done for now. I've been wanting to do some kind of "AI plays Pokémon" project for years, and I've had a ton of fun working on this, but I'd like to move on to some other projects now. 
 
 ### How much does it cost to run?
 
