@@ -23,7 +23,7 @@ If you want to learn more about how this all works, check out:
 
 - Python 3.13
 - [The uv package manager](https://docs.astral.sh/uv/) for installing dependencies
-- The Pokémon Yellow Legacy ROM
+- The Pokémon Yellow Legacy ROM — I am not licensed to distribute this. You'll have to get it yourself.
 
 ### Installation
 
@@ -32,9 +32,9 @@ If you want to learn more about how this all works, check out:
 2. Install the dependencies with `uv sync`
 
 3. Set up your environment variables:
-   Make a copy of the `.env.example` file and name it `.env`. You'll need to add a Gemini API key to get the LLM service to work. If you want to use [Jujno server](https://github.com/mdrideout/junjo-server) for telemetry, you'll have to create an API key for that as well.
+   Make a copy of the `.env.example` file and name it `.env`. You'll need to add a Gemini API key to get the LLM service to work. If you want to use [Jujno server](https://github.com/mdrideout/junjo-server) for (optional) telemetry, you'll have to create an API key for that as well.
 
-**Note:** If you try to run the integration tests, many of them will fail because they depend on save states that I am not licensed to share.
+**Note:** If you try to run the integration tests, many of them will fail because they depend on save states that I am not licensed to distribute.
 
 ## Running the Workflow
 
@@ -98,7 +98,7 @@ For a full 24 hour day of streaming to Twitch from a VM, you're looking at rough
 
 ### How fast does it play?
 
-In my testing, it managed to beat Brock in just under five hours. This will fluctuate wildly depending on the decisions it makes in the early game, however.
+In my testing, it managed to beat Brock in just under five hours. This will fluctuate depending on the decisions it makes in the early game, however.
 
 ## Licence & Affiliation Notice
 
