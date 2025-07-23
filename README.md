@@ -34,7 +34,7 @@ If you want to learn more about how this all works, check out:
 3. Set up your environment variables:
    Make a copy of the `.env.example` file and name it `.env`. You'll need to add a Gemini API key to get the LLM service to work. If you want to use [Jujno server](https://github.com/mdrideout/junjo-server) for (optional) telemetry, you'll have to create an API key for that as well.
 
-**Note:** If you try to run the integration tests, many of them will fail because they depend on save states that I am not licensed to distribute.
+**Note:** If you try to run the integration tests, many of them will fail because they depend on save states that I am not licensed to distribute. Similarly, if you try to run the game state visualization server, you'll get an error that the sprites are unavailable for the same reason.
 
 ## Running the Workflow
 
