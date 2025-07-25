@@ -4,15 +4,14 @@
 
 This is a fully autonomous AI workflow designed to play [Pokémon Yellow Legacy](https://github.com/cRz-Shadows/Pokémon_Yellow_Legacy) on Hard Mode. Pokémon Yellow Legacy is a ROM hack of Pokémon Yellow that includes a ton of balance changes, quality of life improvements, and bug fixes, while maintaining the feel of the first generation of Pokémon. Hard mode adds level caps and blocks item use in battle, forcing the AI to strategize instead of winning by overlevelling a single Pokémon.
 
-The AI workflow is written in Python and orchestrated by [Junjo](https://github.com/mdrideout/junjo), with custom logic for handling battles, navigating the overworld, and parsing text. It operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms (like A* search for navigation) with LLM powered decision making via the Google Gemini family of models.
+The AI workflow is written in Python and orchestrated by [Junjo](https://github.com/mdrideout/junjo), with custom logic for handling battles, navigating the overworld, and parsing text. It operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms with LLM powered decision making via the Google Gemini family of models. It features a three-tier memory system with RAG from a SQLite database and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs.
 
-Data from the AI workflow and the game's memory is piped into an HTML page for visualization, and the whole project is currently [streaming live on Twitch](link-to-stream). If you want to buy me a coffee to help cover the streaming costs, you can do so using the buttons below.
+Data from the AI workflow and the game's memory is piped into an HTML page for visualization, and the whole project is currently [streaming live on Twitch](link-to-stream). If you want to buy me a coffee to help cover the streaming costs, you can do so using the button below.
 
-[paypal-button] [ko-fi-button]
+[ko-fi-button]
 
 If you want to learn more about how this all works, check out:
-- [The philosophy behind the project](docs/philosophy.md)
-- [A detailed look at the architecture](docs/architecture.md)
+- [A deeper look into the philosophy and design of the project](docs/philosophy.md)
 - [A node-by-node description of the AI workflow](docs/workflow.md)
 
 ![A screenshot of the stream](docs/images/stream_view.jpg)
@@ -75,6 +74,10 @@ Partly nostalgia since Pokémon Yellow was the first video game I ever played, b
 ### Didn't Gemini Plays Pokémon already do this?
 
 Great minds think alike! This project, like [Gemini Plays Pokémon](https://www.twitch.tv/gemini_plays_Pokémon), was inspired by [Claude Plays Pokémon](https://www.twitch.tv/claudeplaysPokémon). I started working on an AI workflow for hard mode Yellow Legacy before I'd ever heard of Gemini Plays Pokémon, but that project did release before this one. Our approaches to the problem, however, are completely different from one-another's. For more on this, check out [my article on the philosophy behind this project](docs/philosophy.md).
+
+### What does the AI know?
+
+Only what would be accessible to a human player. It can see the screen, and it has memories of the sprites and warps that it has seen in the past. It has no external database/internet access, and the prompts do not contain any hints beyond giving it a basic play style. When battling Pokemon, it can only see the enemy's health as a percentage with a resolution that matches the resolution of the in-game health bar.
 
 ### Why use Junjo over other frameworks?
 
