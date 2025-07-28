@@ -83,7 +83,11 @@ Only what would be accessible to a human player. It can see the screen, and it h
 
 Full disclosure: The creator of Junjo is a coworker and friend of mine. Personal sentiments aside, Junjo prioritizes asynchronous execution and type safety with Pydantic, which I view as mandatory for any AI workflow. Many other orchestrators treat these criteria as an afterthought, or fail them altogether. I also appreciate Junjo's lightweight, unopinionated design philosophy. It facilitates your work rather than imposing rigid abstractions that are challenging to edit or debug.
 
-### Why are you using Gemini Flash instead of Pro?
+### Why Gemini over another model family?
+
+Two reasons: Partly because Gemini's API has built-in Pydantic support, which saves me a step of manual schema validation, but mostly because GCP gave me $500 of free credits for signing up, which I blew through during development.
+
+### Okay but why are you using Gemini Flash instead of Pro?
 
 I'm not made of money! Gemini Pro is 4x the price of Gemini Flash. It outperformed Flash in my testing, obviously, but it cannot achieve its goals in 1/4th as many iterations, and is thus not worth the cost. It's also much slower than Flash, leading to a less enjoyable viewing experience. My only regret in using Flash is not being able to get away with using Flash-Lite instead! There is more discussion in [the philosophy article](docs/philosophy.md), but a big part of this project is the idea that a smaller model, properly orchestrated to do specific tasks, can dramatically outperform a larger model.
 
