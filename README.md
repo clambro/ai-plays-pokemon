@@ -77,7 +77,7 @@ Great minds think alike! This project, like [Gemini Plays Pokémon](https://www.
 
 ### What does the AI know?
 
-Only what would be accessible to a human player. It can see the screen, and it has memories of the sprites and warps that it has seen in the past. It has no external database/internet access, and the prompts do not contain any hints beyond giving it a basic play style. When battling Pokemon, it can only see the enemy's health as a percentage with a resolution that matches the resolution of the in-game health bar.
+Only what would be accessible to a human player. It can see the screen, and it has memories of the sprites and warps that it has seen in the past. It has no external database/internet access, and the prompts do not contain any hints beyond giving it a basic play style. When battling Pokémon, it can only see the enemy's health as a percentage with a resolution that matches the resolution of the in-game health bar.
 
 ### Why use Junjo over other frameworks?
 
@@ -89,11 +89,11 @@ Two reasons: Partly because Gemini's API has built-in Pydantic support, which sa
 
 ### Okay but why are you using Gemini Flash instead of Pro?
 
-I'm not made of money! Gemini Pro is 4x the price of Gemini Flash. It outperformed Flash in my testing, obviously, but it cannot achieve its goals in 1/4th as many iterations, and is thus not worth the cost. It's also much slower than Flash, leading to a less enjoyable viewing experience. My only regret in using Flash is not being able to get away with using Flash-Lite instead! There is more discussion in [the philosophy article](docs/philosophy.md), but a big part of this project is the idea that a smaller model, properly orchestrated to do specific tasks, can dramatically outperform a larger model.
+I'm not made of money! Gemini Pro is 4x the price of Gemini Flash. It outperformed Flash in my testing, obviously, but it cannot achieve its goals in 1/4th as many iterations, and is thus not worth the cost. It's also much slower than Flash, leading to a less enjoyable viewing experience. My only regret in using Flash is not being able to get away with using Flash-Lite instead! There is more discussion in [the philosophy article](docs/philosophy.md), but a big part of this project is the idea that a smaller model, properly orchestrated to do specific tasks, can outperform a larger model.
 
 ### Can it play other Pokémon games?
 
-Not natively. You would have to create new parsers for the memory locations in whichever game you're trying to adapt it to, and probably tweak some of the timing and navigation logic, but it's certainly possible to adapt this to another Gen 1 or Gen 2 game. PyBoy, unfortunately, only runs GameBoy and GameBoy Color games, so you would need to find another emulator to go beyond Gen 2.
+Not natively. It's certainly possible to adapt this code to another Gen 1 or Gen 2 game, but you would have to create new parsers for the memory locations in the new ROM, and probably tweak some of the timing and navigation logic. PyBoy, unfortunately, only runs GameBoy and GameBoy Color games, so you would need to find another emulator to go beyond Gen 2.
 
 ### Do you intend to keep working on this?
 
@@ -101,7 +101,7 @@ I'd like to see it beat the game, and I'll try to support it so that it does (as
 
 ### How much does it cost to run?
 
-For a full 24 hour day of streaming to Twitch from a VM, you're looking at roughly (in USD): $70 for the LLM API calls, $3 for the VM itself, and $10 for network traffic. So around $85 per day in total.
+For a full 24 hour day of streaming to Twitch from a VM, you're looking at roughly $85 USD. That breaks down as around $72 for the LLM API calls, $3 for the VM itself, and $10 for network traffic.
 
 ### How fast does it play?
 

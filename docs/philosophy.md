@@ -2,21 +2,21 @@
 
 ## Philosophy
 
-### A Spectrum of Pokemon Solvers
+### A Spectrum of Pokémon Solvers
 
-There is a long history of people trying to solve Pokemon autonomously. I'd like to frame these attempts on a spectrum of autonomy that the various approaches allow.
+There is a long history of people trying to solve Pokémon autonomously. I'd like to frame these attempts on a spectrum of autonomy that the various approaches allow.
 
-On the low end of the autonomy spectrum, you have projects like [MartSnack's extremely cool attempts to play Pokemon using a pre-defined series of button presses](https://www.youtube.com/@martsnack). Tool assisted speedrun bots [like this one](https://github.com/alexkara15/PokeBot/tree/master) also fall on this side of the spectrum. The defining feature on this end of the spectrum is determinism. The whole arc of the game is more or less known in advance.
+On the low end of the autonomy spectrum, you have projects like [MartSnack's extremely cool attempts to play Pokémon using a pre-defined series of button presses](https://www.youtube.com/@martsnack). Tool assisted speedrun bots [like this one](https://github.com/alexkara15/PokeBot/tree/master) also fall on this side of the spectrum. The defining feature on this end of the spectrum is determinism. The whole arc of the game is more or less known in advance.
 
 Slightly higher in autonomy than that live the reinforcement learning (RL) algorithms like the very impressive [PokeRL](https://drubinstein.github.io/pokerl/) project, which splits the game into "episodes", defines a route between them, and uses RL and a swarm of agents to find an optimal policy for each episode. This has much higher tolerance for uncertainty than the deterministic approaches we discussed before, but still requires a high level plan that has to be optimized in stages.
 
-At the other extreme of the autonomy spectrum sits the holy grail: A totally autonomous agent that interacts in real time with the emulator in a recurrent loop, with no parsing, tools, or information beyond what's currently visible on screen. This, I believe, was the original goal of the [Claude Plays Pokemon](https://www.twitch.tv/claudeplayspokemon) (CPP) benchmark, but modern LLMs are nowhere near capable of this feat. To make any progress at all, CPP required access to the game state, a knowledge base, a summarizer for long content, and a simple navigation tool. [Gemini Plays Pokemon](https://www.twitch.tv/gemini_plays_pokemon) (GPP) went further still and incorporated a minimap to help with the model's (lack of) spatial awareness. GPP was [criticized by some](https://arstechnica.com/ai/2025/05/why-google-geminis-pokemon-success-isnt-all-its-cracked-up-to-be/) for this "harness" that it used to beat the game, but my contention in this project is that GPP's harness didn't go far enough!
+At the other extreme of the autonomy spectrum sits the holy grail: A totally autonomous agent that interacts in real time with the emulator in a recurrent loop, with no parsing, tools, or information beyond what's currently visible on screen. This, I believe, was the original goal of the [Claude Plays Pokémon](https://www.twitch.tv/claudeplaysPokémon) (CPP) benchmark, but modern LLMs are nowhere near capable of this feat. To make any progress at all, CPP required access to the game state, a knowledge base, a summarizer for long content, and a simple navigation tool. [Gemini Plays Pokémon](https://www.twitch.tv/gemini_plays_Pokémon) (GPP) went further still and incorporated a minimap to help with the model's (lack of) spatial awareness. GPP was [criticized by some](https://arstechnica.com/ai/2025/05/why-google-geminis-Pokémon-success-isnt-all-its-cracked-up-to-be/) for this "harness" that it used to beat the game, but my contention in this project is that GPP's harness didn't go far enough!
 
 ### My Approach
 
-My approach to solving Pokemon Yellow Legacy combines freedom with constraint, sitting firmly in the middle of the autonomy spectrum. I want the LLM to make all the high-level decisions, but I don't need it to determine every individual button press. The flow of the game is not limited in any way, but the AI is tightly bound in a workflow to keep it focused and predictable. The model here is that of a production application. LLMs are expensive and inherently a source of uncertainty. Thus, you only want to use them when you absolutely must, and in a way where their output space is bounded and can be validated.
+My approach to solving Pokémon Yellow Legacy combines freedom with constraint, sitting firmly in the middle of the autonomy spectrum. I want the LLM to make all the high-level decisions, but I don't need it to determine every individual button press. The flow of the game is not limited in any way, but the AI is tightly bound in a workflow to keep it focused and predictable. The model here is that of a production application. LLMs are expensive and inherently a source of uncertainty. Thus, you only want to use them when you absolutely must, and in a way where their output space is bounded and can be validated.
 
-An example will make this more clear: The very first decision you make in Pokemon is what name you want to give your character. Let's say the AI wants to name itself "GEMINI." The shortest sequence to enter this name involves 29 button presses. To do this whole thing with a Gemini model, you would have to use Gemini Pro (because Flash isn't good enough at interpreting the screen), and even if you allowed the model to press multiple buttons per iteration, it would still require several iterations, probably a dozen or so in total. And this is assuming that it didn't make a mistake and have to go back, which it almost certainly would, or worse, make a mistake and carry on with submitting the name.
+An example will make this more clear: The very first decision you make in Pokémon is what name you want to give your character. Let's say the AI wants to name itself "GEMINI." The shortest sequence to enter this name involves 29 button presses. To do this whole thing with a Gemini model, you would have to use Gemini Pro (because Flash isn't good enough at interpreting the screen), and even if you allowed the model to press multiple buttons per iteration, it would still require several iterations, probably a dozen or so in total. And this is assuming that it didn't make a mistake and have to go back, which it almost certainly would, or worse, make a mistake and carry on with submitting the name.
 
 My approach to the above problem is to simply ask the model for the name, since that's the decision we care about, then use a deterministic algorithm to submit the required button presses to the emulator. Naming is a task that Gemini Flash Lite can handle no problem, and it takes only one prompt at one-twelfth the price of Gemini Pro. If we assume that the naive approach took a dozen iterations, then this approach is nearly 150x cheaper overall!
 
@@ -65,7 +65,7 @@ The model is encouraged to summarize memories if they go over a certain length, 
 
 ### Mapping
 
-Aside from memory, the other major shortcoming of LLMs in Pokemon is their lack of spatial reasoning ability. The key difference that allowed GPP to beat Pokemon where CPP failed (and the reason it was criticized) was the inclusion of a minimap that generated itself as the player walked around any given map. My approach here is somewhat similar to what I imagine GPP did, though, as mentioned in the FAQ, I was not aware of GPP when I started this project.
+Aside from memory, the other major shortcoming of LLMs in Pokémon is their lack of spatial reasoning ability. The key difference that allowed GPP to beat Pokémon where CPP failed (and the reason it was criticized) was the inclusion of a minimap that generated itself as the player walked around any given map. My approach here is somewhat similar to what I imagine GPP did, though, as mentioned in the FAQ, I was not aware of GPP when I started this project.
 
 A minimap for each map ID is constructed using ASCII characters and stored in the database. The map is initialized as a rectangle of undiscovered territory the same size as the map in the game's memory, and with every step the player takes in game, the map is updated using whatever information is available on screen. Here is a sample map for Pallet Town:
 
@@ -110,26 +110,40 @@ You will notice that all the tile characters chosen above are unusual unicode ch
 
 ### What About Vision?
 
-Attentive readers will note that I have not said anything about enhancing the emulator's screenshot with additional information to improve the model's performance. This is indeed something that other projects have included (e.g. by adding coordinates, colour coding, or borders to each tile in the image), but I did not find that it was necessary for my approach. The model does see the raw screenshot from the game in nearly every prompt, but it is borderline useless for most of them given the huge amount of information provided to it by the overworld map described above. I may go back and edit the screenshot logic to increase the information it contains if I find that the model is struggling somewhere, but thus far it hasn't seemed necessary to justify the level of work required.
+Attentive readers will note that I have not said anything about editing the emulator's screenshot with additional information to improve the model's performance. This is indeed something that other projects have included (e.g. by adding coordinates, colour coding, or borders to each tile in the image), but I did not find that it was necessary for my approach. The model does see the raw screenshot from the game in nearly every prompt, but it is borderline useless for most of them given the huge amount of information provided to it by the overworld map described above. I may go back and edit the screenshot logic to increase the information it contains if I find that the model is struggling somewhere, but thus far it hasn't seemed necessary to justify the level of work required.
 
 ## Auditing and Testing
 
-### LLM Telemetry
-
-- Reading the prompts and responses is non-optional
-- Junjo Server still in alpha, but will be cool someday
+It is one thing to build the workflow, but it is another thing entirely to be confident that it works. Testing is something you can rarely overdo, and I admit that I could have done more here, but here are several levels on which the project was validated before launch.
 
 ### Pytest
 
-- Unit tests
-- Integration tests with game states
-- Missing LLM evals
+The most standard form of validation is writing code tests. I used the Pytest framework for this since it is by far the most popular and mature testing framework for Python. Unit tests are there to validate niche pieces of complex logic, primarily in the navigation and naming tools. Integration tests check multi-step processes, ensuring that discrete pieces of logic work correctly when chained together. We even have integration tests in this repository that run directly on game states and validate that tools enter the right commands and read correct information from the game's memory. There is even [a meta-test](/tests/unit/test_tests.py) that validates the way we organize our tests.
+
+Despite what does exist in the repo, there are certainly glaring holes in my tests. Coverage is relatively low, but the worst issue is the lack of LLM tests. The point of LLM tests is to ensure that your prompts give the correct output for expected inputs so that you can pick the cheapest model that works and edit your prompts without fear of breaking key behaviour. They are more stochastic than traditional unit/integration/emd-to-end tests, but they help you track down and eliminate common failure modes of your prompts.
+
+My excuse for not having LLM tests is a bit of a lame one: They're hard. My workflow is recursive, meaning the states (and therefore the inputs to all my prompts) depend on everything that came before them. This means that in a perfect world, a change to my workflow would necessitate regenerating all my test cases. Practically speaking, I should have included *something* to validate the prompts even if it was a bunch of synthetic inputs, but I was lazy. Mea culpa. I may do this if the project requires further validation it as it runs. In the mean time, there were other (less rigorous) ways that I evaluated my prompts.
+
+### LLM Telemetry
+
+As anyone who has ever worked with LLMs can tell you, your first attempt at a prompt will never be good enough. You will make mistakes. The LLM will fail in ways you could never have predicted. It will hook onto a single word you used and generate all kinds of unexpected pathologies. The only way to know that your LLM is responding reliably is to actually read its responses. Indeed, this is where you source the LLM test cases that I mentioned above.
+
+This application logs every single LLM prompt and response to the same SQLite database that contains the long-term memories and map info. (This is also how I track the LLM costs over time.) I have spent hours reading these logs, tweaking prompts, reading them again, tweaking again, etc. If my workflow does something unexpected, this database table is the first place I go to start debugging. **There is no substitute for reading your own LLM logs.**
+
+Some more mature applications may use proper telemetry providers over a crude database logging approach like mine. Junjo actually has a sister package called [Junjo Server](https://github.com/mdrideout/junjo-server) for exactly this purpose. It integrates with OpenTelemetry and renders interactable visualizations of your workflows with all the input states, output states, and LLM calls for each node. The project is still in alpha and struggles a bit with my massive workflow states, so it is turned off by default in the app, but I encourage you to check it out as it has a lot of potential.
+
+![Junjo Server](/docs/images/junjo_server.jpg)
 
 ### Live Game State Visualization
 
-- **Web Server Architecture**: aiohttp-based real-time server implementation
-- **State Synchronization**: How agent and game state are pushed to the frontend
-- **Asset Management**: Static file serving for images, CSS, and JavaScript
-- **Frontend Design**: HTML, CSS, and JavaScript for the streaming interface
+The other obvious approach to testing and debugging the LLM is to simply watch it play the game! This project comes with an HTML page that visualizes the workflow's raw memory and goals, along with information about the current game state. The page is hosted locally and runs asynchronously with the emulator and AI workflow. Updates to the page are pushedW every time the raw memory is updated, and again at the end of each agent loop. The main purpose of this page is, of course, to support the live stream, but it was instrumental in validating aspects of the game state parsing and auditing the LLM's thought process.
+
+![Game state visualization](/docs/images/stream_view.jpg)
 
 ### Backup and Restore Logic
+
+All this testing and validation would be nothing without a way to go back and try again. This application contains a backup system that automatically snapshots the database, workflow state, and game state every (by default) 100 iterations (~30 mins). It will also automatically snapshot the last healthy iteration if the application crashes for any reason. The workflow can be restarted from any of these snapshot states, and this proved critical for debugging.
+
+## Conclusion
+
+Kudos to you if you've actually read this far. I don't have much in the way of concluding remarks except to say that this project was tremendously fun to work on. I got to dig into the deepest levels of one of my favourite games and experience all of its insane idiosyncracies first-hand. I've pushed the limits of my own work experience and delivered something that I feel truly proud of. Hopefully you learned a little something from digging through this project. I certainly did.
