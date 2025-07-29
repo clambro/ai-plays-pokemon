@@ -1,6 +1,6 @@
 # AI Workflow: Node-by-Node Analysis
 
-This page will walk in detail through the entire Junjo workflow, one node at a time. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving into this, as some of that terminology will be used here. At a high level, we have a top-level entrypoint for the agent that handles memory updates and retrieval, setting goals, and routing the flow to one of three dedicated subgraphs, each of which handles a major aspect of playing Pokémon. The three subgraphs are the Overworld Handler, the Battle Handler, and the Text Handler, and each one has its own suite of tools to operate in its domain.
+This page will walk in detail through the entire Junjo workflow, one node at a time. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving into this, as some of that terminology will be used here. At a high level, we have a top-level entrypoint for the agent that handles memory updates and retrieval, setting goals, and routing the flow to one of three dedicated subflows, each of which handles a major aspect of playing Pokémon. The three subflows are the Overworld Handler, the Battle Handler, and the Text Handler, and each one has its own suite of tools to operate in its domain.
 
 ## The Main Agent Graph
 

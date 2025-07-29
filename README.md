@@ -73,7 +73,7 @@ Partly nostalgia since Pokémon Yellow was the first video game I ever played, b
 
 ### Didn't Gemini Plays Pokémon already do this?
 
-Great minds think alike! This project, like [Gemini Plays Pokémon](https://www.twitch.tv/gemini_plays_Pokémon), was inspired by [Claude Plays Pokémon](https://www.twitch.tv/claudeplaysPokémon). I started working on an AI workflow for hard mode Yellow Legacy before I'd ever heard of Gemini Plays Pokémon, but that project did release before this one. Our approaches to the problem, however, are completely different from one-another's. For more on this, check out [my article on the philosophy behind this project](docs/philosophy.md).
+Great minds think alike! This project, like [Gemini Plays Pokémon](https://www.twitch.tv/gemini_plays_Pokémon), was inspired by [Claude Plays Pokémon](https://www.twitch.tv/claudeplaysPokémon). I started working on an AI workflow for hard mode Yellow Legacy before I'd ever heard of Gemini Plays Pokémon, but that project did release before this one. Our approaches to the problem, however, are completely different from one-another. For more on this, check out [my article on the philosophy behind this project](docs/philosophy.md).
 
 ### What does the AI know?
 
@@ -101,7 +101,7 @@ I'd like to see it beat the game, and I'll try to support it so that it does (as
 
 ### How much does it cost to run?
 
-For a full 24 hour day of streaming to Twitch from a VM, you're looking at roughly $85 USD. That breaks down as around $72 for the LLM API calls, $3 for the VM itself, and $10 for network traffic.
+For a full 24 hour day of streaming to Twitch from a virtual machine, you're looking at roughly $85 USD. That breaks down as around $72 for the LLM API calls, $3 for the VM itself, and $10 for network traffic.
 
 ### How fast does it play?
 
