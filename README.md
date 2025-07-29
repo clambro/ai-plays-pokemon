@@ -4,7 +4,7 @@
 
 This is a fully autonomous AI workflow designed to play [Pokémon Yellow Legacy](https://github.com/cRz-Shadows/Pokémon_Yellow_Legacy) on Hard Mode. Pokémon Yellow Legacy is a ROM hack of Pokémon Yellow that includes a ton of balance changes, quality of life improvements, and bug fixes, while maintaining the feel of the first generation of Pokémon. Hard mode adds level caps and blocks item use in battle, forcing the AI to strategize instead of winning by overlevelling a single Pokémon.
 
-The AI workflow is written in Python and orchestrated by [Junjo](https://github.com/mdrideout/junjo), with custom logic for handling battles, navigating the overworld, and parsing text. It operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms with LLM powered decision making via the Google Gemini family of models. It features a three-tier memory system with RAG from a SQLite database and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs.
+The AI workflow is written in Python and orchestrated by [Junjo](https://github.com/mdrideout/junjo), with custom logic for handling battles, navigating the overworld, and parsing text. It operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms with LLM powered decision making via the Google Gemini family of models. It features a three-tier memory system with RAG from a SQLite database, and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs.
 
 Data from the AI workflow and the game's memory is piped into an HTML page for visualization, and the whole project is currently [streaming live on Twitch](link-to-stream). If you want to buy me a coffee to help cover the streaming costs, you can do so using the button below.
 
@@ -55,11 +55,11 @@ This will:
 
 - `--rom-path PATH`: Specify a custom path to your ROM file
 - `--backup-folder PATH`: Load a specific backup state
-- `--load-latest`: Automatically load the most recent backup
+- `--load-latest`: Load the most recent backup (incompatible with `--backup-folder`)
 - `--mute-sound`: Mute the emulator sound
 - `--track-telemetry`: Enable telemetry tracking (requires Junjo server)
 
-Other useful constants can be found (and edited) in `common/constants.py`.
+Other relevant constants can be edited in `common/constants.py`.
 
 ### Backup and Restore
 
@@ -77,7 +77,7 @@ Great minds think alike! This project, like [Gemini Plays Pokémon](https://www.
 
 ### What does the AI know?
 
-Only what would be accessible to a human player. It can see the screen, and it has memories of the sprites and warps that it has seen in the past. It has no external database/internet access, and the prompts do not contain any hints beyond giving it a basic play style. When battling Pokémon, it can only see the enemy's health as a percentage with a resolution that matches the resolution of the in-game health bar.
+Only what would be accessible to a human player. It can see the screen, and it has memories of the sprites and warps that it has seen in the past. It has no internet access, and the prompts do not contain any hints beyond basic play style. When battling Pokémon, it can only see the enemy's health as a percentage with a resolution that matches the resolution of the in-game health bar.
 
 ### Why use Junjo over other frameworks?
 
@@ -85,9 +85,9 @@ Full disclosure: The creator of Junjo is a coworker and friend of mine. Personal
 
 ### Why Gemini over another model family?
 
-Two reasons: Partly because Gemini's API has built-in Pydantic support, which saves me a step of manual schema validation, but mostly because GCP gave me $500 of free credits for signing up, which I blew through during development.
+Two reasons: Partly because Gemini's API has built-in Pydantic support, which saved me a step of manual schema validation, but mostly because Google Cloud gave me $500 of free credits for signing up, which I blew through during development.
 
-### Okay but why are you using Gemini Flash instead of Pro?
+### Okay but why Gemini Flash instead of Pro?
 
 I'm not made of money! Gemini Pro is 4x the price of Gemini Flash. It outperformed Flash in my testing, obviously, but it cannot achieve its goals in 1/4th as many iterations, and is thus not worth the cost. It's also much slower than Flash, leading to a less enjoyable viewing experience. My only regret in using Flash is not being able to get away with using Flash-Lite instead! There is more discussion in [the philosophy article](docs/philosophy.md), but a big part of this project is the idea that a smaller model, properly orchestrated to do specific tasks, can outperform a larger model.
 

@@ -1,6 +1,6 @@
 # AI Workflow: Node-by-Node Analysis
 
-This page will walk in detail through the entire Junjo workflow, one node at a time. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving into this, as some of that terminology will be used here. At a high level, we have a top-level entrypoint for the agent that handles memory updates and retrieval, setting goals, and routes the flow to one of three dedicated subgraphs, each of which handles a major aspect of playing Pokémon. The three subgraphs are the Overworld Handler, the Battle Handler, and the Text Handler, and each one has its own suite of tools to operate in its domain.
+This page will walk in detail through the entire Junjo workflow, one node at a time. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving into this, as some of that terminology will be used here. At a high level, we have a top-level entrypoint for the agent that handles memory updates and retrieval, setting goals, and routing the flow to one of three dedicated subgraphs, each of which handles a major aspect of playing Pokémon. The three subgraphs are the Overworld Handler, the Battle Handler, and the Text Handler, and each one has its own suite of tools to operate in its domain.
 
 ## The Main Agent Graph
 
@@ -111,7 +111,7 @@ Only available in wild battles. Runs from the battle.
 
 ### Handle Subsequent Text
 
-The final node in the battle handler. This one is responsible for reading any text that appears after one of the tools above is used. We don't have time to wait for a full agent loop as the text starts streaming as soon as you hit the button. This node captures any text that streams and hits the A button to progress any dialog if the blinking cursor is on screen.
+The final node in the battle handler. It may surprise you that we do this here instead of in the text handler, but it's because the logic for reading text in a battle is slightly different from doing so in the overworld. Additionally, the text starts streaming the moment an action is taken, so we don't have time to wait for the next iteration to start anyway. This node captures any text that streams, adds it to the raw memory, and hits the A button to progress any dialog if the blinking cursor is on screen.
 
 ## The Text Handler Subflow
 
@@ -119,15 +119,15 @@ The final node in the battle handler. This one is responsible for reading any te
 
 ### Determine Handler
 
-This is the entrypoint of the text handler subflow, and its job is to determine which of the available tools is most appropriate for handling the current game state. This subflow, unlike the others, has the option to bail immediately if it detects that there is no text on the screen. This is because some dialog boxes in the game close themselves, and they may do so between the handler being set and the subflow starting. This is extremely unlikely, but the extra bit of safety costs us nothing.
+This is the entrypoint of the text handler subflow, and its job is to determine which of the available tools is most appropriate for handling the current game state. This subflow, unlike the others, has the option to bail immediately if it detects that there is no text on the screen. This is because some dialog boxes in the game close themselves, and they may do so between the handler being set and the subflow starting. This is unlikely, but the extra bit of safety costs us nothing.
 
 ### Handle Dialog Box
 
-This is the most common tool in the text handler subflow. Its job is to read through any dialog that appears on screen and log it directly to the AI's memory. This saves us a ton of time and tokens because we don't need the AI to interpret each screen; we pull it directly from the game state. This node exits if either the dialog box disappears, or text appears outside the dialog box (indicating that a menu has opened up).
+This is the most common tool in the text handler subflow. Its job is to read through any dialog that appears on screen and log it directly to the AI's raw memory. This saves us a ton of time and tokens by pulling the text straight from the game state instead of making the AI read it screenshot by screenshot. This node exits if either the dialog box disappears, or text appears outside the dialog box indicating that a menu has opened up.
 
 ### Assign Name
 
-A niche tool, but a very useful one. This enters a name into the game when the player is asked for their name at the start of the game or captures a new Pokémon and gives it a nickname. Like the dialog box handler, this saves us a ton of time and tokens by asking the AI for a name and deterministically entering the button presses required to submit that name, rather than getting the AI to do it one button at a time. The AI is also really bad at entering names manually, so this saves us from having all its Pokémon be named "AAAAAAAAAA."
+A niche tool, but a very useful one. This enters a name into the game when the player is asked for their name at the start of the game or captures a new Pokémon and gives it a nickname. Like the dialog box handler, this saves us a ton of time and tokens by asking the AI for a name and deterministically entering the button presses required to submit that name, rather than getting the AI to do it one button at a time. The AI is also really bad at entering names manually, so this saves us from watching it play with a team full of Pokémon named "AAAAAAAAAA".
 
 ### Make Decision
 
