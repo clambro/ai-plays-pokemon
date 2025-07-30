@@ -106,11 +106,11 @@ class OverworldWarp(Warp):
 
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the warp."""
-        visited_text = "" if self.visited else "You have not been to this map yet. "
-        return (
-            f"warp_{map_id}_{self.index} at {self.coords} leading to {self.destination.name}."
-            f" {visited_text}{self.description}"
-        )
+        if self.visited or self.destination in [MapId.OUTSIDE, MapId.UNKNOWN]:
+            visited_text = f"This warp leads to {self.destination.name}."
+        else:
+            visited_text = "You have not been to this warp's destination yet."
+        return f"warp_{map_id}_{self.index} at {self.coords}. {visited_text} {self.description}"
 
 
 class OverworldMap(BaseModel):
