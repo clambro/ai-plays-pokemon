@@ -80,13 +80,14 @@ class DetermineHandlerService:
         args = []
         player_pokemon = game_state.battle.player_pokemon
         if player_pokemon:
-            args.extend(
-                [
-                    FightToolArgs(move_index=i, move_name=move.name)
-                    for i, move in enumerate(player_pokemon.moves)
-                    if move.pp > 0
-                ]
-            )
+            fight_args = [
+                FightToolArgs(move_index=i, move_name=move.name)
+                for i, move in enumerate(player_pokemon.moves)
+                if move.pp > 0
+            ]
+            if not fight_args:
+                fight_args = [FightToolArgs(move_index=0, move_name="STRUGGLE")]
+            args.extend(fight_args)
             args.extend(
                 [
                     SwitchPokemonToolArgs(party_index=i, name=p.name, species=p.species)
