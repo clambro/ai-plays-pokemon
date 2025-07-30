@@ -9,5 +9,9 @@
         }
     },
     "ruff.enable": true,
-    "ruff.configurationPreference": "filesystemFirst"
+    "ruff.configurationPreference": "filesystemFirst",
+    "basedpyright.analysis.diagnosticMode": "workspace",
+    "basedpyright.analysis.typeCheckingMode": "basic",
+    "basedpyright.analysis.extraPaths": [],
+    "python.languageServer": "None"
 }
