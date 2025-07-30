@@ -4,7 +4,7 @@
 
 This is a fully autonomous AI workflow designed to play [Pokémon Yellow Legacy](https://github.com/cRz-Shadows/Pokémon_Yellow_Legacy) on Hard Mode. Pokémon Yellow Legacy is a ROM hack of Pokémon Yellow that includes a ton of balance changes, quality of life improvements, and bug fixes, while maintaining the feel of the first generation of Pokémon. Hard mode adds level caps and blocks item use in battle, forcing the AI to strategize instead of winning by overlevelling a single Pokémon.
 
-The AI workflow is written in Python and orchestrated by [Junjo](https://github.com/mdrideout/junjo), with custom logic for handling battles, navigating the overworld, and parsing text. It operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms with LLM powered decision making via the Google Gemini family of models. It features a three-tier memory system with RAG from a SQLite database, and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs.
+The AI workflow is written in Python and orchestrated by [Junjo](https://github.com/mdrideout/junjo), with custom logic for handling battles, navigating the overworld, and parsing text. It operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms and LLM powered decision making. It features a three-tier memory system with RAG from a SQLite database, and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs.
 
 Data from the AI workflow and the game's memory is piped into an HTML page for visualization, and the whole project is currently [streaming live on Twitch](link-to-stream). If you want to buy me a coffee to help cover the streaming costs, you can do so using the button below.
 
@@ -22,6 +22,7 @@ If you want to learn more about how this all works, check out:
 
 - Python 3.13
 - [The uv package manager](https://docs.astral.sh/uv/) for installing dependencies
+- [A Gemini API key](https://ai.google.dev/gemini-api/docs/api-key) for calling the LLM
 - The Pokémon Yellow Legacy ROM — I am not licensed to distribute this. You'll have to get it yourself.
 
 ### Installation
@@ -30,8 +31,9 @@ If you want to learn more about how this all works, check out:
 
 2. Install the dependencies with `uv sync`
 
-3. Set up your environment variables:
-   Make a copy of the `.env.example` file and name it `.env`. You'll need to add a Gemini API key to get the LLM service to work. If you want to use [Jujno server](https://github.com/mdrideout/junjo-server) for (optional) telemetry, you'll have to create an API key for that as well.
+3. Make a copy of the `.env.example` file and name it `.env`. Add your Gemini API key there.
+
+4. (Optional) If you want to use [Jujno Server](https://github.com/mdrideout/junjo-server) for telemetry, you'll have to create an API key for that as well. This is off by default as the project is still in alpha.
 
 **Note:** If you try to run the integration tests, many of them will fail because they depend on save states that I am not licensed to distribute. Similarly, if you try to run the game state visualization server, you'll get an error that the sprites are unavailable for the same reason.
 
@@ -57,7 +59,7 @@ This will:
 - `--backup-folder PATH`: Load a specific backup state
 - `--load-latest`: Load the most recent backup (incompatible with `--backup-folder`)
 - `--mute-sound`: Mute the emulator sound
-- `--track-telemetry`: Enable telemetry tracking (requires Junjo server)
+- `--track-telemetry`: Enable telemetry tracking (requires Junjo Server)
 
 Other relevant constants can be edited in `common/constants.py`.
 
@@ -73,7 +75,7 @@ Partly nostalgia since Pokémon Yellow was the first video game I ever played, b
 
 ### Didn't Gemini Plays Pokémon already do this?
 
-Great minds think alike! This project, like [Gemini Plays Pokémon](https://www.twitch.tv/gemini_plays_Pokémon), was inspired by [Claude Plays Pokémon](https://www.twitch.tv/claudeplaysPokémon). I started working on an AI workflow for hard mode Yellow Legacy before I'd ever heard of Gemini Plays Pokémon, but that project did release before this one. Our approaches to the problem, however, are completely different from one-another. For more on this, check out [my article on the philosophy behind this project](docs/philosophy.md).
+Great minds think alike! This project, like [Gemini Plays Pokémon](https://www.twitch.tv/gemini_plays_Pokémon), was inspired by [Claude Plays Pokémon](https://www.twitch.tv/claudeplaysPokémon). I started working on an AI workflow for hard mode Yellow Legacy before I'd ever heard of Gemini Plays Pokémon, but that project did release before this one. Our approaches to the problem, however, are quite different. For more on this, check out [my article on the philosophy behind this project](docs/philosophy.md).
 
 ### What does the AI know?
 
@@ -93,11 +95,11 @@ I'm not made of money! Gemini Pro is 4x the price of Gemini Flash. It outperform
 
 ### Can it play other Pokémon games?
 
-Not natively. It's certainly possible to adapt this code to another Gen 1 or Gen 2 game, but you would have to create new parsers for the memory locations in the new ROM, and probably tweak some of the timing and navigation logic. PyBoy, unfortunately, only runs GameBoy and GameBoy Color games, so you would need to find another emulator to go beyond Gen 2.
+Not natively. You could to adapt this code to another Gen 1 or Gen 2 game, but you would have to create new parsers for the memory locations in the new ROM, and probably tweak some of the timing and navigation logic. PyBoy, unfortunately, only runs GameBoy and GameBoy Color games, so you would need to find another emulator to go beyond Gen 2.
 
 ### Do you intend to keep working on this?
 
-I'd like to see it beat the game, and I'll try to support it so that it does (assuming the costs don't become too excessive first), but aside from that I think I'm done for now. I've been wanting to do some kind of "AI plays Pokémon" project for years, and I've had a ton of fun working on this, but I'd like to move on to some other projects now. 
+I'd like to see it beat the game, and I'll try to support it so that it does (assuming the costs don't become too excessive first), but aside from that I think I'm done for now. I've been wanting to do some kind of "AI plays Pokémon" project for years, and I've had a ton of fun working on this, but I'd like to move on to some other projects. 
 
 ### How much does it cost to run?
 
