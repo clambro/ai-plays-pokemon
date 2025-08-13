@@ -103,7 +103,7 @@ I'd like to see it beat the game, and I'll try to support it so that it does (as
 
 ### How much does it cost to run?
 
-For a full 24 hour day of streaming to Twitch from a virtual machine, you're looking at roughly $85 USD. That breaks down as around $72 for the LLM API calls, $3 for the VM itself, and $10 for network traffic.
+Roughly $80 USD in Gemini API costs per day of continuous running.
 
 ### How fast does it play?
 
