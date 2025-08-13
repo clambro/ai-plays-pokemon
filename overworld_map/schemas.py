@@ -109,7 +109,10 @@ class OverworldWarp(Warp):
         if self.visited or self.destination in [MapId.OUTSIDE, MapId.UNKNOWN]:
             visited_text = f"This warp leads to {self.destination.name}."
         else:
-            visited_text = "You have not been to this warp's destination yet."
+            visited_text = (
+                "You have not been to this warp's destination yet. Visiting it will add a new map"
+                " to your memory. It might be a good candidate for exploration if it is accessible."
+            )
         return f"warp_{map_id}_{self.index} at {self.coords}. {visited_text} {self.description}"
 
 
