@@ -28,17 +28,23 @@ class CritiqueService:
         game_state = self.emulator.get_game_state()
         screenshot = self.emulator.get_screenshot()
         prompt = CRITIQUE_PROMPT.format(state=self.state_string_builder(game_state))
-        response = await self.llm_service.get_llm_response_pydantic(
-            [screenshot, prompt],
-            schema=CritiqueResponse,
-            prompt_name="critique_overworld_state",
-            thinking_tokens=1024,
-        )
-        self.raw_memory.add_memory(
-            iteration=self.iteration,
-            content=(
-                f"The critic model has provided me with the following advice on my progress:"
-                f" {response.critique}"
-            ),
-        )
+        try:
+            response = await self.llm_service.get_llm_response_pydantic(
+                [screenshot, prompt],
+                schema=CritiqueResponse,
+                prompt_name="critique_overworld_state",
+                thinking_tokens=1024,
+            )
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=(
+                    f"The critic model has provided me with the following advice on my progress:"
+                    f" {response.critique}"
+                ),
+            )
+        except Exception as e:  # noqa: BLE001
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=f"There was an error in the critique process. {e}",
+            )
         return self.raw_memory
