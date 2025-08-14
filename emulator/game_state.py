@@ -70,6 +70,10 @@ class YellowLegacyGameState(BaseModel):
         out += self.party_info
         if self.inventory.items:
             out += "<inventory>\n"
+            out += (
+                "These are all the items in your inventory. You do not have any other items on your"
+                " person beyond the ones listed in this section.\n"
+            )
             for i in self.inventory.items:
                 out += f"- {i.name} (x{i.quantity})\n"
             out += "</inventory>\n"
