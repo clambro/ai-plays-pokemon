@@ -101,7 +101,11 @@ Not natively. You could adapt this code to another Gen 1 or Gen 2 game, but you 
 
 ### Do you intend to keep working on this?
 
-I'd like to see it beat the game, and I'll try to support it so that it does (assuming the cost doesn't become excessive), but aside from that I think I'm done for now. I've been wanting to do some kind of "AI plays Pokémon" project for years, and I've had a ton of fun working on this, but I'd like to move on to some other projects. 
+I'd like to see it beat the game, and I'll try to support it so that it does (assuming the cost doesn't become excessive), but aside from that I think I'm done for now. I've been wanting to do some kind of "AI plays Pokémon" project for years, and I've had a ton of fun working on this, but I'd like to move on to some other projects.
+
+### How long did it take to build this?
+
+It took a good chunk of my free time for 2-3 months to get this to its current state. I wanted to have it ready sooner, but I was doing a lot of back and forth travel that interfered with development. 
 
 ### How much does it cost to run?
 
