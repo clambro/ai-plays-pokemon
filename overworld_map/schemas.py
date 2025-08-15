@@ -240,9 +240,15 @@ class OverworldMap(BaseModel):
 
     def _get_sprite_notes(self) -> str:
         """Get the notes for the sprites on the map, sorted by index."""
-        if not self.known_sprites:
+        out = ""
+        if np.isin(AsciiTile.PC_TILE, self.ascii_tiles_ndarray):
+            # This is a bit of a hack, but the model really struggles to find the PC otherwise.
+            loc = np.argwhere(self.ascii_tiles_ndarray == AsciiTile.PC_TILE)[0]
+            out += f"- There is a PC at {Coords(row=loc[0], col=loc[1])}.\n"
+        elif not self.known_sprites:
             return "No sprites discovered."
-        return "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_sprites.items()))
+        out += "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_sprites.items()))
+        return out.strip()
 
     def _get_warp_notes(self) -> str:
         """Get the notes for the warps on the map, sorted by index."""
