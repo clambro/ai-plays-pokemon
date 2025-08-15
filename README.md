@@ -8,7 +8,7 @@ The AI workflow is written in Python and orchestrated by [Junjo](https://github.
 
 Data from the AI workflow and the game's memory is piped into an HTML page for visualization, and the whole project is currently [streaming live on Twitch](link-to-stream). If you want to buy me a coffee to help cover the streaming costs, you can do so using the button below.
 
-<script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Buy Me a Coffee', '#72a4f2', 'H2H21JQ2I7');kofiwidget2.draw();</script> 
+<a href='https://ko-fi.com/H2H21JQ2I7' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi5.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
 
 If you want to learn more about how this all works, check out:
 - [A deeper look into the philosophy and design of the project](docs/philosophy.md)
