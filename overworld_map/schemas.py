@@ -244,7 +244,10 @@ class OverworldMap(BaseModel):
         if np.isin(AsciiTile.PC_TILE, self.ascii_tiles_ndarray):
             # This is a bit of a hack, but the model really struggles to find the PC otherwise.
             loc = np.argwhere(self.ascii_tiles_ndarray == AsciiTile.PC_TILE)[0]
-            out += f"- There is a PC at {Coords(row=loc[0], col=loc[1])}.\n"
+            out += (
+                f"- There is a PC at {Coords(row=loc[0], col=loc[1])}. It can only be interacted"
+                f" with from below.\n"
+            )
         elif not self.known_sprites:
             return "No sprites discovered."
         out += "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_sprites.items()))
