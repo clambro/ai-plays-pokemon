@@ -30,7 +30,7 @@ SAFETY_SETTINGS = [
     if cat != HarmCategory.HARM_CATEGORY_UNSPECIFIED  # Can't unblock the unspecified category.
 ]
 MIN_THINKING_TOKENS = 512  # This is the minimum allowed for the 2.5 models.
-DEFAULT_TEMPERATURE = 0.3  # A bit of noise helps us with creativity and not getting stuck in loops.
+DEFAULT_TEMPERATURE = 0.2  # A bit of noise helps with creativity and not getting stuck in loops.
 
 
 class GeminiLLMService:
@@ -55,8 +55,7 @@ class GeminiLLMService:
         :param prompt_name: The name of the prompt to use as a label in the database.
         :param system_prompt: The system prompt to send to the Gemini LLM.
         :param temperature: The temperature to use for the response.
-        :param thinking_tokens: The number of tokens to use for the thinking. None is for
-            non-thinking models.
+        :param thinking_tokens: The number of tokens to use for the thinking.
         :return: A string from the Gemini LLM.
         """
         response = await self._get_llm_response(
