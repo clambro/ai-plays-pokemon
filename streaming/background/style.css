@@ -428,6 +428,8 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.5);
     color: white;
     text-shadow: 1px 1px 2px black, -1px -1px 2px black, 1px -1px 2px black, -1px 1px 2px black;
+    width: 60px;
+    text-align: center;
 }
 
 .type-normal {
