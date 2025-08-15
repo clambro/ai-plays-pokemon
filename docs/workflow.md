@@ -1,6 +1,6 @@
 # AI Workflow: Node-by-Node Analysis
 
-This page will walk in detail through the entire Junjo workflow, one node at a time. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving into this, as some of that terminology will be used here. At a high level, we have an entrypoint for the agent that handles memory updates and retrieval, setting goals, and routing the flow to one of three dedicated subflows, each of which handles a major aspect of playing Pokémon. The three subflows are the Overworld Handler, the Battle Handler, and the Text Handler, and each one has its own suite of tools to operate in its domain.
+This page walks through the entire Junjo workflow, one node at a time. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving into this, as some of that terminology will be used here. At a high level, we have an entrypoint for the agent that handles memory updates and retrieval, setting goals, and routing the flow to one of three dedicated subflows, each of which handles a major aspect of playing Pokémon. The three subflows are the Overworld Handler, the Battle Handler, and the Text Handler, and each one has its own suite of tools to operate in its domain.
 
 ## The Main Agent Graph
 
@@ -12,7 +12,7 @@ This is the entrypoint for the entire AI workflow. It is responsible for taking 
 
 ### Create/Update Long-Term Memory
 
-These are two nodes that run in parallel if the Prepare Agent Store node determines that a refresh of the long-term memory is required. They do exactly what the name suggests: One creates new long-term memory objects in the database, and the other updates the ones that are currently in memory.
+These are two nodes that run in parallel if the Prepare Agent Store node determines that a refresh of the long-term memory is required. They do exactly what their names suggest: One creates new long-term memory objects in the database, and the other updates and edits the ones that are currently in memory.
 
 ### Retrieve Long-Term Memory
 
@@ -51,7 +51,7 @@ This uses the current visible screen information to update the map memory in the
 
 ### Select Tool
 
-This is the main decision maker in the overworld subflow. It looks at the game state and the various memory objects and selects which tool the AI should use for this iteration. The tools are all described in detail below. Whatever raw memory "thought" the AI creates in this node is continued by whichever tool is selected.
+This is the main decision maker in the overworld subflow. It looks at the game state and the various memory objects and selects which tool the AI should use for this iteration. The tools are all described in detail below. The raw memory "thought" that the AI creates in this node is continued by whichever tool is selected.
 
 ### Press Buttons
 
@@ -63,7 +63,7 @@ This is the main tool used for navigating the overworld, and also the most compl
 
 ### Critique
 
-The critique tool is the only instance in the entire workflow where Gemini Pro is used. If the AI feels completely stuck, it can (at most once every 20 iterations) invoke Gemini Pro to get some advice on how to get unstuck. This is extremely helpful for breaking the model out of weird loops, although we do have to be careful: Sometimes the critic's advice is wrong!
+The critique tool is the only instance in the entire workflow where Gemini Pro is used. If the AI feels completely stuck, it can (at most once every 20 iterations) invoke Gemini Pro to get some advice on how to get unstuck. This is helpful for breaking the model out of weird loops, though we do have to be careful: Sometimes the critic's advice is wrong!
 
 ### Use Item
 
@@ -71,11 +71,11 @@ Allows the AI to select an item from its bag and attempt to use it.
 
 ### Swap First Pokémon
 
-This is a niche tool that lets the model swap its first Pokémon with another Pokémon in the party. It's useful for training specific Pokémon, or leading with certain Pokémon before major battles.
+This lets the model swap its first Pokémon with another Pokémon in the party. It is useful for training specific Pokémon, or for leading with certain Pokémon before major battles.
 
 ### Sokoban Solver
 
-This was my least favourite node to code because it is so complicated and we only need it in two areas, one of which is optional. "Sokoban" puzzles, named for the classic Japanese video game that popularized them, are the style of puzzles that appear in Pokémon as the boulder pushing puzzles in Victory Road and the Seafoam Islands. There is no way that the AI is solving these on its own, so we need an algorithm to do it. These are NP-hard problems, but thankfully the ones found in-game are simple enough to be solved quickly with A* search.
+This was my least favourite node to code because it is so complicated and we only need it in two areas, one of which is optional. "Sokoban" puzzles, named for the classic Japanese video game that popularized them, are the style of puzzles that appear in Pokémon as the boulder pushing puzzles in Victory Road and the Seafoam Islands. There is no way that the AI is solving these on its own, so we need an algorithm to do it. This category of problems is technically NP-hard, but thankfully the ones found in-game are simple enough to be solved quickly with A* search.
 
 ### Dummy Node
 
@@ -123,7 +123,7 @@ This is the entrypoint of the text handler subflow, and its job is to determine 
 
 ### Handle Dialog Box
 
-This is the most common tool in the text handler subflow. Its job is to read through any dialog that appears on screen and log it directly to the AI's raw memory. This saves us a ton of time and tokens by pulling the text straight from the game state instead of making the AI read it screenshot by screenshot. This node exits if either the dialog box disappears, or text appears outside the dialog box indicating that a menu has opened up.
+This is the most common tool in the text handler subflow. Its job is to read through any dialog that appears on screen and log it directly to the AI's raw memory. This saves us a ton of time and tokens by pulling the text straight from the game state instead of making the AI read it screenshot by screenshot. This node exits if either the dialog box disappears, or if text appears outside the dialog box indicating that a menu has opened up.
 
 ### Assign Name
 
@@ -131,7 +131,7 @@ A niche tool, but a very useful one. This enters a name into the game when the p
 
 ### Make Decision
 
-The generic decision maker node for the text handler. Like the node of the same name from the battle handler, this one is effectively just a "push buttons" tool. It is used to handle menu navigation, yes/no questions, and any other non-trivial text interactions.
+The generic decision maker node for the text handler. Like the node of the same name from the battle handler, this one is effectively a "push buttons" tool. It is used to handle menu navigation, yes/no questions, and any other non-trivial text interactions.
 
 ### Dummy Node
 
