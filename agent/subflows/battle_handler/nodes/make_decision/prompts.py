@@ -1,5 +1,5 @@
 MAKE_DECISION_PROMPT = """
-You are in a pokemon battle. The screenshot provided above is the current game screen. You must decide which button to press to proceed with the battle.
+You are in a Pokemon battle. The screenshot provided above is the current game screen. You must decide which button to press to proceed with the battle.
 
 {state}
 

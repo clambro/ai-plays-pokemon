@@ -62,14 +62,14 @@ class OverworldSign(Sign):
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sign."""
         description = self.description or DEFAULT_ENTITY_DESCRIPTION
-        return f"sign_{map_id}_{self.index} at {self.coords}: {description}"
+        return f"sign_{map_id}_{self.index} at {self.coords}. Your description is: {description}"
 
 
 class OverworldWarp(Warp):
     """
     A warp on the overworld map, known to the player.
 
-    Unlike signs and sprites, warps are static. The description is immutable.
+    Unlike signs and sprites, warps do not have an editable description.
     """
 
     visited: bool

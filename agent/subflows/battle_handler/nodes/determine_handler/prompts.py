@@ -1,5 +1,5 @@
 CHOOSE_ARGS_PROMPT = """
-You are in a pokemon battle. The screenshot provided above is the current game screen. You must decide which action to take based on the available options.
+You are in a Pokemon battle. The screenshot provided above is the current game screen. You must decide which action to take based on the available options.
 
 {state}
 
