@@ -278,12 +278,14 @@ class YellowLegacyGameState(BaseModel):
                 elif self.map.grass_tile and b[1, 0] == self.map.grass_tile:
                     # In engine/battle/wild_encounters.asm, grass tiles only check the bottom left.
                     blocks[b_idx] = AsciiTile.GRASS
-                elif b_flat == self.map.cut_tree_tiles:
+                elif self.map.cut_tree_tiles and b_flat == self.map.cut_tree_tiles:
                     blocks[b_idx] = AsciiTile.CUT_TREE
-                elif b_flat == self.map.boulder_hole_tiles:
+                elif self.map.boulder_hole_tiles and b_flat == self.map.boulder_hole_tiles:
                     blocks[b_idx] = AsciiTile.BOULDER_HOLE
-                elif b_flat == self.map.pressure_plate_tiles:
+                elif self.map.pressure_plate_tiles and b_flat == self.map.pressure_plate_tiles:
                     blocks[b_idx] = AsciiTile.PRESSURE_PLATE
+                elif self.map.pc_tiles and b_flat == self.map.pc_tiles:
+                    blocks[b_idx] = AsciiTile.PC_TILE
                 elif spinner_type := self._get_spinner_type(b_flat):
                     blocks[b_idx] = spinner_type
                 elif b[1, 0] in self.map.walkable_tiles:  # Same bottom-left logic applies here.

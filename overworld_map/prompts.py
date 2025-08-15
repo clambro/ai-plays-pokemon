@@ -94,6 +94,7 @@ LEGEND_MAP = {
     AsciiTile.CUT_TREE: "A tree that can be cut down.",
     AsciiTile.BOULDER_HOLE: "A hole in the ground that you can fall through by standing on it. You can also push boulders into these holes to drop them to the floor below.",
     AsciiTile.PRESSURE_PLATE: "A pressure plate that you can activate by pushing a boulder onto it.",
+    AsciiTile.PC_TILE: "The PC in a Pokemon Center. You can swap your party members with boxed Pokemon by interacting with it.",
     AsciiTile.PIKACHU: "Your companion Pikachu that follows you around. Unlike other sprites, you can walk through Pikachu, which will cause it to switch places with you. You can speak to Pikachu like any other sprite, but doing so only provides flavour text.",
     AsciiTile.SIGN: "An object that you can interact with to read something. Usually a signpost, but could be a TV, radio, or other object. The main distinction between signs and sprites is that signs are static. They will never move, and their text will never change. Signs are usually interacted with from below, and cannot be walked through.",
     AsciiTile.SPINNER_UP: "A spinner tile that moves you upwards.",

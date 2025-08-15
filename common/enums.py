@@ -22,6 +22,7 @@ class AsciiTile(StrEnum):
     CUT_TREE = "┬"
     BOULDER_HOLE = "◌"
     PRESSURE_PLATE = "□"
+    PC_TILE = "▦"
     PIKACHU = "◈"
     SIGN = "‼"
     SPINNER_UP = "⇧"
