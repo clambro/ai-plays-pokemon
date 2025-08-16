@@ -50,6 +50,16 @@ def parse_party_pokemon(mem: PyBoyMemoryView) -> list[Pokemon]:
     return party
 
 
+def parse_pc_pokemon(mem: PyBoyMemoryView) -> list[Pokemon]:
+    """Parse the PC's pokemon from the memory."""
+    pc = []
+    for i in range(mem[0xDA7F]):
+        pokemon = _parse_pc_pokemon(mem, i)
+        if pokemon is not None:
+            pc.append(pokemon)
+    return pc
+
+
 def parse_player_battle_pokemon(mem: PyBoyMemoryView) -> Pokemon | None:
     """Parse a single player pokemon from the memory."""
     species_id = mem[0xD013]
@@ -119,7 +129,7 @@ def _parse_party_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
     if species_id == 0:
         return None
 
-    name = get_text_from_byte_array(mem[0xD2B4 + 0xB * index : 0xD2B4 + 0xB * index + 0xB])
+    name = get_text_from_byte_array(mem[0xD2B4 + 0xB * index : 0xD2B4 + 0xB * (index + 1)])
 
     type1 = _INT_TO_TYPE_MAP[mem[0xD16F + increment]]
     type2 = _INT_TO_TYPE_MAP[mem[0xD170 + increment]]
@@ -148,6 +158,42 @@ def _parse_party_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
         hp=hp,
         max_hp=max_hp,
         status=status,
+        moves=moves,
+    )
+
+
+def _parse_pc_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
+    """Parse a single PC pokemon from the memory."""
+    increment = index * 0x21
+    species_id = mem[0xDA95 + increment]
+    if species_id == 0:
+        return None
+
+    name = get_text_from_byte_array(mem[0xDE05 + 0xB * index : 0xDE05 + 0xB * (index + 1)])
+
+    type1 = _INT_TO_TYPE_MAP[mem[0xDA9A + increment]]
+    type2 = _INT_TO_TYPE_MAP[mem[0xDA9B + increment]]
+    type2 = type2 if type1 != type2 else None  # Monotype pokemon have the same type for both.
+
+    moves = []
+    for i in range(4):
+        move_id = mem[0xDA9D + increment + i]
+        if move_id == 0:
+            continue
+        pp = mem[0xDAB2 + increment + i]
+        moves.append(PokemonMove(name=_INT_TO_MOVE_MAP[move_id], pp=pp))
+
+    max_hp = (mem[0xDA96 + increment] << 8) | mem[0xDA96 + increment + 1]
+
+    return Pokemon(
+        name=name,
+        species=_INT_TO_SPECIES_MAP[species_id],
+        type1=type1,
+        type2=type2,
+        level=mem[0xDA98 + increment],
+        hp=max_hp,  # Always at max HP when in the PC.
+        max_hp=max_hp,
+        status=None,  # No status ailments when in the PC.
         moves=moves,
     )
 
