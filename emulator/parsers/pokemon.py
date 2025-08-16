@@ -51,7 +51,7 @@ def parse_party_pokemon(mem: PyBoyMemoryView) -> list[Pokemon]:
 
 
 def parse_pc_pokemon(mem: PyBoyMemoryView) -> list[Pokemon]:
-    """Parse the PC's pokemon from the memory."""
+    """Parse the pokemon in the active PC box from the memory."""
     pc = []
     for i in range(mem[0xDA7F]):
         pokemon = _parse_pc_pokemon(mem, i)
@@ -61,7 +61,7 @@ def parse_pc_pokemon(mem: PyBoyMemoryView) -> list[Pokemon]:
 
 
 def parse_player_battle_pokemon(mem: PyBoyMemoryView) -> Pokemon | None:
-    """Parse a single player pokemon from the memory."""
+    """Parse the player's active battling pokemon from the memory."""
     species_id = mem[0xD013]
     if species_id == 0:
         return None
@@ -123,7 +123,7 @@ def parse_enemy_battle_pokemon(mem: PyBoyMemoryView) -> EnemyPokemon | None:
 
 
 def _parse_party_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
-    """Parse a single player pokemon from the memory."""
+    """Parse a single party pokemon from the memory."""
     increment = index * 0x2C
     species_id = mem[0xD16A + increment]
     if species_id == 0:
@@ -163,7 +163,7 @@ def _parse_party_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
 
 
 def _parse_pc_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
-    """Parse a single PC pokemon from the memory."""
+    """Parse a single pokemon in the active PC box from the memory."""
     increment = index * 0x21
     species_id = mem[0xDA95 + increment]
     if species_id == 0:

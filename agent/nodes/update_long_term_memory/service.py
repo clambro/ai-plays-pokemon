@@ -53,7 +53,7 @@ class UpdateLongTermMemoryService:
                     continue
                 if update_piece.update_type == UpdateType.APPEND:
                     content = f"{orig_piece.content}\n{update_piece.content}"
-                else:
+                else:  # Rewrite.
                     content = update_piece.content
                 embedding = await self.embedding_service.get_embedding(content, update_piece.title)
                 await update_long_term_memory(
