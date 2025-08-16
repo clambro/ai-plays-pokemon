@@ -70,12 +70,12 @@ class YellowLegacyGameState(BaseModel):
             out += f"Badges Earned: {', '.join(self.player.badges)}\n"
         out += f"Current Level Cap: {self.player.level_cap}\n"
         out += self.party_info
-        out += self.pc_info
         if self.inventory.items:
             out += "<inventory>\n"
             for i in self.inventory.items:
                 out += f"- {i.name} (x{i.quantity})\n"
             out += "</inventory>\n"
+        out += self.pc_info
         out += "</player_info>"
         return out
 
