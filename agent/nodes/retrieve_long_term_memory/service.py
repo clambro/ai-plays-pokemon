@@ -1,3 +1,5 @@
+from loguru import logger
+
 from agent.nodes.retrieve_long_term_memory.prompts import GET_RETRIEVAL_QUERY_PROMPT
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
@@ -31,10 +33,14 @@ class RetrieveLongTermMemoryService:
         screenshot = self.emulator.get_screenshot()
 
         prompt = GET_RETRIEVAL_QUERY_PROMPT.format(state=self.state_string_builder(game_state))
-        query = await self.llm_service.get_llm_response(
-            [screenshot, prompt],
-            prompt_name="get_retrieval_query",
-        )
+        try:
+            query = await self.llm_service.get_llm_response(
+                [screenshot, prompt],
+                prompt_name="get_retrieval_query",
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Error in the retrieval query. Returning the previous memories. {e}")
+            return self.long_term_memory
 
         pieces = await self.retrieval_service.get_most_relevant_memories(query, self.iteration)
         return LongTermMemory(pieces={p.title: p for p in pieces})

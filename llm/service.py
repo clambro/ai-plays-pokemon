@@ -30,6 +30,7 @@ SAFETY_SETTINGS = [
     if cat != HarmCategory.HARM_CATEGORY_UNSPECIFIED  # Can't unblock the unspecified category.
 ]
 MIN_THINKING_TOKENS = 512  # This is the minimum allowed for the 2.5 models.
+DEFAULT_TEMPERATURE = 0.25  # A bit of noise helps with creativity and not getting stuck in loops.
 
 
 class GeminiLLMService:
@@ -44,7 +45,7 @@ class GeminiLLMService:
         messages: str | list[str | Image],
         prompt_name: str,
         system_prompt: str = SYSTEM_PROMPT,
-        temperature: float = 0.0,
+        temperature: float = DEFAULT_TEMPERATURE,
         thinking_tokens: int = MIN_THINKING_TOKENS,
     ) -> str:
         """
@@ -54,8 +55,7 @@ class GeminiLLMService:
         :param prompt_name: The name of the prompt to use as a label in the database.
         :param system_prompt: The system prompt to send to the Gemini LLM.
         :param temperature: The temperature to use for the response.
-        :param thinking_tokens: The number of tokens to use for the thinking. None is for
-            non-thinking models.
+        :param thinking_tokens: The number of tokens to use for the thinking.
         :return: A string from the Gemini LLM.
         """
         response = await self._get_llm_response(
@@ -76,7 +76,7 @@ class GeminiLLMService:
         schema: type[PydanticModel],
         prompt_name: str,
         system_prompt: str = SYSTEM_PROMPT,
-        temperature: float = 0.0,
+        temperature: float = DEFAULT_TEMPERATURE,
         thinking_tokens: int = MIN_THINKING_TOKENS,
     ) -> PydanticModel:
         """

@@ -62,14 +62,14 @@ class OverworldSign(Sign):
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sign."""
         description = self.description or DEFAULT_ENTITY_DESCRIPTION
-        return f"sign_{map_id}_{self.index} at {self.coords}: {description}"
+        return f"sign_{map_id}_{self.index} at {self.coords}. Your description is: {description}"
 
 
 class OverworldWarp(Warp):
     """
     A warp on the overworld map, known to the player.
 
-    Unlike signs and sprites, warps are static. The description is immutable.
+    Unlike signs and sprites, warps do not have an editable description.
     """
 
     visited: bool
@@ -106,11 +106,15 @@ class OverworldWarp(Warp):
 
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the warp."""
-        visited_text = "" if self.visited else "You have not been to this map yet. "
-        return (
-            f"warp_{map_id}_{self.index} at {self.coords} leading to {self.destination.name}."
-            f" {visited_text}{self.description}"
-        )
+        if self.visited or self.destination in [MapId.OUTSIDE, MapId.UNKNOWN]:
+            visited_text = f"This warp leads to {self.destination.name}."
+        else:
+            visited_text = (
+                "You have not been to this warp's destination yet. Visiting it will add a new "
+                " building/floor/location to your memory. It might be a good candidate for"
+                " exploration if it is accessible."
+            )
+        return f"warp_{map_id}_{self.index} at {self.coords}. {visited_text} {self.description}"
 
 
 class OverworldMap(BaseModel):
@@ -237,9 +241,18 @@ class OverworldMap(BaseModel):
 
     def _get_sprite_notes(self) -> str:
         """Get the notes for the sprites on the map, sorted by index."""
-        if not self.known_sprites:
+        out = ""
+        if np.isin(AsciiTile.PC_TILE, self.ascii_tiles_ndarray):
+            # This is a bit of a hack, but the model really struggles to find the PC otherwise.
+            loc = np.argwhere(self.ascii_tiles_ndarray == AsciiTile.PC_TILE)[0]
+            out += (
+                f"- There is a PC at {Coords(row=loc[0], col=loc[1])}. It can only be interacted"
+                f" with from below.\n"
+            )
+        elif not self.known_sprites:
             return "No sprites discovered."
-        return "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_sprites.items()))
+        out += "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_sprites.items()))
+        return out.strip()
 
     def _get_warp_notes(self) -> str:
         """Get the notes for the warps on the map, sorted by index."""

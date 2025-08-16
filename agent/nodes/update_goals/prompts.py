@@ -1,5 +1,5 @@
 UPDATE_GOALS_PROMPT = """
-You have just taken an action and added new information to your memory. If you you feel that recent events warrant removing/completing past goals, or adding new goals, this is your chance to do so.
+You have just taken an action and added new information to your memory. If you feel that recent events warrant removing/completing past goals, or adding new goals, this is your chance to do so.
 
 {state}
 
@@ -15,16 +15,16 @@ Remember that a good goal must be SMART:
   - Good: "Level up my [pokemon] to level [level]"
 - Measurable: The goal must have clear criteria for success.
   - Bad: "Complete Pewter City"
-  - Good: "Defeat Brock in the Pewter City Gym and collect the Boulder Badge"
-- Achievable: The goal must be doable within the confines of the game.
+  - Good: "Defeat Brock in the Pewter City Gym and collect the BOULDERBADGE"
+- Achievable: The goal must be possible within the confines of the game.
   - Bad: "Get my whole team to level 100" (not possible before becoming the Champion due to the level cap)
-  - Good: "Catch a [pokemon] in [location]" (assuming that you have seen that pokemon at that location)
+  - Good: "Catch a [pokemon] in [location]" (assuming that you have seen that Pokemon at that location)
 - Relevant: The goal must be relevant to your ultimate goal of collecting all eight badges and becoming the Champion. Completing the Pokedex is not relevant to this goal, except insofar as you need to catch Pokemon to build your team.
   - Bad: "Catch 100 Magikarp" (silly and pointless)
-  - Good: "Get my team up to the current level cap of level [level] before challenging [major opponent]"
+  - Good: "Catch a [pokemon] in [location] and add it to my team to help me defeat [major opponent]"
 - Time-bound: The least-relevant of the SMART criteria for your purposes, but try to ensure that your goals have clear temporal boundaries when relevant.
   - Suboptimal: "Catch a [pokemon] in [location]"
-  - Good: "Catch a [pokemon] in [location] and add it to my team before challenging [major opponent]"
+  - Good: "Heal my Pokemon at the [location] Pokemon Center before heading to [next location]"
 
 New goals should be based on your experience in the game as recorded in your memory or the player info above, not based on your prior knowledge of Pokemon, which is prone to error. Similarly, do not assume that you have accomplished a goal until you are certain that you have done so based on the information in your memory and the player info above.
 

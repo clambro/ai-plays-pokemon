@@ -5,7 +5,7 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 
 This navigation tool can be used to navigate to any revealed, accessible tile on the current map using an A* search algorithm by simply providing the desired coordinates. The navigation tool can be used to navigate beyond the current screen, but only as far as the edge of the current map. Navigation from one map to another is not possible using this tool, but you can navigate to the edge of the current map and then transition from this map to the next in the next iteration. You may also use the navigation tool to navigate directly to any accessible warp tile that you have discovered on the current map.
 
-The coordinates accessible to you from your current position are as follows:
+The coordinates accessible from your current position are as follows:
 <accessible_coords>
 {accessible_coords}
 </accessible_coords>

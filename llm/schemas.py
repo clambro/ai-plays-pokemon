@@ -20,7 +20,7 @@ GEMINI_FLASH_2_5 = GeminiModel(
     cost_1m_output_tokens=2.5,
 )
 GEMINI_FLASH_LITE_2_5 = GeminiModel(
-    model_id="gemini-2.5-flash-lite-preview-06-17",
+    model_id="gemini-2.5-flash-lite",
     cost_1m_input_tokens=0.1,
     cost_1m_output_tokens=0.4,
 )

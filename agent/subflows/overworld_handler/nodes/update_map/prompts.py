@@ -25,7 +25,7 @@ The following signs are visible on the screen right now. Here are the descriptio
 {entities}
 </signs>
 
-Signs are usualy either signposts or TVs, but can be other objects. Their key defining feature is that they are static, unchanging places where you can read some informational text. You should note the kind of sign in your description, as well as any other relevant information about it. If you have recently read the text on a sign, you should note that in your description.
+Signs are usually either signposts or TVs, but can be other objects. Their key defining feature is that they are static, unchanging places where you can read some informational text. You should note the kind of sign in your description, as well as any other relevant information about it. If you have recently read the text on a sign, you should note that in your description.
 
 Do not assume anything about what the text on a sign says unless you know for sure based on the information provided. Be explicit about not knowing in your description so that you will know to update your description when you learn more. The best way to learn more is to interact with the sign using the action button.
 
