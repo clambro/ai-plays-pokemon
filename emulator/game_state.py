@@ -12,7 +12,7 @@ from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.inventory import Inventory, parse_inventory
 from emulator.parsers.map import Map, parse_map_state
 from emulator.parsers.player import Player, parse_player
-from emulator.parsers.pokemon import Pokemon, parse_party_pokemon
+from emulator.parsers.pokemon import Pokemon, parse_party_pokemon, parse_pc_pokemon
 from emulator.parsers.screen import Screen, parse_screen
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
@@ -25,6 +25,7 @@ class YellowLegacyGameState(BaseModel):
 
     player: Player
     party: list[Pokemon]
+    pc_pokemon: list[Pokemon]
     inventory: Inventory
     map: Map
     sprites: dict[int, Sprite]
@@ -47,6 +48,7 @@ class YellowLegacyGameState(BaseModel):
         return cls(
             player=parse_player(mem),
             party=parse_party_pokemon(mem),
+            pc_pokemon=parse_pc_pokemon(mem),
             inventory=parse_inventory(mem),
             map=parse_map_state(mem),
             sprites=parse_sprites(mem),
@@ -70,13 +72,10 @@ class YellowLegacyGameState(BaseModel):
         out += self.party_info
         if self.inventory.items:
             out += "<inventory>\n"
-            out += (
-                "These are all the items in your inventory. You do not have any other items on your"
-                " person beyond the ones listed in this section.\n"
-            )
             for i in self.inventory.items:
                 out += f"- {i.name} (x{i.quantity})\n"
             out += "</inventory>\n"
+        out += self.pc_info
         out += "</player_info>"
         return out
 
@@ -86,23 +85,19 @@ class YellowLegacyGameState(BaseModel):
         if not self.party:
             return ""
         out = "<party>\n"
-        for i, p in enumerate(self.party, start=0):
-            out += f"<pokemon_{i}>\n"
-            out += f"Name: {p.name}\n"
-            out += f"Species: {p.species}\n"
-            if p.type2:
-                out += f"Type: {p.type1} / {p.type2}\n"
-            else:
-                out += f"Type: {p.type1}\n"
-            out += f"Level: {p.level}\n"
-            out += f"HP: {p.hp} / {p.max_hp}\n"
-            out += f"Status Ailment: {p.status}\n"
-            out += "<moves>\n"
-            for m in p.moves:
-                out += f"- {m.name} (PP: {m.pp})\n"
-            out += "</moves>\n"
-            out += f"</pokemon_{i}>\n"
+        out += self._pokemon_list_to_str(self.party)
         out += "</party>\n"
+        return out
+
+    @property
+    def pc_info(self) -> str:
+        """Get a string representation of the PC."""
+        if not self.pc_pokemon:
+            return ""
+        out = "<pc_pokemon>\n"
+        out += "These are the Pokemon in the active PC box. They are NOT in your party.\n"
+        out += self._pokemon_list_to_str(self.pc_pokemon)
+        out += "</pc_pokemon>\n"
         return out
 
     @property
@@ -252,6 +247,27 @@ class YellowLegacyGameState(BaseModel):
             bottom_line=lines[16][1:-2].strip(),
             has_cursor=lines[16][-2] == "▼",
         )
+
+    def _pokemon_list_to_str(self, pokemon_list: list[Pokemon]) -> str:
+        """Helper function to convert a list of Pokemon to a string."""
+        out = ""
+        for i, p in enumerate(pokemon_list):
+            out += f"<pokemon_{i}>\n"
+            out += f"Name: {p.name}\n"
+            out += f"Species: {p.species}\n"
+            if p.type2:
+                out += f"Type: {p.type1} / {p.type2}\n"
+            else:
+                out += f"Type: {p.type1}\n"
+            out += f"Level: {p.level}\n"
+            out += f"HP: {p.hp} / {p.max_hp}\n"
+            out += f"Status Ailment: {p.status}\n"
+            out += "<moves>\n"
+            for m in p.moves:
+                out += f"- {m.name} (PP: {m.pp})\n"
+            out += "</moves>\n"
+            out += f"</pokemon_{i}>\n"
+        return out
 
     def _get_background_blocks(self) -> tuple[np.ndarray, dict[Coords, BlockedDirection]]:
         """
