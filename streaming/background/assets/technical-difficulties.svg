@@ -1,0 +1,93 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#0f1923;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a2e;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Glitch effect filter -->
+    <filter id="glitch" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.5"/>
+      <feOffset dx="2" dy="0" result="offset1"/>
+      <feOffset dx="-2" dy="0" result="offset2"/>
+      <feMerge>
+        <feMergeNode in="offset1"/>
+        <feMergeNode in="offset2"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Glowing text effect -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="url(#bgGradient)"/>
+  
+  <!-- Animated background grid -->
+  <g opacity="0.1">
+    <defs>
+      <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+        <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#00d4ff" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="1920" height="1080" fill="url(#grid)"/>
+  </g>
+  
+  <!-- Main technical difficulties text -->
+  <g transform="translate(960, 400)">
+    <text x="0" y="0" text-anchor="middle" font-family="Orbitron, monospace" font-size="72" font-weight="900" fill="#e6f1ff" filter="url(#glow)">
+      TECHNICAL DIFFICULTIES
+    </text>
+    <text x="0" y="80" text-anchor="middle" font-family="Roboto Mono, monospace" font-size="32" font-weight="400" fill="#00d4ff">
+      We'll be right back...
+    </text>
+  </g>
+  
+  <!-- Warning icon -->
+  <g transform="translate(960, 200)">
+    <circle cx="0" cy="0" r="60" fill="none" stroke="#ffd700" stroke-width="4" opacity="0.8"/>
+    <path d="M -30 -40 L 30 -40 L 0 40 Z" fill="#ffd700" opacity="0.8"/>
+    <text x="0" y="15" text-anchor="middle" font-family="monospace" font-size="48" font-weight="bold" fill="#0f1923">!</text>
+  </g>
+  
+  <!-- Status indicators -->
+  <g transform="translate(960, 600)">
+    <rect x="-200" y="0" width="400" height="4" fill="#333" rx="2"/>
+    <rect x="-200" y="0" width="200" height="4" fill="#00d4ff" rx="2">
+      <animate attributeName="width" values="0;200;0" dur="3s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  
+  <!-- Pokemon-themed decorative elements -->
+  <g opacity="0.3">
+    <!-- Left Pokeball silhouette -->
+    <g transform="translate(200, 800)">
+      <circle cx="0" cy="0" r="40" fill="none" stroke="#e6f1ff" stroke-width="4"/>
+      <line x1="-40" y1="0" x2="40" y2="0" stroke="#e6f1ff" stroke-width="4"/>
+      <circle cx="0" cy="0" r="8" fill="#e6f1ff"/>
+    </g>
+    
+    <!-- Right Pokeball silhouette -->
+    <g transform="translate(1720, 800)">
+      <circle cx="0" cy="0" r="40" fill="none" stroke="#e6f1ff" stroke-width="4"/>
+      <line x1="-40" y1="0" x2="40" y2="0" stroke="#e6f1ff" stroke-width="4"/>
+      <circle cx="0" cy="0" r="8" fill="#e6f1ff"/>
+    </g>
+  </g>
+  
+  <!-- Animated glitch effects -->
+  <g opacity="0.1">
+    <rect x="0" y="0" width="1920" height="1080" fill="none" stroke="#ff0000" stroke-width="2">
+      <animate attributeName="opacity" values="0;0.3;0" dur="2s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+</svg>

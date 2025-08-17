@@ -9,7 +9,7 @@ Naming rules:
   - The only exception to this is in the intro screen (iteration number less than 15) when you are entering the names for yourself and your rival. These names are at most seven characters long.
 - The name can only contain the letters A-Z and spaces. Spaces count towards the character limit. Numbers are not allowed.
 - The name cannot start or end with a space.
-- Be creative. Don't use generic or default names. This is your chance to add some of your own personality to the game.
+- Be creative. Names must be unique. Don't use generic or default names. This is your chance to add some of your own personality to the game.
 
 Respond using the following keys:
 - "thoughts": One or two sentences briefly considering your situation and deciding on a good name. You must say the name you would like to enter here in your thoughts.

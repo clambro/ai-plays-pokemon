@@ -46,6 +46,7 @@ class AssignNameService:
 
         try:
             name = await self._get_desired_name(game_state)
+            self._validate_name_uniqueness(name, game_state)
             await self._enter_name(name)
         except Exception as e:  # noqa: BLE001
             self.raw_memory.add_memory(
@@ -73,6 +74,16 @@ class AssignNameService:
         )
         self.raw_memory.add_memory(iteration=self.iteration, content=response.thoughts)
         return response.name
+
+    def _validate_name_uniqueness(self, name: str, game_state: YellowLegacyGameState) -> None:
+        """Validate that the name is not already in use."""
+        existing_names = [
+            game_state.player.name,
+            *[p.name for p in game_state.party],
+            *[p.name for p in game_state.pc_pokemon],
+        ]
+        if name in existing_names:
+            raise ValueError(f"I have already used the name {name}. I must pick a different name.")
 
     async def _enter_name(self, name: str) -> None:
         """Enter the name into the game."""
