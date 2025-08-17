@@ -1,9 +1,9 @@
 MAKE_DECISION_PROMPT = """
-You are in a Pokemon battle. The screenshot provided above is the current game screen. You must decide which button to press to proceed with the battle.
+You are in a Pokemon battle. The screenshot provided above is the current game screen. You must decide which button(s) to press to proceed with the battle.
 
 {state}
 
-Here is the game memory's representation of the onscreen text. The text you see below is exactly what the game is displaying on the screen, but the formatting may be somewhat messed up because it is not rendering images. Use it to help you understand the text on the screen, as well as the position of any cursors. This is a more reliable way to navigate menus than the screenshot.
+Here is the game memory's representation of the onscreen text. The text you see below is exactly what the game is displaying on the screen, but the formatting may be somewhat messed up because it is not rendering images. Images may be rendered as garbled text. Use it to help you understand the text on the screen, as well as the position of any cursors. This is a more reliable way to navigate menus than the screenshot, but you should pay attention to the screenshot as well.
 <onscreen_text>
 {text}
 </onscreen_text>
