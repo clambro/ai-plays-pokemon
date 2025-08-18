@@ -33,6 +33,6 @@ Pay close attention to the intent expressed in your last memory. When that memor
 - When in doubt, prioritize exploration candidates over accessible coordinates.
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your one sentence long thoughts on which coordinates you would like to navigate to given the information provided. These thoughts will be appended verbatim to the end of the <last_memory> in your raw memory. If you are overriding the last memory's request, mention it here and explain why you are doing so.
+- thoughts: Your one sentence long thoughts on which coordinates you would like to navigate to given the information provided. These thoughts will be appended verbatim to the end of the <last_memory> in your raw memory. If you are overriding the last memory's request, mention that here and briefly explain why you are doing so.
 - coords: The row-column coordinates of the tile you would like to navigate to. Must be one of the accessible coordinates provided above.
 """.strip()
