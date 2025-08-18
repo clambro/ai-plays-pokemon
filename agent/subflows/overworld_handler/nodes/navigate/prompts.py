@@ -10,7 +10,7 @@ The coordinates accessible from your current position are as follows:
 {accessible_coords}
 </accessible_coords>
 
-The following accessible coordinates (a subset of the accessible coordinates provided above) are adjacent to unseen territory on the current map. They are therefore top candidates for exploration. If the section below is empty, then you have already explored all of the accessible tiles on the current map. Navigating towards any of these coordinates is the most efficient way to explore the current map.
+The following accessible coordinates (a subset of the accessible coordinates provided above) are adjacent to unseen territory on the current map. They are therefore top candidates for exploration. If the section below is empty, then you have already explored all of the accessible tiles on the current map. Navigating towards any of these coordinates is the most efficient way to explore the current map. If your last memory asks you to explore the map, you should choose one of these exploration candidates.
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>
@@ -24,9 +24,9 @@ Your most recent raw memory is repeated below for reference. The "thoughts" in y
 <last_memory>
 {last_memory}
 </last_memory>
-If you see coordinates in the <last_memory> section, do not treat them as mandatory. The full list of accessible coordinates was not available to you when you generated the memory, and you thus may have requested coordinates that are not accessible. You have a lot more information available to you in this prompt than you did when the above memory was generated, so you are allowed to overrule it if the request does not make sense (e.g. if you wanted to explore unseen territory on the map but you now see that you have no accessible exploration candidates). Determine what the memory is trying to tell you and choose the best coordinates from the list of accessible coordinates above. Choosing inaccessible coordinates will result in an error.
+If you see coordinates in the <last_memory> section, do not treat them as mandatory. The full list of accessible coordinates and exploration candidates was not available to you when you generated the memory, and you thus may have requested incorrect coordinates. You have a lot more information available to you in this prompt than you did when the last memory was generated, so you are allowed to overrule it if the request does not make sense (e.g. if you wanted to explore unseen territory on the west side of the current map but you now see that the exploration candidates are all on the south side, you would have to mention that fact and decide what to do about it). Determine what the memory is trying to tell you and choose the best coordinates from the list above. Choosing inaccessible coordinates will result in an error.
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your one sentence long thoughts on which coordinates you would like to navigate to given the information provided. These thoughts will be appended verbatim to the end of the <last_memory> in your raw memory, so try to continue the thought process from there.
+- thoughts: Your one sentence long thoughts on which coordinates you would like to navigate to given the information provided. These thoughts will be appended verbatim to the end of the <last_memory> in your raw memory. If you made a mistake in your last memory, mention it here and correct it.
 - coords: The row-column coordinates of the tile you would like to navigate to. Must be one of the accessible coordinates provided above.
 """.strip()
