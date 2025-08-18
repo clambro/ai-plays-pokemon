@@ -25,9 +25,11 @@ Your most recent raw memory is repeated below for reference. The "thoughts" in y
 {last_memory}
 </last_memory>
 Pay close attention to the intent expressed in your last memory. When that memory was generated, you did not have access to the coordinates provided above. This means that in rare cases you can override nonsensical requests in the last memory. Some rules for this:
+- If the last memory asks you to navigate to a specific warp, boundary, or location, and that location is accessible, you MUST follow the last memory's request and navigate directly to that location.
+- If the last memory intends to interact with a sprite, sign, or some other object, you must move to an accessible coordinate adjacent to that object.
 - If the last memory asks you to navigate to an inaccessible coordinate, you must override it with an accessible coordinate.
-- If the last memory indicates a desire to explore the map or find exploration candidates, you MUST select one of the exploration candidates. The only exception is if there are no exploration candidates available.
-- If the last memory asks you to explore the map but gives you an inaccessible target, or an area that you have already explored, you must override it with an accessible exploration candidate.
+- If the last memory indicates a desire to explore the map or find exploration candidates, you MUST select one of the exploration candidates (even if it is not the exact coordinate you were asked to navigate to). The only exception is if there are no exploration candidates available, in which case you should mention that fact.
+- If the last memory asks you to explore the map but gives you an inaccessible target, or an area that you have already explored, you must override it with an accessible exploration candidate. Again, the only exception is if there are no exploration candidates available, in which case you should mention that fact.
 - When in doubt, prioritize exploration candidates over accessible coordinates.
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
