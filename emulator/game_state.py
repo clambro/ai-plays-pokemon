@@ -260,6 +260,8 @@ class YellowLegacyGameState(BaseModel):
             else:
                 out += f"Type: {p.type1}\n"
             out += f"Level: {p.level}\n"
+            if p.level >= self.player.level_cap:
+                out += "This Pokemon is at the level cap and cannot be leveled up further.\n"
             out += f"HP: {p.hp} / {p.max_hp}\n"
             out += f"Status Ailment: {p.status}\n"
             out += "<moves>\n"
