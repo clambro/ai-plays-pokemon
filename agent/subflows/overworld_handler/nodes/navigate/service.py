@@ -107,9 +107,13 @@ class NavigationService:
         boundary_tiles = utils.get_map_boundary_tiles(accessible_coords, self.current_map)
 
         # Format data for LLM.
-        formatted_accessible_coords = formatting.format_coordinates_grid(accessible_coords)
+        formatted_accessible_coords = formatting.format_coordinates_grid(
+            accessible_coords,
+            self.current_map,
+        )
         formatted_exploration_candidates = formatting.format_exploration_candidates(
-            exploration_candidates
+            exploration_candidates,
+            self.current_map,
         )
         formatted_map_boundaries = formatting.format_map_boundary_tiles(
             boundary_tiles,
