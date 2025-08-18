@@ -12,15 +12,16 @@ from common.schemas import Coords
 from overworld_map.schemas import OverworldMap
 
 
-def format_coordinates_grid(coordinates: list[Coords]) -> str:
+def format_coordinates_grid(coordinates: list[Coords], map_data: OverworldMap) -> str:
     """
-    Format a list of coordinates as a grid string with rows separated by newlines so the LLM has
-    an easier time parsing it.
+    Format a list of coordinates as a grid string with rows separated by newlines and including
+    their tile type so the LLM has an easier time parsing it.
 
-    [(0,0), (0,1), (1,0), (1,1), (1,2)]
+    [(0,0), (0,1), (1,0), (1,1), (1,2), (2,1)]
     ->
-    (0,0) (0,1)
-    (1,0) (1,1) (1,2)
+    (0,0,❀) (0,1,∙)
+    (1,0,❀) (1,1,❀) (1,2,∙)
+    (2,1,❀)
     """
     if not coordinates:
         return ""
@@ -28,13 +29,15 @@ def format_coordinates_grid(coordinates: list[Coords]) -> str:
     coordinates = sorted(coordinates, key=lambda c: (c.row, c.col))
     rows = []
     for _, row_coords in groupby(coordinates, key=lambda c: c.row):
-        row_str = ", ".join(str(coord) for coord in row_coords)
+        row_str = ", ".join(
+            f"({c.row}, {c.col}, {map_data.ascii_tiles[c.row][c.col]})" for c in row_coords
+        )
         rows.append(row_str)
 
     return "\n".join(rows)
 
 
-def format_exploration_candidates(candidates: list[Coords]) -> str:
+def format_exploration_candidates(candidates: list[Coords], map_data: OverworldMap) -> str:
     """
     Format exploration candidates for LLM consumption.
 
@@ -44,7 +47,7 @@ def format_exploration_candidates(candidates: list[Coords]) -> str:
     if not candidates:
         return "No exploration candidates found."
 
-    return format_coordinates_grid(candidates)
+    return format_coordinates_grid(candidates, map_data)
 
 
 def format_map_boundary_tiles(
