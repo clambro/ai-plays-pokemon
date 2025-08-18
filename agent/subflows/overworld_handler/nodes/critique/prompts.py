@@ -8,7 +8,7 @@ Common sources of error include (but are not limited to):
 - Misinterpreting the map information. If this is the case, use your increased intelligence to explain the misinterpretation and correct it.
 - Misinterpreting sprite labels or warp tile descriptions. Rely on the game's memory for this information, not your own assumptions.
 - Incorrectly deciding that the screenshot or your own memory is more reliable than the game data.
-- Making false assumptions and failing to correct them.
+- Making false assumptions and failing to correct them. This includes in past critiques. Do not be afraid to correct your own past mistakes, even if those mistakes came from the critic model.
 - Not taking advantage of your available tools to help you with more complex tasks
 - Not exploring the game world enough, especially the current map. If this is the case, you should point out exactly where you should be exploring. If you can't seem to find a valid path in one direction, is there unexplored terrain in another direction that you can try? Are there warp tiles that you can use to get to a new map?
 - Thinking that you are unable to act or move. You almost certainly can. There are no cutscenes or invisible walls or traps that lock the player indefinitely. If you are in the overworld, you can always move.
