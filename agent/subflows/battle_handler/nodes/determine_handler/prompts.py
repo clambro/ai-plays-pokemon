@@ -16,6 +16,6 @@ The available actions are:
 Note that all of the above actions will use up your turn, and your opponent will have the opportunity to attack you. This means that if you switch Pokemon, your opponent will get a free attack against the Pokemon that you switch into.
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your thoughts on the current game state and which action to take. Consider all the information presented to you above; reflect on it, and then respond with your thoughts. Limit this to one or two sentences.
+- thoughts: Your thoughts on the current game state and which action to take. What is the state of the battle? If present, where is the cursor? Consider all the information presented to you above; reflect on it, and then respond with your thoughts. Limit this to one or two sentences.
 - index: The index of the action to take (the number in the square brackets).
 """.strip()
