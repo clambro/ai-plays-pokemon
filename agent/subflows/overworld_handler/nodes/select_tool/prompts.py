@@ -73,6 +73,8 @@ This tool is useful for:
 - Training a specific Pokemon by having it come out first in battle.
 - Keeping your party members at roughly the same level as one-another by changing which Pokemon is the first to see action in battle.
 
+Remember that Pokemon only gain experience when they are used in battle. Putting a Pokemon in the first position is a good way to guarantee that it will gain experience (assuming it has not fainted and is not at the level cap).
+
 If you want to use this tool, be very explicit in your thoughts about which Pokemon you would like to put in the first position. If you are happy with the order of your party, don't use this tool.
 </swap_first_pokemon_tool>
 """.strip()
