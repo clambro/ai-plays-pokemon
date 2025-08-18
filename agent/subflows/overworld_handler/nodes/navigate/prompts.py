@@ -30,7 +30,7 @@ Pay close attention to the intent expressed in your last memory. When that memor
 - If the last memory asks you to navigate to an inaccessible coordinate, you must override it with an accessible coordinate.
 - If the last memory indicates a desire to explore the map or find exploration candidates, you MUST select one of the exploration candidates (even if it is not the exact coordinate you were asked to navigate to). The only exception is if there are no exploration candidates available, in which case you should mention that fact.
 - If the last memory asks you to explore the map but gives you an inaccessible target, or an area that you have already explored, you must override it with an accessible exploration candidate. Again, the only exception is if there are no exploration candidates available, in which case you should mention that fact.
-- When in doubt, prioritize exploration candidates over accessible coordinates.
+- When in doubt, prioritize exploration candidates over generic accessible coordinates.
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
 - thoughts: Your one sentence long thoughts on which coordinates you would like to navigate to given the information provided. These thoughts will be appended verbatim to the end of the <last_memory> in your raw memory. If you are overriding the last memory's request, mention that here and briefly explain why you are doing so.
