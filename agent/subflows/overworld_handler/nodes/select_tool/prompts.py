@@ -22,7 +22,7 @@ The button tool allows you to submit one or more button presses to the emulator.
 - Opening the main menu.
 - Changing the direction that you are facing.
 - Transitioning from one map to another if you are at the edge of the current map or on/near a warp tile.
-- Rotating in place repeatedly in tall grass to find wild Pokemon. If you are doing this and failing to find wild Pokemon, you may not be standing in a place where wild Pokemon can be found.
+- Rotating in place repeatedly in tall grass to find wild Pokemon. If you are doing this and failing to find wild Pokemon, you may not be standing in a place where wild Pokemon can be found. You should have at least two grass tiles adjacent to you to be confident that you are in a tall grass area.
 
 The button tool can be used to move around the map, but it is not as reliable as the navigation tool. Do not use the button tool for general navigation if the navigation tool is available.
 
