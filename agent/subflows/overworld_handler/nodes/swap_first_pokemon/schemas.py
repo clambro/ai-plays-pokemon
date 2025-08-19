@@ -9,4 +9,4 @@ class SwapFirstPokemonResponse(BaseModel):
     """The response from the overworld swap first Pokemon prompt."""
 
     thoughts: str
-    index: int = Field(ge=1, le=5)
+    index: int = Field(ge=0, le=5)
