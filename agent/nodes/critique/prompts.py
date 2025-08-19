@@ -5,7 +5,7 @@ Stop. Take a step back from playing the game for a moment. You have been imbued 
 
 Here is the game memory's representation of the onscreen text (if any is present). The formatting of the text may be somewhat messed up because it is not rendering images. Use it to help you understand any text on the screen, as well as the position of any cursors. If you see multiple cursors "▷" and "▶", you are probably in a nested menu. The active cursor is always "▶".
 <onscreen_text>
-{text}
+{onscreen_text}
 </onscreen_text>
 If you see garbled, nonsensical text in the onscreen text, it is because the game is rendering an image, which the memory stores as text. If this is the case, use the screenshot to help you better understand what is going on.
 

@@ -13,7 +13,7 @@ Note that long-term memory titles are unique. You cannot re-create or edit an ex
 Good candidates for new long-term memory are:
 - New maps: If you have entered a new area, you can keep notes on what is in it and how to navigate it. You should create a new long-term memory object for each new map you enter. Do not attempt to draw the map itself in your long-term memory; you have a separate tool for reading the spatial layout of the game world. Prefix such titles with "MAP_" for easy reference.
 - Major characters: If you have met a new character, you can keep notes on your interactions with them. Notes about an opposing character's Pokemon team could be kept here as well. Prefix such titles with "CHAR_" for easy reference.
-- New Pokemon: If you have caught a new Pokemon for your team, you can keep notes on it. Prefix such titles with "TEAM_" for easy reference.
+- New Pokemon: If you have caught a new Pokemon for your team, you can keep notes on it. Prefix such titles with "TEAM_" for easy reference. It might be wise to note down type effectiveness against other Pokemon in such a memory.
 - Generic notes or strategies: If you have learned something important, you can keep notes on it. Prefix such titles with "NOTE_" for easy reference.
 
 The above are not exhaustive. You can create a new long-term memory object for any information that you feel is important to remember. Just try to keep your titles concise, consistent, and descriptive.
