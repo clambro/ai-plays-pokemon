@@ -60,7 +60,7 @@ class AssignNameService:
 
         self.raw_memory.add_memory(
             iteration=self.iteration,
-            content=f"Successfully entered the name {name}.",
+            content=f"Entered the name {name}.",
         )
         return self.raw_memory
 

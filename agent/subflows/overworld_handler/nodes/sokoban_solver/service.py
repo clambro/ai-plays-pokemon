@@ -207,7 +207,7 @@ class SokobanSolverService:
 
         self.raw_memory.add_memory(
             iteration=self.iteration,
-            content="Successfully executed a Sokoban solution.",
+            content="Executed a Sokoban solution.",
         )
 
     def _is_blocked(self, current: Coords, dy: int, dx: int) -> bool:

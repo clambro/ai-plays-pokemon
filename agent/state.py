@@ -27,6 +27,7 @@ class AgentState(BaseState):
     handler: AgentStateHandler | None = None
     previous_handler: AgentStateHandler | None = None
     should_retrieve_memory: bool | None = None
+    should_critique: bool | None = None
     emulator_save_state: str | None = None
 
     def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
@@ -79,6 +80,10 @@ class AgentStore(BaseStore[AgentState]):
     ) -> None:
         """Set the should retrieve memory."""
         await self.set_state({"should_retrieve_memory": should_retrieve_memory})
+
+    async def set_should_critique(self, should_critique: Literal[True, False]) -> None:
+        """Set the should critique."""
+        await self.set_state({"should_critique": should_critique})
 
     async def set_iterations_since_last_critique(self, iterations_since_last_critique: int) -> None:
         """Set the iterations since the last critique."""

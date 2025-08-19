@@ -1,5 +1,5 @@
-from agent.subflows.overworld_handler.nodes.critique.prompts import CRITIQUE_PROMPT
-from agent.subflows.overworld_handler.nodes.critique.schemas import CritiqueResponse
+from agent.nodes.critique.prompts import CRITIQUE_PROMPT
+from agent.nodes.critique.schemas import CritiqueResponse
 from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_PRO_2_5
@@ -27,12 +27,15 @@ class CritiqueService:
         """Critique the current state of the game."""
         game_state = self.emulator.get_game_state()
         screenshot = self.emulator.get_screenshot()
-        prompt = CRITIQUE_PROMPT.format(state=self.state_string_builder(game_state))
+        prompt = CRITIQUE_PROMPT.format(
+            state=self.state_string_builder(game_state),
+            onscreen_text=game_state.screen.text,
+        )
         try:
             response = await self.llm_service.get_llm_response_pydantic(
                 [screenshot, prompt],
                 schema=CritiqueResponse,
-                prompt_name="critique_overworld_state",
+                prompt_name="general_critique",
                 thinking_tokens=1024,
             )
             self.raw_memory.add_memory(

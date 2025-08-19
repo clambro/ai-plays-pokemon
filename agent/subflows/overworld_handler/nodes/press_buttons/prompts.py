@@ -5,7 +5,8 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 
 The following (case-sensitive) buttons are available to you:
 - a: The action button. Used to interact with objects in the game. Make sure you are facing the direction of the object that you wish to interact with before pressing the action button.
-- start: Used to open the main menu.
+- b: Does nothing in the overworld. You shouldn't need to press this button.
+- start: Used to open the main menu. You shouldn't need to do this, but it is included for completeness.
 - up: Used to move the player upwards.
 - down: Used to move the player downwards.
 - left: Used to move the player left.
@@ -15,7 +16,7 @@ Tips:
 - You can interact with warp tiles by walking on or through them, depending on the instructions provided in the warp tile's description above.
 - You can interact with sprites or signs using the action button, but you must be facing the entity you wish to interact with before doing so. If the sprite's position is (r, c) and you are at (r, c + 1), then you must face left to interact with it. If you are at (r - 1, c), then you must face down to interact with it. If you are at (r, c - 1), then you must face right to interact with it. If you are at (r + 1, c), then you must face up to interact with it.
 - With nearly all sprites, you must be directly adjacent to them before using the action button. The only exceptions are if you are interacting with a clerk at a mart, a nurse at a Pokemon Center, or a guard at a gate. In these cases, you interact with the counter in front of the sprite, meaning that you must be two tiles away from the sprite (horizontally or vertically depending on the counter, but not diagonally).
-- If you have been given instructions to rotate in place repeatedly in tall grass to find wild Pokemon and you are facing up or down, return a series of left and right button presses like so: [left, right, left, right, left, right]. If you are facing left or right, return a series of up and down button presses like so: [up, down, up, down, up, down]. You must press a series of buttons in order to rotate in place and find wild Pokemon, not just a single button.
+- If you have been given instructions to rotate in place repeatedly in tall grass to find wild Pokemon, return [up, left, down, right, up, left, down, right].
 
 Your most recent raw memory is repeated below for reference. Pay close attention to your current position and facing direction in the memory below. The "thoughts" in your response will be appended verbatim to the end of this memory, so there is no need to duplicate information.
 <last_memory>

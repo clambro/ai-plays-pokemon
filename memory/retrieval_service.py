@@ -5,14 +5,12 @@ from common.constants import (
     DEFAULT_NUM_MEMORIES_RETRIEVED,
     DEFAULT_RERANKING_FACTOR,
 )
-from common.embedding_service import GeminiEmbeddingService
+from common.embedding_service import get_embedding
 from database.long_term_memory.repository import (
     get_all_long_term_memory_embeddings,
     get_long_term_memories,
 )
 from database.long_term_memory.schemas import LongTermMemoryRead
-
-embedding_service = GeminiEmbeddingService()
 
 
 class MemoryRetrievalService:
@@ -56,7 +54,7 @@ class MemoryRetrievalService:
         if len(embeddings) <= self.num_memories:
             return await get_long_term_memories(list(embeddings.keys()), iteration)
 
-        query_embedding = await embedding_service.get_embedding(query)
+        query_embedding = await get_embedding(query)
         top_similarities = await self._get_top_n_semantic_similarity(query_embedding, embeddings)
         if not top_similarities:
             return []

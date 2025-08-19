@@ -44,7 +44,7 @@ class SwapFirstPokemonService:
 
         self.raw_memory.add_memory(
             iteration=self.iteration,
-            content="I successfully swapped the first Pokemon in my party with another Pokemon.",
+            content="I swapped the first Pokemon in my party with another Pokemon.",
         )
         return self.raw_memory
 

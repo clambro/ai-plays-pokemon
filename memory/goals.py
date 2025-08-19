@@ -1,11 +1,32 @@
+from enum import StrEnum
+
 from loguru import logger
 from pydantic import BaseModel, Field
+
+
+class GoalPriority(StrEnum):
+    """The priority of a goal. Alphabetical order is thankfully the same as numerical order."""
+
+    PRIMARY = "Primary"
+    SECONDARY = "Secondary"
+    TERTIARY = "Tertiary"
+
+
+class Goal(BaseModel):
+    """A goal for the agent."""
+
+    goal: str
+    priority: GoalPriority
+
+    def __str__(self) -> str:
+        """Return a string representation of the goal."""
+        return f"{self.priority}: {self.goal}"
 
 
 class Goals(BaseModel):
     """The goals for the agent."""
 
-    goals: list[str] = Field(default_factory=list)
+    goals: list[Goal] = Field(default_factory=list)
 
     def __str__(self) -> str:
         """Return a string representation of the goals."""
@@ -14,7 +35,7 @@ class Goals(BaseModel):
             "Here are the goals that you have set for yourself. Your ultimate goal is, of course,"
             " to collect all eight badges and become the Elite Four Champion, but these goals here"
             " are the next steps on your journey to that goal. The actions that you take and the"
-            " thoughts that you think should all be in the service of these goals."
+            " thoughts that you think should all be in service of these goals."
         )
         out += "\n<goals>\n"
         if self.goals:
@@ -25,11 +46,13 @@ class Goals(BaseModel):
         out += "</goals_info>"
         return out
 
-    def append(self, *goals: str) -> None:
+    def append(self, *goals: Goal) -> None:
         """Append new goals to the list."""
         for goal in goals:
-            logger.info(f'Adding new goal: "{goal.strip()}"')
-            self.goals.append(goal.strip())
+            logger.info(f'Adding new goal: "{goal.goal}"')
+            goal.goal = goal.goal.strip()
+            self.goals.append(goal)
+        self.goals = sorted(self.goals, key=lambda g: g.priority.value)
 
     def remove(self, *indices: int) -> None:
         """Remove goals from the list."""

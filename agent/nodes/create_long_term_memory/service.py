@@ -2,7 +2,7 @@ from loguru import logger
 
 from agent.nodes.create_long_term_memory.prompts import CREATE_LONG_TERM_MEMORY_PROMPT
 from agent.nodes.create_long_term_memory.schemas import CreateLongTermMemoryResponse
-from common.embedding_service import GeminiEmbeddingService
+from common.embedding_service import get_embedding
 from common.types import StateStringBuilderT
 from database.long_term_memory.repository import (
     create_long_term_memory,
@@ -18,7 +18,6 @@ class CreateLongTermMemoryService:
     """Service for creating long-term memory."""
 
     llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
-    embedding_service = GeminiEmbeddingService()
 
     def __init__(
         self,
@@ -45,7 +44,7 @@ class CreateLongTermMemoryService:
                 prompt_name="create_long_term_memory",
             )
             for piece in response.pieces:
-                embedding = await self.embedding_service.get_embedding(piece.content, piece.title)
+                embedding = await get_embedding(piece.content, piece.title)
                 await create_long_term_memory(
                     LongTermMemoryCreate(
                         title=piece.title,

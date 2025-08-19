@@ -123,7 +123,7 @@ function updateDisplay(data) {
         });
     }
     refs.goalsDiv.replaceChildren(goalsFrag);
-    refs.goalsDiv.scrollTop = refs.goalsDiv.scrollHeight;  // Auto-scroll to the bottom.
+    refs.goalsDiv.scrollTop = 0;  // Auto-scroll to the top.
 
     // --- Log ---
     const logFrag = document.createDocumentFragment();

@@ -281,7 +281,7 @@ class NavigationService:
         if new_pos == target_pos:
             self.raw_memory.add_memory(
                 iteration=self.iteration,
-                content=f"Successfully navigated to {target_pos}.",
+                content=f"Completed navigation to {target_pos}.",
             )
             return True
         if prev_pos == new_pos:

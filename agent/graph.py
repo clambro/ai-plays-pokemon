@@ -1,12 +1,14 @@
 from junjo import Edge, Graph, RunConcurrent
 
-from agent.conditions import AgentHandlerIs, ShouldRetrieveMemory
+from agent.conditions import AgentHandlerIs, ShouldCritique, ShouldRetrieveMemory
 from agent.enums import AgentStateHandler
 from agent.nodes.create_long_term_memory.node import CreateLongTermMemoryNode
+from agent.nodes.critique.node import CritiqueNode
 from agent.nodes.dummy.node import DummyNode
 from agent.nodes.prepare_agent_store.node import PrepareAgentStoreNode
 from agent.nodes.retrieve_long_term_memory.node import RetrieveLongTermMemoryNode
 from agent.nodes.save_game_state.node import SaveGameStateNode
+from agent.nodes.should_critique.node import ShouldCritiqueNode
 from agent.nodes.update_background_stream.node import UpdateBackgroundStreamNode
 from agent.nodes.update_goals.node import UpdateGoalsNode
 from agent.nodes.update_long_term_memory.node import UpdateLongTermMemoryNode
@@ -27,6 +29,8 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     """Build the Junjo agent graph."""
     prepare_agent_store = PrepareAgentStoreNode(emulator)
     retrieve_long_term_memory = RetrieveLongTermMemoryNode(emulator)
+    should_critique = ShouldCritiqueNode(emulator)
+    critique = CritiqueNode(emulator)
     update_goals = UpdateGoalsNode(emulator)
     update_summary_memory = UpdateSummaryMemoryNode(emulator)
     create_long_term_memory = CreateLongTermMemoryNode(emulator)
@@ -71,8 +75,11 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
                 ShouldRetrieveMemory(value=True),
             ),
             Edge(create_update_long_term_memory, retrieve_long_term_memory),
-            Edge(prepare_agent_store, post_retrieval_dummy, ShouldRetrieveMemory(value=False)),
-            Edge(retrieve_long_term_memory, post_retrieval_dummy),
+            Edge(prepare_agent_store, should_critique, ShouldRetrieveMemory(value=False)),
+            Edge(retrieve_long_term_memory, should_critique),
+            Edge(should_critique, critique, ShouldCritique(value=True)),
+            Edge(should_critique, post_retrieval_dummy, ShouldCritique(value=False)),
+            Edge(critique, post_retrieval_dummy),
             Edge(
                 post_retrieval_dummy,
                 overworld_handler_subflow,

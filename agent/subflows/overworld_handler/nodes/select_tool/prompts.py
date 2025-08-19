@@ -38,6 +38,7 @@ TOOL_NAME: "navigation"
 
 The navigation tool allows you to navigate to any revealed, accessible tile on the current map using an A* search algorithm. It is useful for:
 - Moving the player around the current map. This should be your primary mode of movement, especially if you are trying to move more than a single tile at a time.
+- Moving to a specific tile type (e.g. moving into tall grass or water to find wild Pokemon. You need access to Surf to move into water).
 - Revealing unexplored territory on the current map.
 - Navigating directly to warp tiles.
 - Navigating to the boundaries of the current map
@@ -51,6 +52,8 @@ The navigation tool intentionally tries to avoid random encounters with wild Pok
 Do not attempt to navigate to the tile that you are currently standing on. This does nothing.
 
 The navigation tool has access to a list of good exploration candidates in maps that are not fully explored. Asking the navigation tool to move to an exploration candidate is the fastest way to explore the map. You do not know where the exploration candidates are. Only the tool knows them, so don't provide any hallucinated exploration coordinates. Give a general description of where you want to go, specifically mention that you want to head to "an exploration candidate," and the tool will determine the best tile to move to.
+
+Navigating directly to warp tiles that are marked in your overworld map as not yet visited is another effective way to explore new areas. Doing so will take you to a new map, usually a building, a cave, or a new floor of a building or cave.
 
 Give general guidance on where you want to go in your thoughts (e.g. to a given warp tile, to a given map boundary, to explore unexplored territory, towards a certain sprite, etc.), but do not provide specific coordinates. The navigation tool will determine the legal target coordinates and prompt you again to choose from them.
 </navigation_tool>
@@ -66,16 +69,16 @@ SWAP_FIRST_POKEMON_TOOL_INFO = """
 <swap_first_pokemon_tool>
 TOOL_NAME: "swap_first_pokemon"
 
-The swap first Pokemon tool allows you to swap the first Pokemon in your party with another Pokemon in your party.
+The swap first Pokemon tool allows you to put a specific Pokemon in the first position in your party. This will make that Pokemon your lead Pokemon in battle (assuming it has not fainted).
 
 This tool is useful for:
-- Leading with a particular Pokemon before a major battle.
-- Training a specific Pokemon by having it come out first in battle.
+- Leading with an advantageous Pokemon before a major battle.
+- Training a specific Pokemon by having it come out first in battle. If you want to train a specific Pokemon, use this tool to put it in the first position before starting your training session.
 - Keeping your party members at roughly the same level as one-another by changing which Pokemon is the first to see action in battle.
 
 Remember that Pokemon only gain experience when they are used in battle. Putting a Pokemon in the first position is a good way to guarantee that it will gain experience (assuming it has not fainted and is not at the level cap).
 
-If you want to use this tool, be very explicit in your thoughts about which Pokemon you would like to put in the first position. If you are happy with the order of your party, don't use this tool.
+If you want to use this tool, be explicit in your thoughts about which Pokemon you would like to put in the first position. If you are happy with the order of your party, don't use this tool.
 </swap_first_pokemon_tool>
 """.strip()
 
@@ -88,7 +91,7 @@ The use item tool allows you to use an item from your inventory in the overworld
 - Teaching a TM or HM to a Pokemon.
 - Using a healing item like a POTION or a REVIVE. This is still allowed outside of battle in hard mode.
 
-If you want to use this tool, be very explicit in your thoughts about which item you would like to use. If the item requires a target Pokemon to use it on, be explicit about which Pokemon you want to use it on.
+If you want to use this tool, be explicit in your thoughts about which item from your inventory you would like to use. If the item requires a target Pokemon (e.g. an evolution stone or a healing item), be explicit about which Pokemon you want to use it on.
 </use_item_tool>
 """.strip()
 
@@ -96,7 +99,7 @@ SOKOBAN_SOLVER_TOOL_INFO = """
 <sokoban_solver_tool>
 TOOL_NAME: "sokoban_solver"
 
-The Sokoban solver tool will automatically solve the onscreen Sokoban puzzle for you, or inform you if the puzzle is not currently solvable.
+The Sokoban solver tool will automatically solve the onscreen Sokoban puzzle for you, or inform you if the puzzle is not currently solvable (likely meaning that you need to explore more).
 </sokoban_solver_tool>
 """.strip()
 
@@ -104,6 +107,6 @@ CRITIQUE_TOOL_INFO = """
 <critique_tool>
 TOOL_NAME: "critique"
 
-The critique tool is a powerful but expensive tool to get an external model to critique your performance and help get you unstuck. Use it if you are confused, or stuck in a loop, or failing to make progress towards your goals.  A good indication that you are stuck is if you are repeating the same actions over and over again. Do not use the critique tool if you are confident in your actions and are making progress towards your goals.
+The critique tool is a powerful but expensive tool to get an external model to critique your performance and help get you unstuck. Use it if you are confused, stuck in a loop, or failing to make progress towards your goals. A good indication that you are stuck is if you are repeating the same actions over and over again. Do not use the critique tool if you are confident in your actions and are making progress towards your goals.
 </critique_tool>
 """.strip()

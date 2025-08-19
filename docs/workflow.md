@@ -2,6 +2,8 @@
 
 This page walks through the entire Junjo workflow, one node at a time. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving into this, as some of that terminology will be used here. At a high level, we have an entrypoint for the agent that handles memory updates and retrieval, setting goals, and routing the flow to one of three dedicated subflows, each of which handles a major aspect of playing Pokémon. The three subflows are the Overworld Handler, the Battle Handler, and the Text Handler, and each one has its own suite of tools to operate in its domain.
 
+Note: Pretty much all the constants below are default values that can be edited in [`common/constants.py`](/common/constants.py).
+
 ## The Main Agent Graph
 
 ![The Main Agent Graph](../visualization/agent_graph/Graph.svg)
@@ -16,7 +18,17 @@ These are two nodes that run in parallel if the Prepare Agent Store node determi
 
 ### Retrieve Long-Term Memory
 
-This is the node that pulls long-term memories from the database. It first constructs a query based on the current game state, embeds the query, and compares it via cosine similarity to the memories in the database. The top few memories are then re-ranked by a combination of cosine similarity to the query, recency, and importance. The top 10 (by default) by that combined score then get added to the agent state until the next retrieval iteration.
+This is the node that pulls long-term memories from the database. It first constructs a query based on the current game state, embeds the query, and compares it via cosine similarity to the memories in the database. The top few memories are then re-ranked by a combination of cosine similarity to the query, recency, and importance. The top 10 by that combined score then get added to the agent state until the next retrieval iteration.
+
+### Should Critique
+
+This node determines if we need to invoke the critic model by checking for loops in the raw memory every few iterations. If the model is saying or doing the same thing over and over again, this node will trigger a critique.
+
+### Critique
+
+The two critique nodes (here and in the Overworld Handler) are the only instances in the entire workflow where Gemini Pro is used. If the AI feels completely stuck, it can (at most once every 20 iterations) invoke Gemini Pro to get some advice on how to get unstuck. This is helpful for breaking the model out of weird loops, though we do have to be careful: Sometimes the critic's advice is wrong!
+
+The key distinction between this node and the one in the Overworld Handler is that this one is triggered automatically by loops in the raw memory, whereas the other one has to be triggered by explicit tool use from the model and is specifically tailored to solving problems in the overworld. This one is particularly useful for catching issues in the Text and Battle Handlers, which otherwise have no way to ask for help from the critic if they get stuck.
 
 ### Dummy Node
 
@@ -28,7 +40,7 @@ At this point, the flow is diverted into one of the three subflows. Each of thes
 
 ### Do Updates
 
-This is another collection of parallel nodes, each of which runs every few iterations depending on the constants in [`common/constants.py`](/common/constants.py). They're all pretty self-explanatory:
+This is another collection of parallel nodes, each of which runs every few iterations. They're all pretty self-explanatory:
 - Update Goals: Optionally sets/edits/completes the AI's goals
 - Update Summary Memory: Optionally adds new memories to the summary memory, and thus bumps off old, irrelevant ones
 - Update Background Stream: Updates the live background for streaming at `localhost:8080` with the latest information from the workflow and game states
@@ -39,7 +51,7 @@ The final state in the workflow. Its only job is to capture the save state of th
 
 ## The Overworld Handler Subflow
 
-![The Overworld Handler Subflow](../visualization/agent_graph/subflow_nfvlEyMMnccEoJPPwuQii.svg)
+![The Overworld Handler Subflow](../visualization/agent_graph/subflow_QIkEPkcV0JILIFlaS7gHv.svg)
 
 ### Load Map
 
@@ -63,7 +75,7 @@ This is the main tool used for navigating the overworld, and also the most compl
 
 ### Critique
 
-The critique tool is the only instance in the entire workflow where Gemini Pro is used. If the AI feels completely stuck, it can (at most once every 20 iterations) invoke Gemini Pro to get some advice on how to get unstuck. This is helpful for breaking the model out of weird loops, though we do have to be careful: Sometimes the critic's advice is wrong!
+Very similar to the generic critique node in the top level agent graph, but triggered by the Select Tool node, and has a prompt that is specifically tailored to resolving errors that occur in the overworld. Like the other critique node, this can be triggered at most once every 20 iterations.
 
 ### Use Item
 
@@ -83,7 +95,7 @@ Purely topological, as are all dummy nodes in the workflow. This is the sink nod
 
 ## The Battle Handler Subflow
 
-![The Battle Handler Subflow](../visualization/agent_graph/subflow_0fgtog1K9j5yWbqpK86Ji.svg)
+![The Battle Handler Subflow](../visualization/agent_graph/subflow_8FrRI8S0ibkT8Vb9m2MzO.svg)
 
 ### Determine Handler
 
@@ -115,7 +127,7 @@ The final node in the battle handler. It may surprise you that we do this here i
 
 ## The Text Handler Subflow
 
-![The Text Handler Subflow](../visualization/agent_graph/subflow_I4h5AEdt51WQ33mjTY19v.svg)
+![The Text Handler Subflow](../visualization/agent_graph/subflow_IM2bYZ8Egf0jU6WaHJeVQ.svg)
 
 ### Determine Handler
 
