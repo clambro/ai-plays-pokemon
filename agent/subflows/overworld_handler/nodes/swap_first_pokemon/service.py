@@ -34,22 +34,26 @@ class SwapFirstPokemonService:
         try:
             index = await self._get_swap_index()
             await self._swap_first_pokemon(index)
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"Error in the swap first Pokemon response. Skipping. {e}")
+            game_state = self.emulator.get_game_state()
             self.raw_memory.add_memory(
                 iteration=self.iteration,
-                content=f"I failed to swap the first Pokemon in my party with another Pokemon. {e}",
+                content=(
+                    f"I successfully swapped the order of my Pokemon. The new party order is "
+                    f"{[p.name for p in game_state.party]}. My lead Pokemon is now "
+                    f"{game_state.party[0].name}."
+                ),
             )
-            return self.raw_memory
-
-        game_state = self.emulator.get_game_state()
-        self.raw_memory.add_memory(
-            iteration=self.iteration,
-            content=(
-                f"I successfully swapped the order of my Pokemon. New party order is "
-                f"{[p.name for p in game_state.party]}."
-            ),
-        )
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Error in the swap first Pokemon response. Skipping. {e}")
+            game_state = self.emulator.get_game_state()
+            self.raw_memory.add_memory(
+                iteration=self.iteration,
+                content=(
+                    f"An error occurred while swapping the first Pokemon in my party: {e}"
+                    f"The current party order is {[p.name for p in game_state.party]}. My lead"
+                    f"Pokemon is {game_state.party[0].name}."
+                ),
+            )
         return self.raw_memory
 
     async def _get_swap_index(self) -> int:
@@ -65,6 +69,9 @@ class SwapFirstPokemonService:
             schema=SwapFirstPokemonResponse,
             prompt_name="get_swap_index",
         )
+        if response.index == 0:
+            first_pokemon = game_state.party[0].name
+            raise ValueError(f"{first_pokemon} is already the first Pokemon in my party.")
         return response.index
 
     async def _swap_first_pokemon(self, pokemon_index: int) -> None:
