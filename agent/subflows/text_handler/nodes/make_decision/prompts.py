@@ -18,7 +18,7 @@ The (case-sensitive) available buttons are:
 - left: Used to navigate the cursor left.
 - right: Used to navigate the cursor right.
 
-Remember: If you feel stuck or lost in a nested menu and you aren't sure what to do, you can usually press the "b" button to back out of it. If you find that you are stuck in a loop, pressing "b" three or four times in sequence will likely break you out of it.
+Remember: If you feel stuck or lost in a nested menu and you aren't sure what to do, you can usually press the "b" button to back out of it. If you are stuck in a loop, press the "b" button 4-5 times in sequence and you should be able to break out of it.
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
 - thoughts: Your thoughts on the current game state and which button(s) to press. Keep this to one or two sentences. It is important that you note any text that you are reading in your thoughts, otherwise you will lose access to it in subsequent turns.
