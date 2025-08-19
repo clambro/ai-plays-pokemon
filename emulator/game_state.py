@@ -85,6 +85,7 @@ class YellowLegacyGameState(BaseModel):
         if not self.party:
             return ""
         out = "<party>\n"
+        out += "These are the Pokemon in your party, in their current order.\n"
         out += self._pokemon_list_to_str(self.party)
         out += "</party>\n"
         return out

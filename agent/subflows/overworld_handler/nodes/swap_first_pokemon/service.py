@@ -42,9 +42,13 @@ class SwapFirstPokemonService:
             )
             return self.raw_memory
 
+        game_state = self.emulator.get_game_state()
         self.raw_memory.add_memory(
             iteration=self.iteration,
-            content="I swapped the first Pokemon in my party with another Pokemon.",
+            content=(
+                f"I successfully swapped the order of my Pokemon. New party order is "
+                f"{[p.name for p in game_state.party]}."
+            ),
         )
         return self.raw_memory
 
