@@ -18,6 +18,7 @@ Common sources of error include (but are not limited to):
 - Not exploring the game world enough. If you are in the overworld, ask yourself if there is any unexplored territory or unvisited warp tiles that you have not yet visited.
 - Getting stuck in a menu loop. You can usually bail out of a menu loop by repeatedly pressing the "b" button.
 - Thinking that all your Pokemon have fainted and that you are unable to progress. The game will not allow this. If all your Pokemon have fainted, you will automatically be sent back to the last Pokemon Center you visited, which will break any loop you are in. That means that if you are in a loop, you are *not* out of usable Pokemon.
+- If you see the text "There's no will to fight" over and over again, it means that you are trying to illegally switch into a fainted Pokemon. If you are stuck in this loop, simply move the cursor to a different Pokemon that has not fainted and press "a" to select it. If you are in this loop, you definitely have at least one Pokemon that has not fainted.
 - Thinking that you are unable to act or move. You almost certainly can. There are no cutscenes or invisible walls or traps that lock the player indefinitely.
 - Doing the same thing over and over again and expecting different results. If you are stuck in a loop, try doing something completely different. Anything to break out of the cycle.
 
