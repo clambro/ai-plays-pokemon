@@ -107,6 +107,6 @@ CRITIQUE_TOOL_INFO = """
 <critique_tool>
 TOOL_NAME: "critique"
 
-The critique tool is a powerful but expensive tool to get an external model to critique your performance and help get you unstuck. Use it if you are confused, stuck in a loop, or failing to make progress towards your goals.  A good indication that you are stuck is if you are repeating the same actions over and over again. Do not use the critique tool if you are confident in your actions and are making progress towards your goals.
+The critique tool is a powerful but expensive tool to get an external model to critique your performance and help get you unstuck. Use it if you are confused, stuck in a loop, or failing to make progress towards your goals. A good indication that you are stuck is if you are repeating the same actions over and over again. Do not use the critique tool if you are confident in your actions and are making progress towards your goals.
 </critique_tool>
 """.strip()

@@ -16,7 +16,7 @@ Tips:
 - You can interact with warp tiles by walking on or through them, depending on the instructions provided in the warp tile's description above.
 - You can interact with sprites or signs using the action button, but you must be facing the entity you wish to interact with before doing so. If the sprite's position is (r, c) and you are at (r, c + 1), then you must face left to interact with it. If you are at (r - 1, c), then you must face down to interact with it. If you are at (r, c - 1), then you must face right to interact with it. If you are at (r + 1, c), then you must face up to interact with it.
 - With nearly all sprites, you must be directly adjacent to them before using the action button. The only exceptions are if you are interacting with a clerk at a mart, a nurse at a Pokemon Center, or a guard at a gate. In these cases, you interact with the counter in front of the sprite, meaning that you must be two tiles away from the sprite (horizontally or vertically depending on the counter, but not diagonally).
-- If you have been given instructions to rotate in place repeatedly in tall grass to find wild Pokemon, return [up, down, left, right, up, down, left, right].
+- If you have been given instructions to rotate in place repeatedly in tall grass to find wild Pokemon, return [up, left, down, right, up, left, down, right].
 
 Your most recent raw memory is repeated below for reference. Pay close attention to your current position and facing direction in the memory below. The "thoughts" in your response will be appended verbatim to the end of this memory, so there is no need to duplicate information.
 <last_memory>
