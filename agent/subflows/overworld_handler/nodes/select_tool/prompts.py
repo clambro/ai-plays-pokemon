@@ -78,7 +78,7 @@ This tool is useful for:
 
 Remember that Pokemon only gain experience when they are used in battle. Putting a Pokemon in the first position is a good way to guarantee that it will gain experience (assuming it has not fainted and is not at the level cap).
 
-If you want to use this tool, be explicit in your thoughts about which Pokemon you would like to put in the first position. If you are happy with the order of your party, don't use this tool.
+If you want to use this tool, be explicit in your thoughts about which Pokemon you would like to put in the first position. If you are happy with the order of your party, don't use this tool. The current party order is shown in the player_info section above.
 </swap_first_pokemon_tool>
 """.strip()
 
@@ -90,6 +90,8 @@ The use item tool allows you to use an item from your inventory in the overworld
 - Using helpful items like REPEL, ESCAPE ROPE, evolution stones, etc.
 - Teaching a TM or HM to a Pokemon.
 - Using a healing item like a POTION or a REVIVE. This is still allowed outside of battle in hard mode.
+
+Note that the item must be in your inventory (in the player_info section above) for you to use it. If you don't have the item in your inventory, you cannot use it.
 
 If you want to use this tool, be explicit in your thoughts about which item from your inventory you would like to use. If the item requires a target Pokemon (e.g. an evolution stone or a healing item), be explicit about which Pokemon you want to use it on.
 </use_item_tool>
