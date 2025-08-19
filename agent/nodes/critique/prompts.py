@@ -3,7 +3,7 @@ Stop. Take a step back from playing the game for a moment. You have signaled tha
 
 {state}
 
-Here is the game memory's representation of the onscreen text (if any is present). The formatting of the text may be somewhat messed up because it is not rendering images. Use it to help you understand any text on the screen, as well as the position of any cursors. If you see multiple cursors "▷" and "▶", you are probably in a nested menu. The active cursor is always "▶".
+Here is the game memory's representation of the onscreen text. If this section is empty then no text is present. The formatting of the text may be somewhat messed up because it is not rendering images. Use it to help you understand any text on the screen, as well as the position of any cursors. If you see multiple cursors "▷" and "▶", you are probably in a nested menu. The active cursor is always "▶".
 <onscreen_text>
 {onscreen_text}
 </onscreen_text>
@@ -20,6 +20,8 @@ Common sources of error include (but are not limited to):
 - Thinking that all your Pokemon have fainted and that you are unable to progress. The game will not allow this. If all your Pokemon have fainted, you will automatically be sent back to the last Pokemon Center you visited, which will break any loop you are in. That means that if you are in a loop, you are *not* out of usable Pokemon.
 - Thinking that you are unable to act or move. You almost certainly can. There are no cutscenes or invisible walls or traps that lock the player indefinitely.
 - Doing the same thing over and over again and expecting different results. If you are stuck in a loop, try doing something completely different. Anything to break out of the cycle.
+
+Pay extra attention to the raw memory, especially the most recent iterations, as those are the memories that triggered this decision to critique. High level critiques are useful too, but the main reason you are here is to get unstuck.
 
 Critique your performance so far. Why are you stuck? Where did you go wrong? What should you do to make meaningful progress towards your goals? Keep your critique to one paragraph max, and focus on the things that you are most certain about. Do not include unfounded speculation in your critique.
 """.strip()

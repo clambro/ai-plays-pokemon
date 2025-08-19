@@ -14,5 +14,7 @@ Common sources of error include (but are not limited to):
 - Thinking that you are unable to act or move. You almost certainly can. There are no cutscenes or invisible walls or traps that lock the player indefinitely. If you are in the overworld, you can always move.
 - Doing the same thing over and over again and expecting different results. If you are walking in circles, try doing something completely different. Go to a new area. Anything to break out of the cycle.
 
+Pay extra attention to the raw memory, especially the most recent iterations, as those are the memories that triggered this decision to critique. High level critiques are useful too, but the main reason you are here is to get unstuck.
+
 Critique your performance so far. Why are you stuck? Where did you go wrong? What should you do to make meaningful progress towards your goals? Keep your critique to one paragraph max, and focus on the things that you are most certain about. Do not include unfounded speculation in your critique.
 """.strip()
