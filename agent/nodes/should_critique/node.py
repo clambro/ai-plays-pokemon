@@ -20,6 +20,7 @@ class ShouldCritiqueNode(Node[AgentStore]):
         state = await store.get_state()
 
         service = ShouldCritiqueService(
+            iteration=state.iteration,
             raw_memory=state.raw_memory,
             goals=state.goals,
             iterations_since_last_critique=state.iterations_since_last_critique,
