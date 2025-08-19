@@ -1,12 +1,14 @@
 from junjo import Edge, Graph, RunConcurrent
 
-from agent.conditions import AgentHandlerIs, ShouldRetrieveMemory
+from agent.conditions import AgentHandlerIs, ShouldCritique, ShouldRetrieveMemory
 from agent.enums import AgentStateHandler
 from agent.nodes.create_long_term_memory.node import CreateLongTermMemoryNode
+from agent.nodes.critique.node import CritiqueNode
 from agent.nodes.dummy.node import DummyNode
 from agent.nodes.prepare_agent_store.node import PrepareAgentStoreNode
 from agent.nodes.retrieve_long_term_memory.node import RetrieveLongTermMemoryNode
 from agent.nodes.save_game_state.node import SaveGameStateNode
+from agent.nodes.should_critique.node import ShouldCritiqueNode
 from agent.nodes.update_background_stream.node import UpdateBackgroundStreamNode
 from agent.nodes.update_goals.node import UpdateGoalsNode
 from agent.nodes.update_long_term_memory.node import UpdateLongTermMemoryNode
@@ -27,6 +29,8 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     """Build the Junjo agent graph."""
     prepare_agent_store = PrepareAgentStoreNode(emulator)
     retrieve_long_term_memory = RetrieveLongTermMemoryNode(emulator)
+    should_critique = ShouldCritiqueNode(emulator)
+    critique = CritiqueNode(emulator)
     update_goals = UpdateGoalsNode(emulator)
     update_summary_memory = UpdateSummaryMemoryNode(emulator)
     create_long_term_memory = CreateLongTermMemoryNode(emulator)
@@ -86,9 +90,12 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             Edge(
                 post_retrieval_dummy, text_handler_subflow, AgentHandlerIs(AgentStateHandler.TEXT)
             ),
-            Edge(text_handler_subflow, do_updates),
-            Edge(battle_handler_subflow, do_updates),
-            Edge(overworld_handler_subflow, do_updates),
+            Edge(text_handler_subflow, should_critique),
+            Edge(battle_handler_subflow, should_critique),
+            Edge(overworld_handler_subflow, should_critique),
+            Edge(should_critique, critique, ShouldCritique(value=True)),
+            Edge(should_critique, do_updates, ShouldCritique(value=False)),
+            Edge(critique, do_updates),
             Edge(do_updates, save_game_state),
         ],
     )
