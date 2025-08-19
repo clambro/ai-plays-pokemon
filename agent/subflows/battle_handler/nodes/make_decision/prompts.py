@@ -9,6 +9,8 @@ Here is the game memory's representation of the onscreen text. The text you see 
 </onscreen_text>
 If you see garbled, nonsensical text in the onscreen text, it is because the game is rendering an image, which the memory stores as text. If this is the case, use the screenshot to help you better understand what is going on.
 
+Note: If you keep seeing the text "There's no will to fight" over and over again, it means that you are trying to switch into a fainted Pokemon. You cannot do this. You must switch to a Pokemon that has not fainted. If you are seeing this text, at least one of your Pokemon is still able to fight. Use the directional buttons to pick a different Pokemon to switch to.
+
 The (case-sensitive) available buttons are:
 - a: The action button. Used to select the highlighted option or progress any on-screen text.
 - b: The back button. Used to go back to the previous screen or decline a yes/no question.
