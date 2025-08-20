@@ -1,7 +1,9 @@
 GET_NAME_PROMPT = """
-You are at the name entry screen.
+You are at the name entry screen. Use the information below to figure out what it is that you are being asked to assign a name to. It is almost certainly a nickname for a Pokemon. The only exception is if the raw memory iteration number is less than 15, in which case you are either entering the names for yourself and your rival.
 
-{state}
+{raw_memory}
+
+{player_info}
 
 Naming rules:
 - The name must be uppercase.
