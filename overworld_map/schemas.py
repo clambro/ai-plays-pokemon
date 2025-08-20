@@ -280,13 +280,20 @@ class OverworldMap(BaseModel):
             )
         out = ""
         for direction, connection in [
-            ("north", self.north_connection),
-            ("south", self.south_connection),
-            ("east", self.east_connection),
-            ("west", self.west_connection),
+            ("NORTH", self.north_connection),
+            ("SOUTH", self.south_connection),
+            ("EAST", self.east_connection),
+            ("WEST", self.west_connection),
         ]:
             if connection is not None:
-                out += f"The map to the {direction} is {connection.name}.\n"
+                out += f"- The map to the {direction} is {connection.name}.\n"
             else:
-                out += f"There is no map connection to the {direction}.\n"
+                out += f"- There is no map connection to the {direction}.\n"
+        out += (
+            "Important: The fact that you are aware of a map connection does not necessarily mean"
+            " that you can access it. If the navigation tool is unable to find a valid path to a"
+            " given map connection, it means that you cannot access it from your current position."
+            " You either need to explore more of the current map to find it, or you must access it"
+            " via another map in between (e.g. through a building or cave)."
+        )
         return out.strip()
