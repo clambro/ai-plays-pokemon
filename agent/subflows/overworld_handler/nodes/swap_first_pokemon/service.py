@@ -51,7 +51,7 @@ class SwapFirstPokemonService:
                 content=(
                     f"An error occurred while swapping the first Pokemon in my party: {e}"
                     f"The current party order is {[p.name for p in game_state.party]}. My lead"
-                    f"Pokemon is {game_state.party[0].name}."
+                    f" Pokemon is {game_state.party[0].name}."
                 ),
             )
         return self.raw_memory
