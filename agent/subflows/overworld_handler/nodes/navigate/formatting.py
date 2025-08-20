@@ -79,7 +79,9 @@ def format_map_boundary_tiles(
         elif connection is not None:
             output.append(
                 f"You have not yet discovered a valid path to the {connection.name} map"
-                f" boundary at the far {cardinal_dir} of the current map."
+                f" boundary at the far {cardinal_dir} of the current map. You can likely find it"
+                f" either by visiting more exploration candidates, or perhaps by accessing it via"
+                f" an intermediate map (e.g. through a building or cave)."
             )
 
     return "\n".join(output)
