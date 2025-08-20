@@ -37,8 +37,12 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         window = "null" if headless else "SDL2"
         self._pyboy = PyBoy(rom_path, sound_volume=volume, window=window)
 
+        # This load_state piece is technically blocking, but it's only done once at initialization,
+        # so there's nothing for it to block.
         if save_state:
-            self._pyboy.load_state(io.BytesIO(base64.b64decode(save_state)))
+            buffer = io.BytesIO(base64.b64decode(save_state))
+            buffer.seek(0)  # Pyboy requires this.
+            self._pyboy.load_state(buffer)
         elif save_state_path:
             with save_state_path.open("rb") as f:
                 self._pyboy.load_state(f)
