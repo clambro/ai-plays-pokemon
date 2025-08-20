@@ -1,5 +1,6 @@
 from loguru import logger
 
+from agent.enums import AgentStateHandler
 from agent.nodes.should_critique.prompts import SHOULD_CRITIQUE_PROMPT
 from agent.nodes.should_critique.schemas import ShouldCritiqueResponse
 from common.constants import (
@@ -23,16 +24,20 @@ class ShouldCritiqueService:
         raw_memory: RawMemory,
         goals: Goals,
         iterations_since_last_critique: int,
+        handler: AgentStateHandler,
     ) -> None:
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.goals = goals
         self.iterations_since_last_critique = iterations_since_last_critique
+        self.handler = handler
 
     async def check_should_critique(self) -> bool:
         """Check if the agent should critique by looking for loops in the raw memory."""
         if (
-            self.iteration % ITERATIONS_PER_GENERIC_CRITIQUE_CHECK != 0
+            # The Overworld Handler has its own critique prompt with map-specific information.
+            self.handler == AgentStateHandler.OVERWORLD
+            or self.iteration % ITERATIONS_PER_GENERIC_CRITIQUE_CHECK != 0
             or self.iterations_since_last_critique < MIN_ITERATIONS_PER_CRITIQUE
         ):
             return False
