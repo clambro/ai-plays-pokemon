@@ -3,7 +3,6 @@ import numpy as np
 from agent.subflows.text_handler.nodes.assign_name.prompts import GET_NAME_PROMPT
 from agent.subflows.text_handler.nodes.assign_name.schemas import NameResponse
 from common.enums import Button
-from common.types import StateStringBuilderT
 from emulator.emulator import YellowLegacyEmulator
 from emulator.game_state import YellowLegacyGameState
 from llm.schemas import GEMINI_FLASH_LITE_2_5
@@ -28,12 +27,10 @@ class AssignNameService:
         self,
         iteration: int,
         raw_memory: RawMemory,
-        state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.iteration = iteration
         self.raw_memory = raw_memory
-        self.state_string_builder = state_string_builder
         self.emulator = emulator
 
     async def assign_name(self) -> RawMemory:
@@ -66,7 +63,11 @@ class AssignNameService:
 
     async def _get_desired_name(self, game_state: YellowLegacyGameState) -> str:
         """Get the desired name from the LLM."""
-        prompt = GET_NAME_PROMPT.format(state=self.state_string_builder(game_state))
+        # We don't need the full state info here. It can overwhelm the small model.
+        prompt = GET_NAME_PROMPT.format(
+            raw_memory=self.raw_memory,
+            player_info=game_state.player_info,
+        )
         response = await self.llm_service.get_llm_response_pydantic(
             prompt,
             schema=NameResponse,

@@ -30,7 +30,7 @@ SAFETY_SETTINGS = [
     if cat != HarmCategory.HARM_CATEGORY_UNSPECIFIED  # Can't unblock the unspecified category.
 ]
 MIN_THINKING_TOKENS = 512  # This is the minimum allowed for the 2.5 models.
-DEFAULT_TEMPERATURE = 0.5  # Some noise helps with creativity and not getting stuck in loops.
+DEFAULT_TEMPERATURE = 1  # This noise is necessary for creativity and not getting stuck in loops.
 
 
 class GeminiLLMService:

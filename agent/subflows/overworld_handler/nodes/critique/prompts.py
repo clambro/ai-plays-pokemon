@@ -8,10 +8,11 @@ Common sources of error include (but are not limited to):
 - Misinterpreting the map information. If this is the case, use your increased intelligence to explain the misinterpretation and correct it.
 - Misinterpreting sprite labels or warp tile descriptions. Rely on the game's memory for this information, not your own assumptions.
 - Incorrectly deciding that the screenshot or your own memory is more reliable than the game data.
-- Making false assumptions and failing to correct them. This includes in past critiques. Do not be afraid to correct your own past mistakes, even if those mistakes came from the critic model.
+- Making false assumptions and failing to correct them. This includes in past critiques. Do not be afraid to correct your own past mistakes/assumptions, even if they came from the critic model.
 - Not taking advantage of your available tools to help you with more complex tasks
 - Not exploring the game world enough, especially the current map. If this is the case, you should point out exactly where you should be exploring. If you can't seem to find a valid path in one direction, is there unexplored terrain in another direction that you can try? Are there warp tiles that you can use to get to a new map?
 - Trying to access a location that you are not able to access at the moment, or have not yet found a way to get to. Are there warp tiles that you haven't explored yet? Are there exploration candidates on the current map that you haven't visited yet? Do you perhaps need to go through a building or cave to get there?
+- Repeatedly walking into walls or other impassable terrain. You can't walk through walls. If you can't find a path to where you want to go, try exploring more of the current map or going through the warp tiles to get to a new map. Bumping into walls is never productive, and is a good indicator that you should try something completely different.
 - Failing to interact with NPCs or objects that could give you information or items.
 - Thinking that you are unable to act or move. You almost certainly can. There are no cutscenes or invisible walls or traps that lock the player indefinitely. If you are in the overworld, you can always move.
 - Doing the same thing over and over again and expecting different results. If you are walking in circles, try doing something completely different. Go to a new area. Anything to break out of the cycle.
