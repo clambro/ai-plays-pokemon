@@ -79,7 +79,10 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
                 if not self._tick():
                     self.stop()
                     break
-            await asyncio.sleep(0.001)  # Pass control back to the event loop.
+            # Pass control back to the event loop. Making this time too large will cause audio to
+            # stutter, but making it too small can corrupt save states by not giving the emulator
+            # enough time to save the state. This value seems to work well.
+            await asyncio.sleep(0.002)
 
     def stop(self) -> None:
         """Stop the emulator."""
