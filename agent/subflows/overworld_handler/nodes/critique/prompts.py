@@ -12,6 +12,7 @@ Common sources of error include (but are not limited to):
 - Not taking advantage of your available tools to help you with more complex tasks
 - Not exploring the game world enough, especially the current map. If this is the case, you should point out exactly where you should be exploring. If you can't seem to find a valid path in one direction, is there unexplored terrain in another direction that you can try? Are there warp tiles that you can use to get to a new map?
 - Trying to access a location that you are not able to access at the moment, or have not yet found a way to get to. Are there warp tiles that you haven't explored yet? Are there exploration candidates on the current map that you haven't visited yet? Do you perhaps need to go through a building or cave to get there?
+- Failing to interact with NPCs or objects that could give you information or items.
 - Thinking that you are unable to act or move. You almost certainly can. There are no cutscenes or invisible walls or traps that lock the player indefinitely. If you are in the overworld, you can always move.
 - Doing the same thing over and over again and expecting different results. If you are walking in circles, try doing something completely different. Go to a new area. Anything to break out of the cycle.
 
