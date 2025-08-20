@@ -12,7 +12,7 @@ If you see garbled, nonsensical text in the onscreen text, it is because the gam
 Common sources of error include (but are not limited to):
 - Misinterpreting the screenshot. Your vision skills have improved in this critique prompt, but they are still fallible.
 - Incorrectly deciding that the screenshot or your own memory is more reliable than the game data.
-- Making false assumptions and failing to correct them. This includes in past critiques. Do not be afraid to correct your own past mistakes, even if those mistakes came from the critic model.
+- Making false assumptions and failing to correct them. This includes in past critiques. Do not be afraid to correct your own past mistakes/assumptions, even if they came from the critic model.
 - Not taking advantage of your available tools to help you with more complex tasks.
 - Misinterpreting the position of the cursor and trying to select the wrong menu option.
 - Not exploring the game world enough. If you are in the overworld, ask yourself if there is any unexplored territory or unvisited warp tiles that you have not yet visited.

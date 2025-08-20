@@ -293,7 +293,8 @@ class OverworldMap(BaseModel):
             "Important: The fact that you are aware of a map connection does not necessarily mean"
             " that you can access it. If the navigation tool is unable to find a valid path to a"
             " given map connection, it means that you cannot access it from your current position."
-            " You either need to explore more of the current map to find it, or you must access it"
-            " via another map in between (e.g. through a building or cave)."
+            " You either need to explore more of the current map to find it, or you must get to"
+            " another part of the current map to access it via an intermediate map (e.g. through"
+            " a building or cave)."
         )
         return out.strip()
