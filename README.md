@@ -6,7 +6,7 @@ This is a fully autonomous AI workflow designed to play [Pokémon Yellow Legacy]
 
 The AI workflow is written in Python and orchestrated by [Junjo](https://github.com/mdrideout/junjo), with custom logic for handling battles, navigating the overworld, and parsing text. It operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms and LLM powered decision making. It features a three-tier memory system with RAG from a SQLite database, and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs.
 
-Data from the AI workflow and the game's memory is piped into an HTML page for visualization, and the whole project is currently [streaming live on Twitch](https://www.twitch.tv/clambr0)!
+Data from the AI workflow and the game's memory is piped into an HTML page for visualization, and the whole project was [streaming live on Twitch](https://www.twitch.tv/clambr0). The stream has been paused while I work on some improvements to the model's high-level navigation planning (and give my wallet some time to recover). Give me a follow on Twitch if you want to know when the stream is back!
 
 If you want to learn more about how this all works, check out:
 - [A deeper look into the philosophy and design of the project](docs/philosophy.md)
