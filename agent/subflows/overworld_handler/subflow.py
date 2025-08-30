@@ -1,4 +1,4 @@
-from junjo import Graph, Subflow
+from junjo import Graph, GraphFactory, Subflow
 from junjo.workflow import StoreFactory
 
 from agent.state import AgentState, AgentStore
@@ -13,12 +13,12 @@ class OverworldHandlerSubflow(
 
     def __init__(
         self,
-        graph: Graph,
+        graph_factory: GraphFactory[Graph],
         store_factory: StoreFactory[OverworldHandlerStore],
         emulator: YellowLegacyEmulator,
     ) -> None:
         self.emulator = emulator
-        super().__init__(graph, store_factory=store_factory)
+        super().__init__(graph_factory=graph_factory, store_factory=store_factory)
 
     async def pre_run_actions(self, parent_store: AgentStore) -> None:
         """Pre run actions that initialize the subflow store from the parent store."""
