@@ -38,7 +38,7 @@ requires-dist = [
     { name = "aiosqlite", specifier = ">=0.21.0,<0.22" },
     { name = "dotenv", specifier = ">=0.9.9,<0.10" },
     { name = "google-genai", specifier = ">=1.13.0,<2" },
-    { name = "junjo", extras = ["graphviz"], specifier = ">=0.46.0,<0.47" },
+    { name = "junjo", extras = ["graphviz"], specifier = ">=0.50.0,<0.51" },
     { name = "loguru", specifier = ">=0.7.3,<0.8" },
     { name = "numpy", specifier = ">=2.2.5,<3" },
     { name = "pillow", specifier = ">=11.2.1,<12" },
@@ -481,7 +481,7 @@ wheels = [
 
 [[package]]
 name = "junjo"
-version = "0.46.0"
+version = "0.50.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "grpcio" },
@@ -491,9 +491,9 @@ dependencies = [
     { name = "opentelemetry-sdk" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e5/d1/47fcae8e8d58c5aa00ac00be4598aaa51d570a404ea5c0e9c90f78e951ed/junjo-0.46.0.tar.gz", hash = "sha256:92cd5e1de061f1dfd603d6ca102734f764e55d95f5e60bfa3a710047915d2f13", size = 41747, upload-time = "2025-06-01T12:56:53.022Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/48/ff/32db4a3dbdd4ca93f4ee4938f6a2ddec0179087bdba0f45f1737f01161de/junjo-0.50.1.tar.gz", hash = "sha256:538bf4beb3f40df78c145f2e28633dcc0b308cbb10b0cc2778939d8a6468cf0f", size = 38431, upload-time = "2025-08-30T23:23:38.958Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e3/57/0684b627d092a0ec521adc84d97c1b607171fe8e2b7f20a24e555c083702/junjo-0.46.0-py3-none-any.whl", hash = "sha256:7818837426e7f9ca96bde267499d3dc319362acf3bb6454c9963279a61fc1a39", size = 46759, upload-time = "2025-06-01T12:56:50.268Z" },
+    { url = "https://files.pythonhosted.org/packages/1a/47/26e3fea9afe1403638d0c5debb076fe2a1a3e7cd09ba761ab50302c59f6d/junjo-0.50.1-py3-none-any.whl", hash = "sha256:7acd0f544d7665eb94f8bfa7f67c025867583f35def9a58ece453be91fb82156", size = 38560, upload-time = "2025-08-30T23:23:37.489Z" },
 ]
 
 [package.optional-dependencies]
