@@ -1,3 +1,5 @@
+"""Update summary memory node for the top-level agent graph."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class UpdateSummaryMemoryNode(Node[AgentStore]):
     """Update the summary memory based on the current game state."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the update summary memory node."""
         self.emulator = emulator
         super().__init__()
 

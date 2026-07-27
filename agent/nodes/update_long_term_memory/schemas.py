@@ -1,3 +1,5 @@
+"""Data models for update long term memory in the top-level agent graph."""
+
 from enum import StrEnum
 
 from pydantic import BaseModel, Field

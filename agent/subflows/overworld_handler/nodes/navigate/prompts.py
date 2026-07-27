@@ -1,3 +1,5 @@
+"""LLM prompts for navigate in the overworld subflow."""
+
 DETERMINE_TARGET_COORDS_PROMPT = """
 You are navigating the overworld. You are standing still. There is no onscreen text, and all onscreen animations have concluded. The screenshot provided above is the current game screen, and it is awaiting your input. You have decided to navigate to a new location on the current map.
 

@@ -42,8 +42,7 @@ def test_all_tests_have_marker(valid_markers: set[str]) -> None:
                     f" folder: ({marker} != {func.parent_folder})",
                 )
                 continue
-    if errors:
-        pytest.fail("Errors found in the marker meta-test:\n" + "\n".join(errors))
+    assert not errors, "Errors found in the marker meta-test:\n" + "\n".join(errors)
 
 
 class _TestFunctionParams(BaseModel):

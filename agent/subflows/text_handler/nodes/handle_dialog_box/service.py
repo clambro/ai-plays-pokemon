@@ -1,3 +1,5 @@
+"""Business logic for handle dialog box in the text subflow."""
+
 import asyncio
 
 from agent.utils import append_dialog_to_list_inplace, is_blinking_cursor_on_screen
@@ -15,6 +17,7 @@ class HandleDialogBoxService:
         raw_memory: RawMemory,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the handle dialog box service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.emulator = emulator

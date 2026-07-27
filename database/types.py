@@ -1,19 +1,36 @@
+"""Custom SQLAlchemy column types."""
+
 import struct
 
 from sqlalchemy import LargeBinary, TypeDecorator
-from sqlalchemy.dialects.sqlite import dialect
+from sqlalchemy.engine import Dialect
 
 
-class Vector(TypeDecorator):
+class Vector(TypeDecorator[list[float]]):
     """SQLAlchemy type for storing a list of floats as a BLOB, and loading it back as a list."""
 
     impl = LargeBinary
     cache_ok = True
 
-    def process_bind_param(self, value: list[float], dialect: dialect) -> bytes:  # noqa: ARG002
+    def process_bind_param(
+        self,
+        value: list[float] | None,
+        dialect: Dialect,  # noqa: ARG002
+    ) -> bytes | None:
         """Convert a list of floats to bytes."""
+        if value is None:
+            return None
         return struct.pack(f"{len(value)}f", *value)
 
-    def process_result_value(self, value: bytes, dialect: dialect) -> list[float]:  # noqa: ARG002
+    def process_result_value(
+        self,
+        value: object,
+        dialect: Dialect,  # noqa: ARG002
+    ) -> list[float] | None:
         """Convert bytes back to list of floats."""
+        if value is None:
+            return None
+        if not isinstance(value, bytes):
+            msg = f"Expected bytes from the database, got {type(value).__name__}"
+            raise TypeError(msg)
         return list(struct.unpack(f"{len(value) // 4}f", value))

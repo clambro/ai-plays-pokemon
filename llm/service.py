@@ -1,3 +1,5 @@
+"""Gemini client integration for structured LLM requests."""
+
 import asyncio
 from typing import TypeVar
 
@@ -25,9 +27,14 @@ PydanticModel = TypeVar("PydanticModel", bound=BaseModel)
 
 TIMEOUT = 60
 SAFETY_SETTINGS = [
-    SafetySetting(category=cat, threshold=HarmBlockThreshold.BLOCK_NONE)
-    for cat in HarmCategory
-    if cat != HarmCategory.HARM_CATEGORY_UNSPECIFIED  # Can't unblock the unspecified category.
+    SafetySetting(category=category, threshold=HarmBlockThreshold.BLOCK_NONE)
+    for category in (
+        HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        HarmCategory.HARM_CATEGORY_HARASSMENT,
+        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
+    )
 ]
 MIN_THINKING_TOKENS = 512  # This is the minimum allowed for the 2.5 models.
 DEFAULT_TEMPERATURE = 1  # This noise is necessary for creativity and not getting stuck in loops.
@@ -37,6 +44,7 @@ class GeminiLLMService:
     """Wrapper for the Gemini LLM API."""
 
     def __init__(self, model: GeminiModel) -> None:
+        """Initialize the Gemini LLM service."""
         self.client = genai.Client(api_key=settings.gemini_api_key)
         self.model = model
 
@@ -75,6 +83,7 @@ class GeminiLLMService:
         messages: str | list[str | Image],
         schema: type[PydanticModel],
         prompt_name: str,
+        *,
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = DEFAULT_TEMPERATURE,
         thinking_tokens: int = MIN_THINKING_TOKENS,
@@ -109,6 +118,7 @@ class GeminiLLMService:
     )
     async def _get_llm_response(  # noqa: PLR0913
         self,
+        *,
         messages: str | list[str | Image],
         schema: type[PydanticModel] | None,
         prompt_name: str,

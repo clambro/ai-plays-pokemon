@@ -1,3 +1,5 @@
+"""Construction of the top-level agent graph."""
+
 from junjo import Edge, Graph, RunConcurrent
 
 from agent.conditions import AgentHandlerIs, ShouldCritique, ShouldRetrieveMemory

@@ -1,3 +1,5 @@
+"""Business logic for Sokoban solver in the overworld subflow."""
+
 import asyncio
 
 from loguru import logger
@@ -25,6 +27,7 @@ class SokobanSolverService:
         current_map: OverworldMap,
         raw_memory: RawMemory,
     ) -> None:
+        """Initialize the sokoban solver service."""
         self.iteration = iteration
         self.emulator = emulator
         self.current_map = current_map

@@ -1,3 +1,5 @@
+"""LLM prompts for update map in the overworld subflow."""
+
 UPDATE_SPRITES_PROMPT = """
 There are one or more sprites visible on the screen right now. This is your chance to, if you so desire, update your long-term memory with new information about them.
 

@@ -1,3 +1,5 @@
+"""Should critique node for the top-level agent graph."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class ShouldCritiqueNode(Node[AgentStore]):
     """A node that determines if the agent should critique."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the should critique node."""
         self.emulator = emulator
         super().__init__()
 

@@ -1,3 +1,5 @@
+"""Update background stream node for the top-level agent graph."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class UpdateBackgroundStreamNode(Node[AgentStore]):
     """Update the background stream with the current state."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the update background stream node."""
         self.emulator = emulator
         super().__init__()
 

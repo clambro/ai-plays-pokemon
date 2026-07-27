@@ -1,3 +1,5 @@
+"""Select tool node for the overworld subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class SelectToolNode(Node[OverworldHandlerStore]):
     """Select a tool based on the current game state in the overworld."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the select tool node."""
         self.emulator = emulator
         super().__init__()
 

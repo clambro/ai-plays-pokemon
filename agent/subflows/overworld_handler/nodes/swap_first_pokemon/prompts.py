@@ -1,3 +1,5 @@
+"""LLM prompts for swap first Pokémon in the overworld subflow."""
+
 SWAP_FIRST_POKEMON_PROMPT = """
 You have decided to swap the first Pokemon in your party with another Pokemon. Below is the thought in which you made this decision:
 <thought>

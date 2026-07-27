@@ -1,3 +1,5 @@
+"""Make decision node for the battle subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class MakeDecisionNode(Node[BattleHandlerStore]):
     """Make a decision based on the current game state in the battle."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the make decision node."""
         self.emulator = emulator
         super().__init__()
 

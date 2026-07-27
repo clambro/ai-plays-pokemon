@@ -1,3 +1,5 @@
+"""Business logic for make decision in the text subflow."""
+
 from loguru import logger
 
 from agent.subflows.text_handler.nodes.make_decision.prompts import DECISION_MAKER_TEXT_PROMPT
@@ -23,6 +25,7 @@ class DecisionMakerTextService:
         state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the decision maker text service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.state_string_builder = state_string_builder

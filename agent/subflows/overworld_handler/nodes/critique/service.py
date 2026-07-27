@@ -1,3 +1,5 @@
+"""Business logic for critique in the overworld subflow."""
+
 from agent.subflows.overworld_handler.nodes.critique.prompts import CRITIQUE_PROMPT
 from agent.subflows.overworld_handler.nodes.critique.schemas import CritiqueResponse
 from common.types import StateStringBuilderT
@@ -17,6 +19,7 @@ class CritiqueService:
         state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the critique service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.state_string_builder = state_string_builder

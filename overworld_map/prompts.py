@@ -1,3 +1,5 @@
+"""LLM prompts for updating the explored overworld map."""
+
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
 from common.enums import AsciiTile
 

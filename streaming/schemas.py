@@ -1,3 +1,5 @@
+"""Messages exchanged with the background streaming client."""
+
 from pydantic import BaseModel
 
 from agent.state import AgentState

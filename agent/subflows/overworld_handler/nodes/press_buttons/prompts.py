@@ -1,3 +1,5 @@
+"""LLM prompts for press buttons in the overworld subflow."""
+
 PRESS_BUTTONS_PROMPT = """
 You are navigating the overworld. You are standing still. There is no onscreen text, and all onscreen animations have concluded. The screenshot provided above is the current game screen, and it is awaiting your input. You have decided to submit one or more button presses to the emulator.
 

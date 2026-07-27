@@ -1,3 +1,5 @@
+"""Navigate node for the overworld subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class NavigationNode(Node[OverworldHandlerStore]):
     """Navigate to the given coordinates."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the navigation node."""
         self.emulator = emulator
         super().__init__()
 

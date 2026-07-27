@@ -1,3 +1,5 @@
+"""Enumerations used by the top-level agent graph."""
+
 from enum import StrEnum
 
 

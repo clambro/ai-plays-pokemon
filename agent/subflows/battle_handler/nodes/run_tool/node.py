@@ -1,3 +1,5 @@
+"""Run tool node for the battle subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -11,6 +13,7 @@ class RunToolNode(Node[BattleHandlerStore]):
     """Run away from the battle."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the run tool node."""
         self.emulator = emulator
         super().__init__()
 

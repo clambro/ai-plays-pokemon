@@ -1,3 +1,5 @@
+"""Tests for the switch Pokémon tool service."""
+
 from pathlib import Path
 
 import pytest

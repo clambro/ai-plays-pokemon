@@ -1,3 +1,5 @@
+"""Business logic for should critique in the top-level agent graph."""
+
 from loguru import logger
 
 from agent.enums import AgentStateHandler
@@ -26,6 +28,7 @@ class ShouldCritiqueService:
         iterations_since_last_critique: int,
         handler: AgentStateHandler,
     ) -> None:
+        """Initialize the should critique service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.goals = goals

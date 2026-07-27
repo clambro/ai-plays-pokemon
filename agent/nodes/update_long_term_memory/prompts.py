@@ -1,3 +1,5 @@
+"""LLM prompts for update long term memory in the top-level agent graph."""
+
 UPDATE_LONG_TERM_MEMORY_PROMPT = """
 You are being given the chance to update your currently available long-term memory objects with any new information that you have learned.
 

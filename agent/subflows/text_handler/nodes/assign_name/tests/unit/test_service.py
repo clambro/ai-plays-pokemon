@@ -1,3 +1,5 @@
+"""Tests for the assign name service."""
+
 import pytest
 
 from agent.subflows.text_handler.nodes.assign_name.service import AssignNameService

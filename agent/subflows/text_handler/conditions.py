@@ -1,3 +1,5 @@
+"""Routing conditions for the text subflow."""
+
 from junjo import Condition
 
 from agent.subflows.text_handler.enums import TextHandler
@@ -8,6 +10,7 @@ class HandlerIs(Condition[TextHandlerState]):
     """A condition that checks if the state handler is the given handler."""
 
     def __init__(self, value: TextHandler | None) -> None:
+        """Initialize the condition with the expected handler."""
         self.value = value
 
     def __str__(self) -> str:

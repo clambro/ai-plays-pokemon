@@ -1,3 +1,5 @@
+"""Data models for the explored overworld map."""
+
 import numpy as np
 from pydantic import BaseModel
 

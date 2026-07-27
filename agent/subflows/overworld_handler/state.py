@@ -1,3 +1,5 @@
+"""State models for the overworld subflow."""
+
 from junjo import BaseState, BaseStore
 
 from agent.state import AgentState

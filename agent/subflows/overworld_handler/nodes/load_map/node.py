@@ -1,3 +1,5 @@
+"""Load map node for the overworld subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class LoadMapNode(Node[OverworldHandlerStore]):
     """Load the current map based on the game state."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the load map node."""
         self.emulator = emulator
         super().__init__()
 

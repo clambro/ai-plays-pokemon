@@ -1,3 +1,5 @@
+"""Business logic for update long term memory in the top-level agent graph."""
+
 from loguru import logger
 
 from agent.nodes.update_long_term_memory.prompts import UPDATE_LONG_TERM_MEMORY_PROMPT
@@ -24,6 +26,7 @@ class UpdateLongTermMemoryService:
         state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the update long term memory service."""
         self.iteration = iteration
         self.long_term_memory = long_term_memory
         self.state_string_builder = state_string_builder

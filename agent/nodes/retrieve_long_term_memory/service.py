@@ -1,3 +1,5 @@
+"""Business logic for retrieve long term memory in the top-level agent graph."""
+
 from loguru import logger
 
 from agent.nodes.retrieve_long_term_memory.prompts import GET_RETRIEVAL_QUERY_PROMPT
@@ -22,6 +24,7 @@ class RetrieveLongTermMemoryService:
         state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the retrieve long term memory service."""
         self.iteration = iteration
         self.long_term_memory = long_term_memory
         self.state_string_builder = state_string_builder

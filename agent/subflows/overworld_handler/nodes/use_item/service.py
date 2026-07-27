@@ -1,3 +1,5 @@
+"""Business logic for use item in the overworld subflow."""
+
 from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.use_item.prompts import USE_ITEM_PROMPT
@@ -20,6 +22,7 @@ class UseItemService:
         raw_memory: RawMemory,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the use item service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.emulator = emulator

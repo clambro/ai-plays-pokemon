@@ -1,3 +1,5 @@
+"""Sokoban solver node for the overworld subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class SokobanSolverNode(Node[OverworldHandlerStore]):
     """Solve the Sokoban puzzle."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the sokoban solver node."""
         self.emulator = emulator
         super().__init__()
 

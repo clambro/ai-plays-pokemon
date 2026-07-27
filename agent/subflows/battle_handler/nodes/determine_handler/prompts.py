@@ -1,3 +1,5 @@
+"""LLM prompts for determine handler in the battle subflow."""
+
 CHOOSE_ARGS_PROMPT = """
 You are in a Pokemon battle. The screenshot provided above is the current game screen. You must decide which action to take based on the available options.
 

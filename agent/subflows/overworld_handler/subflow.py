@@ -1,3 +1,5 @@
+"""Subflow construction for overworld interactions."""
+
 from junjo import Graph, GraphFactory, Subflow
 from junjo.workflow import StoreFactory
 
@@ -17,6 +19,7 @@ class OverworldHandlerSubflow(
         store_factory: StoreFactory[OverworldHandlerStore],
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the overworld handler subflow."""
         self.emulator = emulator
         super().__init__(graph_factory=graph_factory, store_factory=store_factory)
 

@@ -1,3 +1,5 @@
+"""Business logic for assign name in the text subflow."""
+
 import numpy as np
 
 from agent.subflows.text_handler.nodes.assign_name.prompts import GET_NAME_PROMPT
@@ -29,6 +31,7 @@ class AssignNameService:
         raw_memory: RawMemory,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the assign name service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.emulator = emulator

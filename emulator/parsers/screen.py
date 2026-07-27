@@ -1,3 +1,5 @@
+"""Parser for screen data in Pokémon Yellow memory."""
+
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict, computed_field
 

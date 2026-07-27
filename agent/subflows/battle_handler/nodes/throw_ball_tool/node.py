@@ -1,3 +1,5 @@
+"""Throw ball tool node for the battle subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -11,6 +13,7 @@ class ThrowBallToolNode(Node[BattleHandlerStore]):
     """Throw a ball at the enemy."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the throw ball tool node."""
         self.emulator = emulator
         super().__init__()
 

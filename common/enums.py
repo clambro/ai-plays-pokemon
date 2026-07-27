@@ -1,3 +1,5 @@
+"""Enumerations shared throughout the application."""
+
 from enum import Enum, IntEnum, IntFlag, StrEnum, auto
 
 
@@ -381,6 +383,6 @@ class MapId(IntEnum):
     UNKNOWN = -1  # Used to catch all unused values.
 
     @classmethod
-    def _missing_(cls, _: int) -> "MapId":
+    def _missing_(cls, value: object) -> "MapId":  # noqa: ARG003
         """Handle unknown map IDs by returning UNKNOWN."""
         return cls.UNKNOWN

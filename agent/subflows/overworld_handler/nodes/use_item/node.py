@@ -1,3 +1,5 @@
+"""Use item node for the overworld subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class UseItemNode(Node[OverworldHandlerStore]):
     """Use an item from the inventory."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the use item node."""
         self.emulator = emulator
         super().__init__()
 

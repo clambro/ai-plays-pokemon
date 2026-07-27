@@ -1,3 +1,5 @@
+"""Routing conditions for the battle subflow."""
+
 from junjo import Condition
 
 from agent.subflows.battle_handler.schemas import BattleToolArgs
@@ -8,6 +10,7 @@ class ToolArgsIs(Condition[BattleHandlerState]):
     """A condition that checks if the state tool args is the given tool args."""
 
     def __init__(self, value: type[BattleToolArgs] | None) -> None:
+        """Initialize the condition with the expected tool arguments."""
         self.value = value
 
     def __str__(self) -> str:

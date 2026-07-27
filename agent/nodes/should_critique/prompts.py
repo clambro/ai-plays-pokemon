@@ -1,3 +1,5 @@
+"""LLM prompts for should critique in the top-level agent graph."""
+
 SHOULD_CRITIQUE_PROMPT = """
 Stop. Take a step back from the game. In this prompt it is your job to determine if you are stuck in a loop by looking at your raw memory and current goals.
 

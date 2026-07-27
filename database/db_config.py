@@ -1,4 +1,4 @@
-# ruff: noqa: F401
+"""Database engine and session configuration."""
 
 import aiofiles.os
 from loguru import logger
@@ -29,10 +29,12 @@ async def init_fresh_db() -> None:
     await aiofiles.os.makedirs(db_folder)
 
     # Import all models here to ensure they are registered with the engine.
-    from database.llm_messages.model import LLMMessageDBModel
-    from database.long_term_memory.model import LongTermMemoryDBModel
-    from database.map_entity_memory.model import MapEntityMemoryDBModel
-    from database.map_memory.model import MapMemoryDBModel
+    from database.llm_messages.model import LLMMessageDBModel  # noqa: F401, PLC0415
+    from database.long_term_memory.model import LongTermMemoryDBModel  # noqa: F401, PLC0415
+    from database.map_entity_memory.model import (  # noqa: F401, PLC0415
+        MapEntityMemoryDBModel,
+    )
+    from database.map_memory.model import MapMemoryDBModel  # noqa: F401, PLC0415
 
     async with _engine.begin() as conn:
         await conn.run_sync(SQLAlchemyBase.metadata.create_all)

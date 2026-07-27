@@ -1,3 +1,5 @@
+"""Business logic for create long term memory in the top-level agent graph."""
+
 from loguru import logger
 
 from agent.nodes.create_long_term_memory.prompts import CREATE_LONG_TERM_MEMORY_PROMPT
@@ -25,6 +27,7 @@ class CreateLongTermMemoryService:
         state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the create long term memory service."""
         self.iteration = iteration
         self.state_string_builder = state_string_builder
         self.emulator = emulator

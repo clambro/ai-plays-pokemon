@@ -1,3 +1,5 @@
+"""Tests for shared enumerations."""
+
 import pytest
 from google import genai
 

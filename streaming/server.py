@@ -1,5 +1,8 @@
+"""HTTP server for the live game-state display."""
+
 from contextlib import AbstractAsyncContextManager
 from pathlib import Path
+from typing import Self
 
 import aiofiles
 from aiohttp import web
@@ -44,7 +47,7 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
         self.app.router.add_get("/script.js", self._serve_js)
         self.app.router.add_static("/assets", self._background_dir / "assets")
 
-    async def __aenter__(self) -> "BackgroundStreamServer":
+    async def __aenter__(self) -> Self:
         """Start the web server."""
         self.runner = web.AppRunner(self.app)
         await self.runner.setup()

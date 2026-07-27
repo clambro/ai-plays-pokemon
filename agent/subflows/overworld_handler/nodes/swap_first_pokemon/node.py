@@ -1,3 +1,5 @@
+"""Swap first pokémon node for the overworld subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -12,6 +14,7 @@ class SwapFirstPokemonNode(Node[OverworldHandlerStore]):
     """Swap the first Pokemon in the party with another Pokemon."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the swap-first-Pokémon node."""
         self.emulator = emulator
         super().__init__()
 

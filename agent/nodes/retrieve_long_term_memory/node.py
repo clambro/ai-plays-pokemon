@@ -1,3 +1,5 @@
+"""Retrieve long term memory node for the top-level agent graph."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class RetrieveLongTermMemoryNode(Node[AgentStore]):
     """Retrieve the long-term memory from the database."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the retrieve long term memory node."""
         self.emulator = emulator
         super().__init__()
 

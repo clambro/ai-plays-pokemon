@@ -1,3 +1,5 @@
+"""Business logic for swap first Pokémon in the overworld subflow."""
+
 from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.swap_first_pokemon.prompts import (
@@ -25,6 +27,7 @@ class SwapFirstPokemonService:
         raw_memory: RawMemory,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the swap-first-Pokémon service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.emulator = emulator

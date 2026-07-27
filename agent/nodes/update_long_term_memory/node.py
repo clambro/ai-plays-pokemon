@@ -1,3 +1,5 @@
+"""Update long term memory node for the top-level agent graph."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class UpdateLongTermMemoryNode(Node[AgentStore]):
     """A node that updates long-term memory."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the update long term memory node."""
         self.emulator = emulator
         super().__init__()
 

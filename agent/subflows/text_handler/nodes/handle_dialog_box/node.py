@@ -1,3 +1,5 @@
+"""Handle dialog box node for the text subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class HandleDialogBoxNode(Node[TextHandlerStore]):
     """Handle reading the dialog box if it is present."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the handle dialog box node."""
         self.emulator = emulator
         super().__init__()
 

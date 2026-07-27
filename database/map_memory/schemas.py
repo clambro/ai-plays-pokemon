@@ -1,3 +1,5 @@
+"""Data-transfer models for map memory."""
+
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, model_validator

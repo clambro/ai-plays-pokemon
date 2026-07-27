@@ -1,3 +1,5 @@
+"""Graph construction for the overworld subflow."""
+
 from junjo import Edge, Graph
 
 from agent.nodes.dummy.node import DummyNode

@@ -1,3 +1,5 @@
+"""Data models representing parsed emulator state."""
+
 import numpy as np
 from pydantic import BaseModel, ConfigDict
 

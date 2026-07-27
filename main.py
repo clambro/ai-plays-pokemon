@@ -1,3 +1,5 @@
+"""Launch the Pokémon-playing agent application."""
+
 import argparse
 import asyncio
 from pathlib import Path

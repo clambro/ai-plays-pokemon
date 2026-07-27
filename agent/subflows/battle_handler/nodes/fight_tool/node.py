@@ -1,3 +1,5 @@
+"""Fight tool node for the battle subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -11,6 +13,7 @@ class FightToolNode(Node[BattleHandlerStore]):
     """Use a move on the enemy."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the fight tool node."""
         self.emulator = emulator
         super().__init__()
 

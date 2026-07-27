@@ -1,3 +1,5 @@
+"""Make decision node for the text subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class MakeDecisionNode(Node[TextHandlerStore]):
     """Make a decision based on the current game state in the text."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the make decision node."""
         self.emulator = emulator
         super().__init__()
 

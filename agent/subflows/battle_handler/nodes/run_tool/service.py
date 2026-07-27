@@ -1,3 +1,5 @@
+"""Business logic for run tool in the battle subflow."""
+
 from loguru import logger
 
 from agent.subflows.battle_handler.utils import get_cursor_pos_in_fight_menu
@@ -15,6 +17,7 @@ class RunToolService:
         raw_memory: RawMemory,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the run tool service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.emulator = emulator

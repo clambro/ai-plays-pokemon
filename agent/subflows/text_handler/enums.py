@@ -1,3 +1,5 @@
+"""Enumerations used by the text subflow."""
+
 from enum import StrEnum
 
 

@@ -1,3 +1,5 @@
+"""Subflow construction for text interactions."""
+
 from junjo import Graph, GraphFactory, Subflow
 from junjo.workflow import StoreFactory
 
@@ -15,6 +17,7 @@ class TextHandlerSubflow(Subflow[TextHandlerState, TextHandlerStore, AgentState,
         store_factory: StoreFactory[TextHandlerStore],
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the text handler subflow."""
         self.emulator = emulator
         super().__init__(graph_factory=graph_factory, store_factory=store_factory)
 

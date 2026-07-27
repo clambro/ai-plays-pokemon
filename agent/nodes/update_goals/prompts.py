@@ -1,3 +1,5 @@
+"""LLM prompts for update goals in the top-level agent graph."""
+
 UPDATE_GOALS_PROMPT = """
 You have just taken an action and added new information to your memory. If you feel that recent events warrant removing/completing past goals, or adding new goals, this is your chance to do so.
 

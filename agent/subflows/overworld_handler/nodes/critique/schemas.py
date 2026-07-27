@@ -1,3 +1,5 @@
+"""Data models for critique in the overworld subflow."""
+
 from pydantic import BaseModel
 
 

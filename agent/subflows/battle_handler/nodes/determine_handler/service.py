@@ -1,3 +1,5 @@
+"""Business logic for determine handler in the battle subflow."""
+
 from agent.subflows.battle_handler.nodes.determine_handler.prompts import CHOOSE_ARGS_PROMPT
 from agent.subflows.battle_handler.nodes.determine_handler.schemas import DetermineArgsResponse
 from agent.subflows.battle_handler.schemas import (
@@ -29,6 +31,7 @@ class DetermineHandlerService:
         state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the determine handler service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.state_string_builder = state_string_builder

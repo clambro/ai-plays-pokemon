@@ -1,8 +1,11 @@
+"""Backup and restore operations for persistent game data."""
+
 import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
 
 import aiofiles
+import aiofiles.os
 from loguru import logger
 
 from agent.state import AgentState
@@ -61,13 +64,14 @@ async def load_latest_backup() -> AgentState:
 
 async def _copy_dir_async(src: Path, dst: Path) -> None:
     """Asynchronously copy a directory and its contents."""
-    dst.mkdir(parents=True, exist_ok=True)
+    await aiofiles.os.makedirs(dst, exist_ok=True)
 
     async def copy_file(src_file: Path, dst_file: Path) -> None:
         async with aiofiles.open(src_file, "rb") as src_f, aiofiles.open(dst_file, "wb") as dst_f:
             await dst_f.write(await src_f.read())
 
-    files = [f for f in src.iterdir() if f.is_file()]
+    entries = await aiofiles.os.scandir(src)
+    files = [Path(entry.path) for entry in entries if entry.is_file()]
 
     tasks = []
     for src_file in files:

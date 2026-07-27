@@ -1,3 +1,5 @@
+"""Business logic for update goals in the top-level agent graph."""
+
 from loguru import logger
 
 from agent.nodes.update_goals.prompts import UPDATE_GOALS_PROMPT
@@ -22,6 +24,7 @@ class UpdateGoalsService:
         goals: Goals,
         state_string_builder: StateStringBuilderT,
     ) -> None:
+        """Initialize the update goals service."""
         self.iteration = iteration
         self.goals = goals
         self.state_string_builder = state_string_builder

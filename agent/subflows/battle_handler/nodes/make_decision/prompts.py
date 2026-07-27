@@ -1,3 +1,5 @@
+"""LLM prompts for make decision in the battle subflow."""
+
 MAKE_DECISION_PROMPT = """
 You are in a Pokemon battle. The screenshot provided above is the current game screen. You must decide which button(s) to press to proceed with the battle.
 

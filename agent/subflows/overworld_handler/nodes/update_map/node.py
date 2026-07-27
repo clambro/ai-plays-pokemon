@@ -1,3 +1,5 @@
+"""Update map node for the overworld subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class UpdateMapNode(Node[OverworldHandlerStore]):
     """Update the current map and its entities based on the current game state."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the update map node."""
         self.emulator = emulator
         super().__init__()
 

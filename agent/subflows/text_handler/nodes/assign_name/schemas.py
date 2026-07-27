@@ -1,3 +1,5 @@
+"""Data models for assign name in the text subflow."""
+
 from pydantic import BaseModel, Field
 
 

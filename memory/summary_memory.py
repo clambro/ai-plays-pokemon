@@ -1,3 +1,5 @@
+"""Rolling summary memory rendered into agent context."""
+
 from loguru import logger
 from pydantic import BaseModel, Field
 

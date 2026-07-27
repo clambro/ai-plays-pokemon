@@ -1,3 +1,5 @@
+"""LLM prompts for use item in the overworld subflow."""
+
 USE_ITEM_PROMPT = """
 You have decided to use an item from your inventory. Below is the thought in which you made this decision:
 <thought>

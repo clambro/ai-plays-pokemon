@@ -1,3 +1,5 @@
+"""Recent raw memory rendered into agent context."""
+
 from collections import OrderedDict
 
 from loguru import logger

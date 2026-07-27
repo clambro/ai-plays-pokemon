@@ -1,3 +1,5 @@
+"""Handle subsequent text node for the battle subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -12,6 +14,7 @@ class HandleSubsequentTextNode(Node[BattleHandlerStore]):
     """Handles reading the subsequent text (if present) after a tool has been used."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the handle subsequent text node."""
         self.emulator = emulator
         super().__init__()
 

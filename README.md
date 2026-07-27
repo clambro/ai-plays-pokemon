@@ -35,7 +35,9 @@ If you want to buy me a coffee to help cover the streaming costs, you can do so 
 
 3. Make a copy of the `.env.example` file and name it `.env`. Add your Gemini API key there.
 
-4. (Optional) If you want to use [Jujno Server](https://github.com/mdrideout/junjo-server) for telemetry, you'll have to create an API key for that as well. This is off by default since the project is still in alpha.
+4. Put a compatible ROM at `resources/ylegacy.gbc`. If you build from the Yellow Legacy decomp, you can optionally apply [`pokeyellow.patch`](pokeyellow.patch) for two minor bug fixes.
+
+5. (Optional) If you want to use [Junjo Server](https://github.com/mdrideout/junjo-server) for telemetry, you'll have to create an API key for that as well. This is off by default since the project is still in alpha.
 
 **Note:** If you try to run the integration tests, many of them will fail because they depend on save states that I am not licensed to distribute. Similarly, if you try to run the game state visualization server, you'll get an error that the sprites are unavailable for the same reason.
 
@@ -46,7 +48,7 @@ If you want to buy me a coffee to help cover the streaming costs, you can do so 
 Run the AI workflow with the default settings using
 
 ```bash
-python -m main
+uv run python -m main
 ```
 
 This will:
@@ -105,7 +107,7 @@ I'd like to see it beat the game, and I'll try to support it so that it does (as
 
 ### How long did it take to build this?
 
-It took a good chunk of my free time for 2-3 months to get this to its current state. I wanted to have it ready sooner, but I was doing a lot of back and forth travel that interfered with development. 
+It took a good chunk of my free time for 2-3 months to get this to its current state. I wanted to have it ready sooner, but I was doing a lot of back and forth travel that interfered with development.
 
 ### How much does it cost to run?
 

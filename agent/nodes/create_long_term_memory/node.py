@@ -1,3 +1,5 @@
+"""Create long term memory node for the top-level agent graph."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class CreateLongTermMemoryNode(Node[AgentStore]):
     """A node that creates long-term memory."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the create long term memory node."""
         self.emulator = emulator
         super().__init__()
 
