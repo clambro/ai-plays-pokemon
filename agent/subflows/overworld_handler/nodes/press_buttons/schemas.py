@@ -1,3 +1,5 @@
+"""Data models for press buttons in the overworld subflow."""
+
 from pydantic import BaseModel
 
 from common.enums import Button

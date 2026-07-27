@@ -1,3 +1,5 @@
+"""Data-transfer models for map entity memory."""
+
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from common.enums import MapEntityType, MapId

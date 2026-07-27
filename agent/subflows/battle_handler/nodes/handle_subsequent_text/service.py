@@ -1,3 +1,5 @@
+"""Business logic for handle subsequent text in the battle subflow."""
+
 from agent.utils import append_dialog_to_list_inplace, is_blinking_cursor_on_screen
 from common.enums import Button
 from emulator.emulator import YellowLegacyEmulator
@@ -13,6 +15,7 @@ class HandleSubsequentTextService:
         raw_memory: RawMemory,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the handle subsequent text service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.emulator = emulator

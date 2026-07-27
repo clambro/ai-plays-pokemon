@@ -1,3 +1,5 @@
+"""Constants shared throughout the application."""
+
 from pathlib import Path
 
 DEFAULT_ROM_PATH = "resources/ylegacy.gbc"

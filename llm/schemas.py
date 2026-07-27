@@ -1,3 +1,5 @@
+"""Data models and model identifiers for LLM requests."""
+
 from pydantic import BaseModel
 
 

@@ -1,3 +1,5 @@
+"""SQLAlchemy model for map memory."""
+
 from sqlalchemy import JSON, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 

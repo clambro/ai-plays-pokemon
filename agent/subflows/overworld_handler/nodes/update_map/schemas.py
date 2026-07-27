@@ -1,3 +1,5 @@
+"""Data models for update map in the overworld subflow."""
+
 from pydantic import BaseModel
 
 

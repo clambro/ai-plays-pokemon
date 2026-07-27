@@ -1,3 +1,5 @@
+"""Data-transfer models for long term memory."""
+
 from pydantic import BaseModel, ConfigDict, Field
 
 

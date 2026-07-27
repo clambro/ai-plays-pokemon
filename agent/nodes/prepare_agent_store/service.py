@@ -1,3 +1,5 @@
+"""Business logic for prepare agent store in the top-level agent graph."""
+
 from agent.enums import AgentStateHandler
 from common.constants import ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL
 from emulator.emulator import YellowLegacyEmulator
@@ -13,6 +15,7 @@ class PrepareAgentStateService:
         long_term_memory: LongTermMemory,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the prepare agent state service."""
         self.iterations_since_last_ltm_retrieval = iterations_since_last_ltm_retrieval
         self.long_term_memory = long_term_memory
         self.emulator = emulator

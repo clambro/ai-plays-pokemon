@@ -1,3 +1,5 @@
+"""Graph visualization helpers for the agent workflow."""
+
 from pathlib import Path
 from unittest.mock import MagicMock
 

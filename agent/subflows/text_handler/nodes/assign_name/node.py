@@ -1,3 +1,5 @@
+"""Assign name node for the text subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class AssignNameNode(Node[TextHandlerStore]):
     """Assign a name to something in the game."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the assign name node."""
         self.emulator = emulator
         super().__init__()
 

@@ -1,3 +1,5 @@
+"""Parser for Pokémon data in Pokémon Yellow memory."""
+
 import math
 
 from pyboy import PyBoyMemoryView

@@ -1,3 +1,5 @@
+"""Data models for make decision in the text subflow."""
+
 from pydantic import BaseModel
 
 from common.enums import Button

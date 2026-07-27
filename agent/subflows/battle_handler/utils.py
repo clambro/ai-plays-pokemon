@@ -1,3 +1,5 @@
+"""Shared utilities for the battle subflow."""
+
 from common.schemas import Coords
 from emulator.game_state import YellowLegacyGameState
 

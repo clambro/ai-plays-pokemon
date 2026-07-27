@@ -1,3 +1,5 @@
+"""PyBoy integration for controlling Pokémon Yellow."""
+
 import asyncio
 import base64
 import io

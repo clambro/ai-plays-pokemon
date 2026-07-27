@@ -1,3 +1,5 @@
+"""Persistence operations for LLM messages."""
+
 from datetime import UTC, datetime
 
 from sqlalchemy import func, select

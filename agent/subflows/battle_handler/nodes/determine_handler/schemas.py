@@ -1,3 +1,5 @@
+"""Data models for determine handler in the battle subflow."""
+
 from pydantic import BaseModel
 
 

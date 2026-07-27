@@ -1,3 +1,5 @@
+"""Business logic for update map in the overworld subflow."""
+
 import asyncio
 
 from loguru import logger
@@ -32,6 +34,7 @@ class UpdateMapService:
         state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the update map service."""
         self.iteration = iteration
         self.current_map = current_map
         self.state_string_builder = state_string_builder

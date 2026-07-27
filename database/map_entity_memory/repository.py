@@ -1,3 +1,5 @@
+"""Persistence operations for map entity memory."""
+
 from sqlalchemy import delete, select, update
 
 from common.enums import MapId

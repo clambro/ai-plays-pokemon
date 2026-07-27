@@ -1,3 +1,5 @@
+"""State models for the battle subflow."""
+
 from junjo import BaseState, BaseStore
 
 from agent.state import AgentState

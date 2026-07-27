@@ -1,3 +1,5 @@
+"""Press buttons node for the overworld subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class PressButtonsNode(Node[OverworldHandlerStore]):
     """Press buttons based on the current game state in the overworld."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the press buttons node."""
         self.emulator = emulator
         super().__init__()
 

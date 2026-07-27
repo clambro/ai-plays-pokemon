@@ -1,3 +1,5 @@
+"""Utilities for parsing Pokémon Yellow memory."""
+
 INT_TO_CHAR_MAP = {
     0x7F: " ",
     0x80: "A",

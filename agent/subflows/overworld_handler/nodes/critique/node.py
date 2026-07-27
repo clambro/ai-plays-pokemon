@@ -1,3 +1,5 @@
+"""Critique node for the overworld subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class CritiqueNode(Node[OverworldHandlerStore]):
     """A node that critiques the current state of the game."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the critique node."""
         self.emulator = emulator
         super().__init__()
 

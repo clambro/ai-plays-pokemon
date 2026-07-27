@@ -1,3 +1,5 @@
+"""Data models shared throughout the application."""
+
 from typing import Any
 
 from pydantic import BaseModel, model_serializer, model_validator
@@ -30,9 +32,11 @@ class Coords(BaseModel):
         return abs(self.row) + abs(self.col)
 
     def __str__(self) -> str:
+        """Return a human-readable representation."""
         return f"({self.row}, {self.col})"
 
     def __repr__(self) -> str:
+        """Return a developer-readable representation."""
         return self.__str__()
 
     def __eq__(self, other: object) -> bool:

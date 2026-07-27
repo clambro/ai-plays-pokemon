@@ -1,3 +1,5 @@
+"""Database engine and session configuration."""
+
 import aiofiles.os
 from loguru import logger
 from sqlalchemy import text

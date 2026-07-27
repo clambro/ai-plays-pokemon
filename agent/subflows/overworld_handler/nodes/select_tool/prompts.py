@@ -1,3 +1,5 @@
+"""LLM prompts for select tool in the overworld subflow."""
+
 SELECT_TOOL_PROMPT = """
 You are navigating the overworld. You are standing still. There is no onscreen text, and all onscreen animations have concluded. The screenshot provided above is the current game screen, and it is awaiting your input. You must decide which of the available tools to use to proceed with the game.
 

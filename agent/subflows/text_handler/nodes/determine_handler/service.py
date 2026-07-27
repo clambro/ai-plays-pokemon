@@ -1,3 +1,5 @@
+"""Business logic for determine handler in the text subflow."""
+
 from agent.subflows.text_handler.enums import TextHandler
 from emulator.emulator import YellowLegacyEmulator
 
@@ -6,6 +8,7 @@ class DetermineHandlerService:
     """A service that determines the handler to use in the text handler subflow."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the determine handler service."""
         self.emulator = emulator
 
     async def determine_handler(self) -> TextHandler | None:

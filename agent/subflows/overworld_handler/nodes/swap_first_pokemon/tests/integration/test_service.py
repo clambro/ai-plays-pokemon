@@ -1,3 +1,5 @@
+"""Tests for the swap first Pokémon service."""
+
 from pathlib import Path
 
 import pytest

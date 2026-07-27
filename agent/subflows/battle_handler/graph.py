@@ -1,3 +1,5 @@
+"""Graph construction for the battle subflow."""
+
 from junjo import Edge, Graph
 
 from agent.subflows.battle_handler.conditions import ToolArgsIs

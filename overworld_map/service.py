@@ -1,3 +1,5 @@
+"""Storage and rendering for the explored overworld map."""
+
 import asyncio
 
 from common.enums import AsciiTile, MapEntityType

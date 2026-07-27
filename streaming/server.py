@@ -1,3 +1,5 @@
+"""HTTP server for the live game-state display."""
+
 from contextlib import AbstractAsyncContextManager
 from pathlib import Path
 from typing import Self

@@ -1,3 +1,5 @@
+"""Business logic for press buttons in the overworld subflow."""
+
 from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.press_buttons.prompts import PRESS_BUTTONS_PROMPT
@@ -23,6 +25,7 @@ class PressButtonsService:
         state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the press buttons service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.state_string_builder = state_string_builder

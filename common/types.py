@@ -1,3 +1,5 @@
+"""Shared type aliases and callable definitions."""
+
 from collections.abc import Callable
 
 from emulator.game_state import YellowLegacyGameState

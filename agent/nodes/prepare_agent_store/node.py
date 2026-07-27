@@ -1,3 +1,5 @@
+"""Prepare agent store node for the top-level agent graph."""
+
 from junjo import Node
 from loguru import logger
 
@@ -13,6 +15,7 @@ class PrepareAgentStoreNode(Node[AgentStore]):
     """
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the prepare agent store node."""
         self.emulator = emulator
         super().__init__()
 

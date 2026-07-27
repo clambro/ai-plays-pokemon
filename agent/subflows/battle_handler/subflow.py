@@ -1,3 +1,5 @@
+"""Subflow construction for battle interactions."""
+
 from junjo import Graph, GraphFactory, Subflow
 from junjo.workflow import StoreFactory
 
@@ -15,6 +17,7 @@ class BattleHandlerSubflow(Subflow[BattleHandlerState, BattleHandlerStore, Agent
         store_factory: StoreFactory[BattleHandlerStore],
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the battle handler subflow."""
         self.emulator = emulator
         super().__init__(graph_factory=graph_factory, store_factory=store_factory)
 

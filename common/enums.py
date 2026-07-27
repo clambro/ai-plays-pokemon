@@ -1,3 +1,5 @@
+"""Enumerations shared throughout the application."""
+
 from enum import Enum, IntEnum, IntFlag, StrEnum, auto
 
 

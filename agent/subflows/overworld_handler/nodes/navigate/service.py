@@ -1,3 +1,5 @@
+"""Business logic for navigate in the overworld subflow."""
+
 from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.navigate import formatting, utils
@@ -33,6 +35,7 @@ class NavigationService:
         raw_memory: RawMemory,
         state_string_builder: StateStringBuilderT,
     ) -> None:
+        """Initialize the navigation service."""
         self.iteration = iteration
         self.emulator = emulator
         self.current_map = current_map

@@ -1,3 +1,5 @@
+"""OpenTelemetry configuration for Junjo graph execution."""
+
 from junjo.telemetry.junjo_server_otel_exporter import JunjoServerOtelExporter
 from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource

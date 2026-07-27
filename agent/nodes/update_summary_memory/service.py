@@ -1,3 +1,5 @@
+"""Business logic for update summary memory in the top-level agent graph."""
+
 from agent.nodes.update_summary_memory.prompts import UPDATE_SUMMARY_MEMORY_PROMPT
 from agent.nodes.update_summary_memory.schemas import UpdateSummaryMemoryResponse
 from common.constants import ITERATIONS_PER_SUMMARY_UPDATE, RAW_MEMORY_MAX_SIZE
@@ -20,6 +22,7 @@ class UpdateSummaryMemoryService:
         state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the update summary memory service."""
         self.emulator = emulator
         self.iteration = iteration
         self.summary_memory = summary_memory

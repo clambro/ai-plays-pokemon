@@ -1,3 +1,5 @@
+"""Tests for the Sokoban solver service."""
+
 from pathlib import Path
 from unittest.mock import patch
 

@@ -1,3 +1,5 @@
+"""Enumerations used by the overworld subflow."""
+
 from enum import StrEnum
 
 

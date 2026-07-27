@@ -1,3 +1,5 @@
+"""Data models for create long term memory in the top-level agent graph."""
+
 from pydantic import BaseModel, Field
 
 

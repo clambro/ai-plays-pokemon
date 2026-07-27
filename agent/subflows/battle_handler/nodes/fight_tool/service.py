@@ -1,3 +1,5 @@
+"""Business logic for fight tool in the battle subflow."""
+
 from loguru import logger
 
 from agent.subflows.battle_handler.schemas import FightToolArgs
@@ -18,6 +20,7 @@ class FightToolService:
         tool_args: FightToolArgs,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the fight tool service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.tool_args = tool_args

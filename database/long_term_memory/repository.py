@@ -1,3 +1,5 @@
+"""Persistence operations for long term memory."""
+
 from sqlalchemy import select, update
 
 from database.db_config import db_sessionmaker

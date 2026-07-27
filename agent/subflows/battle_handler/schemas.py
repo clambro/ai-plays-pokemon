@@ -1,3 +1,5 @@
+"""Shared data models for the battle subflow."""
+
 from pydantic import BaseModel
 
 from common.enums import PokeballItem
@@ -10,6 +12,7 @@ class FightToolArgs(BaseModel):
     move_name: str
 
     def __str__(self) -> str:
+        """Return a human-readable representation."""
         return f"Use {self.move_name}."
 
 
@@ -21,6 +24,7 @@ class SwitchPokemonToolArgs(BaseModel):
     species: str
 
     def __str__(self) -> str:
+        """Return a human-readable representation."""
         return f"Switch to {self.name} ({self.species})."
 
 
@@ -31,6 +35,7 @@ class ThrowBallToolArgs(BaseModel):
     ball: PokeballItem
 
     def __str__(self) -> str:
+        """Return a human-readable representation."""
         return f"Throw a {self.ball}."
 
 
@@ -38,6 +43,7 @@ class RunToolArgs(BaseModel):
     """The arguments for the run tool."""
 
     def __str__(self) -> str:
+        """Return a human-readable representation."""
         return "Run."
 
 

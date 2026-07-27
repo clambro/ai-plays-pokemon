@@ -1,3 +1,5 @@
+"""Embedding generation for long-term memory retrieval."""
+
 from google import genai
 from google.genai.errors import ServerError
 from google.genai.types import EmbedContentConfig

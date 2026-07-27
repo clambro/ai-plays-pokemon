@@ -1,3 +1,5 @@
+"""Goal memory rendered into agent context."""
+
 from enum import StrEnum
 
 from loguru import logger

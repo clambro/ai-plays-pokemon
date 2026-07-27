@@ -1,3 +1,5 @@
+"""Determine handler node for the text subflow."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class DetermineHandlerNode(Node[TextHandlerStore]):
     """Determine the handler to use."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the determine handler node."""
         self.emulator = emulator
         super().__init__()
 

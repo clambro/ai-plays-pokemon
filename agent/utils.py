@@ -1,3 +1,5 @@
+"""Shared utilities for the agent graph."""
+
 import asyncio
 
 from emulator.emulator import YellowLegacyEmulator

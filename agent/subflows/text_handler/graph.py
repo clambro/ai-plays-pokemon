@@ -1,3 +1,5 @@
+"""Graph construction for the text subflow."""
+
 from junjo import Edge, Graph
 
 from agent.nodes.dummy.node import DummyNode

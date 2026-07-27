@@ -1,3 +1,5 @@
+"""Long-term memory rendered into agent context."""
+
 from pydantic import BaseModel, Field
 
 from database.long_term_memory.schemas import LongTermMemoryRead

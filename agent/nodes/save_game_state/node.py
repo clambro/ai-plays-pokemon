@@ -1,3 +1,5 @@
+"""Save game state node for the top-level agent graph."""
+
 from junjo import Node
 from loguru import logger
 
@@ -9,6 +11,7 @@ class SaveGameStateNode(Node[AgentStore]):
     """Save the game state to the AgentStore."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the save game state node."""
         self.emulator = emulator
         super().__init__()
 

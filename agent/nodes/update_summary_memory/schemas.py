@@ -1,3 +1,5 @@
+"""Data models for update summary memory in the top-level agent graph."""
+
 from pydantic import BaseModel, Field
 
 

@@ -1,3 +1,5 @@
+"""Routing conditions for the top-level agent graph."""
+
 from typing import Literal
 
 from junjo import Condition
@@ -10,6 +12,7 @@ class AgentHandlerIs(Condition[AgentState]):
     """A condition that checks if the agent handler equals a value."""
 
     def __init__(self, handler: AgentStateHandler | None) -> None:
+        """Initialize the condition with the expected handler."""
         self.handler = handler
 
     def __str__(self) -> str:
@@ -29,6 +32,7 @@ class ShouldRetrieveMemory(Condition[AgentState]):
     """A condition that checks if the agent should retrieve memory."""
 
     def __init__(self, value: Literal[True, False]) -> None:
+        """Initialize the condition with the expected decision."""
         self.value = value
 
     def __str__(self) -> str:
@@ -44,6 +48,7 @@ class ShouldCritique(Condition[AgentState]):
     """A condition that checks if the agent should critique."""
 
     def __init__(self, value: Literal[True, False]) -> None:
+        """Initialize the condition with the expected decision."""
         self.value = value
 
     def __str__(self) -> str:

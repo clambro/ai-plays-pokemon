@@ -1,3 +1,5 @@
+"""Data models for navigate in the overworld subflow."""
+
 from pydantic import BaseModel
 
 from common.schemas import Coords

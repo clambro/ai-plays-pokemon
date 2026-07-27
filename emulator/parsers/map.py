@@ -1,3 +1,5 @@
+"""Parser for map data in Pokémon Yellow memory."""
+
 from enum import IntEnum
 
 from pyboy import PyBoyMemoryView

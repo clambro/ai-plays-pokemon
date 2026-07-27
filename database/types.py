@@ -1,3 +1,5 @@
+"""Custom SQLAlchemy column types."""
+
 import struct
 
 from sqlalchemy import LargeBinary, TypeDecorator

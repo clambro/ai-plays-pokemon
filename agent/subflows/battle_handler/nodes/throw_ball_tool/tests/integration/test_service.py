@@ -1,3 +1,5 @@
+"""Tests for the throw ball tool service."""
+
 import asyncio
 from pathlib import Path
 

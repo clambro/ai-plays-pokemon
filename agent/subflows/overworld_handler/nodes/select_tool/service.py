@@ -1,3 +1,5 @@
+"""Business logic for select tool in the overworld subflow."""
+
 from loguru import logger
 
 from agent.subflows.overworld_handler.enums import OverworldTool
@@ -38,6 +40,7 @@ class SelectToolService:
         state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the select tool service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.current_map = current_map

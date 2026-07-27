@@ -1,3 +1,5 @@
+"""Tests for the fight tool service."""
+
 from pathlib import Path
 
 import pytest

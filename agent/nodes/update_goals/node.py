@@ -1,3 +1,5 @@
+"""Update goals node for the top-level agent graph."""
+
 from junjo import Node
 from loguru import logger
 
@@ -10,6 +12,7 @@ class UpdateGoalsNode(Node[AgentStore]):
     """Update the goals based on the raw memory."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
+        """Initialize the update goals node."""
         self.emulator = emulator
         super().__init__()
 

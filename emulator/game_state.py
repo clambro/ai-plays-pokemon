@@ -1,3 +1,5 @@
+"""Game-state extraction from the running emulator."""
+
 from collections import defaultdict
 from typing import Self
 

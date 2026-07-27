@@ -1,3 +1,5 @@
+"""Parser for sprite data in Pokémon Yellow memory."""
+
 from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 

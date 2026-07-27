@@ -1,3 +1,5 @@
+"""Business logic for switch Pokémon tool in the battle subflow."""
+
 from loguru import logger
 
 from agent.subflows.battle_handler.schemas import SwitchPokemonToolArgs
@@ -18,6 +20,7 @@ class SwitchPokemonToolService:
         tool_args: SwitchPokemonToolArgs,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the switch Pokémon tool service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.tool_args = tool_args

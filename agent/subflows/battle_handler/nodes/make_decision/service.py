@@ -1,3 +1,5 @@
+"""Business logic for make decision in the battle subflow."""
+
 from loguru import logger
 
 from agent.subflows.battle_handler.nodes.make_decision.prompts import MAKE_DECISION_PROMPT
@@ -21,6 +23,7 @@ class MakeDecisionService:
         state_string_builder: StateStringBuilderT,
         emulator: YellowLegacyEmulator,
     ) -> None:
+        """Initialize the make decision service."""
         self.iteration = iteration
         self.raw_memory = raw_memory
         self.state_string_builder = state_string_builder

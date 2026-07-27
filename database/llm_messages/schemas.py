@@ -1,3 +1,5 @@
+"""Data-transfer models for LLM messages."""
+
 from pydantic import BaseModel, ConfigDict
 
 from llm.schemas import GeminiModel

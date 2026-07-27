@@ -1,3 +1,5 @@
+"""Backup and restore operations for persistent game data."""
+
 import asyncio
 from datetime import UTC, datetime
 from pathlib import Path

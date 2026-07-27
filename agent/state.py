@@ -1,3 +1,5 @@
+"""State models for the top-level agent graph."""
+
 from pathlib import Path
 from typing import Literal
 

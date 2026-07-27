@@ -1,3 +1,5 @@
+"""Verify that project and pre-commit Ruff versions agree."""
+
 import sys
 from importlib.metadata import version
 from pathlib import Path

@@ -1,3 +1,5 @@
+"""LLM prompts for make decision in the text subflow."""
+
 DECISION_MAKER_TEXT_PROMPT = """
 There is text on the screen. The screenshot provided above is the current game screen. You must decide which button(s) to press to proceed with the game.
 

@@ -1,3 +1,5 @@
+"""Application entry point for the Pokémon-playing agent."""
+
 from junjo import Workflow
 
 from agent.graph import build_agent_graph

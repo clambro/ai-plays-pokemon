@@ -1,3 +1,5 @@
+"""Data models for should critique in the top-level agent graph."""
+
 from pydantic import BaseModel
 
 

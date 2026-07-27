@@ -1,3 +1,5 @@
+"""Gemini client integration for structured LLM requests."""
+
 import asyncio
 from typing import TypeVar
 
@@ -37,6 +39,7 @@ class GeminiLLMService:
     """Wrapper for the Gemini LLM API."""
 
     def __init__(self, model: GeminiModel) -> None:
+        """Initialize the Gemini LLM service."""
         self.client = genai.Client(api_key=settings.gemini_api_key)
         self.model = model
 

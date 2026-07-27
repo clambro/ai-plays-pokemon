@@ -1,3 +1,5 @@
+"""LLM prompts shared throughout the application."""
+
 SYSTEM_PROMPT = """
 You are a sophisticated AI agent built to play Pokemon Yellow Legacy, a modified version of Pokemon Yellow designed to be the best possible Generation I experience. It contains all of the original content of Pokemon Yellow, but with numerous quality of life improvements, balance changes, graphical enhancements, bug fixes, and other updates.
 
