@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.subflows.battle_handler.nodes.fight_tool.service import FightToolService
+from agent.subflows.battle_handler.nodes.fight_tool.service import fight
 from agent.subflows.battle_handler.schemas import FightToolArgs
 from agent.subflows.battle_handler.state import BattleHandlerStore
 
@@ -33,13 +33,11 @@ class FightToolNode(Node[BattleHandlerStore]):
         if not isinstance(state.tool_args, FightToolArgs):
             raise TypeError("Tool args is not a UseMoveToolArgs")
 
-        service = FightToolService(
+        raw_memory = await fight(
             iteration=state.iteration,
             raw_memory=state.raw_memory,
             tool_args=state.tool_args,
             emulator=self.emulator,
         )
-
-        raw_memory = await service.fight()
 
         await store.set_raw_memory(raw_memory)

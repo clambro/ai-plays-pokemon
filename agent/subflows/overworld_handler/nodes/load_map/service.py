@@ -9,15 +9,10 @@ if TYPE_CHECKING:
     from overworld_map.schemas import OverworldMap
 
 
-class LoadMapService:
-    """Service for updating the current map."""
-
-    def __init__(self, emulator: YellowLegacyEmulator, iteration: int) -> None:
-        """Initialize the load map service."""
-        self.emulator = emulator
-        self.iteration = iteration
-
-    async def load_map(self) -> OverworldMap:
-        """Update the current overworld map with the latest screen info."""
-        game_state = self.emulator.get_game_state()
-        return await get_overworld_map(self.iteration, game_state)
+async def load_map(
+    emulator: YellowLegacyEmulator,
+    iteration: int,
+) -> OverworldMap:
+    """Update the current overworld map with the latest screen info."""
+    game_state = emulator.get_game_state()
+    return await get_overworld_map(iteration, game_state)

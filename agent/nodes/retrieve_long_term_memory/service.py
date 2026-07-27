@@ -8,46 +8,35 @@ from agent.nodes.retrieve_long_term_memory.prompts import GET_RETRIEVAL_QUERY_PR
 from llm.schemas import GEMINI_FLASH_LITE_2_5
 from llm.service import GeminiLLMService
 from memory.long_term_memory import LongTermMemory
-from memory.retrieval_service import MemoryRetrievalService
+from memory.retrieval_service import get_most_relevant_memories
 
 if TYPE_CHECKING:
     from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
 
+llm_service = GeminiLLMService(GEMINI_FLASH_LITE_2_5)
 
-class RetrieveLongTermMemoryService:
-    """Service for retrieving the long-term memory."""
 
-    llm_service = GeminiLLMService(GEMINI_FLASH_LITE_2_5)
-    retrieval_service = MemoryRetrievalService()
+async def retrieve_long_term_memory(
+    *,
+    iteration: int,
+    long_term_memory: LongTermMemory,
+    state_string_builder: StateStringBuilder,
+    emulator: YellowLegacyEmulator,
+) -> LongTermMemory:
+    """Retrieve the long-term memory."""
+    game_state = emulator.get_game_state()
+    screenshot = emulator.get_screenshot()
 
-    def __init__(
-        self,
-        iteration: int,
-        long_term_memory: LongTermMemory,
-        state_string_builder: StateStringBuilder,
-        emulator: YellowLegacyEmulator,
-    ) -> None:
-        """Initialize the retrieve long term memory service."""
-        self.iteration = iteration
-        self.long_term_memory = long_term_memory
-        self.state_string_builder = state_string_builder
-        self.emulator = emulator
+    prompt = GET_RETRIEVAL_QUERY_PROMPT.format(state=state_string_builder(game_state))
+    try:
+        query = await llm_service.get_llm_response(
+            [screenshot, prompt],
+            prompt_name="get_retrieval_query",
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Error in the retrieval query. Returning the previous memories. {e}")
+        return long_term_memory
 
-    async def retrieve_long_term_memory(self) -> LongTermMemory:
-        """Retrieve the long-term memory."""
-        game_state = self.emulator.get_game_state()
-        screenshot = self.emulator.get_screenshot()
-
-        prompt = GET_RETRIEVAL_QUERY_PROMPT.format(state=self.state_string_builder(game_state))
-        try:
-            query = await self.llm_service.get_llm_response(
-                [screenshot, prompt],
-                prompt_name="get_retrieval_query",
-            )
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"Error in the retrieval query. Returning the previous memories. {e}")
-            return self.long_term_memory
-
-        pieces = await self.retrieval_service.get_most_relevant_memories(query, self.iteration)
-        return LongTermMemory(pieces={p.title: p for p in pieces})
+    pieces = await get_most_relevant_memories(query, iteration)
+    return LongTermMemory(pieces={p.title: p for p in pieces})

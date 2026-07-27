@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.subflows.overworld_handler.nodes.load_map.service import LoadMapService
+from agent.subflows.overworld_handler.nodes.load_map.service import load_map
 from agent.subflows.overworld_handler.state import OverworldHandlerStore
 
 if TYPE_CHECKING:
@@ -27,8 +27,6 @@ class LoadMapNode(Node[OverworldHandlerStore]):
         state = await store.get_state()
         if state.iteration is None:
             raise ValueError("Iteration is not set")
-        service = LoadMapService(emulator=self.emulator, iteration=state.iteration)
-
-        current_map = await service.load_map()
+        current_map = await load_map(self.emulator, state.iteration)
 
         await store.set_current_map(current_map)

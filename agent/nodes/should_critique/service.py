@@ -18,48 +18,36 @@ if TYPE_CHECKING:
     from memory.goals import Goals
     from memory.raw_memory import RawMemory
 
+llm_service = GeminiLLMService(GEMINI_FLASH_LITE_2_5)
 
-class ShouldCritiqueService:
-    """Service for determining if the agent should critique."""
 
-    llm_service = GeminiLLMService(GEMINI_FLASH_LITE_2_5)
-
-    def __init__(
-        self,
-        iteration: int,
-        raw_memory: RawMemory,
-        goals: Goals,
-        iterations_since_last_critique: int,
-        handler: AgentStateHandler,
-    ) -> None:
-        """Initialize the should critique service."""
-        self.iteration = iteration
-        self.raw_memory = raw_memory
-        self.goals = goals
-        self.iterations_since_last_critique = iterations_since_last_critique
-        self.handler = handler
-
-    async def check_should_critique(self) -> bool:
-        """Check if the agent should critique by looking for loops in the raw memory."""
-        if (
-            # The Overworld Handler has its own critique prompt with map-specific information.
-            self.handler == AgentStateHandler.OVERWORLD
-            or self.iteration % ITERATIONS_PER_GENERIC_CRITIQUE_CHECK != 0
-            or self.iterations_since_last_critique < MIN_ITERATIONS_PER_CRITIQUE
-        ):
-            return False
-        try:
-            prompt = SHOULD_CRITIQUE_PROMPT.format(
-                raw_memory=self.raw_memory,
-                goals=self.goals,
-            )
-            response = await self.llm_service.get_llm_response_pydantic(
-                prompt,
-                ShouldCritiqueResponse,
-                prompt_name="should_critique",
-            )
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"Error checking if the agent should critique. Assuming not.\n{e}")
-            return False
-        else:
-            return response.is_stuck
+async def should_critique(
+    *,
+    iteration: int,
+    raw_memory: RawMemory,
+    goals: Goals,
+    iterations_since_last_critique: int,
+    handler: AgentStateHandler,
+) -> bool:
+    """Check if the agent should critique by looking for loops in the raw memory."""
+    if (
+        # The Overworld Handler has its own critique prompt with map-specific information.
+        handler == AgentStateHandler.OVERWORLD
+        or iteration % ITERATIONS_PER_GENERIC_CRITIQUE_CHECK != 0
+        or iterations_since_last_critique < MIN_ITERATIONS_PER_CRITIQUE
+    ):
+        return False
+    try:
+        prompt = SHOULD_CRITIQUE_PROMPT.format(
+            raw_memory=raw_memory,
+            goals=goals,
+        )
+        response = await llm_service.get_llm_response_pydantic(
+            prompt,
+            ShouldCritiqueResponse,
+            prompt_name="should_critique",
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Error checking if the agent should critique. Assuming not.\n{e}")
+        return False
+    return response.is_stuck

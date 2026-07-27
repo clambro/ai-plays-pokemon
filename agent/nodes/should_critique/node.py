@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.nodes.should_critique.service import ShouldCritiqueService
+from agent.nodes.should_critique.service import should_critique
 from agent.state import AgentStore
 
 if TYPE_CHECKING:
@@ -29,13 +29,12 @@ class ShouldCritiqueNode(Node[AgentStore]):
         if state.handler is None:
             raise ValueError("Handler is not set.")
 
-        service = ShouldCritiqueService(
+        critique_needed = await should_critique(
             iteration=state.iteration,
             raw_memory=state.raw_memory,
             goals=state.goals,
             iterations_since_last_critique=state.iterations_since_last_critique,
             handler=state.handler,
         )
-        should_critique = await service.check_should_critique()
 
-        await store.set_should_critique(should_critique)
+        await store.set_should_critique(critique_needed)

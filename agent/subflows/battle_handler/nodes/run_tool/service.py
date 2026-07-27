@@ -12,36 +12,27 @@ if TYPE_CHECKING:
     from memory.raw_memory import RawMemory
 
 
-class RunToolService:
-    """A service that runs away from the battle."""
+async def run_away(
+    *,
+    iteration: int,
+    raw_memory: RawMemory,
+    emulator: YellowLegacyEmulator,
+) -> RawMemory:
+    """Run away from the battle."""
+    game_state = emulator.get_game_state()
+    cursor_pos = get_cursor_pos_in_fight_menu(game_state)
+    if cursor_pos is None:
+        logger.warning("The fight menu is not open. Skipping.")
+        return raw_memory
 
-    def __init__(
-        self,
-        iteration: int,
-        raw_memory: RawMemory,
-        emulator: YellowLegacyEmulator,
-    ) -> None:
-        """Initialize the run tool service."""
-        self.iteration = iteration
-        self.raw_memory = raw_memory
-        self.emulator = emulator
+    if cursor_pos.col == 0:
+        await emulator.press_button(Button.RIGHT)
+    if cursor_pos.row == 0:
+        await emulator.press_button(Button.DOWN)
+    await emulator.press_button(Button.A, wait_for_animation=False)
 
-    async def run_away(self) -> RawMemory:
-        """Run away from the battle."""
-        game_state = self.emulator.get_game_state()
-        cursor_pos = get_cursor_pos_in_fight_menu(game_state)
-        if cursor_pos is None:
-            logger.warning("The fight menu is not open. Skipping.")
-            return self.raw_memory
-
-        if cursor_pos.col == 0:
-            await self.emulator.press_button(Button.RIGHT)
-        if cursor_pos.row == 0:
-            await self.emulator.press_button(Button.DOWN)
-        await self.emulator.press_button(Button.A, wait_for_animation=False)
-
-        self.raw_memory.add_memory(
-            iteration=self.iteration,
-            content="Attempted to run away from the battle.",
-        )
-        return self.raw_memory
+    raw_memory.add_memory(
+        iteration=iteration,
+        content="Attempted to run away from the battle.",
+    )
+    return raw_memory

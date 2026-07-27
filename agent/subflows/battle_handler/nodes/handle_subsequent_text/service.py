@@ -10,47 +10,38 @@ if TYPE_CHECKING:
     from memory.raw_memory import RawMemory
 
 
-class HandleSubsequentTextService:
-    """Handles reading the subsequent text (if present) after a tool has been used."""
+async def handle_subsequent_text(
+    *,
+    iteration: int,
+    raw_memory: RawMemory,
+    emulator: YellowLegacyEmulator,
+) -> RawMemory:
+    """Handle reading the dialog box."""
+    text: list[str] = []
+    await emulator.wait_for_animation_to_finish()
+    while True:
+        game_state = emulator.get_game_state()
+        dialog_box = game_state.get_dialog_box()
+        if not dialog_box:
+            break
+        append_dialog_to_list_inplace(text, dialog_box)
 
-    def __init__(
-        self,
-        iteration: int,
-        raw_memory: RawMemory,
-        emulator: YellowLegacyEmulator,
-    ) -> None:
-        """Initialize the handle subsequent text service."""
-        self.iteration = iteration
-        self.raw_memory = raw_memory
-        self.emulator = emulator
+        if await is_blinking_cursor_on_screen(emulator):
+            await emulator.press_button(Button.A)
+            continue
 
-    async def handle_subsequent_text(self) -> RawMemory:
-        """Handle reading the dialog box."""
-        text: list[str] = []
-        await self.emulator.wait_for_animation_to_finish()
-        while True:
-            game_state = self.emulator.get_game_state()
-            dialog_box = game_state.get_dialog_box()
-            if not dialog_box:
-                break
-            append_dialog_to_list_inplace(text, dialog_box)
+        prev_state = game_state
+        await emulator.wait_for_animation_to_finish()
+        game_state = emulator.get_game_state()
+        if game_state.screen.text == prev_state.screen.text:
+            break  # Nothing is scrolling, and no animations are happening, so we're done.
 
-            if await is_blinking_cursor_on_screen(self.emulator):
-                await self.emulator.press_button(Button.A)
-                continue
+    joined_text = " ".join(text).strip()
+    if not joined_text:
+        return raw_memory
 
-            prev_state = game_state
-            await self.emulator.wait_for_animation_to_finish()
-            game_state = self.emulator.get_game_state()
-            if game_state.screen.text == prev_state.screen.text:
-                break  # Nothing is scrolling, and no animations are happening, so we're done.
-
-        joined_text = " ".join(text).strip()
-        if not joined_text:
-            return self.raw_memory
-
-        self.raw_memory.add_memory(
-            iteration=self.iteration,
-            content=f'The following text was read from the battle dialog box: "{joined_text}"',
-        )
-        return self.raw_memory
+    raw_memory.add_memory(
+        iteration=iteration,
+        content=f'The following text was read from the battle dialog box: "{joined_text}"',
+    )
+    return raw_memory

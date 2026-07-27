@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from agent.subflows.battle_handler.nodes.run_tool.service import RunToolService
+from agent.subflows.battle_handler.nodes.run_tool.service import run_away
 from emulator.emulator import YellowLegacyEmulator
 from memory.raw_memory import RawMemory
 
@@ -23,12 +23,11 @@ async def test_run_away_from_battle() -> None:
         # Verify that the initial state is as expected.
         assert game_state.battle.is_in_battle
 
-        service = RunToolService(
+        raw_memory = await run_away(
             iteration=0,
             raw_memory=RawMemory(),
             emulator=emulator,
         )
-        raw_memory = await service.run_away()
         await emulator.wait_for_animation_to_finish()
 
         game_state = emulator.get_game_state()

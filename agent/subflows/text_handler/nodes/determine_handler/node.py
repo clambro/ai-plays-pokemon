@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.subflows.text_handler.nodes.determine_handler.service import DetermineHandlerService
+from agent.subflows.text_handler.nodes.determine_handler.service import determine_handler
 from agent.subflows.text_handler.state import TextHandlerStore
 
 if TYPE_CHECKING:
@@ -24,7 +24,6 @@ class DetermineHandlerNode(Node[TextHandlerStore]):
         """The service for the node."""
         logger.info("Determining the handler...")
 
-        service = DetermineHandlerService(emulator=self.emulator)
-        handler = await service.determine_handler()
+        handler = await determine_handler(self.emulator)
 
         await store.set_handler(handler)

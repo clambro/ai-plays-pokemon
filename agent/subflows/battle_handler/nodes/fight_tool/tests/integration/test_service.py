@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from agent.subflows.battle_handler.nodes.fight_tool.service import FightToolService
+from agent.subflows.battle_handler.nodes.fight_tool.service import fight
 from agent.subflows.battle_handler.schemas import FightToolArgs
 from emulator.emulator import YellowLegacyEmulator
 from memory.raw_memory import RawMemory
@@ -29,13 +29,12 @@ async def test_use_move() -> None:
 
         initial_pp = game_state.battle.player_pokemon.moves[move_index].pp
 
-        service = FightToolService(
+        raw_memory = await fight(
             iteration=0,
             raw_memory=RawMemory(),
             tool_args=FightToolArgs(move_index=move_index, move_name="LEER"),
             emulator=emulator,
         )
-        raw_memory = await service.fight()
         await emulator.wait_for_animation_to_finish()
 
         game_state = emulator.get_game_state()

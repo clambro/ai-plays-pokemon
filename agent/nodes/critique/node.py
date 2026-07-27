@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.nodes.critique.service import CritiqueService
+from agent.nodes.critique.service import critique
 from agent.state import AgentStore
 
 if TYPE_CHECKING:
@@ -26,13 +26,12 @@ class CritiqueNode(Node[AgentStore]):
 
         state = await store.get_state()
 
-        service = CritiqueService(
+        raw_memory = await critique(
             iteration=state.iteration,
             raw_memory=state.raw_memory,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
-        raw_memory = await service.critique()
 
         await store.set_raw_memory(raw_memory)
         await store.set_iterations_since_last_critique(0)

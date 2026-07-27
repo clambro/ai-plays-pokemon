@@ -5,7 +5,11 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.nodes.prepare_agent_store.service import PrepareAgentStateService
+from agent.nodes.prepare_agent_store.service import (
+    determine_handler,
+    should_retrieve_memory,
+    wait_for_animations,
+)
 from agent.state import AgentStore
 
 if TYPE_CHECKING:
@@ -28,21 +32,18 @@ class PrepareAgentStoreNode(Node[AgentStore]):
         logger.info("Preparing agent store...")
 
         state = await store.get_state()
-        service = PrepareAgentStateService(
+        await wait_for_animations(self.emulator)
+        handler = await determine_handler(self.emulator)
+        retrieve_memory = await should_retrieve_memory(
             iterations_since_last_ltm_retrieval=state.iterations_since_last_ltm_retrieval,
             long_term_memory=state.long_term_memory,
-            emulator=self.emulator,
         )
-
-        await service.wait_for_animations()
-        handler = await service.determine_handler()
-        should_retrieve_memory = await service.should_retrieve_memory()
 
         await store.set_iteration(state.iteration + 1)
         await store.set_iterations_since_last_critique(state.iterations_since_last_critique + 1)
         await store.set_previous_handler(state.handler)
         await store.set_handler(handler)
-        await store.set_should_retrieve_memory(should_retrieve_memory)
+        await store.set_should_retrieve_memory(retrieve_memory)
         await store.set_iterations_since_last_ltm_retrieval(
             state.iterations_since_last_ltm_retrieval + 1  # Is set to zero in the retrieval step.
         )

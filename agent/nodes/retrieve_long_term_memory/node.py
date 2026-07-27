@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.nodes.retrieve_long_term_memory.service import RetrieveLongTermMemoryService
+from agent.nodes.retrieve_long_term_memory.service import retrieve_long_term_memory
 from agent.state import AgentStore
 
 if TYPE_CHECKING:
@@ -26,13 +26,12 @@ class RetrieveLongTermMemoryNode(Node[AgentStore]):
 
         state = await store.get_state()
 
-        service = RetrieveLongTermMemoryService(
+        long_term_memory = await retrieve_long_term_memory(
             iteration=state.iteration,
             long_term_memory=state.long_term_memory,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
-        long_term_memory = await service.retrieve_long_term_memory()
 
         await store.set_long_term_memory(long_term_memory)
         await store.set_iterations_since_last_ltm_retrieval(0)

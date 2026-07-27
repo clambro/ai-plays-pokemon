@@ -16,77 +16,78 @@ if TYPE_CHECKING:
     from emulator.game_state import YellowLegacyGameState
     from memory.raw_memory import RawMemory
 
+llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
 
-class DecisionMakerTextService:
-    """A service that makes decisions based on the current game state in the text."""
 
-    llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
+async def make_decision(
+    *,
+    iteration: int,
+    raw_memory: RawMemory,
+    state_string_builder: StateStringBuilder,
+    emulator: YellowLegacyEmulator,
+) -> RawMemory:
+    """
+    Make a decision based on the current game state.
 
-    def __init__(
-        self,
-        iteration: int,
-        raw_memory: RawMemory,
-        state_string_builder: StateStringBuilder,
-        emulator: YellowLegacyEmulator,
-    ) -> None:
-        """Initialize the decision maker text service."""
-        self.iteration = iteration
-        self.raw_memory = raw_memory
-        self.state_string_builder = state_string_builder
-        self.emulator = emulator
-
-    async def make_decision(self) -> RawMemory:
-        """
-        Make a decision based on the current game state.
-
-        :return: The button to press.
-        """
-        img = self.emulator.get_screenshot()
-        game_state = self.emulator.get_game_state()
-        state_string = self.state_string_builder(game_state)
-        prompt = DECISION_MAKER_TEXT_PROMPT.format(
-            state=state_string,
-            text=game_state.screen.text,
+    :return: The button to press.
+    """
+    img = emulator.get_screenshot()
+    game_state = emulator.get_game_state()
+    state_string = state_string_builder(game_state)
+    prompt = DECISION_MAKER_TEXT_PROMPT.format(
+        state=state_string,
+        text=game_state.screen.text,
+    )
+    try:
+        response = await llm_service.get_llm_response_pydantic(
+            messages=[img, prompt],
+            schema=DecisionMakerTextResponse,
+            prompt_name="make_text_decision",
         )
-        try:
-            response = await self.llm_service.get_llm_response_pydantic(
-                messages=[img, prompt],
-                schema=DecisionMakerTextResponse,
-                prompt_name="make_text_decision",
-            )
-            buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
-                content=(
-                    f"{response.thoughts} Selected the following buttons:"
-                    f" {[str(b) for b in buttons]}"
-                ),
-            )
-            for b in buttons:
-                game_state = self.emulator.get_game_state()
-                await self.emulator.press_button(b)
-                if self._check_for_state_change() or self._check_for_failed_action(b, game_state):
-                    break
+        buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
+        raw_memory.add_memory(
+            iteration=iteration,
+            content=(
+                f"{response.thoughts} Selected the following buttons: {[str(b) for b in buttons]}"
+            ),
+        )
+        for b in buttons:
+            game_state = emulator.get_game_state()
+            await emulator.press_button(b)
+            if _check_for_state_change(emulator) or _check_for_failed_action(
+                b,
+                game_state,
+                iteration=iteration,
+                raw_memory=raw_memory,
+                emulator=emulator,
+            ):
+                break
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Error making decision. Skipping. {e}")
 
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"Error making decision. Skipping. {e}")
+    return raw_memory
 
-        return self.raw_memory
 
-    def _check_for_state_change(self) -> bool:
-        """Check if the button press triggered a state change to dialog or a battle."""
-        game_state = self.emulator.get_game_state()
-        return not game_state.is_text_on_screen() or game_state.battle.is_in_battle
+def _check_for_state_change(emulator: YellowLegacyEmulator) -> bool:
+    """Check if the button press triggered a state change to dialog or a battle."""
+    game_state = emulator.get_game_state()
+    return not game_state.is_text_on_screen() or game_state.battle.is_in_battle
 
-    def _check_for_failed_action(self, button: Button, game_state: YellowLegacyGameState) -> bool:
-        """Check if the screen is unchanged following an action."""
-        new_state = self.emulator.get_game_state()
-        state_changed = new_state.screen.tiles == game_state.screen.tiles
-        if state_changed:
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
-                content=(
-                    f"I pressed the {button} button, but nothing happened. Have I made a mistake?"
-                ),
-            )
-        return state_changed
+
+def _check_for_failed_action(
+    button: Button,
+    game_state: YellowLegacyGameState,
+    *,
+    iteration: int,
+    raw_memory: RawMemory,
+    emulator: YellowLegacyEmulator,
+) -> bool:
+    """Check if the screen is unchanged following an action."""
+    new_state = emulator.get_game_state()
+    state_changed = new_state.screen.tiles == game_state.screen.tiles
+    if state_changed:
+        raw_memory.add_memory(
+            iteration=iteration,
+            content=f"I pressed the {button} button, but nothing happened. Have I made a mistake?",
+        )
+    return state_changed
