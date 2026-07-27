@@ -17,6 +17,8 @@ from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
 
 if TYPE_CHECKING:
+    from PIL.Image import Image
+
     from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
@@ -44,7 +46,7 @@ async def determine_handler(
         The updated raw memory and selected battle action, or ``None`` when no action can be
         selected.
     """
-    game_state = emulator.get_game_state()
+    game_state, screenshot = await emulator.get_game_state_with_screenshot()
     battle_state = game_state.battle
     if (
         not battle_state.is_in_battle
@@ -62,8 +64,8 @@ async def determine_handler(
         thoughts, action = await _choose_args(
             args,
             game_state,
+            screenshot,
             state_string_builder=state_string_builder,
-            emulator=emulator,
         )
         raw_memory.add_memory(
             iteration=iteration,
@@ -119,12 +121,11 @@ def _get_legal_args(game_state: YellowLegacyGameState) -> list[BattleToolArgs]:
 async def _choose_args(
     args: list[BattleToolArgs],
     game_state: YellowLegacyGameState,
+    screenshot: Image,
     *,
     state_string_builder: StateStringBuilder,
-    emulator: YellowLegacyEmulator,
 ) -> tuple[str, BattleToolArgs]:
     """Choose the action to take based on the available arguments."""
-    img = emulator.get_screenshot()
     actions = "\n".join([f"[{i}]: {a}" for i, a in enumerate(args)])
     prompt = CHOOSE_ARGS_PROMPT.format(
         state=state_string_builder(game_state),
@@ -132,7 +133,7 @@ async def _choose_args(
         actions=actions,
     )
     response = await llm_service.get_llm_response_pydantic(
-        messages=[img, prompt],
+        messages=[screenshot, prompt],
         schema=DetermineArgsResponse,
     )
     return response.thoughts, args[response.index]

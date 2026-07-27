@@ -39,7 +39,7 @@ async def update_goals(
     if iteration % ITERATIONS_PER_GOAL_UPDATE != 0:
         return goals
 
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     prompt = UPDATE_GOALS_PROMPT.format(state=state_string_builder(game_state))
     try:
         response = await llm_service.get_llm_response_pydantic(

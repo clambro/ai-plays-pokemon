@@ -22,5 +22,5 @@ async def load_map(
     Returns:
         The explored-map snapshot for the current location.
     """
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     return await get_overworld_map(iteration, game_state)

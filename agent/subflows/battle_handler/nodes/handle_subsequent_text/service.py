@@ -29,7 +29,7 @@ async def handle_subsequent_text(
     text: list[str] = []
     await emulator.wait_for_animation_to_finish()
     while True:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         dialog_box = game_state.get_dialog_box()
         if not dialog_box:
             break
@@ -41,7 +41,7 @@ async def handle_subsequent_text(
 
         prev_state = game_state
         await emulator.wait_for_animation_to_finish()
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         if game_state.screen.text == prev_state.screen.text:
             break  # Nothing is scrolling, and no animations are happening, so we're done.
 

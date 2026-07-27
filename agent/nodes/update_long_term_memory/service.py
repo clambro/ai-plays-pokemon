@@ -41,7 +41,7 @@ async def update_long_term_memory(
     if not long_term_memory.pieces:
         return
 
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     prompt = UPDATE_LONG_TERM_MEMORY_PROMPT.format(state=state_string_builder(game_state))
     try:
         response = await llm_service.get_llm_response_pydantic(

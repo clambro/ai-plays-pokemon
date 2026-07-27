@@ -18,7 +18,7 @@ async def test_run_away_from_battle() -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
 
         # Verify that the initial state is as expected.
         assert game_state.battle.is_in_battle
@@ -30,6 +30,6 @@ async def test_run_away_from_battle() -> None:
         )
         await emulator.wait_for_animation_to_finish()
 
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert "No! There's no" in game_state.screen.text  # Trainer battle run text.
         assert len(raw_memory.pieces) == 1

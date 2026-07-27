@@ -343,7 +343,7 @@ async def _helper_test_expected_screen(
         mute_sound=True,
         headless=True,
     ) as emulator:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
 
     screen = game_state.get_ascii_screen()
 

@@ -17,7 +17,7 @@ async def determine_handler(emulator: YellowLegacyEmulator) -> TextHandler | Non
     Returns:
         The matching text handler, or ``None`` when text is no longer visible.
     """
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     if not game_state.is_text_on_screen():
         # Should never happen in this handler, but gives us a chance to bail just in case.
         return None

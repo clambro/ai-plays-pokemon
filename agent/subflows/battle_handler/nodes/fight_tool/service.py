@@ -32,7 +32,7 @@ async def fight(
     Returns:
         The supplied raw memory, updated when the move selection is attempted.
     """
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     cursor_pos = get_cursor_pos_in_fight_menu(game_state)
     if cursor_pos is None:
         logger.warning("The fight menu is not open. Skipping.")
@@ -44,7 +44,7 @@ async def fight(
     if cursor_pos.row == 1:
         await emulator.press_button(Button.UP)
     await emulator.press_button(Button.A)
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
 
     cursor_index = _get_move_menu_cursor_index(game_state)
     if cursor_index is None:

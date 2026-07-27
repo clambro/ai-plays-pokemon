@@ -28,7 +28,7 @@ async def run_away(
     Returns:
         The supplied raw memory, updated when the escape attempt is made.
     """
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     cursor_pos = get_cursor_pos_in_fight_menu(game_state)
     if cursor_pos is None:
         logger.warning("The fight menu is not open. Skipping.")

@@ -29,15 +29,20 @@ the asyncio event loop. Commands are processed at safe boundaries between
 frames.
 
 Game-state parsing happens within the emulator runtime. Results returned to the
-application are immutable snapshots detached from live emulator memory. When a
-consumer needs related state, screenshot, and frame information, the runtime
-must capture them coherently so the agent and HTML background do not observe
-different moments accidentally.
+application are detached from live emulator memory. The async interface exposes
+one operation for game state and another that returns game state with its
+corresponding screenshot. No additional snapshot model is needed.
 
 Save-state capture also runs on the owner thread rather than concurrently with
 the tick loop. PyBoy may still pause briefly while producing a save state;
 checkpoint frequency is a separate policy and should not complicate this
 runtime boundary.
+
+The dedicated emulator runtime also makes the existing navigation and Sokoban
+worker-thread handoffs unnecessary. Return those algorithms to ordinary
+synchronous functions once they can no longer stall emulation. Remove the
+save-state worker-thread handoff because save-state capture belongs on the
+emulator owner thread.
 
 Keep the boundary narrow enough that a separate process could replace the
 thread-backed implementation later without changing agent or tool code. A
@@ -53,6 +58,8 @@ separate process is not part of this ticket.
 - Prevent direct PyBoy and live-memory access outside the emulator package.
 - Make runtime failures and unexpected termination visible to awaiting callers
   instead of leaving them blocked.
+- Remove the obsolete navigation, Sokoban, and save-state worker-thread
+  handoffs.
 - Update tests and documentation that assume PyBoy shares the application
   thread.
 
@@ -62,7 +69,8 @@ separate process is not part of this ticket.
 - Slow application work does not delay the emulator tick loop through the
   asyncio event loop.
 - Save-state capture cannot race with ticking or other emulator operations.
-- Agent, streaming, and persistence code use only detached snapshots and the
-  async emulator interface.
+- Agent, streaming, and persistence code use only detached game-state data and
+  the async emulator interface.
+- Navigation and Sokoban algorithms run as straightforward synchronous code.
 - Existing emulator behavior remains covered by bounded tests, including
   command ordering, failure propagation, and shutdown.

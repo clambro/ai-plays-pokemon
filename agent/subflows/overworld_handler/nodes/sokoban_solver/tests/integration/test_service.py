@@ -27,7 +27,7 @@ async def test_solve_sokoban_puzzle_victory_road() -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=14, col=12)
 
         boulders = _get_boulders(game_state)
@@ -37,7 +37,7 @@ async def test_solve_sokoban_puzzle_victory_road() -> None:
         service = await _get_sokoban_service(emulator)
         await service.solve()
 
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         boulders = _get_boulders(game_state)
         assert len(boulders) == 1
         assert boulders == {Coords(row=13, col=17)}
@@ -55,7 +55,7 @@ async def test_solve_sokoban_puzzle_seafoam_islands() -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=15, col=6)
 
         boulders = _get_boulders(game_state)
@@ -74,7 +74,7 @@ async def test_solve_sokoban_puzzle_seafoam_islands() -> None:
         service = await _get_sokoban_service(emulator)  # Update the sprites.
         await service.solve()
 
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         boulders = _get_boulders(game_state)
         assert len(boulders) == expected_num_boulders_after
         assert Coords(row=14, col=2) in boulders
@@ -83,7 +83,7 @@ async def test_solve_sokoban_puzzle_seafoam_islands() -> None:
 
 async def _get_sokoban_service(emulator: YellowLegacyEmulator) -> SokobanSolverService:
     """Helper function to get a Sokoban solver service with the proper mocks."""
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     with (
         patch("database.map_memory.repository.get_map_memory", return_value=None),
         patch(

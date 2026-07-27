@@ -32,8 +32,7 @@ async def critique(
         The supplied raw memory after appending the critique result.
     """
     llm_service = GeminiLLMService(GEMINI_PRO_2_5)
-    game_state = emulator.get_game_state()
-    screenshot = emulator.get_screenshot()
+    game_state, screenshot = await emulator.get_game_state_with_screenshot()
     prompt = CRITIQUE_PROMPT.format(state=state_string_builder(game_state))
     try:
         response = await llm_service.get_llm_response_pydantic(

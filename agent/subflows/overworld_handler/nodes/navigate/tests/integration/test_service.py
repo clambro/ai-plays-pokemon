@@ -22,7 +22,7 @@ async def test_navigate_through_pikachu() -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=28, col=23)
         assert game_state.pikachu.coords == Coords(row=28, col=22)
         assert game_state.player.direction == FacingDirection.RIGHT
@@ -32,7 +32,7 @@ async def test_navigate_through_pikachu() -> None:
         service._determine_target_coords = AsyncMock(return_value=Coords(row=28, col=21))
         await service.navigate()
 
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=28, col=21)
         assert game_state.player.direction == FacingDirection.LEFT
         assert game_state.pikachu.coords == Coords(row=28, col=22)
@@ -47,7 +47,7 @@ async def test_navigate_through_cut_tree() -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=17, col=17)
 
         service = await _get_nav_service(emulator)
@@ -55,7 +55,7 @@ async def test_navigate_through_cut_tree() -> None:
         service._determine_target_coords = AsyncMock(return_value=Coords(row=20, col=15))
         await service.navigate()
 
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=20, col=15)
 
 
@@ -68,7 +68,7 @@ async def test_navigate_through_spinners() -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=13, col=4)
 
         service = await _get_nav_service(emulator)
@@ -76,7 +76,7 @@ async def test_navigate_through_spinners() -> None:
         service._determine_target_coords = AsyncMock(return_value=Coords(row=16, col=8))
         await service.navigate()
 
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=16, col=8)
 
 
@@ -89,7 +89,7 @@ async def test_navigate_through_water() -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=20, col=19)
 
         service = await _get_nav_service(emulator)
@@ -97,13 +97,13 @@ async def test_navigate_through_water() -> None:
         service._determine_target_coords = AsyncMock(return_value=Coords(row=16, col=21))
         await service.navigate()
 
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=16, col=21)
 
 
 async def _get_nav_service(emulator: YellowLegacyEmulator) -> NavigationService:
     """Helper function to get a navigation service with the proper mocks."""
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     with (
         patch("database.map_memory.repository.get_map_memory", return_value=None),
         patch(

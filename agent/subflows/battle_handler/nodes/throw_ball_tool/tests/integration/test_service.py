@@ -21,7 +21,7 @@ async def test_throw_pokeball() -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
 
         # Verify that the initial state is as expected.
         assert game_state.battle.is_in_battle
@@ -42,6 +42,6 @@ async def test_throw_pokeball() -> None:
         )
         await asyncio.sleep(0.1)  # Enough time to change frames, but not to catch the pokemon.
 
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert "POKé BALL!" in game_state.screen.text  # Used Poke Ball text.
         assert len(raw_memory.pieces) == 1

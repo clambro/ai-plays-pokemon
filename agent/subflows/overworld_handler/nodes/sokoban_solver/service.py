@@ -44,8 +44,9 @@ class SokobanSolverService:
             logger.warning("No boulders or goals found in Sokoban map. Bailing.")
             return  # This shouldn't happen, but we need the option to bail if it does.
 
+        player_pos = (await self.emulator.get_game_state()).player.coords
         # This can get expensive, so we run it on its own thread.
-        solution = await asyncio.to_thread(self._solve_sokoban, sokoban_map)
+        solution = await asyncio.to_thread(self._solve_sokoban, sokoban_map, player_pos)
 
         if not solution:
             self.raw_memory.add_memory(
@@ -88,12 +89,15 @@ class SokobanSolverService:
 
         return SokobanMap(tiles=simplified_tiles, boulders=boulders, goals=goals)
 
-    def _solve_sokoban(self, sokoban_map: SokobanMap) -> list[Button] | None:
+    def _solve_sokoban(
+        self,
+        sokoban_map: SokobanMap,
+        player_pos: Coords,
+    ) -> list[Button] | None:
         """Solve the Sokoban puzzle using breadth-first search.
 
         The search is deliberately simple because Pokémon's Sokoban state spaces are small.
         """
-        player_pos = self.emulator.get_game_state().player.coords
         initial_state = (player_pos, frozenset(sokoban_map.boulders))
 
         queue = [(initial_state, [])]
@@ -178,7 +182,7 @@ class SokobanSolverService:
         """Execute the solution by pressing buttons."""
         is_strength_active = False
         for button in solution:
-            game_state = self.emulator.get_game_state()
+            game_state = await self.emulator.get_game_state()
             next_pos = game_state.player.coords + _BUTTON_TO_DIRECTION_MAP[button]
 
             if not is_strength_active and next_pos in sokoban_map.boulders:
@@ -199,7 +203,7 @@ class SokobanSolverService:
                 # The boulders have a slow, irregular animation, so we add an extra wait.
                 await asyncio.sleep(1)
 
-            next_game_state = self.emulator.get_game_state()
+            next_game_state = await self.emulator.get_game_state()
             if (
                 next_game_state.player.coords == game_state.player.coords
                 and next_game_state.sprites == game_state.sprites

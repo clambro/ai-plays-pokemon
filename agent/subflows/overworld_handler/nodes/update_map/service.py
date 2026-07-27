@@ -46,8 +46,7 @@ async def update_map(
     Returns:
         The updated explored map.
     """
-    screenshot = emulator.get_screenshot()
-    game_state = emulator.get_game_state()
+    game_state, screenshot = await emulator.get_game_state_with_screenshot()
     current_map = await update_map_with_screen_info(iteration, game_state, current_map)
     await asyncio.gather(
         *[

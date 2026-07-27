@@ -83,10 +83,11 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
             with suppress(asyncio.CancelledError):
                 await self._tick_task
 
-    def get_game_state(self) -> YellowLegacyGameState:
+    async def get_game_state(self) -> YellowLegacyGameState:
         """Get the current game state."""
-        self._check_stopped()
-        return YellowLegacyGameState.from_memory(self._pyboy.memory)
+        async with self._button_lock:
+            self._check_stopped()
+            return YellowLegacyGameState.from_memory(self._pyboy.memory)
 
     async def async_tick_indefinitely(self) -> None:
         """Tick the emulator indefinitely. Should be run on its own thread."""
@@ -106,21 +107,26 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         self._is_stopped = True
         self._pyboy.stop()
 
-    def get_screenshot(self) -> Image.Image:
-        """Get an independent image of the current game screen.
+    async def get_game_state_with_screenshot(
+        self,
+    ) -> tuple[YellowLegacyGameState, Image.Image]:
+        """Capture the current game state and screen image together.
 
         Returns:
-            A copy of PyBoy's current screen image.
+            The current game state and a copied screen image captured without allowing the emulator
+            to tick between them.
 
         Raises:
             RuntimeError: The emulator has been stopped.
             TypeError: PyBoy exposes no valid screenshot.
         """
-        self._check_stopped()
-        img = deepcopy(self._pyboy.screen.image)
-        if not isinstance(img, Image.Image):
-            raise TypeError("No screenshot available")
-        return img
+        async with self._button_lock:
+            self._check_stopped()
+            game_state = YellowLegacyGameState.from_memory(self._pyboy.memory)
+            screenshot = deepcopy(self._pyboy.screen.image)
+            if not isinstance(screenshot, Image.Image):
+                raise TypeError("No screenshot available")
+            return game_state, screenshot
 
     async def press_button(
         self,
@@ -159,9 +165,9 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         successes = 0
         required_successes = 5
         while successes < required_successes:
-            game_state = self.get_game_state()
+            game_state = await self.get_game_state()
             await asyncio.sleep(0.15)
-            new_game_state = self.get_game_state()
+            new_game_state = await self.get_game_state()
             # The blinking cursor should not block progress, so we ignore it.
             if game_state.screen.tiles_without_cursor == new_game_state.screen.tiles_without_cursor:
                 successes += 1

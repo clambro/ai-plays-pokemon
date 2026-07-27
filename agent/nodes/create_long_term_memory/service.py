@@ -38,7 +38,7 @@ async def create_long_term_memory(
     Note:
         Provider, embedding, and persistence failures are logged and do not escape this function.
     """
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     titles = "\n".join(await get_all_long_term_memory_titles())
     prompt = CREATE_LONG_TERM_MEMORY_PROMPT.format(
         state=state_string_builder(game_state),

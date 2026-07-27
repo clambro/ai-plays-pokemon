@@ -24,7 +24,7 @@ async def test_switch_to_pokemon(monkeypatch: pytest.MonkeyPatch) -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         party_index = 3
         assert len(game_state.party) >= party_index
 
@@ -58,7 +58,7 @@ async def test_switch_to_pokemon(monkeypatch: pytest.MonkeyPatch) -> None:
         raw_memory = await service.swap_first_pokemon()
         await emulator.wait_for_animation_to_finish()
 
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert game_state.party[0] == index_pokemon
         assert game_state.party[party_index] == first_pokemon
         assert len(raw_memory.pieces) == 1

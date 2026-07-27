@@ -37,7 +37,7 @@ async def update_summary_memory(
     if iteration % ITERATIONS_PER_SUMMARY_UPDATE != 0:
         return summary_memory
 
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     prompt = UPDATE_SUMMARY_MEMORY_PROMPT.format(
         raw_memory_max_size=RAW_MEMORY_MAX_SIZE,
         state=state_string_builder(game_state),

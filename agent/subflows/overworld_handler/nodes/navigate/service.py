@@ -47,7 +47,7 @@ class NavigationService:
 
     async def navigate(self) -> tuple[OverworldMap, RawMemory]:
         """Determine the target coordinates and navigate to them."""
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         hm_tiles = game_state.get_hm_tiles()
         accessible_coords = await utils.get_accessible_coords(
             game_state.player.coords,
@@ -92,7 +92,7 @@ class NavigationService:
                 await self.emulator.press_button(button)
 
             prev_pos = game_state.player.coords
-            game_state = self.emulator.get_game_state()
+            game_state = await self.emulator.get_game_state()
             if self._should_cancel_navigation(game_state, prev_pos, starting_map_id, coords):
                 return self.current_map, self.raw_memory
             # Can't update the map until we validate above that we haven't switched maps.
@@ -127,8 +127,7 @@ class NavigationService:
         )
 
         # Get model response.
-        img = self.emulator.get_screenshot()
-        game_state = self.emulator.get_game_state()
+        game_state, img = await self.emulator.get_game_state_with_screenshot()
         last_memory = self.raw_memory.pieces.get(self.iteration) or ""
 
         prompt = DETERMINE_TARGET_COORDS_PROMPT.format(
@@ -202,7 +201,7 @@ class NavigationService:
         Pikachu can block your path on the very first step of navigation if you are not facing it
         when you try to move.
         """
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         if not game_state.pikachu.is_rendered:
             return
 
@@ -269,7 +268,7 @@ class NavigationService:
             await self.emulator.press_button(Button.A)
         await self.emulator.wait_for_animation_to_finish()  # Extra time for the HM use animation.
 
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         if not game_state.player.is_surfing:  # Starting to surf moves the player automatically.
             await self.emulator.press_button(button)
 

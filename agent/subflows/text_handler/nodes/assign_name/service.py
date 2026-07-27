@@ -42,7 +42,7 @@ class AssignNameService:
 
     async def assign_name(self) -> RawMemory:
         """Assign a name to something in the game."""
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         first_name_row = "A B C D E F G H I"
         if first_name_row not in game_state.screen.text:
             # Should never happen if we're in this handler, but just in case we need to bail.
@@ -95,7 +95,7 @@ class AssignNameService:
     async def _enter_name(self, name: str) -> None:
         """Enter the name into the game."""
         for letter in name:
-            game_state = self.emulator.get_game_state()
+            game_state = await self.emulator.get_game_state()
             argwhere_letter = np.argwhere(letter == LETTER_ARR)
             if len(argwhere_letter) != 1:
                 raise ValueError(f"Invalid letter: {letter}")

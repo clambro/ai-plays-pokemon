@@ -41,7 +41,7 @@ class SwapFirstPokemonService:
         try:
             index = await self._get_swap_index()
             await self._swap_first_pokemon(index)
-            game_state = self.emulator.get_game_state()
+            game_state = await self.emulator.get_game_state()
             self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content=(
@@ -52,7 +52,7 @@ class SwapFirstPokemonService:
             )
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error in the swap first Pokemon response. Skipping. {e}")
-            game_state = self.emulator.get_game_state()
+            game_state = await self.emulator.get_game_state()
             self.raw_memory.add_memory(
                 iteration=self.iteration,
                 content=(
@@ -65,7 +65,7 @@ class SwapFirstPokemonService:
 
     async def _get_swap_index(self) -> int:
         """Get the index of the Pokemon to swap with the first Pokemon."""
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         last_memory = self.raw_memory.pieces[self.iteration]
         prompt = SWAP_FIRST_POKEMON_PROMPT.format(
             thought=last_memory,
@@ -82,7 +82,7 @@ class SwapFirstPokemonService:
 
     async def _swap_first_pokemon(self, pokemon_index: int) -> None:
         """Swap the first Pokemon in the party with the Pokemon at the given index."""
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         if game_state.is_text_on_screen():
             raise SwapPokemonError("Can't swap Pokemon in a non-overworld state.")
 
@@ -101,29 +101,29 @@ class SwapFirstPokemonService:
     async def _open_start_menu(self) -> None:
         """Open the start menu."""
         await self.emulator.press_button(Button.START)
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         screen_text = game_state.screen.text
         if "POKéDEX" not in screen_text or "POKéMON" not in screen_text:
             raise SwapPokemonError("Failed to open the START menu.")
 
     async def _open_pokemon_menu(self) -> None:
         """Open the POKéMON menu."""
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         idx_diff = game_state.screen.menu_item_index - 1
         await self._move_cursor(idx_diff)
 
-        screen_text = self.emulator.get_game_state().screen.text
+        screen_text = (await self.emulator.get_game_state()).screen.text
         if "▶POKéMON" not in screen_text:
             raise SwapPokemonError("Failed to open the POKéMON menu.")
         await self.emulator.press_button(Button.A)
 
-        screen_text = self.emulator.get_game_state().screen.text
+        screen_text = (await self.emulator.get_game_state()).screen.text
         if "Choose a POKéMON." not in screen_text:
             raise SwapPokemonError("Failed to open the POKéMON menu.")
 
     async def _select_pokemon(self, pokemon_index: int) -> None:
         """Move the cursor to the Pokemon at the given index."""
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         idx_diff = game_state.screen.menu_item_index - pokemon_index
         await self._move_cursor(idx_diff)
         await self.emulator.press_button(Button.A)
@@ -134,14 +134,14 @@ class SwapFirstPokemonService:
             await self.emulator.press_button(Button.DOWN)
         await self.emulator.press_button(Button.UP)  # Go up to the SWITCH option.
 
-        screen_text = self.emulator.get_game_state().screen.text
+        screen_text = (await self.emulator.get_game_state()).screen.text
         if "▶SWITCH" not in screen_text:
             raise SwapPokemonError("Failed to open the SWITCH menu.")
         await self.emulator.press_button(Button.A)
 
     async def _swap_pokemon(self) -> None:
         """Swap the Pokemon at position 0 with the Pokemon at position 1."""
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         idx_diff = game_state.screen.menu_item_index - 0
         await self._move_cursor(idx_diff)
         await self.emulator.press_button(Button.A)
