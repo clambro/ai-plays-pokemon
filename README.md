@@ -22,7 +22,7 @@ If you want to buy me a coffee to help cover the streaming costs, you can do so 
 
 ### Prerequisites
 
-- Python 3.13
+- Python 3.14
 - [The uv package manager](https://docs.astral.sh/uv/) for installing dependencies
 - [A Gemini API key](https://ai.google.dev/gemini-api/docs/api-key) for calling the LLM
 - The Pokémon Yellow Legacy ROM — I am not licensed to distribute this. You'll have to get it yourself.

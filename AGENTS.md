@@ -2,7 +2,7 @@
 
 ## Environment and Commands
 
-This project uses Python 3.13 and `uv` for dependency management. Run project
+This project uses Python 3.14 and `uv` for dependency management. Run project
 tools through the locked environment:
 
 ```bash
@@ -20,9 +20,8 @@ documented in the README. Do not start it as a validation step: it launches the
 indefinite gameplay loop and may make billable model calls. Emulator smoke tests
 must be explicitly bounded.
 
-The foundation branch targets Python `>=3.13,<3.14`. Keep PyBoy pinned exactly
-to 2.6.0 here because changing it invalidates existing emulator states. The
-Python 3.14 work owns the coordinated PyBoy 2.6.1 update and fresh fixtures.
+The project targets standard GIL-enabled Python `>=3.14,<3.15`. PyBoy is pinned
+exactly because emulator changes can affect existing save states.
 
 ## Quality Rules
 
