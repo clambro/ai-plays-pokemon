@@ -1,7 +1,11 @@
 """Shared utilities for the battle subflow."""
 
+from typing import TYPE_CHECKING
+
 from common.schemas import Coords
-from emulator.game_state import YellowLegacyGameState
+
+if TYPE_CHECKING:
+    from emulator.game_state import YellowLegacyGameState
 
 
 def is_fight_menu_open(game_state: YellowLegacyGameState) -> bool:

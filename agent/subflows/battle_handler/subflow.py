@@ -1,11 +1,16 @@
 """Subflow construction for battle interactions."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Graph, GraphFactory, Subflow
-from junjo.workflow import StoreFactory
 
 from agent.state import AgentState, AgentStore
 from agent.subflows.battle_handler.state import BattleHandlerState, BattleHandlerStore
-from emulator.emulator import YellowLegacyEmulator
+
+if TYPE_CHECKING:
+    from junjo.workflow import StoreFactory
+
+    from emulator.emulator import YellowLegacyEmulator
 
 
 class BattleHandlerSubflow(Subflow[BattleHandlerState, BattleHandlerStore, AgentState, AgentStore]):

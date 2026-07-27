@@ -1,14 +1,18 @@
 """State models for the text subflow."""
 
+from typing import TYPE_CHECKING
+
 from junjo import BaseState, BaseStore
 
-from agent.state import AgentState
 from agent.subflows.text_handler.enums import TextHandler
-from emulator.game_state import YellowLegacyGameState
 from memory.goals import Goals
 from memory.long_term_memory import LongTermMemory
 from memory.raw_memory import RawMemory
 from memory.summary_memory import SummaryMemory
+
+if TYPE_CHECKING:
+    from agent.state import AgentState
+    from emulator.game_state import YellowLegacyGameState
 
 
 class TextHandlerState(BaseState):

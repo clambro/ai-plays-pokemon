@@ -1,11 +1,15 @@
 """Handle dialog box node for the text subflow."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Node
 from loguru import logger
 
 from agent.subflows.text_handler.nodes.handle_dialog_box.service import HandleDialogBoxService
 from agent.subflows.text_handler.state import TextHandlerStore
-from emulator.emulator import YellowLegacyEmulator
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
 
 
 class HandleDialogBoxNode(Node[TextHandlerStore]):

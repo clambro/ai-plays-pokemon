@@ -1,9 +1,13 @@
 """Parser for inventory data in Pokémon Yellow memory."""
 
-from pyboy import PyBoyMemoryView
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel
 
 from common.enums import PokeballItem
+
+if TYPE_CHECKING:
+    from pyboy import PyBoyMemoryView
 
 
 class InventoryItem(BaseModel):

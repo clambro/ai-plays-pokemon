@@ -1,9 +1,12 @@
 """Custom SQLAlchemy column types."""
 
 import struct
+from typing import TYPE_CHECKING
 
 from sqlalchemy import LargeBinary, TypeDecorator
-from sqlalchemy.engine import Dialect
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine import Dialect
 
 
 class Vector(TypeDecorator[list[float]]):

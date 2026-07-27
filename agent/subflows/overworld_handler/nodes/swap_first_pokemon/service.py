@@ -1,5 +1,7 @@
 """Business logic for swap first Pokémon in the overworld subflow."""
 
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.swap_first_pokemon.prompts import (
@@ -10,10 +12,12 @@ from agent.subflows.overworld_handler.nodes.swap_first_pokemon.schemas import (
     SwapPokemonError,
 )
 from common.enums import Button
-from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_FLASH_LITE_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
+    from memory.raw_memory import RawMemory
 
 
 class SwapFirstPokemonService:

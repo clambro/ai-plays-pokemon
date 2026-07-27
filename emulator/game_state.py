@@ -1,10 +1,9 @@
 """Game-state extraction from the running emulator."""
 
 from collections import defaultdict
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 import numpy as np
-from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_SHAPE
@@ -20,6 +19,9 @@ from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
 from emulator.parsers.warp import Warp, parse_warps
 from emulator.schemas import AsciiScreenWithEntities, DialogBox
+
+if TYPE_CHECKING:
+    from pyboy import PyBoyMemoryView
 
 
 class YellowLegacyGameState(BaseModel):

@@ -6,12 +6,15 @@ concerns to make them easier to test.
 """
 
 import asyncio
-
-import numpy as np
+from typing import TYPE_CHECKING
 
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection
 from common.schemas import Coords
-from overworld_map.schemas import OverworldMap
+
+if TYPE_CHECKING:
+    import numpy as np
+
+    from overworld_map.schemas import OverworldMap
 
 
 async def get_accessible_coords(

@@ -1,10 +1,14 @@
 """Parser for sprite data in Pokémon Yellow memory."""
 
-from pyboy import PyBoyMemoryView
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict
 
 from common.enums import SpriteLabel
 from common.schemas import Coords
+
+if TYPE_CHECKING:
+    from pyboy import PyBoyMemoryView
 
 _RANDOM_MOVEMENT = 0xFE
 _NOT_RENDERED = 0xFF

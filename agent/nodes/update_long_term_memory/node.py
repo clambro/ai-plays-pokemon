@@ -1,11 +1,15 @@
 """Update long term memory node for the top-level agent graph."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Node
 from loguru import logger
 
 from agent.nodes.update_long_term_memory.service import UpdateLongTermMemoryService
 from agent.state import AgentStore
-from emulator.emulator import YellowLegacyEmulator
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
 
 
 class UpdateLongTermMemoryNode(Node[AgentStore]):

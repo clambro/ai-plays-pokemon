@@ -1,14 +1,18 @@
 """Business logic for make decision in the battle subflow."""
 
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
 from agent.subflows.battle_handler.nodes.make_decision.prompts import MAKE_DECISION_PROMPT
 from agent.subflows.battle_handler.nodes.make_decision.schemas import MakeDecisionResponse
-from common.types import StateStringBuilderT
-from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory
+
+if TYPE_CHECKING:
+    from common.types import StateStringBuilderT
+    from emulator.emulator import YellowLegacyEmulator
+    from memory.raw_memory import RawMemory
 
 
 class MakeDecisionService:

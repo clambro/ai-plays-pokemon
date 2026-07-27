@@ -1,6 +1,7 @@
 """Tests for the Sokoban solver service."""
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
@@ -9,10 +10,12 @@ from agent.subflows.overworld_handler.nodes.sokoban_solver.service import Sokoba
 from common.enums import Button, SpriteLabel
 from common.schemas import Coords
 from emulator.emulator import YellowLegacyEmulator
-from emulator.game_state import YellowLegacyGameState
 from memory.raw_memory import RawMemory
 from overworld_map.schemas import OverworldSprite
 from overworld_map.service import get_overworld_map, update_map_with_screen_info
+
+if TYPE_CHECKING:
+    from emulator.game_state import YellowLegacyGameState
 
 
 @pytest.mark.integration

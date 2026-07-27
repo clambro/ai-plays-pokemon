@@ -1,5 +1,7 @@
 """Graph construction for the overworld subflow."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Edge, Graph
 
 from agent.nodes.dummy.node import DummyNode
@@ -14,7 +16,9 @@ from agent.subflows.overworld_handler.nodes.sokoban_solver.node import SokobanSo
 from agent.subflows.overworld_handler.nodes.swap_first_pokemon.node import SwapFirstPokemonNode
 from agent.subflows.overworld_handler.nodes.update_map.node import UpdateMapNode
 from agent.subflows.overworld_handler.nodes.use_item.node import UseItemNode
-from emulator.emulator import YellowLegacyEmulator
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
 
 
 def build_overworld_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Graph:

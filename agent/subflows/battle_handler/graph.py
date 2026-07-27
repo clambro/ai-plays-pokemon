@@ -1,5 +1,7 @@
 """Graph construction for the battle subflow."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Edge, Graph
 
 from agent.subflows.battle_handler.conditions import ToolArgsIs
@@ -16,7 +18,9 @@ from agent.subflows.battle_handler.schemas import (
     SwitchPokemonToolArgs,
     ThrowBallToolArgs,
 )
-from emulator.emulator import YellowLegacyEmulator
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
 
 
 def build_battle_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Graph:

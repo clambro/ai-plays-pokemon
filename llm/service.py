@@ -1,7 +1,7 @@
 """Gemini client integration for structured LLM requests."""
 
 import asyncio
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from google import genai
 from google.genai.errors import ServerError
@@ -21,7 +21,9 @@ from common.prompts import SYSTEM_PROMPT
 from common.settings import settings
 from database.llm_messages.repository import create_llm_message
 from database.llm_messages.schemas import LLMMessageCreate
-from llm.schemas import GeminiModel
+
+if TYPE_CHECKING:
+    from llm.schemas import GeminiModel
 
 PydanticModel = TypeVar("PydanticModel", bound=BaseModel)
 

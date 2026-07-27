@@ -1,9 +1,13 @@
 """Routing conditions for the text subflow."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Condition
 
-from agent.subflows.text_handler.enums import TextHandler
 from agent.subflows.text_handler.state import TextHandlerState
+
+if TYPE_CHECKING:
+    from agent.subflows.text_handler.enums import TextHandler
 
 
 class HandlerIs(Condition[TextHandlerState]):

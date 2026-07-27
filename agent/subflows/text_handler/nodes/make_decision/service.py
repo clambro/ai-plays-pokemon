@@ -1,16 +1,20 @@
 """Business logic for make decision in the text subflow."""
 
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
 from agent.subflows.text_handler.nodes.make_decision.prompts import DECISION_MAKER_TEXT_PROMPT
 from agent.subflows.text_handler.nodes.make_decision.schemas import DecisionMakerTextResponse
-from common.enums import Button
-from common.types import StateStringBuilderT
-from emulator.emulator import YellowLegacyEmulator
-from emulator.game_state import YellowLegacyGameState
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory
+
+if TYPE_CHECKING:
+    from common.enums import Button
+    from common.types import StateStringBuilderT
+    from emulator.emulator import YellowLegacyEmulator
+    from emulator.game_state import YellowLegacyGameState
+    from memory.raw_memory import RawMemory
 
 
 class DecisionMakerTextService:

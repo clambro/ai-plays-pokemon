@@ -64,15 +64,17 @@ ignore = [
     "FIX002",  # Line contains TODO
     "TD002",   # Missing author in TODO `# TODO(<author_name>): ...`
     "TD003",   # Missing TODO link
-    # Temporary Python 3.14 migration ignores; resolve in the follow-up cleanup.
-    "TC001",  # Typing-only first-party import.
-    "TC002",  # Typing-only third-party import.
-    "TC003",  # Typing-only standard-library import.
-    "UP037",  # Quoted annotation.
 ]
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "double"
+
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = [
+    "database.base.SQLAlchemyBase",
+    "junjo.BaseState",
+    "pydantic.BaseModel",
+]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10

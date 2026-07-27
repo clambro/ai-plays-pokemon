@@ -1,11 +1,15 @@
 """Parser for player data in Pokémon Yellow memory."""
 
-from pyboy import PyBoyMemoryView
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict
 
 from common.enums import Badge, FacingDirection
 from common.schemas import Coords
 from emulator.parsers.utils import get_text_from_byte_array
+
+if TYPE_CHECKING:
+    from pyboy import PyBoyMemoryView
 
 _BIKING_STATE = 1
 _SURFING_STATE = 2

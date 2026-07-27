@@ -1,5 +1,7 @@
 """Swap first pokémon node for the overworld subflow."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Node
 from loguru import logger
 
@@ -7,7 +9,9 @@ from agent.subflows.overworld_handler.nodes.swap_first_pokemon.service import (
     SwapFirstPokemonService,
 )
 from agent.subflows.overworld_handler.state import OverworldHandlerStore
-from emulator.emulator import YellowLegacyEmulator
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
 
 
 class SwapFirstPokemonNode(Node[OverworldHandlerStore]):

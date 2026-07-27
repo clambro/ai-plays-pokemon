@@ -1,16 +1,19 @@
 """Business logic for Sokoban solver in the overworld subflow."""
 
 import asyncio
+from typing import TYPE_CHECKING
 
 from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.sokoban_solver.schemas import SokobanMap
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, SpriteLabel
 from common.schemas import Coords
-from emulator.emulator import YellowLegacyEmulator
-from emulator.game_state import YellowLegacyGameState
-from memory.raw_memory import RawMemory
-from overworld_map.schemas import OverworldMap
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
+    from emulator.game_state import YellowLegacyGameState
+    from memory.raw_memory import RawMemory
+    from overworld_map.schemas import OverworldMap
 
 FREE_TILE = "F"
 WALL_TILE = "W"

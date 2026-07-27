@@ -1,9 +1,13 @@
 """Parser for sign data in Pokémon Yellow memory."""
 
-from pyboy import PyBoyMemoryView
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict
 
 from common.schemas import Coords
+
+if TYPE_CHECKING:
+    from pyboy import PyBoyMemoryView
 
 
 class Sign(BaseModel):

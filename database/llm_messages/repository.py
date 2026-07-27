@@ -1,12 +1,15 @@
 """Persistence operations for LLM messages."""
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select
 
 from database.db_config import db_sessionmaker
 from database.llm_messages.model import LLMMessageDBModel
-from database.llm_messages.schemas import LLMMessageCreate
+
+if TYPE_CHECKING:
+    from database.llm_messages.schemas import LLMMessageCreate
 
 
 async def create_llm_message(llm_message: LLMMessageCreate) -> None:

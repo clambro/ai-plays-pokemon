@@ -5,16 +5,19 @@ import base64
 import io
 from contextlib import AbstractAsyncContextManager, suppress
 from copy import deepcopy
-from pathlib import Path
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 from loguru import logger
 from PIL import Image
 from pyboy import PyBoy
 
 from common.constants import DEFAULT_ROM_PATH
-from common.enums import Button
 from emulator.game_state import YellowLegacyGameState
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from common.enums import Button
 
 
 class YellowLegacyEmulator(AbstractAsyncContextManager):

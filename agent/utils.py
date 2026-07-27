@@ -1,9 +1,11 @@
 """Shared utilities for the agent graph."""
 
 import asyncio
+from typing import TYPE_CHECKING
 
-from emulator.emulator import YellowLegacyEmulator
-from emulator.schemas import DialogBox
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
+    from emulator.schemas import DialogBox
 
 
 def append_dialog_to_list_inplace(text: list[str], dialog_box: DialogBox) -> None:

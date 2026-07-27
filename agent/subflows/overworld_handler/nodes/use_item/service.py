@@ -1,14 +1,18 @@
 """Business logic for use item in the overworld subflow."""
 
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.use_item.prompts import USE_ITEM_PROMPT
 from agent.subflows.overworld_handler.nodes.use_item.schemas import UseItemError, UseItemResponse
 from common.enums import Button
-from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_FLASH_LITE_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
+    from memory.raw_memory import RawMemory
 
 
 class UseItemService:

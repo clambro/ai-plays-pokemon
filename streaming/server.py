@@ -2,32 +2,35 @@
 
 from contextlib import AbstractAsyncContextManager
 from pathlib import Path
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 import aiofiles
 from aiohttp import web
-from aiohttp.web import Request, Response
 from loguru import logger
 
-from agent.state import AgentState
-from emulator.game_state import YellowLegacyGameState
-from memory.raw_memory import RawMemory
 from streaming.schemas import GameStateView, LogEntryView
+
+if TYPE_CHECKING:
+    from aiohttp.web import Request, Response
+
+    from agent.state import AgentState
+    from emulator.game_state import YellowLegacyGameState
+    from memory.raw_memory import RawMemory
 
 
 class BackgroundStreamServer(AbstractAsyncContextManager):
     """Async context manager for hosting the background HTML page with live updates."""
 
     # Global instance for dependency injection
-    _instance: "BackgroundStreamServer | None" = None
+    _instance: BackgroundStreamServer | None = None
 
     @classmethod
-    def get_instance(cls) -> "BackgroundStreamServer | None":
+    def get_instance(cls) -> BackgroundStreamServer | None:
         """Get the global instance of the stream server."""
         return cls._instance
 
     @classmethod
-    def _set_instance(cls, instance: "BackgroundStreamServer | None") -> None:
+    def _set_instance(cls, instance: BackgroundStreamServer | None) -> None:
         """Set the global instance of the stream server."""
         cls._instance = instance
 

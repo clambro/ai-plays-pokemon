@@ -1,5 +1,7 @@
 """Business logic for select tool in the overworld subflow."""
 
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
 from agent.subflows.overworld_handler.enums import OverworldTool
@@ -16,13 +18,15 @@ from agent.subflows.overworld_handler.nodes.select_tool.prompts import (
 from agent.subflows.overworld_handler.nodes.select_tool.schemas import SelectToolResponse
 from common.constants import MIN_ITERATIONS_PER_CRITIQUE
 from common.enums import AsciiTile, SpriteLabel
-from common.types import StateStringBuilderT
-from emulator.emulator import YellowLegacyEmulator
-from emulator.game_state import YellowLegacyGameState
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory
-from overworld_map.schemas import OverworldMap
+
+if TYPE_CHECKING:
+    from common.types import StateStringBuilderT
+    from emulator.emulator import YellowLegacyEmulator
+    from emulator.game_state import YellowLegacyGameState
+    from memory.raw_memory import RawMemory
+    from overworld_map.schemas import OverworldMap
 
 
 class SelectToolService:

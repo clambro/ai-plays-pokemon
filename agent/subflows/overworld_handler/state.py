@@ -1,15 +1,19 @@
 """State models for the overworld subflow."""
 
+from typing import TYPE_CHECKING
+
 from junjo import BaseState, BaseStore
 
-from agent.state import AgentState
 from agent.subflows.overworld_handler.enums import OverworldTool
-from emulator.game_state import YellowLegacyGameState
 from memory.goals import Goals
 from memory.long_term_memory import LongTermMemory
 from memory.raw_memory import RawMemory
 from memory.summary_memory import SummaryMemory
 from overworld_map.schemas import OverworldMap
+
+if TYPE_CHECKING:
+    from agent.state import AgentState
+    from emulator.game_state import YellowLegacyGameState
 
 
 class OverworldHandlerState(BaseState):

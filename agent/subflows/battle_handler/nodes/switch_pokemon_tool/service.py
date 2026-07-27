@@ -1,13 +1,17 @@
 """Business logic for switch Pokémon tool in the battle subflow."""
 
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
-from agent.subflows.battle_handler.schemas import SwitchPokemonToolArgs
 from agent.subflows.battle_handler.utils import get_cursor_pos_in_fight_menu
 from common.enums import Button
-from emulator.emulator import YellowLegacyEmulator
-from emulator.game_state import YellowLegacyGameState
-from memory.raw_memory import RawMemory
+
+if TYPE_CHECKING:
+    from agent.subflows.battle_handler.schemas import SwitchPokemonToolArgs
+    from emulator.emulator import YellowLegacyEmulator
+    from emulator.game_state import YellowLegacyGameState
+    from memory.raw_memory import RawMemory
 
 
 class SwitchPokemonToolService:

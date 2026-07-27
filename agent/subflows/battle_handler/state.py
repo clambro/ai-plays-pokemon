@@ -1,14 +1,18 @@
 """State models for the battle subflow."""
 
+from typing import TYPE_CHECKING
+
 from junjo import BaseState, BaseStore
 
-from agent.state import AgentState
 from agent.subflows.battle_handler.schemas import BattleToolArgs
-from emulator.emulator import YellowLegacyGameState
 from memory.goals import Goals
 from memory.long_term_memory import LongTermMemory
 from memory.raw_memory import RawMemory
 from memory.summary_memory import SummaryMemory
+
+if TYPE_CHECKING:
+    from agent.state import AgentState
+    from emulator.emulator import YellowLegacyGameState
 
 
 class BattleHandlerState(BaseState):

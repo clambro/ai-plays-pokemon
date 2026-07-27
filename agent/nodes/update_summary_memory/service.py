@@ -1,13 +1,17 @@
 """Business logic for update summary memory in the top-level agent graph."""
 
+from typing import TYPE_CHECKING
+
 from agent.nodes.update_summary_memory.prompts import UPDATE_SUMMARY_MEMORY_PROMPT
 from agent.nodes.update_summary_memory.schemas import UpdateSummaryMemoryResponse
 from common.constants import ITERATIONS_PER_SUMMARY_UPDATE, RAW_MEMORY_MAX_SIZE
-from common.types import StateStringBuilderT
-from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
 from memory.summary_memory import SummaryMemory, SummaryMemoryPiece
+
+if TYPE_CHECKING:
+    from common.types import StateStringBuilderT
+    from emulator.emulator import YellowLegacyEmulator
 
 
 class UpdateSummaryMemoryService:

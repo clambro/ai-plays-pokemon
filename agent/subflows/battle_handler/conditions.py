@@ -1,9 +1,13 @@
 """Routing conditions for the battle subflow."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Condition
 
-from agent.subflows.battle_handler.schemas import BattleToolArgs
 from agent.subflows.battle_handler.state import BattleHandlerState
+
+if TYPE_CHECKING:
+    from agent.subflows.battle_handler.schemas import BattleToolArgs
 
 
 class ToolArgsIs(Condition[BattleHandlerState]):

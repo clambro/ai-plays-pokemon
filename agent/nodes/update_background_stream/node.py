@@ -1,11 +1,15 @@
 """Update background stream node for the top-level agent graph."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Node
 from loguru import logger
 
 from agent.state import AgentStore
-from emulator.emulator import YellowLegacyEmulator
 from streaming.server import update_background_from_states
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
 
 
 class UpdateBackgroundStreamNode(Node[AgentStore]):
