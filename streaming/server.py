@@ -108,9 +108,9 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
         else:
             logger.warning("Current data is not set. Cannot update log")
 
-    async def update_data(self, agent_state: AgentState, game_state: YellowLegacyGameState) -> None:
+    def update_data(self, agent_state: AgentState, game_state: YellowLegacyGameState) -> None:
         """Update the current state data."""
-        self._current_data = await GameStateView.from_states(agent_state, game_state)
+        self._current_data = GameStateView.from_states(agent_state, game_state)
 
 
 def update_background_log_from_memory(memory: RawMemory) -> None:
@@ -122,13 +122,13 @@ def update_background_log_from_memory(memory: RawMemory) -> None:
         logger.warning("Stream server not available for update")
 
 
-async def update_background_from_states(
+def update_background_from_states(
     agent_state: AgentState,
     game_state: YellowLegacyGameState,
 ) -> None:
     """Helper function to update the stream server from anywhere in the codebase."""
     server = BackgroundStreamServer.get_instance()
     if server is not None:
-        await server.update_data(agent_state, game_state)
+        server.update_data(agent_state, game_state)
     else:
         logger.warning("Stream server not available for update")

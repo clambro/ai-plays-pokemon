@@ -134,6 +134,5 @@ async def _choose_args(
     response = await llm_service.get_llm_response_pydantic(
         messages=[img, prompt],
         schema=DetermineArgsResponse,
-        prompt_name="determine_battle_args",
     )
     return response.thoughts, args[response.index]

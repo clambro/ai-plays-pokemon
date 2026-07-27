@@ -26,4 +26,4 @@ class UpdateBackgroundStreamNode(Node[AgentStore]):
 
         state = await store.get_state()
 
-        await update_background_from_states(state, self.emulator.get_game_state())
+        update_background_from_states(state, self.emulator.get_game_state())

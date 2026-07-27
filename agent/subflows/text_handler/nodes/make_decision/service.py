@@ -48,7 +48,6 @@ async def make_decision(
         response = await llm_service.get_llm_response_pydantic(
             messages=[img, prompt],
             schema=DecisionMakerTextResponse,
-            prompt_name="make_text_decision",
         )
         buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
         raw_memory.add_memory(

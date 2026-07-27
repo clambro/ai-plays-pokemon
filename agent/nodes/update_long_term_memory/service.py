@@ -47,7 +47,6 @@ async def update_long_term_memory(
         response = await llm_service.get_llm_response_pydantic(
             prompt,
             UpdateLongTermMemoryResponse,
-            prompt_name="update_long_term_memory",
         )
         for update_piece in response.pieces:
             orig_piece = long_term_memory.pieces.get(update_piece.title)

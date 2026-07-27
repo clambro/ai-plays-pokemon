@@ -35,6 +35,7 @@ const GameStateSchema = z.object({
     money: z.number().int().min(0),
     pokedex_seen: z.number().int().min(0),
     pokedex_caught: z.number().int().min(0),
+    total_tokens: z.number().int().min(0),
     total_cost: z.number().min(0),
     play_time_seconds: z.number().int().min(0),
     badges: z.array(z.string()),
@@ -48,6 +49,7 @@ const refs = {
     money: document.getElementById('money'),
     iteration: document.getElementById('iteration'),
     caughtSeen: document.getElementById('caught-seen'),
+    totalTokens: document.getElementById('total-tokens'),
     totalCost: document.getElementById('total-cost'),
     playTime: document.getElementById('play-time'),
     badgesContainer: document.getElementById('badges-container'),
@@ -66,6 +68,7 @@ function updateDisplay(data) {
         iteration,
         pokedex_seen,
         pokedex_caught,
+        total_tokens,
         total_cost,
         play_time_seconds,
         badges,
@@ -78,6 +81,7 @@ function updateDisplay(data) {
         !refs.money
         || !refs.iteration
         || !refs.caughtSeen
+        || !refs.totalTokens
         || !refs.totalCost
         || !refs.playTime
         || !refs.badgesContainer
@@ -93,6 +97,7 @@ function updateDisplay(data) {
     refs.money.textContent = `¥${money.toLocaleString()}`;
     refs.iteration.textContent = iteration.toString();
     refs.caughtSeen.textContent = `${pokedex_caught}/${pokedex_seen}`;
+    refs.totalTokens.textContent = formatTokenCount(total_tokens);
     refs.totalCost.textContent = `$${total_cost.toFixed(2)}`;
     const hours = Math.floor(play_time_seconds / 3600);
     const minutes = Math.floor((play_time_seconds % 3600) / 60);
@@ -149,6 +154,17 @@ function updateDisplay(data) {
         }
     }
     refs.partyDiv.replaceChildren(partyFrag);
+}
+
+/**
+ * @param {number} count
+ * @returns {string}
+ */
+function formatTokenCount(count) {
+    if (count < 1_000) return count.toLocaleString();
+    if (count < 1_000_000) return `${(count / 1_000).toFixed(2)}k`;
+    if (count < 1_000_000_000) return `${(count / 1_000_000).toFixed(2)}M`;
+    return `${(count / 1_000_000_000).toFixed(2)}B`;
 }
 
 /**

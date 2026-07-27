@@ -39,7 +39,6 @@ async def critique(
         response = await llm_service.get_llm_response_pydantic(
             [screenshot, prompt],
             schema=CritiqueResponse,
-            prompt_name="critique_overworld_state",
             thinking_tokens=1024,
         )
         raw_memory.add_memory(

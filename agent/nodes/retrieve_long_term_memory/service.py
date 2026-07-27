@@ -42,7 +42,6 @@ async def retrieve_long_term_memory(
     try:
         query = await llm_service.get_llm_response(
             [screenshot, prompt],
-            prompt_name="get_retrieval_query",
         )
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Error in the retrieval query. Returning the previous memories. {e}")

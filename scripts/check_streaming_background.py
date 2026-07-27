@@ -12,7 +12,9 @@ from streaming.tests.integration.test_server import MOCK_DATA
 async def main() -> None:
     """Run the server with mock data for a few seconds."""
     async with BackgroundStreamServer() as server:
-        server._current_data = MOCK_DATA  # noqa: SLF001
+        server._current_data = MOCK_DATA.model_copy(  # noqa: SLF001
+            update={"total_tokens": 12_345_678},
+        )
         await asyncio.sleep(30)
 
 

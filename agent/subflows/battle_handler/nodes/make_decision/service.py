@@ -43,7 +43,6 @@ async def make_decision(
         response = await llm_service.get_llm_response_pydantic(
             messages=[img, prompt],
             schema=MakeDecisionResponse,
-            prompt_name="make_battle_decision",
         )
         raw_memory.add_memory(iteration=iteration, content=str(response))
         for i, button in enumerate(response.buttons):

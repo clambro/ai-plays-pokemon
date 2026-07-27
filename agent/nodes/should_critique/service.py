@@ -56,7 +56,6 @@ async def should_critique(
         response = await llm_service.get_llm_response_pydantic(
             prompt,
             ShouldCritiqueResponse,
-            prompt_name="should_critique",
         )
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Error checking if the agent should critique. Assuming not.\n{e}")

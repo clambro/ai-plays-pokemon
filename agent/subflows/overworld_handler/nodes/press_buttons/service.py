@@ -50,7 +50,6 @@ async def press_buttons(
         response = await llm_service.get_llm_response_pydantic(
             messages=[img, prompt],
             schema=PressButtonsResponse,
-            prompt_name="press_buttons",
         )
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Error in the button pressing response. Skipping. {e}")
