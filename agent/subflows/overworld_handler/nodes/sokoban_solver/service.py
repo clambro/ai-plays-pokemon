@@ -89,9 +89,9 @@ class SokobanSolverService:
         return SokobanMap(tiles=simplified_tiles, boulders=boulders, goals=goals)
 
     def _solve_sokoban(self, sokoban_map: SokobanMap) -> list[Button] | None:
-        """
-        Solve the Sokoban puzzle using BFS on the state space. This could be optimized, but the
-        state spaces in Pokemon are small and simple enough that this is likely fine.
+        """Solve the Sokoban puzzle using breadth-first search.
+
+        The search is deliberately simple because Pokémon's Sokoban state spaces are small.
         """
         player_pos = self.emulator.get_game_state().player.coords
         initial_state = (player_pos, frozenset(sokoban_map.boulders))

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from agent.subflows.battle_handler.nodes.switch_pokemon_tool.service import SwitchPokemonToolService
+from agent.subflows.battle_handler.nodes.switch_pokemon_tool.service import switch_pokemon
 from agent.subflows.battle_handler.schemas import SwitchPokemonToolArgs
 from emulator.emulator import YellowLegacyEmulator
 from memory.raw_memory import RawMemory
@@ -27,7 +27,7 @@ async def test_switch_to_pokemon() -> None:
         assert game_state.battle.player_pokemon is not None
         assert len(game_state.party) >= party_index
 
-        service = SwitchPokemonToolService(
+        raw_memory = await switch_pokemon(
             iteration=0,
             raw_memory=RawMemory(),
             tool_args=SwitchPokemonToolArgs(
@@ -37,7 +37,6 @@ async def test_switch_to_pokemon() -> None:
             ),
             emulator=emulator,
         )
-        raw_memory = await service.switch_pokemon()
         await emulator.wait_for_animation_to_finish()
 
         game_state = emulator.get_game_state()

@@ -26,14 +26,17 @@ async def main(
     load_latest: bool = False,
     track_telemetry: bool = False,
 ) -> None:
-    """
-    Get the emulator ticking on an async thread, and iteratively run the agent.
+    """Run the emulator, streaming server, and iterative agent workflow.
 
-    :param rom_path: The path to the ROM file.
-    :param backup_folder: Optional path to load a saved state from.
-    :param mute_sound: Whether to mute the sound.
-    :param load_latest: Whether to load the latest backup.
-    :param track_telemetry: Whether to track telemetry.
+    Args:
+        rom_path: ROM file to load.
+        backup_folder: Specific backup to restore before starting.
+        mute_sound: Whether to initialize the emulator with zero volume.
+        load_latest: Whether to restore the newest available backup.
+        track_telemetry: Whether to enable OpenTelemetry instrumentation.
+
+    Raises:
+        ValueError: Both ``backup_folder`` and ``load_latest`` are specified.
     """
     if backup_folder and load_latest:
         raise ValueError("Cannot load latest backup and specify a backup folder at the same time.")

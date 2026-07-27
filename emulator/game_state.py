@@ -43,11 +43,13 @@ class YellowLegacyGameState(BaseModel):
 
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView) -> Self:
-        """
-        Create a new game state from a snapshot of the memory.
+        """Create a game-state snapshot from emulator memory.
 
-        :param mem: The PyBoyMemoryView instance to create the game state from.
-        :return: A new game state.
+        Args:
+            mem: Current PyBoy memory view.
+
+        Returns:
+            An immutable parsed snapshot of the relevant game state.
         """
         return cls(
             player=parse_player(mem),
@@ -158,9 +160,12 @@ class YellowLegacyGameState(BaseModel):
         return "STRENGTH" in movepool and Badge.RAINBOWBADGE in self.player.badges
 
     def is_naming_screen(self) -> bool:
-        """
-        Check if the current screen is the naming screen, meaning that there is no open dialog box
-        and the letters for typing the name are on screen.
+        """Check whether the naming screen is visible.
+
+        The naming screen has no open dialog box and displays the letter-entry grid.
+
+        Returns:
+            Whether the visible screen is the name-entry interface.
         """
         name_first_row = "A B C D E F G H I"
         onscreen_text = self.screen.text.replace("▶", "")  # Ignore the cursor.
@@ -177,11 +182,13 @@ class YellowLegacyGameState(BaseModel):
         return hm_tiles
 
     def to_screen_coords(self, coords: Coords) -> Coords | None:
-        """
-        Convert map coordinates to screen coordinates.
+        """Convert map coordinates to screen coordinates.
 
-        :param coords: The map coordinates.
-        :return: The screen coordinates (y, x) or None if they're off screen.
+        Args:
+            coords: Coordinates on the current map.
+
+        Returns:
+            Coordinates relative to the visible screen, or ``None`` when they are offscreen.
         """
         if (
             coords.row < self.screen.top
@@ -193,9 +200,12 @@ class YellowLegacyGameState(BaseModel):
         return coords - (self.screen.top, self.screen.left)
 
     def get_ascii_screen(self) -> AsciiScreenWithEntities:
-        """
-        Get an ASCII representation of the current screen, including the onscreen sprites and warp
-        points.
+        """Get an ASCII representation of the current screen.
+
+        The returned screen includes visible sprites, signs, warps, Pikachu, and the player.
+
+        Returns:
+            The classified visible screen, its elevation blockages, and rendered entities.
         """
         blocks, blockages = self._get_background_blocks()
 
@@ -280,11 +290,10 @@ class YellowLegacyGameState(BaseModel):
         return out
 
     def _get_background_blocks(self) -> tuple[np.ndarray, dict[Coords, BlockedDirection]]:
-        """
-        Get the background blocks on the screen without the entities. Note special cases where
-        movement is blocked due to elevation differences.
+        """Get background blocks and paired-tile movement restrictions.
 
-        :return: A tuple of the blocks and blockages.
+        Returns:
+            The classified background grid and elevation blockages, excluding map entities.
         """
         tiles = np.array(self.screen.tiles)
         # Each block on screen is a 2x2 square of tiles.
@@ -335,14 +344,16 @@ class YellowLegacyGameState(BaseModel):
         return self._get_spinner_type(flat_block)
 
     def _get_ledge_type(self, block: np.ndarray) -> AsciiTile | None:
-        """
-        Check if the block is a ledge.
+        """Check whether a block contains a ledge.
 
         A tile is defined as a ledge if at least one row/column follows the pattern of a ledge,
         depending on the orientation of the ledge.
 
-        :param block: The block to check, which is a 2x2 array of tile values.
-        :return: The type of ledge, or None if the block is not a ledge.
+        Args:
+            block: Two-by-two array of tile values to classify.
+
+        Returns:
+            The oriented ledge tile, or ``None`` when the block is not a ledge.
         """
         top = tuple(block[0, :].tolist())
         bottom = tuple(block[1, :].tolist())
@@ -381,18 +392,19 @@ class YellowLegacyGameState(BaseModel):
         tiles: np.ndarray,
         blockages: defaultdict[Coords, BlockedDirection],
     ) -> defaultdict[Coords, BlockedDirection]:
-        """
-        Get the blockage for a given set of coordinates by checking if the tiles in the bottom-left
-        corner of this block and the one above it are in a collision pair.
+        """Update blockages for the block at a pair of tile indices.
 
         Comparisons for collisions, as elsewhere in Pokemon Yellow, are done using the bottom-left
-        tile of each block.
+        tile of each block and the corresponding tile in the block above or to the left.
 
-        :param i: The tile row index of the upper-left corner of the block.
-        :param j: The tile column index of the upper-left corner of the block.
-        :param tiles: The tiles array.
-        :param blockages: The blockages dictionary to update.
-        :return: The updated blockages dictionary.
+        Args:
+            i: Tile row index of the block's upper-left corner.
+            j: Tile column index of the block's upper-left corner.
+            tiles: Full visible tile array.
+            blockages: Blockage mapping to mutate.
+
+        Returns:
+            The mutated blockage mapping.
         """
         bi, bj = i // 2, j // 2  # Block indices, as opposed to tile indices.
         block_tile = tiles[i + 1, j]  # The bottom-left tile of the block is the one used to check.

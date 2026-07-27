@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.subflows.battle_handler.nodes.throw_ball_tool.service import ThrowBallToolService
+from agent.subflows.battle_handler.nodes.throw_ball_tool.service import throw_ball
 from agent.subflows.battle_handler.schemas import ThrowBallToolArgs
 from agent.subflows.battle_handler.state import BattleHandlerStore
 
@@ -33,13 +33,11 @@ class ThrowBallToolNode(Node[BattleHandlerStore]):
         if not isinstance(state.tool_args, ThrowBallToolArgs):
             raise TypeError("Tool args is not a ThrowBallToolArgs")
 
-        service = ThrowBallToolService(
+        raw_memory = await throw_ball(
             iteration=state.iteration,
             raw_memory=state.raw_memory,
             tool_args=state.tool_args,
             emulator=self.emulator,
         )
-
-        raw_memory = await service.throw_ball()
 
         await store.set_raw_memory(raw_memory)

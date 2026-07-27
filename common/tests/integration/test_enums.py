@@ -12,9 +12,7 @@ _client = genai.Client(api_key=settings.gemini_api_key)
 
 @pytest.mark.integration
 def test_one_token_per_tile() -> None:
-    """
-    Test that each ASCII map tile is encoded as a single token and that it doesn't combine
-    characters into a single token if you repeat the same tile multiple times.
+    """Test that each ASCII map tile is encoded independently as one token.
 
     The particular model shouldn't matter much. I think they all use the same tokenizer.
     """

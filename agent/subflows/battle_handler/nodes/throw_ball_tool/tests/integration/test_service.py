@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from agent.subflows.battle_handler.nodes.throw_ball_tool.service import ThrowBallToolService
+from agent.subflows.battle_handler.nodes.throw_ball_tool.service import throw_ball
 from agent.subflows.battle_handler.schemas import ThrowBallToolArgs
 from common.enums import PokeballItem
 from emulator.emulator import YellowLegacyEmulator
@@ -34,13 +34,12 @@ async def test_throw_pokeball() -> None:
                 break
         assert pokeball_index is not None, "Poke Ball not found in inventory"
 
-        service = ThrowBallToolService(
+        raw_memory = await throw_ball(
             iteration=0,
             raw_memory=RawMemory(),
             tool_args=ThrowBallToolArgs(item_index=pokeball_index, ball=PokeballItem.POKE_BALL),
             emulator=emulator,
         )
-        raw_memory = await service.throw_ball()
         await asyncio.sleep(0.1)  # Enough time to change frames, but not to catch the pokemon.
 
         game_state = emulator.get_game_state()

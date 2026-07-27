@@ -10,48 +10,46 @@ if TYPE_CHECKING:
     from memory.long_term_memory import LongTermMemory
 
 
-class PrepareAgentStateService:
-    """Service for preparing the agent state."""
+async def wait_for_animations(emulator: YellowLegacyEmulator) -> None:
+    """Wait until all animations have finished so that we can begin the Agent loop.
 
-    def __init__(
-        self,
-        iterations_since_last_ltm_retrieval: int,
-        long_term_memory: LongTermMemory,
-        emulator: YellowLegacyEmulator,
-    ) -> None:
-        """Initialize the prepare agent state service."""
-        self.iterations_since_last_ltm_retrieval = iterations_since_last_ltm_retrieval
-        self.long_term_memory = long_term_memory
-        self.emulator = emulator
+    We run the check twice to be absolutely sure. Some cutscenes have a slight delay between
+    actions, and missing that can cause weird downstream issues.
+    """
+    await emulator.wait_for_animation_to_finish()
+    await emulator.wait_for_animation_to_finish()
 
-    async def wait_for_animations(self) -> None:
-        """
-        Wait until all animations have finished so that we can begin the Agent loop.
 
-        We run the check twice to be absolutely sure. Some cutscenes have a slight delay between
-        actions, and missing that can cause weird downstream issues.
-        """
-        await self.emulator.wait_for_animation_to_finish()
-        await self.emulator.wait_for_animation_to_finish()
+async def determine_handler(emulator: YellowLegacyEmulator) -> AgentStateHandler:
+    """Determine which handler to use based on the current game state."""
+    game_state = emulator.get_game_state()
+    # The nickname screen after catching a Pokemon is considered a battle state by the game,
+    # but we need to route it to the text handler instead.
+    if game_state.battle.is_in_battle and not game_state.is_naming_screen():
+        return AgentStateHandler.BATTLE
+    if (
+        game_state.is_text_on_screen()
+        or game_state.map.height == 0  # Usually indicates a transition between cutscenes.
+        or game_state.map.width == 0
+    ):
+        return AgentStateHandler.TEXT
+    return AgentStateHandler.OVERWORLD
 
-    async def determine_handler(self) -> AgentStateHandler:
-        """Determine which handler to use based on the current game state."""
-        game_state = self.emulator.get_game_state()
-        # The nickname screen after catching a Pokemon is considered a battle state by the game,
-        # but we need to route it to the text handler instead.
-        if game_state.battle.is_in_battle and not game_state.is_naming_screen():
-            return AgentStateHandler.BATTLE
-        if (
-            game_state.is_text_on_screen()
-            or game_state.map.height == 0  # Usually indicates a transition between cutscenes.
-            or game_state.map.width == 0
-        ):
-            return AgentStateHandler.TEXT
-        return AgentStateHandler.OVERWORLD
 
-    async def should_retrieve_memory(self) -> bool:
-        """Determine if the agent should retrieve memory."""
-        return (
-            self.iterations_since_last_ltm_retrieval >= ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL
-            or not self.long_term_memory.pieces
-        )
+async def should_retrieve_memory(
+    iterations_since_last_ltm_retrieval: int,
+    long_term_memory: LongTermMemory,
+) -> bool:
+    """Determine whether the next agent iteration should retrieve long-term memory.
+
+    Args:
+        iterations_since_last_ltm_retrieval: Iterations elapsed since the previous retrieval.
+        long_term_memory: Memories currently loaded into the agent context.
+
+    Returns:
+        Whether the retrieval interval elapsed or no long-term memory is currently loaded.
+    """
+    return (
+        iterations_since_last_ltm_retrieval >= ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL
+        or not long_term_memory.pieces
+    )

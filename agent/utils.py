@@ -9,13 +9,14 @@ if TYPE_CHECKING:
 
 
 def append_dialog_to_list_inplace(text: list[str], dialog_box: DialogBox) -> None:
-    """
-    Append the dialog box text to the text list in place, accounting for the case where the
-    current top line is the same as the previous bottom line due to the dialog box scrolling
-    the text up.
+    """Append new dialog lines to a list in place.
 
-    :param text: The list of text to append to.
-    :param dialog_box: The dialog box to append.
+    A line already present in either of the two most recent positions is skipped so scrolling
+    dialog is not duplicated.
+
+    Args:
+        text: Accumulated dialog lines to mutate.
+        dialog_box: Current two-line dialog box to append.
     """
     top_line = dialog_box.top_line
     bottom_line = dialog_box.bottom_line

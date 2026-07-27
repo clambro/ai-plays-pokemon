@@ -1,11 +1,14 @@
 """Data models for Sokoban solver in the overworld subflow."""
 
-from pydantic import BaseModel
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from common.schemas import Coords
+if TYPE_CHECKING:
+    from common.schemas import Coords
 
 
-class SokobanMap(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class SokobanMap:
     """A simplified map of the Sokoban puzzle."""
 
     tiles: list[list[str]]

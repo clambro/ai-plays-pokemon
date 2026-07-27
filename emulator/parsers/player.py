@@ -34,11 +34,13 @@ class Player(BaseModel):
 
 
 def parse_player(mem: PyBoyMemoryView) -> Player:
-    """
-    Create a new player state from a snapshot of the memory.
+    """Parse the player state from emulator memory.
 
-    :param mem: The PyBoyMemoryView instance to create the player state from.
-    :return: A new player state.
+    Args:
+        mem: Current PyBoy memory view.
+
+    Returns:
+        An immutable snapshot of the player and progression state.
     """
     name = get_text_from_byte_array(mem[0xD157 : 0xD157 + 0xB])
     if name == "NINTEN":
@@ -75,11 +77,13 @@ def parse_player(mem: PyBoyMemoryView) -> Player:
 
 
 def _read_money(mem: PyBoyMemoryView) -> int:
-    """
-    Read the player's money from the binary coded decimal format.
+    """Read the player's money from its binary-coded decimal representation.
 
-    :param mem: The PyBoyMemoryView instance to read the money from.
-    :return: The player's money.
+    Args:
+        mem: Current PyBoy memory view.
+
+    Returns:
+        The player's money as an integer.
     """
     m1 = mem[0xD394]
     m2 = mem[0xD395]

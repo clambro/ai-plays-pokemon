@@ -32,7 +32,15 @@ async def get_long_term_memories(
     titles: list[str],
     iteration: int,
 ) -> list[LongTermMemoryRead]:
-    """Get long-term memories by their titles."""
+    """Get long-term memories and mark them accessed.
+
+    Args:
+        titles: Memory titles to retrieve.
+        iteration: Current agent iteration stored as the access time.
+
+    Returns:
+        Matching memories after their access iteration is updated.
+    """
     async with db_sessionmaker() as session:
         query = (
             update(LongTermMemoryDBModel)

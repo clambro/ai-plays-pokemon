@@ -8,28 +8,28 @@ if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
 
 
-class DetermineHandlerService:
-    """A service that determines the handler to use in the text handler subflow."""
+async def determine_handler(emulator: YellowLegacyEmulator) -> TextHandler | None:
+    """Determine which text handler matches the visible screen.
 
-    def __init__(self, emulator: YellowLegacyEmulator) -> None:
-        """Initialize the determine handler service."""
-        self.emulator = emulator
+    Args:
+        emulator: Running emulator used to inspect the current screen.
 
-    async def determine_handler(self) -> TextHandler | None:
-        """Determine the handler to use."""
-        game_state = self.emulator.get_game_state()
-        if not game_state.is_text_on_screen():
-            # Should never happen in this handler, but gives us a chance to bail just in case.
-            return None
+    Returns:
+        The matching text handler, or ``None`` when text is no longer visible.
+    """
+    game_state = emulator.get_game_state()
+    if not game_state.is_text_on_screen():
+        # Should never happen in this handler, but gives us a chance to bail just in case.
+        return None
 
-        dialog_box = game_state.get_dialog_box()
-        if dialog_box:
-            is_text_outside_dialog_box = game_state.is_text_on_screen(ignore_dialog_box=True)
-            if is_text_outside_dialog_box:
-                return TextHandler.GENERIC  # Usually indicates a menu or a yes/no question.
-            return TextHandler.DIALOG_BOX
+    dialog_box = game_state.get_dialog_box()
+    if dialog_box:
+        is_text_outside_dialog_box = game_state.is_text_on_screen(ignore_dialog_box=True)
+        if is_text_outside_dialog_box:
+            return TextHandler.GENERIC  # Usually indicates a menu or a yes/no question.
+        return TextHandler.DIALOG_BOX
 
-        if game_state.is_naming_screen():
-            return TextHandler.NAME
+    if game_state.is_naming_screen():
+        return TextHandler.NAME
 
-        return TextHandler.GENERIC
+    return TextHandler.GENERIC

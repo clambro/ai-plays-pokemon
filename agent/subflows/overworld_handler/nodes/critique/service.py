@@ -13,45 +13,44 @@ if TYPE_CHECKING:
     from memory.raw_memory import RawMemory
 
 
-class CritiqueService:
-    """A service that critiques the current state of the game."""
+async def critique(
+    *,
+    iteration: int,
+    raw_memory: RawMemory,
+    state_string_builder: StateStringBuilder,
+    emulator: YellowLegacyEmulator,
+) -> RawMemory:
+    """Ask the critic model for overworld-specific navigation advice.
 
-    def __init__(
-        self,
-        iteration: int,
-        raw_memory: RawMemory,
-        state_string_builder: StateStringBuilder,
-        emulator: YellowLegacyEmulator,
-    ) -> None:
-        """Initialize the critique service."""
-        self.iteration = iteration
-        self.raw_memory = raw_memory
-        self.state_string_builder = state_string_builder
-        self.emulator = emulator
-        self.llm_service = GeminiLLMService(GEMINI_PRO_2_5)
+    Args:
+        iteration: Current agent iteration used to timestamp the critique.
+        raw_memory: Recent memory to update with the critique or provider error.
+        state_string_builder: Formatter for the current overworld state and map context.
+        emulator: Running emulator used to inspect the current game state.
 
-    async def critique(self) -> RawMemory:
-        """Critique the current state of the game."""
-        game_state = self.emulator.get_game_state()
-        screenshot = self.emulator.get_screenshot()
-        prompt = CRITIQUE_PROMPT.format(state=self.state_string_builder(game_state))
-        try:
-            response = await self.llm_service.get_llm_response_pydantic(
-                [screenshot, prompt],
-                schema=CritiqueResponse,
-                prompt_name="critique_overworld_state",
-                thinking_tokens=1024,
-            )
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
-                content=(
-                    f"The critic model has provided me with the following advice:"
-                    f" {response.critique}"
-                ),
-            )
-        except Exception as e:  # noqa: BLE001
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
-                content=f"There was an error in the critique process. {e}",
-            )
-        return self.raw_memory
+    Returns:
+        The supplied raw memory after appending the critique result.
+    """
+    llm_service = GeminiLLMService(GEMINI_PRO_2_5)
+    game_state = emulator.get_game_state()
+    screenshot = emulator.get_screenshot()
+    prompt = CRITIQUE_PROMPT.format(state=state_string_builder(game_state))
+    try:
+        response = await llm_service.get_llm_response_pydantic(
+            [screenshot, prompt],
+            schema=CritiqueResponse,
+            prompt_name="critique_overworld_state",
+            thinking_tokens=1024,
+        )
+        raw_memory.add_memory(
+            iteration=iteration,
+            content=(
+                f"The critic model has provided me with the following advice: {response.critique}"
+            ),
+        )
+    except Exception as e:  # noqa: BLE001
+        raw_memory.add_memory(
+            iteration=iteration,
+            content=f"There was an error in the critique process. {e}",
+        )
+    return raw_memory

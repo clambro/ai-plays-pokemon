@@ -148,9 +148,9 @@ class SwapFirstPokemonService:
         await self.emulator.press_button(Button.A)
 
     async def _move_cursor(self, step: int) -> None:
-        """
-        Move the cursor up by the given number of steps. Positive steps move the cursor up; negative
-        steps move the cursor down.
+        """Move a vertical menu cursor by a signed number of steps.
+
+        Positive values move up; negative values move down.
         """
         if step > 0:
             for _ in range(step):

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.subflows.overworld_handler.nodes.update_map.service import UpdateMapService
+from agent.subflows.overworld_handler.nodes.update_map.service import update_map
 from agent.subflows.overworld_handler.state import OverworldHandlerStore
 
 if TYPE_CHECKING:
@@ -30,12 +30,11 @@ class UpdateMapNode(Node[OverworldHandlerStore]):
         if state.current_map is None:
             raise ValueError("Current map is not set.")
 
-        service = UpdateMapService(
+        current_map = await update_map(
             emulator=self.emulator,
             iteration=state.iteration,
             current_map=state.current_map,
             state_string_builder=state.to_prompt_string,
         )
-        current_map = await service.update_map()
 
         await store.set_current_map(current_map)

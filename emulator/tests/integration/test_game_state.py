@@ -1,5 +1,4 @@
-"""
-Tests for the game state.
+"""Tests for the game state.
 
 For the ASCII screen tests, it's a bit of an antipattern to use strings instead of the enum values
 because if we ever need to change the characters used, we'll have to update the tests, but this is
@@ -17,8 +16,7 @@ from emulator.emulator import YellowLegacyEmulator
 
 @pytest.mark.integration
 async def test_get_ascii_screen_viridian_flowers() -> None:
-    """
-    Test that the ASCII screen is correct for Viridian City near the flowers.
+    """Test that the ASCII screen is correct for Viridian City near the flowers.
 
     Specifically making sure that the flowers don't break the free tile rendering.
     """
@@ -92,10 +90,7 @@ async def test_get_ascii_screen_mt_moon_corners() -> None:
 
 @pytest.mark.integration
 async def test_get_ascii_screen_mt_moon_corners_2() -> None:
-    """
-    Test that the ASCII screen is correct for all the weird blocking corners in Mt Moon in a
-    different part of the map.
-    """
+    """Test another set of unusual blocking corners in Mt Moon."""
     await _helper_test_expected_screen(
         state_filename="mt_moon_corners_2.state",
         expected_blockages={
@@ -118,8 +113,7 @@ async def test_get_ascii_screen_mt_moon_corners_2() -> None:
 
 @pytest.mark.integration
 async def test_get_ascii_screen_mt_moon_poke_center() -> None:
-    """
-    Test that the ASCII screen is correct for Mt. Moon Pokémon Center.
+    """Test that the ASCII screen is correct for Mt. Moon Pokémon Center.
 
     Specifically making sure that Pokemon center floor tiles are rendered as free tiles.
     """
@@ -142,8 +136,7 @@ async def test_get_ascii_screen_mt_moon_poke_center() -> None:
 
 @pytest.mark.integration
 async def test_get_ascii_screen_viridian_water() -> None:
-    """
-    Test that the ASCII screen is correct for Viridian City near the water.
+    """Test that the ASCII screen is correct for Viridian City near the water.
 
     Specifically making sure that the boundaries around water are rendered correctly, as well as
     the cut tree.
@@ -167,8 +160,7 @@ async def test_get_ascii_screen_viridian_water() -> None:
 
 @pytest.mark.integration
 async def test_get_ascii_screen_viridian_forest() -> None:
-    """
-    Test that the ASCII screen is correct for Viridian Forest.
+    """Test that the ASCII screen is correct for Viridian Forest.
 
     Checking the unique tilemap used here.
     """
@@ -338,12 +330,12 @@ async def _helper_test_expected_screen(
     expected_blockages: dict[Coords, BlockedDirection],
     expected_screen: list[str],
 ) -> None:
-    """
-    Helper function to test the ASCII screen for a given state file.
+    """Check the parsed ASCII screen and blockages for a saved state.
 
-    :param state_filename: The name of the state file to load.
-    :param expected_blockages: The expected blockages in the screen.
-    :param expected_screen: The expected screen as a list of strings.
+    Args:
+        state_filename: Save-state fixture to load.
+        expected_blockages: Expected paired-tile movement restrictions.
+        expected_screen: Expected rows of classified ASCII tiles.
     """
     save_file = Path(__file__).parent / "saves" / state_filename
     async with YellowLegacyEmulator(

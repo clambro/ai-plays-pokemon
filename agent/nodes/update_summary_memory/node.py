@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.nodes.update_summary_memory.service import UpdateSummaryMemoryService
+from agent.nodes.update_summary_memory.service import update_summary_memory
 from agent.state import AgentStore
 
 if TYPE_CHECKING:
@@ -26,12 +26,11 @@ class UpdateSummaryMemoryNode(Node[AgentStore]):
 
         state = await store.get_state()
 
-        service = UpdateSummaryMemoryService(
+        summary_memory = await update_summary_memory(
             iteration=state.iteration,
             summary_memory=state.summary_memory,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
-        summary_memory = await service.update_summary_memory()
 
         await store.set_summary_memory(summary_memory)

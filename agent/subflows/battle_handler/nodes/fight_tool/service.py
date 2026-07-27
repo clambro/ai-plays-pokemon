@@ -14,68 +14,69 @@ if TYPE_CHECKING:
     from memory.raw_memory import RawMemory
 
 
-class FightToolService:
-    """A service that uses a move on the enemy."""
+async def fight(
+    *,
+    iteration: int,
+    raw_memory: RawMemory,
+    tool_args: FightToolArgs,
+    emulator: YellowLegacyEmulator,
+) -> RawMemory:
+    """Select a move from the battle menu.
 
-    def __init__(
-        self,
-        iteration: int,
-        raw_memory: RawMemory,
-        tool_args: FightToolArgs,
-        emulator: YellowLegacyEmulator,
-    ) -> None:
-        """Initialize the fight tool service."""
-        self.iteration = iteration
-        self.raw_memory = raw_memory
-        self.tool_args = tool_args
-        self.emulator = emulator
+    Args:
+        iteration: Current agent iteration used to timestamp the attempt.
+        raw_memory: Recent memory to update after selecting the move.
+        tool_args: Selected move index and name.
+        emulator: Running emulator used to navigate the battle menus.
 
-    async def fight(self) -> RawMemory:
-        """Use a move on the enemy."""
-        game_state = self.emulator.get_game_state()
-        cursor_pos = get_cursor_pos_in_fight_menu(game_state)
-        if cursor_pos is None:
-            logger.warning("The fight menu is not open. Skipping.")
-            return self.raw_memory
+    Returns:
+        The supplied raw memory, updated when the move selection is attempted.
+    """
+    game_state = emulator.get_game_state()
+    cursor_pos = get_cursor_pos_in_fight_menu(game_state)
+    if cursor_pos is None:
+        logger.warning("The fight menu is not open. Skipping.")
+        return raw_memory
 
-        # Open the FIGHT menu and update the game state.
-        if cursor_pos.col == 1:
-            await self.emulator.press_button(Button.LEFT)
-        if cursor_pos.row == 1:
-            await self.emulator.press_button(Button.UP)
-        await self.emulator.press_button(Button.A)
-        game_state = self.emulator.get_game_state()
+    # Open the FIGHT menu and update the game state.
+    if cursor_pos.col == 1:
+        await emulator.press_button(Button.LEFT)
+    if cursor_pos.row == 1:
+        await emulator.press_button(Button.UP)
+    await emulator.press_button(Button.A)
+    game_state = emulator.get_game_state()
 
-        cursor_index = self._get_move_menu_cursor_index(game_state)
-        if cursor_index is None:
-            logger.warning("The move menu is not open. Skipping.")
-            return self.raw_memory
+    cursor_index = _get_move_menu_cursor_index(game_state)
+    if cursor_index is None:
+        logger.warning("The move menu is not open. Skipping.")
+        return raw_memory
 
-        # Use the move.
-        idx_diff = cursor_index - self.tool_args.move_index
-        if idx_diff > 0:
-            for _ in range(idx_diff):
-                await self.emulator.press_button(Button.UP)
-        elif idx_diff < 0:
-            for _ in range(-idx_diff):
-                await self.emulator.press_button(Button.DOWN)
-        await self.emulator.press_button(Button.A, wait_for_animation=False)
+    # Use the move.
+    idx_diff = cursor_index - tool_args.move_index
+    if idx_diff > 0:
+        for _ in range(idx_diff):
+            await emulator.press_button(Button.UP)
+    elif idx_diff < 0:
+        for _ in range(-idx_diff):
+            await emulator.press_button(Button.DOWN)
+    await emulator.press_button(Button.A, wait_for_animation=False)
 
-        self.raw_memory.add_memory(
-            iteration=self.iteration, content=f"Attempted to to use {self.tool_args.move_name}."
-        )
-        return self.raw_memory
+    raw_memory.add_memory(
+        iteration=iteration,
+        content=f"Attempted to to use {tool_args.move_name}.",
+    )
+    return raw_memory
 
-    @staticmethod
-    def _get_move_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:
-        """Get the cursor index in the move menu."""
-        text = game_state.screen.text
-        if text.split("\n")[9][1:6] != "TYPE/":
-            return None  # Move menu is not open because the type of the move is not shown.
-        if game_state.battle.player_pokemon is None:
-            return None  # No active Pokemon. Shouldn't happen.
 
-        for i, move in enumerate(game_state.battle.player_pokemon.moves):
-            if f"▶{move.name}" in text:
-                return i
-        return None
+def _get_move_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:
+    """Get the cursor index in the move menu."""
+    text = game_state.screen.text
+    if text.split("\n")[9][1:6] != "TYPE/":
+        return None  # Move menu is not open because the type of the move is not shown.
+    if game_state.battle.player_pokemon is None:
+        return None  # No active Pokemon. Shouldn't happen.
+
+    for i, move in enumerate(game_state.battle.player_pokemon.moves):
+        if f"▶{move.name}" in text:
+            return i
+    return None

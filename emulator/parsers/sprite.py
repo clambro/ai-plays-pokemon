@@ -27,11 +27,13 @@ class Sprite(BaseModel):
 
 
 def parse_sprites(mem: PyBoyMemoryView) -> dict[int, Sprite]:
-    """
-    Parse the list of sprites on the current map from a snapshot of the memory.
+    """Parse ordinary sprites on the current map from emulator memory.
 
-    :param mem: The PyBoyMemoryView instance to create the sprites from.
-    :return: A dictionary of normal sprites, keyed by index.
+    Args:
+        mem: Current PyBoy memory view.
+
+    Returns:
+        Non-player sprites keyed by their map index.
     """
     sprites = {}
     for i in range(0x10, 0xF0, 0x10):  # First sprite is the player.
@@ -51,11 +53,13 @@ def parse_sprites(mem: PyBoyMemoryView) -> dict[int, Sprite]:
 
 
 def parse_pikachu_sprite(mem: PyBoyMemoryView) -> Sprite:
-    """
-    Parse the pikachu sprite from a snapshot of the memory.
+    """Parse Pikachu's follower sprite from emulator memory.
 
-    :param mem: The PyBoyMemoryView instance to create the pikachu sprite from.
-    :return: The pikachu sprite.
+    Args:
+        mem: Current PyBoy memory view.
+
+    Returns:
+        Pikachu's follower sprite state.
     """
     return Sprite(
         index=15,

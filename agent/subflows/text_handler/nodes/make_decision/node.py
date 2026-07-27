@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.subflows.text_handler.nodes.make_decision.service import DecisionMakerTextService
+from agent.subflows.text_handler.nodes.make_decision.service import make_decision
 from agent.subflows.text_handler.state import TextHandlerStore
 
 if TYPE_CHECKING:
@@ -30,13 +30,11 @@ class MakeDecisionNode(Node[TextHandlerStore]):
         if state.raw_memory is None:
             raise ValueError("Raw memory is not set")
 
-        service = DecisionMakerTextService(
+        raw_memory = await make_decision(
             iteration=state.iteration,
             raw_memory=state.raw_memory,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
-
-        raw_memory = await service.make_decision()
 
         await store.set_raw_memory(raw_memory)

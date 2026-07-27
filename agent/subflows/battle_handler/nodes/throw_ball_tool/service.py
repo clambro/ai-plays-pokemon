@@ -14,63 +14,63 @@ if TYPE_CHECKING:
     from memory.raw_memory import RawMemory
 
 
-class ThrowBallToolService:
-    """A service that throws a ball at the enemy."""
+async def throw_ball(
+    *,
+    iteration: int,
+    raw_memory: RawMemory,
+    tool_args: ThrowBallToolArgs,
+    emulator: YellowLegacyEmulator,
+) -> RawMemory:
+    """Select a Poké Ball from the battle item menu.
 
-    def __init__(
-        self,
-        iteration: int,
-        raw_memory: RawMemory,
-        tool_args: ThrowBallToolArgs,
-        emulator: YellowLegacyEmulator,
-    ) -> None:
-        """Initialize the throw ball tool service."""
-        self.iteration = iteration
-        self.raw_memory = raw_memory
-        self.tool_args = tool_args
-        self.emulator = emulator
+    Args:
+        iteration: Current agent iteration used to timestamp the attempt.
+        raw_memory: Recent memory to update after selecting the ball.
+        tool_args: Inventory index and selected Poké Ball type.
+        emulator: Running emulator used to navigate the battle menus.
 
-    async def throw_ball(self) -> RawMemory:
-        """Throw a ball at the enemy."""
-        game_state = self.emulator.get_game_state()
-        cursor_pos = get_cursor_pos_in_fight_menu(game_state)
-        if cursor_pos is None:
-            logger.warning("The fight menu is not open. Skipping.")
-            return self.raw_memory
+    Returns:
+        The supplied raw memory, updated when the throw is attempted.
+    """
+    game_state = emulator.get_game_state()
+    cursor_pos = get_cursor_pos_in_fight_menu(game_state)
+    if cursor_pos is None:
+        logger.warning("The fight menu is not open. Skipping.")
+        return raw_memory
 
-        # Open the ITEM menu and update the game state.
-        if cursor_pos.col == 1:
-            await self.emulator.press_button(Button.LEFT)
-        if cursor_pos.row == 0:
-            await self.emulator.press_button(Button.DOWN)
-        await self.emulator.press_button(Button.A)
-        game_state = self.emulator.get_game_state()
+    # Open the ITEM menu and update the game state.
+    if cursor_pos.col == 1:
+        await emulator.press_button(Button.LEFT)
+    if cursor_pos.row == 0:
+        await emulator.press_button(Button.DOWN)
+    await emulator.press_button(Button.A)
+    game_state = emulator.get_game_state()
 
-        cursor_index = self._get_item_menu_cursor_index(game_state)
-        if cursor_index is None:
-            logger.warning("The item menu is not open. Skipping.")
-            return self.raw_memory
+    cursor_index = _get_item_menu_cursor_index(game_state)
+    if cursor_index is None:
+        logger.warning("The item menu is not open. Skipping.")
+        return raw_memory
 
-        # Throw the ball.
-        idx_diff = cursor_index - self.tool_args.item_index
-        if idx_diff > 0:
-            for _ in range(idx_diff):
-                await self.emulator.press_button(Button.UP)
-        elif idx_diff < 0:
-            for _ in range(-idx_diff):
-                await self.emulator.press_button(Button.DOWN)
-        await self.emulator.press_button(Button.A, wait_for_animation=False)
+    # Throw the ball.
+    idx_diff = cursor_index - tool_args.item_index
+    if idx_diff > 0:
+        for _ in range(idx_diff):
+            await emulator.press_button(Button.UP)
+    elif idx_diff < 0:
+        for _ in range(-idx_diff):
+            await emulator.press_button(Button.DOWN)
+    await emulator.press_button(Button.A, wait_for_animation=False)
 
-        self.raw_memory.add_memory(
-            iteration=self.iteration,
-            content=f"Attempted to throw a {self.tool_args.ball}.",
-        )
-        return self.raw_memory
+    raw_memory.add_memory(
+        iteration=iteration,
+        content=f"Attempted to throw a {tool_args.ball}.",
+    )
+    return raw_memory
 
-    @staticmethod
-    def _get_item_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:
-        """Get the cursor index in the item menu."""
-        idx = game_state.screen.menu_item_index + game_state.screen.list_scroll_offset
-        if idx >= len(game_state.inventory.items):
-            return None
-        return idx
+
+def _get_item_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:
+    """Get the cursor index in the item menu."""
+    idx = game_state.screen.menu_item_index + game_state.screen.list_scroll_offset
+    if idx >= len(game_state.inventory.items):
+        return None
+    return idx

@@ -28,83 +28,91 @@ if TYPE_CHECKING:
     from memory.raw_memory import RawMemory
     from overworld_map.schemas import OverworldMap
 
+llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
 
-class SelectToolService:
-    """A service that selects a tool based on the current game state in the overworld."""
 
-    llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
+async def select_tool(  # noqa: PLR0913
+    *,
+    iteration: int,
+    raw_memory: RawMemory,
+    current_map: OverworldMap,
+    iterations_since_last_critique: int,
+    state_string_builder: StateStringBuilder,
+    emulator: YellowLegacyEmulator,
+) -> tuple[OverworldTool, RawMemory]:
+    """Select an available overworld tool for the current game state.
 
-    def __init__(  # noqa: PLR0913
-        self,
-        *,
-        iteration: int,
-        raw_memory: RawMemory,
-        current_map: OverworldMap,
-        iterations_since_last_critique: int,
-        state_string_builder: StateStringBuilder,
-        emulator: YellowLegacyEmulator,
-    ) -> None:
-        """Initialize the select tool service."""
-        self.iteration = iteration
-        self.raw_memory = raw_memory
-        self.current_map = current_map
-        self.iterations_since_last_critique = iterations_since_last_critique
-        self.state_string_builder = state_string_builder
-        self.emulator = emulator
+    Args:
+        iteration: Current agent iteration used to timestamp the decision.
+        raw_memory: Recent memory to update with the model's reasoning.
+        current_map: Explored map used to determine available navigation tools.
+        iterations_since_last_critique: Iterations elapsed since the previous critique.
+        state_string_builder: Formatter for the current overworld state and map context.
+        emulator: Running emulator used to inspect the state and capture its screen.
 
-    async def select_tool(self) -> tuple[OverworldTool, RawMemory]:
-        """Select a tool based on the current overworld game state."""
-        game_state = self.emulator.get_game_state()
-        img = self.emulator.get_screenshot()
-        prompt = SELECT_TOOL_PROMPT.format(
-            state=self.state_string_builder(game_state),
-            tools=self._get_available_tool_info(game_state),
+    Returns:
+        The selected tool and updated raw memory. Provider or validation failures select the
+        button-pressing tool and leave memory unchanged.
+    """
+    game_state = emulator.get_game_state()
+    img = emulator.get_screenshot()
+    prompt = SELECT_TOOL_PROMPT.format(
+        state=state_string_builder(game_state),
+        tools=_get_available_tool_info(
+            game_state,
+            current_map,
+            iterations_since_last_critique,
+        ),
+    )
+    try:
+        response = await llm_service.get_llm_response_pydantic(
+            messages=[img, prompt],
+            schema=SelectToolResponse,
+            prompt_name="select_overworld_tool",
         )
-        try:
-            response = await self.llm_service.get_llm_response_pydantic(
-                messages=[img, prompt],
-                schema=SelectToolResponse,
-                prompt_name="select_overworld_tool",
-            )
-            tool = OverworldTool(response.tool)
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"Error selecting tool. Defaulting to pressing buttons. {e}")
-            return OverworldTool.PRESS_BUTTONS, self.raw_memory
+        tool = OverworldTool(response.tool)
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Error selecting tool. Defaulting to pressing buttons. {e}")
+        return OverworldTool.PRESS_BUTTONS, raw_memory
 
-        self.raw_memory.add_memory(
-            iteration=self.iteration,
-            content=(
-                f"Current map: {game_state.map.id.name} at coordinates"
-                f" {game_state.player.coords}, facing {game_state.player.direction.name}."
-                f" {response.thoughts}"
-            ),
-        )
-        return tool, self.raw_memory
+    raw_memory.add_memory(
+        iteration=iteration,
+        content=(
+            f"Current map: {game_state.map.id.name} at coordinates"
+            f" {game_state.player.coords}, facing {game_state.player.direction.name}."
+            f" {response.thoughts}"
+        ),
+    )
+    return tool, raw_memory
 
-    def _get_available_tool_info(self, game_state: YellowLegacyGameState) -> str:
-        """Get the information about the available tools."""
-        info = [BUTTON_TOOL_INFO]  # Always available.
-        if game_state.player.is_biking:
-            info.append(NAVIGATION_TOOL_BIKING_INFO)
-        else:
-            info.append(NAVIGATION_TOOL_INFO)
 
-        if len(game_state.party) > 1:
-            info.append(SWAP_FIRST_POKEMON_TOOL_INFO)
+def _get_available_tool_info(
+    game_state: YellowLegacyGameState,
+    current_map: OverworldMap,
+    iterations_since_last_critique: int,
+) -> str:
+    """Get the information about the available tools."""
+    info = [BUTTON_TOOL_INFO]  # Always available.
+    if game_state.player.is_biking:
+        info.append(NAVIGATION_TOOL_BIKING_INFO)
+    else:
+        info.append(NAVIGATION_TOOL_INFO)
 
-        if len(game_state.inventory.items) > 0:
-            info.append(USE_ITEM_TOOL_INFO)
+    if len(game_state.party) > 1:
+        info.append(SWAP_FIRST_POKEMON_TOOL_INFO)
 
-        tiles = [t for row in self.current_map.ascii_tiles for t in row]
-        has_goal = any(t in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE) for t in tiles)
-        has_boulder = any(
-            s.label == SpriteLabel.BOULDER and s.is_rendered
-            for s in self.current_map.known_sprites.values()
-        )
-        if has_boulder and has_goal and game_state.can_use_strength:
-            info.append(SOKOBAN_SOLVER_TOOL_INFO)
+    if len(game_state.inventory.items) > 0:
+        info.append(USE_ITEM_TOOL_INFO)
 
-        if self.iterations_since_last_critique >= MIN_ITERATIONS_PER_CRITIQUE:
-            info.append(CRITIQUE_TOOL_INFO)
+    tiles = [t for row in current_map.ascii_tiles for t in row]
+    has_goal = any(t in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE) for t in tiles)
+    has_boulder = any(
+        s.label == SpriteLabel.BOULDER and s.is_rendered for s in current_map.known_sprites.values()
+    )
+    if has_boulder and has_goal and game_state.can_use_strength:
+        info.append(SOKOBAN_SOLVER_TOOL_INFO)
 
-        return "\n".join(info)
+    if iterations_since_last_critique >= MIN_ITERATIONS_PER_CRITIQUE:
+        info.append(CRITIQUE_TOOL_INFO)
+
+    return "\n".join(info)

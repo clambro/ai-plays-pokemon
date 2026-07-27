@@ -46,7 +46,17 @@ async def get_map_entity_memories_for_map(map_id: MapId) -> list[MapEntityMemory
 
 
 async def update_map_entity_memory(map_entity: MapEntityMemoryUpdate) -> MapEntityMemoryRead:
-    """Update the description of a map entity memory."""
+    """Update a map entity's remembered description.
+
+    Args:
+        map_entity: Entity identity, new description, and update iteration.
+
+    Returns:
+        The updated entity memory.
+
+    Raises:
+        ValueError: No stored entity matches the supplied map, entity ID, and entity type.
+    """
     async with db_sessionmaker() as session:
         query = (
             update(MapEntityMemoryDBModel)

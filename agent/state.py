@@ -103,9 +103,9 @@ class AgentStore(BaseStore[AgentState]):
         )
 
     async def set_emulator_save_state_from_emulator(self, emulator: YellowLegacyEmulator) -> None:
-        """
-        Set the emulator save state from the emulator. Do this sparingly. Saving takes about two
-        frames, so doing it too often messes with the game's audio, and it also hammers the
-        telemetry.
+        """Capture the emulator save state.
+
+        Do this sparingly. Saving takes about two frames, so frequent saves disrupt audio and
+        produce excessive telemetry.
         """
         await self.set_state({"emulator_save_state": await emulator.get_emulator_save_state()})

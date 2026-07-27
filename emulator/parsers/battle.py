@@ -33,11 +33,13 @@ class Battle(BaseModel):
 
 
 def parse_battle_state(mem: PyBoyMemoryView) -> Battle:
-    """
-    Create a new battle state from a snapshot of the memory.
+    """Parse the current battle state from emulator memory.
 
-    :param mem: The PyBoyMemoryView instance to create the battle state from.
-    :return: A new battle state.
+    Args:
+        mem: Current PyBoy memory view.
+
+    Returns:
+        An immutable battle snapshot.
     """
     is_battle_flag = mem[0xD057]
     battle_type_flag = mem[0xD057]

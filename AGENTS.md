@@ -27,9 +27,17 @@ exactly because emulator changes can affect existing save states.
 
 - Fix lint and type errors at their source. Add narrow suppressions only for
   unavoidable third-party issues, with a nearby explanation.
-- Prefer module-level functions for stateless behavior. Use classes when state,
-  identity, lifecycle, or a framework contract makes them useful.
-- Use Google-style docstrings.
+- Prefer module-level functions for stateless operations. Do not use classes
+  solely to copy one call's arguments onto `self`, expose one public method, or
+  namespace static helpers. Keep per-call inputs explicit in function
+  signatures, but preserve existing shared service clients at module scope
+  instead of threading them through unrelated callers.
+- Use classes when state, identity, lifecycle, invariants, polymorphism, or a
+  framework contract makes them useful. Test classes may also group a large
+  test module when that grouping materially improves comprehension.
+- Use Google-style docstrings. Document caller-relevant semantics, mutation,
+  side effects, returns, and failures; keep obvious operations concise. Do not
+  use Sphinx directives.
 - Use Pydantic models at I/O and validation boundaries. Prefer standard-library
   dataclasses for internal structured data.
 - Keep changes focused and preserve unrelated worktree changes.

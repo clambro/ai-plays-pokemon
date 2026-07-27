@@ -1,14 +1,15 @@
 """Recent raw memory rendered into agent context."""
 
 from collections import OrderedDict
+from dataclasses import dataclass, field
 
 from loguru import logger
-from pydantic import BaseModel, Field
 
 from common.constants import RAW_MEMORY_MAX_SIZE
 
 
-class RawMemoryPiece(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class RawMemoryPiece:
     """A single piece of information contained in the Agent's raw memory."""
 
     iteration: int
@@ -23,11 +24,12 @@ class RawMemoryPiece(BaseModel):
         self.content += "\n" + content
 
 
-class RawMemory(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class RawMemory:
     """The Agent's raw memory."""
 
     max_size: int = RAW_MEMORY_MAX_SIZE
-    pieces: OrderedDict[int, RawMemoryPiece] = Field(default_factory=OrderedDict)
+    pieces: OrderedDict[int, RawMemoryPiece] = field(default_factory=OrderedDict)
 
     def __str__(self) -> str:
         """Get a string representation of the memory."""
@@ -47,7 +49,15 @@ class RawMemory(BaseModel):
         return out
 
     def add_memory(self, iteration: int, content: str) -> None:
-        """Append a piece to the memory."""
+        """Append content and publish the resulting rolling memory.
+
+        Content for an existing iteration is appended to that memory piece. The collection is
+        sorted, truncated to ``max_size``, and then sent to the streaming background.
+
+        Args:
+            iteration: Agent iteration associated with the content.
+            content: Thought or observation to append.
+        """
         # Injecting the dependency here to avoid circular imports.
         from streaming.server import update_background_log_from_memory  # noqa: PLC0415
 

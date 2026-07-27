@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.subflows.overworld_handler.nodes.select_tool.service import SelectToolService
+from agent.subflows.overworld_handler.nodes.select_tool.service import select_tool
 from agent.subflows.overworld_handler.state import OverworldHandlerStore
 
 if TYPE_CHECKING:
@@ -34,7 +34,7 @@ class SelectToolNode(Node[OverworldHandlerStore]):
         if state.iterations_since_last_critique is None:
             raise ValueError("Iterations since last critique is not set")
 
-        service = SelectToolService(
+        tool, raw_memory = await select_tool(
             iteration=state.iteration,
             raw_memory=state.raw_memory,
             current_map=state.current_map,
@@ -42,7 +42,6 @@ class SelectToolNode(Node[OverworldHandlerStore]):
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
-        tool, raw_memory = await service.select_tool()
 
         await store.set_raw_memory(raw_memory)
         await store.set_tool(tool)

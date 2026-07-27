@@ -1,5 +1,4 @@
-"""
-Pure algorithmic logic for navigation operations.
+"""Pure algorithmic logic for navigation operations.
 
 This module contains the core algorithmic functions for navigation, separate from any formatting
 concerns to make them easier to test.
@@ -22,15 +21,17 @@ async def get_accessible_coords(
     map_data: OverworldMap,
     hm_tiles: list[AsciiTile],
 ) -> list[Coords]:
-    """
-    Recursively search outward from the player's position to find all accessible coords. Do this
-    on a thread because it's pretty slow.
+    """Find every coordinate reachable from the player's position.
 
-    :param start_pos: Starting position to search from
-    :param map_data: Map data containing tiles and blockages
-    :param walkable_tiles: List of tiles that are accessible using the player's current HMs.
-    :return: List of accessible coordinates, including start_pos (required for finding map
-        boundaries if you're standing on a boundary tile)
+    The recursive search runs on a worker thread because it can be slow.
+
+    Args:
+        start_pos: Coordinate at which to begin the search.
+        map_data: Explored map containing tiles and paired-tile blockages.
+        hm_tiles: Additional tile types traversable with the player's current HMs.
+
+    Returns:
+        Reachable coordinates, including ``start_pos`` so a boundary beneath the player is found.
     """
     return await asyncio.to_thread(_get_accessible_coords, start_pos, map_data, hm_tiles)
 
@@ -41,15 +42,18 @@ async def calculate_path_to_target(
     map_data: OverworldMap,
     hm_tiles: list[AsciiTile],
 ) -> list[Button] | None:
-    """
-    Calculate the path to the target coordinates as a list of button presses using the A* search
-    algorithm. Do this on a thread because it's pretty slow.
+    """Calculate an A* path to the target as a sequence of button presses.
 
-    :param start_pos: Starting position
-    :param target_pos: Target position
-    :param map_data: Map data containing tiles and blockages
-    :param hm_tiles: List of tiles that are accessible using the player's current HMs.
-    :return: List of button presses to reach target, or None if no path found
+    The search runs on a worker thread because it can be slow.
+
+    Args:
+        start_pos: Coordinate at which to begin the path.
+        target_pos: Coordinate the path should reach.
+        map_data: Explored map containing tiles and paired-tile blockages.
+        hm_tiles: Additional tile types traversable with the player's current HMs.
+
+    Returns:
+        Button presses reaching the target, or ``None`` when no path exists.
     """
     return await asyncio.to_thread(
         _calculate_path_to_target,
@@ -64,12 +68,14 @@ def get_exploration_candidates(
     accessible_coords: list[Coords],
     map_data: OverworldMap,
 ) -> list[Coords]:
-    """
-    Get all accessible coords that are adjacent to an unseen tile.
+    """Get all accessible coordinates adjacent to an unseen tile.
 
-    :param accessible_coords: List of accessible coordinates
-    :param map_data: Map data containing tiles
-    :return: List of coordinates that are adjacent to unseen tiles
+    Args:
+        accessible_coords: Coordinates the player can currently reach.
+        map_data: Explored map containing known and unseen tiles.
+
+    Returns:
+        Reachable coordinates from which the player can reveal unseen terrain.
     """
     candidates = []
     tiles = map_data.ascii_tiles_ndarray
@@ -89,12 +95,14 @@ def get_map_boundary_tiles(
     accessible_coords: list[Coords],
     map_data: OverworldMap,
 ) -> dict[FacingDirection, list[Coords]]:
-    """
-    Get all accessible coords that are on the map boundary.
+    """Get all accessible coordinates on connected map boundaries.
 
-    :param accessible_coords: List of accessible coordinates
-    :param map_data: Map data containing tiles
-    :return: Dictionary mapping directions to lists of boundary coordinates
+    Args:
+        accessible_coords: Coordinates the player can currently reach.
+        map_data: Explored map and its cardinal connections.
+
+    Returns:
+        Accessible boundary coordinates grouped by their cardinal direction.
     """
     tiles = map_data.ascii_tiles_ndarray
     height, width = tiles.shape
@@ -144,15 +152,16 @@ def _calculate_path_to_target(
     map_data: OverworldMap,
     hm_tiles: list[AsciiTile],
 ) -> list[Button] | None:
-    """
-    Calculate the path to the target coordinates as a list of button presses using the A* search
-    algorithm.
+    """Calculate an A* path to the target as a sequence of button presses.
 
-    :param start_pos: Starting position
-    :param target_pos: Target position
-    :param map_data: Map data containing tiles and blockages
-    :param hm_tiles: List of tiles that are accessible using the player's current HMs.
-    :return: List of button presses to reach target, or None if no path found
+    Args:
+        start_pos: Coordinate at which to begin the path.
+        target_pos: Coordinate the path should reach.
+        map_data: Explored map containing tiles and paired-tile blockages.
+        hm_tiles: Additional tile types traversable with the player's current HMs.
+
+    Returns:
+        Button presses reaching the target, or ``None`` when no path exists.
     """
     open_set = {start_pos}
     came_from: dict[Coords, tuple[Coords, Button]] = {}
@@ -201,13 +210,15 @@ def _get_neighbors(
     map_data: OverworldMap,
     hm_tiles: list[AsciiTile],
 ) -> list[tuple[Coords, Button]]:
-    """
-    Get all valid neighboring coordinates from a given position.
+    """Get valid neighboring coordinates from a position.
 
-    :param pos: The position to get neighbors for
-    :param map_data: Map data containing tiles and blockages
-    :param hm_tiles: List of tiles that are accessible using the player's current HMs.
-    :return: List of valid neighboring coordinates, and the button to press to get there.
+    Args:
+        pos: Coordinate whose neighbors should be evaluated.
+        map_data: Explored map containing tiles and paired-tile blockages.
+        hm_tiles: Additional tile types traversable with the player's current HMs.
+
+    Returns:
+        Reachable neighboring coordinates paired with the button that enters each one.
     """
     neighbors: list[tuple[Coords, Button]] = []
     walkable_tiles = AsciiTile.get_walkable_tiles()

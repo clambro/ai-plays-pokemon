@@ -18,12 +18,18 @@ model = "gemini-embedding-001"  # The only one for now.
     reraise=True,
 )
 async def get_embedding(text: str, title: str | None = None) -> list[float]:
-    """
-    Get an embedding from the Gemini Embedding API.
+    """Get an embedding from the Gemini Embedding API.
 
-    :param text: The text to get an embedding for.
-    :param title: Optional title information to improve the embedding.
-    :return: An embedding from the Gemini Embedding API.
+    Args:
+        text: Text to embed as a retrieval document.
+        title: Optional document title supplied to the embedding model.
+
+    Returns:
+        The model's 768-dimensional embedding.
+
+    Raises:
+        ValueError: The API response contains no single populated embedding.
+        ServerError: The API still fails after the configured retries.
     """
     response = await client.aio.models.embed_content(
         model=model,

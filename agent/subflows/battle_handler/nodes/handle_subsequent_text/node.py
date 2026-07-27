@@ -6,7 +6,7 @@ from junjo import Node
 from loguru import logger
 
 from agent.subflows.battle_handler.nodes.handle_subsequent_text.service import (
-    HandleSubsequentTextService,
+    handle_subsequent_text,
 )
 from agent.subflows.battle_handler.state import BattleHandlerStore
 
@@ -32,11 +32,10 @@ class HandleSubsequentTextNode(Node[BattleHandlerStore]):
         if state.raw_memory is None:
             raise ValueError("Raw memory is not set")
 
-        service = HandleSubsequentTextService(
+        raw_memory = await handle_subsequent_text(
             iteration=state.iteration,
             raw_memory=state.raw_memory,
             emulator=self.emulator,
         )
-        raw_memory = await service.handle_subsequent_text()
 
         await store.set_raw_memory(raw_memory)

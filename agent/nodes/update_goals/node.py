@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.nodes.update_goals.service import UpdateGoalsService
+from agent.nodes.update_goals.service import update_goals
 from agent.state import AgentStore
 
 if TYPE_CHECKING:
@@ -26,12 +26,11 @@ class UpdateGoalsNode(Node[AgentStore]):
 
         state = await store.get_state()
 
-        service = UpdateGoalsService(
+        goals = await update_goals(
             iteration=state.iteration,
             goals=state.goals,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
-        goals = await service.update_goals()
 
         await store.set_goals(goals)

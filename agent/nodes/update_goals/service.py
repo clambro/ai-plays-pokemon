@@ -15,48 +15,48 @@ if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
     from memory.goals import Goals
 
+llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
 
-class UpdateGoalsService:
-    """Service for updating the goals."""
 
-    llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
+async def update_goals(
+    *,
+    emulator: YellowLegacyEmulator,
+    iteration: int,
+    goals: Goals,
+    state_string_builder: StateStringBuilder,
+) -> Goals:
+    """Update agent goals at the configured interval.
 
-    def __init__(
-        self,
-        emulator: YellowLegacyEmulator,
-        iteration: int,
-        goals: Goals,
-        state_string_builder: StateStringBuilder,
-    ) -> None:
-        """Initialize the update goals service."""
-        self.iteration = iteration
-        self.goals = goals
-        self.state_string_builder = state_string_builder
-        self.emulator = emulator
+    Args:
+        emulator: Running emulator used to inspect the current game state.
+        iteration: Current agent iteration used to enforce the update interval.
+        goals: Goal collection to mutate with the model's removals and additions.
+        state_string_builder: Formatter for the current game state and memory context.
 
-    async def update_goals(self) -> Goals:
-        """Update the goals based on the latest memory and actions."""
-        if self.iteration % ITERATIONS_PER_GOAL_UPDATE != 0:
-            return self.goals
+    Returns:
+        The supplied goal collection after any accepted updates.
+    """
+    if iteration % ITERATIONS_PER_GOAL_UPDATE != 0:
+        return goals
 
-        game_state = self.emulator.get_game_state()
-        prompt = UPDATE_GOALS_PROMPT.format(state=self.state_string_builder(game_state))
-        try:
-            response = await self.llm_service.get_llm_response_pydantic(
-                messages=prompt,
-                schema=UpdateGoalsResponse,
-                prompt_name="update_goals",
-            )
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"Error updating goals. Skipping. {e}")
-            return self.goals
-        try:
-            self.goals.remove(*response.remove)
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"Error removing goals. Skipping. {e}")
-        try:
-            self.goals.append(*response.append)
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"Error appending goals. Skipping. {e}")
+    game_state = emulator.get_game_state()
+    prompt = UPDATE_GOALS_PROMPT.format(state=state_string_builder(game_state))
+    try:
+        response = await llm_service.get_llm_response_pydantic(
+            messages=prompt,
+            schema=UpdateGoalsResponse,
+            prompt_name="update_goals",
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Error updating goals. Skipping. {e}")
+        return goals
+    try:
+        goals.remove(*response.remove)
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Error removing goals. Skipping. {e}")
+    try:
+        goals.append(*response.append)
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Error appending goals. Skipping. {e}")
 
-        return self.goals
+    return goals

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
-from agent.subflows.battle_handler.nodes.run_tool.service import RunToolService
+from agent.subflows.battle_handler.nodes.run_tool.service import run_away
 from agent.subflows.battle_handler.schemas import RunToolArgs
 from agent.subflows.battle_handler.state import BattleHandlerStore
 
@@ -33,12 +33,10 @@ class RunToolNode(Node[BattleHandlerStore]):
         if not isinstance(state.tool_args, RunToolArgs):
             raise TypeError("Tool args is not a RunToolArgs")
 
-        service = RunToolService(
+        raw_memory = await run_away(
             iteration=state.iteration,
             raw_memory=state.raw_memory,
             emulator=self.emulator,
         )
-
-        raw_memory = await service.run_away()
 
         await store.set_raw_memory(raw_memory)

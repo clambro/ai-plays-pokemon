@@ -30,7 +30,18 @@ class Vector(TypeDecorator[list[float]]):
         value: object,
         dialect: Dialect,  # noqa: ARG002
     ) -> list[float] | None:
-        """Convert bytes back to list of floats."""
+        """Convert database bytes back to a vector.
+
+        Args:
+            value: Raw value returned by the database.
+            dialect: SQLAlchemy dialect performing the conversion.
+
+        Returns:
+            The decoded vector, or ``None`` for a database null.
+
+        Raises:
+            TypeError: The database returns a non-byte value.
+        """
         if value is None:
             return None
         if not isinstance(value, bytes):

@@ -56,15 +56,21 @@ class GeminiLLMService:
         temperature: float = DEFAULT_TEMPERATURE,
         thinking_tokens: int = MIN_THINKING_TOKENS,
     ) -> str:
-        """
-        Get a response from the Gemini LLM as a string.
+        """Get a text response from the Gemini model.
 
-        :param messages: The messages to send to the Gemini LLM.
-        :param prompt_name: The name of the prompt to use as a label in the database.
-        :param system_prompt: The system prompt to send to the Gemini LLM.
-        :param temperature: The temperature to use for the response.
-        :param thinking_tokens: The number of tokens to use for the thinking.
-        :return: A string from the Gemini LLM.
+        Args:
+            messages: Text and images to send to the model.
+            prompt_name: Stable label recorded with the request telemetry.
+            system_prompt: Instruction supplied as the model's system prompt.
+            temperature: Sampling temperature for the response.
+            thinking_tokens: Maximum tokens allocated to model reasoning.
+
+        Returns:
+            The model's response text.
+
+        Raises:
+            ValueError: Gemini returns no response text.
+            ServerError: Gemini still fails after the configured retries.
         """
         response = await self._get_llm_response(
             messages=messages,
@@ -88,17 +94,22 @@ class GeminiLLMService:
         temperature: float = DEFAULT_TEMPERATURE,
         thinking_tokens: int = MIN_THINKING_TOKENS,
     ) -> ResponseModel:
-        """
-        Get a Pydantic model from the Gemini LLM, parsed from a JSON response.
+        """Get a Pydantic model parsed from a structured Gemini response.
 
-        :param messages: The messages to send to the Gemini LLM.
-        :param schema: The schema to use for the response.
-        :param prompt_name: The name of the prompt to use as a label in the database.
-        :param system_prompt: The system prompt to send to the Gemini LLM.
-        :param temperature: The temperature to use for the response.
-        :param thinking_tokens: The number of tokens to use for the thinking. None is for
-            non-thinking models.
-        :return: A Pydantic model from the Gemini LLM.
+        Args:
+            messages: Text and images to send to the model.
+            schema: Pydantic model describing the required response.
+            prompt_name: Stable label recorded with the request telemetry.
+            system_prompt: Instruction supplied as the model's system prompt.
+            temperature: Sampling temperature for the response.
+            thinking_tokens: Maximum tokens allocated to model reasoning.
+
+        Returns:
+            The validated structured response.
+
+        Raises:
+            ValueError: Gemini returns no valid structured response.
+            ServerError: Gemini still fails after the configured retries.
         """
         response = await self._get_llm_response(
             messages=messages,
@@ -126,17 +137,22 @@ class GeminiLLMService:
         temperature: float,
         thinking_tokens: int | None,
     ) -> GenerateContentResponse:
-        """
-        Get a response from the Gemini LLM.
+        """Send a request to Gemini and persist its response telemetry.
 
-        :param messages: The messages to send to the Gemini LLM.
-        :param schema: The schema to use for the response.
-        :param prompt_name: The name of the prompt to use as a label in the database.
-        :param system_prompt: The system prompt to send to the Gemini LLM.
-        :param temperature: The temperature to use for the response.
-        :param thinking_tokens: The number of tokens to use for the thinking. None is for
-            non-thinking models.
-        :return: A response from the Gemini LLM.
+        Args:
+            messages: Text and images to send to the model.
+            schema: Optional Pydantic model describing a structured response.
+            prompt_name: Stable label recorded with the request telemetry.
+            system_prompt: Instruction supplied as the model's system prompt.
+            temperature: Sampling temperature for the response.
+            thinking_tokens: Maximum reasoning tokens, or ``None`` for a non-thinking model.
+
+        Returns:
+            Gemini's complete generated-content response.
+
+        Raises:
+            ValueError: Gemini omits response data or fails to produce the requested schema.
+            ServerError: Gemini still fails after the configured retries.
         """
         if isinstance(messages, str):
             messages = [messages]

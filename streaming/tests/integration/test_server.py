@@ -1,5 +1,4 @@
-"""
-Tests for the streaming background HTML page.
+"""Tests for the streaming background HTML page.
 
 These tests validate that the HTML page renders correctly without console errors
 and that all JavaScript functionality works as expected.

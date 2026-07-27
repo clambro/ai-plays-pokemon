@@ -1,9 +1,10 @@
 """Goal memory rendered into agent context."""
 
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 from loguru import logger
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class GoalPriority(StrEnum):
@@ -25,10 +26,11 @@ class Goal(BaseModel):
         return f"{self.priority}: {self.goal}"
 
 
-class Goals(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class Goals:
     """The goals for the agent."""
 
-    goals: list[Goal] = Field(default_factory=list)
+    goals: list[Goal] = field(default_factory=list)
 
     def __str__(self) -> str:
         """Return a string representation of the goals."""

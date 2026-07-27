@@ -12,8 +12,7 @@ if TYPE_CHECKING:
 
 
 class Warp(BaseModel):
-    """
-    A warp on the current map.
+    """A warp on the current map.
 
     Saving the destination is kinda cheating, but much easier than detecting a warp and going back
     to edit the memory.
@@ -28,11 +27,13 @@ class Warp(BaseModel):
 
 
 def parse_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
-    """
-    Parse the list of warps on the current map from a snapshot of the memory.
+    """Parse warps on the current map from emulator memory.
 
-    :param mem: The PyBoyMemoryView instance to create the warps from.
-    :return: A dictionary of warps, keyed by index.
+    Args:
+        mem: Current PyBoy memory view.
+
+    Returns:
+        Warps keyed by their map index.
     """
     num_warps = mem[0xD3FB]
     warps: dict[int, Warp] = {}
@@ -49,9 +50,14 @@ def parse_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
 
 
 def _get_warp_type(coords: Coords, warps: dict[int, Warp]) -> WarpType:
-    """
-    Get the warp type for a warp at the given coordinates, and update its twin in the collection
-    if it exists.
+    """Classify a warp and update an adjacent twin when present.
+
+    Args:
+        coords: Coordinates of the warp being parsed.
+        warps: Previously parsed warps on the current map.
+
+    Returns:
+        The shared double-warp orientation when an adjacent twin exists, otherwise a single warp.
     """
     for w in warps.values():
         if w.warp_type == WarpType.SINGLE and (w.coords - coords).length == 1:

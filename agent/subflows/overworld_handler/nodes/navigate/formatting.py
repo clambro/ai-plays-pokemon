@@ -1,5 +1,4 @@
-"""
-Formatting utilities for navigation operations.
+"""Formatting utilities for navigation operations.
 
 This module contains the formatting functions for navigation operations, separate from any
 algorithmic logic to make them easier to test.
@@ -16,15 +15,23 @@ if TYPE_CHECKING:
 
 
 def format_coordinates_grid(coordinates: list[Coords], map_data: OverworldMap) -> str:
-    """
-    Format a list of coordinates as a grid string with rows separated by newlines and including
-    their tile type so the LLM has an easier time parsing it.
+    """Format coordinates and their tile types as a grid.
 
-    [(0,0), (0,1), (1,0), (1,1), (1,2), (2,1)]
-    ->
-    (0,0,❀) (0,1,∙)
-    (1,0,❀) (1,1,❀) (1,2,∙)
-    (2,1,❀)
+    Rows are separated by newlines so the model can parse their spatial relationship more easily.
+
+    Args:
+        coordinates: Map coordinates to include.
+        map_data: Explored map containing the tile at each coordinate.
+
+    Returns:
+        Rows of coordinate-and-tile tuples, or an empty string when no coordinates are supplied.
+
+    Example:
+        [(0,0), (0,1), (1,0), (1,1), (1,2), (2,1)]
+        ->
+        (0,0,❀) (0,1,∙)
+        (1,0,❀) (1,1,❀) (1,2,∙)
+        (2,1,❀)
     """
     if not coordinates:
         return ""
@@ -41,11 +48,14 @@ def format_coordinates_grid(coordinates: list[Coords], map_data: OverworldMap) -
 
 
 def format_exploration_candidates(candidates: list[Coords], map_data: OverworldMap) -> str:
-    """
-    Format exploration candidates for LLM consumption.
+    """Format exploration candidates for LLM consumption.
 
-    :param candidates: List of exploration candidate coordinates
-    :return: Formatted string for LLM
+    Args:
+        candidates: Coordinates adjacent to unexplored terrain.
+        map_data: Explored map containing the tile at each coordinate.
+
+    Returns:
+        A coordinate grid for the model, or a message stating that no candidates exist.
     """
     if not candidates:
         return "No exploration candidates found."
@@ -57,12 +67,14 @@ def format_map_boundary_tiles(
     boundary_tiles: dict[FacingDirection, list[Coords]],
     map_data: OverworldMap,
 ) -> str:
-    """
-    Format map boundary tiles for LLM consumption.
+    """Format accessible map boundaries for LLM consumption.
 
-    :param boundary_tiles: Dictionary mapping directions to boundary coordinates
-    :param map_connections: Dictionary mapping directions to connected map IDs
-    :return: Formatted string for LLM
+    Args:
+        boundary_tiles: Accessible boundary coordinates grouped by direction.
+        map_data: Explored map containing the connected map IDs.
+
+    Returns:
+        Descriptions of discovered connections and whether their boundaries are accessible.
     """
     output = []
     map_connections = {
