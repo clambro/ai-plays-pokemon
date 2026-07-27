@@ -4,8 +4,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from database.llm_messages.repository import get_total_llm_cost
-
 if TYPE_CHECKING:
     from agent.state import AgentState
     from emulator.game_state import YellowLegacyGameState
@@ -74,6 +72,7 @@ class GameStateView(BaseModel):
     money: int
     pokedex_seen: int
     pokedex_caught: int
+    total_tokens: int
     total_cost: float
     play_time_seconds: int
     badges: list[str]
@@ -82,7 +81,7 @@ class GameStateView(BaseModel):
     log: list[LogEntryView]
 
     @classmethod
-    async def from_states(
+    def from_states(
         cls,
         agent_state: AgentState,
         game_state: YellowLegacyGameState,
@@ -90,13 +89,13 @@ class GameStateView(BaseModel):
         """Create a view of the game state from the agent and game states."""
         pokemon = PartyPokemonView.from_game_state(game_state)
         log = LogEntryView.from_agent_state(agent_state)
-        cost = await get_total_llm_cost()
         return cls(
             iteration=agent_state.iteration,
             money=game_state.player.money,
             pokedex_seen=game_state.player.pokedex_seen,
             pokedex_caught=game_state.player.pokedex_caught,
-            total_cost=cost,
+            total_tokens=agent_state.total_tokens,
+            total_cost=agent_state.total_cost,
             play_time_seconds=game_state.player.play_time_seconds,
             badges=[str(badge) for badge in game_state.player.badges],
             party=pokemon,

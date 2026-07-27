@@ -84,14 +84,22 @@ body {
 /* --- Info Bar --- */
 .info-bar {
     grid-area: info;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 12px;
+}
+
+.info-group {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    padding: 8px 12px;
+    min-width: 0;
+    padding: 8px 16px;
 }
 
 .info-item {
     text-align: center;
+    min-width: 0;
 }
 
 .info-item .label {

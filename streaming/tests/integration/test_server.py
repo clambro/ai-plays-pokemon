@@ -19,6 +19,7 @@ MOCK_DATA = GameStateView(
     money=18143,
     pokedex_seen=45,
     pokedex_caught=21,
+    total_tokens=12_345_678,
     total_cost=23.51,
     play_time_seconds=596153,  # about 165 hours
     badges=["BOULDERBADGE", "CASCADEBADGE", "THUNDERBADGE"],

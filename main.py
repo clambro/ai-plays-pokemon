@@ -62,7 +62,7 @@ async def main(
         YellowLegacyEmulator(str(rom_path), emulator_state, mute_sound=mute_sound) as emulator,
         BackgroundStreamServer() as stream_server,
     ):
-        await stream_server.update_data(state, emulator.get_game_state())  # Initialize the view.
+        stream_server.update_data(state, emulator.get_game_state())  # Initialize the view.
         if not emulator_state:
             await asyncio.sleep(30)  # Some time to manually get to the new game screen.
         try:
