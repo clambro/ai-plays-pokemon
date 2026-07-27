@@ -1,9 +1,10 @@
 """Data models and model identifiers for LLM requests."""
 
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 
-class GeminiModel(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class GeminiModel:
     """Model for the Gemini model."""
 
     model_id: str

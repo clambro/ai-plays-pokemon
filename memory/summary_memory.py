@@ -1,5 +1,7 @@
 """Rolling summary memory rendered into agent context."""
 
+from dataclasses import dataclass, field
+
 from loguru import logger
 from pydantic import BaseModel, Field
 
@@ -22,10 +24,11 @@ class SummaryMemoryPiece(BaseModel):
         return (current_iteration - self.iteration) * (6 - self.importance)
 
 
-class SummaryMemory(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class SummaryMemory:
     """The Agent's summary memory."""
 
-    pieces: list[SummaryMemoryPiece] = Field(default_factory=list)
+    pieces: list[SummaryMemoryPiece] = field(default_factory=list)
 
     def __str__(self) -> str:
         """Get a string representation of the memory."""

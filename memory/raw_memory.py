@@ -1,14 +1,15 @@
 """Recent raw memory rendered into agent context."""
 
 from collections import OrderedDict
+from dataclasses import dataclass, field
 
 from loguru import logger
-from pydantic import BaseModel, Field
 
 from common.constants import RAW_MEMORY_MAX_SIZE
 
 
-class RawMemoryPiece(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class RawMemoryPiece:
     """A single piece of information contained in the Agent's raw memory."""
 
     iteration: int
@@ -23,11 +24,12 @@ class RawMemoryPiece(BaseModel):
         self.content += "\n" + content
 
 
-class RawMemory(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class RawMemory:
     """The Agent's raw memory."""
 
     max_size: int = RAW_MEMORY_MAX_SIZE
-    pieces: OrderedDict[int, RawMemoryPiece] = Field(default_factory=OrderedDict)
+    pieces: OrderedDict[int, RawMemoryPiece] = field(default_factory=OrderedDict)
 
     def __str__(self) -> str:
         """Get a string representation of the memory."""
