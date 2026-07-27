@@ -46,7 +46,6 @@ async def update_summary_memory(
     response = await llm_service.get_llm_response_pydantic(
         prompt,
         UpdateSummaryMemoryResponse,
-        prompt_name="update_summary_memory",
     )
     summary_memory.add_memories(
         iteration,

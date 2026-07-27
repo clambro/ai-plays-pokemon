@@ -24,8 +24,8 @@ observability data, not gameplay state.
 - Stop querying SQLite from the stream for LLM totals.
 - Replace the Junjo Server telemetry exporter with Logfire while leaving Junjo
   orchestration in place.
-- Instrument the current provider once and attach an application span for each
-  logical `prompt_name`.
+- Instrument the current provider once and rely on Junjo workflow spans for
+  application-level grouping.
 - Keep telemetry opt-in and allow the application to work normally without a
   Logfire token or connection.
 - Add an application-owned, concurrency-safe in-memory usage tracker.
@@ -62,7 +62,7 @@ database, or network I/O.
 
 Capture:
 
-- prompt name and provider model;
+- Junjo workflow context and provider model;
 - duration and outcome;
 - retry/attempt relationship;
 - provider usage;
@@ -121,8 +121,8 @@ Tests must use mocked providers and an in-memory Logfire exporter.
 - [ ] Usage totals remain available when Logfire is disabled or unavailable.
 - [ ] V2 backup/restore preserves the active run's usage snapshot.
 - [ ] The stream displays tokens and cost from local state.
-- [ ] Logfire records one filterable logical span per `prompt_name`, with
-      provider attempts and errors correlated correctly.
+- [ ] Logfire provider spans remain grouped under the corresponding Junjo
+      workflow spans.
 - [ ] Prompt/response capture is explicit, scrubbed, and safe for screenshots.
 - [ ] Junjo Server telemetry configuration is removed.
 

@@ -28,17 +28,12 @@ async def test_get_llm_response_updates_agent_usage() -> None:
 
     with (
         patch("llm.service.genai.Client", return_value=client),
-        patch("llm.service.create_llm_message", new_callable=AsyncMock) as create_llm_message,
         bind_llm_usage_updater(store.add_llm_usage),
     ):
         service = GeminiLLMService(GEMINI_FLASH_2_5)
-        result = await service.get_llm_response(
-            "prompt",
-            prompt_name="test",
-        )
+        result = await service.get_llm_response("prompt")
 
     assert result == "response"
     state = await store.get_state()
     assert state.total_tokens == expected_total_tokens
     assert state.total_cost == pytest.approx(expected_cost)
-    create_llm_message.assert_awaited_once()

@@ -119,7 +119,6 @@ async def _update_entities(  # noqa: PLR0913
         response = await llm_service.get_llm_response_pydantic(
             messages=[screenshot, prompt],
             schema=UpdateEntitiesResponse,
-            prompt_name=f"update_{entity_type.name.lower()}s",
         )
         await asyncio.gather(
             *[

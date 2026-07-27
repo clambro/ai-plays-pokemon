@@ -13,17 +13,16 @@ from google.genai.types import (
     SafetySetting,
     ThinkingConfig,
 )
-from PIL.Image import Image
 from pydantic import BaseModel
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from common.prompts import SYSTEM_PROMPT
 from common.settings import settings
-from database.llm_messages.repository import create_llm_message
-from database.llm_messages.schemas import LLMMessageCreate
 from llm.usage import update_llm_usage
 
 if TYPE_CHECKING:
+    from PIL.Image import Image
+
     from llm.schemas import GeminiModel
 
 TIMEOUT = 60
@@ -52,7 +51,6 @@ class GeminiLLMService:
     async def get_llm_response(
         self,
         messages: str | list[str | Image],
-        prompt_name: str,
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = DEFAULT_TEMPERATURE,
         thinking_tokens: int = MIN_THINKING_TOKENS,
@@ -61,7 +59,6 @@ class GeminiLLMService:
 
         Args:
             messages: Text and images to send to the model.
-            prompt_name: Stable label recorded with the request telemetry.
             system_prompt: Instruction supplied as the model's system prompt.
             temperature: Sampling temperature for the response.
             thinking_tokens: Maximum tokens allocated to model reasoning.
@@ -76,7 +73,6 @@ class GeminiLLMService:
         response = await self._get_llm_response(
             messages=messages,
             schema=None,
-            prompt_name=prompt_name,
             system_prompt=system_prompt,
             temperature=temperature,
             thinking_tokens=thinking_tokens,
@@ -85,11 +81,10 @@ class GeminiLLMService:
             raise ValueError("No response from Gemini.")
         return response.text
 
-    async def get_llm_response_pydantic[ResponseModel: BaseModel](  # noqa: PLR0913
+    async def get_llm_response_pydantic[ResponseModel: BaseModel](
         self,
         messages: str | list[str | Image],
         schema: type[ResponseModel],
-        prompt_name: str,
         *,
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = DEFAULT_TEMPERATURE,
@@ -100,7 +95,6 @@ class GeminiLLMService:
         Args:
             messages: Text and images to send to the model.
             schema: Pydantic model describing the required response.
-            prompt_name: Stable label recorded with the request telemetry.
             system_prompt: Instruction supplied as the model's system prompt.
             temperature: Sampling temperature for the response.
             thinking_tokens: Maximum tokens allocated to model reasoning.
@@ -115,7 +109,6 @@ class GeminiLLMService:
         response = await self._get_llm_response(
             messages=messages,
             schema=schema,
-            prompt_name=prompt_name,
             system_prompt=system_prompt,
             temperature=temperature,
             thinking_tokens=thinking_tokens,
@@ -128,12 +121,11 @@ class GeminiLLMService:
         retry=retry_if_exception_type(ServerError),  # The experimental models are unstable.
         reraise=True,
     )
-    async def _get_llm_response(  # noqa: PLR0913
+    async def _get_llm_response(
         self,
         *,
         messages: str | list[str | Image],
         schema: type[BaseModel] | None,
-        prompt_name: str,
         system_prompt: str,
         temperature: float,
         thinking_tokens: int | None,
@@ -143,7 +135,6 @@ class GeminiLLMService:
         Args:
             messages: Text and images to send to the model.
             schema: Optional Pydantic model describing a structured response.
-            prompt_name: Stable label recorded with the request telemetry.
             system_prompt: Instruction supplied as the model's system prompt.
             temperature: Sampling temperature for the response.
             thinking_tokens: Maximum reasoning tokens, or ``None`` for a non-thinking model.
@@ -179,21 +170,28 @@ class GeminiLLMService:
         )
         if not response.text or not response.usage_metadata:
             raise ValueError("No response from Gemini.")
-        message_str = "\n\n".join("<IMAGE>" if isinstance(m, Image) else m for m in messages)
-        llm_message = LLMMessageCreate(
-            model=self.model,
-            prompt_name=prompt_name,
-            prompt=message_str,
-            response=response.text,
-            prompt_tokens=response.usage_metadata.prompt_token_count or 0,
-            thought_tokens=response.usage_metadata.thoughts_token_count or 0,
-            response_tokens=response.usage_metadata.candidates_token_count or 0,
+        cost = _calculate_cost(
+            self.model,
+            input_tokens=response.usage_metadata.prompt_token_count or 0,
+            output_tokens=(response.usage_metadata.thoughts_token_count or 0)
+            + (response.usage_metadata.candidates_token_count or 0),
         )
         await update_llm_usage(
             response.usage_metadata.total_token_count or 0,
-            llm_message.cost,
+            cost,
         )
-        await create_llm_message(llm_message)
         if schema and not isinstance(response.parsed, schema):
             raise ValueError(f"Failed to parse response from Gemini. Got {response.text}")
         return response
+
+
+def _calculate_cost(
+    model: GeminiModel,
+    *,
+    input_tokens: int,
+    output_tokens: int,
+) -> float:
+    """Calculate the cost of one LLM response."""
+    return (
+        input_tokens * model.cost_1m_input_tokens + output_tokens * model.cost_1m_output_tokens
+    ) / 1_000_000

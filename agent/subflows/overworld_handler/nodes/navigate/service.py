@@ -141,7 +141,6 @@ class NavigationService:
         response = await self.llm_service.get_llm_response_pydantic(
             messages=[img, prompt],
             schema=NavigationResponse,
-            prompt_name="determine_target_coords",
         )
         self.raw_memory.add_memory(
             iteration=self.iteration,

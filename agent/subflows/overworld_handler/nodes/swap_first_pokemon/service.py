@@ -74,7 +74,6 @@ class SwapFirstPokemonService:
         response = await self.llm_service.get_llm_response_pydantic(
             messages=prompt,
             schema=SwapFirstPokemonResponse,
-            prompt_name="get_swap_index",
         )
         if response.index == 0:
             first_pokemon = game_state.party[0].name

@@ -55,7 +55,6 @@ class UseItemService:
         response = await self.llm_service.get_llm_response_pydantic(
             messages=prompt,
             schema=UseItemResponse,
-            prompt_name="get_item_index",
         )
         return response.index
 

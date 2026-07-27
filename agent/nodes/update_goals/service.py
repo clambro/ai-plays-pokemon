@@ -45,7 +45,6 @@ async def update_goals(
         response = await llm_service.get_llm_response_pydantic(
             messages=prompt,
             schema=UpdateGoalsResponse,
-            prompt_name="update_goals",
         )
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Error updating goals. Skipping. {e}")

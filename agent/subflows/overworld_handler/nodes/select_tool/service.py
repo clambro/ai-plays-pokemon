@@ -68,7 +68,6 @@ async def select_tool(  # noqa: PLR0913
         response = await llm_service.get_llm_response_pydantic(
             messages=[img, prompt],
             schema=SelectToolResponse,
-            prompt_name="select_overworld_tool",
         )
         tool = OverworldTool(response.tool)
     except Exception as e:  # noqa: BLE001
