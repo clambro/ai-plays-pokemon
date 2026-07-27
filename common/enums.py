@@ -4,8 +4,7 @@ from enum import Enum, IntEnum, IntFlag, StrEnum, auto
 
 
 class AsciiTile(StrEnum):
-    """
-    An enum for the ASCII representations of overworld map tiles.
+    """An enum for the ASCII representations of overworld map tiles.
 
     These HAVE to be one token each or the LLM will hallucinate. There's a test to validate this.
     """
@@ -83,10 +82,10 @@ class FacingDirection(StrEnum):
 
 
 class BlockedDirection(IntFlag):
-    """
-    Represents blocked movement between otherwise walkable tiles. This is usually due to an
-    elevation difference making it impossible to move from one to the other, even though both are
-    walkable and adjacent to one another.
+    """Represent blocked movement between otherwise walkable tiles.
+
+    This usually denotes an elevation difference that prevents movement between adjacent walkable
+    tiles.
     """
 
     UP = 1 << 0
@@ -146,8 +145,7 @@ class Badge(StrEnum):
 
 
 class MapId(IntEnum):
-    """
-    Enum for mapping location IDs to their names.
+    """Enum for mapping location IDs to their names.
 
     There are several IDs in the list below that are listed as "unused" in the game, but sometimes
     they appear as targets for warp tiles in elevators, or if you try to access the map ID mid-warp

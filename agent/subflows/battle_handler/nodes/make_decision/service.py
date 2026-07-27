@@ -24,10 +24,16 @@ async def make_decision(
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
 ) -> RawMemory:
-    """
-    Make a decision in a battle based on the current game state.
+    """Make a decision in a battle based on the current game state.
 
-    :return: The raw memory with the decision added.
+    Args:
+        iteration: Current agent iteration used to timestamp the decision.
+        raw_memory: Recent memory to update with the model response.
+        state_string_builder: Formatter for the current game state.
+        emulator: Running emulator used to inspect the battle and press buttons.
+
+    Returns:
+        The updated raw memory. Model failures are logged and leave the memory unchanged.
     """
     img = emulator.get_screenshot()
     game_state = emulator.get_game_state()

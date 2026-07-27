@@ -21,7 +21,17 @@ async def throw_ball(
     tool_args: ThrowBallToolArgs,
     emulator: YellowLegacyEmulator,
 ) -> RawMemory:
-    """Throw a ball at the enemy."""
+    """Select a Poké Ball from the battle item menu.
+
+    Args:
+        iteration: Current agent iteration used to timestamp the attempt.
+        raw_memory: Recent memory to update after selecting the ball.
+        tool_args: Inventory index and selected Poké Ball type.
+        emulator: Running emulator used to navigate the battle menus.
+
+    Returns:
+        The supplied raw memory, updated when the throw is attempted.
+    """
     game_state = emulator.get_game_state()
     cursor_pos = get_cursor_pos_in_fight_menu(game_state)
     if cursor_pos is None:

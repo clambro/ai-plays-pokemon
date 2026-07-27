@@ -28,7 +28,16 @@ async def create_long_term_memory(
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
 ) -> None:
-    """Create long-term memory."""
+    """Create and persist long-term memories proposed by the model.
+
+    Args:
+        iteration: Current agent iteration used to timestamp new memories.
+        state_string_builder: Formatter for the current game state and memory context.
+        emulator: Running emulator used to inspect the current game state.
+
+    Note:
+        Provider, embedding, and persistence failures are logged and do not escape this function.
+    """
     game_state = emulator.get_game_state()
     titles = "\n".join(await get_all_long_term_memory_titles())
     prompt = CREATE_LONG_TERM_MEMORY_PROMPT.format(

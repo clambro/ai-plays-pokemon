@@ -22,7 +22,11 @@ async def get_output_folder() -> Path:
 
 
 async def create_backup(agent_state: AgentState) -> None:
-    """Save the current game state, agent state, and database to a backup folder."""
+    """Save agent state and the current database into a timestamped backup.
+
+    Args:
+        agent_state: State to serialize, including the output folder and emulator save state.
+    """
     logger.info(f"Creating backup at iteration {agent_state.iteration}.")
 
     timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
@@ -39,7 +43,14 @@ async def create_backup(agent_state: AgentState) -> None:
 
 
 async def load_backup(backup_folder: Path) -> AgentState:
-    """Load the agent state from a backup folder and set the current DB to the backup DB."""
+    """Restore agent state and replace the active database from a backup.
+
+    Args:
+        backup_folder: Backup containing serialized agent state and a database directory.
+
+    Returns:
+        The restored agent state.
+    """
     async with aiofiles.open(backup_folder / BACKUP_AGENT_STATE_NAME) as f:
         agent_state = AgentState.model_validate_json(await f.read())
 
@@ -50,7 +61,14 @@ async def load_backup(backup_folder: Path) -> AgentState:
 
 
 async def load_latest_backup() -> AgentState:
-    """Load the latest backup from the backups folder."""
+    """Restore the newest timestamped backup.
+
+    Returns:
+        Agent state loaded from the newest backup under the newest output directory.
+
+    Raises:
+        ValueError: No output directory or backup exists.
+    """
     subfolders = [
         f for f in OUTPUTS_FOLDER.iterdir() if f.is_dir() and f.name.startswith(OUTPUT_PREFIX)
     ]
@@ -63,10 +81,21 @@ async def load_latest_backup() -> AgentState:
 
 
 async def _copy_dir_async(src: Path, dst: Path) -> None:
-    """Asynchronously copy a directory and its contents."""
+    """Copy the files directly inside one directory to another.
+
+    Args:
+        src: Source directory whose files should be copied.
+        dst: Destination directory to create and populate.
+    """
     await aiofiles.os.makedirs(dst, exist_ok=True)
 
     async def copy_file(src_file: Path, dst_file: Path) -> None:
+        """Copy one file asynchronously.
+
+        Args:
+            src_file: Existing file to read.
+            dst_file: Destination file to overwrite.
+        """
         async with aiofiles.open(src_file, "rb") as src_f, aiofiles.open(dst_file, "wb") as dst_f:
             await dst_f.write(await src_f.read())
 

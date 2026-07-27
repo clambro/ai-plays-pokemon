@@ -29,7 +29,18 @@ async def should_critique(
     iterations_since_last_critique: int,
     handler: AgentStateHandler,
 ) -> bool:
-    """Check if the agent should critique by looking for loops in the raw memory."""
+    """Check whether the agent appears stuck and should request a critique.
+
+    Args:
+        iteration: Current agent iteration used to enforce the check interval.
+        raw_memory: Recent actions inspected for repeated behavior.
+        goals: Current goals supplied to the detection prompt.
+        iterations_since_last_critique: Iterations elapsed since the previous critique.
+        handler: Active top-level handler.
+
+    Returns:
+        Whether the generic critic should run. Provider failures default to ``False``.
+    """
     if (
         # The Overworld Handler has its own critique prompt with map-specific information.
         handler == AgentStateHandler.OVERWORLD

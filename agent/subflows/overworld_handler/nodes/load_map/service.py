@@ -13,6 +13,14 @@ async def load_map(
     emulator: YellowLegacyEmulator,
     iteration: int,
 ) -> OverworldMap:
-    """Update the current overworld map with the latest screen info."""
+    """Load or create the explored map for the current game state.
+
+    Args:
+        emulator: Running emulator used to inspect the current map.
+        iteration: Current agent iteration used when creating map memory.
+
+    Returns:
+        The explored-map snapshot for the current location.
+    """
     game_state = emulator.get_game_state()
     return await get_overworld_map(iteration, game_state)

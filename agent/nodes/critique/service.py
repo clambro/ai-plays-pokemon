@@ -20,7 +20,17 @@ async def critique(
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
 ) -> RawMemory:
-    """Critique the current state of the game."""
+    """Ask the critic model for advice about the current game state.
+
+    Args:
+        iteration: Current agent iteration used to timestamp the critique.
+        raw_memory: Recent memory to update with the critique or provider error.
+        state_string_builder: Formatter for the current game state and memory context.
+        emulator: Running emulator used to inspect the state and capture its screen.
+
+    Returns:
+        The supplied raw memory after appending the critique result.
+    """
     llm_service = GeminiLLMService(GEMINI_PRO_2_5)
     game_state = emulator.get_game_state()
     screenshot = emulator.get_screenshot()

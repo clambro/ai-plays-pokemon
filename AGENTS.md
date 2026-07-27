@@ -35,7 +35,9 @@ exactly because emulator changes can affect existing save states.
 - Use classes when state, identity, lifecycle, invariants, polymorphism, or a
   framework contract makes them useful. Test classes may also group a large
   test module when that grouping materially improves comprehension.
-- Use Google-style docstrings.
+- Use Google-style docstrings. Document caller-relevant semantics, mutation,
+  side effects, returns, and failures; keep obvious operations concise. Do not
+  use Sphinx directives.
 - Use Pydantic models at I/O and validation boundaries. Prefer standard-library
   dataclasses for internal structured data.
 - Keep changes focused and preserve unrelated worktree changes.

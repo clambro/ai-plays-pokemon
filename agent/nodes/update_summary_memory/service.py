@@ -23,7 +23,17 @@ async def update_summary_memory(
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
 ) -> SummaryMemory:
-    """Update the summary memory."""
+    """Update rolling summary memory at the configured interval.
+
+    Args:
+        iteration: Current agent iteration used to enforce the interval and timestamp memories.
+        summary_memory: Summary collection to mutate with the model's response.
+        state_string_builder: Formatter for the current game state and memory context.
+        emulator: Running emulator used to inspect the current game state.
+
+    Returns:
+        The supplied summary memory after any generated additions.
+    """
     if iteration % ITERATIONS_PER_SUMMARY_UPDATE != 0:
         return summary_memory
 

@@ -17,7 +17,16 @@ async def handle_dialog_box(
     raw_memory: RawMemory,
     emulator: YellowLegacyEmulator,
 ) -> RawMemory:
-    """Handle reading the dialog box."""
+    """Advance the main dialog box while capturing its text.
+
+    Args:
+        iteration: Current agent iteration used to timestamp captured dialog.
+        raw_memory: Recent memory to update with the dialog text.
+        emulator: Running emulator used to advance and inspect the dialog box.
+
+    Returns:
+        The supplied raw memory after appending any captured dialog.
+    """
     game_state = emulator.get_game_state()
     dialog_box = game_state.get_dialog_box()
     if not dialog_box:

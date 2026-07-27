@@ -1,5 +1,4 @@
-"""
-Tests for the navigation service.
+"""Tests for the navigation service.
 
 It's a bit of an antipattern to use strings for the maps instead of the enum values because if we
 ever need to change the characters used, we'll have to update the tests, but this is far more
@@ -258,10 +257,7 @@ async def test_calculate_path_to_target_plateau_jump_left() -> None:
 
 @pytest.mark.unit
 async def test_calculate_path_to_target_plateau_from_left_around() -> None:
-    """
-    Test that the path to the target is correct for the plateau map when walking from the left to
-    the center.
-    """
+    """Test the path from the plateau's left side to its center."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
 
@@ -281,10 +277,7 @@ async def test_calculate_path_to_target_plateau_jump_right() -> None:
 
 @pytest.mark.unit
 async def test_calculate_path_to_target_plateau_from_right_around() -> None:
-    """
-    Test that the path to the target is correct for the plateau map when walking from the right to
-    the center.
-    """
+    """Test the path from the plateau's right side to its center."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
 
@@ -309,10 +302,7 @@ async def test_calculate_path_to_target_plateau_jump_down() -> None:
 
 @pytest.mark.unit
 async def test_calculate_path_to_target_plateau_from_down_around() -> None:
-    """
-    Test that the path to the target is correct for the plateau map when walking from the down to
-    the center.
-    """
+    """Test the path from below the plateau to its center."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
 
@@ -327,10 +317,7 @@ async def test_calculate_path_to_target_plateau_from_down_around() -> None:
 
 @pytest.mark.unit
 async def test_calculate_path_to_target_around_collision_pair() -> None:
-    """
-    Test that the path to the target is correct for the collision pairs map when walking around a
-    collision pair.
-    """
+    """Test pathfinding around a paired-tile collision."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = COLLISION_PAIRS_MAP
     map_data.blockages = COLLISION_PAIRS_BLOCKAGES
@@ -367,10 +354,7 @@ async def test_calculate_path_around_grass() -> None:
 
 @pytest.mark.unit
 async def test_calculate_path_through_grass() -> None:
-    """
-    Test that the pathing still goes through the grass tile if it's the only way to get to the
-    target.
-    """
+    """Test that pathfinding uses grass when it is the only route."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = [
         list(row)

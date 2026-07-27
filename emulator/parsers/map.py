@@ -12,8 +12,7 @@ if TYPE_CHECKING:
 
 
 class SpinnerTileIds(BaseModel):
-    """
-    The tiles that are used for the spinner.
+    """The tiles that are used for the spinner.
 
     These are the flattened 4-tile sequences in the order
     [top-left, top-right, bottom-left, bottom-right]
@@ -53,13 +52,15 @@ class Map(BaseModel):
 
 
 def parse_map_state(mem: PyBoyMemoryView) -> Map:
-    """
-    Parse the current map from a snapshot of the memory.
+    """Parse the current map from emulator memory.
 
     Tileset values all come from data/tilesets in the decompiled ROM.
 
-    :param mem: The PyBoyMemoryView instance to create the map from.
-    :return: A new map.
+    Args:
+        mem: Current PyBoy memory view.
+
+    Returns:
+        An immutable snapshot of the current map and its traversal metadata.
     """
     tileset_id = _Tileset(mem[0xD3B4])
 

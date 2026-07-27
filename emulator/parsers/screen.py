@@ -56,11 +56,13 @@ class Screen(BaseModel):
 
 
 def parse_screen(mem: PyBoyMemoryView) -> Screen:
-    """
-    Create a new screen state from a snapshot of the memory.
+    """Parse the visible screen from emulator memory.
 
-    :param mem: The PyBoyMemoryView instance to create the screen state from.
-    :return: A new screen state.
+    Args:
+        mem: Current PyBoy memory view.
+
+    Returns:
+        An immutable snapshot of the screen bounds, tiles, and menu cursors.
     """
     player_y = mem[0xD3AE]
     player_x = mem[0xD3AF]

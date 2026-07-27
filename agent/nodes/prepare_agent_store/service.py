@@ -11,8 +11,7 @@ if TYPE_CHECKING:
 
 
 async def wait_for_animations(emulator: YellowLegacyEmulator) -> None:
-    """
-    Wait until all animations have finished so that we can begin the Agent loop.
+    """Wait until all animations have finished so that we can begin the Agent loop.
 
     We run the check twice to be absolutely sure. Some cutscenes have a slight delay between
     actions, and missing that can cause weird downstream issues.
@@ -41,7 +40,15 @@ async def should_retrieve_memory(
     iterations_since_last_ltm_retrieval: int,
     long_term_memory: LongTermMemory,
 ) -> bool:
-    """Determine if the agent should retrieve memory."""
+    """Determine whether the next agent iteration should retrieve long-term memory.
+
+    Args:
+        iterations_since_last_ltm_retrieval: Iterations elapsed since the previous retrieval.
+        long_term_memory: Memories currently loaded into the agent context.
+
+    Returns:
+        Whether the retrieval interval elapsed or no long-term memory is currently loaded.
+    """
     return (
         iterations_since_last_ltm_retrieval >= ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL
         or not long_term_memory.pieces

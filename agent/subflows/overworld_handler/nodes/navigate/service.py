@@ -22,8 +22,7 @@ if TYPE_CHECKING:
 
 
 class NavigationService:
-    """
-    The service for the navigation action.
+    """The service for the navigation action.
 
     This handles all emulator interactions for navigation. The specific pathfinding algorithms are
     in the utils module, and the formatting of the data for the LLM is in the formatting module.
@@ -199,8 +198,7 @@ class NavigationService:
         return True
 
     async def _handle_pikachu(self, button: Button) -> None:
-        """
-        Check if Pikachu is in the way and face it if so.
+        """Check if Pikachu is in the way and face it if so.
 
         Pikachu can block your path on the very first step of navigation if you are not facing it
         when you try to move.

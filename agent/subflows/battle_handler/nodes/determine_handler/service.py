@@ -32,10 +32,17 @@ async def determine_handler(
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
 ) -> tuple[RawMemory, BattleToolArgs | None]:
-    """
-    Determine the handler for the current game state in the battle.
+    """Determine the handler for the current game state in the battle.
 
-    :return: The raw memory with the decision added.
+    Args:
+        iteration: Current agent iteration used to timestamp the decision.
+        raw_memory: Recent memory to update with the selected action or error.
+        state_string_builder: Formatter for the current game state.
+        emulator: Running emulator used to inspect the battle and capture its screen.
+
+    Returns:
+        The updated raw memory and selected battle action, or ``None`` when no action can be
+        selected.
     """
     game_state = emulator.get_game_state()
     battle_state = game_state.battle
@@ -72,12 +79,13 @@ async def determine_handler(
 
 
 def _get_legal_args(game_state: YellowLegacyGameState) -> list[BattleToolArgs]:
-    """
-    Get the legal arguments for the current game state. This assumes that we're in a normal
-    trainer or wild battle.
+    """Get the legal actions for a normal trainer or wild battle.
 
-    :param game_state: The game state.
-    :return: The legal arguments.
+    Args:
+        game_state: Current game state with an open fight menu.
+
+    Returns:
+        Actions available for the active Pokémon, party, inventory, and battle type.
     """
     args = []
     player_pokemon = game_state.battle.player_pokemon

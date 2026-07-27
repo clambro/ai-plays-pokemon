@@ -21,7 +21,17 @@ async def switch_pokemon(
     tool_args: SwitchPokemonToolArgs,
     emulator: YellowLegacyEmulator,
 ) -> RawMemory:
-    """Switch to a different Pokemon."""
+    """Select a party Pokémon from the battle menu.
+
+    Args:
+        iteration: Current agent iteration used to timestamp the attempt.
+        raw_memory: Recent memory to update after selecting the Pokémon.
+        tool_args: Target party index and identifying Pokémon information.
+        emulator: Running emulator used to navigate the battle menus.
+
+    Returns:
+        The supplied raw memory, updated when the switch is attempted.
+    """
     game_state = emulator.get_game_state()
     cursor_pos = get_cursor_pos_in_fight_menu(game_state)
     if cursor_pos is None:

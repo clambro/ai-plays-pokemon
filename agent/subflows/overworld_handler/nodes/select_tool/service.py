@@ -40,7 +40,20 @@ async def select_tool(  # noqa: PLR0913
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
 ) -> tuple[OverworldTool, RawMemory]:
-    """Select a tool based on the current overworld game state."""
+    """Select an available overworld tool for the current game state.
+
+    Args:
+        iteration: Current agent iteration used to timestamp the decision.
+        raw_memory: Recent memory to update with the model's reasoning.
+        current_map: Explored map used to determine available navigation tools.
+        iterations_since_last_critique: Iterations elapsed since the previous critique.
+        state_string_builder: Formatter for the current overworld state and map context.
+        emulator: Running emulator used to inspect the state and capture its screen.
+
+    Returns:
+        The selected tool and updated raw memory. Provider or validation failures select the
+        button-pressing tool and leave memory unchanged.
+    """
     game_state = emulator.get_game_state()
     img = emulator.get_screenshot()
     prompt = SELECT_TOOL_PROMPT.format(

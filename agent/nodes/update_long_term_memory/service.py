@@ -27,7 +27,17 @@ async def update_long_term_memory(
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
 ) -> None:
-    """Update long-term memory."""
+    """Persist model-proposed updates to loaded long-term memories.
+
+    Args:
+        iteration: Current agent iteration used to timestamp updates.
+        long_term_memory: Loaded memories eligible for append or rewrite operations.
+        state_string_builder: Formatter for the current game state and memory context.
+        emulator: Running emulator used to inspect the current game state.
+
+    Note:
+        Missing titles and provider, embedding, or persistence failures are logged and skipped.
+    """
     if not long_term_memory.pieces:
         return
 

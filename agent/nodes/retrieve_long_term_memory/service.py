@@ -24,7 +24,17 @@ async def retrieve_long_term_memory(
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
 ) -> LongTermMemory:
-    """Retrieve the long-term memory."""
+    """Retrieve long-term memories relevant to the current game state.
+
+    Args:
+        iteration: Current agent iteration used for retrieval recency.
+        long_term_memory: Previously loaded memories returned if query generation fails.
+        state_string_builder: Formatter for the current game state and memory context.
+        emulator: Running emulator used to inspect the state and capture its screen.
+
+    Returns:
+        Relevant long-term memories, or the previously loaded set when query generation fails.
+    """
     game_state = emulator.get_game_state()
     screenshot = emulator.get_screenshot()
 

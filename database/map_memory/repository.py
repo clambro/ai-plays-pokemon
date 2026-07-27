@@ -47,7 +47,17 @@ async def get_visited_maps() -> list[MapId]:
 
 
 async def update_map_tiles(map_memory: MapMemoryCreateUpdate) -> MapMemoryRead:
-    """Update the tiles of a map memory."""
+    """Update an explored map's tiles and blockages.
+
+    Args:
+        map_memory: Map identity, serialized terrain, blockages, and update iteration.
+
+    Returns:
+        The updated map memory.
+
+    Raises:
+        ValueError: No stored map matches the supplied map ID.
+    """
     async with db_sessionmaker() as session:
         query = (
             update(MapMemoryDBModel)

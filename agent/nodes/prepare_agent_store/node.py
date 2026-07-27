@@ -17,9 +17,9 @@ if TYPE_CHECKING:
 
 
 class PrepareAgentStoreNode(Node[AgentStore]):
-    """
-    The first node in the agent loop. Prepares the agent store for the next iteration by selecting
-    the appropriate handler and determining if the agent should retrieve memory.
+    """Prepare the agent store for its next iteration.
+
+    This first node selects the appropriate handler and determines whether to retrieve memory.
     """
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:

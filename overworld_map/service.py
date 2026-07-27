@@ -24,9 +24,17 @@ if TYPE_CHECKING:
 
 
 async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -> OverworldMap:
-    """
-    Get the overworld map from the game state, loading the relevant memories from the database if
-    the map is known, otherwise creating a new one.
+    """Load the explored map for a game-state snapshot.
+
+    Existing terrain and entity memories are loaded from the database. An unseen map is initialized
+    and persisted before being returned.
+
+    Args:
+        iteration: Current agent iteration used when creating new map memory.
+        game_state: Current parsed game state and map metadata.
+
+    Returns:
+        The explored map populated with remembered entities and current map connections.
     """
     map_memory = await get_map_memory(game_state.map.id)
     if map_memory is None:
@@ -75,10 +83,18 @@ async def update_map_with_screen_info(
     game_state: YellowLegacyGameState,
     overworld_map: OverworldMap,
 ) -> OverworldMap:
-    """
-    Update the overworld map with the current screen info. Double check that there is no text
-    on the screen and that the map ID matches the current game state before updating or you'll
-    create weird artifacts.
+    """Update explored-map memory from the current visible screen.
+
+    Terrain and entities are persisted only when no text obscures the screen and the supplied map
+    matches the current game state.
+
+    Args:
+        iteration: Current agent iteration used to timestamp persistence updates.
+        game_state: Current parsed game state and visible screen.
+        overworld_map: Explored map expected to match ``game_state``.
+
+    Returns:
+        A freshly loaded explored map reflecting any accepted updates.
     """
     if not game_state.is_text_on_screen() and overworld_map.id == game_state.map.id:
         await _add_remove_map_entities(iteration, game_state, overworld_map)

@@ -35,7 +35,17 @@ async def update_map(
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
 ) -> OverworldMap:
-    """Update the current map and nearby entities with the latest screen info."""
+    """Update explored terrain and nearby entity descriptions.
+
+    Args:
+        iteration: Current agent iteration used to timestamp map-memory updates.
+        current_map: Explored map to update from the visible screen.
+        state_string_builder: Formatter for the current overworld state and map context.
+        emulator: Running emulator used to inspect the state and capture its screen.
+
+    Returns:
+        The updated explored map.
+    """
     screenshot = emulator.get_screenshot()
     game_state = emulator.get_game_state()
     current_map = await update_map_with_screen_info(iteration, game_state, current_map)
@@ -77,16 +87,19 @@ async def _update_entities(  # noqa: PLR0913
     current_map: OverworldMap,
     state_string_builder: StateStringBuilder,
 ) -> None:
-    """
-    Update the map memory of the entities of the given type, as long as they are within a
-    certain distance of the player. Updating entities that are too far away introduces
-    hallucinations.
+    """Update memory for nearby entities of one type.
 
-    :param entities: The entities to update.
-    :param entity_type: The type of entity to update.
-    :param screenshot: The screenshot of the current screen.
-    :param game_state: The current game state.
-    :param prompt: The prompt to use for the LLM.
+    Entities farther than two tiles from the player are excluded to reduce hallucinations.
+
+    Args:
+        entities: Known sprites or signs that may need descriptions.
+        entity_type: Entity category used for telemetry and persistence.
+        screenshot: Current game screen supplied to the model.
+        game_state: Current parsed emulator state.
+        prompt: Prompt template for the entity category.
+        iteration: Current agent iteration used to timestamp updates.
+        current_map: Explored map owning the entities.
+        state_string_builder: Formatter for the current game state.
     """
     max_distance = 2
     updatable_entities = [

@@ -21,9 +21,20 @@ if TYPE_CHECKING:
 
 
 class YellowLegacyEmulator(AbstractAsyncContextManager):
-    """
-    Wrapper for accessing the game state of Pokemon Yellow Legacy. Encapsulates the PyBoy API so
-    that the rest of the codebase doesn't need to worry about emulation or memory addresses.
+    """Control Pokémon Yellow Legacy through a managed PyBoy instance.
+
+    The wrapper owns PyBoy's lifecycle and exposes parsed game state, screenshots, button input,
+    and save-state operations without leaking memory addresses to callers.
+
+    Args:
+        rom_path: Path to the ROM to load.
+        save_state: Base64-encoded state to restore.
+        save_state_path: File containing a state to restore.
+        mute_sound: Whether to initialize PyBoy with zero volume.
+        headless: Whether to use PyBoy's null window instead of SDL.
+
+    Raises:
+        ValueError: Both ``save_state`` and ``save_state_path`` are provided.
     """
 
     def __init__(
@@ -96,7 +107,15 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         self._pyboy.stop()
 
     def get_screenshot(self) -> Image.Image:
-        """Get a screenshot of the current game screen."""
+        """Get an independent image of the current game screen.
+
+        Returns:
+            A copy of PyBoy's current screen image.
+
+        Raises:
+            RuntimeError: The emulator has been stopped.
+            TypeError: PyBoy exposes no valid screenshot.
+        """
         self._check_stopped()
         img = deepcopy(self._pyboy.screen.image)
         if not isinstance(img, Image.Image):
@@ -109,13 +128,15 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         *,
         wait_for_animation: bool = True,
     ) -> None:
-        """
-        Send a button press to the emulator and wait for any animations to finish.
+        """Send a button press and optionally wait for animations to finish.
 
-        :param button: The button to press.
-        :param hold_frames: The number of frames to hold each button.
-        :param wait_for_animation: Whether to wait for animations to finish. You usually want this,
-            but you can skip it if you have bespoke handling for subsequent activity.
+        Args:
+            button: Game Boy button to press.
+            wait_for_animation: Whether to wait for the resulting screen animation. Disable this
+                only when the caller handles subsequent activity itself.
+
+        Raises:
+            RuntimeError: The emulator has been stopped.
         """
         self._check_stopped()
         # If we're deferring animation handling, we want to exit as quickly as possible. Two frames
@@ -127,8 +148,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
             await self.wait_for_animation_to_finish()
 
     async def wait_for_animation_to_finish(self) -> None:
-        """
-        Wait until all ongoing animations have finished.
+        """Wait until all ongoing animations have finished.
 
         The various hyperparameters here are a bit wishy-washy. I determined emperically that they
         work pretty well, but they're probably not optimal, especially since different scenarios
@@ -160,11 +180,16 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
             raise RuntimeError("Emulator is stopped.")
 
     def _tick(self, count: int = 1) -> bool:
-        """
-        Tick the emulator forward by `count` frames.
+        """Tick the emulator forward by a number of frames.
 
-        :param count: Number of frames to tick forward.
-        :return: Whether the game is still running.
+        Args:
+            count: Number of frames to advance.
+
+        Returns:
+            Whether the game is still running.
+
+        Raises:
+            RuntimeError: The emulator has been stopped.
         """
         self._check_stopped()
         return self._pyboy.tick(count, render=True, sound=True)

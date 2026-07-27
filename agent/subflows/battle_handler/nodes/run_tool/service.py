@@ -18,7 +18,16 @@ async def run_away(
     raw_memory: RawMemory,
     emulator: YellowLegacyEmulator,
 ) -> RawMemory:
-    """Run away from the battle."""
+    """Select RUN from the battle menu.
+
+    Args:
+        iteration: Current agent iteration used to timestamp the attempt.
+        raw_memory: Recent memory to update after selecting RUN.
+        emulator: Running emulator used to navigate the battle menu.
+
+    Returns:
+        The supplied raw memory, updated when the escape attempt is made.
+    """
     game_state = emulator.get_game_state()
     cursor_pos = get_cursor_pos_in_fight_menu(game_state)
     if cursor_pos is None:

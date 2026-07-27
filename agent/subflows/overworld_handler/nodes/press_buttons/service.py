@@ -26,7 +26,19 @@ async def press_buttons(
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
 ) -> RawMemory:
-    """Press buttons based on the current overworld game state."""
+    """Ask the model for a short overworld button sequence and execute it.
+
+    Execution stops early after a collision, failed interaction, map transition, dialog, or battle.
+
+    Args:
+        iteration: Current agent iteration used to timestamp the decision and feedback.
+        raw_memory: Recent memory to update with the decision and execution results.
+        state_string_builder: Formatter for the current overworld state and map context.
+        emulator: Running emulator used to inspect the state and press buttons.
+
+    Returns:
+        The supplied raw memory after recording the decision and any early-stop feedback.
+    """
     game_state = emulator.get_game_state()
     img = emulator.get_screenshot()
     last_memory = raw_memory.pieces.get(iteration) or ""
@@ -85,9 +97,19 @@ def _check_for_collision(  # noqa: PLR0913
     raw_memory: RawMemory,
     emulator: YellowLegacyEmulator,
 ) -> bool:
-    """
-    Check if the player bumped into a wall and add a note to the raw memory if so.
-    Returns True if the check passed, False otherwise.
+    """Check whether a directional press collided or changed maps.
+
+    Args:
+        button: Button that was pressed.
+        prev_map_id: Map ID before the button press.
+        prev_coords: Player coordinates before the button press.
+        prev_direction: Facing direction before the button press.
+        iteration: Current agent iteration used to timestamp feedback.
+        raw_memory: Recent memory to update after a collision or map transition.
+        emulator: Running emulator used to inspect the resulting state.
+
+    Returns:
+        Whether execution may continue with the next planned button.
     """
     if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN]:
         return True
@@ -120,9 +142,16 @@ def _check_for_action(
     raw_memory: RawMemory,
     emulator: YellowLegacyEmulator,
 ) -> bool:
-    """
-    Check if the player hit the action button but nothing happened.
-    Returns True if the check passed, False otherwise.
+    """Check whether an action-button press produced an interaction.
+
+    Args:
+        button: Button that was pressed.
+        iteration: Current agent iteration used to timestamp feedback.
+        raw_memory: Recent memory to update after the interaction.
+        emulator: Running emulator used to inspect the resulting state.
+
+    Returns:
+        Whether execution may continue with the next planned button.
     """
     if button != Button.A:
         return True

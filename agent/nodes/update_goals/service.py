@@ -25,7 +25,17 @@ async def update_goals(
     goals: Goals,
     state_string_builder: StateStringBuilder,
 ) -> Goals:
-    """Update the goals based on the latest memory and actions."""
+    """Update agent goals at the configured interval.
+
+    Args:
+        emulator: Running emulator used to inspect the current game state.
+        iteration: Current agent iteration used to enforce the update interval.
+        goals: Goal collection to mutate with the model's removals and additions.
+        state_string_builder: Formatter for the current game state and memory context.
+
+    Returns:
+        The supplied goal collection after any accepted updates.
+    """
     if iteration % ITERATIONS_PER_GOAL_UPDATE != 0:
         return goals
 

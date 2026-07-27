@@ -72,8 +72,7 @@ class OverworldSign(Sign):
 
 
 class OverworldWarp(Warp):
-    """
-    A warp on the overworld map, known to the player.
+    """A warp on the overworld map, known to the player.
 
     Unlike signs and sprites, warps do not have an editable description.
     """
@@ -82,7 +81,14 @@ class OverworldWarp(Warp):
 
     @property
     def description(self) -> str:
-        """Get a description of the warp."""
+        """Get instructions for entering the warp.
+
+        Returns:
+            A movement description appropriate for the warp's orientation.
+
+        Raises:
+            ValueError: The warp has an unknown type.
+        """
         if self.warp_type == WarpType.SINGLE:
             return "This is a single warp tile. Stand on it to warp."
         if self.warp_type == WarpType.DOUBLE_VERTICAL and self.coords.col == 0:
@@ -223,13 +229,14 @@ class OverworldMap(BaseModel):
         direction: BlockedDirection,
         screen: AsciiScreenWithEntities,
     ) -> tuple[str, str]:
-        """
-        Get the adjacent tile and blocking notes for the player's current position in the given
-        direction.
+        """Get the adjacent tile and movement-blocking note in one direction.
 
-        :param blocked: The blocked direction.
-        :param screen: The ASCII screen with entities.
-        :return: A tuple of the adjacent tile and blocking notes.
+        Args:
+            direction: Direction from the player's current screen position.
+            screen: Current ASCII screen with entities and elevation blockages.
+
+        Returns:
+            The adjacent tile and an explanatory note when elevation blocks movement.
         """
         text = ", but your movement in this direction is blocked by an elevation difference."
         row_col_map = {

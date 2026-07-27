@@ -113,16 +113,18 @@ class AssignNameService:
 
     @staticmethod
     def _get_dir_buttons(letter_loc: tuple[int, int], cursor_loc: int) -> list[Button]:
-        """
-        Get the direction buttons to press to get to the letter.
+        """Get the direction buttons needed to reach a letter.
 
         Row 1 starts at cursor_loc 5 for A, adds 2 for each letter, ending at 21 for I.
         Row 2 starts at 45 for J, adds 2 for each letter, ending at 61 for R.
         Row 3 starts at 85 for S, adds 2 for each letter, with 99 for Z, ending at 101 for space.
 
-        :param letter_loc: The (row, col) location of the letter in the LETTER_ARR.
-        :param cursor_loc: The index of the cursor on the screen.
-        :return: The direction buttons to press.
+        Args:
+            letter_loc: Row and column of the letter in ``LETTER_ARR``.
+            cursor_loc: Current cursor index on the naming screen.
+
+        Returns:
+            Directional button presses that move the cursor to the letter.
         """
         cursor_row = cursor_loc // 40
         cursor_col = (cursor_loc % 40 - 5) // 2

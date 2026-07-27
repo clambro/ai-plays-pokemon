@@ -1,6 +1,6 @@
-"""
-Hacky script to shove some dummy data from the tests into the background server and spin it up so
-that I can quickly visualize styles and layouts.
+"""Preview the streaming background with fixture data.
+
+This development script starts the server briefly to inspect styles and layouts.
 """
 
 import asyncio

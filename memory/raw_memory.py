@@ -47,7 +47,15 @@ class RawMemory(BaseModel):
         return out
 
     def add_memory(self, iteration: int, content: str) -> None:
-        """Append a piece to the memory."""
+        """Append content and publish the resulting rolling memory.
+
+        Content for an existing iteration is appended to that memory piece. The collection is
+        sorted, truncated to ``max_size``, and then sent to the streaming background.
+
+        Args:
+            iteration: Agent iteration associated with the content.
+            content: Thought or observation to append.
+        """
         # Injecting the dependency here to avoid circular imports.
         from streaming.server import update_background_log_from_memory  # noqa: PLC0415
 

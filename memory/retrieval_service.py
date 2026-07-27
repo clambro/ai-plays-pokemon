@@ -27,15 +27,20 @@ async def get_most_relevant_memories(
     reranking_factor: float = DEFAULT_RERANKING_FACTOR,
     min_semantic_similarity: float = DEFAULT_MIN_SEMANTIC_SIMILARITY,
 ) -> list[LongTermMemoryRead]:
-    """
-    Get the most relevant memories to the `query`.
+    """Get the long-term memories most relevant to a query.
 
-    :param query: The query to search for.
-    :param iteration: The current iteration of the Agent.
-    :param num_memories: The number of memories to return.
-    :param reranking_factor: The multiplier for determining how many more memories to pull
-        before reranking.
-    :return: A list of the `num_memories` most relevant memories to the `query`.
+    Args:
+        query: Semantic search query.
+        iteration: Current agent iteration used to update memory access times.
+        num_memories: Maximum number of memories to return.
+        reranking_factor: Multiplier controlling how many semantic matches are reranked.
+        min_semantic_similarity: Minimum cosine similarity accepted as a candidate.
+
+    Returns:
+        Up to ``num_memories`` memories ordered by combined relevance, recency, and importance.
+
+    Raises:
+        ValueError: ``num_memories`` or ``reranking_factor`` is less than one.
     """
     if num_memories < 1:
         raise ValueError("Number of memories must be greater than 0")
@@ -76,13 +81,16 @@ async def _get_top_n_semantic_similarity(
     num_to_rerank: int,
     min_semantic_similarity: float,
 ) -> dict[str, float]:
-    """
-    Get the IDs and semantic similarity of the most relevant memories to the query.
+    """Get the memory IDs with the highest semantic similarity to a query.
 
-    :param query_embedding: The embedding of the query.
-    :param memory_embeddings: The embeddings of the memories.
-    :return: A dictionary of the IDs and semantic similarity of the most relevant memories to
-        the query.
+    Args:
+        query_embedding: Embedding of the retrieval query.
+        memory_embeddings: Memory embeddings keyed by title.
+        num_to_rerank: Maximum number of similarity matches to retain.
+        min_semantic_similarity: Minimum cosine similarity accepted as a candidate.
+
+    Returns:
+        Retained memory titles mapped to their cosine similarity.
     """
     mem_ids, mem_embeddings = zip(*memory_embeddings.items(), strict=True)
     mem_embeddings = np.array(mem_embeddings)
@@ -102,13 +110,16 @@ def _rerank_memories(
     *,
     min_semantic_similarity: float,
 ) -> list[LongTermMemoryRead]:
-    """
-    Rerank the memories based on semantic similarity, recency, and importance.
+    """Rerank memories by semantic similarity, recency, and importance.
 
-    :param iteration: The current iteration of the Agent.
-    :param memories: The memories to rerank.
-    :param top_similarities: The semantic similarity of the memories to the query.
-    :return: A list of the reranked memories.
+    Args:
+        iteration: Current agent iteration used to calculate recency.
+        memories: Candidate memories to rerank.
+        top_similarities: Cosine similarities keyed by memory title.
+        min_semantic_similarity: Fallback similarity for a candidate missing from the mapping.
+
+    Returns:
+        Candidate memories ordered by descending combined score.
     """
     scores = (
         (

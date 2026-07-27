@@ -16,7 +16,16 @@ async def handle_subsequent_text(
     raw_memory: RawMemory,
     emulator: YellowLegacyEmulator,
 ) -> RawMemory:
-    """Handle reading the dialog box."""
+    """Read battle dialog produced after an action.
+
+    Args:
+        iteration: Current agent iteration used to timestamp captured dialog.
+        raw_memory: Recent memory to update with the dialog text.
+        emulator: Running emulator used to advance and inspect the dialog box.
+
+    Returns:
+        The supplied raw memory after appending any captured dialog.
+    """
     text: list[str] = []
     await emulator.wait_for_animation_to_finish()
     while True:
