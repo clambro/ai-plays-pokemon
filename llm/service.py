@@ -21,6 +21,7 @@ from common.prompts import SYSTEM_PROMPT
 from common.settings import settings
 from database.llm_messages.repository import create_llm_message
 from database.llm_messages.schemas import LLMMessageCreate
+from llm.usage import update_llm_usage
 
 if TYPE_CHECKING:
     from llm.schemas import GeminiModel
@@ -179,17 +180,20 @@ class GeminiLLMService:
         if not response.text or not response.usage_metadata:
             raise ValueError("No response from Gemini.")
         message_str = "\n\n".join("<IMAGE>" if isinstance(m, Image) else m for m in messages)
-        await create_llm_message(
-            LLMMessageCreate(
-                model=self.model,
-                prompt_name=prompt_name,
-                prompt=message_str,
-                response=response.text,
-                prompt_tokens=response.usage_metadata.prompt_token_count or 0,
-                thought_tokens=response.usage_metadata.thoughts_token_count or 0,
-                response_tokens=response.usage_metadata.candidates_token_count or 0,
-            ),
+        llm_message = LLMMessageCreate(
+            model=self.model,
+            prompt_name=prompt_name,
+            prompt=message_str,
+            response=response.text,
+            prompt_tokens=response.usage_metadata.prompt_token_count or 0,
+            thought_tokens=response.usage_metadata.thoughts_token_count or 0,
+            response_tokens=response.usage_metadata.candidates_token_count or 0,
         )
+        await update_llm_usage(
+            response.usage_metadata.total_token_count or 0,
+            llm_message.cost,
+        )
+        await create_llm_message(llm_message)
         if schema and not isinstance(response.parsed, schema):
             raise ValueError(f"Failed to parse response from Gemini. Got {response.text}")
         return response

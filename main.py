@@ -8,7 +8,7 @@ import aiofiles
 import aiofiles.os
 from loguru import logger
 
-from agent.app import build_agent_workflow
+from agent.app import run_agent_workflow
 from agent.state import AgentState
 from common.backup_service import create_backup, get_output_folder, load_backup, load_latest_backup
 from common.constants import DEFAULT_ROM_PATH, ITERATIONS_PER_BACKUP
@@ -67,9 +67,7 @@ async def main(
             await asyncio.sleep(30)  # Some time to manually get to the new game screen.
         try:
             while True:
-                workflow = build_agent_workflow(state, emulator)
-                await workflow.execute()
-                state = await workflow.get_state()
+                state = await run_agent_workflow(state, emulator)
                 if state.iteration % ITERATIONS_PER_BACKUP == 0:
                     await create_backup(state)
         except Exception:  # noqa: BLE001
