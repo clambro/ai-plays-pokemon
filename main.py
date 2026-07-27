@@ -41,7 +41,7 @@ async def main(
 
     setup_telemetry()
 
-    folder = await get_output_folder()
+    folder = get_output_folder()
 
     if backup_folder:
         state = await load_backup(backup_folder)

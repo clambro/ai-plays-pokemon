@@ -11,6 +11,7 @@ import pytest
 from aiohttp import ClientSession
 from aiohttp.web import HTTPOk
 
+import streaming.server as server_module
 from streaming.schemas import GameStateView, LogEntryView, PartyPokemonView
 from streaming.server import BackgroundStreamServer
 
@@ -134,7 +135,7 @@ async def test_html_page_handles_empty_data() -> None:
 
 
 @pytest.mark.integration
-async def test_html_page_assets_exist() -> None:
+def test_html_page_assets_exist() -> None:
     """Test that all required asset files exist and are accessible."""
     background_dir = Path("streaming/background")
 
@@ -173,9 +174,34 @@ async def test_html_page_data_updates() -> None:
             assert content == ""
 
         server._current_data = MOCK_DATA
-        await asyncio.sleep(0.2)  # Wait for the data to be updated.
 
         async with session.get("http://localhost:8083/api/state.json") as response:
             assert response.status == HTTPOk.status_code
             json_content = await response.json()
             assert json_content == MOCK_DATA.model_dump()
+
+
+@pytest.mark.integration
+async def test_server_cleans_up_if_startup_is_cancelled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Clean up the partially initialized runner when server startup is cancelled."""
+    startup_started = asyncio.Event()
+    keep_starting = asyncio.Event()
+
+    async def wait_to_start(_site: server_module.web.TCPSite) -> None:
+        startup_started.set()
+        await keep_starting.wait()
+
+    monkeypatch.setattr(server_module.web.TCPSite, "start", wait_to_start)
+    server = BackgroundStreamServer(host="localhost", port=8084)
+    startup = asyncio.create_task(server.__aenter__())
+    await startup_started.wait()
+
+    startup.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await startup
+    assert server.runner is None
+    assert server.site is None
+    assert BackgroundStreamServer.get_instance() is None

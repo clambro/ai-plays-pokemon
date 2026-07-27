@@ -49,7 +49,7 @@ class NavigationService:
         """Determine the target coordinates and navigate to them."""
         game_state = await self.emulator.get_game_state()
         hm_tiles = game_state.get_hm_tiles()
-        accessible_coords = await utils.get_accessible_coords(
+        accessible_coords = utils.get_accessible_coords(
             game_state.player.coords,
             self.current_map,
             hm_tiles,
@@ -60,11 +60,11 @@ class NavigationService:
             logger.warning(f"Error determining target coordinates. Skipping. {e}")
             return self.current_map, self.raw_memory
 
-        if not await self._validate_target_coords(game_state, coords, accessible_coords):
+        if not self._validate_target_coords(game_state, coords, accessible_coords):
             logger.warning("Cancelling navigation due to invalid target coordinates.")
             return self.current_map, self.raw_memory
 
-        path = await utils.calculate_path_to_target(
+        path = utils.calculate_path_to_target(
             game_state.player.coords,
             coords,
             self.current_map,
@@ -147,7 +147,7 @@ class NavigationService:
         )
         return response.coords
 
-    async def _validate_target_coords(
+    def _validate_target_coords(
         self,
         game_state: YellowLegacyGameState,
         coords: Coords,

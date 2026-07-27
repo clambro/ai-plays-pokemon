@@ -53,10 +53,17 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
     async def __aenter__(self) -> Self:
         """Start the web server."""
         self.runner = web.AppRunner(self.app)
-        await self.runner.setup()
-
-        self.site = web.TCPSite(self.runner, self.host, self.port)
-        await self.site.start()
+        try:
+            await self.runner.setup()
+            self.site = web.TCPSite(self.runner, self.host, self.port)
+            await self.site.start()
+        except BaseException:
+            try:
+                await self.runner.cleanup()
+            finally:
+                self.site = None
+                self.runner = None
+            raise
 
         self._set_instance(self)
 
@@ -65,12 +72,17 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
         """Stop the web server."""
-        if self.site:
-            await self.site.stop()
-        if self.runner:
-            await self.runner.cleanup()
-
-        self._set_instance(None)
+        try:
+            if self.site:
+                await self.site.stop()
+        finally:
+            try:
+                if self.runner:
+                    await self.runner.cleanup()
+            finally:
+                self.site = None
+                self.runner = None
+                self._set_instance(None)
 
         logger.info("Background server stopped")
 

@@ -119,19 +119,15 @@ async def _update_entities(  # noqa: PLR0913
             messages=[screenshot, prompt],
             schema=UpdateEntitiesResponse,
         )
-        await asyncio.gather(
-            *[
-                update_map_entity_memory(
-                    MapEntityMemoryUpdate(
-                        map_id=current_map.id,
-                        entity_id=u.index,
-                        entity_type=entity_type,
-                        description=u.description,
-                        iteration=iteration,
-                    ),
-                )
-                for u in response.updates
-            ],
-        )
+        for update in response.updates:
+            await update_map_entity_memory(
+                MapEntityMemoryUpdate(
+                    map_id=current_map.id,
+                    entity_id=update.index,
+                    entity_type=entity_type,
+                    description=update.description,
+                    iteration=iteration,
+                ),
+            )
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Error updating entities. Skipping. {e}")

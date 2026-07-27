@@ -45,8 +45,7 @@ class SokobanSolverService:
             return  # This shouldn't happen, but we need the option to bail if it does.
 
         player_pos = (await self.emulator.get_game_state()).player.coords
-        # This can get expensive, so we run it on its own thread.
-        solution = await asyncio.to_thread(self._solve_sokoban, sokoban_map, player_pos)
+        solution = self._solve_sokoban(sokoban_map, player_pos)
 
         if not solution:
             self.raw_memory.add_memory(

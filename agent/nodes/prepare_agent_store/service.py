@@ -36,7 +36,7 @@ async def determine_handler(emulator: YellowLegacyEmulator) -> AgentStateHandler
     return AgentStateHandler.OVERWORLD
 
 
-async def should_retrieve_memory(
+def should_retrieve_memory(
     iterations_since_last_ltm_retrieval: int,
     long_term_memory: LongTermMemory,
 ) -> bool:

@@ -52,7 +52,7 @@ async def get_most_relevant_memories(
         return await get_long_term_memories(list(embeddings.keys()), iteration)
 
     query_embedding = await get_embedding(query)
-    top_similarities = await _get_top_n_semantic_similarity(
+    top_similarities = _get_top_n_semantic_similarity(
         query_embedding,
         embeddings,
         num_to_rerank=int(num_memories * reranking_factor),
@@ -74,7 +74,7 @@ async def get_most_relevant_memories(
     return reranked_memories[:num_memories]
 
 
-async def _get_top_n_semantic_similarity(
+def _get_top_n_semantic_similarity(
     query_embedding: list[float],
     memory_embeddings: dict[str, list[float]],
     *,
