@@ -181,6 +181,3 @@ streaming/**/assets/**/*.png
 
 # Don't commit save states.
 **.state
-
-# Junjo Server
-.dbdata/
