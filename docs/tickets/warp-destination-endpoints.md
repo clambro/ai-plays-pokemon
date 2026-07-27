@@ -124,4 +124,3 @@ prompt visibility under both information policies.
 - [ ] Prompts show the most specific permitted destination without leaking full
       map terrain.
 - [ ] Stored transitions use coordinates, not provisional region IDs.
-

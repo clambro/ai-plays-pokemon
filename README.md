@@ -105,7 +105,7 @@ I'd like to see it beat the game, and I'll try to support it so that it does (as
 
 ### How long did it take to build this?
 
-It took a good chunk of my free time for 2-3 months to get this to its current state. I wanted to have it ready sooner, but I was doing a lot of back and forth travel that interfered with development. 
+It took a good chunk of my free time for 2-3 months to get this to its current state. I wanted to have it ready sooner, but I was doing a lot of back and forth travel that interfered with development.
 
 ### How much does it cost to run?
 

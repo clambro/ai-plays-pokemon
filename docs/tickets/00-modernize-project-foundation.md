@@ -7,7 +7,8 @@ repository should have current quality tooling, current dependencies except
 PyBoy, a reproducible default ROM patch, a useful root `AGENTS.md`, and a fully
 green validation suite.
 
-**Priority:** P0  
+**Priority:** P0
+
 **Blocks:** Every other v2 implementation ticket
 
 ## Scope
@@ -123,4 +124,3 @@ Document:
 - [uv dependency management](https://docs.astral.sh/uv/)
 - [pre-commit documentation](https://pre-commit.com/)
 - [PyBoy documentation](https://docs.pyboy.dk/)
-

@@ -6,8 +6,10 @@ Move the clean P0 baseline to standard GIL-enabled CPython 3.14, update PyBoy
 to 2.6.1, adopt the useful modern typing syntax, and leave every quality gate
 green before v2 feature work begins.
 
-**Priority:** P1  
-**Depends on:** [`00-modernize-project-foundation.md`](00-modernize-project-foundation.md)  
+**Priority:** P1
+
+**Depends on:** [`00-modernize-project-foundation.md`](00-modernize-project-foundation.md)
+
 **Blocks:** Every v2 feature ticket
 
 ## Scope
@@ -86,4 +88,3 @@ own tickets.
 - [PEP 649](https://peps.python.org/pep-0649/)
 - [PEP 749](https://peps.python.org/pep-0749/)
 - [`annotationlib`](https://docs.python.org/3.14/library/annotationlib.html)
-

@@ -6,7 +6,8 @@ Remove per-call LLM telemetry from SQLite. Send detailed traces to Logfire and
 keep a small local usage accumulator as the authoritative source for token and
 cost totals displayed by the application.
 
-**Depends on:** [`01-upgrade-python-3.14.md`](01-upgrade-python-3.14.md)  
+**Depends on:** [`01-upgrade-python-3.14.md`](01-upgrade-python-3.14.md)
+
 **Precedes:** [`replace-gemini-with-gpt-5-6-luna.md`](replace-gemini-with-gpt-5-6-luna.md)
 
 ## Motivation
@@ -132,4 +133,3 @@ Tests must use mocked providers and an in-memory Logfire exporter.
 - [Manual tracing](https://logfire.pydantic.dev/docs/guides/onboarding-checklist/add-manual-tracing/)
 - [Sensitive-data scrubbing](https://logfire.pydantic.dev/docs/how-to-guides/scrubbing/)
 - [Testing Logfire](https://logfire.pydantic.dev/docs/reference/api/testing/)
-
