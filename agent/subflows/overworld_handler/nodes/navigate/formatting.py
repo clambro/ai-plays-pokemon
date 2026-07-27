@@ -6,10 +6,13 @@ algorithmic logic to make them easier to test.
 """
 
 from itertools import groupby
+from typing import TYPE_CHECKING
 
 from common.enums import FacingDirection
-from common.schemas import Coords
-from overworld_map.schemas import OverworldMap
+
+if TYPE_CHECKING:
+    from common.schemas import Coords
+    from overworld_map.schemas import OverworldMap
 
 
 def format_coordinates_grid(coordinates: list[Coords], map_data: OverworldMap) -> str:

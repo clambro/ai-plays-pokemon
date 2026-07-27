@@ -1,5 +1,7 @@
 """Long-term memory retrieval and ranking."""
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 from common.constants import (
@@ -12,7 +14,9 @@ from database.long_term_memory.repository import (
     get_all_long_term_memory_embeddings,
     get_long_term_memories,
 )
-from database.long_term_memory.schemas import LongTermMemoryRead
+
+if TYPE_CHECKING:
+    from database.long_term_memory.schemas import LongTermMemoryRead
 
 
 class MemoryRetrievalService:

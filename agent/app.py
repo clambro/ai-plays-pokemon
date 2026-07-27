@@ -1,10 +1,14 @@
 """Application entry point for the Pokémon-playing agent."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Workflow
 
 from agent.graph import build_agent_graph
 from agent.state import AgentState, AgentStore
-from emulator.emulator import YellowLegacyEmulator
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
 
 
 def build_agent_workflow(

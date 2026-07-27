@@ -1,5 +1,7 @@
 """Construction of the top-level agent graph."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Edge, Graph, RunConcurrent
 
 from agent.conditions import AgentHandlerIs, ShouldCritique, ShouldRetrieveMemory
@@ -24,7 +26,9 @@ from agent.subflows.overworld_handler.subflow import OverworldHandlerSubflow
 from agent.subflows.text_handler.graph import build_text_handler_subflow_graph
 from agent.subflows.text_handler.state import TextHandlerState, TextHandlerStore
 from agent.subflows.text_handler.subflow import TextHandlerSubflow
-from emulator.emulator import YellowLegacyEmulator
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
 
 
 def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:

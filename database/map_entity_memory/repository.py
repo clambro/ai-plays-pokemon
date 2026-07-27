@@ -1,8 +1,9 @@
 """Persistence operations for map entity memory."""
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import delete, select, update
 
-from common.enums import MapId
 from database.db_config import db_sessionmaker
 from database.map_entity_memory.model import MapEntityMemoryDBModel
 from database.map_entity_memory.schemas import (
@@ -11,6 +12,9 @@ from database.map_entity_memory.schemas import (
     MapEntityMemoryRead,
     MapEntityMemoryUpdate,
 )
+
+if TYPE_CHECKING:
+    from common.enums import MapId
 
 
 async def create_map_entity_memory(map_entity: MapEntityMemoryCreate) -> MapEntityMemoryRead:

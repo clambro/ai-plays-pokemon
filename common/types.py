@@ -1,8 +1,9 @@
 """Shared type aliases and callable definitions."""
 
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
-from emulator.game_state import YellowLegacyGameState
+if TYPE_CHECKING:
+    from emulator.game_state import YellowLegacyGameState
 
-# Useful shorthand for a common string builder type.
-StateStringBuilderT = Callable[[YellowLegacyGameState], str]
+type StateStringBuilder = Callable[[YellowLegacyGameState], str]

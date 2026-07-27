@@ -1,11 +1,14 @@
 """Parser for map data in Pokémon Yellow memory."""
 
 from enum import IntEnum
+from typing import TYPE_CHECKING
 
-from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
 from common.enums import MapId
+
+if TYPE_CHECKING:
+    from pyboy import PyBoyMemoryView
 
 
 class SpinnerTileIds(BaseModel):

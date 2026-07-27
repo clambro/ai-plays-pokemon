@@ -1,10 +1,14 @@
 """Parser for screen data in Pokémon Yellow memory."""
 
-from pyboy import PyBoyMemoryView
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, computed_field
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
 from emulator.parsers.utils import INT_TO_CHAR_MAP
+
+if TYPE_CHECKING:
+    from pyboy import PyBoyMemoryView
 
 
 class Screen(BaseModel):

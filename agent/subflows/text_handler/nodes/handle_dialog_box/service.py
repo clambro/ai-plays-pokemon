@@ -1,11 +1,14 @@
 """Business logic for handle dialog box in the text subflow."""
 
 import asyncio
+from typing import TYPE_CHECKING
 
 from agent.utils import append_dialog_to_list_inplace, is_blinking_cursor_on_screen
 from common.enums import Button
-from emulator.emulator import YellowLegacyEmulator
-from memory.raw_memory import RawMemory
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
+    from memory.raw_memory import RawMemory
 
 
 class HandleDialogBoxService:

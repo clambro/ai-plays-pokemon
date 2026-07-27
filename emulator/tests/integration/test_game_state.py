@@ -153,8 +153,8 @@ async def test_get_ascii_screen_viridian_water() -> None:
         expected_blockages={},
         expected_screen=[
             "∙∙∙∙∙∙∙∙∙∙",
-            "∙∙∙∙∙∙∙◆∙∙",
-            "▉▉∙∙∙∙∙∙∙∙",
+            "∙∙∙∙∙∙∙∙∙∙",
+            "▉▉∙∙∙∙◆∙∙∙",
             "∙∙┬∙∙∙∙∙∙∙",
             "◆∙▉▉☻◈∙∙∙∙",
             "∙∙≋≋≋≋≋≋∙∙",

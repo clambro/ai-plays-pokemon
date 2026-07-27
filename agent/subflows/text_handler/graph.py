@@ -1,5 +1,7 @@
 """Graph construction for the text subflow."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Edge, Graph
 
 from agent.nodes.dummy.node import DummyNode
@@ -9,7 +11,9 @@ from agent.subflows.text_handler.nodes.assign_name.node import AssignNameNode
 from agent.subflows.text_handler.nodes.determine_handler.node import DetermineHandlerNode
 from agent.subflows.text_handler.nodes.handle_dialog_box.node import HandleDialogBoxNode
 from agent.subflows.text_handler.nodes.make_decision.node import MakeDecisionNode
-from emulator.emulator import YellowLegacyEmulator
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
 
 
 def build_text_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Graph:

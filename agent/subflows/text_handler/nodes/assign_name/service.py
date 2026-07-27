@@ -1,15 +1,19 @@
 """Business logic for assign name in the text subflow."""
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 from agent.subflows.text_handler.nodes.assign_name.prompts import GET_NAME_PROMPT
 from agent.subflows.text_handler.nodes.assign_name.schemas import NameResponse
 from common.enums import Button
-from emulator.emulator import YellowLegacyEmulator
-from emulator.game_state import YellowLegacyGameState
 from llm.schemas import GEMINI_FLASH_LITE_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
+    from emulator.game_state import YellowLegacyGameState
+    from memory.raw_memory import RawMemory
 
 LETTER_ARR = np.array(
     [

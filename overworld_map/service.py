@@ -1,6 +1,7 @@
 """Storage and rendering for the explored overworld map."""
 
 import asyncio
+from typing import TYPE_CHECKING
 
 from common.enums import AsciiTile, MapEntityType
 from database.map_entity_memory.repository import (
@@ -16,8 +17,10 @@ from database.map_memory.repository import (
     update_map_tiles,
 )
 from database.map_memory.schemas import MapMemoryCreateUpdate
-from emulator.game_state import YellowLegacyGameState
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
+
+if TYPE_CHECKING:
+    from emulator.game_state import YellowLegacyGameState
 
 
 async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -> OverworldMap:

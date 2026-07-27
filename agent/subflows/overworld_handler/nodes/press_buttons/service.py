@@ -1,16 +1,20 @@
 """Business logic for press buttons in the overworld subflow."""
 
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
 from agent.subflows.overworld_handler.nodes.press_buttons.prompts import PRESS_BUTTONS_PROMPT
 from agent.subflows.overworld_handler.nodes.press_buttons.schemas import PressButtonsResponse
 from common.enums import Button, FacingDirection, MapId
-from common.schemas import Coords
-from common.types import StateStringBuilderT
-from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory
+
+if TYPE_CHECKING:
+    from common.schemas import Coords
+    from common.types import StateStringBuilder
+    from emulator.emulator import YellowLegacyEmulator
+    from memory.raw_memory import RawMemory
 
 
 class PressButtonsService:
@@ -22,7 +26,7 @@ class PressButtonsService:
         self,
         iteration: int,
         raw_memory: RawMemory,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the press buttons service."""

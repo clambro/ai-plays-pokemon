@@ -1,9 +1,13 @@
 """Routing conditions for the overworld subflow."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Condition
 
-from agent.subflows.overworld_handler.enums import OverworldTool
 from agent.subflows.overworld_handler.state import OverworldHandlerState
+
+if TYPE_CHECKING:
+    from agent.subflows.overworld_handler.enums import OverworldTool
 
 
 class ToolIs(Condition[OverworldHandlerState]):

@@ -1,11 +1,13 @@
 """Routing conditions for the top-level agent graph."""
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from junjo import Condition
 
-from agent.enums import AgentStateHandler
 from agent.state import AgentState
+
+if TYPE_CHECKING:
+    from agent.enums import AgentStateHandler
 
 
 class AgentHandlerIs(Condition[AgentState]):

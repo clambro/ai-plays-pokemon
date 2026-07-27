@@ -1,11 +1,16 @@
 """Subflow construction for text interactions."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Graph, GraphFactory, Subflow
-from junjo.workflow import StoreFactory
 
 from agent.state import AgentState, AgentStore
 from agent.subflows.text_handler.state import TextHandlerState, TextHandlerStore
-from emulator.emulator import YellowLegacyEmulator
+
+if TYPE_CHECKING:
+    from junjo.workflow import StoreFactory
+
+    from emulator.emulator import YellowLegacyEmulator
 
 
 class TextHandlerSubflow(Subflow[TextHandlerState, TextHandlerStore, AgentState, AgentStore]):

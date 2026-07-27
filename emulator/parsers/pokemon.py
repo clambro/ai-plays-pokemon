@@ -1,11 +1,14 @@
 """Parser for Pokémon data in Pokémon Yellow memory."""
 
 import math
+from typing import TYPE_CHECKING
 
-from pyboy import PyBoyMemoryView
 from pydantic import BaseModel, ConfigDict
 
 from emulator.parsers.utils import get_text_from_byte_array
+
+if TYPE_CHECKING:
+    from pyboy import PyBoyMemoryView
 
 
 class PokemonMove(BaseModel):

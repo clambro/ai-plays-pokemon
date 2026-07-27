@@ -1,12 +1,16 @@
 """Business logic for critique in the top-level agent graph."""
 
+from typing import TYPE_CHECKING
+
 from agent.nodes.critique.prompts import CRITIQUE_PROMPT
 from agent.nodes.critique.schemas import CritiqueResponse
-from common.types import StateStringBuilderT
-from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_PRO_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory
+
+if TYPE_CHECKING:
+    from common.types import StateStringBuilder
+    from emulator.emulator import YellowLegacyEmulator
+    from memory.raw_memory import RawMemory
 
 
 class CritiqueService:
@@ -16,7 +20,7 @@ class CritiqueService:
         self,
         iteration: int,
         raw_memory: RawMemory,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the critique service."""

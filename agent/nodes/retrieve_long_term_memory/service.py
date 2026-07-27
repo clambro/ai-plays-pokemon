@@ -1,14 +1,18 @@
 """Business logic for retrieve long term memory in the top-level agent graph."""
 
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
 from agent.nodes.retrieve_long_term_memory.prompts import GET_RETRIEVAL_QUERY_PROMPT
-from common.types import StateStringBuilderT
-from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_FLASH_LITE_2_5
 from llm.service import GeminiLLMService
 from memory.long_term_memory import LongTermMemory
 from memory.retrieval_service import MemoryRetrievalService
+
+if TYPE_CHECKING:
+    from common.types import StateStringBuilder
+    from emulator.emulator import YellowLegacyEmulator
 
 
 class RetrieveLongTermMemoryService:
@@ -21,7 +25,7 @@ class RetrieveLongTermMemoryService:
         self,
         iteration: int,
         long_term_memory: LongTermMemory,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the retrieve long term memory service."""

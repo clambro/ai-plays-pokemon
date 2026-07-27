@@ -1,7 +1,11 @@
 """Business logic for determine handler in the text subflow."""
 
+from typing import TYPE_CHECKING
+
 from agent.subflows.text_handler.enums import TextHandler
-from emulator.emulator import YellowLegacyEmulator
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
 
 
 class DetermineHandlerService:

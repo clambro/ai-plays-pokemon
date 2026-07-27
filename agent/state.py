@@ -1,18 +1,20 @@
 """State models for the top-level agent graph."""
 
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from junjo import BaseState, BaseStore
 from pydantic import Field
 
 from agent.enums import AgentStateHandler
-from emulator.emulator import YellowLegacyEmulator
-from emulator.game_state import YellowLegacyGameState
 from memory.goals import Goals
 from memory.long_term_memory import LongTermMemory
 from memory.raw_memory import RawMemory
 from memory.summary_memory import SummaryMemory
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
+    from emulator.game_state import YellowLegacyGameState
 
 
 class AgentState(BaseState):

@@ -1,7 +1,7 @@
 """Gemini client integration for structured LLM requests."""
 
 import asyncio
-from typing import TypeVar
+from typing import TYPE_CHECKING
 
 from google import genai
 from google.genai.errors import ServerError
@@ -21,9 +21,9 @@ from common.prompts import SYSTEM_PROMPT
 from common.settings import settings
 from database.llm_messages.repository import create_llm_message
 from database.llm_messages.schemas import LLMMessageCreate
-from llm.schemas import GeminiModel
 
-PydanticModel = TypeVar("PydanticModel", bound=BaseModel)
+if TYPE_CHECKING:
+    from llm.schemas import GeminiModel
 
 TIMEOUT = 60
 SAFETY_SETTINGS = [
@@ -78,16 +78,16 @@ class GeminiLLMService:
             raise ValueError("No response from Gemini.")
         return response.text
 
-    async def get_llm_response_pydantic(  # noqa: PLR0913
+    async def get_llm_response_pydantic[ResponseModel: BaseModel](  # noqa: PLR0913
         self,
         messages: str | list[str | Image],
-        schema: type[PydanticModel],
+        schema: type[ResponseModel],
         prompt_name: str,
         *,
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = DEFAULT_TEMPERATURE,
         thinking_tokens: int = MIN_THINKING_TOKENS,
-    ) -> PydanticModel:
+    ) -> ResponseModel:
         """
         Get a Pydantic model from the Gemini LLM, parsed from a JSON response.
 
@@ -120,7 +120,7 @@ class GeminiLLMService:
         self,
         *,
         messages: str | list[str | Image],
-        schema: type[PydanticModel] | None,
+        schema: type[BaseModel] | None,
         prompt_name: str,
         system_prompt: str,
         temperature: float,

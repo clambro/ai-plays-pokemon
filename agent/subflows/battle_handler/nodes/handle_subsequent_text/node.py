@@ -1,5 +1,7 @@
 """Handle subsequent text node for the battle subflow."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Node
 from loguru import logger
 
@@ -7,7 +9,9 @@ from agent.subflows.battle_handler.nodes.handle_subsequent_text.service import (
     HandleSubsequentTextService,
 )
 from agent.subflows.battle_handler.state import BattleHandlerStore
-from emulator.emulator import YellowLegacyEmulator
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
 
 
 class HandleSubsequentTextNode(Node[BattleHandlerStore]):

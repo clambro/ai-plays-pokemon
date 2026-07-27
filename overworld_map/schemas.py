@@ -1,14 +1,18 @@
 """Data models for the explored overworld map."""
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 from pydantic import BaseModel
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpType
 from common.schemas import Coords
-from emulator.game_state import YellowLegacyGameState
 from emulator.schemas import AsciiScreenWithEntities, Sign, Sprite, Warp
 from overworld_map.prompts import LEGEND_MAP, OVERWORLD_MAP_STR_FORMAT
+
+if TYPE_CHECKING:
+    from emulator.game_state import YellowLegacyGameState
 
 DEFAULT_ENTITY_DESCRIPTION = (
     "No description added yet. Approach and interact with this entity to add a description."
@@ -33,7 +37,7 @@ class OverworldSprite(Sprite):
     description: str | None
 
     @classmethod
-    def from_sprite(cls, sprite: Sprite, description: str | None) -> "OverworldSprite":
+    def from_sprite(cls, sprite: Sprite, description: str | None) -> OverworldSprite:
         """Create an overworld sprite from a sprite and a description."""
         return cls(**sprite.model_dump(), description=description)
 
@@ -57,7 +61,7 @@ class OverworldSign(Sign):
     description: str | None
 
     @classmethod
-    def from_sign(cls, sign: Sign, description: str | None) -> "OverworldSign":
+    def from_sign(cls, sign: Sign, description: str | None) -> OverworldSign:
         """Create an overworld sign from a sign and a description."""
         return cls(**sign.model_dump(), description=description)
 
@@ -100,7 +104,7 @@ class OverworldWarp(Warp):
         raise ValueError(f"Unknown warp type: {self.warp_type}")
 
     @classmethod
-    def from_warp(cls, warp: Warp, visited_maps: list[MapId]) -> "OverworldWarp":
+    def from_warp(cls, warp: Warp, visited_maps: list[MapId]) -> OverworldWarp:
         """Create an overworld warp from a warp."""
         # The OUTSIDE placeholder map is not in the DB, so we assume it's always visited.
         visited = warp.destination in visited_maps or warp.destination == MapId.OUTSIDE

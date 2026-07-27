@@ -1,8 +1,12 @@
 """Business logic for load map in the overworld subflow."""
 
-from emulator.emulator import YellowLegacyEmulator
-from overworld_map.schemas import OverworldMap
+from typing import TYPE_CHECKING
+
 from overworld_map.service import get_overworld_map
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
+    from overworld_map.schemas import OverworldMap
 
 
 class LoadMapService:

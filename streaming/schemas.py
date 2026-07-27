@@ -1,11 +1,15 @@
 """Messages exchanged with the background streaming client."""
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel
 
-from agent.state import AgentState
 from database.llm_messages.repository import get_total_llm_cost
-from emulator.game_state import YellowLegacyGameState
-from memory.raw_memory import RawMemory
+
+if TYPE_CHECKING:
+    from agent.state import AgentState
+    from emulator.game_state import YellowLegacyGameState
+    from memory.raw_memory import RawMemory
 
 
 class PartyPokemonView(BaseModel):
@@ -22,7 +26,7 @@ class PartyPokemonView(BaseModel):
     moves: list[str]
 
     @classmethod
-    def from_game_state(cls, game_state: YellowLegacyGameState) -> list["PartyPokemonView"]:
+    def from_game_state(cls, game_state: YellowLegacyGameState) -> list[PartyPokemonView]:
         """Create a view of the Pokemon from the game state."""
         return [
             cls(
@@ -47,7 +51,7 @@ class LogEntryView(BaseModel):
     thought: str
 
     @classmethod
-    def from_memory(cls, memory: RawMemory) -> list["LogEntryView"]:
+    def from_memory(cls, memory: RawMemory) -> list[LogEntryView]:
         """Create a view of the log entry from the memory."""
         return [
             cls(
@@ -58,7 +62,7 @@ class LogEntryView(BaseModel):
         ]
 
     @classmethod
-    def from_agent_state(cls, state: AgentState) -> list["LogEntryView"]:
+    def from_agent_state(cls, state: AgentState) -> list[LogEntryView]:
         """Create a view of the log entry from the agent state."""
         return cls.from_memory(state.raw_memory)
 
@@ -82,7 +86,7 @@ class GameStateView(BaseModel):
         cls,
         agent_state: AgentState,
         game_state: YellowLegacyGameState,
-    ) -> "GameStateView":
+    ) -> GameStateView:
         """Create a view of the game state from the agent and game states."""
         pokemon = PartyPokemonView.from_game_state(game_state)
         log = LogEntryView.from_agent_state(agent_state)

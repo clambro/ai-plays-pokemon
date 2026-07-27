@@ -1,6 +1,7 @@
 """Parser for battle data in Pokémon Yellow memory."""
 
-from pyboy import PyBoyMemoryView
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from common.enums import BattleType
@@ -10,6 +11,9 @@ from emulator.parsers.pokemon import (
     parse_enemy_battle_pokemon,
     parse_player_battle_pokemon,
 )
+
+if TYPE_CHECKING:
+    from pyboy import PyBoyMemoryView
 
 _WILD_BATTLE_FLAG = 1
 _TRAINER_BATTLE_FLAG = 2

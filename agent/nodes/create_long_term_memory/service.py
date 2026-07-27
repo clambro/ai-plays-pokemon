@@ -1,19 +1,23 @@
 """Business logic for create long term memory in the top-level agent graph."""
 
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
 from agent.nodes.create_long_term_memory.prompts import CREATE_LONG_TERM_MEMORY_PROMPT
 from agent.nodes.create_long_term_memory.schemas import CreateLongTermMemoryResponse
 from common.embedding_service import get_embedding
-from common.types import StateStringBuilderT
 from database.long_term_memory.repository import (
     create_long_term_memory,
     get_all_long_term_memory_titles,
 )
 from database.long_term_memory.schemas import LongTermMemoryCreate
-from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
+
+if TYPE_CHECKING:
+    from common.types import StateStringBuilder
+    from emulator.emulator import YellowLegacyEmulator
 
 
 class CreateLongTermMemoryService:
@@ -24,7 +28,7 @@ class CreateLongTermMemoryService:
     def __init__(
         self,
         iteration: int,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the create long term memory service."""

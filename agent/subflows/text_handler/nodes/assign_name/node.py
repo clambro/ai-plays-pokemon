@@ -1,11 +1,15 @@
 """Assign name node for the text subflow."""
 
+from typing import TYPE_CHECKING
+
 from junjo import Node
 from loguru import logger
 
 from agent.subflows.text_handler.nodes.assign_name.service import AssignNameService
 from agent.subflows.text_handler.state import TextHandlerStore
-from emulator.emulator import YellowLegacyEmulator
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
 
 
 class AssignNameNode(Node[TextHandlerStore]):

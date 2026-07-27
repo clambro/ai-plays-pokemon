@@ -1,9 +1,9 @@
 """Business logic for update map in the overworld subflow."""
 
 import asyncio
+from typing import TYPE_CHECKING
 
 from loguru import logger
-from PIL.Image import Image
 
 from agent.subflows.overworld_handler.nodes.update_map.prompts import (
     UPDATE_SIGNS_PROMPT,
@@ -11,15 +11,19 @@ from agent.subflows.overworld_handler.nodes.update_map.prompts import (
 )
 from agent.subflows.overworld_handler.nodes.update_map.schemas import UpdateEntitiesResponse
 from common.enums import MapEntityType
-from common.types import StateStringBuilderT
 from database.map_entity_memory.repository import update_map_entity_memory
 from database.map_entity_memory.schemas import MapEntityMemoryUpdate
-from emulator.emulator import YellowLegacyEmulator
-from emulator.game_state import YellowLegacyGameState
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
-from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite
 from overworld_map.service import update_map_with_screen_info
+
+if TYPE_CHECKING:
+    from PIL.Image import Image
+
+    from common.types import StateStringBuilder
+    from emulator.emulator import YellowLegacyEmulator
+    from emulator.game_state import YellowLegacyGameState
+    from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite
 
 
 class UpdateMapService:
@@ -31,7 +35,7 @@ class UpdateMapService:
         self,
         iteration: int,
         current_map: OverworldMap,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the update map service."""

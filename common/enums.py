@@ -34,7 +34,7 @@ class AsciiTile(StrEnum):
     SPINNER_STOP = "⊙"
 
     @classmethod
-    def get_walkable_tiles(cls) -> list["AsciiTile"]:
+    def get_walkable_tiles(cls) -> list[AsciiTile]:
         """Get the walkable tiles."""
         return [
             cls.FREE,
@@ -52,7 +52,7 @@ class AsciiTile(StrEnum):
         ]
 
     @classmethod
-    def get_spinner_tiles(cls) -> list["AsciiTile"]:
+    def get_spinner_tiles(cls) -> list[AsciiTile]:
         """Get the spinner tiles."""
         return [cls.SPINNER_UP, cls.SPINNER_DOWN, cls.SPINNER_LEFT, cls.SPINNER_RIGHT]
 
@@ -383,6 +383,6 @@ class MapId(IntEnum):
     UNKNOWN = -1  # Used to catch all unused values.
 
     @classmethod
-    def _missing_(cls, value: object) -> "MapId":  # noqa: ARG003
+    def _missing_(cls, value: object) -> MapId:  # noqa: ARG003
         """Handle unknown map IDs by returning UNKNOWN."""
         return cls.UNKNOWN

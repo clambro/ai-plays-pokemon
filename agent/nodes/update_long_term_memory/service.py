@@ -1,17 +1,21 @@
 """Business logic for update long term memory in the top-level agent graph."""
 
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
 from agent.nodes.update_long_term_memory.prompts import UPDATE_LONG_TERM_MEMORY_PROMPT
 from agent.nodes.update_long_term_memory.schemas import UpdateLongTermMemoryResponse, UpdateType
 from common.embedding_service import get_embedding
-from common.types import StateStringBuilderT
 from database.long_term_memory.repository import update_long_term_memory
 from database.long_term_memory.schemas import LongTermMemoryUpdate
-from emulator.emulator import YellowLegacyEmulator
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
-from memory.long_term_memory import LongTermMemory
+
+if TYPE_CHECKING:
+    from common.types import StateStringBuilder
+    from emulator.emulator import YellowLegacyEmulator
+    from memory.long_term_memory import LongTermMemory
 
 
 class UpdateLongTermMemoryService:
@@ -23,7 +27,7 @@ class UpdateLongTermMemoryService:
         self,
         iteration: int,
         long_term_memory: LongTermMemory,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the update long term memory service."""

@@ -1,5 +1,7 @@
 """Business logic for determine handler in the battle subflow."""
 
+from typing import TYPE_CHECKING
+
 from agent.subflows.battle_handler.nodes.determine_handler.prompts import CHOOSE_ARGS_PROMPT
 from agent.subflows.battle_handler.nodes.determine_handler.schemas import DetermineArgsResponse
 from agent.subflows.battle_handler.schemas import (
@@ -11,12 +13,14 @@ from agent.subflows.battle_handler.schemas import (
 )
 from agent.subflows.battle_handler.utils import is_fight_menu_open
 from common.enums import BattleType, PokeballItem
-from common.types import StateStringBuilderT
-from emulator.emulator import YellowLegacyEmulator
-from emulator.game_state import YellowLegacyGameState
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
-from memory.raw_memory import RawMemory
+
+if TYPE_CHECKING:
+    from common.types import StateStringBuilder
+    from emulator.emulator import YellowLegacyEmulator
+    from emulator.game_state import YellowLegacyGameState
+    from memory.raw_memory import RawMemory
 
 
 class DetermineHandlerService:
@@ -28,7 +32,7 @@ class DetermineHandlerService:
         self,
         iteration: int,
         raw_memory: RawMemory,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the determine handler service."""

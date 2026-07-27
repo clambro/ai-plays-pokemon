@@ -1,9 +1,13 @@
 """Business logic for prepare agent store in the top-level agent graph."""
 
+from typing import TYPE_CHECKING
+
 from agent.enums import AgentStateHandler
 from common.constants import ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL
-from emulator.emulator import YellowLegacyEmulator
-from memory.long_term_memory import LongTermMemory
+
+if TYPE_CHECKING:
+    from emulator.emulator import YellowLegacyEmulator
+    from memory.long_term_memory import LongTermMemory
 
 
 class PrepareAgentStateService:

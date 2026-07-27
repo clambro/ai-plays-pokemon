@@ -1,5 +1,7 @@
 """Business logic for should critique in the top-level agent graph."""
 
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
 from agent.enums import AgentStateHandler
@@ -11,8 +13,10 @@ from common.constants import (
 )
 from llm.schemas import GEMINI_FLASH_LITE_2_5
 from llm.service import GeminiLLMService
-from memory.goals import Goals
-from memory.raw_memory import RawMemory
+
+if TYPE_CHECKING:
+    from memory.goals import Goals
+    from memory.raw_memory import RawMemory
 
 
 class ShouldCritiqueService:
