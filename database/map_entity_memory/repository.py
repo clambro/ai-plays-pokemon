@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import and_, delete, or_, select, update
 
 from database.db_config import db_sessionmaker
 from database.map_entity_memory.model import MapEntityMemoryDBModel
@@ -14,25 +14,9 @@ from database.map_entity_memory.schemas import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from common.enums import MapId
-
-
-async def create_map_entity_memory(map_entity: MapEntityMemoryCreate) -> MapEntityMemoryRead:
-    """Create a new warp memory."""
-    async with db_sessionmaker() as session:
-        db_obj = MapEntityMemoryDBModel(
-            map_id=map_entity.map_id,
-            entity_id=map_entity.entity_id,
-            entity_type=map_entity.entity_type,
-            description=None,
-            create_iteration=map_entity.iteration,
-            update_iteration=map_entity.iteration,
-        )
-        session.add(db_obj)
-        await session.commit()
-        await session.refresh(db_obj)
-
-    return MapEntityMemoryRead.model_validate(db_obj)
 
 
 async def get_map_entity_memories_for_map(map_id: MapId) -> list[MapEntityMemoryRead]:
@@ -45,54 +29,58 @@ async def get_map_entity_memories_for_map(map_id: MapId) -> list[MapEntityMemory
     return [MapEntityMemoryRead.model_validate(d) for d in db_objs]
 
 
-async def update_map_entity_memory(map_entity: MapEntityMemoryUpdate) -> MapEntityMemoryRead:
-    """Update a map entity's remembered description.
+async def apply_map_entity_changes(
+    *,
+    creates: Sequence[MapEntityMemoryCreate] = (),
+    updates: Sequence[MapEntityMemoryUpdate] = (),
+    deletes: Sequence[MapEntityMemoryDelete] = (),
+) -> None:
+    """Apply a batch of map-entity changes in one transaction."""
+    if not creates and not updates and not deletes:
+        return
 
-    Args:
-        map_entity: Entity identity, new description, and update iteration.
-
-    Returns:
-        The updated entity memory.
-
-    Raises:
-        ValueError: No stored entity matches the supplied map, entity ID, and entity type.
-    """
-    async with db_sessionmaker() as session:
-        query = (
-            update(MapEntityMemoryDBModel)
-            .where(
-                MapEntityMemoryDBModel.map_id == map_entity.map_id,
-                MapEntityMemoryDBModel.entity_id == map_entity.entity_id,
-                MapEntityMemoryDBModel.entity_type == map_entity.entity_type,
-            )
-            .values(
-                description=map_entity.description,
-                update_iteration=map_entity.iteration,
-            )
-            .returning(MapEntityMemoryDBModel)
+    async with db_sessionmaker.begin() as session:
+        session.add_all(
+            [
+                MapEntityMemoryDBModel(
+                    map_id=entity.map_id,
+                    entity_id=entity.entity_id,
+                    entity_type=entity.entity_type,
+                    description=None,
+                    create_iteration=entity.iteration,
+                    update_iteration=entity.iteration,
+                )
+                for entity in creates
+            ],
         )
-        result = await session.execute(query)
-        db_obj = result.scalar_one_or_none()
 
-        if db_obj is None:
-            raise ValueError(
-                f"No map entity memory found for map_id: {map_entity.map_id}"
-                f" and entity_id: {map_entity.entity_id}"
-                f" and entity_type: {map_entity.entity_type}",
+        if updates:
+            await session.execute(
+                update(MapEntityMemoryDBModel),
+                [
+                    {
+                        "map_id": entity.map_id,
+                        "entity_id": entity.entity_id,
+                        "entity_type": entity.entity_type,
+                        "description": entity.description,
+                        "update_iteration": entity.iteration,
+                    }
+                    for entity in updates
+                ],
             )
 
-        await session.commit()
-
-        return MapEntityMemoryRead.model_validate(db_obj)
-
-
-async def delete_map_entity_memory(map_entity: MapEntityMemoryDelete) -> None:
-    """Delete a map entity memory."""
-    async with db_sessionmaker() as session:
-        query = delete(MapEntityMemoryDBModel).where(
-            MapEntityMemoryDBModel.map_id == map_entity.map_id,
-            MapEntityMemoryDBModel.entity_id == map_entity.entity_id,
-            MapEntityMemoryDBModel.entity_type == map_entity.entity_type,
-        )
-        await session.execute(query)
-        await session.commit()
+        if deletes:
+            await session.execute(
+                delete(MapEntityMemoryDBModel).where(
+                    or_(
+                        *[
+                            and_(
+                                MapEntityMemoryDBModel.map_id == entity.map_id,
+                                MapEntityMemoryDBModel.entity_id == entity.entity_id,
+                                MapEntityMemoryDBModel.entity_type == entity.entity_type,
+                            )
+                            for entity in deletes
+                        ],
+                    ),
+                ),
+            )
