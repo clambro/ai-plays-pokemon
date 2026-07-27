@@ -150,16 +150,14 @@ async def test_html_page_assets_exist() -> None:
 
     expected_badges = ["boulderbadge.png", "cascadebadge.png", "thunderbadge.png"]
     for badge in expected_badges:
-        if not (badges_dir / badge).exists():
-            pytest.fail(f"Badge asset {badge} not found.")
+        assert (badges_dir / badge).exists(), f"Badge asset {badge} not found."
 
     pokemon_dir = assets_dir / "pokemon"
     assert pokemon_dir.exists()
 
     expected_pokemon = ["pikachu.png", "golbat.png", "geodude.png"]
     for pokemon in expected_pokemon:
-        if not (pokemon_dir / pokemon).exists():
-            pytest.fail(f"Pokemon asset {pokemon} not found.")
+        assert (pokemon_dir / pokemon).exists(), f"Pokemon asset {pokemon} not found."
 
 
 @pytest.mark.integration
