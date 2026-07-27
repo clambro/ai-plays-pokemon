@@ -11,7 +11,7 @@ from memory.long_term_memory import LongTermMemory
 from memory.retrieval_service import MemoryRetrievalService
 
 if TYPE_CHECKING:
-    from common.types import StateStringBuilderT
+    from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
 
 
@@ -25,7 +25,7 @@ class RetrieveLongTermMemoryService:
         self,
         iteration: int,
         long_term_memory: LongTermMemory,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the retrieve long term memory service."""

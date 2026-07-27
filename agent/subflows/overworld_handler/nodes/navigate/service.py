@@ -14,7 +14,7 @@ from overworld_map.service import update_map_with_screen_info
 
 if TYPE_CHECKING:
     from common.schemas import Coords
-    from common.types import StateStringBuilderT
+    from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
     from memory.raw_memory import RawMemory
@@ -37,7 +37,7 @@ class NavigationService:
         emulator: YellowLegacyEmulator,
         current_map: OverworldMap,
         raw_memory: RawMemory,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
     ) -> None:
         """Initialize the navigation service."""
         self.iteration = iteration

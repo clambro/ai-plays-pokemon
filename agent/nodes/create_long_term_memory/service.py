@@ -16,7 +16,7 @@ from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
 
 if TYPE_CHECKING:
-    from common.types import StateStringBuilderT
+    from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
 
 
@@ -28,7 +28,7 @@ class CreateLongTermMemoryService:
     def __init__(
         self,
         iteration: int,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the create long term memory service."""

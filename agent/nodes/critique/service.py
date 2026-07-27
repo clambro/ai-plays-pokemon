@@ -8,7 +8,7 @@ from llm.schemas import GEMINI_PRO_2_5
 from llm.service import GeminiLLMService
 
 if TYPE_CHECKING:
-    from common.types import StateStringBuilderT
+    from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
     from memory.raw_memory import RawMemory
 
@@ -20,7 +20,7 @@ class CritiqueService:
         self,
         iteration: int,
         raw_memory: RawMemory,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the critique service."""

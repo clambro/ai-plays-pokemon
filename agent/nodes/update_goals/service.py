@@ -11,7 +11,7 @@ from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
 
 if TYPE_CHECKING:
-    from common.types import StateStringBuilderT
+    from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
     from memory.goals import Goals
 
@@ -26,7 +26,7 @@ class UpdateGoalsService:
         emulator: YellowLegacyEmulator,
         iteration: int,
         goals: Goals,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
     ) -> None:
         """Initialize the update goals service."""
         self.iteration = iteration

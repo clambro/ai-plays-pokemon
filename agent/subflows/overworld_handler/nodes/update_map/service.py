@@ -20,7 +20,7 @@ from overworld_map.service import update_map_with_screen_info
 if TYPE_CHECKING:
     from PIL.Image import Image
 
-    from common.types import StateStringBuilderT
+    from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
     from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite
@@ -35,7 +35,7 @@ class UpdateMapService:
         self,
         iteration: int,
         current_map: OverworldMap,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the update map service."""

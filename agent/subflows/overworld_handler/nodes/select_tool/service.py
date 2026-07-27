@@ -22,7 +22,7 @@ from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
 
 if TYPE_CHECKING:
-    from common.types import StateStringBuilderT
+    from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
     from memory.raw_memory import RawMemory
@@ -41,7 +41,7 @@ class SelectToolService:
         raw_memory: RawMemory,
         current_map: OverworldMap,
         iterations_since_last_critique: int,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the select tool service."""

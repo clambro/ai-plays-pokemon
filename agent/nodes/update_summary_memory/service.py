@@ -10,7 +10,7 @@ from llm.service import GeminiLLMService
 from memory.summary_memory import SummaryMemory, SummaryMemoryPiece
 
 if TYPE_CHECKING:
-    from common.types import StateStringBuilderT
+    from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
 
 
@@ -23,7 +23,7 @@ class UpdateSummaryMemoryService:
         self,
         iteration: int,
         summary_memory: SummaryMemory,
-        state_string_builder: StateStringBuilderT,
+        state_string_builder: StateStringBuilder,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the update summary memory service."""
