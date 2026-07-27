@@ -1,9 +1,13 @@
 """Tests for the swap first Pokémon service."""
 
 from pathlib import Path
+from unittest.mock import AsyncMock
 
 import pytest
 
+from agent.subflows.overworld_handler.nodes.swap_first_pokemon.schemas import (
+    SwapFirstPokemonResponse,
+)
 from agent.subflows.overworld_handler.nodes.swap_first_pokemon.service import (
     SwapFirstPokemonService,
 )
@@ -12,7 +16,7 @@ from memory.raw_memory import RawMemory
 
 
 @pytest.mark.integration
-async def test_switch_to_pokemon() -> None:
+async def test_switch_to_pokemon(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test switching the first Pokemon in the party with the one at position 3."""
     save_file = Path(__file__).parent / "saves" / "save.state"
     async with YellowLegacyEmulator(
@@ -40,6 +44,16 @@ async def test_switch_to_pokemon() -> None:
             iteration=0,
             raw_memory=raw_memory,
             emulator=emulator,
+        )
+        monkeypatch.setattr(
+            service.llm_service,
+            "get_llm_response_pydantic",
+            AsyncMock(
+                return_value=SwapFirstPokemonResponse(
+                    thoughts="Move the requested Pokémon to the front.",
+                    index=party_index,
+                )
+            ),
         )
         raw_memory = await service.swap_first_pokemon()
         await emulator.wait_for_animation_to_finish()

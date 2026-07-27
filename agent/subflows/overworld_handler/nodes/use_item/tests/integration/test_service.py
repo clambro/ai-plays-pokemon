@@ -1,16 +1,18 @@
 """Tests for the use item service."""
 
 from pathlib import Path
+from unittest.mock import AsyncMock
 
 import pytest
 
+from agent.subflows.overworld_handler.nodes.use_item.schemas import UseItemResponse
 from agent.subflows.overworld_handler.nodes.use_item.service import UseItemService
 from emulator.emulator import YellowLegacyEmulator
 from memory.raw_memory import RawMemory
 
 
 @pytest.mark.integration
-async def test_use_item() -> None:
+async def test_use_item(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test using an item from the inventory."""
     save_file = Path(__file__).parent / "saves" / "save.state"
     async with YellowLegacyEmulator(
@@ -18,6 +20,11 @@ async def test_use_item() -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
+        item_index = next(
+            index
+            for index, item in enumerate(emulator.get_game_state().inventory.items)
+            if item.name == "REPEL"
+        )
         raw_memory = RawMemory()
         raw_memory.add_memory(
             iteration=0,
@@ -28,6 +35,16 @@ async def test_use_item() -> None:
             iteration=0,
             raw_memory=raw_memory,
             emulator=emulator,
+        )
+        monkeypatch.setattr(
+            service.llm_service,
+            "get_llm_response_pydantic",
+            AsyncMock(
+                return_value=UseItemResponse(
+                    thoughts="Use REPEL.",
+                    index=item_index,
+                )
+            ),
         )
         raw_memory = await service.use_item()
         await emulator.wait_for_animation_to_finish()

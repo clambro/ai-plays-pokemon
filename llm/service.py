@@ -27,9 +27,14 @@ PydanticModel = TypeVar("PydanticModel", bound=BaseModel)
 
 TIMEOUT = 60
 SAFETY_SETTINGS = [
-    SafetySetting(category=cat, threshold=HarmBlockThreshold.BLOCK_NONE)
-    for cat in HarmCategory
-    if cat != HarmCategory.HARM_CATEGORY_UNSPECIFIED  # Can't unblock the unspecified category.
+    SafetySetting(category=category, threshold=HarmBlockThreshold.BLOCK_NONE)
+    for category in (
+        HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        HarmCategory.HARM_CATEGORY_HARASSMENT,
+        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
+    )
 ]
 MIN_THINKING_TOKENS = 512  # This is the minimum allowed for the 2.5 models.
 DEFAULT_TEMPERATURE = 1  # This noise is necessary for creativity and not getting stuck in loops.
