@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     """Contains keys read from the environment."""
 
     gemini_api_key: str = ""
-    junjo_server_api_key: str = ""
+    logfire_token: str = ""
 
 
 settings = Settings()

@@ -37,7 +37,9 @@ If you want to buy me a coffee to help cover the streaming costs, you can do so 
 
 4. Put a compatible ROM at `resources/ylegacy.gbc`. If you build from the Yellow Legacy decomp, you can optionally apply [`pokeyellow.patch`](pokeyellow.patch) for two minor bug fixes.
 
-5. (Optional) If you want to use [Junjo Server](https://github.com/mdrideout/junjo-server) for telemetry, you'll have to create an API key for that as well. This is off by default since the project is still in alpha.
+5. (Strongly recommended) Add a [Logfire](https://logfire.pydantic.dev/) write
+   token as `LOGFIRE_TOKEN`. Without telemetry, you will have very little
+   visibility into what the agent is doing behind the scenes.
 
 **Note:** If you try to run the integration tests, many of them will fail because they depend on save states that I am not licensed to distribute. Similarly, if you try to run the game state visualization server, you'll get an error that the sprites are unavailable for the same reason.
 
@@ -56,6 +58,7 @@ This will:
 - Start a fresh game session
 - Launch the live-updaing background display at `http://localhost:8080`
 - Create automatic backups every 100 iterations
+- Send telemetry to Logfire when `LOGFIRE_TOKEN` is configured
 
 ### Command Line Options
 
@@ -63,7 +66,6 @@ This will:
 - `--backup-folder PATH`: Load a specific backup state
 - `--load-latest`: Load the most recent backup (mutually exclusive with `--backup-folder`)
 - `--mute-sound`: Mute the emulator sound
-- `--track-telemetry`: Enable telemetry tracking (requires Junjo Server)
 
 Other relevant constants can be edited in `common/constants.py`.
 

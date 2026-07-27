@@ -130,6 +130,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.logfire/
 env/
 venv/
 ENV/
