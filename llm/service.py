@@ -75,6 +75,7 @@ class GeminiLLMService:
         messages: str | list[str | Image],
         schema: type[PydanticModel],
         prompt_name: str,
+        *,
         system_prompt: str = SYSTEM_PROMPT,
         temperature: float = DEFAULT_TEMPERATURE,
         thinking_tokens: int = MIN_THINKING_TOKENS,
@@ -109,6 +110,7 @@ class GeminiLLMService:
     )
     async def _get_llm_response(  # noqa: PLR0913
         self,
+        *,
         messages: str | list[str | Image],
         schema: type[PydanticModel] | None,
         prompt_name: str,

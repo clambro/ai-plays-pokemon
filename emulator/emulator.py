@@ -4,6 +4,7 @@ import io
 from contextlib import AbstractAsyncContextManager, suppress
 from copy import deepcopy
 from pathlib import Path
+from typing import Self
 
 from loguru import logger
 from PIL import Image
@@ -51,7 +52,7 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         self._tick_task: asyncio.Task | None = None
         self._button_lock = asyncio.Lock()
 
-    async def __aenter__(self) -> "YellowLegacyEmulator":
+    async def __aenter__(self) -> Self:
         """Start the emulator's tick task when entering the context."""
         self._is_stopped = False
         self._tick_task = asyncio.create_task(self.async_tick_indefinitely())

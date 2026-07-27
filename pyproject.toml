@@ -26,7 +26,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pre-commit>=3.6.2,<4",
-    "ruff>=0.12.0,<0.13",
+    "ruff>=0.16.0,<0.17",
     "pytest-asyncio>=1.0.0,<2",
     "poethepoet>=0.35.0,<0.36",
 ]
@@ -41,7 +41,6 @@ build-backend = "hatchling.build"
 [tool.poe.tasks]
 unit_tests = "python -m pytest -k unit"
 integration_tests = "python -m pytest -k integration"
-node_tests = "python -m pytest -k node"
 
 [tool.ruff]
 target-version = "py313"
@@ -61,6 +60,7 @@ ignore = [
     "D401",  # First line of docstring should be in imperative mood: "{first_line}"
     "INP001",  # File {filename} is part of an implicit namespace package. Add an __init__.py.
     "COM812",  # Enforce trailing commas (handled by the formatter).
+    "CPY001",  # Missing copyright notice (handled by the license file).
     "EM101",  # Raw string in exception.
     "EM102",  # f-string in exception.
     "TRY003",  # Avoid specifying long messages outside the exception class
@@ -95,5 +95,4 @@ addopts = [
 markers =[
     "unit: mark a test as a unit test.",
     "integration: mark a test as an integration test",
-    "node: mark a test as a node test",
 ]

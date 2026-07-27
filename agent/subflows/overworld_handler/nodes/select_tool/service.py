@@ -30,6 +30,7 @@ class SelectToolService:
 
     def __init__(  # noqa: PLR0913
         self,
+        *,
         iteration: int,
         raw_memory: RawMemory,
         current_map: OverworldMap,
