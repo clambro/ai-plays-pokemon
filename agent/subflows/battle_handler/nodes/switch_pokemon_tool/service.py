@@ -45,13 +45,7 @@ class SwitchPokemonToolService:
             return self.raw_memory
 
         # Move the cursor to the Pokemon and update the game state.
-        idx_diff = cursor_index - self.tool_args.party_index
-        if idx_diff > 0:
-            for _ in range(idx_diff):
-                await self.emulator.press_button(Button.UP)
-        elif idx_diff < 0:
-            for _ in range(-idx_diff):
-                await self.emulator.press_button(Button.DOWN)
+        await self._move_cursor(cursor_index, self.tool_args.party_index)
         await self.emulator.press_button(Button.A)
         game_state = self.emulator.get_game_state()
 
@@ -61,8 +55,7 @@ class SwitchPokemonToolService:
             return self.raw_memory
 
         # Select the Pokemon.
-        for _ in range(cursor_index):
-            await self.emulator.press_button(Button.UP)
+        await self._move_cursor(cursor_index, 0)
         await self.emulator.press_button(Button.A, wait_for_animation=False)
 
         self.raw_memory.add_memory(
@@ -70,6 +63,19 @@ class SwitchPokemonToolService:
             content=f"Attempted to to switch to {self.tool_args.name}.",
         )
         return self.raw_memory
+
+    async def _move_cursor(self, current_index: int, target_index: int) -> None:
+        """Move a vertical menu cursor to the target index."""
+        index_difference = current_index - target_index
+        if index_difference > 0:
+            button = Button.UP
+        elif index_difference < 0:
+            button = Button.DOWN
+        else:
+            return
+
+        for _ in range(abs(index_difference)):
+            await self.emulator.press_button(button)
 
     @staticmethod
     def _get_pkmn_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:

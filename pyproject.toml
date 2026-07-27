@@ -73,7 +73,7 @@ ignore = [
 inline-quotes = "double"
 
 [tool.ruff.lint.mccabe]
-max-complexity = 20
+max-complexity = 10
 
 [tool.ruff.lint.pep8-naming]
 classmethod-decorators = ["validator"]

@@ -289,34 +289,46 @@ class YellowLegacyGameState(BaseModel):
 
         for i in range(0, tiles.shape[0], 2):
             for j in range(0, tiles.shape[1], 2):
-                b = tiles[i : i + 2, j : j + 2]
-                b_flat = tuple(b.flatten().tolist())
-                b_idx = (i // 2, j // 2)
-
-                if self.map.water_tile and np.isin(b, self.map.water_tile).any():
-                    blocks[b_idx] = AsciiTile.WATER
-                elif ledge_type := self._get_ledge_type(b):
-                    blocks[b_idx] = ledge_type
-                elif self.map.grass_tile and b[1, 0] == self.map.grass_tile:
-                    # In engine/battle/wild_encounters.asm, grass tiles only check the bottom left.
-                    blocks[b_idx] = AsciiTile.GRASS
-                elif self.map.cut_tree_tiles and b_flat == self.map.cut_tree_tiles:
-                    blocks[b_idx] = AsciiTile.CUT_TREE
-                elif self.map.boulder_hole_tiles and b_flat == self.map.boulder_hole_tiles:
-                    blocks[b_idx] = AsciiTile.BOULDER_HOLE
-                elif self.map.pressure_plate_tiles and b_flat == self.map.pressure_plate_tiles:
-                    blocks[b_idx] = AsciiTile.PRESSURE_PLATE
-                elif self.map.pc_tiles and b_flat == self.map.pc_tiles:
-                    blocks[b_idx] = AsciiTile.PC_TILE
-                elif spinner_type := self._get_spinner_type(b_flat):
-                    blocks[b_idx] = spinner_type
-                elif b[1, 0] in self.map.walkable_tiles:  # Same bottom-left logic applies here.
-                    blocks[b_idx] = AsciiTile.FREE
-
+                block = tiles[i : i + 2, j : j + 2]
+                blocks[i // 2, j // 2] = self._classify_background_block(block)
                 blockages = self._get_blockage(i, j, tiles, blockages)
 
         # Remove the default behaviour so we can query blockages without adding new ones.
         return np.array(blocks), dict(blockages)
+
+    def _classify_background_block(self, block: np.ndarray) -> AsciiTile:
+        """Classify a 2x2 block of background tiles."""
+        if self.map.water_tile and np.isin(block, self.map.water_tile).any():
+            return AsciiTile.WATER
+        if ledge_type := self._get_ledge_type(block):
+            return ledge_type
+        if self.map.grass_tile and block[1, 0] == self.map.grass_tile:
+            # In engine/battle/wild_encounters.asm, grass tiles only check the bottom left.
+            return AsciiTile.GRASS
+
+        flat_block = tuple(block.flatten().tolist())
+        if special_type := self._get_special_background_block_type(flat_block):
+            return special_type
+        if block[1, 0] in self.map.walkable_tiles:
+            # The engine uses the same bottom-left logic for ordinary walkable blocks.
+            return AsciiTile.FREE
+        return AsciiTile.WALL
+
+    def _get_special_background_block_type(
+        self,
+        flat_block: tuple[int, int, int, int],
+    ) -> AsciiTile | None:
+        """Classify a block represented by a special four-tile pattern."""
+        special_blocks = (
+            (self.map.cut_tree_tiles, AsciiTile.CUT_TREE),
+            (self.map.boulder_hole_tiles, AsciiTile.BOULDER_HOLE),
+            (self.map.pressure_plate_tiles, AsciiTile.PRESSURE_PLATE),
+            (self.map.pc_tiles, AsciiTile.PC_TILE),
+        )
+        for tile_pattern, tile_type in special_blocks:
+            if tile_pattern and flat_block == tile_pattern:
+                return tile_type
+        return self._get_spinner_type(flat_block)
 
     def _get_ledge_type(self, block: np.ndarray) -> AsciiTile | None:
         """
