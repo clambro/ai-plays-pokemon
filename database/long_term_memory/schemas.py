@@ -9,7 +9,6 @@ class LongTermMemoryCreate(BaseModel):
     title: str
     content: str
     importance: int = Field(ge=1, le=5)
-    embedding: list[float]
     iteration: int
 
 
@@ -29,6 +28,5 @@ class LongTermMemoryUpdate(BaseModel):
 
     title: str
     content: str
-    embedding: list[float]
     importance: int = Field(ge=1, le=5)
     iteration: int

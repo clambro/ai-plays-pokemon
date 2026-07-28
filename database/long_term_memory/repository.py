@@ -18,7 +18,6 @@ async def create_long_term_memory(create_schema: LongTermMemoryCreate) -> None:
             title=create_schema.title,
             content=create_schema.content,
             importance=create_schema.importance,
-            embedding=create_schema.embedding,
             create_iteration=create_schema.iteration,
             update_iteration=create_schema.iteration,
             last_accessed_iteration=create_schema.iteration,
@@ -63,7 +62,6 @@ async def update_long_term_memory(update_schema: LongTermMemoryUpdate) -> None:
             .where(LongTermMemoryDBModel.title == update_schema.title)
             .values(
                 content=update_schema.content,
-                embedding=update_schema.embedding,
                 importance=update_schema.importance,
                 update_iteration=update_schema.iteration,
             )
@@ -80,13 +78,3 @@ async def get_all_long_term_memory_titles() -> list[str]:
         db_objs = result.scalars().all()
 
         return list(db_objs)
-
-
-async def get_all_long_term_memory_embeddings() -> dict[str, list[float]]:
-    """Get all long-term memory embeddings."""
-    async with db_sessionmaker() as session:
-        query = select(LongTermMemoryDBModel.title, LongTermMemoryDBModel.embedding)
-        result = await session.execute(query)
-        db_objs = result.all()
-
-        return {o[0]: o[1] for o in db_objs}
