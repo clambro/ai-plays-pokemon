@@ -77,6 +77,20 @@ async def get_raw_memory_blocks(
     return [RawMemoryBlockRead.model_validate(db_obj) for db_obj in db_objs]
 
 
+async def get_raw_memory_blocks_after(iteration: int) -> list[RawMemoryBlockRead]:
+    """Load finalized raw blocks after an iteration in chronological order."""
+    async with db_sessionmaker() as session:
+        query = (
+            select(RawMemoryBlockDBModel)
+            .where(RawMemoryBlockDBModel.iteration > iteration)
+            .order_by(RawMemoryBlockDBModel.iteration)
+        )
+        result = await session.execute(query)
+        db_objs = result.scalars().all()
+
+    return [RawMemoryBlockRead.model_validate(db_obj) for db_obj in db_objs]
+
+
 async def store_memory_summary(summary: MemorySummaryCreate) -> MemorySummaryRead:
     """Persist one derived summary."""
     async with db_sessionmaker() as session:

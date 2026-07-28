@@ -151,19 +151,21 @@ themselves should not depend on the streaming server.
    responses and leave every source block and child summary untouched.
 
 4. **Add the complete rolling-memory application services.**
-   Add current-block mutation and publication, iteration finalization,
-   compaction orchestration, startup hydration, prompt rendering, and the raw
-   HTML log projection around the rolling-memory model. Keep these services
-   separate from the running application until the complete path exists.
+   Add end-of-loop iteration finalization and compaction orchestration,
+   next-loop and startup initialization, and prompt rendering around the
+   rolling-memory model. Keep these services separate from the running
+   application until the complete path exists.
 
 5. **Cut the application over to rolling memory.**
    Replace the old state fields and memory writes with the rolling-memory
    working state. At the end of a completed top-level workflow, persist the
-   combined current block once, perform the frontier compaction pass,
-   reload the bounded view, and prepare the next iteration. Hydrate that same
-   view after fresh startup or database restoration. Switch the AI prompts and
-   live HTML log together so both consume the same recent raw blocks and
-   unfinished current block.
+   combined current block once and perform the frontier compaction pass. At the
+   start of the next loop, initialize its current block and reload the bounded
+   view. Use the same initialization after fresh startup or database
+   restoration. Route current-block mutation and live publication through the
+   agent state. Switch the AI prompts and existing `from_agent_state()` HTML
+   path together so both consume the same recent raw blocks and unfinished
+   current block.
 
 6. **Delete the old memory systems.**
    Delete `RawMemory`, `SummaryMemory`, summary pieces, importance and decay
