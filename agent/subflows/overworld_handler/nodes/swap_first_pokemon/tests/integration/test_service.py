@@ -50,7 +50,6 @@ async def test_switch_to_pokemon(monkeypatch: pytest.MonkeyPatch) -> None:
             "get_llm_response_pydantic",
             AsyncMock(
                 return_value=SwapFirstPokemonResponse(
-                    thoughts="Move the requested Pokémon to the front.",
                     index=party_index,
                 )
             ),

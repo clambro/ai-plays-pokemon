@@ -8,8 +8,7 @@ from agent.subflows.overworld_handler.nodes.navigate import formatting, utils
 from agent.subflows.overworld_handler.nodes.navigate.prompts import DETERMINE_TARGET_COORDS_PROMPT
 from agent.subflows.overworld_handler.nodes.navigate.schemas import NavigationResponse
 from common.enums import AsciiTile, Button, FacingDirection, MapId
-from llm.schemas import GEMINI_FLASH_2_5
-from llm.service import GeminiLLMService
+from llm.service import OpenAILLMService
 from overworld_map.service import update_map_with_screen_info
 
 if TYPE_CHECKING:
@@ -28,7 +27,7 @@ class NavigationService:
     in the utils module, and the formatting of the data for the LLM is in the formatting module.
     """
 
-    llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
+    llm_service = OpenAILLMService()
 
     def __init__(
         self,

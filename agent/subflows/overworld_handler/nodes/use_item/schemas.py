@@ -10,5 +10,4 @@ class UseItemError(Exception):
 class UseItemResponse(BaseModel):
     """The response from the overworld use item prompt."""
 
-    thoughts: str
     index: int = Field(ge=0)

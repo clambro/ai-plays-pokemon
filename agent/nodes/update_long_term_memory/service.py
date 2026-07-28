@@ -8,15 +8,14 @@ from agent.nodes.update_long_term_memory.prompts import UPDATE_LONG_TERM_MEMORY_
 from agent.nodes.update_long_term_memory.schemas import UpdateLongTermMemoryResponse, UpdateType
 from database.long_term_memory.repository import update_long_term_memory as update_memory_record
 from database.long_term_memory.schemas import LongTermMemoryUpdate
-from llm.schemas import GEMINI_FLASH_2_5
-from llm.service import GeminiLLMService
+from llm.service import OpenAILLMService
 
 if TYPE_CHECKING:
     from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
     from memory.long_term_memory import LongTermMemory
 
-llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
+llm_service = OpenAILLMService()
 
 
 async def update_long_term_memory(

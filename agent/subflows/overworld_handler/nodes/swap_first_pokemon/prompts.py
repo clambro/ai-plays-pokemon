@@ -33,12 +33,10 @@ Species: RATTATA
 
 <example_output>
 {{
-    "thoughts": "ZIPPY the PIKACHU is currently in position 0, and I want SHELLY the SQUIRTLE to be the first Pokemon in my party. SHELLY is currently in position 1, so I will return 1.",
     "index": 1
 }}
 </example_output>
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your very brief thoughts on which Pokemon to swap the first Pokemon in your party with based on the thought and party information provided to you in this prompt.
 - index: The index of the Pokemon to swap the first Pokemon in your party with. This must be one of the indices listed above. If the Pokemon you want to swap with is already the first Pokemon in your party, you should return 0 to do nothing.
 """.strip()

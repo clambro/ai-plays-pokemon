@@ -11,14 +11,13 @@ from database.long_term_memory.repository import (
 )
 from database.long_term_memory.repository import get_all_long_term_memory_titles
 from database.long_term_memory.schemas import LongTermMemoryCreate
-from llm.schemas import GEMINI_FLASH_2_5
-from llm.service import GeminiLLMService
+from llm.service import OpenAILLMService
 
 if TYPE_CHECKING:
     from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
 
-llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
+llm_service = OpenAILLMService()
 
 
 async def create_long_term_memory(

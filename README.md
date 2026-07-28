@@ -24,7 +24,7 @@ If you want to buy me a coffee to help cover the streaming costs, you can do so 
 
 - Python 3.14
 - [The uv package manager](https://docs.astral.sh/uv/) for installing dependencies
-- [A Gemini API key](https://ai.google.dev/gemini-api/docs/api-key) for calling the LLM
+- [An OpenAI API key](https://platform.openai.com/api-keys) for calling the LLM
 - The Pokémon Yellow Legacy ROM — I am not licensed to distribute this. You'll have to get it yourself.
 
 ### Installation
@@ -33,7 +33,7 @@ If you want to buy me a coffee to help cover the streaming costs, you can do so 
 
 2. Install the dependencies with `uv sync`
 
-3. Make a copy of the `.env.example` file and name it `.env`. Add your Gemini API key there.
+3. Make a copy of the `.env.example` file and name it `.env`. Add your OpenAI API key there.
 
 4. Put a compatible ROM at `resources/ylegacy.gbc`. If you build from the Yellow Legacy decomp, you can optionally apply [`pokeyellow.patch`](pokeyellow.patch) for two minor bug fixes.
 
@@ -91,13 +91,9 @@ Only what would be accessible to a human player. It can see the screen, and it h
 
 Full disclosure: The creator of Junjo is a coworker and friend of mine. Personal sentiments aside, Junjo prioritizes asynchronous execution and type safety with Pydantic, which I view as mandatory for any AI workflow. Many other orchestrators treat these criteria as an afterthought, or fail them altogether. I also appreciate Junjo's lightweight, unopinionated design philosophy. It facilitates your work rather than imposing rigid abstractions that are challenging to edit or debug.
 
-### Why Gemini over another model family?
+### Why GPT-5.6 Luna?
 
-Two reasons: Partly because Gemini's API has built-in Pydantic support which saved me a step of manual schema validation, but mostly because Google Cloud gave me $500 of free credits for signing up, which I blew through during development.
-
-### Okay but why Gemini Flash instead of Pro?
-
-I'm not made of money! Gemini Pro is 4x the price of Gemini Flash. It outperformed Flash in my testing, obviously, but it cannot achieve its goals in 1/4th as many iterations, and is thus not worth the cost. It's also much slower than Flash, leading to a less enjoyable viewing experience. My only regret in using Flash was not being able to get away with using Flash-Lite instead! There is more discussion in [the philosophy article](docs/philosophy.md), but a big part of this project is the idea that a smaller model, properly orchestrated to do specific tasks, can outperform a larger model.
+It was the cheapest, fastest frontier model at the time of writing. My only regret is that they didn't offer an even cheaper option. There is more discussion in [the philosophy article](docs/philosophy.md), but a big part of this project is the idea that a smaller model, properly orchestrated to do specific tasks, can outperform a larger model. Smaller models also have lower latency, making for a more enjoyable viewing experience.
 
 ### Can it play other Pokémon games?
 
@@ -109,11 +105,11 @@ I'd like to see it beat the game, and I'll try to support it so that it does (as
 
 ### How long did it take to build this?
 
-It took a good chunk of my free time for 2-3 months to get this to its current state. I wanted to have it ready sooner, but I was doing a lot of back and forth travel that interfered with development.
+[The first complete version](https://github.com/clambro/ai-plays-pokemon/tree/v1.0.0) took a good chunk of my free time for 2-3 months. The current version benefited from advances in vibe coding and was built on top of the first in about a week.
 
 ### How much does it cost to run?
 
-Roughly $80 USD per 24 hour day of continuous running for the Gemini API calls.
+Roughly $8 USD per hour for the Luna API calls.
 
 ### How fast does it play?
 

@@ -16,9 +16,9 @@ At the high end of the autonomy spectrum sits the holy grail: A totally autonomo
 
 My approach to solving Pokémon Yellow Legacy combines freedom with constraint, sitting firmly in the middle of the autonomy spectrum. I want the LLM to make all the high-level decisions, but I don't need it to determine every individual button press. The flow of the game remains entirely unpredictable, but the AI is tightly bound in a workflow to keep it focused and safe. The idea here is that of a production application. LLMs are expensive and a source of uncertainty. You only want to use them when you have to, and in a way where their output space is bounded and can be validated.
 
-An example will make this more clear: The first decision you make in Pokémon is what to name your character. Let's say the AI wants to name itself "GEMINI." The shortest sequence to enter this name involves 29 button presses. To do this whole thing with a Gemini model, you would have to use Gemini Pro (because Flash isn't good enough at interpreting the screen). Even if you allowed the model to press multiple buttons per iteration, it would still require several iterations, probably a dozen or so in total. And this is assuming that it didn't make a mistake and have to go back, which it almost certainly would. Or worse, make a mistake and carry on with submitting the name.
+An example will make this more clear: The first decision you make in Pokémon is what to name your character. Entering even a short name requires dozens of button presses. Asking a vision model to handle the entire sequence would require repeated screenshots and button selections, with each step creating another opportunity for a mistake.
 
-My approach to the above problem is to simply ask the model for the name, since that's the decision we care about, then use a deterministic algorithm to submit the required button presses to the emulator. Naming is a task that Gemini Flash Lite can handle no problem, and it takes only one prompt at one-twelfth the price of Gemini Pro. If we assume that the naive approach took a dozen iterations, then this approach is nearly 150x cheaper overall! It also gives a guaranteed correct result and runs much faster.
+My approach to the above problem is to simply ask the model for the name, since that's the decision we care about, then use a deterministic algorithm to submit the required button presses to the emulator. This reduces the task to one model call, guarantees that a valid response is entered correctly, and runs much faster and more cheaply.
 
 Naming is a trivial example that doesn't happen that often in game, but the same logic applies for navigation and selecting options in battles. We don't need the AI to take every single step, just tell us where it wants to go. We don't need the AI to press seven buttons to throw a PokéBall, just tell us to throw it. Breaking down the gameplay into these discrete units of activity allows us to use smaller models, making the project cheaper overall. These cheaper model also run faster, thus making for a better viewing experience. The final advantage to this approach is that these discrete actions are far, far easier to test and tweak than monolithic agentic prompts, and their side effects are limited by the constraints we build around them.
 
@@ -47,7 +47,7 @@ LLMs have various shortcomings that prevent them from reaching the holy grail of
 
 ### Three Kinds of Memory
 
-The first issue we will tackle is the LLM's finite context window that stops it from holding its entire history in memory. With every iteration of the model, it gains a new memory of what it has done. LLMs have a finite context length, which is the maximum number of tokens that can be used for a single query (~1M tokens for the Gemini 2.5 series). Keeping a rolling log of as much memory as possible would get expensive fast since we pay per token in the query, and we would lose context from older memories once we rolled them over. My solution to this problem is a three-tiered memory architecture that separately handles the immediate past, short-term memories, and long-term memories.
+The first issue we will tackle is the LLM's finite context window that stops it from holding its entire history in memory. With every iteration of the model, it gains a new memory of what it has done. Keeping a rolling log of as much memory as possible would get expensive fast since we pay per token in the query, and we would eventually lose older context. My solution to this problem is a three-tiered memory architecture that separately handles the immediate past, short-term memories, and long-term memories.
 
 Note: Pretty much all the constants I mention below are default values that can be edited in [`common/constants.py`](/common/constants.py).
 
@@ -78,35 +78,35 @@ Aside from memory, the other major shortcoming of LLMs in Pokémon is their lack
 A minimap for each map ID is constructed using ASCII characters and stored in the database. The map is initialized as a rectangle of undiscovered territory the same size as the map in the game's memory, and with every step the player takes in game, the map is updated using whatever information is available on screen. Here is a sample map for Pallet Town:
 
 ```
-∙∙∙▉∙∙∙∙∙▉❀❀▉∙∙∙∙∙▉∙
-▉▉▉▉▉▉▉▉▉▉❀❀▉▉▉▉▉▉▉▉
-▉∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▉
-▉∙∙∙▉▉▉▉∙∙∙∙▉▉▉▉∙∙∙▉
-▉∙∙∙▉▉▉▉∙∙∙∙▉▉▉▉∙∙∙▉
-▉∙∙‼▉⇆▉▉∙∙∙‼▉⇆▉▉∙∙∙▉
-▉∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▉
-▉∙∙∙∙∙∙∙☻◈∙∙∙∙∙∙∙∙∙▉
-▉∙∙∙◆∙∙∙∙∙▉▉▉▉▉▉∙∙∙▉
-▉∙∙∙▉▉▉‼∙∙▉▉▉▉▉▉∙∙∙▉
-▉∙∙∙∙∙∙∙∙∙▉▉▉▉▉▉∙∙∙▉
-▉∙∙∙∙∙∙∙∙∙▉▉⇆▉▉▉∙∙∙▉
-▉∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▉
-▉∙∙∙∙∙∙∙∙∙▉▉▉‼▉▉∙∙∙▉
-▉∙∙∙≋≋≋≋◆∙∙∙∙∙∙∙∙∙∙▉
-░░░∙≋≋≋≋∙∙∙∙∙∙∙∙∙∙∙▉
-░░░∙≋≋≋≋∙∙∙∙∙∙∙∙∙∙∙▉
-░░░∙≋≋≋≋▉▉▉▉▉▉▉▉▉▉▉▉
+∙∙∙▓∙∙∙∙∙▓※※▓∙∙∙∙∙▓∙
+▓▓▓▓▓▓▓▓▓▓※※▓▓▓▓▓▓▓▓
+▓∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▓
+▓∙∙∙▓▓▓▓∙∙∙∙▓▓▓▓∙∙∙▓
+▓∙∙∙▓▓▓▓∙∙∙∙▓▓▓▓∙∙∙▓
+▓∙∙‼▓∞▓▓∙∙∙‼▓∞▓▓∙∙∙▓
+▓∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▓
+▓∙∙∙∙∙∙∙☺♦∙∙∙∙∙∙∙∙∙▓
+▓∙∙∙◆∙∙∙∙∙▓▓▓▓▓▓∙∙∙▓
+▓∙∙∙▓▓▓‼∙∙▓▓▓▓▓▓∙∙∙▓
+▓∙∙∙∙∙∙∙∙∙▓▓▓▓▓▓∙∙∙▓
+▓∙∙∙∙∙∙∙∙∙▓▓∞▓▓▓∙∙∙▓
+▓∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▓
+▓∙∙∙∙∙∙∙∙∙▓▓▓‼▓▓∙∙∙▓
+▓∙∙∙≈≈≈≈◆∙∙∙∙∙∙∙∙∙∙▓
+░░░∙≈≈≈≈∙∙∙∙∙∙∙∙∙∙∙▓
+░░░∙≈≈≈≈∙∙∙∙∙∙∙∙∙∙∙▓
+░░░∙≈≈≈≈▓▓▓▓▓▓▓▓▓▓▓▓
 
 Legend:
 ░ Undiscovered
 ∙ Free tile
-☻ Player
-◈ Pikachu
-▉ Barrier/wall
-≋ Water
-❀ Tall grass
+☺ Player
+♦ Pikachu
+▓ Barrier/wall
+≈ Water
+※ Tall grass
 ◆ Sprite
-⇆ Warp
+∞ Warp
 ‼ Sign
 ```
 

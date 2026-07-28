@@ -15,7 +15,6 @@ from pyboy import PyBoy
 if TYPE_CHECKING:
     from pathlib import Path
 
-_HEADLESS_TICK_SLEEP_SECONDS = 0.002
 
 type _QueuedCommand = tuple[Callable[[PyBoy], None], Callable[[Exception], None]]
 
@@ -135,8 +134,11 @@ class PyBoyWorker:
                 if not pyboy.tick(1, render=True, sound=True):
                     failure = RuntimeError("Emulator stopped unexpectedly.")
                     break
-                if self._headless:
-                    time.sleep(_HEADLESS_TICK_SLEEP_SECONDS)
+                # PyBoy's SDL limiter skips its own sleep while refilling a low audio buffer.
+                # Without this minimum delay, the tight worker loop runs catch-up frames
+                # back-to-back, causing brief audio and visual speed-ups after scheduling jitter.
+                # PyBoy adjusts its normal SDL sleep around this delay, preserving real-time speed.
+                time.sleep(0.002)
         except Exception as exc:  # noqa: BLE001
             # Every worker failure must reach pending and future callers.
             failure = exc

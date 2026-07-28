@@ -17,11 +17,11 @@ from overworld_map.schemas import OverworldMap
 PLATEAU_MAP = [
     list(row)
     for row in [
-        "▉▉▉▉▉▉▉▉▉▉▉",
-        "░∙⌊∙∙∙∙∙⌋∙░",
-        "░∙⌊∙∙∙∙∙⌋∙░",
-        "░∙⌊∙∙∙∙∙⌋∙∙",
-        "░∙▉⌄⌄∙⌄⌄▉∙░",
+        "▓▓▓▓▓▓▓▓▓▓▓",
+        "░∙≤∙∙∙∙∙≥∙░",
+        "░∙≤∙∙∙∙∙≥∙░",
+        "░∙≤∙∙∙∙∙≥∙∙",
+        "░∙▓▽▽∙▽▽▓∙░",
         "░∙∙∙∙∙∙∙∙∙░",
         "░░░░░∙░░░░░",
     ]
@@ -46,19 +46,19 @@ COLLISION_PAIRS_BLOCKAGES = {
     Coords(row=2, col=0): BlockedDirection.UP,
 }
 
-CUT_TREE_MAP = [list("∙┬∙")]
+CUT_TREE_MAP = [list("∙†∙")]
 
-SURF_MAP = [list("∙≋∙")]
+SURF_MAP = [list("∙≈∙")]
 
 SPINNER_MAP = [
     list(row)
     for row in [
-        "∙∙▉⇩∙",
-        "⇩▉∙⇩←",
+        "∙∙▓\u2228∙",
+        "\u2228▓∙\u2228\u2039",
         "∙∙∙░░",
-        "∙⊙←░∙",
-        "→∙⇧∙∙",
-        "∙▉∙∙∙",
+        "∙●\u2039░∙",
+        "\u203a∙Λ∙∙",
+        "∙▓∙∙∙",
     ]
 ]
 
@@ -338,7 +338,7 @@ def test_calculate_path_around_grass() -> None:
     map_data.ascii_tiles = [
         list(row)
         for row in [
-            "∙❀∙",
+            "∙※∙",
             "∙∙∙",
         ]
     ]
@@ -359,8 +359,8 @@ def test_calculate_path_through_grass() -> None:
     map_data.ascii_tiles = [
         list(row)
         for row in [
-            "∙❀∙",
-            "∙❀∙",
+            "∙※∙",
+            "∙※∙",
         ]
     ]
 

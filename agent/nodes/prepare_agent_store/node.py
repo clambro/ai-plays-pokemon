@@ -40,7 +40,6 @@ class PrepareAgentStoreNode(Node[AgentStore]):
         )
 
         await store.set_iteration(state.iteration + 1)
-        await store.set_iterations_since_last_critique(state.iterations_since_last_critique + 1)
         await store.set_previous_handler(state.handler)
         await store.set_handler(handler)
         await store.set_should_retrieve_memory(retrieve_memory)

@@ -12,8 +12,7 @@ from agent.subflows.overworld_handler.nodes.swap_first_pokemon.schemas import (
     SwapPokemonError,
 )
 from common.enums import Button
-from llm.schemas import GEMINI_FLASH_LITE_2_5
-from llm.service import GeminiLLMService
+from llm.service import OpenAILLMService
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
@@ -23,7 +22,7 @@ if TYPE_CHECKING:
 class SwapFirstPokemonService:
     """A service that swaps the first Pokemon in the party with another Pokemon."""
 
-    llm_service = GeminiLLMService(GEMINI_FLASH_LITE_2_5)
+    llm_service = OpenAILLMService()
 
     def __init__(
         self,

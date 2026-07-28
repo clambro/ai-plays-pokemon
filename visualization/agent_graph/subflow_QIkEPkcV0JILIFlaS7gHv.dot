@@ -4,7 +4,6 @@ digraph "subflow_QIkEPkcV0JILIFlaS7gHv" {
   node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
   edge [fontname="Helvetica", fontsize=9];
   sBToJVm5xra9OxQBzL5Um [label="SokobanSolverNode"];
-  xg2mGLyKwok4bDw7afPFR [label="CritiqueNode"];
   "0fpkx3b7lQVoQVagpXRS2" [label="PressButtonsNode"];
   Y517JpY8yyrWfM65w8E1b [label="LoadMapNode"];
   rtMBAPePt87bvLPxAIzas [label="SelectToolNode"];
@@ -20,11 +19,9 @@ digraph "subflow_QIkEPkcV0JILIFlaS7gHv" {
   rtMBAPePt87bvLPxAIzas -> HElFGc07fqIQPXHNia278 [style="dashed", label="ToolIs(swap_first_pokemon)"];
   rtMBAPePt87bvLPxAIzas -> "28cAYIgfDu1bLNZz1MVTd" [style="dashed", label="ToolIs(use_item)"];
   rtMBAPePt87bvLPxAIzas -> sBToJVm5xra9OxQBzL5Um [style="dashed", label="ToolIs(sokoban_solver)"];
-  rtMBAPePt87bvLPxAIzas -> xg2mGLyKwok4bDw7afPFR [style="dashed", label="ToolIs(critique)"];
   "0fpkx3b7lQVoQVagpXRS2" -> "8OX4nPRrRikyqbywL8H4Q" [style="solid"];
   r0ZmBU1qZB1rY8pHOBsFp -> "8OX4nPRrRikyqbywL8H4Q" [style="solid"];
   HElFGc07fqIQPXHNia278 -> "8OX4nPRrRikyqbywL8H4Q" [style="solid"];
   "28cAYIgfDu1bLNZz1MVTd" -> "8OX4nPRrRikyqbywL8H4Q" [style="solid"];
   sBToJVm5xra9OxQBzL5Um -> "8OX4nPRrRikyqbywL8H4Q" [style="solid"];
-  xg2mGLyKwok4bDw7afPFR -> "8OX4nPRrRikyqbywL8H4Q" [style="solid"];
 }

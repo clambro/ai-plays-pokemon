@@ -7,7 +7,6 @@ from junjo import Edge, Graph
 from agent.nodes.dummy.node import DummyNode
 from agent.subflows.overworld_handler.conditions import ToolIs
 from agent.subflows.overworld_handler.enums import OverworldTool
-from agent.subflows.overworld_handler.nodes.critique.node import CritiqueNode
 from agent.subflows.overworld_handler.nodes.load_map.node import LoadMapNode
 from agent.subflows.overworld_handler.nodes.navigate.node import NavigationNode
 from agent.subflows.overworld_handler.nodes.press_buttons.node import PressButtonsNode
@@ -24,7 +23,6 @@ if TYPE_CHECKING:
 def build_overworld_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Graph:
     """Build the overworld handler subflow graph."""
     load_map = LoadMapNode(emulator)
-    critique = CritiqueNode(emulator)
     update_map = UpdateMapNode(emulator)
     select_tool = SelectToolNode(emulator)
     navigation = NavigationNode(emulator)
@@ -46,12 +44,10 @@ def build_overworld_handler_subflow_graph(emulator: YellowLegacyEmulator) -> Gra
             Edge(select_tool, swap_first_pokemon, ToolIs(OverworldTool.SWAP_FIRST_POKEMON)),
             Edge(select_tool, use_item, ToolIs(OverworldTool.USE_ITEM)),
             Edge(select_tool, sokoban_solver, ToolIs(OverworldTool.SOKOBAN_SOLVER)),
-            Edge(select_tool, critique, ToolIs(OverworldTool.CRITIQUE)),
             Edge(press_buttons, dummy_sink),
             Edge(navigation, dummy_sink),
             Edge(swap_first_pokemon, dummy_sink),
             Edge(use_item, dummy_sink),
             Edge(sokoban_solver, dummy_sink),
-            Edge(critique, dummy_sink),
         ],
     )

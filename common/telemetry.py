@@ -7,7 +7,7 @@ from common.settings import settings
 
 
 def setup_telemetry() -> None:
-    """Configure Logfire and instrument the Gemini client."""
+    """Configure Logfire and instrument the OpenAI client."""
     if not settings.logfire_token:
         logger.warning("LOGFIRE_TOKEN is not set; telemetry will not be sent to Logfire.")
 
@@ -17,4 +17,4 @@ def setup_telemetry() -> None:
         service_name="AI Plays Pokemon Yellow Legacy",
         console=False,
     )
-    logfire.instrument_google_genai()
+    logfire.instrument_openai()

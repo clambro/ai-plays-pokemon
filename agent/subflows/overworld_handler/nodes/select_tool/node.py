@@ -31,14 +31,11 @@ class SelectToolNode(Node[OverworldHandlerStore]):
             raise ValueError("Iteration is not set")
         if state.current_map is None:
             raise ValueError("Current map is not set")
-        if state.iterations_since_last_critique is None:
-            raise ValueError("Iterations since last critique is not set")
 
         tool, raw_memory = await select_tool(
             iteration=state.iteration,
             raw_memory=state.raw_memory,
             current_map=state.current_map,
-            iterations_since_last_critique=state.iterations_since_last_critique,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )

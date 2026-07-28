@@ -1,85 +1,73 @@
-"""Gemini client integration for structured LLM requests."""
+"""OpenAI client integration for LLM requests."""
 
-import asyncio
+import base64
+from io import BytesIO
 from typing import TYPE_CHECKING
 
-from google import genai
-from google.genai.errors import ServerError
-from google.genai.types import (
-    GenerateContentConfig,
-    GenerateContentResponse,
-    HarmBlockThreshold,
-    HarmCategory,
-    SafetySetting,
-    ThinkingConfig,
-)
+from genai_prices import calc_price, extract_usage
+from openai import AsyncOpenAI
+from openai.lib._parsing._responses import type_to_text_format_param
 from pydantic import BaseModel
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from common.prompts import SYSTEM_PROMPT
 from common.settings import settings
 from llm.usage import update_llm_usage
 
 if TYPE_CHECKING:
+    from openai.types.responses import (
+        Response,
+        ResponseInputContentParam,
+        ResponseInputParam,
+        ResponseUsage,
+    )
     from PIL.Image import Image
 
-    from llm.schemas import GeminiModel
-
-TIMEOUT = 60
-SAFETY_SETTINGS = [
-    SafetySetting(category=category, threshold=HarmBlockThreshold.BLOCK_NONE)
-    for category in (
-        HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        HarmCategory.HARM_CATEGORY_HARASSMENT,
-        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-        HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
-    )
-]
-MIN_THINKING_TOKENS = 512  # This is the minimum allowed for the 2.5 models.
-DEFAULT_TEMPERATURE = 1  # This noise is necessary for creativity and not getting stuck in loops.
+MODEL = "gpt-5.6-luna"
+REASONING_EFFORT = "low"
+TIMEOUT_SECONDS = 60
+MAX_RETRIES = 2
+INPUT_TOKEN_OVERHEAD = 6
 
 
-class GeminiLLMService:
-    """Wrapper for the Gemini LLM API."""
+class OpenAILLMService:
+    """Shared GPT-5.6 Luna client and request boundary."""
 
-    def __init__(self, model: GeminiModel) -> None:
-        """Initialize the Gemini LLM service."""
-        self.client = genai.Client(api_key=settings.gemini_api_key)
-        self.model = model
+    def __init__(self) -> None:
+        """Initialize the OpenAI client."""
+        self.client = AsyncOpenAI(
+            api_key=settings.openai_api_key,
+            timeout=TIMEOUT_SECONDS,
+            max_retries=MAX_RETRIES,
+        )
 
     async def get_llm_response(
         self,
         messages: str | list[str | Image],
         system_prompt: str = SYSTEM_PROMPT,
-        temperature: float = DEFAULT_TEMPERATURE,
-        thinking_tokens: int = MIN_THINKING_TOKENS,
     ) -> str:
-        """Get a text response from the Gemini model.
+        """Get an ordinary text response from GPT-5.6 Luna.
 
         Args:
             messages: Text and images to send to the model.
-            system_prompt: Instruction supplied as the model's system prompt.
-            temperature: Sampling temperature for the response.
-            thinking_tokens: Maximum tokens allocated to model reasoning.
+            system_prompt: Instruction supplied to the model.
 
         Returns:
             The model's response text.
 
         Raises:
-            ValueError: Gemini returns no response text.
-            ServerError: Gemini still fails after the configured retries.
+            ValueError: OpenAI returns an unsuccessful response or no response text.
         """
-        response = await self._get_llm_response(
-            messages=messages,
-            schema=None,
-            system_prompt=system_prompt,
-            temperature=temperature,
-            thinking_tokens=thinking_tokens,
+        response = await self.client.responses.create(
+            model=MODEL,
+            input=self._build_input(messages),
+            instructions=system_prompt,
+            reasoning={"effort": REASONING_EFFORT},
         )
-        if not response.text:
-            raise ValueError("No response from Gemini.")
-        return response.text
+        await self._record_usage(response)
+        self._validate_response(response)
+        if not response.output_text:
+            raise ValueError("OpenAI returned no response text.")
+        return response.output_text
 
     async def get_llm_response_pydantic[ResponseModel: BaseModel](
         self,
@@ -87,111 +75,114 @@ class GeminiLLMService:
         schema: type[ResponseModel],
         *,
         system_prompt: str = SYSTEM_PROMPT,
-        temperature: float = DEFAULT_TEMPERATURE,
-        thinking_tokens: int = MIN_THINKING_TOKENS,
     ) -> ResponseModel:
-        """Get a Pydantic model parsed from a structured Gemini response.
+        """Get a Pydantic model parsed from a GPT-5.6 Luna response.
 
         Args:
             messages: Text and images to send to the model.
             schema: Pydantic model describing the required response.
-            system_prompt: Instruction supplied as the model's system prompt.
-            temperature: Sampling temperature for the response.
-            thinking_tokens: Maximum tokens allocated to model reasoning.
+            system_prompt: Instruction supplied to the model.
 
         Returns:
             The validated structured response.
 
         Raises:
-            ValueError: Gemini returns no valid structured response.
-            ServerError: Gemini still fails after the configured retries.
+            ValueError: OpenAI returns an unsuccessful or invalid structured response.
         """
-        response = await self._get_llm_response(
-            messages=messages,
-            schema=schema,
-            system_prompt=system_prompt,
-            temperature=temperature,
-            thinking_tokens=thinking_tokens,
+        response = await self.client.responses.create(
+            model=MODEL,
+            input=self._build_input(messages),
+            instructions=system_prompt,
+            reasoning={"effort": REASONING_EFFORT},
+            text={"format": type_to_text_format_param(schema)},
         )
-        return schema.model_validate(response.parsed)
+        await self._record_usage(response)
+        self._validate_response(response)
+        if not response.output_text:
+            raise ValueError("OpenAI returned no valid structured response.")
+        return schema.model_validate_json(response.output_text)
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_fixed(1),
-        retry=retry_if_exception_type(ServerError),  # The experimental models are unstable.
-        reraise=True,
-    )
-    async def _get_llm_response(
-        self,
-        *,
-        messages: str | list[str | Image],
-        schema: type[BaseModel] | None,
-        system_prompt: str,
-        temperature: float,
-        thinking_tokens: int | None,
-    ) -> GenerateContentResponse:
-        """Send a request to Gemini and persist its response telemetry.
+    async def count_input_tokens(self, text: str) -> int:
+        """Count the GPT-5.6 Luna input tokens for text."""
+        response = await self.client.responses.input_tokens.count(model=MODEL, input=text)
+        # The endpoint includes fixed Responses API message framing in addition to
+        # the supplied text. Remove it so this method reports only the text tokens.
+        return response.input_tokens - INPUT_TOKEN_OVERHEAD
 
-        Args:
-            messages: Text and images to send to the model.
-            schema: Optional Pydantic model describing a structured response.
-            system_prompt: Instruction supplied as the model's system prompt.
-            temperature: Sampling temperature for the response.
-            thinking_tokens: Maximum reasoning tokens, or ``None`` for a non-thinking model.
-
-        Returns:
-            Gemini's complete generated-content response.
-
-        Raises:
-            ValueError: Gemini omits response data or fails to produce the requested schema.
-            ServerError: Gemini still fails after the configured retries.
-        """
+    @staticmethod
+    def _build_input(messages: str | list[str | Image]) -> str | ResponseInputParam:
+        """Convert text and Pillow images into Responses API input."""
         if isinstance(messages, str):
-            messages = [messages]
-        thinking_config = (
-            ThinkingConfig(thinking_budget=thinking_tokens) if thinking_tokens is not None else None
-        )
-        content_config = GenerateContentConfig(
-            system_instruction=system_prompt,
-            temperature=temperature,
-            safety_settings=SAFETY_SETTINGS,
-            thinking_config=thinking_config,
-        )
-        if schema:
-            content_config.response_mime_type = "application/json"
-            content_config.response_schema = schema
-        response = await asyncio.wait_for(
-            self.client.aio.models.generate_content(
-                model=self.model.model_id,
-                contents=messages,  # type: ignore -- This is a Gemini API issue.
-                config=content_config,
-            ),
-            timeout=TIMEOUT,
-        )
-        if not response.text or not response.usage_metadata:
-            raise ValueError("No response from Gemini.")
-        cost = _calculate_cost(
-            self.model,
-            input_tokens=response.usage_metadata.prompt_token_count or 0,
-            output_tokens=(response.usage_metadata.thoughts_token_count or 0)
-            + (response.usage_metadata.candidates_token_count or 0),
-        )
+            return messages
+
+        content: list[ResponseInputContentParam] = []
+        for message in messages:
+            if isinstance(message, str):
+                content.append({"type": "input_text", "text": message})
+            else:
+                content.append(
+                    {
+                        "type": "input_image",
+                        "image_url": OpenAILLMService._image_data_url(message),
+                        "detail": "original",
+                    }
+                )
+        input_messages: ResponseInputParam = [{"role": "user", "content": content}]
+        return input_messages
+
+    @staticmethod
+    def _image_data_url(image: Image) -> str:
+        """Convert a Pillow image to an in-memory PNG data URL."""
+        buffer = BytesIO()
+        image.save(buffer, format="PNG")
+        encoded_image = base64.b64encode(buffer.getvalue()).decode()
+        return f"data:image/png;base64,{encoded_image}"
+
+    @staticmethod
+    async def _record_usage(response: Response) -> None:
+        """Add one OpenAI response's tokens and cost to the active run."""
+        usage = response.usage
+        if usage is None:
+            raise ValueError("OpenAI returned no usage information.")
         await update_llm_usage(
-            response.usage_metadata.total_token_count or 0,
-            cost,
+            usage.total_tokens,
+            OpenAILLMService._calculate_cost(response.model, usage),
         )
-        if schema and not isinstance(response.parsed, schema):
-            raise ValueError(f"Failed to parse response from Gemini. Got {response.text}")
-        return response
 
+    @staticmethod
+    def _validate_response(response: Response) -> None:
+        """Raise a clear error for unsuccessful terminal responses."""
+        for output in response.output:
+            if output.type == "message":
+                for content in output.content:
+                    if content.type == "refusal":
+                        raise ValueError(f"OpenAI refused the request: {content.refusal}")
 
-def _calculate_cost(
-    model: GeminiModel,
-    *,
-    input_tokens: int,
-    output_tokens: int,
-) -> float:
-    """Calculate the cost of one LLM response."""
-    return (
-        input_tokens * model.cost_1m_input_tokens + output_tokens * model.cost_1m_output_tokens
-    ) / 1_000_000
+        if response.status == "completed":
+            return
+        if response.error is not None:
+            raise ValueError(f"OpenAI response failed: {response.error.message}")
+        if response.incomplete_details is not None:
+            raise ValueError(f"OpenAI response incomplete: {response.incomplete_details.reason}")
+        raise ValueError(f"OpenAI response ended with status {response.status}.")
+
+    @staticmethod
+    def _calculate_cost(model: str, usage: ResponseUsage) -> float:
+        """Calculate the response cost using the shared GenAI pricing database."""
+        usage_data = extract_usage(
+            {
+                "model": model,
+                "usage": usage.model_dump(),
+            },
+            provider_id="openai",
+            api_flavor="responses",
+        )
+        if usage_data.model is None:
+            raise ValueError(f"No pricing information for OpenAI model {model}.")
+        return float(
+            calc_price(
+                usage_data.usage,
+                model_ref=usage_data.model.id,
+                provider_id="openai",
+            ).total_price
+        )

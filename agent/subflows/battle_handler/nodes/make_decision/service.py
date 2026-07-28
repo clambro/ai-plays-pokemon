@@ -6,15 +6,14 @@ from loguru import logger
 
 from agent.subflows.battle_handler.nodes.make_decision.prompts import MAKE_DECISION_PROMPT
 from agent.subflows.battle_handler.nodes.make_decision.schemas import MakeDecisionResponse
-from llm.schemas import GEMINI_FLASH_2_5
-from llm.service import GeminiLLMService
+from llm.service import OpenAILLMService
 
 if TYPE_CHECKING:
     from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
     from memory.raw_memory import RawMemory
 
-llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
+llm_service = OpenAILLMService()
 
 
 async def make_decision(

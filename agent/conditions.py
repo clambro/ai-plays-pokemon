@@ -44,19 +44,3 @@ class ShouldRetrieveMemory(Condition[AgentState]):
     def evaluate(self, state: AgentState) -> bool:
         """Evaluate the condition."""
         return state.should_retrieve_memory == self.value
-
-
-class ShouldCritique(Condition[AgentState]):
-    """A condition that checks if the agent should critique."""
-
-    def __init__(self, value: Literal[True, False]) -> None:
-        """Initialize the condition with the expected decision."""
-        self.value = value
-
-    def __str__(self) -> str:
-        """Return the string representation of the condition."""
-        return f"ShouldCritique({self.value})"
-
-    def evaluate(self, state: AgentState) -> bool:
-        """Evaluate the condition."""
-        return state.should_critique == self.value

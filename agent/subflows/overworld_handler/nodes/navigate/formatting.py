@@ -29,9 +29,9 @@ def format_coordinates_grid(coordinates: list[Coords], map_data: OverworldMap) -
     Example:
         [(0,0), (0,1), (1,0), (1,1), (1,2), (2,1)]
         ->
-        (0,0,❀) (0,1,∙)
-        (1,0,❀) (1,1,❀) (1,2,∙)
-        (2,1,❀)
+        (0,0,※) (0,1,∙)
+        (1,0,※) (1,1,※) (1,2,∙)
+        (2,1,※)
     """
     if not coordinates:
         return ""

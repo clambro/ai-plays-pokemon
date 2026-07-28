@@ -5,15 +5,14 @@ from typing import TYPE_CHECKING
 from agent.nodes.update_summary_memory.prompts import UPDATE_SUMMARY_MEMORY_PROMPT
 from agent.nodes.update_summary_memory.schemas import UpdateSummaryMemoryResponse
 from common.constants import ITERATIONS_PER_SUMMARY_UPDATE, RAW_MEMORY_MAX_SIZE
-from llm.schemas import GEMINI_FLASH_2_5
-from llm.service import GeminiLLMService
+from llm.service import OpenAILLMService
 from memory.summary_memory import SummaryMemory, SummaryMemoryPiece
 
 if TYPE_CHECKING:
     from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
 
-llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
+llm_service = OpenAILLMService()
 
 
 async def update_summary_memory(

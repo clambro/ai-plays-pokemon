@@ -13,8 +13,7 @@ from agent.subflows.overworld_handler.nodes.update_map.schemas import UpdateEnti
 from common.enums import MapEntityType
 from database.map_entity_memory.repository import apply_map_entity_changes
 from database.map_entity_memory.schemas import MapEntityMemoryUpdate
-from llm.schemas import GEMINI_FLASH_2_5
-from llm.service import GeminiLLMService
+from llm.service import OpenAILLMService
 from overworld_map.service import update_map_with_screen_info
 
 if TYPE_CHECKING:
@@ -25,7 +24,7 @@ if TYPE_CHECKING:
     from emulator.game_state import YellowLegacyGameState
     from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite
 
-llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
+llm_service = OpenAILLMService()
 
 
 async def update_map(

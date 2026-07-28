@@ -27,12 +27,10 @@ I need to use a Potion on my Pikachu.
 
 <example_output>
 {{
-    "thoughts": "I need to use a Potion on my Pikachu. The potion is at index 3, so I will return 3.",
     "index": 3
 }}
 </example_output>
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your very brief thoughts on which item to use based on the thought and inventory information provided to you in this prompt.
 - index: The index of the item to use. This must be one of the indices listed above.
 """.strip()
