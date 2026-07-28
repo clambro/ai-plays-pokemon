@@ -27,7 +27,7 @@ llm_service = OpenAILLMService()
 async def compact_memory(memory: RollingMemory) -> list[MemorySummaryRead]:
     """Compact every range eligible in the current rolling-memory view."""
     requests = []
-    if len(memory.loaded_raw_blocks) > ROLLING_MEMORY_LEAF_SIZE:
+    if len(memory.loaded_raw_blocks) >= ROLLING_MEMORY_LEAF_SIZE * 2:
         raw_blocks = memory.loaded_raw_blocks[:ROLLING_MEMORY_LEAF_SIZE]
         requests.append(
             _summarize(

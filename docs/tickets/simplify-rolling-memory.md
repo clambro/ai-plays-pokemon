@@ -144,11 +144,11 @@ themselves should not depend on the streaming server.
    memory records.
 
 3. **Build hierarchical compaction.**
-   Use the rolling-memory working view to compact the previous limit-sized
-   finalized raw block whenever the loaded raw view exceeds that limit, leaving
-   the newest block exact. Include every eligible binary pair in the loaded
-   summary frontier in the same parallel request batch. Store only successful
-   responses and leave every source block and child summary untouched.
+   Wait until the rolling-memory working view contains two limit-sized batches
+   of finalized raw blocks, then compact the older batch while leaving the
+   newer batch exact. Include every eligible binary pair in the loaded summary
+   frontier in the same parallel request batch. Store only successful responses
+   and leave every source block and child summary untouched.
 
 4. **Add the complete rolling-memory application services.**
    Add end-of-loop iteration finalization and compaction orchestration,
