@@ -10,6 +10,10 @@ class CurrentMemoryBlock:
     iteration: int
     content: str = ""
 
+    def __str__(self) -> str:
+        """Format the block with its application iteration."""
+        return f"[{self.iteration}]: {self.content}"
+
     def append(self, content: str) -> None:
         """Append content in the order it was recorded."""
         separator = "\n" if self.content else ""
@@ -23,15 +27,27 @@ class RawMemoryBlock:
     iteration: int
     content: str
 
+    def __str__(self) -> str:
+        """Format the block with its application iteration."""
+        return f"[{self.iteration}]: {self.content}"
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class MemorySummary:
-    """A derived summary covering an inclusive iteration range."""
+    """A derived summary covering an inclusive iteration range.
+
+    Level 0 is the implicit raw-memory layer, so stored summaries begin at
+    level 1.
+    """
 
     start_iteration: int
     end_iteration: int
     level: int
     content: str
+
+    def __str__(self) -> str:
+        """Format the summary with its covered iteration range."""
+        return f"[{self.start_iteration}-{self.end_iteration}]: {self.content}"
 
 
 @dataclass(slots=True, kw_only=True)

@@ -60,6 +60,8 @@ Start with fixed, aligned ranges of finalized iterations. A leaf summary
 compresses the raw blocks within one range. When two adjacent summaries at the
 same level exist, they can be combined into one parent whose range covers both
 children. Each higher level therefore represents twice as much history.
+Treat raw blocks as the implicit level 0 and number stored leaf summaries from
+level 1.
 
 Keep the child summaries and raw blocks after creating a parent. This makes
 the tree inspectable and allows summaries and prompt views to be rebuilt
@@ -70,9 +72,12 @@ example, twenty-iteration leaf ranges produce fewer than one summary operation
 per ten iterations on average once parent merges are included. Treat the exact
 range and output limits as named configuration values that can be tuned later.
 
-Perform at most one summary operation per application iteration. If a parent
-summary is still pending, its existing children remain usable in the prompt
-view; gameplay does not need to wait for the tree to become completely merged.
+Use the rolling-memory working view directly. When its finalized raw blocks
+exceed the leaf limit, compact the previous limit-sized block and leave the
+newest block raw. Compact that block alongside every eligible pair already
+present in the summary frontier, running all requests in parallel. Parents
+made eligible by those results remain in the frontier for the next application
+iteration.
 
 ## Prompt View
 
@@ -138,40 +143,33 @@ themselves should not depend on the streaming server.
    HTML log. Keep database and streaming dependencies outside the stored
    memory records.
 
-3. **Persist completed iterations.**
-   Move iteration finalization to the end of a completed top-level workflow.
-   Write the combined block once, reload the bounded raw view from SQLite, and
-   then begin the next mutable iteration. Hydrate the same view from the copied
-   database after startup or backup restoration. Include any unfinished
-   iteration restored from agent state without duplicating a finalized
-   database block. Update existing memory-writing services to target the
-   unified iteration-level interface without changing their gameplay
-   behavior.
+3. **Build hierarchical compaction.**
+   Use the rolling-memory working view to compact the previous limit-sized
+   finalized raw block whenever the loaded raw view exceeds that limit, leaving
+   the newest block exact. Include every eligible binary pair in the loaded
+   summary frontier in the same parallel request batch. Store only successful
+   responses and leave every source block and child summary untouched.
 
-4. **Build hierarchical compaction.**
-   Replace the periodic summary-memory updater with a service that finds the
-   next eligible leaf or parent range, requests one bounded summary, and stores
-   it only after a successful response. Limit it to one summary operation per
-   application iteration and leave its source blocks untouched.
+4. **Add the complete rolling-memory application services.**
+   Add current-block mutation and publication, iteration finalization,
+   compaction orchestration, startup hydration, prompt rendering, and the raw
+   HTML log projection around the rolling-memory model. Keep these services
+   separate from the running application until the complete path exists.
 
-5. **Render the rolling prompt view.**
-   Load the summary frontier for older history, append exact recent blocks, and
-   expose one chronological memory string to the top-level and subflow state
-   builders. Keep direct access to the current raw iteration for services that
-   continue or amend the current thought.
+5. **Cut the application over to rolling memory.**
+   Replace the old state fields and memory writes with the rolling-memory
+   working state. At the end of a completed top-level workflow, persist the
+   combined current block once, perform the frontier compaction pass,
+   reload the bounded view, and prepare the next iteration. Hydrate that same
+   view after fresh startup or database restoration. Switch the AI prompts and
+   live HTML log together so both consume the same recent raw blocks and
+   unfinished current block.
 
-6. **Wire the live HTML view.**
-   Publish the loaded raw blocks after every mutation of the current raw
-   iteration and let the browser viewport determine how many are visible. Keep
-   summary content out of the activity log.
-
-7. **Remove the old split memory systems.**
+6. **Delete the old memory systems.**
    Delete `RawMemory`, `SummaryMemory`, summary pieces, importance and decay
    logic, the old periodic summary node, and their separate size constants.
-   Replace the two state fields with the bounded rolling-memory working state
-   and update backup serialization accordingly.
 
-8. **Update the memory documentation and behavioral coverage.**
+7. **Update the memory documentation and behavioral coverage.**
    Document the raw database record, hierarchical prompt view, and
    iteration-finalization boundary. Cover the important behavior: multiple
    writes form one finalized iteration, recent HTML entries remain raw, prompt

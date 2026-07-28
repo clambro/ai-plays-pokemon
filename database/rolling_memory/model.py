@@ -16,7 +16,11 @@ class RawMemoryBlockDBModel(SQLAlchemyBase):
 
 
 class MemorySummaryDBModel(SQLAlchemyBase):
-    """A derived summary covering an inclusive range of application iterations."""
+    """A derived summary covering an inclusive range of application iterations.
+
+    Level 0 is the implicit raw-memory layer, so stored summaries begin at
+    level 1.
+    """
 
     __tablename__ = "memory_summary"
 
