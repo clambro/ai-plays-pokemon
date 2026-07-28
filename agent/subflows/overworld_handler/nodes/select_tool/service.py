@@ -16,8 +16,7 @@ from agent.subflows.overworld_handler.nodes.select_tool.prompts import (
 )
 from agent.subflows.overworld_handler.nodes.select_tool.schemas import SelectToolResponse
 from common.enums import AsciiTile, SpriteLabel
-from llm.schemas import GEMINI_FLASH_2_5
-from llm.service import GeminiLLMService
+from llm.service import OpenAILLMService
 
 if TYPE_CHECKING:
     from common.types import StateStringBuilder
@@ -26,7 +25,7 @@ if TYPE_CHECKING:
     from memory.raw_memory import RawMemory
     from overworld_map.schemas import OverworldMap
 
-llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
+llm_service = OpenAILLMService()
 
 
 async def select_tool(

@@ -13,8 +13,7 @@ from agent.subflows.battle_handler.schemas import (
 )
 from agent.subflows.battle_handler.utils import is_fight_menu_open
 from common.enums import BattleType, PokeballItem
-from llm.schemas import GEMINI_FLASH_2_5
-from llm.service import GeminiLLMService
+from llm.service import OpenAILLMService
 
 if TYPE_CHECKING:
     from PIL.Image import Image
@@ -24,7 +23,7 @@ if TYPE_CHECKING:
     from emulator.game_state import YellowLegacyGameState
     from memory.raw_memory import RawMemory
 
-llm_service = GeminiLLMService(model=GEMINI_FLASH_2_5)
+llm_service = OpenAILLMService()
 
 
 async def determine_handler(

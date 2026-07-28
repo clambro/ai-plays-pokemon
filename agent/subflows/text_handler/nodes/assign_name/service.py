@@ -7,8 +7,7 @@ import numpy as np
 from agent.subflows.text_handler.nodes.assign_name.prompts import GET_NAME_PROMPT
 from agent.subflows.text_handler.nodes.assign_name.schemas import NameResponse
 from common.enums import Button
-from llm.schemas import GEMINI_FLASH_LITE_2_5
-from llm.service import GeminiLLMService
+from llm.service import OpenAILLMService
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
@@ -27,7 +26,7 @@ LETTER_ARR = np.array(
 class AssignNameService:
     """A service that assigns a name to something in the game."""
 
-    llm_service = GeminiLLMService(GEMINI_FLASH_LITE_2_5)
+    llm_service = OpenAILLMService()
 
     def __init__(
         self,

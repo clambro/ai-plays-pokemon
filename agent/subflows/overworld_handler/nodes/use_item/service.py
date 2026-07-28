@@ -7,8 +7,7 @@ from loguru import logger
 from agent.subflows.overworld_handler.nodes.use_item.prompts import USE_ITEM_PROMPT
 from agent.subflows.overworld_handler.nodes.use_item.schemas import UseItemError, UseItemResponse
 from common.enums import Button
-from llm.schemas import GEMINI_FLASH_LITE_2_5
-from llm.service import GeminiLLMService
+from llm.service import OpenAILLMService
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
@@ -18,7 +17,7 @@ if TYPE_CHECKING:
 class UseItemService:
     """A service that uses an item from the inventory."""
 
-    llm_service = GeminiLLMService(GEMINI_FLASH_LITE_2_5)
+    llm_service = OpenAILLMService()
 
     def __init__(
         self,

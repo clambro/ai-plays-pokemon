@@ -41,7 +41,6 @@ async def test_use_item(monkeypatch: pytest.MonkeyPatch) -> None:
             "get_llm_response_pydantic",
             AsyncMock(
                 return_value=UseItemResponse(
-                    thoughts="Use REPEL.",
                     index=item_index,
                 )
             ),

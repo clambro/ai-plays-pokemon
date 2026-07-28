@@ -9,7 +9,7 @@ load_dotenv()
 class Settings(BaseSettings):
     """Contains keys read from the environment."""
 
-    gemini_api_key: str = ""
+    openai_api_key: str
     logfire_token: str = ""
 
 
