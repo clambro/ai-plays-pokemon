@@ -22,7 +22,7 @@ If there are maps connected to the current map, the following section will guide
 {map_boundaries}
 </map_boundaries>
 
-Your most recent raw memory is repeated below for reference. The "thoughts" in your response will be appended verbatim to the end of this memory, so there is no need to duplicate information.
+Your current iteration memory is repeated below for reference. The "thoughts" in your response will be appended verbatim to the end of this memory, so there is no need to duplicate information.
 <last_memory>
 {last_memory}
 </last_memory>
@@ -36,6 +36,6 @@ Pay close attention to the intent expressed in your last memory. When that memor
 - When in doubt, prioritize exploration candidates over generic accessible coordinates.
 
 Reflect on the information provided to you and respond in the format given below. The relevant keys are:
-- thoughts: Your one sentence long thoughts on which coordinates you would like to navigate to given the information provided. These thoughts will be appended verbatim to the end of the <last_memory> in your raw memory. If you are overriding the last memory's request, mention that here and briefly explain why you are doing so.
+- thoughts: Your one sentence long thoughts on which coordinates you would like to navigate to given the information provided. These thoughts will be appended verbatim to the end of the <last_memory> in your rolling memory. If you are overriding the last memory's request, mention that here and briefly explain why you are doing so.
 - coords: The row-column coordinates of the tile you would like to navigate to. Must be one of the accessible coordinates provided above. Do NOT include the tile type in your response, just the coordinates.
 """.strip()

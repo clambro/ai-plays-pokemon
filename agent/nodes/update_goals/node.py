@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class UpdateGoalsNode(Node[AgentStore]):
-    """Update the goals based on the raw memory."""
+    """Update the goals based on the rolling memory."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
         """Initialize the update goals node."""
