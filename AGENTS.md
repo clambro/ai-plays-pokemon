@@ -40,6 +40,13 @@ exactly because emulator changes can affect existing save states.
   use Sphinx directives.
 - Use Pydantic models at I/O and validation boundaries. Prefer standard-library
   dataclasses for internal structured data.
+- Tests must protect externally observable behavior or stable domain rules and
+  survive internal refactors that preserve that behavior. Do not add tests that
+  merely mirror implementation details such as private helpers, internal call
+  sequences, exact wiring, or timing constants. Prefer real integration
+  coverage for component interactions and focused unit tests for substantive
+  pure algorithms. Repository policy tests are appropriate when they
+  deliberately enforce a project convention.
 - Keep changes focused and preserve unrelated worktree changes.
 
 ## Repository Layout
