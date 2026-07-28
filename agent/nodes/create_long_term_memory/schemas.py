@@ -1,6 +1,6 @@
 """Data models for create long term memory in the top-level agent graph."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class _CreateLongTermMemoryResponsePiece(BaseModel):
@@ -8,7 +8,6 @@ class _CreateLongTermMemoryResponsePiece(BaseModel):
 
     title: str
     content: str
-    importance: int = Field(ge=1, le=3)
 
 
 class CreateLongTermMemoryResponse(BaseModel):

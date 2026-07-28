@@ -18,7 +18,7 @@ These are two nodes that run in parallel if the Prepare Agent Store node determi
 
 ### Retrieve Long-Term Memory
 
-This is the node that pulls long-term memories from the database. It first constructs a query based on the current game state, embeds the query, and compares it via cosine similarity to the memories in the database. The top few memories are then re-ranked by a combination of cosine similarity to the query, recency, and importance. The top 10 by that combined score then get added to the agent state until the next retrieval iteration.
+This is the node that pulls long-term memories from the database. The model sees the available memory titles alongside the current game and agent state, then selects up to 10 titles to recall. The selected documents are loaded directly by title and added to the agent state until the next retrieval iteration.
 
 ### Should Critique
 

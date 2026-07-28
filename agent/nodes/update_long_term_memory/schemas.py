@@ -2,7 +2,7 @@
 
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class UpdateType(StrEnum):
@@ -18,7 +18,6 @@ class _UpdateLongTermMemoryResponsePiece(BaseModel):
     title: str
     update_type: UpdateType
     content: str
-    importance: int = Field(ge=1, le=3)
 
 
 class UpdateLongTermMemoryResponse(BaseModel):

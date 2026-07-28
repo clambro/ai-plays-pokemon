@@ -15,9 +15,8 @@ preparation, tool registry, and execution policy.
 Pydantic Graph is only the top-level mode router. It does not model every tool
 call, button press, or step inside a battle or text interaction.
 
-Long-term memory is simplified first as an independent phase. The agent
-migration then depends on a small memory interface rather than the current RAG
-implementation.
+Long-term memory has already been simplified independently. The agent migration
+depends on its title-based lookup rather than embedding retrieval.
 
 ## Execution Model
 
@@ -385,29 +384,19 @@ inside their local loops.
 The simplified long-term-memory implementation exposes a narrow
 application-facing boundary:
 
-- load relevant durable memory;
-- add or revise a memory;
-- remove a memory; and
+- list available memory titles;
+- load durable memory by title;
+- create or revise a memory; and
 - persist changes.
 
 Agent contexts and tool services use this boundary. They do not depend on
-embedding, generated-query, retrieval, reranking, or database details.
+embedding or reranking details.
 
 ## Migration Phases
 
 Each phase is a separate sequential ticket and leaves the application working.
 
-### Phase 1: Simplify long-term memory
-
-- Replace the RAG-oriented implementation with the selected direct memory
-  design.
-- Establish the narrow memory boundary used by existing code and future
-  agents.
-- Remove retrieval machinery the new design does not use.
-
-This phase is independent of Junjo and the agent migration.
-
-### Phase 2: Replace the text subflow
+### Phase 1: Replace the text subflow
 
 - Introduce `TextContext`, its preparation function, text agent, tool
   registry, and per-tool interface/service packages.
@@ -416,7 +405,7 @@ This phase is independent of Junjo and the agent migration.
   complete text runner.
 - Remove the superseded text graph and nodes.
 
-### Phase 3: Replace the battle subflow
+### Phase 2: Replace the battle subflow
 
 - Introduce `BattleContext`, its preparation function, battle agent, tool
   registry, and per-tool interface/service packages.
@@ -425,7 +414,7 @@ This phase is independent of Junjo and the agent migration.
   complete battle runner.
 - Remove the superseded battle graph and nodes.
 
-### Phase 4: Replace the overworld subflow
+### Phase 3: Replace the overworld subflow
 
 - Introduce `OverworldContext`, its preparation function, overworld agent,
   tool registry, and per-tool interface/service packages.
@@ -436,7 +425,7 @@ This phase is independent of Junjo and the agent migration.
 - Remove the superseded selector prompts, secondary argument prompts, graph,
   and nodes.
 
-### Phase 5: Replace the root graph
+### Phase 4: Replace the root graph
 
 - Implement the small functional Pydantic Graph.
 - Route directly to the three completed mode runners.

@@ -6,7 +6,6 @@ from loguru import logger
 
 from agent.nodes.create_long_term_memory.prompts import CREATE_LONG_TERM_MEMORY_PROMPT
 from agent.nodes.create_long_term_memory.schemas import CreateLongTermMemoryResponse
-from common.embedding_service import get_embedding
 from database.long_term_memory.repository import (
     create_long_term_memory as create_long_term_memory_record,
 )
@@ -36,7 +35,7 @@ async def create_long_term_memory(
         emulator: Running emulator used to inspect the current game state.
 
     Note:
-        Provider, embedding, and persistence failures are logged and do not escape this function.
+        Provider and persistence failures are logged and do not escape this function.
     """
     game_state = await emulator.get_game_state()
     titles = "\n".join(await get_all_long_term_memory_titles())
@@ -50,14 +49,12 @@ async def create_long_term_memory(
             CreateLongTermMemoryResponse,
         )
         for piece in response.pieces:
-            embedding = await get_embedding(piece.content, piece.title)
+            title = piece.title.strip().upper().replace(" ", "_")
             await create_long_term_memory_record(
                 LongTermMemoryCreate(
-                    title=piece.title,
+                    title=title,
                     content=piece.content,
-                    importance=piece.importance,
                     iteration=iteration,
-                    embedding=embedding,
                 ),
             )
     except Exception as e:  # noqa: BLE001

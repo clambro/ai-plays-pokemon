@@ -6,7 +6,6 @@ from loguru import logger
 
 from agent.nodes.update_long_term_memory.prompts import UPDATE_LONG_TERM_MEMORY_PROMPT
 from agent.nodes.update_long_term_memory.schemas import UpdateLongTermMemoryResponse, UpdateType
-from common.embedding_service import get_embedding
 from database.long_term_memory.repository import update_long_term_memory as update_memory_record
 from database.long_term_memory.schemas import LongTermMemoryUpdate
 from llm.schemas import GEMINI_FLASH_2_5
@@ -36,7 +35,7 @@ async def update_long_term_memory(
         emulator: Running emulator used to inspect the current game state.
 
     Note:
-        Missing titles and provider, embedding, or persistence failures are logged and skipped.
+        Missing titles and provider or persistence failures are logged and skipped.
     """
     if not long_term_memory.pieces:
         return
@@ -49,25 +48,22 @@ async def update_long_term_memory(
             UpdateLongTermMemoryResponse,
         )
         for update_piece in response.pieces:
-            orig_piece = long_term_memory.pieces.get(update_piece.title)
+            title = update_piece.title.strip().upper().replace(" ", "_")
+            orig_piece = long_term_memory.pieces.get(title)
             if orig_piece is None:
                 logger.warning(
-                    f"Tried to update non-existent long-term memory piece:"
-                    f" {update_piece.title}. Skipping.",
+                    f"Tried to update non-existent long-term memory piece: {title}. Skipping.",
                 )
                 continue
             if update_piece.update_type == UpdateType.APPEND:
                 content = f"{orig_piece.content}\n{update_piece.content}"
             else:  # Rewrite.
                 content = update_piece.content
-            embedding = await get_embedding(content, update_piece.title)
             await update_memory_record(
                 LongTermMemoryUpdate(
-                    title=update_piece.title,
+                    title=title,
                     content=content,
-                    importance=update_piece.importance,
                     iteration=iteration,
-                    embedding=embedding,
                 ),
             )
     except Exception as e:  # noqa: BLE001
