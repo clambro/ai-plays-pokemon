@@ -212,7 +212,6 @@ class SokobanSolverService:
                     content="Sokoban solver was interrupted. Skipping further execution.",
                 )
                 return
-            next_game_state = game_state
 
         self.raw_memory.add_memory(
             iteration=self.iteration,
