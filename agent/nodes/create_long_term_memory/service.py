@@ -50,10 +50,11 @@ async def create_long_term_memory(
             CreateLongTermMemoryResponse,
         )
         for piece in response.pieces:
-            embedding = await get_embedding(piece.content, piece.title)
+            title = piece.title.strip().upper().replace(" ", "_")
+            embedding = await get_embedding(piece.content, title)
             await create_long_term_memory_record(
                 LongTermMemoryCreate(
-                    title=piece.title,
+                    title=title,
                     content=piece.content,
                     importance=piece.importance,
                     iteration=iteration,

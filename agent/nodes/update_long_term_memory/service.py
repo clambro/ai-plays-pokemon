@@ -49,21 +49,21 @@ async def update_long_term_memory(
             UpdateLongTermMemoryResponse,
         )
         for update_piece in response.pieces:
-            orig_piece = long_term_memory.pieces.get(update_piece.title)
+            title = update_piece.title.strip().upper().replace(" ", "_")
+            orig_piece = long_term_memory.pieces.get(title)
             if orig_piece is None:
                 logger.warning(
-                    f"Tried to update non-existent long-term memory piece:"
-                    f" {update_piece.title}. Skipping.",
+                    f"Tried to update non-existent long-term memory piece: {title}. Skipping.",
                 )
                 continue
             if update_piece.update_type == UpdateType.APPEND:
                 content = f"{orig_piece.content}\n{update_piece.content}"
             else:  # Rewrite.
                 content = update_piece.content
-            embedding = await get_embedding(content, update_piece.title)
+            embedding = await get_embedding(content, title)
             await update_memory_record(
                 LongTermMemoryUpdate(
-                    title=update_piece.title,
+                    title=title,
                     content=content,
                     importance=update_piece.importance,
                     iteration=iteration,
