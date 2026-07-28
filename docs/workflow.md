@@ -20,16 +20,6 @@ These are two nodes that run in parallel if the Prepare Agent Store node determi
 
 This is the node that pulls long-term memories from the database. The model sees the available memory titles alongside the current game and agent state, then selects up to 10 titles to recall. The selected documents are loaded directly by title and added to the agent state until the next retrieval iteration.
 
-### Should Critique
-
-This node determines if we need to invoke the critic model by checking for loops in the raw memory every few iterations. If the model is saying or doing the same thing over and over again, this node will trigger a critique.
-
-### Critique
-
-The two critique nodes (here and in the Overworld Handler) are the only instances in the entire workflow where Gemini Pro is used. If the AI feels completely stuck, it can (at most once every 20 iterations) invoke Gemini Pro to get some advice on how to get unstuck. This is helpful for breaking the model out of weird loops, though we do have to be careful: Sometimes the critic's advice is wrong!
-
-The key distinction between this node and the one in the Overworld Handler is that this one is triggered automatically by loops in the raw memory, whereas the other one has to be triggered by explicit tool use from the model and is specifically tailored to solving problems in the overworld. This one is particularly useful for catching issues in the Text and Battle Handlers, which otherwise have no way to ask for help from the critic if they get stuck.
-
 ### Dummy Node
 
 This is purely topological to simplify the flow of the graph. It does nothing.
@@ -70,10 +60,6 @@ This is the simplest of all the overworld tools, and it does exactly what it say
 ### Navigation
 
 This is the main tool used for navigating the overworld, and also the most complex node in the entire workflow. The AI is given a list of accessible tiles, as well as some good candidates for further exploring the map, and it tells the tool where it wants to go. The destination is checked to make sure it's legal, and an A* algorithm then finds the shortest path and starts walking there. Every step, it checks for interruptions and updates the map. The navigation algorithm is sophisticated enough to handle ledges, surfing, cut trees, Team Rocket spinner tiles, and elevation changes in caverns.
-
-### Critique
-
-Very similar to the generic critique node in the top level agent graph, but triggered by the Select Tool node, and has a prompt that is specifically tailored to resolving errors that occur in the overworld. Like the other critique node, this can be triggered at most once every 20 iterations.
 
 ### Use Item
 

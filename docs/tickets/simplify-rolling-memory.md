@@ -13,11 +13,6 @@ The design borrows OptMem's append-first, bounded-context, deterministic
 compaction ideas without installing its CLI, copying its unlicensed source, or
 implementing its filesystem and summary tree.
 
-**Depends on:**
-
-- [`replace-llm-message-db-with-logfire.md`](replace-llm-message-db-with-logfire.md)
-- [`replace-gemini-with-gpt-5-6-luna.md`](replace-gemini-with-gpt-5-6-luna.md)
-
 **Does not change:** Database-backed long-term memory
 
 ## Design
