@@ -27,56 +27,6 @@ async def finalize_raw_memory_block(block: RawMemoryBlockCreate) -> RawMemoryBlo
     return RawMemoryBlockRead.model_validate(db_obj)
 
 
-async def get_recent_raw_memory_blocks(limit: int) -> list[RawMemoryBlockRead]:
-    """Load the most recent raw blocks in chronological order.
-
-    Args:
-        limit: Maximum number of blocks to load.
-
-    Returns:
-        Up to ``limit`` blocks ordered from oldest to newest.
-    """
-    async with db_sessionmaker() as session:
-        query = (
-            select(RawMemoryBlockDBModel)
-            .order_by(RawMemoryBlockDBModel.iteration.desc())
-            .limit(limit)
-        )
-        result = await session.execute(query)
-        db_objs = list(reversed(result.scalars().all()))
-
-    return [RawMemoryBlockRead.model_validate(db_obj) for db_obj in db_objs]
-
-
-async def get_raw_memory_blocks(
-    *,
-    start_iteration: int,
-    end_iteration: int,
-) -> list[RawMemoryBlockRead]:
-    """Load raw blocks from an inclusive iteration range.
-
-    Args:
-        start_iteration: First iteration to include.
-        end_iteration: Last iteration to include.
-
-    Returns:
-        Matching blocks in chronological order.
-    """
-    async with db_sessionmaker() as session:
-        query = (
-            select(RawMemoryBlockDBModel)
-            .where(
-                RawMemoryBlockDBModel.iteration >= start_iteration,
-                RawMemoryBlockDBModel.iteration <= end_iteration,
-            )
-            .order_by(RawMemoryBlockDBModel.iteration)
-        )
-        result = await session.execute(query)
-        db_objs = result.scalars().all()
-
-    return [RawMemoryBlockRead.model_validate(db_obj) for db_obj in db_objs]
-
-
 async def get_raw_memory_blocks_after(iteration: int) -> list[RawMemoryBlockRead]:
     """Load finalized raw blocks after an iteration in chronological order."""
     async with db_sessionmaker() as session:

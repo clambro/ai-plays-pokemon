@@ -128,9 +128,9 @@ themselves should not depend on the streaming server.
 
 1. **Add rolling-memory persistence.**
    Create the raw-block and summary database models, boundary schemas, and
-   repository operations. Support finalizing one iteration, reading recent raw
-   blocks, reading a raw iteration range, storing summaries, and loading only
-   the current top-level non-overlapping summary frontier. Register the models
+   repository operations. Support finalizing one iteration, loading the raw
+   tail after the summarized frontier, storing summaries, and loading only the
+   current top-level non-overlapping summary frontier. Register the models
    during fresh database initialization.
 
 2. **Introduce the rolling-memory domain model.**

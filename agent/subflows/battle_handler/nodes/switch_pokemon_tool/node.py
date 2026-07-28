@@ -26,18 +26,15 @@ class SwitchPokemonToolNode(Node[BattleHandlerStore]):
         logger.info("Switching to a different Pokemon...")
 
         state = await store.get_state()
-        if state.iteration is None:
-            raise ValueError("Iteration is not set")
-        if state.raw_memory is None:
-            raise ValueError("Raw memory is not set")
+        if state.rolling_memory is None:
+            raise ValueError("Rolling memory is not set")
         if not isinstance(state.tool_args, SwitchPokemonToolArgs):
             raise TypeError("Tool args is not a SwitchPokemonToolArgs")
 
-        raw_memory = await switch_pokemon(
-            iteration=state.iteration,
-            raw_memory=state.raw_memory,
+        rolling_memory = await switch_pokemon(
+            rolling_memory=state.rolling_memory,
             tool_args=state.tool_args,
             emulator=self.emulator,
         )
 
-        await store.set_raw_memory(raw_memory)
+        await store.set_rolling_memory(rolling_memory)

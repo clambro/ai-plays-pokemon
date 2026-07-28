@@ -11,32 +11,30 @@ if TYPE_CHECKING:
     from agent.subflows.battle_handler.schemas import SwitchPokemonToolArgs
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
 
 
 async def switch_pokemon(
     *,
-    iteration: int,
-    raw_memory: RawMemory,
+    rolling_memory: RollingMemory,
     tool_args: SwitchPokemonToolArgs,
     emulator: YellowLegacyEmulator,
-) -> RawMemory:
+) -> RollingMemory:
     """Select a party Pokémon from the battle menu.
 
     Args:
-        iteration: Current agent iteration used to timestamp the attempt.
-        raw_memory: Recent memory to update after selecting the Pokémon.
+        rolling_memory: Recent memory to update after selecting the Pokémon.
         tool_args: Target party index and identifying Pokémon information.
         emulator: Running emulator used to navigate the battle menus.
 
     Returns:
-        The supplied raw memory, updated when the switch is attempted.
+        The supplied rolling memory, updated when the switch is attempted.
     """
     game_state = await emulator.get_game_state()
     cursor_pos = get_cursor_pos_in_fight_menu(game_state)
     if cursor_pos is None:
         logger.warning("The fight menu is not open. Skipping.")
-        return raw_memory
+        return rolling_memory
 
     # Open the PKMN menu and update the game state.
     if cursor_pos.col == 0:
@@ -49,7 +47,7 @@ async def switch_pokemon(
     cursor_index = _get_pkmn_menu_cursor_index(game_state)
     if cursor_index is None:
         logger.warning("The Pokemon menu is not open. Skipping.")
-        return raw_memory
+        return rolling_memory
 
     # Move the cursor to the Pokemon and update the game state.
     await _move_cursor(emulator, cursor_index, tool_args.party_index)
@@ -59,17 +57,16 @@ async def switch_pokemon(
     cursor_index = _get_switch_menu_cursor_index(game_state)
     if cursor_index is None:
         logger.warning("The switch menu is not open. Skipping.")
-        return raw_memory
+        return rolling_memory
 
     # Select the Pokemon.
     await _move_cursor(emulator, cursor_index, 0)
     await emulator.press_button(Button.A, wait_for_animation=False)
 
-    raw_memory.add_memory(
-        iteration=iteration,
+    rolling_memory.add_memory(
         content=f"Attempted to to switch to {tool_args.name}.",
     )
-    return raw_memory
+    return rolling_memory
 
 
 async def _move_cursor(

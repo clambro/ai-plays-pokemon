@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
     from agent.state import AgentState
     from emulator.game_state import YellowLegacyGameState
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
 
 
 class BackgroundStreamServer(AbstractAsyncContextManager):
@@ -113,7 +113,7 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
             return web.Response()
         return web.json_response(self._current_data.model_dump(mode="json"))
 
-    def update_log(self, memory: RawMemory) -> None:
+    def update_log(self, memory: RollingMemory) -> None:
         """Update the current log data."""
         if self._current_data is not None:
             self._current_data.log = LogEntryView.from_memory(memory)
@@ -125,7 +125,7 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
         self._current_data = GameStateView.from_states(agent_state, game_state)
 
 
-def update_background_log_from_memory(memory: RawMemory) -> None:
+def update_background_log_from_memory(memory: RollingMemory) -> None:
     """Update the background log from the memory."""
     server = BackgroundStreamServer.get_instance()
     if server is not None:

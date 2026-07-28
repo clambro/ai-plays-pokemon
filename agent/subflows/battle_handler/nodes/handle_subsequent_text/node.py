@@ -27,15 +27,12 @@ class HandleSubsequentTextNode(Node[BattleHandlerStore]):
         logger.info("Handling the subsequent text if it is present...")
 
         state = await store.get_state()
-        if state.iteration is None:
-            raise ValueError("Iteration is not set")
-        if state.raw_memory is None:
-            raise ValueError("Raw memory is not set")
+        if state.rolling_memory is None:
+            raise ValueError("Rolling memory is not set")
 
-        raw_memory = await handle_subsequent_text(
-            iteration=state.iteration,
-            raw_memory=state.raw_memory,
+        rolling_memory = await handle_subsequent_text(
+            rolling_memory=state.rolling_memory,
             emulator=self.emulator,
         )
 
-        await store.set_raw_memory(raw_memory)
+        await store.set_rolling_memory(rolling_memory)

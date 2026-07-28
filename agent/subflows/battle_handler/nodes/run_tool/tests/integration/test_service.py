@@ -6,7 +6,7 @@ import pytest
 
 from agent.subflows.battle_handler.nodes.run_tool.service import run_away
 from emulator.emulator import YellowLegacyEmulator
-from memory.raw_memory import RawMemory
+from memory.rolling_memory import RollingMemory
 
 
 @pytest.mark.integration
@@ -23,13 +23,12 @@ async def test_run_away_from_battle() -> None:
         # Verify that the initial state is as expected.
         assert game_state.battle.is_in_battle
 
-        raw_memory = await run_away(
-            iteration=0,
-            raw_memory=RawMemory(),
+        rolling_memory = await run_away(
+            rolling_memory=RollingMemory(),
             emulator=emulator,
         )
         await emulator.wait_for_animation_to_finish()
 
         game_state = await emulator.get_game_state()
         assert "No! There's no" in game_state.screen.text  # Trainer battle run text.
-        assert len(raw_memory.pieces) == 1
+        assert len(rolling_memory.raw_blocks) == 1

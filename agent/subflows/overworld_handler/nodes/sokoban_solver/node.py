@@ -25,19 +25,16 @@ class SokobanSolverNode(Node[OverworldHandlerStore]):
         logger.info("Using the Sokoban solver...")
 
         state = await store.get_state()
-        if state.iteration is None:
-            raise ValueError("Iteration is not set")
-        if state.raw_memory is None:
-            raise ValueError("Raw memory is not set")
+        if state.rolling_memory is None:
+            raise ValueError("Rolling memory is not set")
         if state.current_map is None:
             raise ValueError("Current map is not set")
 
         service = SokobanSolverService(
-            iteration=state.iteration,
             emulator=self.emulator,
             current_map=state.current_map,
-            raw_memory=state.raw_memory,
+            rolling_memory=state.rolling_memory,
         )
         await service.solve()
 
-        await store.set_raw_memory(state.raw_memory)
+        await store.set_rolling_memory(state.rolling_memory)

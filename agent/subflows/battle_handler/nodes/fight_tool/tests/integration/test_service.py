@@ -7,7 +7,7 @@ import pytest
 from agent.subflows.battle_handler.nodes.fight_tool.service import fight
 from agent.subflows.battle_handler.schemas import FightToolArgs
 from emulator.emulator import YellowLegacyEmulator
-from memory.raw_memory import RawMemory
+from memory.rolling_memory import RollingMemory
 
 
 @pytest.mark.integration
@@ -29,9 +29,8 @@ async def test_use_move() -> None:
 
         initial_pp = game_state.battle.player_pokemon.moves[move_index].pp
 
-        raw_memory = await fight(
-            iteration=0,
-            raw_memory=RawMemory(),
+        rolling_memory = await fight(
+            rolling_memory=RollingMemory(),
             tool_args=FightToolArgs(move_index=move_index, move_name="LEER"),
             emulator=emulator,
         )
@@ -40,4 +39,4 @@ async def test_use_move() -> None:
         game_state = await emulator.get_game_state()
         assert game_state.battle.player_pokemon is not None
         assert game_state.battle.player_pokemon.moves[move_index].pp == initial_pp - 1
-        assert len(raw_memory.pieces) == 1
+        assert len(rolling_memory.raw_blocks) == 1

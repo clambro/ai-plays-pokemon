@@ -8,30 +8,28 @@ from common.enums import Button
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
 
 
 async def handle_dialog_box(
     *,
-    iteration: int,
-    raw_memory: RawMemory,
+    rolling_memory: RollingMemory,
     emulator: YellowLegacyEmulator,
-) -> RawMemory:
+) -> RollingMemory:
     """Advance the main dialog box while capturing its text.
 
     Args:
-        iteration: Current agent iteration used to timestamp captured dialog.
-        raw_memory: Recent memory to update with the dialog text.
+        rolling_memory: Recent memory to update with the dialog text.
         emulator: Running emulator used to advance and inspect the dialog box.
 
     Returns:
-        The supplied raw memory after appending any captured dialog.
+        The supplied rolling memory after appending any captured dialog.
     """
     game_state = await emulator.get_game_state()
     dialog_box = game_state.get_dialog_box()
     if not dialog_box:
         # Should never happen if we're in this handler, but just in case we need to bail.
-        return raw_memory
+        return rolling_memory
 
     text: list[str] = []
     is_blinking_cursor = True
@@ -52,8 +50,7 @@ async def handle_dialog_box(
 
     joined_text = " ".join(text)
     end_text = "The dialog box is now closed." if not dialog_box else ""
-    raw_memory.add_memory(
-        iteration=iteration,
+    rolling_memory.add_memory(
         content=f'The following text was read from the main dialog box: "{joined_text}" {end_text}',
     )
-    return raw_memory
+    return rolling_memory

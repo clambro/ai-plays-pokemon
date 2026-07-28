@@ -21,28 +21,26 @@ if TYPE_CHECKING:
     from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
 
 llm_service = OpenAILLMService()
 
 
 async def determine_handler(
     *,
-    iteration: int,
-    raw_memory: RawMemory,
+    rolling_memory: RollingMemory,
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
-) -> tuple[RawMemory, BattleToolArgs | None]:
+) -> tuple[RollingMemory, BattleToolArgs | None]:
     """Determine the handler for the current game state in the battle.
 
     Args:
-        iteration: Current agent iteration used to timestamp the decision.
-        raw_memory: Recent memory to update with the selected action or error.
+        rolling_memory: Recent memory to update with the selected action or error.
         state_string_builder: Formatter for the current game state.
         emulator: Running emulator used to inspect the battle and capture its screen.
 
     Returns:
-        The updated raw memory and selected battle action, or ``None`` when no action can be
+        The updated rolling memory and selected battle action, or ``None`` when no action can be
         selected.
     """
     game_state, screenshot = await emulator.get_game_state_with_screenshot()
@@ -52,12 +50,12 @@ async def determine_handler(
         or battle_state.battle_type not in [BattleType.TRAINER, BattleType.WILD]
         or not is_fight_menu_open(game_state)
     ):
-        return raw_memory, None
+        return rolling_memory, None
 
     args = _get_legal_args(game_state)
     if not args:
         # Edge case if no Pokemon in the party, zero PP, and either no balls or trainer battle.
-        return raw_memory, None
+        return rolling_memory, None
 
     try:
         thoughts, action = await _choose_args(
@@ -66,17 +64,15 @@ async def determine_handler(
             screenshot,
             state_string_builder=state_string_builder,
         )
-        raw_memory.add_memory(
-            iteration=iteration,
+        rolling_memory.add_memory(
             content=f'{thoughts} I chose the following battle action: "{action}"',
         )
     except Exception as e:  # noqa: BLE001
         action = None
-        raw_memory.add_memory(
-            iteration=iteration,
+        rolling_memory.add_memory(
             content=f"I received the following error when choosing a battle action: {e}",
         )
-    return raw_memory, action
+    return rolling_memory, action
 
 
 def _get_legal_args(game_state: YellowLegacyGameState) -> list[BattleToolArgs]:

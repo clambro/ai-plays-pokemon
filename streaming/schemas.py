@@ -7,7 +7,7 @@ from pydantic import BaseModel
 if TYPE_CHECKING:
     from agent.state import AgentState
     from emulator.game_state import YellowLegacyGameState
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
 
 
 class PartyPokemonView(BaseModel):
@@ -49,20 +49,20 @@ class LogEntryView(BaseModel):
     thought: str
 
     @classmethod
-    def from_memory(cls, memory: RawMemory) -> list[LogEntryView]:
+    def from_memory(cls, memory: RollingMemory) -> list[LogEntryView]:
         """Create a view of the log entry from the memory."""
         return [
             cls(
-                iteration=piece.iteration,
-                thought=piece.content,
+                iteration=block.iteration,
+                thought=block.content,
             )
-            for piece in memory.pieces.values()
+            for block in memory.raw_blocks
         ]
 
     @classmethod
     def from_agent_state(cls, state: AgentState) -> list[LogEntryView]:
         """Create a view of the log entry from the agent state."""
-        return cls.from_memory(state.raw_memory)
+        return cls.from_memory(state.rolling_memory)
 
 
 class GameStateView(BaseModel):

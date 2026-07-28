@@ -12,7 +12,7 @@ from agent.subflows.overworld_handler.nodes.swap_first_pokemon.service import (
     SwapFirstPokemonService,
 )
 from emulator.emulator import YellowLegacyEmulator
-from memory.raw_memory import RawMemory
+from memory.rolling_memory import RollingMemory
 
 
 @pytest.mark.integration
@@ -31,9 +31,8 @@ async def test_switch_to_pokemon(monkeypatch: pytest.MonkeyPatch) -> None:
         first_pokemon = game_state.party[0]
         index_pokemon = game_state.party[party_index]
 
-        raw_memory = RawMemory()
-        raw_memory.add_memory(
-            iteration=0,
+        rolling_memory = RollingMemory()
+        rolling_memory.add_memory(
             content=(
                 f"I need to put {index_pokemon.name} the {index_pokemon.species} in the first"
                 f" position in my party."
@@ -41,8 +40,7 @@ async def test_switch_to_pokemon(monkeypatch: pytest.MonkeyPatch) -> None:
         )
 
         service = SwapFirstPokemonService(
-            iteration=0,
-            raw_memory=raw_memory,
+            rolling_memory=rolling_memory,
             emulator=emulator,
         )
         monkeypatch.setattr(
@@ -54,10 +52,10 @@ async def test_switch_to_pokemon(monkeypatch: pytest.MonkeyPatch) -> None:
                 )
             ),
         )
-        raw_memory = await service.swap_first_pokemon()
+        rolling_memory = await service.swap_first_pokemon()
         await emulator.wait_for_animation_to_finish()
 
         game_state = await emulator.get_game_state()
         assert game_state.party[0] == index_pokemon
         assert game_state.party[party_index] == first_pokemon
-        assert len(raw_memory.pieces) == 1
+        assert len(rolling_memory.raw_blocks) == 1

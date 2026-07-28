@@ -11,32 +11,30 @@ if TYPE_CHECKING:
     from agent.subflows.battle_handler.schemas import FightToolArgs
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
 
 
 async def fight(
     *,
-    iteration: int,
-    raw_memory: RawMemory,
+    rolling_memory: RollingMemory,
     tool_args: FightToolArgs,
     emulator: YellowLegacyEmulator,
-) -> RawMemory:
+) -> RollingMemory:
     """Select a move from the battle menu.
 
     Args:
-        iteration: Current agent iteration used to timestamp the attempt.
-        raw_memory: Recent memory to update after selecting the move.
+        rolling_memory: Recent memory to update after selecting the move.
         tool_args: Selected move index and name.
         emulator: Running emulator used to navigate the battle menus.
 
     Returns:
-        The supplied raw memory, updated when the move selection is attempted.
+        The supplied rolling memory, updated when the move selection is attempted.
     """
     game_state = await emulator.get_game_state()
     cursor_pos = get_cursor_pos_in_fight_menu(game_state)
     if cursor_pos is None:
         logger.warning("The fight menu is not open. Skipping.")
-        return raw_memory
+        return rolling_memory
 
     # Open the FIGHT menu and update the game state.
     if cursor_pos.col == 1:
@@ -49,7 +47,7 @@ async def fight(
     cursor_index = _get_move_menu_cursor_index(game_state)
     if cursor_index is None:
         logger.warning("The move menu is not open. Skipping.")
-        return raw_memory
+        return rolling_memory
 
     # Use the move.
     idx_diff = cursor_index - tool_args.move_index
@@ -61,11 +59,10 @@ async def fight(
             await emulator.press_button(Button.DOWN)
     await emulator.press_button(Button.A, wait_for_animation=False)
 
-    raw_memory.add_memory(
-        iteration=iteration,
+    rolling_memory.add_memory(
         content=f"Attempted to to use {tool_args.move_name}.",
     )
-    return raw_memory
+    return rolling_memory
 
 
 def _get_move_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:

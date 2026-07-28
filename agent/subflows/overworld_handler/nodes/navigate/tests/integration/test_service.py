@@ -9,7 +9,7 @@ from agent.subflows.overworld_handler.nodes.navigate.service import NavigationSe
 from common.enums import FacingDirection
 from common.schemas import Coords
 from emulator.emulator import YellowLegacyEmulator
-from memory.raw_memory import RawMemory
+from memory.rolling_memory import RollingMemory
 from overworld_map.service import get_overworld_map, update_map_with_screen_info
 
 
@@ -120,6 +120,6 @@ async def _get_nav_service(emulator: YellowLegacyEmulator) -> NavigationService:
         iteration=0,
         emulator=emulator,
         current_map=overworld_map,
-        raw_memory=RawMemory(),
+        rolling_memory=RollingMemory(),
         state_string_builder=MagicMock(),
     )

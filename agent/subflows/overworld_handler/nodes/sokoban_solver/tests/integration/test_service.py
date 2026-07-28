@@ -10,7 +10,7 @@ from agent.subflows.overworld_handler.nodes.sokoban_solver.service import Sokoba
 from common.enums import Button, SpriteLabel
 from common.schemas import Coords
 from emulator.emulator import YellowLegacyEmulator
-from memory.raw_memory import RawMemory
+from memory.rolling_memory import RollingMemory
 from overworld_map.schemas import OverworldSprite
 from overworld_map.service import get_overworld_map, update_map_with_screen_info
 
@@ -99,10 +99,9 @@ async def _get_sokoban_service(emulator: YellowLegacyEmulator) -> SokobanSolverS
             s.index: OverworldSprite.from_sprite(s, None) for s in game_state.sprites.values()
         }
     return SokobanSolverService(
-        iteration=0,
         emulator=emulator,
         current_map=overworld_map,
-        raw_memory=RawMemory(),
+        rolling_memory=RollingMemory(),
     )
 
 
