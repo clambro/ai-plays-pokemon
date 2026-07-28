@@ -78,10 +78,10 @@ view; gameplay does not need to wait for the tree to become completely merged.
 
 Render one chronological rolling-memory section:
 
-1. Select a non-overlapping set of existing summary nodes that covers older
-   history within a fixed historical-memory budget.
-2. Prefer smaller ranges near the present and increasingly large ranges
-   farther in the past.
+1. Load the current summary frontier: the highest existing non-overlapping
+   nodes that cover older history.
+2. Because the frontier follows the binary tree, it naturally uses smaller
+   ranges near the present and increasingly large ranges farther in the past.
 3. Follow those summaries with the most recent iteration blocks verbatim,
    including the current unfinished iteration when it has content.
 
@@ -126,8 +126,9 @@ themselves should not depend on the streaming server.
 1. **Add rolling-memory persistence.**
    Create the raw-block and summary database models, boundary schemas, and
    repository operations. Support finalizing one iteration, reading recent raw
-   blocks, reading a raw iteration range, and storing and loading summaries by
-   range and level. Register the models during fresh database initialization.
+   blocks, reading a raw iteration range, storing summaries, and loading only
+   the current top-level non-overlapping summary frontier. Register the models
+   during fresh database initialization.
 
 2. **Introduce the rolling-memory domain model.**
    Add a small internal model for the current iteration and bounded prompt
@@ -153,10 +154,10 @@ themselves should not depend on the streaming server.
    application iteration and leave its source blocks untouched.
 
 5. **Render the rolling prompt view.**
-   Implement the age-sensitive tree cover for older history, append exact
-   recent blocks, and expose one chronological memory string to the top-level
-   and subflow state builders. Keep direct access to the current raw iteration
-   for services that continue or amend the current thought.
+   Load the summary frontier for older history, append exact recent blocks, and
+   expose one chronological memory string to the top-level and subflow state
+   builders. Keep direct access to the current raw iteration for services that
+   continue or amend the current thought.
 
 6. **Introduce the bounded live HTML buffer.**
    Seed a bounded live buffer from the latest finalized database blocks when
