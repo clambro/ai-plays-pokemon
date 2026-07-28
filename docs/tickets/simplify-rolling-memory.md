@@ -2,113 +2,197 @@
 
 ## Outcome
 
-Replace the separate raw-memory and summary-memory systems with one small
-rolling-memory domain model:
+Replace the separate raw-memory and summary-memory systems with one coherent
+rolling-memory system that can cover an entire playthrough:
 
-- recent gameplay events remain verbatim;
-- older recent events are represented by one bounded editable summary; and
-- compaction occurs only when the recent buffer exceeds its configured limit.
+- raw memory remains an append-only record of application iterations;
+- prompts contain exact recent iterations and progressively coarser summaries
+  of older history;
+- SQLite stores the complete raw history and the derived summary tree; and
+- the HTML activity log continues to show raw iteration memories, independent
+  of the representation used in prompts.
 
-The design borrows OptMem's append-first, bounded-context, deterministic
-compaction ideas without installing its CLI, copying its unlicensed source, or
-implementing its filesystem and summary tree.
+Long-term memory remains a separate title-based system.
 
-**Does not change:** Database-backed long-term memory
+## Iteration-Level Memory
 
-## Design
+The unit of raw memory remains the current application iteration. It is not an
+individual model request, response, tool call, or future Pydantic AI agent
+step.
 
-`RollingMemory` should be an internal standard-library dataclass containing:
+Multiple memory writes during one iteration append to the same in-memory
+block, preserving their order. Once the iteration is complete, that block is
+finalized and written to SQLite once. Summary generation must only consume
+finalized iteration blocks; it must never summarize a block that can still
+change.
 
-- one event per iteration, with multiple writes appended in order;
-- a chronological recent-event collection;
-- one summary string; and
-- a cursor identifying the newest event removed by successful compaction.
+This boundary may be reconsidered after the agentic orchestration work, but
+changing it is not part of this ticket.
 
-Pydantic remains at the LLM response and v2 backup boundaries rather than
-being the internal memory model.
+## Persistence
 
-Use named, provider-independent limits. Initial values may retain the current
-50-iteration recent window, compact the oldest 20 entries at a time, and cap
-the summary at roughly 12,000 characters, but finalize them from representative
-v2 transcripts.
+Add a rolling-memory database package following the existing repository
+structure.
 
-## Compaction Contract
+The database should contain:
 
-- Appending an event never requires an LLM call.
-- At or below the recent-event limit, no compaction call occurs.
-- Above the limit, code selects the exact oldest batch.
-- The model receives only the existing summary and selected batch.
-- The response is one replacement summary with a configured length limit.
-- The new summary may reconcile corrected information and remove repetition,
-  resolved transient details, and self-talk, but must not invent outcomes.
-- Replace the summary and delete the selected events only after the response
-  and batch identity are validated.
-- On any failure, retain the previous summary and every source event. Temporary
-  overflow is preferable to data loss.
-- Attempt at most one compaction per gameplay iteration and make persistent
-  overflow visible in logs and telemetry.
+- an append-only raw-memory table with at most one finalized block per
+  iteration; and
+- a summary table containing immutable derived summaries for explicit
+  iteration ranges and tree levels.
 
-The compactor must be independent of Junjo. A workflow node may invoke it
-temporarily, but the memory model and compaction service must not depend on
-workflow types.
+Raw blocks are the source of truth and are never deleted by compaction.
+Summary rows are rebuildable derived data. Do not add importance, decay, or
+last-accessed fields.
 
-## Integration Changes
+The active agent state should retain only bounded working data, including the
+current unfinished iteration and the memory view needed by the current
+workflow. The complete history belongs in SQLite and is therefore included in
+the existing database backups rather than repeatedly serialized into
+`AgentState`.
 
-- Replace `raw_memory` and `summary_memory` in agent/subflow state with one
-  `rolling_memory` value.
-- Replace the periodic summary-update node, importance values, decay logic,
-  and separate size constants.
-- Give normal prompts one memory section containing older summary followed by
-  exact recent events.
-- Give loop detection and the activity stream the recent-only view.
-- Remove the streaming-server side effect from memory append; streaming should
-  occur at the orchestration boundary.
-- Keep retrieved long-term memories separate from rolling compaction and normal
-  rendering.
-- Define one v2 backup representation and test its round trip without a
-  load-time LLM call.
-- Record compaction prompt name, token/cost use, batch size, duration, and
-  failures through the telemetry system.
+## Hierarchical Summaries
+
+Use an OptMem-inspired binary summary tree rather than one repeatedly rewritten
+global summary.
+
+Start with fixed, aligned ranges of finalized iterations. A leaf summary
+compresses the raw blocks within one range. When two adjacent summaries at the
+same level exist, they can be combined into one parent whose range covers both
+children. Each higher level therefore represents twice as much history.
+
+Keep the child summaries and raw blocks after creating a parent. This makes
+the tree inspectable and allows summaries and prompt views to be rebuilt
+without losing the original record.
+
+Initial sizes should preserve approximately the current cost profile. For
+example, twenty-iteration leaf ranges produce fewer than one summary operation
+per ten iterations on average once parent merges are included. Treat the exact
+range and output limits as named configuration values that can be tuned later.
+
+Perform at most one summary operation per application iteration. If a parent
+summary is still pending, its existing children remain usable in the prompt
+view; gameplay does not need to wait for the tree to become completely merged.
+
+## Prompt View
+
+Render one chronological rolling-memory section:
+
+1. Select a non-overlapping set of existing summary nodes that covers older
+   history within a fixed historical-memory budget.
+2. Prefer smaller ranges near the present and increasingly large ranges
+   farther in the past.
+3. Follow those summaries with the most recent iteration blocks verbatim,
+   including the current unfinished iteration when it has content.
+
+Every summary shown to the model must identify the iteration range it covers.
+The selected ranges must not overlap or leave gaps in finalized history.
+
+The summarization prompt should retain lasting outcomes, unresolved work,
+failed approaches, and later corrections while removing repetition,
+transient mechanics, and self-talk. It must derive its answer only from the
+raw range or child summaries supplied to it and must not invent outcomes.
+
+The renderer should use the raw database records and summary tree as inputs.
+Pydantic AI message-history compaction and provider-native conversation
+compaction are not substitutes for this gameplay-memory view.
+
+## HTML Activity Log
+
+The HTML display continues to use raw iteration memories only. Summary
+creation must never alter the visible log.
+
+Maintain a separate bounded live view containing only the approximately five
+most recent raw iteration blocks that fit in the existing window. This is a
+garbage-collected display buffer, not another durable memory store:
+
+- every write to the current iteration updates its visible entry immediately;
+- starting a new visible iteration evicts the oldest entry once the display
+  limit is exceeded;
+- the complete finalized history remains in SQLite after display entries are
+  evicted; and
+- startup and backup restoration repopulate the buffer from the most recent
+  finalized database blocks, plus any unfinished iteration restored from
+  agent state.
+
+Continue publishing the bounded buffer to the background server after every
+raw-memory mutation so the HTML remains live during long navigation, battle,
+and text operations. The application-level memory service should coordinate
+the mutation and publication; the database model and raw block records
+themselves should not depend on the streaming server.
+
+## Step-by-Step Implementation Plan
+
+1. **Add rolling-memory persistence.**
+   Create the raw-block and summary database models, boundary schemas, and
+   repository operations. Support finalizing one iteration, reading recent raw
+   blocks, reading a raw iteration range, and storing and loading summaries by
+   range and level. Register the models during fresh database initialization.
+
+2. **Introduce the rolling-memory domain model.**
+   Add a small internal model for the current iteration and bounded prompt
+   view. Preserve the existing behavior where repeated writes to one
+   iteration append in order. Add a separate bounded recent-block view for the
+   live HTML log. Keep database and streaming dependencies outside the stored
+   memory records.
+
+3. **Persist completed iterations.**
+   Move iteration finalization to the end of a completed top-level workflow.
+   Write the combined block once, keep the next iteration mutable in memory,
+   and hydrate both prompt history and the bounded HTML buffer from the copied
+   database after startup or backup restoration. Include any unfinished
+   iteration restored from agent state without duplicating a finalized
+   database block. Update existing memory-writing services to target the
+   unified iteration-level interface without changing their gameplay
+   behavior.
+
+4. **Build hierarchical compaction.**
+   Replace the periodic summary-memory updater with a service that finds the
+   next eligible leaf or parent range, requests one bounded summary, and stores
+   it only after a successful response. Limit it to one summary operation per
+   application iteration and leave its source blocks untouched.
+
+5. **Render the rolling prompt view.**
+   Implement the age-sensitive tree cover for older history, append exact
+   recent blocks, and expose one chronological memory string to the top-level
+   and subflow state builders. Keep direct access to the current raw iteration
+   for services that continue or amend the current thought.
+
+6. **Introduce the bounded live HTML buffer.**
+   Seed a bounded live buffer from the latest finalized database blocks when
+   the application starts or restarts. Update and publish that buffer after
+   every mutation of the current raw iteration, evict its oldest block when a
+   new iteration exceeds the display limit, and keep summary content out of
+   the activity log.
+
+7. **Remove the old split memory systems.**
+   Delete `RawMemory`, `SummaryMemory`, summary pieces, importance and decay
+   logic, the old periodic summary node, and their separate size constants.
+   Replace the two state fields with the bounded rolling-memory working state
+   and update backup serialization accordingly.
+
+8. **Update the memory documentation and behavioral coverage.**
+   Document the raw database record, hierarchical prompt view, and
+   iteration-finalization boundary. Cover the important behavior: multiple
+   writes form one finalized iteration, recent HTML entries remain raw, prompt
+   ranges are chronological and complete, compaction never removes source
+   history, and database-backed memory survives backup restoration. Avoid
+   tests that merely freeze internal implementation details.
 
 ## Out of Scope
 
-- Redesigning long-term memory.
-- An unbounded raw archive or hierarchical summary tree.
-- OptMem subprocess or filesystem integration.
-- Importance scores, decay, immutable summary pieces, or hidden truncation.
-- Junjo removal.
-- Broad gameplay prompt rewrites.
-
-## Validation
-
-Use unit tests for append behavior, deterministic batch selection, rendering,
-cursor advancement, stale-batch rejection, and failure atomicity. Integration
-tests should cover every subflow, prompt rendering, stream output, v2 backup
-round trip, long-term-memory interaction, and recovery after a failed
-compaction.
-
-Evaluate summary quality on recorded gameplay transcripts. Compare retained
-milestones, unresolved goals, failed approaches, corrections, token use, and
-summary size rather than exact wording.
-
-## Acceptance Criteria
-
-- [ ] Agent state and subflows use one rolling-memory value.
-- [ ] Recent events remain ordered and verbatim.
-- [ ] One bounded summary represents compacted recent history.
-- [ ] Compaction is triggered by overflow and selects its batch
-      deterministically.
-- [ ] Only the existing summary and selected events enter the compaction
-      prompt.
-- [ ] Failed or stale compaction loses no information.
-- [ ] Importance, decay, periodic summary calls, and their old models are
-      removed.
-- [ ] Loop detection, prompts, streaming, telemetry, and the v2 backup format
-      use the correct rolling-memory views.
-- [ ] Long-term memory remains a separate durable tier.
-- [ ] The domain model is independent of Junjo and uses standard dataclasses.
+- Changing the application iteration boundary to individual agent or model
+  steps.
+- Redesigning title-based long-term memory.
+- Embedding retrieval or RAG.
+- Making historical summaries selectable agent tools.
+- Replacing Junjo or implementing the later Pydantic AI orchestration.
+- Sending the complete raw history to either normal prompts or the HTML
+  polling response.
 
 ## References
 
-- [OptMem repository](https://github.com/VictorTaelin/OptMem)
-- [GitHub licensing guidance](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository)
+- [OptMem](https://github.com/VictorTaelin/OptMem)
+- [Recursively Summarizing Books with Human Feedback](https://arxiv.org/abs/2109.10862)
+- [Generative Agents: Interactive Simulacra of Human Behavior](https://arxiv.org/abs/2304.03442)
+- [LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory](https://arxiv.org/abs/2410.10813)
