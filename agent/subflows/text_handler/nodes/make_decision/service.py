@@ -37,8 +37,7 @@ async def make_decision(
     Returns:
         The updated raw memory. Model failures are logged and leave the memory unchanged.
     """
-    img = emulator.get_screenshot()
-    game_state = emulator.get_game_state()
+    game_state, img = await emulator.get_game_state_with_screenshot()
     state_string = state_string_builder(game_state)
     prompt = DECISION_MAKER_TEXT_PROMPT.format(
         state=state_string,
@@ -57,9 +56,9 @@ async def make_decision(
             ),
         )
         for b in buttons:
-            game_state = emulator.get_game_state()
+            game_state = await emulator.get_game_state()
             await emulator.press_button(b)
-            if _check_for_state_change(emulator) or _check_for_failed_action(
+            if await _check_for_state_change(emulator) or await _check_for_failed_action(
                 b,
                 game_state,
                 iteration=iteration,
@@ -73,13 +72,13 @@ async def make_decision(
     return raw_memory
 
 
-def _check_for_state_change(emulator: YellowLegacyEmulator) -> bool:
+async def _check_for_state_change(emulator: YellowLegacyEmulator) -> bool:
     """Check if the button press triggered a state change to dialog or a battle."""
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     return not game_state.is_text_on_screen() or game_state.battle.is_in_battle
 
 
-def _check_for_failed_action(
+async def _check_for_failed_action(
     button: Button,
     game_state: YellowLegacyGameState,
     *,
@@ -88,7 +87,7 @@ def _check_for_failed_action(
     emulator: YellowLegacyEmulator,
 ) -> bool:
     """Check if the screen is unchanged following an action."""
-    new_state = emulator.get_game_state()
+    new_state = await emulator.get_game_state()
     state_changed = new_state.screen.tiles == game_state.screen.tiles
     if state_changed:
         raw_memory.add_memory(

@@ -32,7 +32,7 @@ async def throw_ball(
     Returns:
         The supplied raw memory, updated when the throw is attempted.
     """
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     cursor_pos = get_cursor_pos_in_fight_menu(game_state)
     if cursor_pos is None:
         logger.warning("The fight menu is not open. Skipping.")
@@ -44,7 +44,7 @@ async def throw_ball(
     if cursor_pos.row == 0:
         await emulator.press_button(Button.DOWN)
     await emulator.press_button(Button.A)
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
 
     cursor_index = _get_item_menu_cursor_index(game_state)
     if cursor_index is None:

@@ -22,7 +22,7 @@ async def test_use_item(monkeypatch: pytest.MonkeyPatch) -> None:
     ) as emulator:
         item_index = next(
             index
-            for index, item in enumerate(emulator.get_game_state().inventory.items)
+            for index, item in enumerate((await emulator.get_game_state()).inventory.items)
             if item.name == "REPEL"
         )
         raw_memory = RawMemory()
@@ -49,7 +49,7 @@ async def test_use_item(monkeypatch: pytest.MonkeyPatch) -> None:
         raw_memory = await service.use_item()
         await emulator.wait_for_animation_to_finish()
 
-        dialog_box = emulator.get_game_state().get_dialog_box()
+        dialog_box = (await emulator.get_game_state()).get_dialog_box()
         assert dialog_box is not None
         assert dialog_box.top_line == "AAA used"
         assert dialog_box.bottom_line == "REPEL!"

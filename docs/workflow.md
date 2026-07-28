@@ -45,9 +45,7 @@ This is another collection of parallel nodes, each of which runs every few itera
 - Update Summary Memory: Optionally adds new memories to the summary memory, and thus bumps off old, irrelevant ones
 - Update Background Stream: Updates the live background for streaming at `localhost:8080` with the latest information from the workflow and game states
 
-### Save Game State
-
-The final state in the workflow. Its only job is to capture the save state of the emulator and add it to the agent workflow state so that we can use it for testing, backups, and disaster recovery. After this node is run, the whole workflow starts over again.
+The workflow ends after these updates. Outside the graph, the application captures the emulator state and creates a backup every 20 minutes, as well as after a caught workflow error.
 
 ## The Overworld Handler Subflow
 

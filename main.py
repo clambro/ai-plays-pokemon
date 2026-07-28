@@ -11,7 +11,7 @@ from loguru import logger
 from agent.app import run_agent_workflow
 from agent.state import AgentState
 from common.backup_service import create_backup, get_output_folder, load_backup, load_latest_backup
-from common.constants import DEFAULT_ROM_PATH, ITERATIONS_PER_BACKUP
+from common.constants import BACKUP_INTERVAL_SECONDS, DEFAULT_ROM_PATH
 from common.telemetry import setup_telemetry
 from database.db_config import init_fresh_db
 from emulator.emulator import YellowLegacyEmulator
@@ -41,38 +41,43 @@ async def main(
 
     setup_telemetry()
 
-    folder = await get_output_folder()
+    folder = get_output_folder()
 
     if backup_folder:
         state = await load_backup(backup_folder)
-        state.folder = folder
         emulator_state = state.emulator_save_state
     elif load_latest:
         state = await load_latest_backup()
-        state.folder = folder
         emulator_state = state.emulator_save_state
     else:
         await init_fresh_db()
         state = AgentState(folder=folder)
         emulator_state = None
 
+    state.folder = folder
+    state.emulator_save_state = None
     await aiofiles.os.makedirs(folder)
 
     async with (
         YellowLegacyEmulator(str(rom_path), emulator_state, mute_sound=mute_sound) as emulator,
         BackgroundStreamServer() as stream_server,
     ):
-        stream_server.update_data(state, emulator.get_game_state())  # Initialize the view.
+        stream_server.update_data(state, await emulator.get_game_state())  # Initialize the view.
         if not emulator_state:
             await asyncio.sleep(30)  # Some time to manually get to the new game screen.
+        loop = asyncio.get_running_loop()
+        next_backup_at = loop.time() + BACKUP_INTERVAL_SECONDS
         try:
             while True:
                 state = await run_agent_workflow(state, emulator)
-                if state.iteration % ITERATIONS_PER_BACKUP == 0:
-                    await create_backup(state)
+                if loop.time() >= next_backup_at:
+                    emulator_save_state = await emulator.get_emulator_save_state()
+                    await create_backup(state, emulator_save_state)
+                    next_backup_at = loop.time() + BACKUP_INTERVAL_SECONDS
         except Exception:  # noqa: BLE001
             logger.exception("Agent workflow raised an exception.")
-            await create_backup(state)
+            emulator_save_state = await emulator.get_emulator_save_state()
+            await create_backup(state, emulator_save_state)
 
 
 if __name__ == "__main__":

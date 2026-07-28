@@ -35,8 +35,7 @@ async def make_decision(
     Returns:
         The updated raw memory. Model failures are logged and leave the memory unchanged.
     """
-    img = emulator.get_screenshot()
-    game_state = emulator.get_game_state()
+    game_state, img = await emulator.get_game_state_with_screenshot()
     state_string = state_string_builder(game_state)
     prompt = MAKE_DECISION_PROMPT.format(state=state_string, text=game_state.screen.text)
     try:

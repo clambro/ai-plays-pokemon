@@ -3,28 +3,30 @@
 import asyncio
 import base64
 import io
-from contextlib import AbstractAsyncContextManager, suppress
+from contextlib import AbstractAsyncContextManager
 from copy import deepcopy
 from typing import TYPE_CHECKING, Self
 
 from loguru import logger
 from PIL import Image
-from pyboy import PyBoy
 
 from common.constants import DEFAULT_ROM_PATH
 from emulator.game_state import YellowLegacyGameState
+from emulator.pyboy_worker import PyBoyWorker
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from pyboy import PyBoy
 
     from common.enums import Button
 
 
 class YellowLegacyEmulator(AbstractAsyncContextManager):
-    """Control Pokémon Yellow Legacy through a managed PyBoy instance.
+    """Control Pokémon Yellow Legacy through a thread-owned PyBoy instance.
 
-    The wrapper owns PyBoy's lifecycle and exposes parsed game state, screenshots, button input,
-    and save-state operations without leaking memory addresses to callers.
+    The public API owns Pokémon-specific behavior. A private worker owns PyBoy and executes each
+    requested operation on its dedicated thread.
 
     Args:
         rom_path: Path to the ROM to load.
@@ -50,77 +52,66 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         if save_state and save_state_path:
             raise ValueError("Cannot specify both save_state and save_state_path.")
 
-        volume = 0 if mute_sound else 100
-        window = "null" if headless else "SDL2"
-        self._pyboy = PyBoy(rom_path, sound_volume=volume, window=window)
-
-        # This load_state piece is technically blocking, but it's only done once at initialization,
-        # so there's nothing for it to block.
-        if save_state:
-            buffer = io.BytesIO(base64.b64decode(save_state))
-            buffer.seek(0)  # Pyboy requires this.
-            self._pyboy.load_state(buffer)
-        elif save_state_path:
-            with save_state_path.open("rb") as f:
-                self._pyboy.load_state(f)
-
-        self._is_stopped = True
-        self._tick_task: asyncio.Task | None = None
-        self._button_lock = asyncio.Lock()
+        self._worker = PyBoyWorker(
+            rom_path,
+            save_state,
+            save_state_path,
+            mute_sound=mute_sound,
+            headless=headless,
+        )
 
     async def __aenter__(self) -> Self:
-        """Start the emulator's tick task when entering the context."""
-        self._is_stopped = False
-        self._tick_task = asyncio.create_task(self.async_tick_indefinitely())
-        await asyncio.sleep(1)  # Give the emulator time to load before continuing.
+        """Start the PyBoy worker when entering the context."""
+        await self._worker.start()
+        try:
+            await asyncio.sleep(1)  # Give the emulator time to load before continuing.
+        except asyncio.CancelledError:
+            await self._worker.stop()
+            raise
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
-        """Stop the emulator and cancel the tick task when exiting the context."""
-        self.stop()
-        if self._tick_task:
-            self._tick_task.cancel()
-            with suppress(asyncio.CancelledError):
-                await self._tick_task
+        """Stop the PyBoy worker when exiting the context."""
+        shutdown_error: Exception | None = None
+        try:
+            await self._worker.stop()
+        except Exception as exc:  # noqa: BLE001
+            # Preserve worker failures without masking an exception from the context body.
+            shutdown_error = exc
 
-    def get_game_state(self) -> YellowLegacyGameState:
+        if exc_type is None and shutdown_error is not None:
+            raise shutdown_error
+
+    async def get_game_state(self) -> YellowLegacyGameState:
         """Get the current game state."""
-        self._check_stopped()
-        return YellowLegacyGameState.from_memory(self._pyboy.memory)
+        return await self._worker.execute(
+            lambda pyboy: YellowLegacyGameState.from_memory(pyboy.memory)
+        )
 
-    async def async_tick_indefinitely(self) -> None:
-        """Tick the emulator indefinitely. Should be run on its own thread."""
-        while True:
-            self._check_stopped()
-            async with self._button_lock:
-                if not self._tick():
-                    self.stop()
-                    break
-            # Pass control back to the event loop. Making this time too large will cause audio to
-            # stutter, but making it too small can corrupt save states by not giving the emulator
-            # enough time to save the state. This value seems to work well.
-            await asyncio.sleep(0.002)
-
-    def stop(self) -> None:
-        """Stop the emulator."""
-        self._is_stopped = True
-        self._pyboy.stop()
-
-    def get_screenshot(self) -> Image.Image:
-        """Get an independent image of the current game screen.
+    async def get_game_state_with_screenshot(
+        self,
+    ) -> tuple[YellowLegacyGameState, Image.Image]:
+        """Capture the current game state and screen image together.
 
         Returns:
-            A copy of PyBoy's current screen image.
+            The current game state and a copied screen image captured without allowing the emulator
+            to tick between them.
 
         Raises:
             RuntimeError: The emulator has been stopped.
             TypeError: PyBoy exposes no valid screenshot.
         """
-        self._check_stopped()
-        img = deepcopy(self._pyboy.screen.image)
-        if not isinstance(img, Image.Image):
-            raise TypeError("No screenshot available")
-        return img
+
+        def _capture_game_state_with_screenshot(
+            pyboy: PyBoy,
+        ) -> tuple[YellowLegacyGameState, Image.Image]:
+            game_state = YellowLegacyGameState.from_memory(pyboy.memory)
+            screenshot = deepcopy(pyboy.screen.image)
+            if not isinstance(screenshot, Image.Image):
+                raise TypeError("No screenshot available")
+            return game_state, screenshot
+
+        return await self._worker.execute(_capture_game_state_with_screenshot)
 
     async def press_button(
         self,
@@ -138,12 +129,10 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         Raises:
             RuntimeError: The emulator has been stopped.
         """
-        self._check_stopped()
         # If we're deferring animation handling, we want to exit as quickly as possible. Two frames
         # seems to be the minimum to guarantee that the button press is registered.
         hold_frames = 10 if wait_for_animation else 2
-        async with self._button_lock:
-            self._pyboy.button(button, hold_frames)
+        await self._worker.execute(lambda pyboy: pyboy.button(button, hold_frames))
         if wait_for_animation:
             await self.wait_for_animation_to_finish()
 
@@ -155,13 +144,12 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         have different animation speeds.
         """
         logger.info("Checking for animations and waiting for them to finish.")
-        self._check_stopped()
         successes = 0
         required_successes = 5
         while successes < required_successes:
-            game_state = self.get_game_state()
+            game_state = await self.get_game_state()
             await asyncio.sleep(0.15)
-            new_game_state = self.get_game_state()
+            new_game_state = await self.get_game_state()
             # The blinking cursor should not block progress, so we ignore it.
             if game_state.screen.tiles_without_cursor == new_game_state.screen.tiles_without_cursor:
                 successes += 1
@@ -170,26 +158,10 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
 
     async def get_emulator_save_state(self) -> str:
         """Get the current save state as a Base64 encoded string."""
-        self._check_stopped()
-        with io.BytesIO() as f:
-            await asyncio.to_thread(self._pyboy.save_state, f)
-            return base64.b64encode(f.getvalue()).decode("utf-8")
 
-    def _check_stopped(self) -> None:
-        if self._is_stopped:
-            raise RuntimeError("Emulator is stopped.")
+        def _capture_save_state(pyboy: PyBoy) -> str:
+            with io.BytesIO() as file:
+                pyboy.save_state(file)
+                return base64.b64encode(file.getvalue()).decode("utf-8")
 
-    def _tick(self, count: int = 1) -> bool:
-        """Tick the emulator forward by a number of frames.
-
-        Args:
-            count: Number of frames to advance.
-
-        Returns:
-            Whether the game is still running.
-
-        Raises:
-            RuntimeError: The emulator has been stopped.
-        """
-        self._check_stopped()
-        return self._pyboy.tick(count, render=True, sound=True)
+        return await self._worker.execute(_capture_save_state)

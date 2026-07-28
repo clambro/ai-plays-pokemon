@@ -11,7 +11,7 @@ from agent.subflows.overworld_handler.nodes.update_map.prompts import (
 )
 from agent.subflows.overworld_handler.nodes.update_map.schemas import UpdateEntitiesResponse
 from common.enums import MapEntityType
-from database.map_entity_memory.repository import update_map_entity_memory
+from database.map_entity_memory.repository import apply_map_entity_changes
 from database.map_entity_memory.schemas import MapEntityMemoryUpdate
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
@@ -46,37 +46,37 @@ async def update_map(
     Returns:
         The updated explored map.
     """
-    screenshot = emulator.get_screenshot()
-    game_state = emulator.get_game_state()
+    game_state, screenshot = await emulator.get_game_state_with_screenshot()
     current_map = await update_map_with_screen_info(iteration, game_state, current_map)
-    await asyncio.gather(
-        *[
-            _update_entities(
-                list(current_map.known_sprites.values()),
-                MapEntityType.SPRITE,
-                screenshot,
-                game_state,
-                UPDATE_SPRITES_PROMPT,
-                iteration=iteration,
-                current_map=current_map,
-                state_string_builder=state_string_builder,
-            ),
-            _update_entities(
-                list(current_map.known_signs.values()),
-                MapEntityType.SIGN,
-                screenshot,
-                game_state,
-                UPDATE_SIGNS_PROMPT,
-                iteration=iteration,
-                current_map=current_map,
-                state_string_builder=state_string_builder,
-            ),
-        ],
+    update_groups = await asyncio.gather(
+        _get_entity_updates(
+            list(current_map.known_sprites.values()),
+            MapEntityType.SPRITE,
+            screenshot,
+            game_state,
+            UPDATE_SPRITES_PROMPT,
+            iteration=iteration,
+            current_map=current_map,
+            state_string_builder=state_string_builder,
+        ),
+        _get_entity_updates(
+            list(current_map.known_signs.values()),
+            MapEntityType.SIGN,
+            screenshot,
+            game_state,
+            UPDATE_SIGNS_PROMPT,
+            iteration=iteration,
+            current_map=current_map,
+            state_string_builder=state_string_builder,
+        ),
     )
+    updates = [update for group in update_groups for update in group]
+    await apply_map_entity_changes(updates=updates)
+
     return current_map
 
 
-async def _update_entities(  # noqa: PLR0913
+async def _get_entity_updates(  # noqa: PLR0913
     entities: list[OverworldSprite | OverworldSign],
     entity_type: MapEntityType,
     screenshot: Image,
@@ -86,8 +86,8 @@ async def _update_entities(  # noqa: PLR0913
     iteration: int,
     current_map: OverworldMap,
     state_string_builder: StateStringBuilder,
-) -> None:
-    """Update memory for nearby entities of one type.
+) -> list[MapEntityMemoryUpdate]:
+    """Describe nearby entities of one type.
 
     Entities farther than two tiles from the player are excluded to reduce hallucinations.
 
@@ -106,7 +106,7 @@ async def _update_entities(  # noqa: PLR0913
         e for e in entities if (e.coords - game_state.player.coords).length <= max_distance
     ]
     if not updatable_entities:
-        return
+        return []
 
     entity_text = "\n".join(
         [f"- [{e.index}] {e.to_string(current_map.id)}" for e in updatable_entities],
@@ -120,19 +120,16 @@ async def _update_entities(  # noqa: PLR0913
             messages=[screenshot, prompt],
             schema=UpdateEntitiesResponse,
         )
-        await asyncio.gather(
-            *[
-                update_map_entity_memory(
-                    MapEntityMemoryUpdate(
-                        map_id=current_map.id,
-                        entity_id=u.index,
-                        entity_type=entity_type,
-                        description=u.description,
-                        iteration=iteration,
-                    ),
-                )
-                for u in response.updates
-            ],
-        )
+        return [
+            MapEntityMemoryUpdate(
+                map_id=current_map.id,
+                entity_id=update.index,
+                entity_type=entity_type,
+                description=update.description,
+                iteration=iteration,
+            )
+            for update in response.updates
+        ]
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Error updating entities. Skipping. {e}")
+        return []

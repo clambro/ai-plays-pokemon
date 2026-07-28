@@ -37,7 +37,7 @@ async def is_blinking_cursor_on_screen(emulator: YellowLegacyEmulator) -> bool:
     max_counter = 6  # Cursor blinks on/off a bit more than 2x per second.
     while counter < max_counter:
         await asyncio.sleep(blink_wait_time)
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         dialog_box = game_state.get_dialog_box()
         if dialog_box and dialog_box.has_cursor:
             break

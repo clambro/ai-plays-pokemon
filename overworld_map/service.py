@@ -1,12 +1,10 @@
 """Storage and rendering for the explored overworld map."""
 
-import asyncio
 from typing import TYPE_CHECKING
 
 from common.enums import AsciiTile, MapEntityType
 from database.map_entity_memory.repository import (
-    create_map_entity_memory,
-    delete_map_entity_memory,
+    apply_map_entity_changes,
     get_map_entity_memories_for_map,
 )
 from database.map_entity_memory.schemas import MapEntityMemoryCreate, MapEntityMemoryDelete
@@ -113,66 +111,49 @@ async def _add_remove_map_entities(
 
     ascii_screen = game_state.get_ascii_screen()
 
-    tasks = []
-    tasks.extend(
-        [
-            create_map_entity_memory(
-                MapEntityMemoryCreate(
-                    iteration=iteration,
-                    map_id=overworld_map.id,
-                    entity_id=s.index,
-                    entity_type=MapEntityType.SPRITE,
-                ),
-            )
-            for s in ascii_screen.sprites
-            if s.is_rendered and s.index not in overworld_map.known_sprites
-        ]
+    creates = [
+        MapEntityMemoryCreate(
+            iteration=iteration,
+            map_id=overworld_map.id,
+            entity_id=sprite.index,
+            entity_type=MapEntityType.SPRITE,
+        )
+        for sprite in ascii_screen.sprites
+        if sprite.is_rendered and sprite.index not in overworld_map.known_sprites
+    ]
+    creates.extend(
+        MapEntityMemoryCreate(
+            iteration=iteration,
+            map_id=overworld_map.id,
+            entity_id=warp.index,
+            entity_type=MapEntityType.WARP,
+        )
+        for warp in ascii_screen.warps
+        if warp.index not in overworld_map.known_warps
     )
-    tasks.extend(
-        [
-            create_map_entity_memory(
-                MapEntityMemoryCreate(
-                    iteration=iteration,
-                    map_id=overworld_map.id,
-                    entity_id=w.index,
-                    entity_type=MapEntityType.WARP,
-                ),
-            )
-            for w in ascii_screen.warps
-            if w.index not in overworld_map.known_warps
-        ]
-    )
-    tasks.extend(
-        [
-            create_map_entity_memory(
-                MapEntityMemoryCreate(
-                    iteration=iteration,
-                    map_id=overworld_map.id,
-                    entity_id=s.index,
-                    entity_type=MapEntityType.SIGN,
-                ),
-            )
-            for s in ascii_screen.signs
-            if s.index not in overworld_map.known_signs
-        ]
+    creates.extend(
+        MapEntityMemoryCreate(
+            iteration=iteration,
+            map_id=overworld_map.id,
+            entity_id=sign.index,
+            entity_type=MapEntityType.SIGN,
+        )
+        for sign in ascii_screen.signs
+        if sign.index not in overworld_map.known_signs
     )
     # Previously seen sprite has been de-rendered. Likely an item that has been picked up, or a
     # scripted character that has walked off the screen. Sprites are the only entity types that can
     # be de-rendered.
-    tasks.extend(
-        [
-            delete_map_entity_memory(
-                MapEntityMemoryDelete(
-                    map_id=overworld_map.id,
-                    entity_id=s.index,
-                    entity_type=MapEntityType.SPRITE,
-                ),
-            )
-            for s in overworld_map.known_sprites.values()
-            if game_state.to_screen_coords(s.coords) is not None and not s.is_rendered
-        ]
-    )
-    await asyncio.gather(*tasks)
+    deletes = [
+        MapEntityMemoryDelete(
+            map_id=overworld_map.id,
+            entity_id=sprite.index,
+            entity_type=MapEntityType.SPRITE,
+        )
+        for sprite in overworld_map.known_sprites.values()
+        if game_state.to_screen_coords(sprite.coords) is not None and not sprite.is_rendered
+    ]
+    await apply_map_entity_changes(creates=creates, deletes=deletes)
 
 
 async def _update_overworld_map_tiles(

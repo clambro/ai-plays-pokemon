@@ -77,12 +77,12 @@ DUMMY_MAP = OverworldMap(
 
 
 @pytest.mark.unit
-async def test_get_accessible_coords_plateau() -> None:
+def test_get_accessible_coords_plateau() -> None:
     """Test that the accessible coords are correct for the plateau map."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
 
-    accessible_coords = await utils.get_accessible_coords(PLATEAU_CENTER, map_data, [])
+    accessible_coords = utils.get_accessible_coords(PLATEAU_CENTER, map_data, [])
     assert _coords_to_binary_map(set(accessible_coords), 7, 11) == [
         "00000000000",
         "01011111010",
@@ -95,13 +95,13 @@ async def test_get_accessible_coords_plateau() -> None:
 
 
 @pytest.mark.unit
-async def test_get_accessible_coords_collision_pairs() -> None:
+def test_get_accessible_coords_collision_pairs() -> None:
     """Test that the accessible coords are correct for the collision pairs map."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = COLLISION_PAIRS_MAP
     map_data.blockages = COLLISION_PAIRS_BLOCKAGES
 
-    accessible_coords = await utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
+    accessible_coords = utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
     assert _coords_to_binary_map(set(accessible_coords), 3, 3) == [
         "110",
         "011",
@@ -110,22 +110,22 @@ async def test_get_accessible_coords_collision_pairs() -> None:
 
 
 @pytest.mark.unit
-async def test_get_accessible_coords_cut_tree_no_hm() -> None:
+def test_get_accessible_coords_cut_tree_no_hm() -> None:
     """Test that the accessible coords are correct for the cut tree map with no HMs."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = CUT_TREE_MAP
 
-    accessible_coords = await utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
+    accessible_coords = utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
     assert _coords_to_binary_map(set(accessible_coords), 1, 3) == ["100"]
 
 
 @pytest.mark.unit
-async def test_get_accessible_coords_cut_tree_with_hm() -> None:
+def test_get_accessible_coords_cut_tree_with_hm() -> None:
     """Test that the accessible coords are correct for the cut tree map with an HM."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = CUT_TREE_MAP
 
-    accessible_coords = await utils.get_accessible_coords(
+    accessible_coords = utils.get_accessible_coords(
         Coords(row=0, col=0),
         map_data,
         [AsciiTile.CUT_TREE],
@@ -134,22 +134,22 @@ async def test_get_accessible_coords_cut_tree_with_hm() -> None:
 
 
 @pytest.mark.unit
-async def test_get_accessible_coords_surf_no_hm() -> None:
+def test_get_accessible_coords_surf_no_hm() -> None:
     """Test that the accessible coords are correct for the surf map with no HMs."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = SURF_MAP
 
-    accessible_coords = await utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
+    accessible_coords = utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
     assert _coords_to_binary_map(set(accessible_coords), 1, 3) == ["100"]
 
 
 @pytest.mark.unit
-async def test_get_accessible_coords_surf_with_hm() -> None:
+def test_get_accessible_coords_surf_with_hm() -> None:
     """Test that the accessible coords are correct for the surf map with an HM."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = SURF_MAP
 
-    accessible_coords = await utils.get_accessible_coords(
+    accessible_coords = utils.get_accessible_coords(
         Coords(row=0, col=0),
         map_data,
         [AsciiTile.WATER],
@@ -158,12 +158,12 @@ async def test_get_accessible_coords_surf_with_hm() -> None:
 
 
 @pytest.mark.unit
-async def test_get_accessible_coords_spinner() -> None:
+def test_get_accessible_coords_spinner() -> None:
     """Test that the accessible coords are correct for the spinner map."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = SPINNER_MAP
 
-    accessible_coords = await utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
+    accessible_coords = utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
     assert _coords_to_binary_map(set(accessible_coords), 6, 5) == [
         "11000",
         "00110",
@@ -175,12 +175,12 @@ async def test_get_accessible_coords_spinner() -> None:
 
 
 @pytest.mark.unit
-async def test_get_exploration_candidates_plateau() -> None:
+def test_get_exploration_candidates_plateau() -> None:
     """Test that the exploration candidates are correct for the plateau map."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
 
-    accessible_coords = await utils.get_accessible_coords(PLATEAU_CENTER, map_data, [])
+    accessible_coords = utils.get_accessible_coords(PLATEAU_CENTER, map_data, [])
     exploration_candidates = utils.get_exploration_candidates(accessible_coords, map_data)
     assert _coords_to_binary_map(set(exploration_candidates), 7, 11) == [
         "00000000000",
@@ -194,25 +194,25 @@ async def test_get_exploration_candidates_plateau() -> None:
 
 
 @pytest.mark.unit
-async def test_get_exploration_candidates_collision_pairs() -> None:
+def test_get_exploration_candidates_collision_pairs() -> None:
     """Test that the exploration candidates are correct for the collision pairs map."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = COLLISION_PAIRS_MAP
     map_data.blockages = COLLISION_PAIRS_BLOCKAGES
 
-    accessible_coords = await utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
+    accessible_coords = utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
     exploration_candidates = utils.get_exploration_candidates(accessible_coords, map_data)
     assert exploration_candidates == []
 
 
 @pytest.mark.unit
-async def test_get_map_boundary_tiles_plateau() -> None:
+def test_get_map_boundary_tiles_plateau() -> None:
     """Test that the map boundary tiles are correct for the plateau map if we add a map below."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
     map_data.south_connection = MapId.ROUTE_1
 
-    accessible_coords = await utils.get_accessible_coords(PLATEAU_CENTER, map_data, [])
+    accessible_coords = utils.get_accessible_coords(PLATEAU_CENTER, map_data, [])
     boundary_tiles = utils.get_map_boundary_tiles(accessible_coords, map_data)
 
     # There is no right boundary tile because the map is not connected to the right.
@@ -225,7 +225,7 @@ async def test_get_map_boundary_tiles_plateau() -> None:
 
 
 @pytest.mark.unit
-async def test_get_map_boundary_tiles_collision_pairs() -> None:
+def test_get_map_boundary_tiles_collision_pairs() -> None:
     """Test that the map boundary tiles are correct for the collision pairs map."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = COLLISION_PAIRS_MAP
@@ -233,7 +233,7 @@ async def test_get_map_boundary_tiles_collision_pairs() -> None:
     map_data.east_connection = MapId.ROUTE_1
     map_data.west_connection = MapId.ROUTE_1
 
-    accessible_coords = await utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
+    accessible_coords = utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
     boundary_tiles = utils.get_map_boundary_tiles(accessible_coords, map_data)
 
     assert boundary_tiles[FacingDirection.DOWN] == []
@@ -246,52 +246,52 @@ async def test_get_map_boundary_tiles_collision_pairs() -> None:
 
 
 @pytest.mark.unit
-async def test_calculate_path_to_target_plateau_jump_left() -> None:
+def test_calculate_path_to_target_plateau_jump_left() -> None:
     """Test that the path to the target is correct for the plateau map when jumping left."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
 
-    path = await utils.calculate_path_to_target(PLATEAU_CENTER, Coords(row=2, col=1), map_data, [])
+    path = utils.calculate_path_to_target(PLATEAU_CENTER, Coords(row=2, col=1), map_data, [])
     assert path == 3 * [Button.LEFT]
 
 
 @pytest.mark.unit
-async def test_calculate_path_to_target_plateau_from_left_around() -> None:
+def test_calculate_path_to_target_plateau_from_left_around() -> None:
     """Test the path from the plateau's left side to its center."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
 
-    path = await utils.calculate_path_to_target(Coords(row=2, col=1), PLATEAU_CENTER, map_data, [])
+    path = utils.calculate_path_to_target(Coords(row=2, col=1), PLATEAU_CENTER, map_data, [])
     assert path == 3 * [Button.DOWN] + 4 * [Button.RIGHT] + 3 * [Button.UP]
 
 
 @pytest.mark.unit
-async def test_calculate_path_to_target_plateau_jump_right() -> None:
+def test_calculate_path_to_target_plateau_jump_right() -> None:
     """Test that the path to the target is correct for the plateau map when jumping right."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
 
-    path = await utils.calculate_path_to_target(PLATEAU_CENTER, Coords(row=2, col=9), map_data, [])
+    path = utils.calculate_path_to_target(PLATEAU_CENTER, Coords(row=2, col=9), map_data, [])
     assert path == 3 * [Button.RIGHT]
 
 
 @pytest.mark.unit
-async def test_calculate_path_to_target_plateau_from_right_around() -> None:
+def test_calculate_path_to_target_plateau_from_right_around() -> None:
     """Test the path from the plateau's right side to its center."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
 
-    path = await utils.calculate_path_to_target(Coords(row=2, col=9), PLATEAU_CENTER, map_data, [])
+    path = utils.calculate_path_to_target(Coords(row=2, col=9), PLATEAU_CENTER, map_data, [])
     assert path == 3 * [Button.DOWN] + 4 * [Button.LEFT] + 3 * [Button.UP]
 
 
 @pytest.mark.unit
-async def test_calculate_path_to_target_plateau_jump_down() -> None:
+def test_calculate_path_to_target_plateau_jump_down() -> None:
     """Test that the path to the target is correct for the plateau map when jumping down."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
 
-    path = await utils.calculate_path_to_target(
+    path = utils.calculate_path_to_target(
         Coords(row=3, col=4),
         Coords(row=5, col=4),
         map_data,
@@ -301,12 +301,12 @@ async def test_calculate_path_to_target_plateau_jump_down() -> None:
 
 
 @pytest.mark.unit
-async def test_calculate_path_to_target_plateau_from_down_around() -> None:
+def test_calculate_path_to_target_plateau_from_down_around() -> None:
     """Test the path from below the plateau to its center."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
 
-    path = await utils.calculate_path_to_target(
+    path = utils.calculate_path_to_target(
         Coords(row=5, col=4),
         Coords(row=3, col=4),
         map_data,
@@ -316,13 +316,13 @@ async def test_calculate_path_to_target_plateau_from_down_around() -> None:
 
 
 @pytest.mark.unit
-async def test_calculate_path_to_target_around_collision_pair() -> None:
+def test_calculate_path_to_target_around_collision_pair() -> None:
     """Test pathfinding around a paired-tile collision."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = COLLISION_PAIRS_MAP
     map_data.blockages = COLLISION_PAIRS_BLOCKAGES
 
-    path = await utils.calculate_path_to_target(
+    path = utils.calculate_path_to_target(
         Coords(row=0, col=0),
         Coords(row=2, col=0),
         map_data,
@@ -332,7 +332,7 @@ async def test_calculate_path_to_target_around_collision_pair() -> None:
 
 
 @pytest.mark.unit
-async def test_calculate_path_around_grass() -> None:
+def test_calculate_path_around_grass() -> None:
     """Test that the pathing properly avoids the grass tile, even though it's not optimal."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = [
@@ -343,7 +343,7 @@ async def test_calculate_path_around_grass() -> None:
         ]
     ]
 
-    path = await utils.calculate_path_to_target(
+    path = utils.calculate_path_to_target(
         Coords(row=0, col=0),
         Coords(row=0, col=2),
         map_data,
@@ -353,7 +353,7 @@ async def test_calculate_path_around_grass() -> None:
 
 
 @pytest.mark.unit
-async def test_calculate_path_through_grass() -> None:
+def test_calculate_path_through_grass() -> None:
     """Test that pathfinding uses grass when it is the only route."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = [
@@ -364,7 +364,7 @@ async def test_calculate_path_through_grass() -> None:
         ]
     ]
 
-    path = await utils.calculate_path_to_target(
+    path = utils.calculate_path_to_target(
         Coords(row=0, col=0),
         Coords(row=0, col=2),
         map_data,
@@ -374,12 +374,12 @@ async def test_calculate_path_through_grass() -> None:
 
 
 @pytest.mark.unit
-async def test_calculate_path_through_cut_tree() -> None:
+def test_calculate_path_through_cut_tree() -> None:
     """Test that we can path through a cut tree if we have the right HMs."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = CUT_TREE_MAP
 
-    path = await utils.calculate_path_to_target(
+    path = utils.calculate_path_to_target(
         Coords(row=0, col=0),
         Coords(row=0, col=2),
         map_data,
@@ -389,12 +389,12 @@ async def test_calculate_path_through_cut_tree() -> None:
 
 
 @pytest.mark.unit
-async def test_calculate_path_through_water() -> None:
+def test_calculate_path_through_water() -> None:
     """Test that we can path through water if we have the right HMs."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = SURF_MAP
 
-    path = await utils.calculate_path_to_target(
+    path = utils.calculate_path_to_target(
         Coords(row=0, col=0),
         Coords(row=0, col=2),
         map_data,
@@ -404,12 +404,12 @@ async def test_calculate_path_through_water() -> None:
 
 
 @pytest.mark.unit
-async def test_calculate_path_through_spinners() -> None:
+def test_calculate_path_through_spinners() -> None:
     """Test that we can path through spinners."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = SPINNER_MAP
 
-    path = await utils.calculate_path_to_target(
+    path = utils.calculate_path_to_target(
         Coords(row=0, col=0),
         Coords(row=3, col=1),
         map_data,

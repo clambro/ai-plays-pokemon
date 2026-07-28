@@ -46,7 +46,7 @@ class UseItemService:
 
     async def _get_item_index(self) -> int:
         """Get the index of the item to use."""
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         last_memory = self.raw_memory.pieces[self.iteration]
         inventory_str = "\n".join(
             f"[{i}] {item.name}" for i, item in enumerate(game_state.inventory.items)
@@ -60,7 +60,7 @@ class UseItemService:
 
     async def _use_item(self, item_index: int) -> None:
         """Use the item at the given index."""
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         if game_state.is_text_on_screen():
             raise UseItemError("Can't use an item in a non-overworld state.")
 
@@ -73,26 +73,26 @@ class UseItemService:
     async def _open_start_menu(self) -> None:
         """Open the start menu."""
         await self.emulator.press_button(Button.START)
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         screen_text = game_state.screen.text
         if "POKéDEX" not in screen_text and "POKéMON" not in screen_text:
             raise UseItemError("Failed to open the START menu.")
 
     async def _open_item_menu(self) -> None:
         """Open the ITEM menu."""
-        game_state = self.emulator.get_game_state()
+        game_state = await self.emulator.get_game_state()
         item_menu_position = 2
         idx_diff = game_state.screen.menu_item_index - item_menu_position
         await self._move_cursor(idx_diff)
 
-        screen_text = self.emulator.get_game_state().screen.text
+        screen_text = (await self.emulator.get_game_state()).screen.text
         if "▶ITEM" not in screen_text:
             raise UseItemError("Failed to open the ITEM menu.")
         await self.emulator.press_button(Button.A)
 
     async def _select_item(self, item_index: int) -> None:
         """Move the cursor to the item at the given index."""
-        screen = self.emulator.get_game_state().screen
+        screen = (await self.emulator.get_game_state()).screen
         idx_diff = screen.menu_item_index + screen.list_scroll_offset - item_index
         await self._move_cursor(idx_diff)
         await self.emulator.press_button(Button.A)  # Select the item.

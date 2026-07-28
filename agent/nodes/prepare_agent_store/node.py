@@ -34,7 +34,7 @@ class PrepareAgentStoreNode(Node[AgentStore]):
         state = await store.get_state()
         await wait_for_animations(self.emulator)
         handler = await determine_handler(self.emulator)
-        retrieve_memory = await should_retrieve_memory(
+        retrieve_memory = should_retrieve_memory(
             iterations_since_last_ltm_retrieval=state.iterations_since_last_ltm_retrieval,
             long_term_memory=state.long_term_memory,
         )

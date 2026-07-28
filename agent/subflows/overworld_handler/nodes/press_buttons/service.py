@@ -39,8 +39,7 @@ async def press_buttons(
     Returns:
         The supplied raw memory after recording the decision and any early-stop feedback.
     """
-    game_state = emulator.get_game_state()
-    img = emulator.get_screenshot()
+    game_state, img = await emulator.get_game_state_with_screenshot()
     last_memory = raw_memory.pieces.get(iteration) or ""
     prompt = PRESS_BUTTONS_PROMPT.format(
         state=state_string_builder(game_state),
@@ -63,9 +62,9 @@ async def press_buttons(
         ),
     )
     for b in buttons:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         await emulator.press_button(b)
-        passed_collision = _check_for_collision(
+        passed_collision = await _check_for_collision(
             button=b,
             prev_map_id=game_state.map.id,
             prev_coords=game_state.player.coords,
@@ -74,19 +73,19 @@ async def press_buttons(
             raw_memory=raw_memory,
             emulator=emulator,
         )
-        passed_action = _check_for_action(
+        passed_action = await _check_for_action(
             b,
             iteration=iteration,
             raw_memory=raw_memory,
             emulator=emulator,
         )
-        state_changed = _check_for_state_change(emulator)
+        state_changed = await _check_for_state_change(emulator)
         if not passed_collision or not passed_action or state_changed:
             break
     return raw_memory
 
 
-def _check_for_collision(  # noqa: PLR0913
+async def _check_for_collision(  # noqa: PLR0913
     button: Button,
     prev_map_id: MapId,
     prev_coords: Coords,
@@ -113,7 +112,7 @@ def _check_for_collision(  # noqa: PLR0913
     if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN]:
         return True
 
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     if prev_map_id != game_state.map.id:
         raw_memory.add_memory(
             iteration=iteration,
@@ -134,7 +133,7 @@ def _check_for_collision(  # noqa: PLR0913
     return True
 
 
-def _check_for_action(
+async def _check_for_action(
     button: Button,
     *,
     iteration: int,
@@ -155,7 +154,7 @@ def _check_for_action(
     if button != Button.A:
         return True
 
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     if not game_state.is_text_on_screen():
         raw_memory.add_memory(
             iteration=iteration,
@@ -177,7 +176,7 @@ def _check_for_action(
     return True
 
 
-def _check_for_state_change(emulator: YellowLegacyEmulator) -> bool:
+async def _check_for_state_change(emulator: YellowLegacyEmulator) -> bool:
     """Check if the movement triggered a state change to dialog or a battle."""
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     return game_state.is_text_on_screen() or game_state.battle.is_in_battle

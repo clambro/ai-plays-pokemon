@@ -35,8 +35,7 @@ async def retrieve_long_term_memory(
     Returns:
         Relevant long-term memories, or the previously loaded set when query generation fails.
     """
-    game_state = emulator.get_game_state()
-    screenshot = emulator.get_screenshot()
+    game_state, screenshot = await emulator.get_game_state_with_screenshot()
 
     prompt = GET_RETRIEVAL_QUERY_PROMPT.format(state=state_string_builder(game_state))
     try:

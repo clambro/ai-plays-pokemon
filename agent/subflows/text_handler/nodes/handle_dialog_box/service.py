@@ -27,7 +27,7 @@ async def handle_dialog_box(
     Returns:
         The supplied raw memory after appending any captured dialog.
     """
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     dialog_box = game_state.get_dialog_box()
     if not dialog_box:
         # Should never happen if we're in this handler, but just in case we need to bail.
@@ -45,7 +45,7 @@ async def handle_dialog_box(
         await emulator.press_button(Button.A)
         await asyncio.sleep(0.5)  # Buffer to ensure that no new dialog boxes have opened.
 
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         dialog_box = game_state.get_dialog_box()
         is_blinking_cursor = await is_blinking_cursor_on_screen(emulator)
         is_text_outside_dialog_box = game_state.is_text_on_screen(ignore_dialog_box=True)

@@ -54,8 +54,7 @@ async def select_tool(  # noqa: PLR0913
         The selected tool and updated raw memory. Provider or validation failures select the
         button-pressing tool and leave memory unchanged.
     """
-    game_state = emulator.get_game_state()
-    img = emulator.get_screenshot()
+    game_state, img = await emulator.get_game_state_with_screenshot()
     prompt = SELECT_TOOL_PROMPT.format(
         state=state_string_builder(game_state),
         tools=_get_available_tool_info(

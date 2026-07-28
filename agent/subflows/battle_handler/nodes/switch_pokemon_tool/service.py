@@ -32,7 +32,7 @@ async def switch_pokemon(
     Returns:
         The supplied raw memory, updated when the switch is attempted.
     """
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     cursor_pos = get_cursor_pos_in_fight_menu(game_state)
     if cursor_pos is None:
         logger.warning("The fight menu is not open. Skipping.")
@@ -44,7 +44,7 @@ async def switch_pokemon(
     if cursor_pos.row == 1:
         await emulator.press_button(Button.UP)
     await emulator.press_button(Button.A)
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
 
     cursor_index = _get_pkmn_menu_cursor_index(game_state)
     if cursor_index is None:
@@ -54,7 +54,7 @@ async def switch_pokemon(
     # Move the cursor to the Pokemon and update the game state.
     await _move_cursor(emulator, cursor_index, tool_args.party_index)
     await emulator.press_button(Button.A)
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
 
     cursor_index = _get_switch_menu_cursor_index(game_state)
     if cursor_index is None:

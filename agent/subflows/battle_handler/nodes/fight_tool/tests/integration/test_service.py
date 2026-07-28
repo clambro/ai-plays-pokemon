@@ -19,7 +19,7 @@ async def test_use_move() -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         move_index = 2
 
         # Verify that the initial state is as expected.
@@ -37,7 +37,7 @@ async def test_use_move() -> None:
         )
         await emulator.wait_for_animation_to_finish()
 
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert game_state.battle.player_pokemon is not None
         assert game_state.battle.player_pokemon.moves[move_index].pp == initial_pp - 1
         assert len(raw_memory.pieces) == 1

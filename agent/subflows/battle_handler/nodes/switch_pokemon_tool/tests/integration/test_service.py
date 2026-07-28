@@ -19,7 +19,7 @@ async def test_switch_to_pokemon() -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         party_index = 1
 
         # Verify that the initial state is as expected.
@@ -39,6 +39,6 @@ async def test_switch_to_pokemon() -> None:
         )
         await emulator.wait_for_animation_to_finish()
 
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         assert game_state.battle.player_pokemon == game_state.party[party_index]
         assert len(raw_memory.pieces) == 1

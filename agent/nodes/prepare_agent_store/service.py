@@ -22,7 +22,7 @@ async def wait_for_animations(emulator: YellowLegacyEmulator) -> None:
 
 async def determine_handler(emulator: YellowLegacyEmulator) -> AgentStateHandler:
     """Determine which handler to use based on the current game state."""
-    game_state = emulator.get_game_state()
+    game_state = await emulator.get_game_state()
     # The nickname screen after catching a Pokemon is considered a battle state by the game,
     # but we need to route it to the text handler instead.
     if game_state.battle.is_in_battle and not game_state.is_naming_screen():
@@ -36,7 +36,7 @@ async def determine_handler(emulator: YellowLegacyEmulator) -> AgentStateHandler
     return AgentStateHandler.OVERWORLD
 
 
-async def should_retrieve_memory(
+def should_retrieve_memory(
     iterations_since_last_ltm_retrieval: int,
     long_term_memory: LongTermMemory,
 ) -> bool:
