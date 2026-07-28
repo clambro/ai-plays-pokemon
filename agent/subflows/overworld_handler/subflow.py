@@ -37,7 +37,7 @@ class OverworldHandlerSubflow(
         """Post run actions that update the parent store with the subflow's state."""
         state = await self.store.get_state()
 
-        if state.raw_memory is None:
-            raise ValueError("Raw memory is not set")
+        if state.rolling_memory is None:
+            raise ValueError("Rolling memory is not set")
 
-        await parent_store.set_raw_memory(state.raw_memory)
+        await parent_store.set_rolling_memory(state.rolling_memory)

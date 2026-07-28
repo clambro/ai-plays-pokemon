@@ -12,7 +12,7 @@ from common.schemas import Coords
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
     from overworld_map.schemas import OverworldMap
 
 FREE_TILE = "F"
@@ -25,16 +25,14 @@ class SokobanSolverService:
 
     def __init__(
         self,
-        iteration: int,
         emulator: YellowLegacyEmulator,
         current_map: OverworldMap,
-        raw_memory: RawMemory,
+        rolling_memory: RollingMemory,
     ) -> None:
         """Initialize the sokoban solver service."""
-        self.iteration = iteration
         self.emulator = emulator
         self.current_map = current_map
-        self.raw_memory = raw_memory
+        self.rolling_memory = rolling_memory
 
     async def solve(self) -> None:
         """Solve the Sokoban puzzle."""
@@ -48,8 +46,7 @@ class SokobanSolverService:
         solution = self._solve_sokoban(sokoban_map, player_pos)
 
         if not solution:
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
+            self.rolling_memory.add_memory(
                 content=(
                     "The Sokoban solver was unable to find a solution. This is likely because I"
                     " haven't explored enough of the map yet, or I need to get boulders from"
@@ -207,14 +204,12 @@ class SokobanSolverService:
                 next_game_state.player.coords == game_state.player.coords
                 and next_game_state.sprites == game_state.sprites
             ):
-                self.raw_memory.add_memory(
-                    iteration=self.iteration,
+                self.rolling_memory.add_memory(
                     content="Sokoban solver was interrupted. Skipping further execution.",
                 )
                 return
 
-        self.raw_memory.add_memory(
-            iteration=self.iteration,
+        self.rolling_memory.add_memory(
             content="Executed a Sokoban solution.",
         )
 

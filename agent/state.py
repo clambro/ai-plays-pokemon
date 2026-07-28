@@ -5,13 +5,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 from junjo import BaseState, BaseStore
-from pydantic import Field
+from pydantic import Field, field_serializer
 
 from agent.enums import AgentStateHandler
 from memory.goals import Goals
 from memory.long_term_memory import LongTermMemory
-from memory.raw_memory import RawMemory
-from memory.summary_memory import SummaryMemory
+from memory.rolling_memory import CurrentMemoryBlock, RollingMemory
 
 if TYPE_CHECKING:
     from emulator.game_state import YellowLegacyGameState
@@ -23,8 +22,7 @@ class AgentState(BaseState):
     folder: Path
     iteration: int = 0
     iterations_since_last_ltm_retrieval: int = 0
-    raw_memory: RawMemory = Field(default_factory=RawMemory)
-    summary_memory: SummaryMemory = Field(default_factory=SummaryMemory)
+    rolling_memory: RollingMemory = Field(default_factory=RollingMemory)
     long_term_memory: LongTermMemory = Field(default_factory=LongTermMemory)
     goals: Goals = Field(default_factory=Goals)
     handler: AgentStateHandler | None = None
@@ -38,13 +36,20 @@ class AgentState(BaseState):
         """Get a string representation of the agent and game state to be used in prompts."""
         return "\n\n".join(
             (
-                str(self.raw_memory),
-                str(self.summary_memory),
+                str(self.rolling_memory),
                 str(self.long_term_memory),
                 str(self.goals),
                 game_state.player_info,
             ),
         )
+
+    @field_serializer("rolling_memory")
+    def serialize_rolling_memory(
+        self,
+        rolling_memory: RollingMemory,
+    ) -> dict[str, CurrentMemoryBlock]:
+        """Serialize only the current block; database views are restored from SQLite."""
+        return {"current_block": rolling_memory.current_block}
 
 
 class AgentStore(BaseStore[AgentState]):
@@ -59,13 +64,9 @@ class AgentStore(BaseStore[AgentState]):
         """Set the iteration."""
         await self.set_state({"iteration": iteration})
 
-    async def set_raw_memory(self, raw_memory: RawMemory) -> None:
-        """Set the raw memory."""
-        await self.set_state({"raw_memory": raw_memory})
-
-    async def set_summary_memory(self, summary_memory: SummaryMemory) -> None:
-        """Set the summary memory."""
-        await self.set_state({"summary_memory": summary_memory})
+    async def set_rolling_memory(self, rolling_memory: RollingMemory) -> None:
+        """Set the rolling memory."""
+        await self.set_state({"rolling_memory": rolling_memory})
 
     async def set_long_term_memory(self, long_term_memory: LongTermMemory) -> None:
         """Set the long-term memory."""

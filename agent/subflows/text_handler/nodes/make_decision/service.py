@@ -13,28 +13,26 @@ if TYPE_CHECKING:
     from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
 
 llm_service = OpenAILLMService()
 
 
 async def make_decision(
     *,
-    iteration: int,
-    raw_memory: RawMemory,
+    rolling_memory: RollingMemory,
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
-) -> RawMemory:
+) -> RollingMemory:
     """Make a decision based on the current text or menu state.
 
     Args:
-        iteration: Current agent iteration used to timestamp the decision.
-        raw_memory: Recent memory to update with the model response.
+        rolling_memory: Recent memory to update with the model response.
         state_string_builder: Formatter for the current game state.
         emulator: Running emulator used to inspect the screen and press buttons.
 
     Returns:
-        The updated raw memory. Model failures are logged and leave the memory unchanged.
+        The updated rolling memory. Model failures are logged and leave the memory unchanged.
     """
     game_state, img = await emulator.get_game_state_with_screenshot()
     state_string = state_string_builder(game_state)
@@ -48,8 +46,7 @@ async def make_decision(
             schema=DecisionMakerTextResponse,
         )
         buttons = response.buttons if isinstance(response.buttons, list) else [response.buttons]
-        raw_memory.add_memory(
-            iteration=iteration,
+        rolling_memory.add_memory(
             content=(
                 f"{response.thoughts} Selected the following buttons: {[str(b) for b in buttons]}"
             ),
@@ -60,15 +57,14 @@ async def make_decision(
             if await _check_for_state_change(emulator) or await _check_for_failed_action(
                 b,
                 game_state,
-                iteration=iteration,
-                raw_memory=raw_memory,
+                rolling_memory=rolling_memory,
                 emulator=emulator,
             ):
                 break
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Error making decision. Skipping. {e}")
 
-    return raw_memory
+    return rolling_memory
 
 
 async def _check_for_state_change(emulator: YellowLegacyEmulator) -> bool:
@@ -81,16 +77,14 @@ async def _check_for_failed_action(
     button: Button,
     game_state: YellowLegacyGameState,
     *,
-    iteration: int,
-    raw_memory: RawMemory,
+    rolling_memory: RollingMemory,
     emulator: YellowLegacyEmulator,
 ) -> bool:
     """Check if the screen is unchanged following an action."""
     new_state = await emulator.get_game_state()
     state_changed = new_state.screen.tiles == game_state.screen.tiles
     if state_changed:
-        raw_memory.add_memory(
-            iteration=iteration,
+        rolling_memory.add_memory(
             content=f"I pressed the {button} button, but nothing happened. Have I made a mistake?",
         )
     return state_changed

@@ -16,7 +16,7 @@ from llm.service import OpenAILLMService
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
 
 
 class SwapFirstPokemonService:
@@ -26,23 +26,20 @@ class SwapFirstPokemonService:
 
     def __init__(
         self,
-        iteration: int,
-        raw_memory: RawMemory,
+        rolling_memory: RollingMemory,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the swap-first-Pokémon service."""
-        self.iteration = iteration
-        self.raw_memory = raw_memory
+        self.rolling_memory = rolling_memory
         self.emulator = emulator
 
-    async def swap_first_pokemon(self) -> RawMemory:
+    async def swap_first_pokemon(self) -> RollingMemory:
         """Swap the first Pokemon in the party with another Pokemon."""
         try:
             index = await self._get_swap_index()
             await self._swap_first_pokemon(index)
             game_state = await self.emulator.get_game_state()
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
+            self.rolling_memory.add_memory(
                 content=(
                     f"I successfully swapped the order of my Pokemon. The new party order is "
                     f"{[p.name for p in game_state.party]}. My lead Pokemon is now "
@@ -52,20 +49,19 @@ class SwapFirstPokemonService:
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error in the swap first Pokemon response. Skipping. {e}")
             game_state = await self.emulator.get_game_state()
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
+            self.rolling_memory.add_memory(
                 content=(
                     f"An error occurred while swapping the first Pokemon in my party: {e}"
                     f"The current party order is {[p.name for p in game_state.party]}. My lead"
                     f" Pokemon is {game_state.party[0].name}."
                 ),
             )
-        return self.raw_memory
+        return self.rolling_memory
 
     async def _get_swap_index(self) -> int:
         """Get the index of the Pokemon to swap with the first Pokemon."""
         game_state = await self.emulator.get_game_state()
-        last_memory = self.raw_memory.pieces[self.iteration]
+        last_memory = str(self.rolling_memory.current_block)
         prompt = SWAP_FIRST_POKEMON_PROMPT.format(
             thought=last_memory,
             party_info=game_state.party_info,

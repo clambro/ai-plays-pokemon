@@ -26,18 +26,15 @@ class FightToolNode(Node[BattleHandlerStore]):
         logger.info("Using a move on the enemy...")
 
         state = await store.get_state()
-        if state.iteration is None:
-            raise ValueError("Iteration is not set")
-        if state.raw_memory is None:
-            raise ValueError("Raw memory is not set")
+        if state.rolling_memory is None:
+            raise ValueError("Rolling memory is not set")
         if not isinstance(state.tool_args, FightToolArgs):
             raise TypeError("Tool args is not a UseMoveToolArgs")
 
-        raw_memory = await fight(
-            iteration=state.iteration,
-            raw_memory=state.raw_memory,
+        rolling_memory = await fight(
+            rolling_memory=state.rolling_memory,
             tool_args=state.tool_args,
             emulator=self.emulator,
         )
 
-        await store.set_raw_memory(raw_memory)
+        await store.set_rolling_memory(rolling_memory)

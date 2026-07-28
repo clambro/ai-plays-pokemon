@@ -34,6 +34,10 @@ async def init_fresh_db() -> None:
         MapEntityMemoryDBModel,
     )
     from database.map_memory.model import MapMemoryDBModel  # noqa: F401, PLC0415
+    from database.rolling_memory.model import (  # noqa: F401, PLC0415
+        MemorySummaryDBModel,
+        RawMemoryBlockDBModel,
+    )
 
     async with _engine.begin() as conn:
         await conn.run_sync(SQLAlchemyBase.metadata.create_all)

@@ -25,16 +25,13 @@ class AssignNameNode(Node[TextHandlerStore]):
         logger.info("Assigning a name...")
 
         state = await store.get_state()
-        if state.iteration is None:
-            raise ValueError("Iteration is not set")
-        if state.raw_memory is None:
-            raise ValueError("Raw memory is not set")
+        if state.rolling_memory is None:
+            raise ValueError("Rolling memory is not set")
 
         service = AssignNameService(
-            iteration=state.iteration,
-            raw_memory=state.raw_memory,
+            rolling_memory=state.rolling_memory,
             emulator=self.emulator,
         )
-        raw_memory = await service.assign_name()
+        rolling_memory = await service.assign_name()
 
-        await store.set_raw_memory(raw_memory)
+        await store.set_rolling_memory(rolling_memory)

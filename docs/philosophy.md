@@ -45,25 +45,21 @@ The orchestration flow used in this project is called [Junjo](https://github.com
 
 LLMs have various shortcomings that prevent them from reaching the holy grail of perfect autonomy described above. The two greatest issues we have to deal with are a limited context window, and a lack of spatial reasoning ability. Like CPP and GPP then, we must create some tools and structures to overcome these deficiencies.
 
-### Three Kinds of Memory
+### Rolling and Long-Term Memory
 
-The first issue we will tackle is the LLM's finite context window that stops it from holding its entire history in memory. With every iteration of the model, it gains a new memory of what it has done. Keeping a rolling log of as much memory as possible would get expensive fast since we pay per token in the query, and we would eventually lose older context. My solution to this problem is a three-tiered memory architecture that separately handles the immediate past, short-term memories, and long-term memories.
+The first issue we will tackle is the LLM's finite context window, which stops it from holding an entire playthrough in detail. Replaying every previous action in every prompt would grow continuously more expensive, while simply discarding old actions would eventually erase important context. The project handles these two needs with rolling memory for chronological history and long-term memory for agent-maintained notes.
 
 Note: Pretty much all the constants I mention below are default values that can be edited in [`common/constants.py`](/common/constants.py).
 
-#### The Raw Memory
+#### Rolling Memory
 
-The raw memory is the simplest of the three memory types. This is an ordered dictionary that maps iteration numbers to the AI workflow's raw output for each iteration. It contains 50 elements, and all older memories are simply deleted. The raw memory serves to inform the workflow of its immediate past actions (50 iterations is roughly 15 mins). Given that this raw information is bloated by a lot of the model's self talk, we clip it after relatively few iterations to keep the cost down and reduce potential distractions from excessive context. Lengths differ from iteration to iteration, but the total raw memory size is roughly 6500 tokens.
+One raw memory block represents one complete top-level workflow iteration. Every thought, observation, and tool result produced during that iteration is appended to the same mutable block in order. The block is finalized only after the workflow finishes, at which point it is written once to SQLite and the next iteration begins with a new block.
 
-#### The Summary Memory
+The raw table is the permanent source of truth: compaction never deletes or rewrites it. The active agent state carries the current block and the bounded view needed for the current workflow, but only the current block is serialized with the state. Because database files are included in backups, the complete history is restored without serializing it into every agent-state snapshot.
 
-The summary memory is the short term memory that gets consolidated from the raw memory. Every 10 iterations, the model is given the chance to create a new summary memory from its raw memories. These are significantly condensed compared to the raw memories. As an example, fighting a trainer battle could eaily take up 20 raw memory slots (say 2500 tokens), whereas a summary of that battle like
+Prompts receive a chronological mixture of summaries and exact recent blocks. Once two batches of twenty raw blocks are available, the older batch is compressed into a level-one summary while the newer twenty remain exact. Adjacent summaries at the same level are later combined into a parent summary covering both ranges. Repeating this process creates a binary hierarchy in which older history occupies progressively less space and recent history retains full detail. Every entry includes the iteration or iteration range it covers, so the prompt view remains ordered and gap-free.
 
-> I defeated a SWIMMER's TENTACOOL, HORSEA, and GOLDEEN and earned ¥381. Pikachu grew to level 34 during the battle.
-
-is only about 35 tokens. The fact that the summary memory is so much more dense than the raw memory allows its length to be much longer. We have space for 200 summary memories, and they take up roughly 4000 tokens in total.
-
-The summary memory also has more intelligent rollover logic than the raw memory. When a piece of summary memory is created, it is given an importance score from 1 (trivial) to 5 (critical for progression). When it comes time to bump an old summary memory and add a new one, both age and importance are taken into account so that we keep important memories longer than trivial ones. [The math for that is here](/memory/summary_memory.py) if you're curious.
+The live HTML activity log uses only the exact raw working set and the unfinished current block. It updates whenever memory is appended and never displays the derived summaries, so compaction does not replace the recent on-screen log.
 
 #### The Long-Term Memory
 

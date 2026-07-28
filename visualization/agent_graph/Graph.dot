@@ -19,13 +19,11 @@ digraph "G" {
     "RtTGRwTSA4xy6Vozt075l__entry" [label="", shape=point, width=0.01, style=invis];
     "RtTGRwTSA4xy6Vozt075l__exit"  [label="", shape=point, width=0.01, style=invis];
     jFSoMuMTOFy83u5f7QtdA [label="UpdateGoalsNode"];
-    "4rofRRNcDEeimvPR1b8Wl" [label="UpdateSummaryMemoryNode"];
     Xkjw6xyXXtMlWihLEuQNs [label="UpdateBackgroundStreamNode"];
   }
   IM2bYZ8Egf0jU6WaHJeVQ [label="TextHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
   QIkEPkcV0JILIFlaS7gHv [label="OverworldHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
   QmkJGpdVAtGnBNCpujMZF [label="UpdateLongTermMemoryNode"];
-  "4rofRRNcDEeimvPR1b8Wl" [label="UpdateSummaryMemoryNode"];
   jFSoMuMTOFy83u5f7QtdA [label="UpdateGoalsNode"];
   "8FrRI8S0ibkT8Vb9m2MzO" [label="BattleHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
   R23Y0lV9pKaQNMzlq9lca [label="RetrieveLongTermMemoryNode"];
@@ -33,6 +31,7 @@ digraph "G" {
   g44YdhDLLbvrLy1YJ5SG7 [label="CreateLongTermMemoryNode"];
   "8BjzGaYDQzV6g798mESdp" [label="PrepareAgentStoreNode"];
   Xkjw6xyXXtMlWihLEuQNs [label="UpdateBackgroundStreamNode"];
+  finalizeMemory [label="FinalizeMemoryNode"];
   "8BjzGaYDQzV6g798mESdp" -> o0O6dLxKLhdviNccnpYR1__entry [lhead="cluster_o0O6dLxKLhdviNccnpYR1", style="dashed", label="ShouldRetrieveMemory(True)"];
   o0O6dLxKLhdviNccnpYR1__exit -> R23Y0lV9pKaQNMzlq9lca [ltail="cluster_o0O6dLxKLhdviNccnpYR1", style="solid"];
   "8BjzGaYDQzV6g798mESdp" -> WkMzn53ZyL0YzPFXYCCEc [style="dashed", label="ShouldRetrieveMemory(False)"];
@@ -43,4 +42,5 @@ digraph "G" {
   IM2bYZ8Egf0jU6WaHJeVQ -> RtTGRwTSA4xy6Vozt075l__entry [lhead="cluster_RtTGRwTSA4xy6Vozt075l", style="solid"];
   "8FrRI8S0ibkT8Vb9m2MzO" -> RtTGRwTSA4xy6Vozt075l__entry [lhead="cluster_RtTGRwTSA4xy6Vozt075l", style="solid"];
   QIkEPkcV0JILIFlaS7gHv -> RtTGRwTSA4xy6Vozt075l__entry [lhead="cluster_RtTGRwTSA4xy6Vozt075l", style="solid"];
+  RtTGRwTSA4xy6Vozt075l__exit -> finalizeMemory [ltail="cluster_RtTGRwTSA4xy6Vozt075l", style="solid"];
 }

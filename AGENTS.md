@@ -40,6 +40,11 @@ exactly because emulator changes can affect existing save states.
   use Sphinx directives.
 - Use Pydantic models at I/O and validation boundaries. Prefer standard-library
   dataclasses for internal structured data.
+- Establish the source of truth, ownership, and lifecycle before adding state
+  or abstractions. Do not duplicate authoritative data for a view, put loading
+  or presentation policy in domain records, or let cached state become another
+  authority; keep persistence and workflow transitions in the coordinating
+  service.
 - Tests must protect externally observable behavior or stable domain rules and
   survive internal refactors that preserve that behavior. Do not add tests that
   merely mirror implementation details such as private helpers, internal call
@@ -56,7 +61,7 @@ exactly because emulator changes can affect existing save states.
 - `emulator/`: PyBoy lifecycle, game-state snapshots, and ROM-memory parsers.
 - `overworld_map/`: explored-map state, persistence integration, and prompt
   formatting.
-- `memory/`: goals and raw, summary, and long-term memory behavior.
+- `memory/`: goals, rolling-memory compaction, and long-term memory behavior.
 - `database/`: SQLite models and repositories.
 - `llm/`: model definitions and provider access.
 - `streaming/`: the HTML background server and view models.

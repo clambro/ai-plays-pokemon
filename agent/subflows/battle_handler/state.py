@@ -7,8 +7,7 @@ from junjo import BaseState, BaseStore
 from agent.subflows.battle_handler.schemas import BattleToolArgs
 from memory.goals import Goals
 from memory.long_term_memory import LongTermMemory
-from memory.raw_memory import RawMemory
-from memory.summary_memory import SummaryMemory
+from memory.rolling_memory import RollingMemory
 
 if TYPE_CHECKING:
     from agent.state import AgentState
@@ -19,8 +18,7 @@ class BattleHandlerState(BaseState):
     """The state used in the battle handler graph workflow."""
 
     iteration: int | None = None
-    raw_memory: RawMemory | None = None
-    summary_memory: SummaryMemory | None = None
+    rolling_memory: RollingMemory | None = None
     long_term_memory: LongTermMemory | None = None
     goals: Goals | None = None
     tool_args: BattleToolArgs | None = None
@@ -29,8 +27,7 @@ class BattleHandlerState(BaseState):
         """Get a string representation of the agent and game state to be used in prompts."""
         return "\n\n".join(
             (
-                str(self.raw_memory),
-                str(self.summary_memory),
+                str(self.rolling_memory),
                 str(self.long_term_memory),
                 str(self.goals),
                 game_state.player_info,
@@ -47,16 +44,15 @@ class BattleHandlerStore(BaseStore[BattleHandlerState]):
         await self.set_state(
             {
                 "iteration": parent_state.iteration,
-                "raw_memory": parent_state.raw_memory,
-                "summary_memory": parent_state.summary_memory,
+                "rolling_memory": parent_state.rolling_memory,
                 "long_term_memory": parent_state.long_term_memory,
                 "goals": parent_state.goals,
             },
         )
 
-    async def set_raw_memory(self, raw_memory: RawMemory) -> None:
-        """Set the raw memory."""
-        await self.set_state({"raw_memory": raw_memory})
+    async def set_rolling_memory(self, rolling_memory: RollingMemory) -> None:
+        """Set the rolling memory."""
+        await self.set_state({"rolling_memory": rolling_memory})
 
     async def set_tool_args(self, tool_args: BattleToolArgs | None) -> None:
         """Set the tool args."""

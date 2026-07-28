@@ -11,7 +11,7 @@ from llm.service import OpenAILLMService
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
 
 
 class UseItemService:
@@ -21,32 +21,29 @@ class UseItemService:
 
     def __init__(
         self,
-        iteration: int,
-        raw_memory: RawMemory,
+        rolling_memory: RollingMemory,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the use item service."""
-        self.iteration = iteration
-        self.raw_memory = raw_memory
+        self.rolling_memory = rolling_memory
         self.emulator = emulator
 
-    async def use_item(self) -> RawMemory:
+    async def use_item(self) -> RollingMemory:
         """Use an item from the inventory."""
         try:
             index = await self._get_item_index()
             await self._use_item(index)
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error in the use item response. Skipping. {e}")
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
+            self.rolling_memory.add_memory(
                 content=f"I failed to use an item from my inventory. {e}",
             )
-        return self.raw_memory
+        return self.rolling_memory
 
     async def _get_item_index(self) -> int:
         """Get the index of the item to use."""
         game_state = await self.emulator.get_game_state()
-        last_memory = self.raw_memory.pieces[self.iteration]
+        last_memory = str(self.rolling_memory.current_block)
         inventory_str = "\n".join(
             f"[{i}] {item.name}" for i, item in enumerate(game_state.inventory.items)
         )

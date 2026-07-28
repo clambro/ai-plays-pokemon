@@ -8,7 +8,7 @@ import pytest
 from agent.subflows.overworld_handler.nodes.use_item.schemas import UseItemResponse
 from agent.subflows.overworld_handler.nodes.use_item.service import UseItemService
 from emulator.emulator import YellowLegacyEmulator
-from memory.raw_memory import RawMemory
+from memory.rolling_memory import RollingMemory
 
 
 @pytest.mark.integration
@@ -25,15 +25,13 @@ async def test_use_item(monkeypatch: pytest.MonkeyPatch) -> None:
             for index, item in enumerate((await emulator.get_game_state()).inventory.items)
             if item.name == "REPEL"
         )
-        raw_memory = RawMemory()
-        raw_memory.add_memory(
-            iteration=0,
+        rolling_memory = RollingMemory()
+        rolling_memory.add_memory(
             content="I want to spray a REPEL to keep wild Pokemon away.",
         )
 
         service = UseItemService(
-            iteration=0,
-            raw_memory=raw_memory,
+            rolling_memory=rolling_memory,
             emulator=emulator,
         )
         monkeypatch.setattr(
@@ -45,11 +43,11 @@ async def test_use_item(monkeypatch: pytest.MonkeyPatch) -> None:
                 )
             ),
         )
-        raw_memory = await service.use_item()
+        rolling_memory = await service.use_item()
         await emulator.wait_for_animation_to_finish()
 
         dialog_box = (await emulator.get_game_state()).get_dialog_box()
         assert dialog_box is not None
         assert dialog_box.top_line == "AAA used"
         assert dialog_box.bottom_line == "REPEL!"
-        assert len(raw_memory.pieces) == 1
+        assert len(rolling_memory.raw_blocks) == 1

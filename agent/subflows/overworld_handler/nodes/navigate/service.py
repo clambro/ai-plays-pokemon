@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
     from overworld_map.schemas import OverworldMap
 
 
@@ -34,17 +34,17 @@ class NavigationService:
         iteration: int,
         emulator: YellowLegacyEmulator,
         current_map: OverworldMap,
-        raw_memory: RawMemory,
+        rolling_memory: RollingMemory,
         state_string_builder: StateStringBuilder,
     ) -> None:
         """Initialize the navigation service."""
         self.iteration = iteration
         self.emulator = emulator
         self.current_map = current_map
-        self.raw_memory = raw_memory
+        self.rolling_memory = rolling_memory
         self.state_string_builder = state_string_builder
 
-    async def navigate(self) -> tuple[OverworldMap, RawMemory]:
+    async def navigate(self) -> tuple[OverworldMap, RollingMemory]:
         """Determine the target coordinates and navigate to them."""
         game_state = await self.emulator.get_game_state()
         hm_tiles = game_state.get_hm_tiles()
@@ -57,11 +57,11 @@ class NavigationService:
             coords = await self._determine_target_coords(accessible_coords)
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error determining target coordinates. Skipping. {e}")
-            return self.current_map, self.raw_memory
+            return self.current_map, self.rolling_memory
 
         if not self._validate_target_coords(game_state, coords, accessible_coords):
             logger.warning("Cancelling navigation due to invalid target coordinates.")
-            return self.current_map, self.raw_memory
+            return self.current_map, self.rolling_memory
 
         path = utils.calculate_path_to_target(
             game_state.player.coords,
@@ -71,15 +71,14 @@ class NavigationService:
         )
         if not path:
             logger.warning("No path found to target coordinates.")
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
+            self.rolling_memory.add_memory(
                 content=(
                     f"Navigation failed. No path found to target coordinates {coords}."
                     f" This either means that the location is inaccessible, or that I have not"
                     f" explored enough of the map to reveal the path."
                 ),
             )
-            return self.current_map, self.raw_memory
+            return self.current_map, self.rolling_memory
 
         starting_map_id = self.current_map.id
         await self._handle_pikachu(path[0])
@@ -93,14 +92,14 @@ class NavigationService:
             prev_pos = game_state.player.coords
             game_state = await self.emulator.get_game_state()
             if self._should_cancel_navigation(game_state, prev_pos, starting_map_id, coords):
-                return self.current_map, self.raw_memory
+                return self.current_map, self.rolling_memory
             # Can't update the map until we validate above that we haven't switched maps.
             self.current_map = await update_map_with_screen_info(
                 self.iteration,
                 game_state,
                 self.current_map,
             )
-        return self.current_map, self.raw_memory
+        return self.current_map, self.rolling_memory
 
     async def _determine_target_coords(self, accessible_coords: list[Coords]) -> Coords:
         """Determine the target coordinates to navigate to."""
@@ -127,7 +126,8 @@ class NavigationService:
 
         # Get model response.
         game_state, img = await self.emulator.get_game_state_with_screenshot()
-        last_memory = self.raw_memory.pieces.get(self.iteration) or ""
+        current_block = self.rolling_memory.current_block
+        last_memory = str(current_block) if current_block.content else ""
 
         prompt = DETERMINE_TARGET_COORDS_PROMPT.format(
             state=self.state_string_builder(game_state),
@@ -140,8 +140,7 @@ class NavigationService:
             messages=[img, prompt],
             schema=NavigationResponse,
         )
-        self.raw_memory.add_memory(
-            iteration=self.iteration,
+        self.rolling_memory.add_memory(
             content=f"{response.thoughts} Navigating to {response.coords}.",
         )
         return response.coords
@@ -159,8 +158,7 @@ class NavigationService:
             or coords.row >= self.current_map.height
             or coords.col >= self.current_map.width
         ):
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
+            self.rolling_memory.add_memory(
                 content=(
                     f"Navigation failed. The target coordinates {coords} are outside the current"
                     f" map bounds. The navigation tool cannot cross map boundaries."
@@ -168,14 +166,12 @@ class NavigationService:
             )
             return False
         if coords == game_state.player.coords:
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
+            self.rolling_memory.add_memory(
                 content=f"I tried to navigate to {coords}, but I'm already there!",
             )
             return False
         if self.current_map.ascii_tiles[coords.row][coords.col] == AsciiTile.SPRITE:
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
+            self.rolling_memory.add_memory(
                 content=(
                     f"Navigation failed. The target coordinates {coords} are occupied by a sprite."
                     f" If I want to interact with the sprite, I have to navigate to a tile adjacent"
@@ -184,8 +180,7 @@ class NavigationService:
             )
             return False
         if coords not in accessible_coords:
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
+            self.rolling_memory.add_memory(
                 content=(
                     f"Navigation failed. The target coordinates {coords} are not in the list of"
                     f" accessible coordinates that was provided to me."
@@ -281,22 +276,19 @@ class NavigationService:
         """Check if we should cancel navigation."""
         new_pos = game_state.player.coords
         if new_pos == target_pos:
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
+            self.rolling_memory.add_memory(
                 content=f"Completed navigation to {target_pos}.",
             )
             return True
         if prev_pos == new_pos:
             logger.warning("Navigation interrupted. Cancelling.")
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
+            self.rolling_memory.add_memory(
                 content=f"Navigation to {target_pos} interrupted at position {new_pos}.",
             )
             return True
         if game_state.map.id != starting_map_id:
             logger.warning("Map changed during navigation. Cancelling.")
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
+            self.rolling_memory.add_memory(
                 content="The map has changed during navigation. Cancelling further steps.",
             )
             return True

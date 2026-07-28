@@ -7,24 +7,22 @@ from common.enums import Button
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
 
 
 async def handle_subsequent_text(
     *,
-    iteration: int,
-    raw_memory: RawMemory,
+    rolling_memory: RollingMemory,
     emulator: YellowLegacyEmulator,
-) -> RawMemory:
+) -> RollingMemory:
     """Read battle dialog produced after an action.
 
     Args:
-        iteration: Current agent iteration used to timestamp captured dialog.
-        raw_memory: Recent memory to update with the dialog text.
+        rolling_memory: Recent memory to update with the dialog text.
         emulator: Running emulator used to advance and inspect the dialog box.
 
     Returns:
-        The supplied raw memory after appending any captured dialog.
+        The supplied rolling memory after appending any captured dialog.
     """
     text: list[str] = []
     await emulator.wait_for_animation_to_finish()
@@ -47,10 +45,9 @@ async def handle_subsequent_text(
 
     joined_text = " ".join(text).strip()
     if not joined_text:
-        return raw_memory
+        return rolling_memory
 
-    raw_memory.add_memory(
-        iteration=iteration,
+    rolling_memory.add_memory(
         content=f'The following text was read from the battle dialog box: "{joined_text}"',
     )
-    return raw_memory
+    return rolling_memory

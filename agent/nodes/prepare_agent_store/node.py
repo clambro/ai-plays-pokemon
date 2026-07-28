@@ -11,6 +11,8 @@ from agent.nodes.prepare_agent_store.service import (
     wait_for_animations,
 )
 from agent.state import AgentStore
+from memory.rolling_memory import initialize_memory
+from streaming.server import update_background_log_from_memory
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
@@ -38,8 +40,11 @@ class PrepareAgentStoreNode(Node[AgentStore]):
             iterations_since_last_ltm_retrieval=state.iterations_since_last_ltm_retrieval,
             long_term_memory=state.long_term_memory,
         )
+        rolling_memory = await initialize_memory(state.rolling_memory.current_block)
 
-        await store.set_iteration(state.iteration + 1)
+        await store.set_iteration(rolling_memory.current_block.iteration)
+        await store.set_rolling_memory(rolling_memory)
+        update_background_log_from_memory(rolling_memory)
         await store.set_previous_handler(state.handler)
         await store.set_handler(handler)
         await store.set_should_retrieve_memory(retrieve_memory)

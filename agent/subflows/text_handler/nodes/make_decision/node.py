@@ -25,16 +25,13 @@ class MakeDecisionNode(Node[TextHandlerStore]):
         logger.info("Running the text decision maker...")
 
         state = await store.get_state()
-        if state.iteration is None:
-            raise ValueError("Iteration is not set")
-        if state.raw_memory is None:
-            raise ValueError("Raw memory is not set")
+        if state.rolling_memory is None:
+            raise ValueError("Rolling memory is not set")
 
-        raw_memory = await make_decision(
-            iteration=state.iteration,
-            raw_memory=state.raw_memory,
+        rolling_memory = await make_decision(
+            rolling_memory=state.rolling_memory,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
 
-        await store.set_raw_memory(raw_memory)
+        await store.set_rolling_memory(rolling_memory)

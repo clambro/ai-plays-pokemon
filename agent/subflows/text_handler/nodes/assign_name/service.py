@@ -12,7 +12,7 @@ from llm.service import OpenAILLMService
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
 
 LETTER_ARR = np.array(
     [
@@ -30,55 +30,51 @@ class AssignNameService:
 
     def __init__(
         self,
-        iteration: int,
-        raw_memory: RawMemory,
+        rolling_memory: RollingMemory,
         emulator: YellowLegacyEmulator,
     ) -> None:
         """Initialize the assign name service."""
-        self.iteration = iteration
-        self.raw_memory = raw_memory
+        self.rolling_memory = rolling_memory
         self.emulator = emulator
 
-    async def assign_name(self) -> RawMemory:
+    async def assign_name(self) -> RollingMemory:
         """Assign a name to something in the game."""
         game_state = await self.emulator.get_game_state()
         first_name_row = "A B C D E F G H I"
         if first_name_row not in game_state.screen.text:
             # Should never happen if we're in this handler, but just in case we need to bail.
-            return self.raw_memory
+            return self.rolling_memory
 
         try:
             name = await self._get_desired_name(game_state)
             self._validate_name_uniqueness(name, game_state)
             await self._enter_name(name)
         except Exception as e:  # noqa: BLE001
-            self.raw_memory.add_memory(
-                iteration=self.iteration,
+            self.rolling_memory.add_memory(
                 content=(
                     f"I attempted to enter an invalid name: {e}"
                     f" I need to pay closer attention to the rules and try again."
                 ),
             )
-            return self.raw_memory
+            return self.rolling_memory
 
-        self.raw_memory.add_memory(
-            iteration=self.iteration,
+        self.rolling_memory.add_memory(
             content=f"Entered the name {name}.",
         )
-        return self.raw_memory
+        return self.rolling_memory
 
     async def _get_desired_name(self, game_state: YellowLegacyGameState) -> str:
         """Get the desired name from the LLM."""
         # We don't need the full state info here. It can overwhelm the small model.
         prompt = GET_NAME_PROMPT.format(
-            raw_memory=self.raw_memory,
+            memory=self.rolling_memory,
             player_info=game_state.player_info,
         )
         response = await self.llm_service.get_llm_response_pydantic(
             prompt,
             schema=NameResponse,
         )
-        self.raw_memory.add_memory(iteration=self.iteration, content=response.thoughts)
+        self.rolling_memory.add_memory(content=response.thoughts)
         return response.name
 
     def _validate_name_uniqueness(self, name: str, game_state: YellowLegacyGameState) -> None:

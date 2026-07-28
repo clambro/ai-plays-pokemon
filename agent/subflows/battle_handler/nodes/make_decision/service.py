@@ -11,28 +11,26 @@ from llm.service import OpenAILLMService
 if TYPE_CHECKING:
     from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
 
 llm_service = OpenAILLMService()
 
 
 async def make_decision(
     *,
-    iteration: int,
-    raw_memory: RawMemory,
+    rolling_memory: RollingMemory,
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
-) -> RawMemory:
+) -> RollingMemory:
     """Make a decision in a battle based on the current game state.
 
     Args:
-        iteration: Current agent iteration used to timestamp the decision.
-        raw_memory: Recent memory to update with the model response.
+        rolling_memory: Recent memory to update with the model response.
         state_string_builder: Formatter for the current game state.
         emulator: Running emulator used to inspect the battle and press buttons.
 
     Returns:
-        The updated raw memory. Model failures are logged and leave the memory unchanged.
+        The updated rolling memory. Model failures are logged and leave the memory unchanged.
     """
     game_state, img = await emulator.get_game_state_with_screenshot()
     state_string = state_string_builder(game_state)
@@ -42,11 +40,11 @@ async def make_decision(
             messages=[img, prompt],
             schema=MakeDecisionResponse,
         )
-        raw_memory.add_memory(iteration=iteration, content=str(response))
+        rolling_memory.add_memory(content=str(response))
         for i, button in enumerate(response.buttons):
             # We skip the wait on the last press so we can go immediately to the next node.
             wait_for_animation = i < len(response.buttons) - 1
             await emulator.press_button(button, wait_for_animation=wait_for_animation)
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Error making decision. Skipping. {e}")
-    return raw_memory
+    return rolling_memory

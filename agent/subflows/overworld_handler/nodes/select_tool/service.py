@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from common.types import StateStringBuilder
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
-    from memory.raw_memory import RawMemory
+    from memory.rolling_memory import RollingMemory
     from overworld_map.schemas import OverworldMap
 
 llm_service = OpenAILLMService()
@@ -30,23 +30,21 @@ llm_service = OpenAILLMService()
 
 async def select_tool(
     *,
-    iteration: int,
-    raw_memory: RawMemory,
+    rolling_memory: RollingMemory,
     current_map: OverworldMap,
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
-) -> tuple[OverworldTool, RawMemory]:
+) -> tuple[OverworldTool, RollingMemory]:
     """Select an available overworld tool for the current game state.
 
     Args:
-        iteration: Current agent iteration used to timestamp the decision.
-        raw_memory: Recent memory to update with the model's reasoning.
+        rolling_memory: Recent memory to update with the model's reasoning.
         current_map: Explored map used to determine available navigation tools.
         state_string_builder: Formatter for the current overworld state and map context.
         emulator: Running emulator used to inspect the state and capture its screen.
 
     Returns:
-        The selected tool and updated raw memory. Provider or validation failures select the
+        The selected tool and updated rolling memory. Provider or validation failures select the
         button-pressing tool and leave memory unchanged.
     """
     game_state, img = await emulator.get_game_state_with_screenshot()
@@ -62,17 +60,16 @@ async def select_tool(
         tool = OverworldTool(response.tool)
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Error selecting tool. Defaulting to pressing buttons. {e}")
-        return OverworldTool.PRESS_BUTTONS, raw_memory
+        return OverworldTool.PRESS_BUTTONS, rolling_memory
 
-    raw_memory.add_memory(
-        iteration=iteration,
+    rolling_memory.add_memory(
         content=(
             f"Current map: {game_state.map.id.name} at coordinates"
             f" {game_state.player.coords}, facing {game_state.player.direction.name}."
             f" {response.thoughts}"
         ),
     )
-    return tool, raw_memory
+    return tool, rolling_memory
 
 
 def _get_available_tool_info(

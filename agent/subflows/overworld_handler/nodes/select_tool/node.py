@@ -25,20 +25,17 @@ class SelectToolNode(Node[OverworldHandlerStore]):
         logger.info("Selecting an overworld tool...")
 
         state = await store.get_state()
-        if state.raw_memory is None:
-            raise ValueError("Raw memory is not set")
-        if state.iteration is None:
-            raise ValueError("Iteration is not set")
+        if state.rolling_memory is None:
+            raise ValueError("Rolling memory is not set")
         if state.current_map is None:
             raise ValueError("Current map is not set")
 
-        tool, raw_memory = await select_tool(
-            iteration=state.iteration,
-            raw_memory=state.raw_memory,
+        tool, rolling_memory = await select_tool(
+            rolling_memory=state.rolling_memory,
             current_map=state.current_map,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,
         )
 
-        await store.set_raw_memory(raw_memory)
+        await store.set_rolling_memory(rolling_memory)
         await store.set_tool(tool)

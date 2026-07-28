@@ -27,16 +27,13 @@ class SwapFirstPokemonNode(Node[OverworldHandlerStore]):
         logger.info("Swapping the first Pokemon...")
 
         state = await store.get_state()
-        if state.raw_memory is None:
-            raise ValueError("Raw memory is not set")
-        if state.iteration is None:
-            raise ValueError("Iteration is not set")
+        if state.rolling_memory is None:
+            raise ValueError("Rolling memory is not set")
 
         service = SwapFirstPokemonService(
-            iteration=state.iteration,
-            raw_memory=state.raw_memory,
+            rolling_memory=state.rolling_memory,
             emulator=self.emulator,
         )
-        raw_memory = await service.swap_first_pokemon()
+        rolling_memory = await service.swap_first_pokemon()
 
-        await store.set_raw_memory(raw_memory)
+        await store.set_rolling_memory(rolling_memory)

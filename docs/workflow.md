@@ -10,7 +10,7 @@ Note: Pretty much all the constants below are default values that can be edited 
 
 ### Prepare Agent Store
 
-This is the entrypoint for the entire AI workflow. It is responsible for taking the previous agent state and preparing for the next iteration of the loop. It increments certain counters, waits for any in-game animations to finish, and determines which subflow the workflow will route to depending on whether the current game state is in a battle, free to move in the overworld, or reading dialog/menu text.
+This is the entrypoint for the entire AI workflow. It is responsible for taking the previous agent state and preparing for the next iteration of the loop. It loads the current rolling-memory summary frontier and exact raw tail from SQLite, creates the next mutable iteration block when necessary, increments certain counters, waits for any in-game animations to finish, and determines which subflow the workflow will route to depending on whether the current game state is in a battle, free to move in the overworld, or reading dialog/menu text.
 
 ### Create/Update Long-Term Memory
 
@@ -30,12 +30,16 @@ At this point, the flow is diverted into one of the three subflows. Each of thes
 
 ### Do Updates
 
-This is another collection of parallel nodes, each of which runs every few iterations. They're all pretty self-explanatory:
+This is another collection of parallel nodes:
+
 - Update Goals: Optionally sets/edits/completes the AI's goals
-- Update Summary Memory: Optionally adds new memories to the summary memory, and thus bumps off old, irrelevant ones
 - Update Background Stream: Updates the live background for streaming at `localhost:8080` with the latest information from the workflow and game states
 
-The workflow ends after these updates. Outside the graph, the application captures the emulator state and creates a backup every 20 minutes, as well as after a caught workflow error.
+### Finalize Memory
+
+This is the final node in every successful top-level workflow. It writes the completed iteration's combined memory block to SQLite exactly once, then performs one hierarchical compaction pass. Raw blocks remain in the database permanently; compaction only adds derived summaries. The next workflow initializes the new current block and reloads the resulting bounded memory view.
+
+Outside the graph, the application captures the emulator state and creates a backup every 20 minutes, as well as after a caught workflow error. The copied SQLite database contains the complete finalized memory history, while the serialized agent state contains only its current in-memory block. Initialization recognizes a block that has already been finalized and advances to the next iteration without duplicating it.
 
 ## The Overworld Handler Subflow
 
@@ -51,7 +55,7 @@ This uses the current visible screen information to update the map memory in the
 
 ### Select Tool
 
-This is the main decision maker in the overworld subflow. It looks at the game state and the various memory objects and selects which tool the AI should use for this iteration. The tools are all described in detail below. The raw memory "thought" that the AI creates in this node is continued by whichever tool is selected.
+This is the main decision maker in the overworld subflow. It looks at the game state and the various memory objects and selects which tool the AI should use for this iteration. The tools are all described in detail below. The current iteration's memory "thought" created in this node is continued by whichever tool is selected.
 
 ### Press Buttons
 
@@ -107,7 +111,7 @@ Only available in wild battles. Runs from the battle.
 
 ### Handle Subsequent Text
 
-The final node in the battle handler. It may surprise you that we do this here instead of in the text handler, but it's because the logic for reading text in a battle is slightly different from doing so in the overworld. Additionally, the text starts streaming the moment an action is taken, so we don't have time to wait for the next iteration to start. This node captures any text that streams and adds it to the raw memory.
+The final node in the battle handler. It may surprise you that we do this here instead of in the text handler, but it's because the logic for reading text in a battle is slightly different from doing so in the overworld. Additionally, the text starts streaming the moment an action is taken, so we don't have time to wait for the next iteration to start. This node captures any text that streams and appends it to the current iteration's memory block.
 
 ## The Text Handler Subflow
 
@@ -119,7 +123,7 @@ This is the entrypoint of the text handler subflow, and its job is to determine 
 
 ### Handle Dialog Box
 
-This is the most common tool in the text handler subflow. Its job is to read through any dialog that appears on screen and log it directly to the AI's raw memory. This saves us a ton of time and tokens by pulling the text straight from the game state instead of making the AI read it screenshot by screenshot. This node exits if either the dialog box disappears, or if text appears outside the dialog box indicating that a menu has opened up.
+This is the most common tool in the text handler subflow. Its job is to read through any dialog that appears on screen and append it directly to the current iteration's memory block. This saves us a ton of time and tokens by pulling the text straight from the game state instead of making the AI read it screenshot by screenshot. This node exits if either the dialog box disappears, or if text appears outside the dialog box indicating that a menu has opened up.
 
 ### Assign Name
 
