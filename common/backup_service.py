@@ -21,11 +21,12 @@ def get_output_folder() -> Path:
     return OUTPUTS_FOLDER / f"{OUTPUT_PREFIX}{timestamp}"
 
 
-async def create_backup(agent_state: AgentState) -> None:
+async def create_backup(agent_state: AgentState, emulator_save_state: str) -> None:
     """Save agent state and the current database into a timestamped backup.
 
     Args:
-        agent_state: State to serialize, including the output folder and emulator save state.
+        agent_state: State to serialize.
+        emulator_save_state: Emulator state captured immediately before the backup.
     """
     logger.info(f"Creating backup at iteration {agent_state.iteration}.")
 
@@ -36,8 +37,9 @@ async def create_backup(agent_state: AgentState) -> None:
     backup_db_folder = backup_folder / DB_FOLDER_NAME
     await aiofiles.os.makedirs(backup_db_folder, exist_ok=True)
 
+    backup_state = agent_state.model_copy(update={"emulator_save_state": emulator_save_state})
     async with aiofiles.open(backup_folder / BACKUP_AGENT_STATE_NAME, "w") as f:
-        await f.write(agent_state.model_dump_json())
+        await f.write(backup_state.model_dump_json())
 
     await _copy_dir_async(src=DB_FILE_PATH.parent, dst=backup_db_folder)
 

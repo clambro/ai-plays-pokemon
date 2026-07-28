@@ -14,7 +14,6 @@ from memory.raw_memory import RawMemory
 from memory.summary_memory import SummaryMemory
 
 if TYPE_CHECKING:
-    from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
 
 
@@ -109,14 +108,6 @@ class AgentStore(BaseStore[AgentState]):
         await self.set_state(
             {"iterations_since_last_ltm_retrieval": iterations_since_last_ltm_retrieval}
         )
-
-    async def set_emulator_save_state_from_emulator(self, emulator: YellowLegacyEmulator) -> None:
-        """Capture the emulator save state.
-
-        Do this sparingly. Saving takes about two frames, so frequent saves disrupt audio and
-        produce excessive telemetry.
-        """
-        await self.set_state({"emulator_save_state": await emulator.get_emulator_save_state()})
 
     async def add_llm_usage(self, tokens: int, cost: float) -> None:
         """Add one LLM call's usage to the run totals.
