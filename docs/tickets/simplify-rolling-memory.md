@@ -102,20 +102,18 @@ compaction are not substitutes for this gameplay-memory view.
 The HTML display continues to use raw iteration memories only. Summary
 creation must never alter the visible log.
 
-Maintain a separate bounded live view containing only the approximately five
-most recent raw iteration blocks that fit in the existing window. This is a
-garbage-collected display buffer, not another durable memory store:
+Stream the loaded raw working set directly. The browser already scrolls the log
+to the bottom, so the viewport naturally shows however many recent entries fit
+on screen. Do not introduce another buffer or memory limit for the display:
 
 - every write to the current iteration updates its visible entry immediately;
-- starting a new visible iteration evicts the oldest entry once the display
-  limit is exceeded;
-- the complete finalized history remains in SQLite after display entries are
-  evicted; and
-- startup and backup restoration repopulate the buffer from the most recent
-  finalized database blocks, plus any unfinished iteration restored from
-  agent state.
+- the complete finalized history remains in SQLite after blocks leave the
+  loaded working set; and
+- startup and backup restoration repopulate the raw working set from the most
+  recent finalized database blocks, plus any unfinished iteration restored
+  from agent state.
 
-Continue publishing the bounded buffer to the background server after every
+Continue publishing the loaded raw blocks to the background server after every
 raw-memory mutation so the HTML remains live during long navigation, battle,
 and text operations. The application-level memory service should coordinate
 the mutation and publication; the database model and raw block records
@@ -133,14 +131,17 @@ themselves should not depend on the streaming server.
 2. **Introduce the rolling-memory domain model.**
    Add a small internal model for the current iteration and bounded prompt
    view. Preserve the existing behavior where repeated writes to one
-   iteration append in order. Add a separate bounded recent-block view for the
-   live HTML log. Keep database and streaming dependencies outside the stored
+   iteration append in order. Keep the current iteration as a mutable working
+   block, and create an immutable raw block only when that iteration is
+   loaded back from SQLite. Treat the loaded raw blocks and summary frontier as
+   immutable database read views. Use the same loaded raw blocks for the live
+   HTML log. Keep database and streaming dependencies outside the stored
    memory records.
 
 3. **Persist completed iterations.**
    Move iteration finalization to the end of a completed top-level workflow.
-   Write the combined block once, keep the next iteration mutable in memory,
-   and hydrate both prompt history and the bounded HTML buffer from the copied
+   Write the combined block once, reload the bounded raw view from SQLite, and
+   then begin the next mutable iteration. Hydrate the same view from the copied
    database after startup or backup restoration. Include any unfinished
    iteration restored from agent state without duplicating a finalized
    database block. Update existing memory-writing services to target the
@@ -159,12 +160,10 @@ themselves should not depend on the streaming server.
    builders. Keep direct access to the current raw iteration for services that
    continue or amend the current thought.
 
-6. **Introduce the bounded live HTML buffer.**
-   Seed a bounded live buffer from the latest finalized database blocks when
-   the application starts or restarts. Update and publish that buffer after
-   every mutation of the current raw iteration, evict its oldest block when a
-   new iteration exceeds the display limit, and keep summary content out of
-   the activity log.
+6. **Wire the live HTML view.**
+   Publish the loaded raw blocks after every mutation of the current raw
+   iteration and let the browser viewport determine how many are visible. Keep
+   summary content out of the activity log.
 
 7. **Remove the old split memory systems.**
    Delete `RawMemory`, `SummaryMemory`, summary pieces, importance and decay

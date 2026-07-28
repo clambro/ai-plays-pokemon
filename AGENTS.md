@@ -40,6 +40,11 @@ exactly because emulator changes can affect existing save states.
   use Sphinx directives.
 - Use Pydantic models at I/O and validation boundaries. Prefer standard-library
   dataclasses for internal structured data.
+- Establish the source of truth, ownership, and lifecycle before adding state
+  or abstractions. Do not duplicate authoritative data for a view, put loading
+  or presentation policy in domain records, or let cached state become another
+  authority; keep persistence and workflow transitions in the coordinating
+  service.
 - Tests must protect externally observable behavior or stable domain rules and
   survive internal refactors that preserve that behavior. Do not add tests that
   merely mirror implementation details such as private helpers, internal call
