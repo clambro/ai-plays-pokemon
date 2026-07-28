@@ -1,6 +1,6 @@
 """Data-transfer models for long term memory."""
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class LongTermMemoryCreate(BaseModel):
@@ -8,7 +8,6 @@ class LongTermMemoryCreate(BaseModel):
 
     title: str
     content: str
-    importance: int = Field(ge=1, le=5)
     iteration: int
 
 
@@ -17,8 +16,6 @@ class LongTermMemoryRead(BaseModel):
 
     title: str
     content: str
-    importance: int = Field(ge=1, le=5)
-    last_accessed_iteration: int
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,5 +25,4 @@ class LongTermMemoryUpdate(BaseModel):
 
     title: str
     content: str
-    importance: int = Field(ge=1, le=5)
     iteration: int

@@ -27,7 +27,6 @@ class RetrieveLongTermMemoryNode(Node[AgentStore]):
         state = await store.get_state()
 
         long_term_memory = await retrieve_long_term_memory(
-            iteration=state.iteration,
             long_term_memory=state.long_term_memory,
             state_string_builder=state.to_prompt_string,
             emulator=self.emulator,

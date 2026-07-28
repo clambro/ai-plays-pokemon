@@ -63,7 +63,6 @@ async def update_long_term_memory(
                 LongTermMemoryUpdate(
                     title=title,
                     content=content,
-                    importance=update_piece.importance,
                     iteration=iteration,
                 ),
             )

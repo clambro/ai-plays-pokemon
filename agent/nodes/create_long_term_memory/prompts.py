@@ -31,10 +31,6 @@ Guidelines for creating new long-term memory objects:
 Your response must be in the JSON format described below, with the keys defined as follows:
 - title: The title of the new long-term memory object in SCREAMING_SNAKE_CASE with no punctuation.
 - content: The content of the new long-term memory object.
-- importance: The importance of the new long-term memory object, on a scale from 1-3, defined as follows:
-  - 3: Critical information that you expect to refer back to often (e.g. battle strategy, a core teammate, a major character, etc.).
-  - 2: Important information that you expect to refer back to occasionally (e.g. a new map, enemy trainers, key-items, etc.). When in doubt, this should be your default importance score.
-  - 1: Information that you don't want to forget, but don't expect to refer back to often (e.g. defeated trainers, Pokemon that you don't expect to use, etc.).
 
 Remember that you do not have to create a new long-term memory object here if you don't have anything to add. An empty list is a valid response. You should not create more than one new long-term memory object at a time. In other words, the length of the list you return should be 0 or 1.
 """

@@ -19,8 +19,6 @@ async def test_retrieve_long_term_memory_loads_selected_titles(
     selected_memory = LongTermMemoryRead(
         title=selected_title,
         content="Brock leads the Pewter Gym.",
-        importance=2,
-        last_accessed_iteration=4,
     )
     emulator = MagicMock()
     emulator.get_game_state_with_screenshot = AsyncMock(return_value=(MagicMock(), MagicMock()))
@@ -34,14 +32,13 @@ async def test_retrieve_long_term_memory_loads_selected_titles(
     monkeypatch.setattr(service, "get_long_term_memories", get_memories)
 
     result = await service.retrieve_long_term_memory(
-        iteration=5,
         long_term_memory=LongTermMemory(),
         state_string_builder=MagicMock(return_value="current state"),
         emulator=emulator,
     )
 
     assert result.pieces == {selected_title: selected_memory}
-    get_memories.assert_awaited_once_with([selected_title], 5)
+    get_memories.assert_awaited_once_with([selected_title])
 
 
 @pytest.mark.unit
@@ -52,8 +49,6 @@ async def test_retrieve_long_term_memory_drops_unknown_titles(
     previous_memory = LongTermMemoryRead(
         title="Team",
         content="Pikachu is a permanent party member.",
-        importance=3,
-        last_accessed_iteration=4,
     )
     previous = LongTermMemory(pieces={previous_memory.title: previous_memory})
     emulator = MagicMock()
@@ -72,7 +67,6 @@ async def test_retrieve_long_term_memory_drops_unknown_titles(
     monkeypatch.setattr(service, "get_long_term_memories", get_memories)
 
     result = await service.retrieve_long_term_memory(
-        iteration=5,
         long_term_memory=previous,
         state_string_builder=MagicMock(return_value="current state"),
         emulator=emulator,
@@ -97,7 +91,6 @@ async def test_retrieve_long_term_memory_skips_selection_without_titles(
     monkeypatch.setattr(service.llm_service, "get_llm_response_pydantic", select_titles)
 
     result = await service.retrieve_long_term_memory(
-        iteration=5,
         long_term_memory=LongTermMemory(),
         state_string_builder=MagicMock(return_value="current state"),
         emulator=emulator,

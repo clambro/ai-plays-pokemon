@@ -13,7 +13,5 @@ class LongTermMemoryDBModel(SQLAlchemyBase):
 
     title: Mapped[str] = mapped_column(String, primary_key=True, index=True)
     content: Mapped[str] = mapped_column(String, nullable=False)
-    importance: Mapped[int] = mapped_column(Integer, nullable=False)
     create_iteration: Mapped[int] = mapped_column(Integer, nullable=False)
     update_iteration: Mapped[int] = mapped_column(Integer, nullable=False)
-    last_accessed_iteration: Mapped[int] = mapped_column(Integer, nullable=False)

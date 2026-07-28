@@ -24,7 +24,6 @@ llm_service = GeminiLLMService(GEMINI_FLASH_LITE_2_5)
 
 async def retrieve_long_term_memory(
     *,
-    iteration: int,
     long_term_memory: LongTermMemory,
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
@@ -32,7 +31,6 @@ async def retrieve_long_term_memory(
     """Retrieve long-term memories relevant to the current game state.
 
     Args:
-        iteration: Current agent iteration used for retrieval recency.
         long_term_memory: Previously loaded memories returned if title selection fails.
         state_string_builder: Formatter for the current game state and memory context.
         emulator: Running emulator used to inspect the state and capture its screen.
@@ -72,5 +70,5 @@ async def retrieve_long_term_memory(
     if not selected_titles:
         return LongTermMemory()
 
-    pieces = await get_long_term_memories(selected_titles, iteration)
+    pieces = await get_long_term_memories(selected_titles)
     return LongTermMemory(pieces={p.title: p for p in pieces})

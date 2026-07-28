@@ -17,10 +17,8 @@ async def create_long_term_memory(create_schema: LongTermMemoryCreate) -> None:
         db_obj = LongTermMemoryDBModel(
             title=create_schema.title,
             content=create_schema.content,
-            importance=create_schema.importance,
             create_iteration=create_schema.iteration,
             update_iteration=create_schema.iteration,
-            last_accessed_iteration=create_schema.iteration,
         )
         session.add(db_obj)
         await session.commit()
@@ -29,40 +27,31 @@ async def create_long_term_memory(create_schema: LongTermMemoryCreate) -> None:
 
 async def get_long_term_memories(
     titles: list[str],
-    iteration: int,
 ) -> list[LongTermMemoryRead]:
-    """Get long-term memories and mark them accessed.
+    """Get long-term memories by title.
 
     Args:
         titles: Memory titles to retrieve.
-        iteration: Current agent iteration stored as the access time.
 
     Returns:
-        Matching memories after their access iteration is updated.
+        Matching memories.
     """
     async with db_sessionmaker() as session:
-        query = (
-            update(LongTermMemoryDBModel)
-            .where(LongTermMemoryDBModel.title.in_(titles))
-            .values(last_accessed_iteration=iteration)
-            .returning(LongTermMemoryDBModel)
-        )
+        query = select(LongTermMemoryDBModel).where(LongTermMemoryDBModel.title.in_(titles))
         result = await session.execute(query)
         db_objs = result.scalars().all()
-        await session.commit()
 
         return [LongTermMemoryRead.model_validate(o) for o in db_objs]
 
 
 async def update_long_term_memory(update_schema: LongTermMemoryUpdate) -> None:
-    """Update a long-term memory with new content and importance."""
+    """Update a long-term memory with new content."""
     async with db_sessionmaker() as session:
         query = (
             update(LongTermMemoryDBModel)
             .where(LongTermMemoryDBModel.title == update_schema.title)
             .values(
                 content=update_schema.content,
-                importance=update_schema.importance,
                 update_iteration=update_schema.iteration,
             )
         )

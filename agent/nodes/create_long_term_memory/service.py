@@ -54,7 +54,6 @@ async def create_long_term_memory(
                 LongTermMemoryCreate(
                     title=title,
                     content=piece.content,
-                    importance=piece.importance,
                     iteration=iteration,
                 ),
             )
