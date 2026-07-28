@@ -26,6 +26,7 @@ MODEL = "gpt-5.6-luna"
 REASONING_EFFORT = "low"
 TIMEOUT_SECONDS = 60
 MAX_RETRIES = 2
+INPUT_TOKEN_OVERHEAD = 6
 
 
 class OpenAILLMService:
@@ -104,7 +105,9 @@ class OpenAILLMService:
     async def count_input_tokens(self, text: str) -> int:
         """Count the GPT-5.6 Luna input tokens for text."""
         response = await self.client.responses.input_tokens.count(model=MODEL, input=text)
-        return response.input_tokens
+        # The endpoint includes fixed Responses API message framing in addition to
+        # the supplied text. Remove it so this method reports only the text tokens.
+        return response.input_tokens - INPUT_TOKEN_OVERHEAD
 
     @staticmethod
     def _build_input(messages: str | list[str | Image]) -> str | ResponseInputParam:

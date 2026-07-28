@@ -78,35 +78,35 @@ Aside from memory, the other major shortcoming of LLMs in Pokémon is their lack
 A minimap for each map ID is constructed using ASCII characters and stored in the database. The map is initialized as a rectangle of undiscovered territory the same size as the map in the game's memory, and with every step the player takes in game, the map is updated using whatever information is available on screen. Here is a sample map for Pallet Town:
 
 ```
-∙∙∙▉∙∙∙∙∙▉❀❀▉∙∙∙∙∙▉∙
-▉▉▉▉▉▉▉▉▉▉❀❀▉▉▉▉▉▉▉▉
-▉∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▉
-▉∙∙∙▉▉▉▉∙∙∙∙▉▉▉▉∙∙∙▉
-▉∙∙∙▉▉▉▉∙∙∙∙▉▉▉▉∙∙∙▉
-▉∙∙‼▉⇆▉▉∙∙∙‼▉⇆▉▉∙∙∙▉
-▉∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▉
-▉∙∙∙∙∙∙∙☻◈∙∙∙∙∙∙∙∙∙▉
-▉∙∙∙◆∙∙∙∙∙▉▉▉▉▉▉∙∙∙▉
-▉∙∙∙▉▉▉‼∙∙▉▉▉▉▉▉∙∙∙▉
-▉∙∙∙∙∙∙∙∙∙▉▉▉▉▉▉∙∙∙▉
-▉∙∙∙∙∙∙∙∙∙▉▉⇆▉▉▉∙∙∙▉
-▉∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▉
-▉∙∙∙∙∙∙∙∙∙▉▉▉‼▉▉∙∙∙▉
-▉∙∙∙≋≋≋≋◆∙∙∙∙∙∙∙∙∙∙▉
-░░░∙≋≋≋≋∙∙∙∙∙∙∙∙∙∙∙▉
-░░░∙≋≋≋≋∙∙∙∙∙∙∙∙∙∙∙▉
-░░░∙≋≋≋≋▉▉▉▉▉▉▉▉▉▉▉▉
+∙∙∙▓∙∙∙∙∙▓※※▓∙∙∙∙∙▓∙
+▓▓▓▓▓▓▓▓▓▓※※▓▓▓▓▓▓▓▓
+▓∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▓
+▓∙∙∙▓▓▓▓∙∙∙∙▓▓▓▓∙∙∙▓
+▓∙∙∙▓▓▓▓∙∙∙∙▓▓▓▓∙∙∙▓
+▓∙∙‼▓∞▓▓∙∙∙‼▓∞▓▓∙∙∙▓
+▓∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▓
+▓∙∙∙∙∙∙∙☺♦∙∙∙∙∙∙∙∙∙▓
+▓∙∙∙◆∙∙∙∙∙▓▓▓▓▓▓∙∙∙▓
+▓∙∙∙▓▓▓‼∙∙▓▓▓▓▓▓∙∙∙▓
+▓∙∙∙∙∙∙∙∙∙▓▓▓▓▓▓∙∙∙▓
+▓∙∙∙∙∙∙∙∙∙▓▓∞▓▓▓∙∙∙▓
+▓∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▓
+▓∙∙∙∙∙∙∙∙∙▓▓▓‼▓▓∙∙∙▓
+▓∙∙∙≈≈≈≈◆∙∙∙∙∙∙∙∙∙∙▓
+░░░∙≈≈≈≈∙∙∙∙∙∙∙∙∙∙∙▓
+░░░∙≈≈≈≈∙∙∙∙∙∙∙∙∙∙∙▓
+░░░∙≈≈≈≈▓▓▓▓▓▓▓▓▓▓▓▓
 
 Legend:
 ░ Undiscovered
 ∙ Free tile
-☻ Player
-◈ Pikachu
-▉ Barrier/wall
-≋ Water
-❀ Tall grass
+☺ Player
+♦ Pikachu
+▓ Barrier/wall
+≈ Water
+※ Tall grass
 ◆ Sprite
-⇆ Warp
+∞ Warp
 ‼ Sign
 ```
 

@@ -12,7 +12,7 @@ llm_service = OpenAILLMService()
 async def test_one_token_per_tile() -> None:
     """Test that GPT-5.6 Luna encodes each ASCII map tile as one token."""
     num_repeats = 10
-    expected_tokens = await llm_service.count_input_tokens("\n\n") + num_repeats
+    expected_tokens = num_repeats + 2  # Include the two surrounding newlines.
     errors = []
     for tile in AsciiTile:
         contents = "\n" + tile.value * num_repeats + "\n"
