@@ -7,7 +7,6 @@ from loguru import logger
 from agent.subflows.overworld_handler.enums import OverworldTool
 from agent.subflows.overworld_handler.nodes.select_tool.prompts import (
     BUTTON_TOOL_INFO,
-    CRITIQUE_TOOL_INFO,
     NAVIGATION_TOOL_BIKING_INFO,
     NAVIGATION_TOOL_INFO,
     SELECT_TOOL_PROMPT,
@@ -16,7 +15,6 @@ from agent.subflows.overworld_handler.nodes.select_tool.prompts import (
     USE_ITEM_TOOL_INFO,
 )
 from agent.subflows.overworld_handler.nodes.select_tool.schemas import SelectToolResponse
-from common.constants import MIN_ITERATIONS_PER_CRITIQUE
 from common.enums import AsciiTile, SpriteLabel
 from llm.schemas import GEMINI_FLASH_2_5
 from llm.service import GeminiLLMService
@@ -31,12 +29,11 @@ if TYPE_CHECKING:
 llm_service = GeminiLLMService(GEMINI_FLASH_2_5)
 
 
-async def select_tool(  # noqa: PLR0913
+async def select_tool(
     *,
     iteration: int,
     raw_memory: RawMemory,
     current_map: OverworldMap,
-    iterations_since_last_critique: int,
     state_string_builder: StateStringBuilder,
     emulator: YellowLegacyEmulator,
 ) -> tuple[OverworldTool, RawMemory]:
@@ -46,7 +43,6 @@ async def select_tool(  # noqa: PLR0913
         iteration: Current agent iteration used to timestamp the decision.
         raw_memory: Recent memory to update with the model's reasoning.
         current_map: Explored map used to determine available navigation tools.
-        iterations_since_last_critique: Iterations elapsed since the previous critique.
         state_string_builder: Formatter for the current overworld state and map context.
         emulator: Running emulator used to inspect the state and capture its screen.
 
@@ -57,11 +53,7 @@ async def select_tool(  # noqa: PLR0913
     game_state, img = await emulator.get_game_state_with_screenshot()
     prompt = SELECT_TOOL_PROMPT.format(
         state=state_string_builder(game_state),
-        tools=_get_available_tool_info(
-            game_state,
-            current_map,
-            iterations_since_last_critique,
-        ),
+        tools=_get_available_tool_info(game_state, current_map),
     )
     try:
         response = await llm_service.get_llm_response_pydantic(
@@ -87,7 +79,6 @@ async def select_tool(  # noqa: PLR0913
 def _get_available_tool_info(
     game_state: YellowLegacyGameState,
     current_map: OverworldMap,
-    iterations_since_last_critique: int,
 ) -> str:
     """Get the information about the available tools."""
     info = [BUTTON_TOOL_INFO]  # Always available.
@@ -109,8 +100,5 @@ def _get_available_tool_info(
     )
     if has_boulder and has_goal and game_state.can_use_strength:
         info.append(SOKOBAN_SOLVER_TOOL_INFO)
-
-    if iterations_since_last_critique >= MIN_ITERATIONS_PER_CRITIQUE:
-        info.append(CRITIQUE_TOOL_INFO)
 
     return "\n".join(info)

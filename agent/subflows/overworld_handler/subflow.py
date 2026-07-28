@@ -39,8 +39,5 @@ class OverworldHandlerSubflow(
 
         if state.raw_memory is None:
             raise ValueError("Raw memory is not set")
-        if state.iterations_since_last_critique is None:
-            raise ValueError("Iterations since last critique is not set")
 
         await parent_store.set_raw_memory(state.raw_memory)
-        await parent_store.set_iterations_since_last_critique(state.iterations_since_last_critique)

@@ -12,11 +12,6 @@ class GeminiModel:
     cost_1m_output_tokens: float
 
 
-GEMINI_PRO_2_5 = GeminiModel(
-    model_id="gemini-2.5-pro",
-    cost_1m_input_tokens=1.25,
-    cost_1m_output_tokens=10,
-)
 GEMINI_FLASH_2_5 = GeminiModel(
     model_id="gemini-2.5-flash",
     cost_1m_input_tokens=0.3,
