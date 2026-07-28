@@ -69,7 +69,7 @@ The summary memory also has more intelligent rollover logic than the raw memory.
 
 The final kind of memory given to the model is the long-term memory. This is effectively a database table of documents that the model can create and update every ten iterations. Each document has a unique title. When refreshing its long-term memory, the model sees the available titles and chooses which documents it wants to recall. Those documents are then loaded directly by title. Long term memories are never deleted (though I may change that if it becomes a problem).
 
-The model is encouraged to summarize memories if they go over a certain length, but there are no hard rules for what it can put in there. Common topics include notes on maps, characters, party members, goals, etc. The long term memory is refreshed with ten new memories every ten iterations, and these memories take up roughly 2000 tokens in total.
+The model is encouraged to summarize memories if they go over a certain length, but there are no hard rules for what it can put in there. Common topics include notes on maps, characters, party members, goals, etc. Up to ten relevant memories are selected every ten iterations, and these memories take up roughly 2000 tokens in total.
 
 ### Mapping
 

@@ -14,7 +14,7 @@ from memory.long_term_memory import LongTermMemory
 async def test_retrieve_long_term_memory_loads_selected_titles(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Normalize selected titles and silently discard titles that do not exist."""
+    """Normalize selected titles and discard titles that do not exist."""
     selected_title = "PEWTER_CITY"
     selected_memory = LongTermMemoryRead(
         title=selected_title,

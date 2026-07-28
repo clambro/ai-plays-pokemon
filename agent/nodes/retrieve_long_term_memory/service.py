@@ -64,6 +64,11 @@ async def retrieve_long_term_memory(
         normalized_title = title.strip().upper().replace(" ", "_")
         if normalized_title in available_titles:
             selected_titles.append(normalized_title)
+        else:
+            logger.warning(
+                f"Tried to retrieve non-existent long-term memory piece:"
+                f" {normalized_title}. Skipping.",
+            )
     if not selected_titles:
         return LongTermMemory()
 

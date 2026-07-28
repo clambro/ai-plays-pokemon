@@ -5,13 +5,6 @@
 Remove Gemini completely, make the explicit `gpt-5.6-luna` model the only
 generation model, and delete every global and overworld critique mechanism.
 
-**Depends on:**
-
-- [`simplify-long-term-memory.md`](simplify-long-term-memory.md)
-
-The long-term-memory work removes embeddings first, so this ticket only needs
-to migrate generation.
-
 ## Generation
 
 - Replace `google-genai` with the current OpenAI Python SDK and replace
