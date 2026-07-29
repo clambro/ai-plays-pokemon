@@ -6,8 +6,9 @@ Replace the complete Junjo text subflow with a Pydantic AI text agent that
 stays inside a local interaction loop until text mode exits.
 
 The Junjo root graph remains temporarily. It invokes the new text runner
-through one adapter, leaving the application runnable before the battle and
-overworld migrations begin.
+through one adapter, leaving the application runnable while the overworld
+handler still uses Junjo. Follow the context, agent, registry, and per-tool
+interface/service boundaries established by the completed battle migration.
 
 ## Design
 

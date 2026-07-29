@@ -407,18 +407,9 @@ embedding or reranking details.
 
 ## Migration Phases
 
-Each phase is a separate sequential ticket and leaves the application working.
+Each phase is implemented separately and leaves the application working.
 
-### Phase 1: Replace the text subflow
-
-- Introduce `TextContext`, its preparation function, text agent, tool
-  registry, and per-tool interface/service packages.
-- Implement the local text loop.
-- Replace the Junjo text subflow with one temporary adapter that invokes the
-  complete text runner.
-- Remove the superseded text graph and nodes.
-
-### Phase 2: Replace the battle subflow
+### Phase 1: Replace the battle subflow
 
 - Introduce `BattleContext`, its preparation function, battle agent, tool
   registry, and per-tool interface/service packages.
@@ -426,6 +417,15 @@ Each phase is a separate sequential ticket and leaves the application working.
 - Replace the Junjo battle subflow with one temporary adapter that invokes the
   complete battle runner.
 - Remove the superseded battle graph and nodes.
+
+### Phase 2: Replace the text subflow
+
+- Introduce `TextContext`, its preparation function, text agent, tool
+  registry, and per-tool interface/service packages.
+- Implement the local text loop.
+- Replace the Junjo text subflow with one temporary adapter that invokes the
+  complete text runner.
+- Remove the superseded text graph and nodes.
 
 ### Phase 3: Replace the overworld subflow
 

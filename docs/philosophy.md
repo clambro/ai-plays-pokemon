@@ -28,18 +28,18 @@ Fundamentally the approach here is to let the agent do the thinking and offload 
 
 Given that the core philosophy here is "freedom within constraint," we need an orchestration system to control the state of our AI agent. This orchestration system needs to meet the following criteria:
 
-- It must run asynchronously. It will be running on the same thread as the PyBoy emulator itself, so we have to make sure it doesn't block emulation.
-  - Pyboy is not natively async, so we had to [do some additional work](/emulator/emulator.py) to make it async-safe.
-  - This was more of a self-imposed challenge. I could have run PyBoy on a separate thread entirely and added a communication layer between it and the agent, but I wanted the whole thing to run together as if it were a single application.
-- Its states must be compatible with Pydantic. The interfaces between the various layers of our application all need to be validated and type-safe or the application will fall into chaos. These interfaces are:
+- It must run asynchronously so slow model calls, navigation, database access, and other application work do not interrupt emulation. PyBoy is not natively async, so a dedicated worker thread owns the emulator and exposes a small asynchronous controller to the rest of the application.
+- Interfaces between the various layers of the application need to be validated and type-safe or the application will fall into chaos. These interfaces include:
   - The [parsers](/emulator/parsers/) that read the raw game memory and turn it into the usable game state object.
-  - The Pydantic integration [in the LLM service](/llm/service.py) that converts the raw JSON string output of the LLMs into validated schemas.
+  - Pydantic AI's typed agent contexts, function-tool arguments, and structured model responses.
   - The [repository pattern](/database/) used to read objects from and write objects to the SQLite database.
   - The [backup service](/common/backup_service.py) that serializes states to and deserializes states from the disk.
   - The [background server](/streaming/server.py) that displays the workflow and game states on an HTML page.
-- It must be lightweight and promote modular code. We need to be able to easily add new nodes to our workflow or rearrange old ones as our needs and understanding of the game evolve. Many orchestration tools impose heavy abstractions that are difficult to debug. That won't work for us.
+- It must be lightweight and promote modular code. We need to be able to add or rearrange agents, tools, and deterministic services as our understanding of the game evolves.
 
-The orchestration flow used in this project is called [Junjo](https://github.com/mdrideout/junjo), and it meets all of the above criteria. Full disclosure: Junjo was created by a coworker and friend of mine, but he did so out of the exact needs and shortcomings of other workflow orchestrators that I described above. Junjo creates a serializable, stateful, nestable graph (read: constraint) for our AI to operate within. A node-by-node analysis of this graph [is available here](/docs/workflow.md) if you're curious about how it's constructed.
+The application is migrating from Junjo graphs to Pydantic AI agents organized around three gameplay domains: overworld navigation, battles, and text interactions. Shared deterministic preparation loads the memory, goals, game state, and other context needed by a domain before its agent runs. Each agent has its own typed context and a focused registry of tools. Those tools expose a thin model-facing interface while separate deterministic services handle the underlying game mechanics.
+
+An agent may use several tools within its domain before returning control to the outer workflow. Tool results provide fresh observations for the next decision, while only information useful beyond that local loop becomes durable memory. Work that involves no meaningful model decision remains ordinary deterministic code. The migration is phased so the application remains usable as each domain adopts this structure; the [workflow documentation](/docs/workflow.md) describes the current hybrid implementation.
 
 ## Overcoming the LLM's Flaws
 
