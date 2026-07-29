@@ -2,14 +2,30 @@
 
 import asyncio
 from dataclasses import dataclass, field
+from io import BytesIO
 from typing import TYPE_CHECKING
+
+from pydantic_ai import BinaryContent
 
 from common.enums import Button
 
 if TYPE_CHECKING:
+    from PIL import Image
+
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
     from emulator.schemas import DialogBox
+
+
+def build_screenshot_content(screenshot: Image.Image) -> BinaryContent:
+    """Encode a screenshot for a multimodal model message."""
+    image_buffer = BytesIO()
+    screenshot.save(image_buffer, format="PNG")
+    return BinaryContent(
+        data=image_buffer.getvalue(),
+        media_type="image/png",
+        vendor_metadata={"detail": "original"},
+    )
 
 
 def is_battle_handler_state(game_state: YellowLegacyGameState) -> bool:

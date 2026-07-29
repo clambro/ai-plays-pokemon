@@ -18,9 +18,7 @@ from agent.subflows.battle_handler.node import BattleAgentNode
 from agent.subflows.overworld_handler.graph import build_overworld_handler_subflow_graph
 from agent.subflows.overworld_handler.state import OverworldHandlerState, OverworldHandlerStore
 from agent.subflows.overworld_handler.subflow import OverworldHandlerSubflow
-from agent.subflows.text_handler.graph import build_text_handler_subflow_graph
-from agent.subflows.text_handler.state import TextHandlerState, TextHandlerStore
-from agent.subflows.text_handler.subflow import TextHandlerSubflow
+from agent.subflows.text_handler.node import TextHandlerNode
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
@@ -37,11 +35,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     finalize_memory = FinalizeMemoryNode()
 
     battle_agent = BattleAgentNode(emulator)
-    text_handler_subflow = TextHandlerSubflow(
-        graph_factory=lambda: build_text_handler_subflow_graph(emulator),
-        store_factory=lambda: TextHandlerStore(TextHandlerState()),
-        emulator=emulator,
-    )
+    text_handler = TextHandlerNode(emulator)
     overworld_handler_subflow = OverworldHandlerSubflow(
         graph_factory=lambda: build_overworld_handler_subflow_graph(emulator),
         store_factory=lambda: OverworldHandlerStore(OverworldHandlerState()),
@@ -85,10 +79,8 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
                 battle_agent,
                 AgentHandlerIs(AgentStateHandler.BATTLE),
             ),
-            Edge(
-                post_retrieval_dummy, text_handler_subflow, AgentHandlerIs(AgentStateHandler.TEXT)
-            ),
-            Edge(text_handler_subflow, do_updates),
+            Edge(post_retrieval_dummy, text_handler, AgentHandlerIs(AgentStateHandler.TEXT)),
+            Edge(text_handler, do_updates),
             Edge(battle_agent, do_updates),
             Edge(overworld_handler_subflow, do_updates),
             Edge(do_updates, finalize_memory),
