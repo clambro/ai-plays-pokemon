@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING
 from pydantic_ai import BinaryContent
 
 from agent.subflows.battle_handler.prompts import build_battle_tool_result
-from agent.utils import append_dialog_to_list_inplace, is_blinking_cursor_on_screen
-from common.enums import Button
+from agent.utils import DialogReader
 from common.schemas import Coords
 from streaming.server import update_background_from_states
 
@@ -118,28 +117,26 @@ async def handle_battle_dialog(context: BattleContext) -> str:
     Returns:
         The captured dialog text.
     """
-    text: list[str] = []
-    await context.emulator.wait_for_animation_to_finish()
+    dialog_reader = DialogReader(context.emulator)
+    game_state = await dialog_reader.wait_for_animation()
     while True:
-        game_state = await context.emulator.get_game_state()
+        dialog_reader.observe(game_state)
         dialog_box = game_state.get_dialog_box()
         if not dialog_box:
             break
-        append_dialog_to_list_inplace(text, dialog_box)
 
-        if await is_blinking_cursor_on_screen(context.emulator):
-            await context.emulator.press_button(Button.A)
+        if await dialog_reader.is_cursor_blinking():
+            game_state = await dialog_reader.advance()
             continue
 
         previous_state = game_state
-        await context.emulator.wait_for_animation_to_finish()
-        game_state = await context.emulator.get_game_state()
+        game_state = await dialog_reader.wait_for_animation()
         if game_state.screen.text == previous_state.screen.text:
             break
 
-    dialog = " ".join(text).strip()
+    dialog = dialog_reader.text
     if dialog:
         context.state.rolling_memory.add_memory(
-            content=f'The following text was read from the battle dialog box: "{dialog}"',
+            content=f'Onscreen text: "{dialog}"',
         )
     return dialog
