@@ -1,8 +1,10 @@
 """Task-local routing for LLM usage updates."""
 
-from collections.abc import Awaitable, Callable, Iterator
+from collections.abc import Awaitable, Callable, Iterator, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
+
+from pydantic_ai import ModelMessage, ModelResponse
 
 type LLMUsageUpdater = Callable[[int, float], Awaitable[None]]
 
@@ -30,3 +32,15 @@ async def update_llm_usage(tokens: int, cost: float) -> None:
     except LookupError as error:
         raise RuntimeError("LLM usage updater is not bound to an agent run") from error
     await update_usage(tokens, cost)
+
+
+async def update_pydantic_ai_usage(messages: Sequence[ModelMessage]) -> None:
+    """Add Pydantic AI model-response usage to the active agent state."""
+    responses = [message for message in messages if isinstance(message, ModelResponse)]
+    if not responses:
+        return
+
+    await update_llm_usage(
+        tokens=sum(response.usage.total_tokens for response in responses),
+        cost=sum(float(response.cost().total_price) for response in responses),
+    )

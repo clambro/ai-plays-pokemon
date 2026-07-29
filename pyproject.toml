@@ -22,6 +22,7 @@ dependencies = [
     "aiosqlite>=0.22.1,<0.23",
     "aiohttp>=3.14.3,<4",
     "logfire>=4.39.0,<5",
+    "pydantic-ai-slim[openai]>=2.19.0,<3",
 ]
 
 [dependency-groups]
