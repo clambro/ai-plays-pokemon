@@ -1,10 +1,12 @@
 """Task-local routing for LLM usage updates."""
 
-from collections.abc import Awaitable, Callable, Iterator, Sequence
+from collections.abc import Awaitable, Callable, Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
+from typing import TYPE_CHECKING
 
-from pydantic_ai import ModelMessage, ModelResponse
+if TYPE_CHECKING:
+    from pydantic_ai import ModelResponse
 
 type LLMUsageUpdater = Callable[[int, float], Awaitable[None]]
 
@@ -34,13 +36,9 @@ async def update_llm_usage(tokens: int, cost: float) -> None:
     await update_usage(tokens, cost)
 
 
-async def update_pydantic_ai_usage(messages: Sequence[ModelMessage]) -> None:
-    """Add Pydantic AI model-response usage to the active agent state."""
-    responses = [message for message in messages if isinstance(message, ModelResponse)]
-    if not responses:
-        return
-
-    await update_llm_usage(
-        tokens=sum(response.usage.total_tokens for response in responses),
-        cost=sum(float(response.cost().total_price) for response in responses),
-    )
+async def update_pydantic_ai_usage(response: ModelResponse) -> tuple[int, float]:
+    """Add one Pydantic AI model response's usage to the active agent state."""
+    tokens = response.usage.total_tokens
+    cost = float(response.cost().total_price)
+    await update_llm_usage(tokens, cost)
+    return tokens, cost

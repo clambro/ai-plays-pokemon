@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from pydantic_ai import ModelRetry, Tool
+from pydantic_ai import Tool
 
 from agent.subflows.battle_handler.tools.errors import BattleActionUnavailableError
 from agent.subflows.battle_handler.tools.throw_ball.service import (
@@ -34,9 +34,6 @@ def build_throw_ball_tool(context: BattleContext) -> Tool[BattleContext]:
 
         Returns:
             Fresh battle context after the attempted throw.
-
-        Raises:
-            ModelRetry: The requested ball is unavailable in the latest game state.
         """
         try:
             result = await throw_ball_service(
@@ -44,11 +41,10 @@ def build_throw_ball_tool(context: BattleContext) -> Tool[BattleContext]:
                 ball_type=PokeballItem(ball_type),
             )
         except BattleActionUnavailableError as error:
-            retry_context = await refresh_battle_observation(
+            return await refresh_battle_observation(
                 context,
                 action_result=str(error),
             )
-            raise ModelRetry(retry_context) from error
         return await complete_battle_action(context, result)
 
     return Tool(throw_ball, require_parameter_descriptions=True)

@@ -11,6 +11,8 @@ if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
 
+_STRUGGLE = "STRUGGLE"
+
 
 async def fight(*, emulator: YellowLegacyEmulator, move_slot: int) -> str:
     """Select a move from the battle menu.
@@ -35,6 +37,9 @@ async def fight(*, emulator: YellowLegacyEmulator, move_slot: int) -> str:
         raise BattleActionUnavailableError(f"Move slot {move_slot} is not available.")
 
     await _open_move_menu(emulator, cursor_pos)
+    if move_name == _STRUGGLE:
+        return f"Attempted to use {_STRUGGLE}."
+
     game_state = await emulator.get_game_state()
 
     cursor_index = _get_move_menu_cursor_index(game_state)
@@ -53,10 +58,12 @@ def _get_available_move_name(game_state: YellowLegacyGameState, move_slot: int) 
         return None
 
     available_moves = [
-        (slot, move.name) for slot, move in enumerate(player_pokemon.moves) if move.pp > 0
+        (slot, move.name)
+        for slot, move in enumerate(player_pokemon.moves)
+        if move.pp > 0 and slot != game_state.battle.disabled_move_slot
     ]
     if not available_moves:
-        return "STRUGGLE" if move_slot == 0 else None
+        return _STRUGGLE if move_slot == 0 else None
     return next((name for slot, name in available_moves if slot == move_slot), None)
 
 

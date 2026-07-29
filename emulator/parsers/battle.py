@@ -28,6 +28,7 @@ class Battle(BaseModel):
     player_pokemon: Pokemon | None
     enemy_pokemon: EnemyPokemon | None
     num_enemy_pokemon: int | None = Field(ge=0, le=100)
+    disabled_move_slot: int | None = Field(default=None, ge=0, le=3)
 
     model_config = ConfigDict(frozen=True)
 
@@ -51,6 +52,7 @@ def parse_battle_state(mem: PyBoyMemoryView) -> Battle:
             player_pokemon=None,
             enemy_pokemon=None,
             num_enemy_pokemon=None,
+            disabled_move_slot=None,
         )
 
     # Note that both flags are used to determine the battle type.
@@ -81,10 +83,14 @@ def parse_battle_state(mem: PyBoyMemoryView) -> Battle:
                 num_remaining_enemy_pokemon += 1
         num_enemy_pokemon = num_remaining_enemy_pokemon
 
+    disabled_move_number = mem[0xD06D] >> 4
+    disabled_move_slot = disabled_move_number - 1 if disabled_move_number else None
+
     return Battle(
         is_in_battle=is_in_battle,
         battle_type=battle_type,
         player_pokemon=player_pokemon,
         enemy_pokemon=enemy_pokemon,
         num_enemy_pokemon=num_enemy_pokemon,
+        disabled_move_slot=disabled_move_slot,
     )

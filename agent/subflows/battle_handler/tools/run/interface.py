@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from pydantic_ai import ModelRetry, Tool
+from pydantic_ai import Tool
 
 from agent.subflows.battle_handler.tools.errors import BattleActionUnavailableError
 from agent.subflows.battle_handler.tools.run.service import run as run_service
@@ -24,18 +24,14 @@ def build_run_tool(context: BattleContext) -> Tool[BattleContext]:
 
         Returns:
             Fresh battle context after the escape attempt.
-
-        Raises:
-            ModelRetry: Running is unavailable in the latest game state.
         """
         try:
             result = await run_service(emulator=context.emulator)
         except BattleActionUnavailableError as error:
-            retry_context = await refresh_battle_observation(
+            return await refresh_battle_observation(
                 context,
                 action_result=str(error),
             )
-            raise ModelRetry(retry_context) from error
         return await complete_battle_action(context, result)
 
     return Tool(run, require_parameter_descriptions=True)

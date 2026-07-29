@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, Annotated
 
 from pydantic import Field
-from pydantic_ai import ModelRetry, Tool
+from pydantic_ai import Tool
 
 from agent.subflows.battle_handler.tools.errors import BattleActionUnavailableError
 from agent.subflows.battle_handler.tools.fight.service import fight as fight_service
@@ -32,9 +32,6 @@ def build_fight_tool(context: BattleContext) -> Tool[BattleContext]:
 
         Returns:
             Fresh battle context after the attempted move.
-
-        Raises:
-            ModelRetry: The requested move is unavailable in the latest game state.
         """
         try:
             result = await fight_service(
@@ -42,11 +39,10 @@ def build_fight_tool(context: BattleContext) -> Tool[BattleContext]:
                 move_slot=move_slot,
             )
         except BattleActionUnavailableError as error:
-            retry_context = await refresh_battle_observation(
+            return await refresh_battle_observation(
                 context,
                 action_result=str(error),
             )
-            raise ModelRetry(retry_context) from error
         return await complete_battle_action(context, result)
 
     return Tool(fight, require_parameter_descriptions=True)

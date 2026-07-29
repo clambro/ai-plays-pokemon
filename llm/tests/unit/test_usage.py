@@ -59,7 +59,8 @@ async def test_pydantic_ai_usage_updates_agent_totals() -> None:
     store = AgentStore(AgentState(folder=Path("output")))
 
     with bind_llm_usage_updater(store.add_llm_usage):
-        await update_pydantic_ai_usage(responses)
+        for response in responses:
+            await update_pydantic_ai_usage(response)
 
     state = await store.get_state()
     assert state.total_tokens == sum(response.usage.total_tokens for response in responses)

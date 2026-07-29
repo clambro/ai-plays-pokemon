@@ -10,6 +10,8 @@ from emulator.parsers.utils import get_text_from_byte_array
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
 
+_PP_MASK = 0x3F
+
 
 class PokemonMove(BaseModel):
     """A move that a pokemon can learn."""
@@ -82,7 +84,7 @@ def parse_player_battle_pokemon(mem: PyBoyMemoryView) -> Pokemon | None:
         move_id = mem[0xD01B + i]
         if move_id == 0:
             continue
-        pp = mem[0xD02C + i]
+        pp = mem[0xD02C + i] & _PP_MASK
         moves.append(PokemonMove(name=_INT_TO_MOVE_MAP[move_id], pp=pp))
 
     hp = (mem[0xD014] << 8) | mem[0xD015]
@@ -145,7 +147,7 @@ def _parse_party_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
         move_id = mem[0xD172 + increment + i]
         if move_id == 0:
             continue
-        pp = mem[0xD187 + increment + i]
+        pp = mem[0xD187 + increment + i] & _PP_MASK
         moves.append(PokemonMove(name=_INT_TO_MOVE_MAP[move_id], pp=pp))
 
     hp = (mem[0xD16B + increment] << 8) | mem[0xD16B + increment + 1]
@@ -185,7 +187,7 @@ def _parse_pc_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
         move_id = mem[0xDA9D + increment + i]
         if move_id == 0:
             continue
-        pp = mem[0xDAB2 + increment + i]
+        pp = mem[0xDAB2 + increment + i] & _PP_MASK
         moves.append(PokemonMove(name=_INT_TO_MOVE_MAP[move_id], pp=pp))
 
     max_hp = (mem[0xDA96 + increment] << 8) | mem[0xDA96 + increment + 1]

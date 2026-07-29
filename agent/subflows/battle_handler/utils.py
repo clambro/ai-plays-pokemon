@@ -66,12 +66,11 @@ async def complete_battle_action(context: BattleContext, action_result: str) -> 
         Fresh context for the agent's next decision.
     """
     dialog = await handle_battle_dialog(context)
-    result = await refresh_battle_observation(
+    return await refresh_battle_observation(
         context,
         action_result=action_result,
         dialog=dialog,
     )
-    return [result, build_screenshot_content(context.screenshot)]
 
 
 async def refresh_battle_observation(
@@ -79,14 +78,17 @@ async def refresh_battle_observation(
     *,
     action_result: str,
     dialog: str = "",
-) -> str:
+) -> BattleToolResult:
     """Refresh the battle context and render it for the agent."""
     await refresh_battle_context(context)
-    return build_battle_tool_result(
-        context,
-        action_result=action_result,
-        dialog=dialog,
-    )
+    return [
+        build_screenshot_content(context.screenshot),
+        build_battle_tool_result(
+            context,
+            action_result=action_result,
+            dialog=dialog,
+        ),
+    ]
 
 
 async def refresh_battle_context(context: BattleContext) -> None:
