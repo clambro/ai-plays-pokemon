@@ -15,14 +15,12 @@ async def run(
     *,
     rolling_memory: RollingMemory,
     emulator: YellowLegacyEmulator,
-    reason: str,
 ) -> str:
     """Select RUN from the battle menu.
 
     Args:
         rolling_memory: Recent memory to update after selecting RUN.
         emulator: Running emulator used to navigate the battle menu.
-        reason: Brief explanation of the escape attempt.
 
     Returns:
         Confirmation of the escape attempt.
@@ -44,5 +42,5 @@ async def run(
     await emulator.press_button(Button.A, wait_for_animation=False)
 
     result = "Attempted to run away from the battle."
-    rolling_memory.add_memory(content=f"{reason} {result}")
+    rolling_memory.add_memory(content=result)
     return result

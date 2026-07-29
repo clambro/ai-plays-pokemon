@@ -1,8 +1,7 @@
 """Pydantic AI interface for throwing a Poke Ball."""
 
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING
 
-from pydantic import Field
 from pydantic_ai import ModelRetry, Tool
 
 from agent.subflows.battle_handler.tools.errors import BattleActionUnavailableError
@@ -19,7 +18,6 @@ def build_throw_ball_tool(context: BattleContext) -> Tool[BattleContext]:
     """Build the throw-ball tool bound to the current battle context."""
 
     async def throw_ball(
-        reason: Annotated[str, Field(min_length=1)],
         ball_type: PokeballItem,
     ) -> str:
         """Throw an available Poke Ball during a wild battle.
@@ -27,7 +25,6 @@ def build_throw_ball_tool(context: BattleContext) -> Tool[BattleContext]:
         The selected ball must be present in the player's current inventory.
 
         Args:
-            reason: Brief first-person explanation of why this ball should be thrown.
             ball_type: Type of Poke Ball to throw.
 
         Returns:
@@ -40,7 +37,6 @@ def build_throw_ball_tool(context: BattleContext) -> Tool[BattleContext]:
             return await throw_ball_service(
                 rolling_memory=context.rolling_memory,
                 emulator=context.emulator,
-                reason=reason,
                 ball_type=PokeballItem(ball_type),
             )
         except BattleActionUnavailableError as error:

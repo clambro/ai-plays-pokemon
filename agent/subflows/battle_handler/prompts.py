@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from agent.subflows.battle_handler.context import BattleContext
 
 BATTLE_DECISION_PROMPT = """
-You are in a Pokemon battle. The screenshot provided above is the current game screen. Use exactly one tool to take the next battle action.
+You are in a Pokemon battle. The screenshot provided above is the current game screen. Briefly explain your reasoning in first person as ordinary response text, then use exactly one tool to take the next battle action.
 
 {state}
 

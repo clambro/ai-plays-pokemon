@@ -17,7 +17,6 @@ async def switch_pokemon(
     *,
     rolling_memory: RollingMemory,
     emulator: YellowLegacyEmulator,
-    reason: str,
     party_slot: int,
 ) -> str:
     """Select a party Pokemon from the battle menu.
@@ -25,7 +24,6 @@ async def switch_pokemon(
     Args:
         rolling_memory: Recent memory to update after selecting the Pokemon.
         emulator: Running emulator used to navigate the battle menus.
-        reason: Brief explanation of the selected switch.
         party_slot: Zero-based party slot of the Pokemon to switch in.
 
     Returns:
@@ -66,7 +64,7 @@ async def switch_pokemon(
     await emulator.press_button(Button.A, wait_for_animation=False)
 
     result = f"Attempted to switch to {target.name} ({target.species})."
-    rolling_memory.add_memory(content=f"{reason} {result}")
+    rolling_memory.add_memory(content=result)
     return result
 
 

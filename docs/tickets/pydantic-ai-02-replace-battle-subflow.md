@@ -149,8 +149,10 @@ selector, argument schemas, conditions, and action nodes while retaining the
 existing post-action dialog handling.
 
 After committing that intermediate slice, remove the `reason` argument from
-every battle tool. The agent's thought process should provide the reasoning;
-tool calls should contain only the arguments needed to perform the action.
+every battle tool. Instruct the agent to emit a brief, visible text explanation
+alongside each tool call. The runner appends that text to rolling memory before
+executing the tool, which also streams it to the HTML background. Tool calls
+contain only the arguments needed to perform the action.
 
 Once every battle action runs through the agent, move orchestration into the
 whole-battle runner. Remove the remaining Junjo battle wrapper only after the

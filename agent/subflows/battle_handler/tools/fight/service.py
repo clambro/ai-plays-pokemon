@@ -17,7 +17,6 @@ async def fight(
     *,
     rolling_memory: RollingMemory,
     emulator: YellowLegacyEmulator,
-    reason: str,
     move_slot: int,
 ) -> str:
     """Select a move from the battle menu.
@@ -25,7 +24,6 @@ async def fight(
     Args:
         rolling_memory: Recent memory to update after selecting the move.
         emulator: Running emulator used to navigate the battle menus.
-        reason: Brief explanation of the selected move.
         move_slot: Zero-based slot of the move to use.
 
     Returns:
@@ -53,7 +51,7 @@ async def fight(
     await _select_move(emulator, cursor_index, move_slot)
 
     result = f"Attempted to use {move_name}."
-    rolling_memory.add_memory(content=f"{reason} {result}")
+    rolling_memory.add_memory(content=result)
     return result
 
 

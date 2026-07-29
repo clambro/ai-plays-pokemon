@@ -26,10 +26,7 @@ type BattleButton = Literal[
 def build_press_buttons_tool(context: BattleContext) -> Tool[BattleContext]:
     """Build the button-input tool bound to the current battle context."""
 
-    async def press_buttons(
-        reason: Annotated[str, Field(min_length=1)],
-        buttons: Annotated[list[BattleButton], Field(min_length=1)],
-    ) -> str:
+    async def press_buttons(buttons: Annotated[list[BattleButton], Field(min_length=1)]) -> str:
         """Press buttons to navigate an irregular battle screen.
 
         The available buttons are:
@@ -45,7 +42,6 @@ def build_press_buttons_tool(context: BattleContext) -> Tool[BattleContext]:
         to a clearly identified menu choice.
 
         Args:
-            reason: Brief first-person explanation of the current screen and selected input.
             buttons: Buttons to press in order.
 
         Returns:
@@ -53,7 +49,6 @@ def build_press_buttons_tool(context: BattleContext) -> Tool[BattleContext]:
         """
         return await press_buttons_service(
             context=context,
-            reason=reason,
             buttons=buttons,
         )
 

@@ -30,7 +30,6 @@ async def test_switch_to_pokemon() -> None:
         await switch_pokemon(
             rolling_memory=rolling_memory,
             emulator=emulator,
-            reason="The next party member is a better matchup.",
             party_slot=party_index,
         )
         await emulator.wait_for_animation_to_finish()

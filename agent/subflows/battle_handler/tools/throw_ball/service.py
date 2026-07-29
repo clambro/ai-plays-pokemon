@@ -17,7 +17,6 @@ async def throw_ball(
     *,
     rolling_memory: RollingMemory,
     emulator: YellowLegacyEmulator,
-    reason: str,
     ball_type: PokeballItem,
 ) -> str:
     """Select a Poke Ball from the battle item menu.
@@ -25,7 +24,6 @@ async def throw_ball(
     Args:
         rolling_memory: Recent memory to update after selecting the ball.
         emulator: Running emulator used to navigate the battle menus.
-        reason: Brief explanation of the selected ball.
         ball_type: Type of Poke Ball to throw.
 
     Returns:
@@ -62,7 +60,7 @@ async def throw_ball(
     await _select_item(emulator, cursor_index, item_index)
 
     result = f"Attempted to throw a {ball_type.value}."
-    rolling_memory.add_memory(content=f"{reason} {result}")
+    rolling_memory.add_memory(content=result)
     return result
 
 

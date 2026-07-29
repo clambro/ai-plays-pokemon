@@ -29,6 +29,5 @@ async def test_cannot_run_from_trainer_battle() -> None:
             await run(
                 rolling_memory=rolling_memory,
                 emulator=emulator,
-                reason="Escaping would avoid an unnecessary battle.",
             )
         assert not rolling_memory.raw_blocks

@@ -32,7 +32,6 @@ async def test_use_move() -> None:
         await fight(
             rolling_memory=rolling_memory,
             emulator=emulator,
-            reason="LEER will lower the opponent's defense.",
             move_slot=move_index,
         )
         await emulator.wait_for_animation_to_finish()

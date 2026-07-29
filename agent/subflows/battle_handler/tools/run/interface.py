@@ -1,8 +1,7 @@
 """Pydantic AI interface for attempting to leave a battle."""
 
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING
 
-from pydantic import Field
 from pydantic_ai import ModelRetry, Tool
 
 from agent.subflows.battle_handler.tools.errors import BattleActionUnavailableError
@@ -15,13 +14,8 @@ if TYPE_CHECKING:
 def build_run_tool(context: BattleContext) -> Tool[BattleContext]:
     """Build the run tool bound to the current battle context."""
 
-    async def run(
-        reason: Annotated[str, Field(min_length=1)],
-    ) -> str:
+    async def run() -> str:
         """Attempt to run from the current battle.
-
-        Args:
-            reason: Brief first-person explanation of why running is appropriate.
 
         Returns:
             Confirmation of the escape attempt.
@@ -33,7 +27,6 @@ def build_run_tool(context: BattleContext) -> Tool[BattleContext]:
             return await run_service(
                 rolling_memory=context.rolling_memory,
                 emulator=context.emulator,
-                reason=reason,
             )
         except BattleActionUnavailableError as error:
             raise ModelRetry(str(error)) from error

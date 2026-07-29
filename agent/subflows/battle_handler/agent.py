@@ -41,6 +41,10 @@ async def run_battle_decision(context: BattleContext) -> None:
             node = agent_run.next_node
             while not agent.is_end_node(node):
                 current_node = node
+                if isinstance(current_node, CallToolsNode) and (
+                    reasoning := current_node.model_response.text
+                ):
+                    context.rolling_memory.add_memory(reasoning)
                 node = await agent_run.next(node)
                 if isinstance(current_node, CallToolsNode):
                     break

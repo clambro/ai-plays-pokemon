@@ -34,7 +34,6 @@ async def test_throw_pokeball() -> None:
         await throw_ball(
             rolling_memory=rolling_memory,
             emulator=emulator,
-            reason="A Poke Ball may catch this Pokemon.",
             ball_type=PokeballItem.POKE_BALL,
         )
         await asyncio.sleep(0.1)  # Enough time to change frames, but not to catch the pokemon.
