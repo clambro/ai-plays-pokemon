@@ -38,7 +38,6 @@ def build_fight_tool(context: BattleContext) -> Tool[BattleContext]:
         """
         try:
             result = await fight_service(
-                rolling_memory=context.state.rolling_memory,
                 emulator=context.emulator,
                 move_slot=move_slot,
             )

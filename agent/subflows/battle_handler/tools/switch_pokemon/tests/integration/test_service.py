@@ -6,7 +6,6 @@ import pytest
 
 from agent.subflows.battle_handler.tools.switch_pokemon.service import switch_pokemon
 from emulator.emulator import YellowLegacyEmulator
-from memory.rolling_memory import RollingMemory
 
 
 @pytest.mark.integration
@@ -26,9 +25,7 @@ async def test_switch_to_pokemon() -> None:
         assert game_state.battle.player_pokemon is not None
         assert len(game_state.party) >= party_index
 
-        rolling_memory = RollingMemory()
         await switch_pokemon(
-            rolling_memory=rolling_memory,
             emulator=emulator,
             party_slot=party_index,
         )
@@ -36,4 +33,3 @@ async def test_switch_to_pokemon() -> None:
 
         game_state = await emulator.get_game_state()
         assert game_state.battle.player_pokemon == game_state.party[party_index]
-        assert len(rolling_memory.raw_blocks) == 1

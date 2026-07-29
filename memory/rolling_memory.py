@@ -26,7 +26,7 @@ class CurrentMemoryBlock:
 
     def append(self, content: str) -> None:
         """Append content in the order it was recorded."""
-        separator = "\n" if self.content else ""
+        separator = "\n\n" if self.content else ""
         self.content += f"{separator}{content}"
 
 

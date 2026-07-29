@@ -41,11 +41,7 @@ def build_switch_pokemon_tool(context: BattleContext) -> Tool[BattleContext]:
             ModelRetry: The requested party member is unavailable in the latest game state.
         """
         try:
-            result = await switch_pokemon_service(
-                rolling_memory=context.state.rolling_memory,
-                emulator=context.emulator,
-                party_slot=party_slot,
-            )
+            result = await switch_pokemon_service(emulator=context.emulator, party_slot=party_slot)
         except BattleActionUnavailableError as error:
             retry_context = await refresh_battle_observation(
                 context,

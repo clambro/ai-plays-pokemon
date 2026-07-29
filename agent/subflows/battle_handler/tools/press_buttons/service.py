@@ -14,10 +14,10 @@ async def press_buttons(
     context: BattleContext,
     buttons: Sequence[Button],
 ) -> str:
-    """Press the selected buttons and record the action in rolling memory.
+    """Press the selected buttons.
 
     Args:
-        context: Battle dependencies and working memory.
+        context: Battle dependencies.
         buttons: Buttons to press in order.
 
     Returns:
@@ -25,7 +25,6 @@ async def press_buttons(
     """
     button_names = [button.value for button in buttons]
     result = f"Pressed the following buttons: {button_names}."
-    context.state.rolling_memory.add_memory(content=result)
     for index, button in enumerate(buttons):
         await context.emulator.press_button(
             button,

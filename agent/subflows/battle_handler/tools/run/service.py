@@ -8,18 +8,12 @@ from common.enums import BattleType, Button
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
-    from memory.rolling_memory import RollingMemory
 
 
-async def run(
-    *,
-    rolling_memory: RollingMemory,
-    emulator: YellowLegacyEmulator,
-) -> str:
+async def run(*, emulator: YellowLegacyEmulator) -> str:
     """Select RUN from the battle menu.
 
     Args:
-        rolling_memory: Recent memory to update after selecting RUN.
         emulator: Running emulator used to navigate the battle menu.
 
     Returns:
@@ -41,6 +35,4 @@ async def run(
         await emulator.press_button(Button.DOWN)
     await emulator.press_button(Button.A, wait_for_animation=False)
 
-    result = "Attempted to run away from the battle."
-    rolling_memory.add_memory(content=result)
-    return result
+    return "Attempted to run away from the battle."

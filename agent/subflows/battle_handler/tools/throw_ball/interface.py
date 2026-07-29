@@ -40,7 +40,6 @@ def build_throw_ball_tool(context: BattleContext) -> Tool[BattleContext]:
         """
         try:
             result = await throw_ball_service(
-                rolling_memory=context.state.rolling_memory,
                 emulator=context.emulator,
                 ball_type=PokeballItem(ball_type),
             )

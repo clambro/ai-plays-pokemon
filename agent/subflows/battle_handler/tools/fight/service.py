@@ -10,19 +10,12 @@ if TYPE_CHECKING:
     from common.schemas import Coords
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
-    from memory.rolling_memory import RollingMemory
 
 
-async def fight(
-    *,
-    rolling_memory: RollingMemory,
-    emulator: YellowLegacyEmulator,
-    move_slot: int,
-) -> str:
+async def fight(*, emulator: YellowLegacyEmulator, move_slot: int) -> str:
     """Select a move from the battle menu.
 
     Args:
-        rolling_memory: Recent memory to update after selecting the move.
         emulator: Running emulator used to navigate the battle menus.
         move_slot: Zero-based slot of the move to use.
 
@@ -50,9 +43,7 @@ async def fight(
 
     await _select_move(emulator, cursor_index, move_slot)
 
-    result = f"Attempted to use {move_name}."
-    rolling_memory.add_memory(content=result)
-    return result
+    return f"Attempted to use {move_name}."
 
 
 def _get_available_move_name(game_state: YellowLegacyGameState, move_slot: int) -> str | None:

@@ -277,6 +277,19 @@ mode and invoking the correct runner. Each runner prepares its own context.
 The graph does not own tools, prompts, memory mutation, background updates, or
 the internal battle and text loops.
 
+### Iteration semantics follow-up
+
+Preserve the existing Junjo iteration behavior during the mode migrations
+because it is tightly coupled to agent state, rolling-memory finalization, and
+SQLite persistence. This temporarily means one overworld action advances the
+iteration while an entire battle or text loop shares one iteration.
+
+After the root graph migration is complete, revisit this boundary. Advancing
+the iteration for each agent-loop decision may provide a cleaner and more
+consistent definition across all three modes, but it should be changed together
+with the memory and database lifecycle rather than inside an individual mode
+migration.
+
 ## Overworld Agent
 
 The overworld runner prepares `OverworldContext`, supplies the overworld

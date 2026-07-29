@@ -8,7 +8,6 @@ import pytest
 from agent.subflows.battle_handler.tools.throw_ball.service import throw_ball
 from common.enums import PokeballItem
 from emulator.emulator import YellowLegacyEmulator
-from memory.rolling_memory import RollingMemory
 
 
 @pytest.mark.integration
@@ -30,9 +29,7 @@ async def test_throw_pokeball() -> None:
             "Poke Ball not found in inventory"
         )
 
-        rolling_memory = RollingMemory()
         await throw_ball(
-            rolling_memory=rolling_memory,
             emulator=emulator,
             ball_type=PokeballItem.POKE_BALL,
         )
@@ -40,4 +37,3 @@ async def test_throw_pokeball() -> None:
 
         game_state = await emulator.get_game_state()
         assert "POKé BALL!" in game_state.screen.text  # Used Poke Ball text.
-        assert len(rolling_memory.raw_blocks) == 1

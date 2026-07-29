@@ -99,10 +99,12 @@ Tool results form the changing portion of the battle conversation. Each tool
 returns a context string that describes the completed action and supplies a
 fresh observation for the next model request. This string remains inside the
 agent loop and is not appended wholesale to rolling memory or the HTML log.
-Keep the existing inline action records written by the deterministic tool
-services. The agent's visible narration is appended before the tool runs.
-Normal battle dialog remains deterministic, is recorded in rolling memory,
-and should not consume a separate model call.
+Action results and refreshed observations remain internal to the agent loop.
+Battle tools and their deterministic action services do not write to rolling
+memory or the HTML log. The agent's text emitted alongside each tool call and
+captured game dialog are appended to rolling memory and streamed to the HTML
+log. Normal battle dialog remains deterministic and should not consume a
+separate model call.
 
 Keep the conversation append-only and cache-friendly. Instructions and initial
 input stay at the beginning; changing state is appended only through tool
@@ -118,12 +120,11 @@ The local loop ends when battle mode exits, not solely when the ROM battle flag
 is cleared. In particular, the naming screen shown after catching a Pokémon is
 text mode even though the battle flag may remain set.
 
-The complete battle remains one top-level rolling-memory iteration. Agent
-narration and captured dialog append to the current block, which already
-streams live log changes to the HTML background. Tool-result context remains in
-the agent conversation only. The runner must also refresh the full displayed
-game state during the local loop because control may not return to the root
-graph for several actions.
+The complete battle remains one top-level rolling-memory iteration. Each agent
+message and captured game dialog appends to the current block, while action
+results and refreshed observations remain inside the agent conversation. The
+runner still refreshes the displayed game state during the local loop because
+control may not return to the root graph for several actions.
 
 Introducing Pydantic AI also requires small shared integrations outside the
 battle handler:
@@ -153,19 +154,19 @@ selector, argument schemas, conditions, and action nodes while retaining the
 existing post-action dialog handling.
 
 After committing that intermediate slice, remove the `reason` argument from
-every battle tool. Instruct the agent to emit a brief, visible text explanation
-alongside each tool call. The runner appends that text to rolling memory before
-executing the tool, which also streams it to the HTML background. Tool calls
-contain only the arguments needed to perform the action.
+every battle tool. Instruct the agent to emit a brief text explanation
+alongside each tool call. The runner appends that explanation to rolling memory
+before executing the tool. Tool calls contain only the arguments needed to
+perform the action.
 
 Once every battle action runs through the agent, move orchestration into the
 whole-battle runner. Keep one Pydantic AI run alive, refresh the context after
 each tool without rebuilding the initial input or toolset, and stop when the
 application no longer classifies the screen as battle mode. Keep the existing
-inline action records in rolling memory while the richer in-run tool return
-provides fresh context only to the agent conversation. Remove the remaining
-Junjo battle wrapper only after the new runner owns the complete battle
-lifecycle.
+tool results inside the agent conversation rather than writing battle action
+descriptions to rolling memory. Preserve captured game dialog as durable
+history for the next top-level iteration. Remove the remaining Junjo battle
+wrapper only after the new runner owns the complete battle lifecycle.
 
 ## Completion
 

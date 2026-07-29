@@ -10,19 +10,16 @@ if TYPE_CHECKING:
     from common.schemas import Coords
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
-    from memory.rolling_memory import RollingMemory
 
 
 async def throw_ball(
     *,
-    rolling_memory: RollingMemory,
     emulator: YellowLegacyEmulator,
     ball_type: PokeballItem,
 ) -> str:
     """Select a Poke Ball from the battle item menu.
 
     Args:
-        rolling_memory: Recent memory to update after selecting the ball.
         emulator: Running emulator used to navigate the battle menus.
         ball_type: Type of Poke Ball to throw.
 
@@ -59,9 +56,7 @@ async def throw_ball(
 
     await _select_item(emulator, cursor_index, item_index)
 
-    result = f"Attempted to throw a {ball_type.value}."
-    rolling_memory.add_memory(content=result)
-    return result
+    return f"Attempted to throw a {ball_type.value}."
 
 
 async def _open_item_menu(emulator: YellowLegacyEmulator, cursor_pos: Coords) -> None:

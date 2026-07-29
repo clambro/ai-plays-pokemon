@@ -29,10 +29,7 @@ def build_run_tool(context: BattleContext) -> Tool[BattleContext]:
             ModelRetry: Running is unavailable in the latest game state.
         """
         try:
-            result = await run_service(
-                rolling_memory=context.state.rolling_memory,
-                emulator=context.emulator,
-            )
+            result = await run_service(emulator=context.emulator)
         except BattleActionUnavailableError as error:
             retry_context = await refresh_battle_observation(
                 context,

@@ -10,19 +10,16 @@ if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
     from emulator.parsers.pokemon import Pokemon
-    from memory.rolling_memory import RollingMemory
 
 
 async def switch_pokemon(
     *,
-    rolling_memory: RollingMemory,
     emulator: YellowLegacyEmulator,
     party_slot: int,
 ) -> str:
     """Select a party Pokemon from the battle menu.
 
     Args:
-        rolling_memory: Recent memory to update after selecting the Pokemon.
         emulator: Running emulator used to navigate the battle menus.
         party_slot: Zero-based party slot of the Pokemon to switch in.
 
@@ -63,9 +60,7 @@ async def switch_pokemon(
     await _move_cursor(emulator, cursor_index, 0)
     await emulator.press_button(Button.A, wait_for_animation=False)
 
-    result = f"Attempted to switch to {target.name} ({target.species})."
-    rolling_memory.add_memory(content=result)
-    return result
+    return f"Attempted to switch to {target.name} ({target.species})."
 
 
 def _get_available_party_member(
