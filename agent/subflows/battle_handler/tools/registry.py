@@ -19,10 +19,12 @@ if TYPE_CHECKING:
     from agent.subflows.battle_handler.context import BattleContext
 
 
-def build_battle_toolset(context: BattleContext) -> FunctionToolset[BattleContext]:
+def build_battle_toolset(
+    context: BattleContext,
+    battle_type: BattleType | None,
+) -> FunctionToolset[BattleContext]:
     """Build the fixed toolset for the current battle type."""
     tools: list[Tool[BattleContext]] = []
-    battle_type = context.game_state.battle.battle_type
     if battle_type in (BattleType.TRAINER, BattleType.WILD):
         tools.extend(
             (

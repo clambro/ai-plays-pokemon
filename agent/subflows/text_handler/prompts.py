@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from agent.subflows.text_handler.context import TextContext
+    from emulator.game_state import YellowLegacyGameState
 
 TEXT_DECISION_PROMPT = """
 There is actionable text on the screen. The screenshot provided above is the current game screen. Briefly explain your reasoning in first person as ordinary response text, then use exactly one tool to take the next action. Every response must include a tool call.
@@ -18,9 +19,12 @@ If you see garbled, nonsensical text in the onscreen text, it is because the gam
 """.strip()
 
 
-def build_text_decision_prompt(context: TextContext) -> str:
-    """Build the prompt for the current actionable text screen."""
+def build_text_decision_prompt(
+    context: TextContext,
+    initial_game_state: YellowLegacyGameState,
+) -> str:
+    """Build the prompt for the initial actionable text screen."""
     return TEXT_DECISION_PROMPT.format(
-        state=context.state.to_prompt_string(context.game_state),
-        text=context.game_state.screen.text,
+        state=context.state.to_prompt_string(initial_game_state),
+        text=initial_game_state.screen.text,
     )

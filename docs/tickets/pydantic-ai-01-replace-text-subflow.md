@@ -14,10 +14,10 @@ handler still uses Junjo.
 
 ## Design
 
-Create a dedicated `TextContext` dataclass for the current agent state, fresh
-game observation, screenshot, and emulator. The runner operates on the root
-agent state and emulator directly, and prepares a `TextContext` only after it
-reaches an actionable screen.
+Create a dedicated `TextContext` dataclass containing the live agent state and
+emulator dependency. The entry game state and screenshot are static run inputs,
+not context fields. Tools read fresh observations from the emulator and return
+them without mutating the context.
 
 The runner first observes the game and distinguishes between:
 
@@ -61,19 +61,19 @@ routes back into the text runner and tries again naturally.
 ## Implementation Plan
 
 1. **Establish the actionable-text agent.**
-   Add `TextContext`, context preparation, a temporary root-graph adapter, and
-   a Pydantic AI agent with the `press_buttons` tool. Replace the generic raw
-   structured-output decision while retaining the existing deterministic
-   dialog and naming behavior. Keep the one-text-action boundary initially so
-   this first slice can establish the agent pattern without also changing the
-   interaction lifecycle. Remove the superseded Junjo text graph, subflow,
-   state, conditions, and wrapper nodes.
+   Add `TextContext`, a temporary root-graph adapter, and a Pydantic AI agent
+   with the `press_buttons` tool. Replace the generic raw structured-output
+   decision while retaining the existing deterministic dialog and naming
+   behavior. Keep the one-text-action boundary initially so this first slice
+   can establish the agent pattern without also changing the interaction
+   lifecycle. Remove the superseded Junjo text graph, subflow, state,
+   conditions, and wrapper nodes.
 
 1.5. **Clarify the initial game state.**
-   Rename the `game_state` field on both `BattleContext` and `TextContext` to
-   `initial_game_state`. Use it only for agent-entry prompts and toolset
-   construction; fresh states read after actions must not overwrite the
-   initial observation.
+   Remove game state and screenshot fields from both `BattleContext` and
+   `TextContext`. Contexts contain live dependencies only. Capture the entry
+   observation as local agent-run input, and keep fresh observations returned
+   by tools local rather than storing them back on the context.
 
 2. **Migrate naming into the toolset.**
    Replace the separate naming model call with an `assign_name` function tool.

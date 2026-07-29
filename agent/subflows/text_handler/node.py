@@ -7,11 +7,11 @@ from loguru import logger
 
 from agent.state import AgentStore
 from agent.subflows.text_handler.agent import run_text_agent
+from agent.subflows.text_handler.context import TextContext
 from agent.subflows.text_handler.enums import TextHandler
 from agent.subflows.text_handler.nodes.assign_name.service import AssignNameService
 from agent.subflows.text_handler.nodes.determine_handler.service import determine_handler
 from agent.subflows.text_handler.nodes.handle_dialog_box.service import handle_dialog_box
-from agent.subflows.text_handler.prepare import prepare_text_context
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
@@ -44,7 +44,7 @@ class TextHandlerNode(Node[AgentStore]):
             )
             rolling_memory = await service.assign_name()
         elif handler == TextHandler.GENERIC:
-            context = await prepare_text_context(
+            context = TextContext(
                 state=state,
                 emulator=self.emulator,
             )

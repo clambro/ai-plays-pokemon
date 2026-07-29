@@ -1,5 +1,7 @@
 """Pydantic AI text-agent construction and one-action execution."""
 
+from typing import TYPE_CHECKING
+
 from pydantic_ai import Agent, BinaryContent, CallToolsNode, ModelResponse
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 
@@ -10,6 +12,11 @@ from agent.utils import build_screenshot_content
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 from llm.usage import update_pydantic_ai_usage
+
+if TYPE_CHECKING:
+    from PIL import Image
+
+    from emulator.game_state import YellowLegacyGameState
 
 
 def build_text_agent(context: TextContext) -> Agent[TextContext, str]:
@@ -31,9 +38,14 @@ def build_text_agent(context: TextContext) -> Agent[TextContext, str]:
 
 async def run_text_agent(context: TextContext) -> None:
     """Run the text agent through at most one tool action."""
+    initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
     agent = build_text_agent(context)
     async with agent.iter(
-        build_text_agent_input(context),
+        build_text_agent_input(
+            context,
+            initial_game_state=initial_game_state,
+            initial_screenshot=initial_screenshot,
+        ),
         deps=context,
     ) as agent_run:
         accounted_responses = 0
@@ -59,11 +71,16 @@ async def run_text_agent(context: TextContext) -> None:
                 await _record_response_usage(context, response)
 
 
-def build_text_agent_input(context: TextContext) -> list[str | BinaryContent]:
+def build_text_agent_input(
+    context: TextContext,
+    *,
+    initial_game_state: YellowLegacyGameState,
+    initial_screenshot: Image.Image,
+) -> list[str | BinaryContent]:
     """Build the initial multimodal input for a text-agent run."""
     return [
-        build_screenshot_content(context.screenshot),
-        build_text_decision_prompt(context),
+        build_screenshot_content(initial_screenshot),
+        build_text_decision_prompt(context, initial_game_state),
     ]
 
 

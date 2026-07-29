@@ -26,10 +26,10 @@ async def press_buttons(*, context: TextContext, buttons: Sequence[Button]) -> s
         await context.emulator.press_button(button)
         pressed_buttons.append(button.value)
 
-        context.game_state = await context.emulator.get_game_state()
-        if not context.game_state.is_text_on_screen() or context.game_state.battle.is_in_battle:
+        game_state = await context.emulator.get_game_state()
+        if not game_state.is_text_on_screen() or game_state.battle.is_in_battle:
             break
-        if context.game_state.screen.tiles == previous_state.screen.tiles:
+        if game_state.screen.tiles == previous_state.screen.tiles:
             result = f"The screen did not change after pressing {button.value}."
             break
 

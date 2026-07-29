@@ -6,6 +6,7 @@ from common.enums import BattleType, PokeballItem
 
 if TYPE_CHECKING:
     from agent.subflows.battle_handler.context import BattleContext
+    from emulator.game_state import YellowLegacyGameState
 
 BATTLE_DECISION_PROMPT = """
 You are in a Pokemon battle. The screenshot provided above shows the battle at entry. After each tool call, its returned context is the freshest state and supersedes earlier observations. Briefly explain your reasoning in first person as ordinary response text, then use exactly one tool to take the next battle action. Every response must include a tool call; the agent loop ends automatically when the game exits battle mode.
@@ -24,25 +25,28 @@ Note: If you keep seeing the text "There's no will to fight" over and over again
 """.strip()
 
 
-def build_battle_decision_prompt(context: BattleContext) -> str:
-    """Build the prompt for the current battle observation."""
+def build_battle_decision_prompt(
+    context: BattleContext,
+    initial_game_state: YellowLegacyGameState,
+) -> str:
+    """Build the prompt for the battle-entry observation."""
     state = "\n\n".join(
         (
             str(context.state.rolling_memory),
             str(context.state.long_term_memory),
             str(context.state.goals),
-            context.game_state.player_info,
-            context.game_state.battle_info,
+            initial_game_state.player_info,
+            initial_game_state.battle_info,
         ),
     )
     return BATTLE_DECISION_PROMPT.format(
         state=state,
-        text=context.game_state.screen.text,
+        text=initial_game_state.screen.text,
     )
 
 
 def build_battle_tool_result(
-    context: BattleContext,
+    game_state: YellowLegacyGameState,
     *,
     action_result: str,
     dialog: str = "",
@@ -52,19 +56,19 @@ def build_battle_tool_result(
     if dialog:
         sections.append(f'Battle dialog: "{dialog}"')
     available_balls: list[str] = []
-    if context.game_state.battle.battle_type == BattleType.WILD:
+    if game_state.battle.battle_type == BattleType.WILD:
         pokeball_names = {ball.value for ball in PokeballItem}
         available_balls = [
             f"- {item.name} (x{item.quantity})"
-            for item in context.game_state.inventory.items
+            for item in game_state.inventory.items
             if item.name in pokeball_names
         ]
     sections.extend(
         (
-            context.game_state.party_info,
+            game_state.party_info,
             "Available Poke Balls:\n" + "\n".join(available_balls) if available_balls else "",
-            context.game_state.battle_info,
-            "Current onscreen text:\n" + context.game_state.screen.text,
+            game_state.battle_info,
+            "Current onscreen text:\n" + game_state.screen.text,
         ),
     )
     return "\n\n".join(section for section in sections if section)

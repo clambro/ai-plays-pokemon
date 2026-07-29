@@ -76,24 +76,17 @@ async def refresh_battle_observation(
     action_result: str,
     dialog: str = "",
 ) -> BattleToolResult:
-    """Refresh the battle context and render it for the agent."""
-    await refresh_battle_context(context)
+    """Capture and render a fresh battle observation for the agent."""
+    game_state, screenshot = await context.emulator.get_game_state_with_screenshot()
+    update_background_from_states(context.state, game_state)
     return [
-        build_screenshot_content(context.screenshot),
+        build_screenshot_content(screenshot),
         build_battle_tool_result(
-            context,
+            game_state,
             action_result=action_result,
             dialog=dialog,
         ),
     ]
-
-
-async def refresh_battle_context(context: BattleContext) -> None:
-    """Refresh local and displayed state from the emulator."""
-    game_state, screenshot = await context.emulator.get_game_state_with_screenshot()
-    context.game_state = game_state
-    context.screenshot = screenshot
-    update_background_from_states(context.state, game_state)
 
 
 async def handle_battle_dialog(context: BattleContext) -> str:
