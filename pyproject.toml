@@ -45,6 +45,15 @@ build-backend = "hatchling.build"
 [tool.poe.tasks]
 unit_tests = "python -m pytest -k unit"
 integration_tests = "python -m pytest -k integration"
+clean = { shell = """
+find . \
+    \\( -type d -name .git -o -type d -name .venv \\) -prune -o \
+    -type d -name __pycache__ -exec rm -rf -- {} +
+find . -depth -mindepth 1 -type d -empty \
+    -not -path '*/.git' -not -path '*/.git/*' \
+    -not -path './.venv' -not -path './.venv/*' \
+    -delete
+""" }
 
 [tool.ruff]
 target-version = "py314"

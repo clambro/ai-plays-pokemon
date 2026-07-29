@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from agent.subflows.battle_handler.context import BattleContext
 
 BATTLE_DECISION_PROMPT = """
-You are in a Pokemon battle. The screenshot provided above is the current game screen. Use the press_buttons tool once to proceed with the battle.
+You are in a Pokemon battle. The screenshot provided above is the current game screen. Use exactly one tool to take the next battle action.
 
 {state}
 
@@ -15,6 +15,8 @@ Here is the game memory's representation of the onscreen text. The text you see 
 {text}
 </onscreen_text>
 If you see garbled, nonsensical text in the onscreen text, it is because the game is rendering an image, which the memory stores as text. If this is the case, use the screenshot to help you better understand what is going on.
+
+Fighting, voluntarily switching Pokemon, throwing a Poke Ball, and attempting to run all use up your turn, giving the opponent an opportunity to attack. In particular, switching gives the opponent a free attack against the Pokemon you switch in. Experience is granted only to Pokemon used in the battle, provided they have not fainted and are not at the level cap.
 
 Note: If you keep seeing the text "There's no will to fight" over and over again, it means that you are trying to switch into a fainted Pokemon. You cannot do this. You must switch to a Pokemon that has not fainted. If you are seeing this text, at least one of your Pokemon is still able to fight. Use the directional buttons to pick a different Pokemon to switch to.
 """.strip()

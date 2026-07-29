@@ -1,42 +1,48 @@
-"""Business logic for switch Pokémon tool in the battle subflow."""
+"""Deterministic party switching for the battle agent."""
 
 from typing import TYPE_CHECKING
 
-from loguru import logger
-
+from agent.subflows.battle_handler.tools.errors import BattleActionUnavailableError
 from agent.subflows.battle_handler.utils import get_cursor_pos_in_fight_menu
 from common.enums import Button
 
 if TYPE_CHECKING:
-    from agent.subflows.battle_handler.schemas import SwitchPokemonToolArgs
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
+    from emulator.parsers.pokemon import Pokemon
     from memory.rolling_memory import RollingMemory
 
 
 async def switch_pokemon(
     *,
     rolling_memory: RollingMemory,
-    tool_args: SwitchPokemonToolArgs,
     emulator: YellowLegacyEmulator,
-) -> RollingMemory:
-    """Select a party Pokémon from the battle menu.
+    reason: str,
+    party_slot: int,
+) -> str:
+    """Select a party Pokemon from the battle menu.
 
     Args:
-        rolling_memory: Recent memory to update after selecting the Pokémon.
-        tool_args: Target party index and identifying Pokémon information.
+        rolling_memory: Recent memory to update after selecting the Pokemon.
         emulator: Running emulator used to navigate the battle menus.
+        reason: Brief explanation of the selected switch.
+        party_slot: Zero-based party slot of the Pokemon to switch in.
 
     Returns:
-        The supplied rolling memory, updated when the switch is attempted.
+        Confirmation of the attempted switch.
+
+    Raises:
+        BattleActionUnavailableError: The requested Pokemon cannot be switched in.
     """
     game_state = await emulator.get_game_state()
     cursor_pos = get_cursor_pos_in_fight_menu(game_state)
     if cursor_pos is None:
-        logger.warning("The fight menu is not open. Skipping.")
-        return rolling_memory
+        raise BattleActionUnavailableError("The fight menu is not open.")
 
-    # Open the PKMN menu and update the game state.
+    target = _get_available_party_member(game_state, party_slot)
+    if target is None:
+        raise BattleActionUnavailableError(f"Party slot {party_slot} is not available.")
+
     if cursor_pos.col == 0:
         await emulator.press_button(Button.RIGHT)
     if cursor_pos.row == 1:
@@ -46,27 +52,39 @@ async def switch_pokemon(
 
     cursor_index = _get_pkmn_menu_cursor_index(game_state)
     if cursor_index is None:
-        logger.warning("The Pokemon menu is not open. Skipping.")
-        return rolling_memory
+        raise BattleActionUnavailableError("The Pokemon menu did not open.")
 
-    # Move the cursor to the Pokemon and update the game state.
-    await _move_cursor(emulator, cursor_index, tool_args.party_index)
+    await _move_cursor(emulator, cursor_index, party_slot)
     await emulator.press_button(Button.A)
     game_state = await emulator.get_game_state()
 
     cursor_index = _get_switch_menu_cursor_index(game_state)
     if cursor_index is None:
-        logger.warning("The switch menu is not open. Skipping.")
-        return rolling_memory
+        raise BattleActionUnavailableError("The switch menu did not open.")
 
-    # Select the Pokemon.
     await _move_cursor(emulator, cursor_index, 0)
     await emulator.press_button(Button.A, wait_for_animation=False)
 
-    rolling_memory.add_memory(
-        content=f"Attempted to to switch to {tool_args.name}.",
-    )
-    return rolling_memory
+    result = f"Attempted to switch to {target.name} ({target.species})."
+    rolling_memory.add_memory(content=f"{reason} {result}")
+    return result
+
+
+def _get_available_party_member(
+    game_state: YellowLegacyGameState,
+    party_slot: int,
+) -> Pokemon | None:
+    """Resolve a legal party slot against the current battle state."""
+    player_pokemon = game_state.battle.player_pokemon
+    if player_pokemon is None or party_slot >= len(game_state.party):
+        return None
+
+    target = game_state.party[party_slot]
+    if target.hp <= 0:
+        return None
+    if (target.name, target.species) == (player_pokemon.name, player_pokemon.species):
+        return None
+    return target
 
 
 async def _move_cursor(
@@ -89,10 +107,10 @@ async def _move_cursor(
 
 def _get_pkmn_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:
     """Get the cursor index in the Pokemon menu."""
-    menu_idx = game_state.screen.menu_item_index
-    if "Choose a POKéMON." not in game_state.screen.text or menu_idx >= len(game_state.party):
+    menu_index = game_state.screen.menu_item_index
+    if "Choose a POKéMON." not in game_state.screen.text or menu_index >= len(game_state.party):
         return None
-    return menu_idx
+    return menu_index
 
 
 def _get_switch_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:

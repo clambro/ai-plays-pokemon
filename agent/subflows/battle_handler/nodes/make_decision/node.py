@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
+from agent.subflows.battle_handler.agent import run_battle_decision
 from agent.subflows.battle_handler.prepare import prepare_battle_context
-from agent.subflows.battle_handler.run import run_battle_decision
 from agent.subflows.battle_handler.state import BattleHandlerStore
 
 if TYPE_CHECKING:
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class MakeDecisionNode(Node[BattleHandlerStore]):
-    """Make a decision based on the current game state in the battle."""
+    """Run the battle agent for one action."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
         """Initialize the make decision node."""
@@ -23,7 +23,7 @@ class MakeDecisionNode(Node[BattleHandlerStore]):
 
     async def service(self, store: BattleHandlerStore) -> None:
         """The service for the node."""
-        logger.info("Running the battle decision maker...")
+        logger.info("Running the battle agent for one action...")
 
         state = await store.get_state()
         if state.rolling_memory is None:

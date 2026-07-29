@@ -4,14 +4,12 @@ from typing import TYPE_CHECKING
 
 from junjo import BaseState, BaseStore
 
-from agent.subflows.battle_handler.schemas import BattleToolArgs
 from memory.goals import Goals
 from memory.long_term_memory import LongTermMemory
 from memory.rolling_memory import RollingMemory
 
 if TYPE_CHECKING:
     from agent.state import AgentState
-    from emulator.emulator import YellowLegacyGameState
 
 
 class BattleHandlerState(BaseState):
@@ -21,19 +19,6 @@ class BattleHandlerState(BaseState):
     rolling_memory: RollingMemory | None = None
     long_term_memory: LongTermMemory | None = None
     goals: Goals | None = None
-    tool_args: BattleToolArgs | None = None
-
-    def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
-        """Get a string representation of the agent and game state to be used in prompts."""
-        return "\n\n".join(
-            (
-                str(self.rolling_memory),
-                str(self.long_term_memory),
-                str(self.goals),
-                game_state.player_info,
-                game_state.battle_info,
-            ),
-        )
 
 
 class BattleHandlerStore(BaseStore[BattleHandlerState]):
@@ -53,7 +38,3 @@ class BattleHandlerStore(BaseStore[BattleHandlerState]):
     async def set_rolling_memory(self, rolling_memory: RollingMemory) -> None:
         """Set the rolling memory."""
         await self.set_state({"rolling_memory": rolling_memory})
-
-    async def set_tool_args(self, tool_args: BattleToolArgs | None) -> None:
-        """Set the tool args."""
-        await self.set_state({"tool_args": tool_args})
