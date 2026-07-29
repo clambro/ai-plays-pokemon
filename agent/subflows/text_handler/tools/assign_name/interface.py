@@ -9,6 +9,7 @@ from agent.subflows.text_handler.tools.assign_name.service import (
     assign_name as assign_name_service,
 )
 from agent.subflows.text_handler.tools.errors import TextActionUnavailableError
+from agent.subflows.text_handler.utils import TextToolResult, complete_text_action
 
 if TYPE_CHECKING:
     from agent.subflows.text_handler.context import TextContext
@@ -19,7 +20,7 @@ def build_assign_name_tool(context: TextContext) -> Tool[TextContext]:
 
     async def assign_name(
         name: Annotated[str, Field(pattern=r"^[A-Z ]{1,10}$")],
-    ) -> str:
+    ) -> TextToolResult:
         """Choose and enter a name while the naming screen is open.
 
         This tool works only on the naming screen (i.e. the screen displaying
@@ -41,15 +42,15 @@ def build_assign_name_tool(context: TextContext) -> Tool[TextContext]:
             name: Name to enter exactly as written.
 
         Returns:
-            Confirmation of the entered name, or why the action could not be
-            performed.
+            Fresh text context after attempting to enter the name.
         """
         try:
-            return await assign_name_service(
+            result = await assign_name_service(
                 emulator=context.emulator,
                 name=name,
             )
         except TextActionUnavailableError as error:
-            return str(error)
+            return await complete_text_action(context, str(error))
+        return await complete_text_action(context, result)
 
     return Tool(assign_name, require_parameter_descriptions=True)

@@ -90,10 +90,10 @@ routes back into the text runner and tries again naturally.
    conversation alive across subsequent decisions. After each tool action,
    drain and record ordinary dialog, refresh the context and HTML background,
    and either return the next actionable observation to the agent or end when
-   text mode exits or control moves to battle.
+   text mode exits or control moves to battle. Delete the superseded handler
+   enum, dialog-routing service, and any other dead implementation code.
 
-4. **Remove the old implementation and update documentation.**
-   Delete the remaining raw text prompts, response schemas, handlers, and
-   obsolete routing code. Update the workflow and architecture documentation
-   to show the deterministic dialog path and conditional text agent, then
+4. **Update documentation and finish cleanup.**
+   Update the workflow and architecture documentation to show the deterministic
+   dialog path and conditional text agent. Perform a final cleanup pass, then
    remove this completed ticket.

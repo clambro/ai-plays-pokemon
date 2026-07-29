@@ -8,6 +8,7 @@ from pydantic_ai import Tool
 from agent.subflows.text_handler.tools.press_buttons.service import (
     press_buttons as press_buttons_service,
 )
+from agent.subflows.text_handler.utils import TextToolResult, complete_text_action
 from common.enums import Button
 
 if TYPE_CHECKING:
@@ -29,7 +30,7 @@ def build_press_buttons_tool(context: TextContext) -> Tool[TextContext]:
 
     async def press_buttons(
         buttons: Annotated[list[TextButton], Field(min_length=1)],
-    ) -> str:
+    ) -> TextToolResult:
         """Press buttons to respond to the current text screen.
 
         The available buttons are:
@@ -50,11 +51,12 @@ def build_press_buttons_tool(context: TextContext) -> Tool[TextContext]:
             buttons: Buttons to press in order.
 
         Returns:
-            The result of the attempted button sequence.
+            Fresh text context after pressing the buttons.
         """
-        return await press_buttons_service(
+        result = await press_buttons_service(
             context=context,
             buttons=buttons,
         )
+        return await complete_text_action(context, result)
 
     return Tool(press_buttons, require_parameter_descriptions=True)

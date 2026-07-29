@@ -1,4 +1,4 @@
-"""Pydantic AI text-agent construction and one-action execution."""
+"""Pydantic AI text-agent construction and interaction execution."""
 
 from typing import TYPE_CHECKING
 
@@ -8,6 +8,11 @@ from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 from agent.subflows.text_handler.context import TextContext
 from agent.subflows.text_handler.prompts import build_text_decision_prompt
 from agent.subflows.text_handler.tools.registry import build_text_toolset
+from agent.subflows.text_handler.utils import (
+    handle_text_dialog,
+    is_plain_text_dialog,
+    is_text_interaction_state,
+)
 from agent.utils import build_screenshot_content
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
@@ -36,16 +41,15 @@ def build_text_agent(context: TextContext) -> Agent[TextContext, str]:
     )
 
 
-async def run_text_agent(context: TextContext) -> None:
-    """Run the text agent through at most one tool action."""
-    initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
+async def run_text(context: TextContext) -> None:
+    """Handle one complete text interaction, using an agent only for decisions."""
+    agent_input = await _prepare_text_agent_input(context)
+    if agent_input is None:
+        return
+
     agent = build_text_agent(context)
     async with agent.iter(
-        build_text_agent_input(
-            context,
-            initial_game_state=initial_game_state,
-            initial_screenshot=initial_screenshot,
-        ),
+        agent_input,
         deps=context,
     ) as agent_run:
         accounted_responses = 0
@@ -60,7 +64,9 @@ async def run_text_agent(context: TextContext) -> None:
                         context.state.rolling_memory.add_memory(reasoning)
                 node = await agent_run.next(node)
                 if isinstance(current_node, CallToolsNode):
-                    break
+                    game_state = await context.emulator.get_game_state()
+                    if not is_text_interaction_state(game_state):
+                        break
         finally:
             responses = [
                 message
@@ -69,6 +75,24 @@ async def run_text_agent(context: TextContext) -> None:
             ]
             for response in responses[accounted_responses:]:
                 await _record_response_usage(context, response)
+
+
+async def _prepare_text_agent_input(
+    context: TextContext,
+) -> list[str | BinaryContent] | None:
+    """Drain ordinary dialog and prepare input if a decision remains."""
+    game_state = await context.emulator.get_game_state()
+    if is_plain_text_dialog(game_state):
+        await handle_text_dialog(context)
+
+    initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
+    if not is_text_interaction_state(initial_game_state):
+        return None
+    return build_text_agent_input(
+        context,
+        initial_game_state=initial_game_state,
+        initial_screenshot=initial_screenshot,
+    )
 
 
 def build_text_agent_input(
