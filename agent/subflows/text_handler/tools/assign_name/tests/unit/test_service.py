@@ -2,7 +2,7 @@
 
 import pytest
 
-from agent.subflows.text_handler.nodes.assign_name.service import AssignNameService
+from agent.subflows.text_handler.tools.assign_name.service import _get_dir_buttons
 from common.enums import Button
 
 
@@ -12,7 +12,7 @@ def test_same_position_no_movement() -> None:
     cursor_loc = 5  # cursor_row=0, cursor_col=0
     letter_loc = (0, 0)
 
-    result = AssignNameService._get_dir_buttons(letter_loc, cursor_loc)
+    result = _get_dir_buttons(letter_loc, cursor_loc)
 
     assert result == []
 
@@ -23,7 +23,7 @@ def test_simple_right_movement() -> None:
     cursor_loc = 5  # cursor_row=0, cursor_col=0
     letter_loc = (0, 1)
 
-    result = AssignNameService._get_dir_buttons(letter_loc, cursor_loc)
+    result = _get_dir_buttons(letter_loc, cursor_loc)
 
     assert result == [Button.RIGHT]
 
@@ -34,7 +34,7 @@ def test_simple_left_movement() -> None:
     cursor_loc = 7  # cursor_row=0, cursor_col=1
     letter_loc = (0, 0)
 
-    result = AssignNameService._get_dir_buttons(letter_loc, cursor_loc)
+    result = _get_dir_buttons(letter_loc, cursor_loc)
 
     assert result == [Button.LEFT]
 
@@ -45,7 +45,7 @@ def test_simple_down_movement() -> None:
     cursor_loc = 5  # cursor_row=0, cursor_col=0
     letter_loc = (1, 0)
 
-    result = AssignNameService._get_dir_buttons(letter_loc, cursor_loc)
+    result = _get_dir_buttons(letter_loc, cursor_loc)
 
     assert result == [Button.DOWN]
 
@@ -56,7 +56,7 @@ def test_simple_up_movement() -> None:
     cursor_loc = 45  # cursor_row=1, cursor_col=0
     letter_loc = (0, 0)
 
-    result = AssignNameService._get_dir_buttons(letter_loc, cursor_loc)
+    result = _get_dir_buttons(letter_loc, cursor_loc)
 
     assert result == [Button.UP]
 
@@ -67,7 +67,7 @@ def test_diagonal_movement() -> None:
     cursor_loc = 5  # cursor_row=0, cursor_col=0
     letter_loc = (1, 1)
 
-    result = AssignNameService._get_dir_buttons(letter_loc, cursor_loc)
+    result = _get_dir_buttons(letter_loc, cursor_loc)
 
     assert set(result) == {Button.DOWN, Button.RIGHT}
 
@@ -79,7 +79,7 @@ def test_wrapping_right_to_left() -> None:
     cursor_loc = 21
     letter_loc = (0, 0)
 
-    result = AssignNameService._get_dir_buttons(letter_loc, cursor_loc)
+    result = _get_dir_buttons(letter_loc, cursor_loc)
 
     assert result == [Button.RIGHT]
 
@@ -90,7 +90,7 @@ def test_wrapping_left_to_right() -> None:
     cursor_loc = 5  # cursor_row=0, cursor_col=0
     letter_loc = (0, 8)
 
-    result = AssignNameService._get_dir_buttons(letter_loc, cursor_loc)
+    result = _get_dir_buttons(letter_loc, cursor_loc)
 
     assert result == [Button.LEFT]
 
@@ -101,7 +101,7 @@ def test_no_wrapping_when_not_shorter() -> None:
     cursor_loc = 5  # cursor_row=0, cursor_col=0
     letter_loc = (0, 4)
 
-    result = AssignNameService._get_dir_buttons(letter_loc, cursor_loc)
+    result = _get_dir_buttons(letter_loc, cursor_loc)
 
     assert result == [Button.RIGHT, Button.RIGHT, Button.RIGHT, Button.RIGHT]
 
@@ -112,7 +112,7 @@ def test_wrapping_threshold_edge_case() -> None:
     cursor_loc = 5  # cursor_row=0, cursor_col=0
     letter_loc = (0, 5)
 
-    result = AssignNameService._get_dir_buttons(letter_loc, cursor_loc)
+    result = _get_dir_buttons(letter_loc, cursor_loc)
 
     assert result == [Button.LEFT, Button.LEFT, Button.LEFT, Button.LEFT]
 
@@ -123,6 +123,6 @@ def test_cross_row_wrapping() -> None:
     cursor_loc = 21  # cursor_row=0, cursor_col=8
     letter_loc = (1, 0)
 
-    result = AssignNameService._get_dir_buttons(letter_loc, cursor_loc)
+    result = _get_dir_buttons(letter_loc, cursor_loc)
 
     assert set(result) == {Button.DOWN, Button.RIGHT}

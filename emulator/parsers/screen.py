@@ -54,6 +54,12 @@ class Screen(BaseModel):
         blank = 0x7F
         return [[t if t != cursor else blank for t in row] for row in self.tiles]
 
+    @property
+    def naming_screen_name_limit(self) -> int:
+        """Get the number of name slots displayed on the naming screen."""
+        name_slot_tiles = {0x76, 0x77}
+        return sum(tile in name_slot_tiles for tile in self.tiles[3][10:])
+
 
 def parse_screen(mem: PyBoyMemoryView) -> Screen:
     """Parse the visible screen from emulator memory.

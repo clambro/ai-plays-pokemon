@@ -1,4 +1,4 @@
-"""Dependencies and mutable state for one battle-agent run."""
+"""Dependencies and mutable state for a text-agent run."""
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -9,8 +9,8 @@ if TYPE_CHECKING:
 
 
 @dataclass(slots=True, kw_only=True)
-class BattleContext:
-    """Live dependencies for one complete battle."""
+class TextContext:
+    """Live dependencies for an actionable text screen."""
 
     state: AgentState
     emulator: YellowLegacyEmulator

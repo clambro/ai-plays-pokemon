@@ -35,6 +35,11 @@ dependencies and supplies each mode with only what it needs. Agent and tool
 code must not reach outward to construct emulator, persistence, or streaming
 infrastructure.
 
+Once all three mode agents exist, consider extracting the nearly identical
+agent construction and execution code shared by them. Keep mode-specific
+prompts, tools, and termination behavior separate, and only introduce the
+abstraction if it makes the completed implementations simpler.
+
 Preserve the mode boundaries established by the preceding tickets:
 
 - one selected action ends an overworld turn;

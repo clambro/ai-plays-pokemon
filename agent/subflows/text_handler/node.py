@@ -1,4 +1,4 @@
-"""Temporary Junjo adapter for the Pydantic AI battle agent."""
+"""Temporary Junjo adapter for text interactions."""
 
 from typing import TYPE_CHECKING
 
@@ -6,33 +6,33 @@ from junjo import Node
 from loguru import logger
 
 from agent.state import AgentStore
-from agent.subflows.battle_handler.agent import run_battle
-from agent.subflows.battle_handler.context import BattleContext
+from agent.subflows.text_handler.agent import run_text
+from agent.subflows.text_handler.context import TextContext
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
 
 
-class BattleAgentNode(Node[AgentStore]):
-    """Run the Pydantic AI agent for the complete battle."""
+class TextHandlerNode(Node[AgentStore]):
+    """Run one complete text interaction from the root Junjo graph."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
-        """Initialize the battle-agent node."""
+        """Initialize the text-handler adapter."""
         self.emulator = emulator
         super().__init__()
 
     async def service(self, store: AgentStore) -> None:
-        """Run the complete battle loop and retain its rolling memory."""
-        logger.info("Running the battle agent...")
+        """Handle the current dialog and any decisions it reveals."""
+        logger.info("Running the text handler...")
 
         state = await store.get_state()
-        context = BattleContext(
+        context = TextContext(
             state=state,
             emulator=self.emulator,
         )
         try:
-            await run_battle(context)
+            await run_text(context)
         except Exception as error:  # noqa: BLE001
-            logger.warning(f"Error running battle agent. Skipping. {error}")
+            logger.warning(f"Error running text interaction. Skipping. {error}")
 
         await store.set_rolling_memory(context.state.rolling_memory)

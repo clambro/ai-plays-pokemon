@@ -1,18 +1,15 @@
 """Shared utilities for the battle subflow."""
 
-from io import BytesIO
 from typing import TYPE_CHECKING
 
 from pydantic_ai import BinaryContent
 
 from agent.subflows.battle_handler.prompts import build_battle_tool_result
-from agent.utils import DialogReader
+from agent.utils import DialogReader, build_screenshot_content
 from common.schemas import Coords
 from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
-    from PIL import Image
-
     from agent.subflows.battle_handler.context import BattleContext
     from emulator.game_state import YellowLegacyGameState
 
@@ -79,35 +76,17 @@ async def refresh_battle_observation(
     action_result: str,
     dialog: str = "",
 ) -> BattleToolResult:
-    """Refresh the battle context and render it for the agent."""
-    await refresh_battle_context(context)
+    """Capture and render a fresh battle observation for the agent."""
+    game_state, screenshot = await context.emulator.get_game_state_with_screenshot()
+    update_background_from_states(context.state, game_state)
     return [
-        build_screenshot_content(context.screenshot),
+        build_screenshot_content(screenshot),
         build_battle_tool_result(
-            context,
+            game_state,
             action_result=action_result,
             dialog=dialog,
         ),
     ]
-
-
-async def refresh_battle_context(context: BattleContext) -> None:
-    """Refresh local and displayed state from the emulator."""
-    game_state, screenshot = await context.emulator.get_game_state_with_screenshot()
-    context.game_state = game_state
-    context.screenshot = screenshot
-    update_background_from_states(context.state, game_state)
-
-
-def build_screenshot_content(screenshot: Image.Image) -> BinaryContent:
-    """Encode a screenshot for a multimodal model message."""
-    image_buffer = BytesIO()
-    screenshot.save(image_buffer, format="PNG")
-    return BinaryContent(
-        data=image_buffer.getvalue(),
-        media_type="image/png",
-        vendor_metadata={"detail": "original"},
-    )
 
 
 async def handle_battle_dialog(context: BattleContext) -> str:

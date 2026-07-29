@@ -1,6 +1,6 @@
 # AI Workflow Architecture
 
-This page describes the current hybrid workflow. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology is used here. A Junjo root graph handles shared memory and goal work before routing execution into one of three gameplay domains: overworld navigation, battles, or text interactions. The overworld and text handlers remain Junjo subflows, while the battle handler is a Pydantic AI agent that owns an entire battle loop and operates through real function tools.
+This page describes the current hybrid workflow. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology is used here. A Junjo root graph handles shared memory and goal work before routing execution into one of three gameplay domains: overworld navigation, battles, or text interactions. The overworld handler runs as a Junjo subflow. Battles and text interactions run as local Pydantic AI agent loops reached through adapter nodes.
 
 Note: Pretty much all the constants below are default values that can be edited in [`common/constants.py`](/common/constants.py).
 
@@ -26,7 +26,7 @@ This is purely topological to simplify the flow of the graph. It does nothing.
 
 ### The Three Gameplay Domains
 
-At this point, the flow is diverted into one of the three gameplay domains. Overworld and text interactions enter Junjo subflows. Battles enter a temporary Junjo adapter that prepares and runs the Pydantic AI battle agent.
+At this point, the flow is diverted into one of the three gameplay domains. Overworld interactions enter a Junjo subflow. Battles and text interactions enter adapter nodes that invoke their complete local runners.
 
 ### Do Updates
 
@@ -43,7 +43,7 @@ Outside the graph, the application captures the emulator state and creates a bac
 
 ## The Overworld Handler Subflow
 
-![The Overworld Handler Subflow](../visualization/agent_graph/subflow_QIkEPkcV0JILIFlaS7gHv.svg)
+![The Overworld Handler Subflow](../visualization/agent_graph/subflow_OEE7uI0clMr6XDlM4jJIj.svg)
 
 ### Load Map
 
@@ -83,7 +83,7 @@ Purely topological, as are all dummy nodes in the workflow. This is the sink nod
 
 ## The Battle Agent
 
-The battle handler is no longer a Junjo subflow. The root graph reaches it through one temporary adapter node, but that node prepares a typed `BattleContext` and hands the complete battle lifecycle to a Pydantic AI agent.
+The battle handler is a Pydantic AI agent that owns the complete battle lifecycle. A root adapter prepares its typed `BattleContext` and static initial input, then hands over control until the battle ends.
 
 ```mermaid
 flowchart LR
@@ -154,26 +154,45 @@ Provides constrained directional, confirm, and cancel input for forced switches,
 
 The agent emits a brief explanation alongside each tool call. That explanation and captured in-game dialog are appended to the current rolling-memory block and streamed to the HTML activity log. Detailed action results and refreshed observations stay inside the agent conversation, where they provide context for the next decision without flooding durable memory. The complete battle remains one top-level workflow iteration.
 
-## The Text Handler Subflow
+## The Text Runner
 
-![The Text Handler Subflow](../visualization/agent_graph/subflow_IM2bYZ8Egf0jU6WaHJeVQ.svg)
+The text handler owns an entire interaction inside one local runner reached through a root adapter. The important distinction here is that most text in Pokémon does not require any actual decision-making. We should not pay an AI to mash A through a speech bubble when we can read the text directly from memory and advance it ourselves.
 
-### Determine Handler
+```mermaid
+flowchart LR
+    root["Junjo root<br/>Text adapter"] --> inspect["Inspect current screen"]
+    inspect -->|"Plain dialog"| dialog["Read and advance dialog<br/>deterministically"]
+    dialog --> inspect
+    inspect -->|"Decision required"| agent["GPT-5.6 Luna<br/>text agent"]
+    inspect -->|"Text ends or battle begins"| finish["Return to root graph"]
 
-This is the entrypoint of the text handler subflow, and its job is to determine which of the available tools is most appropriate for handling the current game state. This subflow, unlike the others, has the option to bail immediately if it detects that there is no text on the screen. This is because some dialog boxes in the game close themselves, and they may do so between the handler being set and the subflow starting.
+    agent --> choice{"Function tool call"}
+    choice --> buttons["press_buttons"]
+    choice --> name["assign_name"]
+    buttons --> observe["Read resulting dialog and return<br/>fresh text and screenshot"]
+    name --> observe
+    observe -->|"Text interaction continues"| agent
+    observe -->|"Text ends or battle begins"| finish
+```
 
 ### Handle Dialog Box
 
-This is the most common tool in the text handler subflow. Its job is to read through any dialog that appears on screen and append it directly to the current iteration's memory block. This saves us a ton of time and tokens by pulling the text straight from the game state instead of making the AI read it screenshot by screenshot. This node exits if either the dialog box disappears, or if text appears outside the dialog box indicating that a menu has opened up.
+This is the most common path through the text handler, and it is deliberately handled before the agent is even constructed. Its job is to read through any dialog that appears on screen and append it directly to the current iteration's memory block. This saves us a ton of time and tokens by pulling the text straight from the game state instead of making the AI read it screenshot by screenshot.
+
+The dialog reader exits if the box disappears, a battle begins, or text appears outside the dialog box. That last case usually means that a menu or yes/no question has opened and a real decision is finally required. If the dialog simply closes, the runner returns without making a model call at all. If it reveals a decision, the runner starts one text-agent conversation and keeps it alive until the interaction is over.
+
+### Press Buttons
+
+This is the generic decision maker for the text handler. It is effectively a constrained "push buttons" tool used for menu navigation, yes/no questions, the title screen, and any other non-trivial text interaction.
+
+After the buttons are pressed, deterministic code reads and advances any resulting dialog. The tool then returns the captured text, current onscreen text, and a fresh screenshot to the same agent conversation. This lets the model make several related decisions without repeatedly backing out through the entire root graph.
 
 ### Assign Name
 
-A niche tool, but a very useful one. This enters a name into the game when the player is asked for their name at the start of the game or captures a new Pokémon and gives it a nickname. Like the dialog box handler, this saves us a ton of time and tokens by asking the AI for a name and deterministically entering the button presses required to submit that name, rather than getting the AI to do it one button at a time. The AI is also really bad at entering names manually, so this saves us from watching it play with a team full of Pokémon named "AAAAAAAAAA".
+A niche tool, but a very useful one. This enters a name into the game when the player is asked for their name at the start of the game, when the rival needs a name, or when a newly caught Pokémon needs a nickname. It saves time and tokens by asking the AI for a name and deterministically entering the button presses required to submit it, rather than getting the AI to do it one button at a time.
 
-### Make Decision
+The tool checks that the naming screen is actually open before doing anything. If it is not, the request is rejected and the current text and screenshot are returned so the agent can recover.
 
-The generic decision maker node for the text handler. Like the node of the same name from the battle handler, this one is effectively a "push buttons" tool. It is used to handle menu navigation, yes/no questions, and any other non-trivial text interactions.
+### Memory and Display Updates
 
-### Dummy Node
-
-Purely topological sink node for the subflow.
+The agent narrates each decision alongside its tool call. That explanation and any dialog read after the action are appended to the current rolling-memory block and streamed to the HTML activity log. The more mechanical tool results stay inside the local conversation, where they are useful for the next decision without cluttering long-term history. The complete text interaction counts as one top-level workflow iteration.
