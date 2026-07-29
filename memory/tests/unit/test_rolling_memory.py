@@ -20,7 +20,7 @@ def test_current_iteration_accumulates_one_chronological_memory_block() -> None:
 
     assert len(memory.raw_blocks) == 1
     assert str(memory.current_block) == (
-        "[42]: Selected the navigation tool.\nReached the Pokémon Center."
+        "[42]: Selected the navigation tool.\n\nReached the Pokémon Center."
     )
 
 

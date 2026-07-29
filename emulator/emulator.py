@@ -15,6 +15,7 @@ from emulator.game_state import YellowLegacyGameState
 from emulator.pyboy_worker import PyBoyWorker
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
 
     from pyboy import PyBoy
@@ -136,25 +137,39 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         if wait_for_animation:
             await self.wait_for_animation_to_finish()
 
-    async def wait_for_animation_to_finish(self) -> None:
+    async def wait_for_animation_to_finish(
+        self,
+        on_game_state: Callable[[YellowLegacyGameState], None] | None = None,
+    ) -> YellowLegacyGameState:
         """Wait until all ongoing animations have finished.
 
         The various hyperparameters here are a bit wishy-washy. I determined emperically that they
         work pretty well, but they're probably not optimal, especially since different scenarios
         have different animation speeds.
+
+        Args:
+            on_game_state: Optional observer called for each state already read while waiting.
+
+        Returns:
+            The final observed game state.
         """
         logger.info("Checking for animations and waiting for them to finish.")
         successes = 0
         required_successes = 5
         while successes < required_successes:
             game_state = await self.get_game_state()
+            if on_game_state:
+                on_game_state(game_state)
             await asyncio.sleep(0.15)
             new_game_state = await self.get_game_state()
+            if on_game_state:
+                on_game_state(new_game_state)
             # The blinking cursor should not block progress, so we ignore it.
             if game_state.screen.tiles_without_cursor == new_game_state.screen.tiles_without_cursor:
                 successes += 1
             else:
                 successes = 0
+        return new_game_state
 
     async def get_emulator_save_state(self) -> str:
         """Get the current save state as a Base64 encoded string."""

@@ -150,6 +150,7 @@ body {
 
 #log-content p {
     margin-bottom: 20px;
+    white-space: pre-wrap;
 }
 
 #log-content {

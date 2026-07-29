@@ -4,13 +4,13 @@
 
 This is a fully autonomous AI workflow designed to play [Pokémon Yellow Legacy](https://github.com/cRz-Shadows/Pokémon_Yellow_Legacy) on Hard Mode. Pokémon Yellow Legacy is a ROM hack of Pokémon Yellow that includes a ton of balance changes, quality of life improvements, and bug fixes, while maintaining the feel of the first generation of Pokémon. Hard mode adds level caps and blocks item use in battle, forcing the AI to strategize instead of winning by overlevelling a single Pokémon.
 
-The AI workflow is written in Python and orchestrated by [Junjo](https://github.com/mdrideout/junjo), with custom logic for handling battles, navigating the overworld, and parsing text. It operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms and LLM powered decision making. It features a three-tier memory system with agent-guided long-term memory lookup from a SQLite database, and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs.
+The AI workflow is written in Python and combines [Pydantic AI](https://ai.pydantic.dev/) agents with deterministic gameplay tools. It is currently being migrated from Junjo graphs to agents organized around the three major parts of the game: exploring the overworld, handling text and menus, and battling. The application operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms and LLM-powered decision making. It features hierarchical rolling memory, agent-guided long-term memory lookup from a SQLite database, and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs.
 
 Data from the AI workflow and the game's memory is piped into an HTML page for visualization, and the whole project was [streaming live on Twitch](https://www.twitch.tv/clambr0). The stream has been paused while I work on some improvements to the model's high-level navigation planning (and give my wallet some time to recover). Give me a follow on Twitch if you want to know when the stream is back!
 
 If you want to learn more about how this all works, check out:
 - [A deeper look into the philosophy and design of the project](docs/philosophy.md)
-- [A node-by-node description of the AI workflow](docs/workflow.md)
+- [A description of the AI architecture and its tools](docs/workflow.md)
 
 If you want to buy me a coffee to help cover the streaming costs, you can do so using the button below.
 
@@ -87,9 +87,9 @@ Great minds think alike! This project, like [Gemini Plays Pokémon](https://www.
 
 Only what would be accessible to a human player. It can see the screen, and it has memories of the sprites and warps that it has seen in the past. It has no internet access, and the prompts do not contain any hints beyond basic play style. When battling Pokémon, it can only see the enemy's health as a percentage with a resolution that matches the resolution of the in-game health bar.
 
-### Why use Junjo over other frameworks?
+### Why combine agents with deterministic tools?
 
-Full disclosure: The creator of Junjo is a coworker and friend of mine. Personal sentiments aside, Junjo prioritizes asynchronous execution and type safety with Pydantic, which I view as mandatory for any AI workflow. Many other orchestrators treat these criteria as an afterthought, or fail them altogether. I also appreciate Junjo's lightweight, unopinionated design philosophy. It facilitates your work rather than imposing rigid abstractions that are challenging to edit or debug.
+The model should make decisions, not laboriously reproduce mechanics that ordinary code can handle faster and more reliably. Each gameplay agent receives a typed context and a focused set of function tools for its domain. The agent decides what it wants to accomplish, while deterministic code validates the request against fresh game state and handles details such as navigation, menu input, and state persistence. This keeps unpredictable reasoning with the model and predictable mechanical work in testable Python services.
 
 ### Why GPT-5.6 Luna?
 

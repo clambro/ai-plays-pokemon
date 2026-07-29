@@ -14,9 +14,7 @@ from agent.nodes.retrieve_long_term_memory.node import RetrieveLongTermMemoryNod
 from agent.nodes.update_background_stream.node import UpdateBackgroundStreamNode
 from agent.nodes.update_goals.node import UpdateGoalsNode
 from agent.nodes.update_long_term_memory.node import UpdateLongTermMemoryNode
-from agent.subflows.battle_handler.graph import build_battle_handler_subflow_graph
-from agent.subflows.battle_handler.state import BattleHandlerState, BattleHandlerStore
-from agent.subflows.battle_handler.subflow import BattleHandlerSubflow
+from agent.subflows.battle_handler.node import BattleAgentNode
 from agent.subflows.overworld_handler.graph import build_overworld_handler_subflow_graph
 from agent.subflows.overworld_handler.state import OverworldHandlerState, OverworldHandlerStore
 from agent.subflows.overworld_handler.subflow import OverworldHandlerSubflow
@@ -38,11 +36,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     update_background_stream = UpdateBackgroundStreamNode(emulator)
     finalize_memory = FinalizeMemoryNode()
 
-    battle_handler_subflow = BattleHandlerSubflow(
-        graph_factory=lambda: build_battle_handler_subflow_graph(emulator),
-        store_factory=lambda: BattleHandlerStore(BattleHandlerState()),
-        emulator=emulator,
-    )
+    battle_agent = BattleAgentNode(emulator)
     text_handler_subflow = TextHandlerSubflow(
         graph_factory=lambda: build_text_handler_subflow_graph(emulator),
         store_factory=lambda: TextHandlerStore(TextHandlerState()),
@@ -88,14 +82,14 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             ),
             Edge(
                 post_retrieval_dummy,
-                battle_handler_subflow,
+                battle_agent,
                 AgentHandlerIs(AgentStateHandler.BATTLE),
             ),
             Edge(
                 post_retrieval_dummy, text_handler_subflow, AgentHandlerIs(AgentStateHandler.TEXT)
             ),
             Edge(text_handler_subflow, do_updates),
-            Edge(battle_handler_subflow, do_updates),
+            Edge(battle_agent, do_updates),
             Edge(overworld_handler_subflow, do_updates),
             Edge(do_updates, finalize_memory),
         ],

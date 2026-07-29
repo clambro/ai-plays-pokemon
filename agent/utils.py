@@ -1,45 +1,102 @@
 """Shared utilities for the agent graph."""
 
 import asyncio
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+
+from common.enums import Button
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
+    from emulator.game_state import YellowLegacyGameState
     from emulator.schemas import DialogBox
 
 
-def append_dialog_to_list_inplace(text: list[str], dialog_box: DialogBox) -> None:
-    """Append new dialog lines to a list in place.
-
-    A line already present in either of the two most recent positions is skipped so scrolling
-    dialog is not duplicated.
-
-    Args:
-        text: Accumulated dialog lines to mutate.
-        dialog_box: Current two-line dialog box to append.
-    """
-    top_line = dialog_box.top_line
-    bottom_line = dialog_box.bottom_line
-    prev_lines = [
-        text[-1] if text else None,
-        text[-2] if len(text) > 1 else None,
-    ]
-    if not text or (top_line and top_line not in prev_lines):
-        text.append(top_line)
-    if not text or (bottom_line and bottom_line not in prev_lines):
-        text.append(bottom_line)
+def is_battle_handler_state(game_state: YellowLegacyGameState) -> bool:
+    """Determine whether the game state belongs to the battle handler."""
+    # The nickname screen after catching a Pokemon is considered a battle state by the game,
+    # but we need to route it to the text handler instead.
+    return game_state.battle.is_in_battle and not game_state.is_naming_screen()
 
 
-async def is_blinking_cursor_on_screen(emulator: YellowLegacyEmulator) -> bool:
-    """Check if the blinking cursor is on screen."""
-    counter = 0
-    blink_wait_time = 0.1
-    max_counter = 6  # Cursor blinks on/off a bit more than 2x per second.
-    while counter < max_counter:
-        await asyncio.sleep(blink_wait_time)
-        game_state = await emulator.get_game_state()
+@dataclass(slots=True)
+class DialogReader:
+    """Capture complete dialog pages while advancing an emulator."""
+
+    emulator: YellowLegacyEmulator
+    _pages: list[DialogBox] = field(default_factory=list, init=False)
+
+    def observe(self, game_state: YellowLegacyGameState) -> None:
+        """Capture the most complete snapshot of the visible dialog page."""
         dialog_box = game_state.get_dialog_box()
-        if dialog_box and dialog_box.has_cursor:
-            break
-        counter += 1
-    return counter < max_counter
+        if not dialog_box or (not dialog_box.top_line and not dialog_box.bottom_line):
+            return
+        if not self._pages:
+            self._pages.append(dialog_box)
+            return
+
+        previous_page = self._pages[-1]
+        previous_lines = (previous_page.top_line, previous_page.bottom_line)
+        current_lines = (dialog_box.top_line, dialog_box.bottom_line)
+        if current_lines == previous_lines:
+            if dialog_box.has_cursor and not previous_page.has_cursor:
+                self._pages[-1] = dialog_box
+            return
+
+        top_line_continues = dialog_box.top_line == previous_page.top_line or (
+            bool(previous_page.top_line) and dialog_box.top_line.startswith(previous_page.top_line)
+        )
+        top_line_scrolled = bool(previous_page.bottom_line) and dialog_box.top_line.startswith(
+            previous_page.bottom_line,
+        )
+        if not previous_page.has_cursor and top_line_continues and not top_line_scrolled:
+            self._pages[-1] = dialog_box
+        else:
+            self._pages.append(dialog_box)
+
+    async def observe_current_state(self) -> YellowLegacyGameState:
+        """Capture and return the emulator's current state."""
+        game_state = await self.emulator.get_game_state()
+        self.observe(game_state)
+        return game_state
+
+    async def wait_for_animation(self) -> YellowLegacyGameState:
+        """Capture transient dialog while waiting for the current animation."""
+        return await self.emulator.wait_for_animation_to_finish(
+            on_game_state=self.observe,
+        )
+
+    async def advance(self) -> YellowLegacyGameState:
+        """Press A and capture dialog while the resulting animation runs."""
+        await self.emulator.press_button(Button.A, wait_for_animation=False)
+        return await self.wait_for_animation()
+
+    async def is_cursor_blinking(self) -> bool:
+        """Check for the blinking cursor while retaining every observed dialog page."""
+        blink_wait_time = 0.1
+        max_checks = 6  # Cursor blinks on/off a bit more than 2x per second.
+        for _ in range(max_checks):
+            await asyncio.sleep(blink_wait_time)
+            game_state = await self.emulator.get_game_state()
+            self.observe(game_state)
+            dialog_box = game_state.get_dialog_box()
+            if dialog_box and dialog_box.has_cursor:
+                return True
+        return False
+
+    @property
+    def text(self) -> str:
+        """Combine captured pages without repeating lines that scrolled upward."""
+        text: list[str] = []
+        for dialog_box in self._pages:
+            top_line = dialog_box.top_line
+            bottom_line = dialog_box.bottom_line
+            previous_lines = [
+                text[-1] if text else None,
+                text[-2] if len(text) > 1 else None,
+            ]
+            if not text or (top_line and top_line not in previous_lines):
+                text.append(top_line)
+            if not text or (bottom_line and bottom_line not in previous_lines):
+                text.append(bottom_line)
+        return " ".join(text).strip()

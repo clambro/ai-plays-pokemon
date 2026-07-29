@@ -10,10 +10,6 @@ The Junjo root graph remains temporarily. It invokes one overworld agent turn
 through an adapter, leaving all three gameplay modes on their final agent
 architecture before the root graph is replaced.
 
-**Depends on:**
-
-- [`pydantic-ai-02-replace-battle-subflow.md`](pydantic-ai-02-replace-battle-subflow.md)
-
 ## Design
 
 Create a dedicated `OverworldContext` dataclass and use it as the overworld

@@ -102,15 +102,13 @@
 <!-- 8FrRI8S0ibkT8Vb9m2MzO -->
 <g id="node11" class="node">
 <title>8FrRI8S0ibkT8Vb9m2MzO</title>
-<polygon fill="lightyellow" stroke="black" points="1379.5,-107 1257.5,-107 1257.5,-103 1253.5,-103 1253.5,-99 1257.5,-99 1257.5,-79 1253.5,-79 1253.5,-75 1257.5,-75 1257.5,-71 1379.5,-71 1379.5,-107"/>
-<polyline fill="none" stroke="black" points="1257.5,-103 1261.5,-103 1261.5,-99 1257.5,-99 "/>
-<polyline fill="none" stroke="black" points="1257.5,-79 1261.5,-79 1261.5,-75 1257.5,-75 "/>
-<text text-anchor="middle" x="1318.5" y="-86.5" font-family="Helvetica,sans-Serif" font-size="10.00">BattleHandlerSubflow</text>
+<path fill="#efefef" stroke="black" d="M1356.5,-107C1356.5,-107 1280.5,-107 1280.5,-107 1274.5,-107 1268.5,-101 1268.5,-95 1268.5,-95 1268.5,-83 1268.5,-83 1268.5,-77 1274.5,-71 1280.5,-71 1280.5,-71 1356.5,-71 1356.5,-71 1362.5,-71 1368.5,-77 1368.5,-83 1368.5,-83 1368.5,-95 1368.5,-95 1368.5,-101 1362.5,-107 1356.5,-107"/>
+<text text-anchor="middle" x="1318.5" y="-86.5" font-family="Helvetica,sans-Serif" font-size="10.00">BattleAgentNode</text>
 </g>
 <!-- 8FrRI8S0ibkT8Vb9m2MzO&#45;&gt;RtTGRwTSA4xy6Vozt075l__entry -->
 <g id="edge9" class="edge">
 <title>8FrRI8S0ibkT8Vb9m2MzO&#45;&gt;RtTGRwTSA4xy6Vozt075l__entry</title>
-<path fill="none" stroke="black" d="M1369.62,-107.02C1376.54,-109.85 1383.5,-112.88 1390,-116 1399.68,-120.65 1403.09,-124.99 1409.52,-128.79"/>
+<path fill="none" stroke="black" d="M1368.86,-106.71C1376.04,-109.63 1383.27,-112.76 1390,-116 1399.68,-120.65 1403.09,-124.99 1409.52,-128.79"/>
 <polygon fill="black" stroke="black" points="1408.44,-132.14 1419,-133 1411.28,-125.74 1408.44,-132.14"/>
 </g>
 <!-- WkMzn53ZyL0YzPFXYCCEc -->
@@ -142,8 +140,8 @@
 <!-- WkMzn53ZyL0YzPFXYCCEc&#45;&gt;8FrRI8S0ibkT8Vb9m2MzO -->
 <g id="edge6" class="edge">
 <title>WkMzn53ZyL0YzPFXYCCEc&#45;&gt;8FrRI8S0ibkT8Vb9m2MzO</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M1089.03,-133.09C1095.04,-131.67 1101.18,-130.26 1107,-129 1153.69,-118.89 1206.5,-108.86 1247.55,-101.37"/>
-<polygon fill="black" stroke="black" points="1248.24,-104.8 1257.45,-99.57 1246.99,-97.91 1248.24,-104.8"/>
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M1089.03,-133.09C1095.04,-131.67 1101.18,-130.26 1107,-129 1157.99,-117.96 1216.29,-107.01 1258.59,-99.36"/>
+<polygon fill="black" stroke="black" points="1259.22,-102.81 1268.44,-97.59 1257.98,-95.92 1259.22,-102.81"/>
 <text text-anchor="middle" x="1168" y="-131.8" font-family="Helvetica,sans-Serif" font-size="9.00">AgentHandlerIs(battle)</text>
 </g>
 <!-- 8BjzGaYDQzV6g798mESdp -->

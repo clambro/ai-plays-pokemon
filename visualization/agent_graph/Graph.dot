@@ -25,7 +25,7 @@ digraph "G" {
   QIkEPkcV0JILIFlaS7gHv [label="OverworldHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
   QmkJGpdVAtGnBNCpujMZF [label="UpdateLongTermMemoryNode"];
   jFSoMuMTOFy83u5f7QtdA [label="UpdateGoalsNode"];
-  "8FrRI8S0ibkT8Vb9m2MzO" [label="BattleHandlerSubflow", shape=component, style="filled,rounded", fillcolor="lightyellow"];
+  "8FrRI8S0ibkT8Vb9m2MzO" [label="BattleAgentNode"];
   R23Y0lV9pKaQNMzlq9lca [label="RetrieveLongTermMemoryNode"];
   WkMzn53ZyL0YzPFXYCCEc [label="DummyNode"];
   g44YdhDLLbvrLy1YJ5SG7 [label="CreateLongTermMemoryNode"];

@@ -1,10 +1,10 @@
-# AI Workflow: Node-by-Node Analysis
+# AI Workflow Architecture
 
-This page walks through the entire Junjo workflow, one node at a time. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving into this, as some of that terminology will be used here. At a high level, we have an entrypoint for the agent that handles memory updates and retrieval, setting goals, and routing the flow to one of three dedicated subflows, each of which handles a major aspect of playing Pokémon. The three subflows are the Overworld Handler, the Battle Handler, and the Text Handler, and each one has its own suite of tools to operate in its domain.
+This page describes the current hybrid workflow. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology is used here. A Junjo root graph handles shared memory and goal work before routing execution into one of three gameplay domains: overworld navigation, battles, or text interactions. The overworld and text handlers remain Junjo subflows, while the battle handler is a Pydantic AI agent that owns an entire battle loop and operates through real function tools.
 
 Note: Pretty much all the constants below are default values that can be edited in [`common/constants.py`](/common/constants.py).
 
-## The Main Agent Graph
+## The Junjo Root Graph
 
 ![The Main Agent Graph](../visualization/agent_graph/Graph.svg)
 
@@ -24,9 +24,9 @@ This is the node that pulls long-term memories from the database. The model sees
 
 This is purely topological to simplify the flow of the graph. It does nothing.
 
-### The Three Subflows
+### The Three Gameplay Domains
 
-At this point, the flow is diverted into one of the three subflows. Each of these is treated fully below.
+At this point, the flow is diverted into one of the three gameplay domains. Overworld and text interactions enter Junjo subflows. Battles enter a temporary Junjo adapter that prepares and runs the Pydantic AI battle agent.
 
 ### Do Updates
 
@@ -81,37 +81,78 @@ This was my least favourite node to code because it is so complicated and we onl
 
 Purely topological, as are all dummy nodes in the workflow. This is the sink node the signals the end of the overworld subflow.
 
-## The Battle Handler Subflow
+## The Battle Agent
 
-![The Battle Handler Subflow](../visualization/agent_graph/subflow_8FrRI8S0ibkT8Vb9m2MzO.svg)
+The battle handler is no longer a Junjo subflow. The root graph reaches it through one temporary adapter node, but that node prepares a typed `BattleContext` and hands the complete battle lifecycle to a Pydantic AI agent.
 
-### Determine Handler
+```mermaid
+flowchart LR
+    root["Junjo root<br/>Battle adapter"] --> prepare["Prepare BattleContext<br/>and static initial input"]
+    prepare --> agent["GPT-5.6 Luna<br/>battle agent"]
+    agent --> choice{"Function tool call"}
 
-This is the entrypoint for the battle handler subflow. Its job is to determine which tool to route the flow to. It first checks for anything unusual. If we're in an irregular battle type (tutorial or safari zone), or the Fight/Item/PKMN/Run menu isn't open, it will immediately route to the generic "make decision" node. Otherwise, it will determine the legal decisons available based on the game state and ask the AI to select one of them.
+    subgraph toolset["Stable toolset for this battle"]
+        fight["fight"]
+        switch["switch_pokemon"]
+        ball["throw_ball"]
+        run["run"]
+        buttons["press_buttons"]
+    end
 
-### Make Decision
+    choice --> fight
+    choice --> switch
+    choice --> ball
+    choice --> run
+    choice --> buttons
 
-This is the generic handler for all unusual situations. It is very similar to the "press buttons" tool in the overworld. If we're in any battle that is not a standard wild Pokémon or trainer battle, or if the fight menu didn't open properly (e.g. because our Pokémon fainted), this tool will select one or more buttons to enter directly into the emulator.
+    fight --> service["Deterministic<br/>battle service"]
+    switch --> service
+    ball --> service
+    run --> service
+    buttons --> service
 
-### Fight Tool
+    service --> observe["Advance dialog and refresh<br/>screenshot, battle, party, and screen state"]
+    observe -->|"Tool result"| agent
+    agent -->|"Battle mode exits"| finish["Return to root graph"]
+```
 
-Enters deterministic button presses to use one of the current Pokémon's available moves.
+The initial prompt, memory, goals, and tool definitions are prepared once. After every action, the tool returns a fresh screenshot and parsed observation to the same conversation. The agent can therefore react to damage, fainted Pokémon, failed escape attempts, new opponents, forced switches, and irregular battle screens without returning to the root graph or rebuilding its context.
 
-### Switch Pokémon Tool
+The registry is fixed for the battle type so the model-visible prompt remains stable and cache-friendly:
 
-Only available if the player has more than one Pokémon with non-zero HP. Enters deterministic button presses to switch to another Pokémon in the party.
+| Tool | Trainer battle | Wild battle | Other battle |
+|---|:---:|:---:|:---:|
+| `fight` | ✓ | ✓ | — |
+| `switch_pokemon` | ✓ | ✓ | — |
+| `throw_ball` | — | ✓ | — |
+| `run` | — | ✓ | — |
+| `press_buttons` | ✓ | ✓ | ✓ |
 
-### Throw Ball Tool
+Temporary legality is deliberately not encoded by rebuilding the registry. Each tool reads fresh emulator state immediately before acting. If a move has no PP, a party member has fainted, or a requested ball is no longer in the bag, the tool rejects the request and gives the agent the updated observation so it can try something else.
 
-Only available in wild battles if the player has balls in their inventory. Enters deterministic button presses to throw one of the balls.
+### Fight
 
-### Run Tool
+Selects a move by its zero-based slot. The deterministic service navigates the battle menu, uses the move, captures every page of the resulting dialog, and waits for the next decision point.
 
-Only available in wild battles. Runs from the battle.
+### Switch Pokémon
 
-### Handle Subsequent Text
+Selects a party member by its zero-based slot. The tool validates that the Pokémon is alive and not already active before deterministically navigating the party menu.
 
-The final node in the battle handler. It may surprise you that we do this here instead of in the text handler, but it's because the logic for reading text in a battle is slightly different from doing so in the overworld. Additionally, the text starts streaming the moment an action is taken, so we don't have time to wait for the next iteration to start. This node captures any text that streams and appends it to the current iteration's memory block.
+### Throw Ball
+
+Selects a Poké Ball by type during a wild battle. The tool checks the current inventory, throws the requested ball, and returns the resulting dialog and screen state. A successful catch exits the battle loop so the root workflow can route the naming screen to the text handler.
+
+### Run
+
+Attempts to escape from a wild battle. A failed escape returns the opponent's response and refreshed battle state to the agent so it can make another decision.
+
+### Press Buttons
+
+Provides constrained directional, confirm, and cancel input for forced switches, dialog, special battle types, and other screens that do not fit one of the semantic tools. It remains available during ordinary battles because those irregular screens can appear at any time.
+
+### Memory and Display Updates
+
+The agent emits a brief explanation alongside each tool call. That explanation and captured in-game dialog are appended to the current rolling-memory block and streamed to the HTML activity log. Detailed action results and refreshed observations stay inside the agent conversation, where they provide context for the next decision without flooding durable memory. The complete battle remains one top-level workflow iteration.
 
 ## The Text Handler Subflow
 

@@ -179,8 +179,14 @@ dependencies; it should not duplicate them.
 
 ## Pydantic AI Tool Construction
 
-Pydantic AI function tools receive agent dependencies through
-`RunContext[ContextType]`. Every tool interface therefore has the shape:
+Pydantic AI function tools may receive agent dependencies through
+`RunContext[ContextType]`, or a registry may build tools already bound to one
+prepared mode context. Use `RunContext` when the same interface must resolve
+different dependencies at execution time. Bind the context at construction
+when the agent and its stable toolset share one lifecycle, as the battle agent
+does.
+
+A context-driven interface has the shape:
 
 ```python
 async def navigate(
@@ -198,8 +204,8 @@ async def navigate(
     )
 ```
 
-`interface.py` is the only part of this tool that imports `RunContext`.
-`service.py` knows nothing about Pydantic AI.
+Only `interface.py` knows whether the tool uses `RunContext` or a bound
+context. `service.py` knows nothing about Pydantic AI.
 
 Google-style docstrings and type annotations define the description and JSON
 schema shown to the model. Tool-specific Pydantic models validate structured
@@ -208,7 +214,8 @@ arguments and results at this boundary.
 ### Tool registries
 
 Each agent owns one `tools/registry.py`. The registry builds a Pydantic AI
-`FunctionToolset` from the interface functions belonging to that agent.
+`FunctionToolset` from the interface functions or tool builders belonging to
+that agent.
 
 Conceptually:
 
@@ -229,11 +236,11 @@ executes the actual interface functions. There is no application-defined
 `tool_name -> handler` switch and no second model response that is converted
 into a tool call elsewhere.
 
-Where tool legality changes with state, wrap the registered toolset with
-Pydantic AI's `FilteredToolset` or `.filtered(...)`. The filter reads the typed
-mode context and the Pydantic `ToolDefinition` before each model step. Tool
-interfaces still validate state-dependent arguments because exposure alone
-cannot prove that a particular target remains valid.
+Use `FilteredToolset` or `.filtered(...)` only when changing the exposed tools
+between model steps is useful enough to justify changing the model-visible
+tool definitions. For a cache-sensitive loop such as a battle, build a stable
+toolset for the mode at entry and let each interface validate changing
+state-dependent legality immediately before acting.
 
 Do not build a custom `AbstractToolset` unless `FunctionToolset` composition
 and filtering prove insufficient.
@@ -277,6 +284,19 @@ mode and invoking the correct runner. Each runner prepares its own context.
 The graph does not own tools, prompts, memory mutation, background updates, or
 the internal battle and text loops.
 
+### Iteration semantics follow-up
+
+Preserve the existing Junjo iteration behavior during the mode migrations
+because it is tightly coupled to agent state, rolling-memory finalization, and
+SQLite persistence. This temporarily means one overworld action advances the
+iteration while an entire battle or text loop shares one iteration.
+
+After the root graph migration is complete, revisit this boundary. Advancing
+the iteration for each agent-loop decision may provide a cleaner and more
+consistent definition across all three modes, but it should be changed together
+with the memory and database lifecycle rather than inside an individual mode
+migration.
+
 ## Overworld Agent
 
 The overworld runner prepares `OverworldContext`, supplies the overworld
@@ -309,10 +329,11 @@ The battle runner owns a local loop:
 
 1. Observe settled battle state.
 2. Prepare a new `BattleContext`.
-3. Filter the battle registry to legal tools.
-4. Run one battle-agent decision.
-5. Re-observe the game.
-6. Repeat until battle mode exits.
+3. Build the stable registry appropriate to the battle type.
+4. Start one agent run with static initial input.
+5. Let each selected tool validate fresh state, act, and return the updated
+   observation.
+6. Continue the same agent run until battle mode exits.
 
 Battle tools include fighting, switching, throwing a ball, running, and
 constrained input for irregular screens.
@@ -394,18 +415,9 @@ embedding or reranking details.
 
 ## Migration Phases
 
-Each phase is a separate sequential ticket and leaves the application working.
+Each phase is implemented separately and leaves the application working.
 
-### Phase 1: Replace the text subflow
-
-- Introduce `TextContext`, its preparation function, text agent, tool
-  registry, and per-tool interface/service packages.
-- Implement the local text loop.
-- Replace the Junjo text subflow with one temporary adapter that invokes the
-  complete text runner.
-- Remove the superseded text graph and nodes.
-
-### Phase 2: Replace the battle subflow
+### Phase 1: Replace the battle subflow
 
 - Introduce `BattleContext`, its preparation function, battle agent, tool
   registry, and per-tool interface/service packages.
@@ -413,6 +425,15 @@ Each phase is a separate sequential ticket and leaves the application working.
 - Replace the Junjo battle subflow with one temporary adapter that invokes the
   complete battle runner.
 - Remove the superseded battle graph and nodes.
+
+### Phase 2: Replace the text subflow
+
+- Introduce `TextContext`, its preparation function, text agent, tool
+  registry, and per-tool interface/service packages.
+- Implement the local text loop.
+- Replace the Junjo text subflow with one temporary adapter that invokes the
+  complete text runner.
+- Remove the superseded text graph and nodes.
 
 ### Phase 3: Replace the overworld subflow
 

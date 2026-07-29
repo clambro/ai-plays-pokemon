@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 from agent.enums import AgentStateHandler
+from agent.utils import is_battle_handler_state
 from common.constants import ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL
 
 if TYPE_CHECKING:
@@ -23,9 +24,7 @@ async def wait_for_animations(emulator: YellowLegacyEmulator) -> None:
 async def determine_handler(emulator: YellowLegacyEmulator) -> AgentStateHandler:
     """Determine which handler to use based on the current game state."""
     game_state = await emulator.get_game_state()
-    # The nickname screen after catching a Pokemon is considered a battle state by the game,
-    # but we need to route it to the text handler instead.
-    if game_state.battle.is_in_battle and not game_state.is_naming_screen():
+    if is_battle_handler_state(game_state):
         return AgentStateHandler.BATTLE
     if (
         game_state.is_text_on_screen()

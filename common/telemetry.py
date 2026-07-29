@@ -7,7 +7,7 @@ from common.settings import settings
 
 
 def setup_telemetry() -> None:
-    """Configure Logfire and instrument the OpenAI client."""
+    """Configure Logfire and instrument the application's LLM clients."""
     if not settings.logfire_token:
         logger.warning("LOGFIRE_TOKEN is not set; telemetry will not be sent to Logfire.")
 
@@ -18,3 +18,4 @@ def setup_telemetry() -> None:
         console=False,
     )
     logfire.instrument_openai()
+    logfire.instrument_pydantic_ai()

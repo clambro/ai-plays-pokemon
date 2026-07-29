@@ -131,8 +131,9 @@ class YellowLegacyGameState(BaseModel):
             out += f"HP: {self.battle.player_pokemon.hp} / {self.battle.player_pokemon.max_hp}\n"
             out += f"Status Ailment: {self.battle.player_pokemon.status}\n"
             out += "<moves>\n"
-            for m in self.battle.player_pokemon.moves:
-                out += f"- {m.name} (PP: {m.pp})\n"
+            for slot, move in enumerate(self.battle.player_pokemon.moves):
+                disabled = " [DISABLED]" if slot == self.battle.disabled_move_slot else ""
+                out += f"- {move.name} (PP: {move.pp}){disabled}\n"
             out += "</moves>\n"
             out += "</player_pokemon>\n"
 
