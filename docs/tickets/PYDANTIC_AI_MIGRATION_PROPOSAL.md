@@ -350,14 +350,16 @@ The text runner also owns a local loop. Plain dialog advancement remains
 deterministic when no decision is required. Menus, questions, naming screens,
 and irregular interactions use the text agent and its registered tools.
 
-Each iteration:
+Each interaction:
 
 1. Observe the current text state.
-2. Exit if the interaction has ended.
-3. Advance plain dialog deterministically when safe.
-4. Otherwise prepare a new `TextContext`.
-5. Run one text-agent tool decision.
-6. Re-observe before continuing.
+2. Advance and record plain dialog deterministically while it is safe.
+3. Exit without constructing an agent if the interaction ends or enters battle.
+4. Otherwise start one agent conversation with static initial input and a fixed
+   tool registry.
+5. Let each selected tool act, read resulting dialog, and return the current
+   text and screenshot.
+6. Continue the same agent run until text mode exits or battle begins.
 
 Initial text tools are constrained button input and name entry. Additional
 tools should be introduced only when they represent a distinct semantic
