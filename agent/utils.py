@@ -5,7 +5,15 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
+    from emulator.game_state import YellowLegacyGameState
     from emulator.schemas import DialogBox
+
+
+def is_battle_handler_state(game_state: YellowLegacyGameState) -> bool:
+    """Determine whether the game state belongs to the battle handler."""
+    # The nickname screen after catching a Pokemon is considered a battle state by the game,
+    # but we need to route it to the text handler instead.
+    return game_state.battle.is_in_battle and not game_state.is_naming_screen()
 
 
 def append_dialog_to_list_inplace(text: list[str], dialog_box: DialogBox) -> None:

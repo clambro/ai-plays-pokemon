@@ -9,6 +9,11 @@ from agent.subflows.battle_handler.tools.errors import BattleActionUnavailableEr
 from agent.subflows.battle_handler.tools.switch_pokemon.service import (
     switch_pokemon as switch_pokemon_service,
 )
+from agent.subflows.battle_handler.utils import (
+    BattleToolResult,
+    complete_battle_action,
+    refresh_battle_observation,
+)
 
 if TYPE_CHECKING:
     from agent.subflows.battle_handler.context import BattleContext
@@ -19,7 +24,7 @@ def build_switch_pokemon_tool(context: BattleContext) -> Tool[BattleContext]:
 
     async def switch_pokemon(
         party_slot: Annotated[int, Field(ge=0, le=5)],
-    ) -> str:
+    ) -> BattleToolResult:
         """Switch to an available Pokemon in the player's party.
 
         The party slot is its zero-based position in the player's party. The
@@ -30,18 +35,23 @@ def build_switch_pokemon_tool(context: BattleContext) -> Tool[BattleContext]:
             party_slot: Zero-based party slot of the Pokemon to switch in.
 
         Returns:
-            Confirmation of the attempted switch.
+            Fresh battle context after the attempted switch.
 
         Raises:
             ModelRetry: The requested party member is unavailable in the latest game state.
         """
         try:
-            return await switch_pokemon_service(
-                rolling_memory=context.rolling_memory,
+            result = await switch_pokemon_service(
+                rolling_memory=context.state.rolling_memory,
                 emulator=context.emulator,
                 party_slot=party_slot,
             )
         except BattleActionUnavailableError as error:
-            raise ModelRetry(str(error)) from error
+            retry_context = await refresh_battle_observation(
+                context,
+                action_result=str(error),
+            )
+            raise ModelRetry(retry_context) from error
+        return await complete_battle_action(context, result)
 
     return Tool(switch_pokemon, require_parameter_descriptions=True)

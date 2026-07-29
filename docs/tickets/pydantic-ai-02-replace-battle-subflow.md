@@ -36,12 +36,12 @@ information, and initial battle and screen state; it is not rebuilt between
 actions.
 
 The battle agent owns a `tools/registry.py` built with `FunctionToolset`.
-Build the toolset from the prepared battle state for each agent run. At a
-standard trainer-battle menu, expose fighting and switching only when those
-actions are available. Wild battles may additionally expose throwing a ball
-and running. Irregular battle screens expose constrained button input instead
-of semantic tools. The agent chooses arguments from the supplied player,
-inventory, battle, and screen state.
+Build its toolset once from the battle type at entry so the model-visible tool
+definitions remain stable throughout the run. Trainer battles expose fighting,
+switching, and constrained button input. Wild battles additionally expose
+throwing a ball and running. Other battle types expose constrained button input
+only. Button input remains available throughout ordinary battles for dialog,
+forced switches, and other screens not covered by semantic tools.
 
 Each exposed tool still validates its request against fresh emulator state
 before acting and returns model-visible retry feedback when the request is no
@@ -84,20 +84,25 @@ Within that run it:
 2. lets the agent select and execute a real function tool;
 3. deterministically advances battle dialog and waits for the next decision
    point;
-4. refreshes the displayed state;
-5. returns the updated battle state, screen state, and screenshot from the
-   tool for the agent's next decision; and
+4. refreshes the local and displayed state;
+5. returns an updated screenshot plus battle, party, dialog, and screen context
+   from the tool for the agent's next decision; and
 6. continues until the application no longer classifies the screen as battle
    mode.
 
 The toolset should cover fighting, switching, throwing a ball, running, and
-constrained input for irregular battle screens. Tool interfaces expose
-semantic choices; services translate them into deterministic emulator input.
+constrained button input. Tool interfaces expose semantic choices; services
+translate them into deterministic emulator input and reject choices that are
+not legal in the fresh emulator state.
 
-Tool results form the changing portion of the battle conversation. Each result
-describes the completed action and supplies a fresh observation for the next
-model request. Normal battle dialog remains deterministic and should not
-consume a separate model call.
+Tool results form the changing portion of the battle conversation. Each tool
+returns a context string that describes the completed action and supplies a
+fresh observation for the next model request. This string remains inside the
+agent loop and is not appended wholesale to rolling memory or the HTML log.
+Keep the existing inline action records written by the deterministic tool
+services. The agent's visible narration is appended before the tool runs.
+Normal battle dialog remains deterministic, is recorded in rolling memory,
+and should not consume a separate model call.
 
 Keep the conversation append-only and cache-friendly. Instructions and initial
 input stay at the beginning; changing state is appended only through tool
@@ -105,21 +110,20 @@ results. Use a stable battle-agent prompt cache key, keep image detail settings
 consistent, and inspect cache-read and cache-write usage while tuning. Do not
 re-send rolling memory between actions.
 
-At the ordinary trainer or wild battle menu, the registry exposes only the
-semantic capabilities available from the supplied game state. Constrained
-button input covers screens that the semantic services do not understand. Tool
-services must resolve semantic choices against fresh state instead of trusting
-menu indices captured before the model call.
+The registry remains fixed for the battle. Temporary legality is enforced by
+the tools against fresh emulator state instead of changing their definitions
+or trusting menu indices captured before the model call.
 
 The local loop ends when battle mode exits, not solely when the ROM battle flag
 is cleared. In particular, the naming screen shown after catching a Pokémon is
 text mode even though the battle flag may remain set.
 
-The complete battle remains one top-level rolling-memory iteration. Individual
-actions and captured dialog append to the current block, which already streams
-live log changes to the HTML background. The runner must also refresh the full
-displayed game state during the local loop because control may not return to
-the root graph for several actions.
+The complete battle remains one top-level rolling-memory iteration. Agent
+narration and captured dialog append to the current block, which already
+streams live log changes to the HTML background. Tool-result context remains in
+the agent conversation only. The runner must also refresh the full displayed
+game state during the local loop because control may not return to the root
+graph for several actions.
 
 Introducing Pydantic AI also requires small shared integrations outside the
 battle handler:
@@ -155,8 +159,13 @@ executing the tool, which also streams it to the HTML background. Tool calls
 contain only the arguments needed to perform the action.
 
 Once every battle action runs through the agent, move orchestration into the
-whole-battle runner. Remove the remaining Junjo battle wrapper only after the
-new runner owns the complete battle lifecycle.
+whole-battle runner. Keep one Pydantic AI run alive, refresh the context after
+each tool without rebuilding the initial input or toolset, and stop when the
+application no longer classifies the screen as battle mode. Keep the existing
+inline action records in rolling memory while the richer in-run tool return
+provides fresh context only to the agent conversation. Remove the remaining
+Junjo battle wrapper only after the new runner owns the complete battle
+lifecycle.
 
 ## Completion
 

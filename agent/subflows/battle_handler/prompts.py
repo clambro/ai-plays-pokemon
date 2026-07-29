@@ -2,11 +2,13 @@
 
 from typing import TYPE_CHECKING
 
+from common.enums import BattleType, PokeballItem
+
 if TYPE_CHECKING:
     from agent.subflows.battle_handler.context import BattleContext
 
 BATTLE_DECISION_PROMPT = """
-You are in a Pokemon battle. The screenshot provided above is the current game screen. Briefly explain your reasoning in first person as ordinary response text, then use exactly one tool to take the next battle action.
+You are in a Pokemon battle. The screenshot provided above shows the battle at entry. After each tool call, its returned context is the freshest state and supersedes earlier observations. Briefly explain your reasoning in first person as ordinary response text, then use exactly one tool to take the next battle action.
 
 {state}
 
@@ -26,9 +28,9 @@ def build_battle_decision_prompt(context: BattleContext) -> str:
     """Build the prompt for the current battle observation."""
     state = "\n\n".join(
         (
-            str(context.rolling_memory),
-            str(context.long_term_memory),
-            str(context.goals),
+            str(context.state.rolling_memory),
+            str(context.state.long_term_memory),
+            str(context.state.goals),
             context.game_state.player_info,
             context.game_state.battle_info,
         ),
@@ -37,3 +39,32 @@ def build_battle_decision_prompt(context: BattleContext) -> str:
         state=state,
         text=context.game_state.screen.text,
     )
+
+
+def build_battle_tool_result(
+    context: BattleContext,
+    *,
+    action_result: str,
+    dialog: str = "",
+) -> str:
+    """Build the fresh context returned by a battle tool."""
+    sections = [action_result]
+    if dialog:
+        sections.append(f'Battle dialog: "{dialog}"')
+    available_balls: list[str] = []
+    if context.game_state.battle.battle_type == BattleType.WILD:
+        pokeball_names = {ball.value for ball in PokeballItem}
+        available_balls = [
+            f"- {item.name} (x{item.quantity})"
+            for item in context.game_state.inventory.items
+            if item.name in pokeball_names
+        ]
+    sections.extend(
+        (
+            context.game_state.party_info,
+            "Available Poke Balls:\n" + "\n".join(available_balls) if available_balls else "",
+            context.game_state.battle_info,
+            "Current onscreen text:\n" + context.game_state.screen.text,
+        ),
+    )
+    return "\n\n".join(section for section in sections if section)

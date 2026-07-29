@@ -25,7 +25,7 @@ async def press_buttons(
     """
     button_names = [button.value for button in buttons]
     result = f"Pressed the following buttons: {button_names}."
-    context.rolling_memory.add_memory(content=result)
+    context.state.rolling_memory.add_memory(content=result)
     for index, button in enumerate(buttons):
         await context.emulator.press_button(
             button,

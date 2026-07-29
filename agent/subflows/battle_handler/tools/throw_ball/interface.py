@@ -8,6 +8,11 @@ from agent.subflows.battle_handler.tools.errors import BattleActionUnavailableEr
 from agent.subflows.battle_handler.tools.throw_ball.service import (
     throw_ball as throw_ball_service,
 )
+from agent.subflows.battle_handler.utils import (
+    BattleToolResult,
+    complete_battle_action,
+    refresh_battle_observation,
+)
 from common.enums import PokeballItem
 
 if TYPE_CHECKING:
@@ -19,7 +24,7 @@ def build_throw_ball_tool(context: BattleContext) -> Tool[BattleContext]:
 
     async def throw_ball(
         ball_type: PokeballItem,
-    ) -> str:
+    ) -> BattleToolResult:
         """Throw an available Poke Ball during a wild battle.
 
         The selected ball must be present in the player's current inventory.
@@ -28,18 +33,23 @@ def build_throw_ball_tool(context: BattleContext) -> Tool[BattleContext]:
             ball_type: Type of Poke Ball to throw.
 
         Returns:
-            Confirmation of the attempted throw.
+            Fresh battle context after the attempted throw.
 
         Raises:
             ModelRetry: The requested ball is unavailable in the latest game state.
         """
         try:
-            return await throw_ball_service(
-                rolling_memory=context.rolling_memory,
+            result = await throw_ball_service(
+                rolling_memory=context.state.rolling_memory,
                 emulator=context.emulator,
                 ball_type=PokeballItem(ball_type),
             )
         except BattleActionUnavailableError as error:
-            raise ModelRetry(str(error)) from error
+            retry_context = await refresh_battle_observation(
+                context,
+                action_result=str(error),
+            )
+            raise ModelRetry(retry_context) from error
+        return await complete_battle_action(context, result)
 
     return Tool(throw_ball, require_parameter_descriptions=True)
