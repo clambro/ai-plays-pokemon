@@ -9,7 +9,6 @@ from agent.state import AgentStore
 from agent.subflows.text_handler.agent import run_text_agent
 from agent.subflows.text_handler.context import TextContext
 from agent.subflows.text_handler.enums import TextHandler
-from agent.subflows.text_handler.nodes.assign_name.service import AssignNameService
 from agent.subflows.text_handler.nodes.determine_handler.service import determine_handler
 from agent.subflows.text_handler.nodes.handle_dialog_box.service import handle_dialog_box
 
@@ -37,13 +36,7 @@ class TextHandlerNode(Node[AgentStore]):
                 rolling_memory=rolling_memory,
                 emulator=self.emulator,
             )
-        elif handler == TextHandler.NAME:
-            service = AssignNameService(
-                rolling_memory=rolling_memory,
-                emulator=self.emulator,
-            )
-            rolling_memory = await service.assign_name()
-        elif handler == TextHandler.GENERIC:
+        elif handler in (TextHandler.NAME, TextHandler.GENERIC):
             context = TextContext(
                 state=state,
                 emulator=self.emulator,

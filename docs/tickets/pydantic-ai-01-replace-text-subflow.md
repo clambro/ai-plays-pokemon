@@ -77,10 +77,12 @@ routes back into the text runner and tries again naturally.
 
 2. **Migrate naming into the toolset.**
    Replace the separate naming model call with an `assign_name` function tool.
-   Preserve the deterministic cursor navigation and uniqueness checks, and
-   keep the existing navigation tests with the service they cover. Build both
-   text tools into one stable registry and let their services reject requests
-   that do not match the current screen.
+   State explicitly in its tool description that it works only on the naming
+   screen, and re-read the emulator state to enforce that requirement before
+   entering anything. Preserve the deterministic cursor navigation and
+   uniqueness checks, and keep the existing navigation tests with the service
+   they cover. Build both text tools into one stable registry and let their
+   services reject requests that do not match the current screen.
 
 3. **Close the local interaction loop.**
    Move ordinary dialog advancement ahead of agent construction so dialog-only
