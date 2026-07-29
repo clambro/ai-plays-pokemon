@@ -5,8 +5,6 @@ from pydantic_ai import (
     BinaryContent,
     CallToolsNode,
     ModelResponse,
-    ModelRetry,
-    RunContext,
 )
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 
@@ -22,7 +20,7 @@ from llm.usage import update_pydantic_ai_usage
 
 def build_battle_agent(context: BattleContext) -> Agent[BattleContext, str]:
     """Construct the Pydantic AI battle agent."""
-    agent = Agent(
+    return Agent(
         model=f"openai-responses:{MODEL}",
         name="battle_agent",
         deps_type=BattleContext,
@@ -35,8 +33,6 @@ def build_battle_agent(context: BattleContext) -> Agent[BattleContext, str]:
             timeout=TIMEOUT_SECONDS,
         ),
     )
-    agent.output_validator(_validate_battle_output)
-    return agent
 
 
 async def run_battle(context: BattleContext) -> None:
@@ -77,13 +73,6 @@ def build_battle_agent_input(context: BattleContext) -> list[str | BinaryContent
         build_screenshot_content(context.screenshot),
         build_battle_decision_prompt(context),
     ]
-
-
-def _validate_battle_output(context: RunContext[BattleContext], output: str) -> str:
-    """Allow the agent run to end only after battle mode exits."""
-    if is_battle_handler_state(context.deps.game_state):
-        raise ModelRetry("The battle is still active. Use one of the available tools.")
-    return output
 
 
 async def _record_response_usage(context: BattleContext, response: ModelResponse) -> None:
