@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Annotated, Literal
 from pydantic import Field
 from pydantic_ai import Tool
 
+from agent.subflows.text_handler.tools.errors import TextActionUnavailableError
 from agent.subflows.text_handler.tools.press_buttons.service import (
     press_buttons as press_buttons_service,
 )
@@ -53,10 +54,13 @@ def build_press_buttons_tool(context: TextContext) -> Tool[TextContext]:
         Returns:
             Fresh text context after pressing the buttons.
         """
-        result = await press_buttons_service(
-            context=context,
-            buttons=buttons,
-        )
+        try:
+            result = await press_buttons_service(
+                context=context,
+                buttons=buttons,
+            )
+        except TextActionUnavailableError as error:
+            return await complete_text_action(context, str(error))
         return await complete_text_action(context, result)
 
     return Tool(press_buttons, require_parameter_descriptions=True)

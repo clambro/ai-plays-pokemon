@@ -18,6 +18,7 @@ _LETTER_GRID = np.array(
         ["S", "T", "U", "V", "W", "X", "Y", "Z", " "],
     ],
 )
+_VALID_NAME_CHARACTERS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZ ")
 
 
 async def assign_name(
@@ -41,9 +42,30 @@ async def assign_name(
     if not game_state.is_naming_screen():
         raise TextActionUnavailableError("The naming screen is not open.")
 
+    _validate_name(name, game_state)
     _validate_name_uniqueness(name, game_state)
     await _enter_name(emulator, name)
     return f"Entered the name {name}."
+
+
+def _validate_name(
+    name: str,
+    game_state: YellowLegacyGameState,
+) -> None:
+    """Reject names that cannot be entered completely on the current screen."""
+    if not name or name != name.strip() or not set(name).issubset(_VALID_NAME_CHARACTERS):
+        raise TextActionUnavailableError(
+            "Names must contain only uppercase letters and internal spaces.",
+        )
+
+    # The ROM draws 7 slots for player/rival names and 10 for Pokemon names.
+    max_length = game_state.screen.naming_screen_name_limit
+    if max_length not in {7, 10}:
+        raise TextActionUnavailableError("Could not determine the naming screen's name limit.")
+    if len(name) > max_length:
+        raise TextActionUnavailableError(
+            f"This naming screen accepts at most {max_length} characters.",
+        )
 
 
 def _validate_name_uniqueness(
