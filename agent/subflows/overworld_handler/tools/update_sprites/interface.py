@@ -27,13 +27,7 @@ def build_update_sprites_tool(
     eligible_sprites: list[OverworldSprite],
 ) -> Tool[OverworldContext]:
     """Build the sprite-description tool for the nearby sprites."""
-    current_map = context.state.current_map
-    if current_map is None:
-        raise ValueError("Current map is not set")
-    iteration = context.state.iteration
-    if iteration is None:
-        raise ValueError("Iteration is not set")
-
+    current_map = context.current_map
     eligible_indices = {sprite.index for sprite in eligible_sprites}
 
     async def update_sprites(
@@ -63,7 +57,7 @@ def build_update_sprites_tool(
         }
         await update_sprites_service(
             map_id=current_map.id,
-            iteration=iteration,
+            iteration=context.state.iteration,
             updates=valid_updates.items(),
         )
 

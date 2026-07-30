@@ -15,9 +15,7 @@ from agent.nodes.update_background_stream.node import UpdateBackgroundStreamNode
 from agent.nodes.update_goals.node import UpdateGoalsNode
 from agent.nodes.update_long_term_memory.node import UpdateLongTermMemoryNode
 from agent.subflows.battle_handler.node import BattleAgentNode
-from agent.subflows.overworld_handler.graph import build_overworld_handler_subflow_graph
-from agent.subflows.overworld_handler.state import OverworldHandlerState, OverworldHandlerStore
-from agent.subflows.overworld_handler.subflow import OverworldHandlerSubflow
+from agent.subflows.overworld_handler.node import OverworldAgentNode
 from agent.subflows.text_handler.node import TextHandlerNode
 
 if TYPE_CHECKING:
@@ -36,11 +34,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
 
     battle_agent = BattleAgentNode(emulator)
     text_handler = TextHandlerNode(emulator)
-    overworld_handler_subflow = OverworldHandlerSubflow(
-        graph_factory=lambda: build_overworld_handler_subflow_graph(emulator),
-        store_factory=lambda: OverworldHandlerStore(OverworldHandlerState()),
-        emulator=emulator,
-    )
+    overworld_agent = OverworldAgentNode(emulator)
 
     create_update_long_term_memory = RunConcurrent(
         name="CreateUpdateLongTermMemory",
@@ -71,7 +65,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             Edge(retrieve_long_term_memory, post_retrieval_dummy),
             Edge(
                 post_retrieval_dummy,
-                overworld_handler_subflow,
+                overworld_agent,
                 AgentHandlerIs(AgentStateHandler.OVERWORLD),
             ),
             Edge(
@@ -82,7 +76,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
             Edge(post_retrieval_dummy, text_handler, AgentHandlerIs(AgentStateHandler.TEXT)),
             Edge(text_handler, do_updates),
             Edge(battle_agent, do_updates),
-            Edge(overworld_handler_subflow, do_updates),
+            Edge(overworld_agent, do_updates),
             Edge(do_updates, finalize_memory),
         ],
     )

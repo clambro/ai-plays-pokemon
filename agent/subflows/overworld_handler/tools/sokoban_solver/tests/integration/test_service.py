@@ -12,7 +12,7 @@ from common.schemas import Coords
 from emulator.emulator import YellowLegacyEmulator
 from memory.rolling_memory import RollingMemory
 from overworld_map.schemas import OverworldSprite
-from overworld_map.service import get_overworld_map, update_map_with_screen_info
+from overworld_map.service import prepare_overworld_map
 
 if TYPE_CHECKING:
     from emulator.game_state import YellowLegacyGameState
@@ -93,8 +93,7 @@ async def _get_sokoban_service(emulator: YellowLegacyEmulator) -> SokobanSolverS
         patch("database.map_memory.repository.update_map_tiles", return_value=None),
         patch("overworld_map.service._add_remove_map_entities", return_value=None),
     ):
-        overworld_map = await get_overworld_map(0, game_state)
-        await update_map_with_screen_info(0, game_state, overworld_map)
+        overworld_map = await prepare_overworld_map(0, game_state)
         overworld_map.known_sprites = {
             s.index: OverworldSprite.from_sprite(s, None) for s in game_state.sprites.values()
         }

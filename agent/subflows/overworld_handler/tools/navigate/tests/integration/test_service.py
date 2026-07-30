@@ -10,7 +10,7 @@ from common.enums import FacingDirection
 from common.schemas import Coords
 from emulator.emulator import YellowLegacyEmulator
 from memory.rolling_memory import RollingMemory
-from overworld_map.service import get_overworld_map, update_map_with_screen_info
+from overworld_map.service import prepare_overworld_map
 
 
 @pytest.mark.integration
@@ -109,8 +109,7 @@ async def _get_nav_service(emulator: YellowLegacyEmulator) -> NavigationService:
         patch("database.map_memory.repository.update_map_tiles", return_value=None),
         patch("overworld_map.service._add_remove_map_entities", return_value=None),
     ):
-        overworld_map = await get_overworld_map(0, game_state)
-        await update_map_with_screen_info(0, game_state, overworld_map)
+        overworld_map = await prepare_overworld_map(0, game_state)
 
     return NavigationService(
         iteration=0,

@@ -42,11 +42,8 @@ def build_use_item_tool(context: OverworldContext) -> Tool[OverworldContext]:
         Returns:
             Confirmation or failure details for the attempted item use.
         """
-        rolling_memory = context.state.rolling_memory
-        if rolling_memory is None:
-            raise ValueError("Rolling memory is not set")
         service = UseItemService(
-            rolling_memory=rolling_memory,
+            rolling_memory=context.state.rolling_memory,
             emulator=context.emulator,
         )
         await service.use_item(inventory_slot)

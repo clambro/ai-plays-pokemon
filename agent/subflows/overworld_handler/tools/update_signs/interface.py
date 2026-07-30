@@ -27,13 +27,7 @@ def build_update_signs_tool(
     eligible_signs: list[OverworldSign],
 ) -> Tool[OverworldContext]:
     """Build the sign-description tool for the nearby signs."""
-    current_map = context.state.current_map
-    if current_map is None:
-        raise ValueError("Current map is not set")
-    iteration = context.state.iteration
-    if iteration is None:
-        raise ValueError("Iteration is not set")
-
+    current_map = context.current_map
     eligible_indices = {sign.index for sign in eligible_signs}
 
     async def update_signs(
@@ -63,7 +57,7 @@ def build_update_signs_tool(
         }
         await update_signs_service(
             map_id=current_map.id,
-            iteration=iteration,
+            iteration=context.state.iteration,
             updates=valid_updates.items(),
         )
 

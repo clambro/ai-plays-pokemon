@@ -4,13 +4,15 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.state import OverworldHandlerState
+    from agent.state import AgentState
     from emulator.emulator import YellowLegacyEmulator
+    from overworld_map.schemas import OverworldMap
 
 
 @dataclass(slots=True, kw_only=True)
 class OverworldContext:
     """Live dependencies for one overworld decision and action."""
 
-    state: OverworldHandlerState
+    state: AgentState
     emulator: YellowLegacyEmulator
+    current_map: OverworldMap

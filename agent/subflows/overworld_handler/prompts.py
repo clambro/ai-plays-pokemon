@@ -59,9 +59,7 @@ def build_overworld_decision_prompt(
     game_state: YellowLegacyGameState,
 ) -> str:
     """Build the initial prompt for one overworld decision."""
-    current_map = context.state.current_map
-    if current_map is None:
-        raise ValueError("Current map is not set")
+    current_map = context.current_map
 
     if game_state.player.is_biking:
         unavailable = "Navigation data is unavailable while riding a bike."
@@ -95,7 +93,15 @@ def build_overworld_decision_prompt(
         for index, item in enumerate(game_state.inventory.items)
     )
     return OVERWORLD_DECISION_PROMPT.format(
-        state=context.state.to_prompt_string(game_state),
+        state="\n\n".join(
+            (
+                str(context.state.rolling_memory),
+                str(context.state.long_term_memory),
+                str(context.state.goals),
+                current_map.to_string(game_state),
+                game_state.player_info,
+            ),
+        ),
         accessible_coords=accessible_coords,
         exploration_candidates=exploration_candidates,
         map_boundaries=map_boundaries,

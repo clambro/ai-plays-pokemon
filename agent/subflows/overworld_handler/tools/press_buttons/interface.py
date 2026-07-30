@@ -106,11 +106,8 @@ def build_press_buttons_tool(context: OverworldContext) -> Tool[OverworldContext
         Returns:
             Confirmation of the attempted button sequence.
         """
-        rolling_memory = context.state.rolling_memory
-        if rolling_memory is None:
-            raise ValueError("Rolling memory is not set")
         await press_buttons_service(
-            rolling_memory=rolling_memory,
+            rolling_memory=context.state.rolling_memory,
             emulator=context.emulator,
             buttons=list(buttons),
         )

@@ -133,6 +133,8 @@ context, and remove the duplicated overworld state and store.
 
 Preserve the single-tool turn boundary and all root-graph behavior.
 
+This stage is complete.
+
 ### 4. Enable the overworld agent loop
 
 Allow the agent to use multiple non-movement tools within one run. Mark tools

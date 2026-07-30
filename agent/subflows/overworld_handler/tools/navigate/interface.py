@@ -78,21 +78,14 @@ def build_navigation_tool(context: OverworldContext) -> Tool[OverworldContext]:
             Confirmation or failure details for the attempted navigation.
         """
         state = context.state
-        if state.iteration is None:
-            raise ValueError("Iteration is not set")
-        if state.rolling_memory is None:
-            raise ValueError("Rolling memory is not set")
-        if state.current_map is None:
-            raise ValueError("Current map is not set")
-
         target = Coords(row=row, col=col)
         service = NavigationService(
             iteration=state.iteration,
             emulator=context.emulator,
-            current_map=state.current_map,
+            current_map=context.current_map,
             rolling_memory=state.rolling_memory,
         )
-        state.current_map, _ = await service.navigate(target)
+        await service.navigate(target)
         return f"Attempted navigation to {target}."
 
     return Tool(navigation, require_parameter_descriptions=True)

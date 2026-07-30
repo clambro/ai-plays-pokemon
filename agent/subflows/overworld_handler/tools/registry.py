@@ -44,23 +44,21 @@ def build_overworld_toolset(
         tools.append(build_use_item_tool(context))
     if _is_sokoban_available(context, game_state):
         tools.append(build_sokoban_solver_tool(context))
-    current_map = context.state.current_map
-    if current_map is not None:
-        max_distance = 2
-        nearby_sprites = [
-            sprite
-            for sprite in current_map.known_sprites.values()
-            if (sprite.coords - game_state.player.coords).length <= max_distance
-        ]
-        nearby_signs = [
-            sign
-            for sign in current_map.known_signs.values()
-            if (sign.coords - game_state.player.coords).length <= max_distance
-        ]
-        if nearby_sprites:
-            tools.append(build_update_sprites_tool(context, nearby_sprites))
-        if nearby_signs:
-            tools.append(build_update_signs_tool(context, nearby_signs))
+    max_distance = 2
+    nearby_sprites = [
+        sprite
+        for sprite in context.current_map.known_sprites.values()
+        if (sprite.coords - game_state.player.coords).length <= max_distance
+    ]
+    nearby_signs = [
+        sign
+        for sign in context.current_map.known_signs.values()
+        if (sign.coords - game_state.player.coords).length <= max_distance
+    ]
+    if nearby_sprites:
+        tools.append(build_update_sprites_tool(context, nearby_sprites))
+    if nearby_signs:
+        tools.append(build_update_signs_tool(context, nearby_signs))
     return FunctionToolset(tools=tools)
 
 
@@ -69,8 +67,8 @@ def _is_sokoban_available(
     game_state: YellowLegacyGameState,
 ) -> bool:
     """Check whether the current map contains a usable Sokoban puzzle."""
-    current_map = context.state.current_map
-    if current_map is None or not game_state.can_use_strength:
+    current_map = context.current_map
+    if not game_state.can_use_strength:
         return False
 
     has_goal = any(

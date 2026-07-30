@@ -12,10 +12,13 @@ from agent.utils import build_screenshot_content
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 from llm.usage import update_pydantic_ai_usage
+from overworld_map.service import prepare_overworld_map
 
 if TYPE_CHECKING:
     from PIL import Image
 
+    from agent.state import AgentState
+    from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
 
 
@@ -39,9 +42,18 @@ def build_overworld_agent(
     )
 
 
-async def run_overworld(context: OverworldContext) -> None:
+async def run_overworld(
+    state: AgentState,
+    emulator: YellowLegacyEmulator,
+) -> None:
     """Run the overworld agent until it executes one tool."""
-    initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
+    initial_game_state, initial_screenshot = await emulator.get_game_state_with_screenshot()
+    current_map = await prepare_overworld_map(state.iteration, initial_game_state)
+    context = OverworldContext(
+        state=state,
+        emulator=emulator,
+        current_map=current_map,
+    )
     agent = build_overworld_agent(context, initial_game_state)
     async with agent.iter(
         build_overworld_agent_input(
@@ -57,13 +69,10 @@ async def run_overworld(context: OverworldContext) -> None:
             while not agent.is_end_node(node):
                 current_node = node
                 if isinstance(current_node, CallToolsNode):
-                    await update_pydantic_ai_usage(current_node.model_response)
+                    await _record_response_usage(context, current_node.model_response)
                     accounted_responses += 1
                     if reasoning := current_node.model_response.text:
-                        rolling_memory = context.state.rolling_memory
-                        if rolling_memory is None:
-                            raise ValueError("Rolling memory is not set")
-                        rolling_memory.add_memory(
+                        context.state.rolling_memory.add_memory(
                             (
                                 f"Current map: {initial_game_state.map.id.name} at coordinates"
                                 f" {initial_game_state.player.coords}, facing"
@@ -80,7 +89,7 @@ async def run_overworld(context: OverworldContext) -> None:
                 if isinstance(message, ModelResponse)
             ]
             for response in responses[accounted_responses:]:
-                await update_pydantic_ai_usage(response)
+                await _record_response_usage(context, response)
 
 
 def build_overworld_agent_input(
@@ -94,3 +103,10 @@ def build_overworld_agent_input(
         build_screenshot_content(initial_screenshot),
         build_overworld_decision_prompt(context, initial_game_state),
     ]
+
+
+async def _record_response_usage(context: OverworldContext, response: ModelResponse) -> None:
+    """Record one model response in both persistent and displayed state."""
+    tokens, cost = await update_pydantic_ai_usage(response)
+    context.state.total_tokens += tokens
+    context.state.total_cost += cost

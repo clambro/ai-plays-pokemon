@@ -23,15 +23,10 @@ def build_sokoban_solver_tool(context: OverworldContext) -> Tool[OverworldContex
         Returns:
             Confirmation that the solver ran.
         """
-        state = context.state
-        if state.rolling_memory is None:
-            raise ValueError("Rolling memory is not set")
-        if state.current_map is None:
-            raise ValueError("Current map is not set")
         service = SokobanSolverService(
             emulator=context.emulator,
-            current_map=state.current_map,
-            rolling_memory=state.rolling_memory,
+            current_map=context.current_map,
+            rolling_memory=context.state.rolling_memory,
         )
         await service.solve()
         return "Ran the Sokoban solver."

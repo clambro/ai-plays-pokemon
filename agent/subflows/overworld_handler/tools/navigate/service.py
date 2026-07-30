@@ -6,7 +6,7 @@ from loguru import logger
 
 from agent.subflows.overworld_handler.tools.navigate import utils
 from common.enums import AsciiTile, Button, FacingDirection, MapId
-from overworld_map.service import update_map_with_screen_info
+from overworld_map.service import update_overworld_map
 
 if TYPE_CHECKING:
     from common.schemas import Coords
@@ -81,7 +81,7 @@ class NavigationService:
             if self._should_cancel_navigation(game_state, prev_pos, starting_map_id, coords):
                 return self.current_map, self.rolling_memory
             # Can't update the map until we validate above that we haven't switched maps.
-            self.current_map = await update_map_with_screen_info(
+            await update_overworld_map(
                 self.iteration,
                 game_state,
                 self.current_map,

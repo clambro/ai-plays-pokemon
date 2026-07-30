@@ -50,11 +50,8 @@ def build_swap_first_pokemon_tool(
         Returns:
             The resulting party order or details of why the swap failed.
         """
-        rolling_memory = context.state.rolling_memory
-        if rolling_memory is None:
-            raise ValueError("Rolling memory is not set")
         service = SwapFirstPokemonService(
-            rolling_memory=rolling_memory,
+            rolling_memory=context.state.rolling_memory,
             emulator=context.emulator,
         )
         await service.swap_first_pokemon(party_slot)
