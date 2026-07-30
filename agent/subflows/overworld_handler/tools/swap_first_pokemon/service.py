@@ -27,29 +27,26 @@ class SwapFirstPokemonService:
         self.rolling_memory = rolling_memory
         self.emulator = emulator
 
-    async def swap_first_pokemon(self, pokemon_index: int) -> RollingMemory:
+    async def swap_first_pokemon(self, pokemon_index: int) -> str:
         """Swap the first Pokemon with the Pokemon at the requested party index."""
         try:
             await self._swap_first_pokemon(pokemon_index)
             game_state = await self.emulator.get_game_state()
-            self.rolling_memory.add_memory(
-                content=(
-                    f"I successfully swapped the order of my Pokemon. The new party order is "
-                    f"{[p.name for p in game_state.party]}. My lead Pokemon is now "
-                    f"{game_state.party[0].name}."
-                ),
+            result = (
+                f"I successfully swapped the order of my Pokemon. The new party order is "
+                f"{[p.name for p in game_state.party]}. My lead Pokemon is now "
+                f"{game_state.party[0].name}."
             )
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error in the swap first Pokemon response. Skipping. {e}")
             game_state = await self.emulator.get_game_state()
-            self.rolling_memory.add_memory(
-                content=(
-                    f"An error occurred while swapping the first Pokemon in my party: {e}"
-                    f"The current party order is {[p.name for p in game_state.party]}. My lead"
-                    f" Pokemon is {game_state.party[0].name}."
-                ),
+            result = (
+                f"An error occurred while swapping the first Pokemon in my party: {e}"
+                f"The current party order is {[p.name for p in game_state.party]}. My lead"
+                f" Pokemon is {game_state.party[0].name}."
             )
-        return self.rolling_memory
+        self.rolling_memory.add_memory(result)
+        return result
 
     async def _swap_first_pokemon(self, pokemon_index: int) -> None:
         """Swap the first Pokemon in the party with the Pokemon at the given index."""

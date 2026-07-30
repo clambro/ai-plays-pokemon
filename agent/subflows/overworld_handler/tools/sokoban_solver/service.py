@@ -34,28 +34,31 @@ class SokobanSolverService:
         self.current_map = current_map
         self.rolling_memory = rolling_memory
 
-    async def solve(self) -> None:
+    async def solve(self) -> str:
         """Solve the Sokoban puzzle."""
         sokoban_map = self._get_simplified_map()
 
         if not sokoban_map.boulders or not sokoban_map.goals:
             logger.warning("No boulders or goals found in Sokoban map. Bailing.")
-            return  # This shouldn't happen, but we need the option to bail if it does.
+            result = "The Sokoban solver found no boulders or goals and did not run."
+            self.rolling_memory.add_memory(result)
+            return result
 
         player_pos = (await self.emulator.get_game_state()).player.coords
         solution = self._solve_sokoban(sokoban_map, player_pos)
 
         if not solution:
-            self.rolling_memory.add_memory(
-                content=(
-                    "The Sokoban solver was unable to find a solution. This is likely because I"
-                    " haven't explored enough of the map yet, or I need to get boulders from"
-                    " other locations first, or because I already solved the puzzle previously."
-                ),
+            result = (
+                "The Sokoban solver was unable to find a solution. This is likely because I"
+                " haven't explored enough of the map yet, or I need to get boulders from"
+                " other locations first, or because I already solved the puzzle previously."
             )
-            return
+            self.rolling_memory.add_memory(result)
+            return result
 
-        await self._execute_solution(solution, sokoban_map)
+        result = await self._execute_solution(solution, sokoban_map)
+        self.rolling_memory.add_memory(result)
+        return result
 
     def _get_simplified_map(self) -> SokobanMap:
         """Get a simplified map of the Sokoban puzzle with the boulders and goals."""
@@ -174,7 +177,7 @@ class SokobanSolverService:
             valid_tiles += (WARP_TILE,)
         return sokoban_map.tiles[pos.row][pos.col] in valid_tiles
 
-    async def _execute_solution(self, solution: list[Button], sokoban_map: SokobanMap) -> None:
+    async def _execute_solution(self, solution: list[Button], sokoban_map: SokobanMap) -> str:
         """Execute the solution by pressing buttons."""
         is_strength_active = False
         for button in solution:
@@ -204,14 +207,9 @@ class SokobanSolverService:
                 next_game_state.player.coords == game_state.player.coords
                 and next_game_state.sprites == game_state.sprites
             ):
-                self.rolling_memory.add_memory(
-                    content="Sokoban solver was interrupted. Skipping further execution.",
-                )
-                return
+                return "Sokoban solver was interrupted. Skipping further execution."
 
-        self.rolling_memory.add_memory(
-            content="Executed a Sokoban solution.",
-        )
+        return "Executed a Sokoban solution."
 
     def _is_blocked(self, current: Coords, dy: int, dx: int) -> bool:
         """Check if the movement is blocked by a paired tile collision."""

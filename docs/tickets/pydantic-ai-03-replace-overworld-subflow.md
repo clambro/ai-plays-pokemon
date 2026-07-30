@@ -6,8 +6,9 @@ Replace the internal Junjo overworld graph with one Pydantic AI agent decision
 that selects and executes a real function tool.
 
 The root Junjo graph remains temporarily and invokes the overworld runner
-through one adapter node, matching the battle and text agents. Each overworld
-run executes exactly one tool and returns to the root graph.
+through one adapter node, matching the battle and text agents. An overworld run
+may execute multiple tools but returns to the root graph as soon as the player
+moves.
 
 This ticket covers the existing overworld subflow only. Root-level behavior
 such as goal updates, long-term-memory management, background refresh,
@@ -137,14 +138,17 @@ This stage is complete.
 
 ### 4. Enable the overworld agent loop
 
-Allow the agent to use multiple non-movement tools within one run. Mark tools
-that move the player so their successful execution ends the run; do not infer
-movement by comparing maps or game states. Keep the initial instructions and
-tool definitions stable for prompt caching, and return fresh observations
-through tool results when the agent continues.
+Allow the agent to use multiple tools within one run. After each tool executes,
+compare the player's coordinates with the position at the beginning of the
+run. End the run once the player has moved; do not compare maps, which can
+change when NPCs move. Keep the initial instructions and tool definitions
+stable for prompt caching, and return fresh observations through tool results
+when the agent continues.
 
 Do not impose an arbitrary request limit. Preserve the existing outer workflow
-boundary when a movement tool ends the agent run.
+boundary when player movement ends the agent run.
+
+This stage is complete.
 
 ### 5. Final cleanup
 

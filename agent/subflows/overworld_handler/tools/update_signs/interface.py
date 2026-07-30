@@ -9,6 +9,10 @@ from pydantic_ai import Tool
 from agent.subflows.overworld_handler.tools.update_signs.service import (
     update_signs as update_signs_service,
 )
+from agent.subflows.overworld_handler.utils import (
+    OverworldToolResult,
+    complete_overworld_action,
+)
 
 if TYPE_CHECKING:
     from agent.subflows.overworld_handler.context import OverworldContext
@@ -32,7 +36,7 @@ def build_update_signs_tool(
 
     async def update_signs(
         updates: Annotated[list[SignDescriptionUpdate], Field(min_length=1)],
-    ) -> str:
+    ) -> OverworldToolResult:
         """Update long-term descriptions of nearby signs.
 
         Signs are usually signposts or TVs, but may be other static places
@@ -48,7 +52,7 @@ def build_update_signs_tool(
             updates: Sign indices and their complete new descriptions.
 
         Returns:
-            The sign indices whose descriptions were updated.
+            Fresh overworld context after updating the descriptions.
         """
         valid_updates = {
             update.index: update.description
@@ -66,7 +70,8 @@ def build_update_signs_tool(
         result = f"Updated sign descriptions for indices: {updated}."
         if ignored:
             result += f" Ignored ineligible sign indices: {ignored}."
-        return result
+        context.state.rolling_memory.add_memory(result)
+        return await complete_overworld_action(context, result)
 
     entity_text = "\n".join(
         f"- [{sign.index}] {sign.to_string(current_map.id)}" for sign in eligible_signs

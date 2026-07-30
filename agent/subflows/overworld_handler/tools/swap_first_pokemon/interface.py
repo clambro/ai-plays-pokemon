@@ -8,6 +8,10 @@ from pydantic_ai import Tool
 from agent.subflows.overworld_handler.tools.swap_first_pokemon.service import (
     SwapFirstPokemonService,
 )
+from agent.subflows.overworld_handler.utils import (
+    OverworldToolResult,
+    complete_overworld_action,
+)
 
 if TYPE_CHECKING:
     from agent.subflows.overworld_handler.context import OverworldContext
@@ -20,7 +24,7 @@ def build_swap_first_pokemon_tool(
 
     async def swap_first_pokemon(
         party_slot: Annotated[int, Field(ge=1, le=5)],
-    ) -> str:
+    ) -> OverworldToolResult:
         """Put another party Pokemon in the first position.
 
         This will make that Pokemon your lead Pokemon in battle (assuming it
@@ -48,13 +52,13 @@ def build_swap_first_pokemon_tool(
             party_slot: Zero-based non-lead party slot of the Pokemon that should become the lead.
 
         Returns:
-            The resulting party order or details of why the swap failed.
+            Fresh overworld context after changing the party order.
         """
         service = SwapFirstPokemonService(
             rolling_memory=context.state.rolling_memory,
             emulator=context.emulator,
         )
-        await service.swap_first_pokemon(party_slot)
-        return "Attempted to change the lead Pokemon."
+        result = await service.swap_first_pokemon(party_slot)
+        return await complete_overworld_action(context, result)
 
     return Tool(swap_first_pokemon, require_parameter_descriptions=True)

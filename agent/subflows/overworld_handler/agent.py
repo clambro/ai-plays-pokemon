@@ -46,7 +46,7 @@ async def run_overworld(
     state: AgentState,
     emulator: YellowLegacyEmulator,
 ) -> None:
-    """Run the overworld agent until it executes one tool."""
+    """Run the overworld agent until a tool moves the player."""
     initial_game_state, initial_screenshot = await emulator.get_game_state_with_screenshot()
     current_map = await prepare_overworld_map(state.iteration, initial_game_state)
     context = OverworldContext(
@@ -72,16 +72,12 @@ async def run_overworld(
                     await _record_response_usage(context, current_node.model_response)
                     accounted_responses += 1
                     if reasoning := current_node.model_response.text:
-                        context.state.rolling_memory.add_memory(
-                            (
-                                f"Current map: {initial_game_state.map.id.name} at coordinates"
-                                f" {initial_game_state.player.coords}, facing"
-                                f" {initial_game_state.player.direction.name}. {reasoning}"
-                            ),
-                        )
+                        context.state.rolling_memory.add_memory(reasoning)
                 node = await agent_run.next(node)
                 if isinstance(current_node, CallToolsNode):
-                    break
+                    game_state = await context.emulator.get_game_state()
+                    if game_state.player.coords != initial_game_state.player.coords:
+                        break
         finally:
             responses = [
                 message

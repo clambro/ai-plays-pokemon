@@ -15,7 +15,7 @@ async def press_buttons(
     rolling_memory: RollingMemory,
     emulator: YellowLegacyEmulator,
     buttons: list[Button],
-) -> RollingMemory:
+) -> str:
     """Execute a short overworld button sequence.
 
     Execution stops early after a collision, failed interaction, map transition, dialog, or battle.
@@ -26,42 +26,46 @@ async def press_buttons(
         buttons: Buttons to press in order.
 
     Returns:
-        The supplied rolling memory after recording the input and any early-stop feedback.
+        The same action result recorded in rolling memory.
     """
-    rolling_memory.add_memory(
-        content=f"Selected the following buttons: {[str(button) for button in buttons]}.",
-    )
+    results = []
     for button in buttons:
         game_state = await emulator.get_game_state()
         await emulator.press_button(button)
-        passed_collision = await _check_for_collision(
+        collision_result = await _check_for_collision(
             button=button,
             prev_map_id=game_state.map.id,
             prev_coords=game_state.player.coords,
             prev_direction=game_state.player.direction,
-            rolling_memory=rolling_memory,
             emulator=emulator,
         )
-        passed_action = await _check_for_action(
+        action_result = await _check_for_action(
             button,
-            rolling_memory=rolling_memory,
             emulator=emulator,
         )
+        if collision_result:
+            results.append(collision_result)
+        if action_result:
+            results.append(action_result)
         state_changed = await _check_for_state_change(emulator)
-        if not passed_collision or not passed_action or state_changed:
+        if collision_result or action_result or state_changed:
             break
-    return rolling_memory
+
+    if not results:
+        results.append("Button sequence completed.")
+    result = "\n\n".join(results)
+    rolling_memory.add_memory(result)
+    return result
 
 
-async def _check_for_collision(  # noqa: PLR0913
+async def _check_for_collision(
     button: Button,
     prev_map_id: MapId,
     prev_coords: Coords,
     prev_direction: FacingDirection,
     *,
-    rolling_memory: RollingMemory,
     emulator: YellowLegacyEmulator,
-) -> bool:
+) -> str | None:
     """Check whether a directional press collided or changed maps.
 
     Args:
@@ -69,71 +73,54 @@ async def _check_for_collision(  # noqa: PLR0913
         prev_map_id: Map ID before the button press.
         prev_coords: Player coordinates before the button press.
         prev_direction: Facing direction before the button press.
-        rolling_memory: Recent memory to update after a collision or map transition.
         emulator: Running emulator used to inspect the resulting state.
 
     Returns:
-        Whether execution may continue with the next planned button.
+        Feedback when the sequence should stop, otherwise ``None``.
     """
     if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN]:
-        return True
+        return None
 
     game_state = await emulator.get_game_state()
     if prev_map_id != game_state.map.id:
-        rolling_memory.add_memory(
-            content=(
-                f"I changed maps after pressing the '{button}' button. Cancelling further steps."
-            ),
-        )
-        return False
+        return f"I changed maps after pressing the '{button}' button. Cancelling further steps."
     if prev_coords == game_state.player.coords and prev_direction == game_state.player.direction:
-        rolling_memory.add_memory(
-            content=(
-                f"My position did not change after pressing the '{button}' button. Did I"
-                f" bump into something?"
-            ),
+        return (
+            f"My position did not change after pressing the '{button}' button. Did I"
+            f" bump into something?"
         )
-        return False
-    return True
+    return None
 
 
 async def _check_for_action(
     button: Button,
     *,
-    rolling_memory: RollingMemory,
     emulator: YellowLegacyEmulator,
-) -> bool:
+) -> str | None:
     """Check whether an action-button press produced an interaction.
 
     Args:
         button: Button that was pressed.
-        rolling_memory: Recent memory to update after the interaction.
         emulator: Running emulator used to inspect the resulting state.
 
     Returns:
-        Whether execution may continue with the next planned button.
+        Feedback when the sequence should stop, otherwise ``None``.
     """
     if button != Button.A:
-        return True
+        return None
 
     game_state = await emulator.get_game_state()
     if not game_state.is_text_on_screen():
-        rolling_memory.add_memory(
-            content=(
-                "I pressed the action button but nothing happened. There must not be"
-                " anything to interact with in the direction I am facing."
-            ),
+        return (
+            "I pressed the action button but nothing happened. There must not be"
+            " anything to interact with in the direction I am facing."
         )
-        return False
     if dialog_box := game_state.get_dialog_box():
         # Some dialog boxes (e.g. if you pick up an item) disappear automatically before we can
         # start a new agent loop to parse them, so we have to capture them immediately.
         text = f"{dialog_box.top_line} {dialog_box.bottom_line}".strip()
-        rolling_memory.add_memory(
-            content=f'I pressed the action button and a dialog box opened, saying: "{text}"',
-        )
-        return False
-    return True
+        return f'I pressed the action button and a dialog box opened, saying: "{text}"'
+    return None
 
 
 async def _check_for_state_change(emulator: YellowLegacyEmulator) -> bool:

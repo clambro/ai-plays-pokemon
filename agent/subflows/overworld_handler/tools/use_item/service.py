@@ -27,30 +27,32 @@ class UseItemService:
         self.rolling_memory = rolling_memory
         self.emulator = emulator
 
-    async def use_item(self, item_index: int) -> RollingMemory:
+    async def use_item(self, item_index: int) -> str:
         """Use the item at the requested inventory index."""
         try:
-            await self._use_item(item_index)
+            item_name = await self._use_item(item_index)
+            result = f"I used {item_name} from inventory slot {item_index}."
         except Exception as e:  # noqa: BLE001
             logger.warning(f"Error in the use item response. Skipping. {e}")
-            self.rolling_memory.add_memory(
-                content=f"I failed to use an item from my inventory. {e}",
-            )
-        return self.rolling_memory
+            result = f"I failed to use an item from my inventory. {e}"
+        self.rolling_memory.add_memory(result)
+        return result
 
-    async def _use_item(self, item_index: int) -> None:
+    async def _use_item(self, item_index: int) -> str:
         """Use the item at the given index."""
         game_state = await self.emulator.get_game_state()
         if item_index >= len(game_state.inventory.items):
             raise UseItemError(f"Inventory slot {item_index} is not available.")
         if game_state.is_text_on_screen():
             raise UseItemError("Can't use an item in a non-overworld state.")
+        item_name = game_state.inventory.items[item_index].name
 
         # Splitting into sub-steps for easier debugging. Otherwise the various game states become
         # too difficult to keep track of.
         await self._open_start_menu()
         await self._open_item_menu()
         await self._select_item(item_index)
+        return item_name
 
     async def _open_start_menu(self) -> None:
         """Open the start menu."""

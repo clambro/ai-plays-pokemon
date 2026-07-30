@@ -39,7 +39,7 @@ async def test_switch_to_pokemon() -> None:
             rolling_memory=rolling_memory,
             emulator=emulator,
         )
-        rolling_memory = await service.swap_first_pokemon(party_index)
+        await service.swap_first_pokemon(party_index)
         await emulator.wait_for_animation_to_finish()
 
         game_state = await emulator.get_game_state()

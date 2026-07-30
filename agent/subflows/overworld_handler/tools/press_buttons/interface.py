@@ -8,6 +8,10 @@ from pydantic_ai import Tool
 from agent.subflows.overworld_handler.tools.press_buttons.service import (
     press_buttons as press_buttons_service,
 )
+from agent.subflows.overworld_handler.utils import (
+    OverworldToolResult,
+    complete_overworld_action,
+)
 from common.enums import Button
 
 if TYPE_CHECKING:
@@ -29,7 +33,7 @@ def build_press_buttons_tool(context: OverworldContext) -> Tool[OverworldContext
 
     async def press_buttons(
         buttons: Annotated[list[OverworldButton], Field(min_length=1)],
-    ) -> str:
+    ) -> OverworldToolResult:
         """Press one or more buttons directly in the overworld.
 
         The button tool allows you to submit one or more button presses to the
@@ -104,13 +108,13 @@ def build_press_buttons_tool(context: OverworldContext) -> Tool[OverworldContext
             buttons: Buttons to press in order.
 
         Returns:
-            Confirmation of the attempted button sequence.
+            Fresh overworld context after pressing the buttons.
         """
-        await press_buttons_service(
+        result = await press_buttons_service(
             rolling_memory=context.state.rolling_memory,
             emulator=context.emulator,
             buttons=list(buttons),
         )
-        return f"Pressed the following buttons: {[str(button) for button in buttons]}."
+        return await complete_overworld_action(context, result)
 
     return Tool(press_buttons, require_parameter_descriptions=True)

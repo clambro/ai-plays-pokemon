@@ -5,6 +5,10 @@ from typing import TYPE_CHECKING
 from pydantic_ai import Tool
 
 from agent.subflows.overworld_handler.tools.navigate.service import NavigationService
+from agent.subflows.overworld_handler.utils import (
+    OverworldToolResult,
+    complete_overworld_action,
+)
 from common.schemas import Coords
 
 if TYPE_CHECKING:
@@ -14,7 +18,7 @@ if TYPE_CHECKING:
 def build_navigation_tool(context: OverworldContext) -> Tool[OverworldContext]:
     """Build the navigation tool bound to the current overworld context."""
 
-    async def navigation(row: int, col: int) -> str:
+    async def navigation(row: int, col: int) -> OverworldToolResult:
         """Navigate to a revealed, accessible tile on the current map.
 
         The navigation tool allows you to navigate to any revealed, accessible
@@ -75,7 +79,7 @@ def build_navigation_tool(context: OverworldContext) -> Tool[OverworldContext]:
             col: Map column from the provided accessible coordinates.
 
         Returns:
-            Confirmation or failure details for the attempted navigation.
+            Fresh overworld context after navigation.
         """
         state = context.state
         target = Coords(row=row, col=col)
@@ -85,7 +89,7 @@ def build_navigation_tool(context: OverworldContext) -> Tool[OverworldContext]:
             current_map=context.current_map,
             rolling_memory=state.rolling_memory,
         )
-        await service.navigate(target)
-        return f"Attempted navigation to {target}."
+        result = await service.navigate(target)
+        return await complete_overworld_action(context, result)
 
     return Tool(navigation, require_parameter_descriptions=True)

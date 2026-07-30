@@ -6,6 +6,10 @@ from pydantic import Field
 from pydantic_ai import Tool
 
 from agent.subflows.overworld_handler.tools.use_item.service import UseItemService
+from agent.subflows.overworld_handler.utils import (
+    OverworldToolResult,
+    complete_overworld_action,
+)
 
 if TYPE_CHECKING:
     from agent.subflows.overworld_handler.context import OverworldContext
@@ -16,7 +20,7 @@ def build_use_item_tool(context: OverworldContext) -> Tool[OverworldContext]:
 
     async def use_item(
         inventory_slot: Annotated[int, Field(ge=0)],
-    ) -> str:
+    ) -> OverworldToolResult:
         """Use an item from the current inventory.
 
         The use item tool allows you to use an item from your inventory in the
@@ -40,13 +44,13 @@ def build_use_item_tool(context: OverworldContext) -> Tool[OverworldContext]:
             inventory_slot: Zero-based inventory slot of the item to use.
 
         Returns:
-            Confirmation or failure details for the attempted item use.
+            Fresh overworld context after using the item.
         """
         service = UseItemService(
             rolling_memory=context.state.rolling_memory,
             emulator=context.emulator,
         )
-        await service.use_item(inventory_slot)
-        return f"Attempted to use inventory slot {inventory_slot}."
+        result = await service.use_item(inventory_slot)
+        return await complete_overworld_action(context, result)
 
     return Tool(use_item, require_parameter_descriptions=True)

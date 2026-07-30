@@ -9,6 +9,10 @@ from pydantic_ai import Tool
 from agent.subflows.overworld_handler.tools.update_sprites.service import (
     update_sprites as update_sprites_service,
 )
+from agent.subflows.overworld_handler.utils import (
+    OverworldToolResult,
+    complete_overworld_action,
+)
 
 if TYPE_CHECKING:
     from agent.subflows.overworld_handler.context import OverworldContext
@@ -32,7 +36,7 @@ def build_update_sprites_tool(
 
     async def update_sprites(
         updates: Annotated[list[SpriteDescriptionUpdate], Field(min_length=1)],
-    ) -> str:
+    ) -> OverworldToolResult:
         """Update long-term descriptions of nearby sprites.
 
         Sprites are usually people or item balls, but may also be objects or
@@ -48,7 +52,7 @@ def build_update_sprites_tool(
             updates: Sprite indices and their complete new descriptions.
 
         Returns:
-            The sprite indices whose descriptions were updated.
+            Fresh overworld context after updating the descriptions.
         """
         valid_updates = {
             update.index: update.description
@@ -66,7 +70,8 @@ def build_update_sprites_tool(
         result = f"Updated sprite descriptions for indices: {updated}."
         if ignored:
             result += f" Ignored ineligible sprite indices: {ignored}."
-        return result
+        context.state.rolling_memory.add_memory(result)
+        return await complete_overworld_action(context, result)
 
     entity_text = "\n".join(
         f"- [{sprite.index}] {sprite.to_string(current_map.id)}" for sprite in eligible_sprites

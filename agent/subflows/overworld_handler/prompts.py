@@ -47,8 +47,8 @@ Your current inventory is listed below:
 
 Briefly explain your reasoning in first person as ordinary response text, then
 use exactly one available tool to act. Be sure to consider all the tools at
-your disposal. Every response must include one tool call. The agent run ends
-automatically after that tool executes.
+your disposal. Every response must include one tool call. A fresh observation
+will be returned after each tool executes.
 
 {biking_warning}
 """.strip()

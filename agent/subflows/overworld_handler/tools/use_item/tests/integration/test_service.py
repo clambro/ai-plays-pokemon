@@ -32,7 +32,7 @@ async def test_use_item() -> None:
             rolling_memory=rolling_memory,
             emulator=emulator,
         )
-        rolling_memory = await service.use_item(item_index)
+        await service.use_item(item_index)
         await emulator.wait_for_animation_to_finish()
 
         dialog_box = (await emulator.get_game_state()).get_dialog_box()
