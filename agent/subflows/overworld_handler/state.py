@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from junjo import BaseState, BaseStore
 
-from agent.subflows.overworld_handler.enums import OverworldTool
 from memory.goals import Goals
 from memory.long_term_memory import LongTermMemory
 from memory.rolling_memory import RollingMemory
@@ -23,7 +22,6 @@ class OverworldHandlerState(BaseState):
     long_term_memory: LongTermMemory | None = None
     goals: Goals | None = None
     current_map: OverworldMap | None = None
-    tool: OverworldTool | None = None
 
     def to_prompt_string(self, game_state: YellowLegacyGameState) -> str:
         """Get a string representation of the agent and game state to be used in prompts."""
@@ -61,7 +59,3 @@ class OverworldHandlerStore(BaseStore[OverworldHandlerState]):
     async def set_current_map(self, current_map: OverworldMap) -> None:
         """Set the current map."""
         await self.set_state({"current_map": current_map})
-
-    async def set_tool(self, tool: OverworldTool | None) -> None:
-        """Set the tool."""
-        await self.set_state({"tool": tool})

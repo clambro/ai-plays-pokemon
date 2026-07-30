@@ -263,6 +263,12 @@ This policy is decided per mode without changing tool architecture. A
 single-step agent still selects and executes an actual Pydantic AI function
 tool.
 
+Before extending a single-step runner into a multi-action agent loop, audit
+every tool result contract. Once the model continues after a tool call, the
+returned value must accurately report success or failure and provide the
+updated observation needed for the next decision; generic "attempted action"
+messages are not sufficient.
+
 ## Root Graph
 
 The root Pydantic Graph stays deliberately small:
