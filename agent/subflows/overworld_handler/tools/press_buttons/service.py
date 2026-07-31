@@ -83,7 +83,7 @@ async def _check_for_collision(
 
     game_state = await emulator.get_game_state()
     if prev_map_id != game_state.map.id:
-        return f"I changed maps after pressing the '{button}' button. Cancelling further steps."
+        return f"I changed maps from {prev_map_id.name} to {game_state.map.id.name}."
     if prev_coords == game_state.player.coords and prev_direction == game_state.player.direction:
         return (
             f"My position did not change after pressing the '{button}' button. Did I"
