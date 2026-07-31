@@ -295,9 +295,9 @@ the internal battle and text loops.
 
 Preserve the existing Junjo iteration behavior during the mode migrations
 because it is tightly coupled to agent state, rolling-memory finalization, and
-SQLite persistence. This temporarily means one overworld run ending in player
-movement advances the iteration while an entire battle or text loop shares one
-iteration.
+SQLite persistence. This temporarily means each overworld run advances the
+iteration when player movement or a gameplay-domain transition ends it, while
+an entire battle or text loop shares one iteration.
 
 After the root graph migration is complete, revisit this boundary. Advancing
 the iteration for each agent-loop decision may provide a cleaner and more
@@ -308,7 +308,8 @@ migration.
 ## Overworld Agent
 
 The overworld runner prepares `OverworldContext`, supplies the overworld
-registry, and keeps one conversation alive until the player moves.
+registry, and keeps one conversation alive until the player moves or the game
+enters another gameplay domain.
 
 Its tools cover capabilities such as:
 
@@ -450,7 +451,7 @@ Each phase is implemented separately and leaves the application working.
 - Introduce `OverworldContext`, its preparation function, overworld agent,
   tool registry, and per-tool interface/service packages.
 - Keep one agent conversation alive across non-movement tools and return to
-  the root workflow when the player moves.
+  the root workflow when the player moves or the gameplay domain changes.
 - Replace the Junjo overworld subflow with one temporary adapter that invokes
   the overworld runner.
 - Remove the superseded selector prompts, secondary argument prompts, graph,

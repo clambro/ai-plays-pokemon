@@ -43,7 +43,7 @@ Outside the graph, the application captures the emulator state and creates a bac
 
 ## The Overworld Agent
 
-The overworld handler prepares the explored map and then gives one Pydantic AI agent the local navigation loop. The runner returns to the root workflow as soon as a tool moves the player.
+The overworld handler prepares the explored map and then gives one Pydantic AI agent the local navigation loop. The runner returns to the root workflow as soon as a tool moves the player or the game enters another gameplay domain.
 
 ```mermaid
 flowchart LR
@@ -77,8 +77,8 @@ flowchart LR
     sprites --> observe
     signs --> observe
 
-    observe -->|"Player has not moved"| agent
-    observe -->|"Player moved"| finish["Return to root graph"]
+    observe -->|"Still in place and in the overworld"| agent
+    observe -->|"Player moved or gameplay domain changed"| finish["Return to root graph"]
 ```
 
 ### Prepare Map
@@ -126,7 +126,7 @@ These tools let the agent persist useful descriptions of nearby map entities aft
 
 The agent narrates its decision alongside each tool call. The tool then produces the actual outcome of the action. That same outcome is appended to the current rolling-memory block and returned with a fresh screenshot to the local conversation, so the HTML activity log and the agent cannot disagree about what happened.
 
-If the action did not move the player, the agent can make another decision using that result. Once the player's coordinates differ from the position at entry, the runner returns to the root graph. The complete overworld run remains one top-level workflow iteration.
+If the action leaves the player in place and the game in the overworld, the agent can make another decision using that result. Once the player moves or the game enters a text interaction or battle, the runner returns to the root graph. The complete overworld run remains one top-level workflow iteration.
 
 ## The Battle Agent
 

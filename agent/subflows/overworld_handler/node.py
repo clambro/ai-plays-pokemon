@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from junjo import Node
 from loguru import logger
+from pydantic_ai import AgentRunError
 
 from agent.state import AgentStore
 from agent.subflows.overworld_handler.agent import run_overworld
@@ -27,7 +28,7 @@ class OverworldAgentNode(Node[AgentStore]):
         state = await store.get_state()
         try:
             await run_overworld(state, self.emulator)
-        except Exception as error:  # noqa: BLE001
+        except AgentRunError as error:
             logger.warning(f"Error running overworld agent. Skipping. {error}")
 
         await store.set_rolling_memory(state.rolling_memory)

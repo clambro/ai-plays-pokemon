@@ -42,7 +42,7 @@ abstraction if it makes the completed implementations simpler.
 
 Preserve the mode boundaries established by the preceding tickets:
 
-- overworld returns once the player moves;
+- overworld returns once the player moves or the gameplay domain changes;
 - battle returns only when battle mode exits; and
 - text returns only when the interaction exits.
 

@@ -8,7 +8,7 @@ from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 from agent.subflows.overworld_handler.context import OverworldContext
 from agent.subflows.overworld_handler.prompts import build_overworld_decision_prompt
 from agent.subflows.overworld_handler.tools.registry import build_overworld_toolset
-from agent.utils import build_screenshot_content
+from agent.utils import build_screenshot_content, is_battle_handler_state
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 from llm.usage import update_pydantic_ai_usage
@@ -46,7 +46,7 @@ async def run_overworld(
     state: AgentState,
     emulator: YellowLegacyEmulator,
 ) -> None:
-    """Run the overworld agent until a tool moves the player."""
+    """Run the overworld agent until the player moves or leaves the overworld."""
     initial_game_state, initial_screenshot = await emulator.get_game_state_with_screenshot()
     current_map = await prepare_overworld_map(state.iteration, initial_game_state)
     context = OverworldContext(
@@ -76,7 +76,7 @@ async def run_overworld(
                 node = await agent_run.next(node)
                 if isinstance(current_node, CallToolsNode):
                     game_state = await context.emulator.get_game_state()
-                    if game_state.player.coords != initial_game_state.player.coords:
+                    if _should_end_overworld_run(initial_game_state, game_state):
                         break
         finally:
             responses = [
@@ -106,3 +106,18 @@ async def _record_response_usage(context: OverworldContext, response: ModelRespo
     tokens, cost = await update_pydantic_ai_usage(response)
     context.state.total_tokens += tokens
     context.state.total_cost += cost
+
+
+def _should_end_overworld_run(
+    initial_game_state: YellowLegacyGameState,
+    game_state: YellowLegacyGameState,
+) -> bool:
+    """Check whether control should return to the root workflow."""
+    return (
+        game_state.map.id != initial_game_state.map.id
+        or game_state.player.coords != initial_game_state.player.coords
+        or is_battle_handler_state(game_state)
+        or game_state.is_text_on_screen()
+        or game_state.map.height == 0
+        or game_state.map.width == 0
+    )
