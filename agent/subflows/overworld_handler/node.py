@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class OverworldAgentNode(Node[AgentStore]):
-    """Run one Pydantic AI overworld decision and action."""
+    """Run one Pydantic AI overworld conversation."""
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
         """Initialize the overworld-agent node."""
@@ -21,7 +21,7 @@ class OverworldAgentNode(Node[AgentStore]):
         super().__init__()
 
     async def service(self, store: AgentStore) -> None:
-        """Run one overworld tool call and retain its mutable state."""
+        """Run the overworld agent and retain its mutable state."""
         logger.info("Running the overworld agent...")
 
         state = await store.get_state()

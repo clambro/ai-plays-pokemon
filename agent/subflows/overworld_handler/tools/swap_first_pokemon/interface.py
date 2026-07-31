@@ -52,7 +52,7 @@ def build_swap_first_pokemon_tool(
             party_slot: Zero-based non-lead party slot of the Pokemon that should become the lead.
 
         Returns:
-            Fresh overworld context after changing the party order.
+            Fresh screenshot and the actual party-change result.
         """
         service = SwapFirstPokemonService(
             rolling_memory=context.state.rolling_memory,

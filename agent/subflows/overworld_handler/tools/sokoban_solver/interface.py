@@ -25,7 +25,7 @@ def build_sokoban_solver_tool(context: OverworldContext) -> Tool[OverworldContex
         (likely meaning that you need to explore more).
 
         Returns:
-            Fresh overworld context after the solver runs.
+            Fresh screenshot and the actual solver result.
         """
         service = SokobanSolverService(
             emulator=context.emulator,

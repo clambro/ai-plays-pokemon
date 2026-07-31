@@ -1,4 +1,4 @@
-"""Business logic for navigate in the overworld subflow."""
+"""Business logic for the overworld navigation tool."""
 
 from typing import TYPE_CHECKING
 
@@ -96,6 +96,8 @@ class NavigationService:
         accessible_coords: list[Coords],
     ) -> str | None:
         """Return why the target coordinates are invalid, if applicable."""
+        if game_state.player.is_biking:
+            return "Navigation is unavailable while riding a bike."
         if (
             coords.row < 0
             or coords.col < 0

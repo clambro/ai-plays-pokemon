@@ -9,9 +9,11 @@ if TYPE_CHECKING:
     from emulator.game_state import YellowLegacyGameState
 
 OVERWORLD_DECISION_PROMPT = """
-You are navigating the overworld. You are standing still. There is no onscreen
-text, and all onscreen animations have concluded. The screenshot provided
-above is the current game screen, and it is awaiting your input.
+You are navigating the overworld. At entry, you are standing still, there is no
+onscreen text, and all onscreen animations have concluded. The screenshot
+provided above shows the game screen at entry. After each tool call, its
+returned screenshot and result are the freshest state and supersede earlier
+observations.
 
 {state}
 
@@ -58,7 +60,7 @@ def build_overworld_decision_prompt(
     context: OverworldContext,
     game_state: YellowLegacyGameState,
 ) -> str:
-    """Build the initial prompt for one overworld decision."""
+    """Build the initial prompt for one overworld-agent run."""
     current_map = context.current_map
 
     if game_state.player.is_biking:

@@ -10,7 +10,7 @@ Completing this ticket removes Junjo from the application.
 
 **Depends on:**
 
-- [`pydantic-ai-03-replace-overworld-subflow.md`](pydantic-ai-03-replace-overworld-subflow.md)
+- [`pydantic-ai-04-move-memory-and-goal-tools.md`](pydantic-ai-04-move-memory-and-goal-tools.md)
 
 ## Design
 
@@ -42,7 +42,7 @@ abstraction if it makes the completed implementations simpler.
 
 Preserve the mode boundaries established by the preceding tickets:
 
-- one selected action ends an overworld turn;
+- overworld returns once the player moves;
 - battle returns only when battle mode exits; and
 - text returns only when the interaction exits.
 

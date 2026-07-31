@@ -44,7 +44,7 @@ def build_use_item_tool(context: OverworldContext) -> Tool[OverworldContext]:
             inventory_slot: Zero-based inventory slot of the item to use.
 
         Returns:
-            Fresh overworld context after using the item.
+            Fresh screenshot and the actual item-use result.
         """
         service = UseItemService(
             rolling_memory=context.state.rolling_memory,

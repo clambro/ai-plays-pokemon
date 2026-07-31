@@ -52,7 +52,7 @@ def build_update_signs_tool(
             updates: Sign indices and their complete new descriptions.
 
         Returns:
-            Fresh overworld context after updating the descriptions.
+            Fresh screenshot and the description-update result.
         """
         valid_updates = {
             update.index: update.description

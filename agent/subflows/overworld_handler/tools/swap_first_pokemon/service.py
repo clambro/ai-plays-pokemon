@@ -1,4 +1,4 @@
-"""Business logic for swap first Pokémon in the overworld subflow."""
+"""Business logic for the overworld party-order tool."""
 
 from typing import TYPE_CHECKING
 

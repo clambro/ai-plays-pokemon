@@ -79,7 +79,7 @@ def build_navigation_tool(context: OverworldContext) -> Tool[OverworldContext]:
             col: Map column from the provided accessible coordinates.
 
         Returns:
-            Fresh overworld context after navigation.
+            Fresh screenshot and the actual navigation result.
         """
         state = context.state
         target = Coords(row=row, col=col)

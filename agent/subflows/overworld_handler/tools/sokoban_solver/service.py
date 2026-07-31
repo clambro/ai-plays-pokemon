@@ -1,4 +1,4 @@
-"""Business logic for Sokoban solver in the overworld subflow."""
+"""Business logic for the overworld Sokoban solver tool."""
 
 import asyncio
 from typing import TYPE_CHECKING

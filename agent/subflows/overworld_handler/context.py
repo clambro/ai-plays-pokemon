@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 @dataclass(slots=True, kw_only=True)
 class OverworldContext:
-    """Live dependencies for one overworld decision and action."""
+    """Live dependencies for one overworld-agent run."""
 
     state: AgentState
     emulator: YellowLegacyEmulator

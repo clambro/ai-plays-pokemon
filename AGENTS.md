@@ -56,8 +56,8 @@ exactly because emulator changes can affect existing save states.
 
 ## Repository Layout
 
-- `agent/`: the root workflow and overworld subflow, plus the Pydantic AI text
-  and battle agents and their tools.
+- `agent/`: the Junjo root workflow and the overworld, text, and battle
+  Pydantic AI agents and tools.
 - `emulator/`: PyBoy lifecycle, game-state snapshots, and ROM-memory parsers.
 - `overworld_map/`: explored-map state, persistence integration, and prompt
   formatting.

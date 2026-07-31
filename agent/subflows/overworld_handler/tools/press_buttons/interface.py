@@ -108,7 +108,7 @@ def build_press_buttons_tool(context: OverworldContext) -> Tool[OverworldContext
             buttons: Buttons to press in order.
 
         Returns:
-            Fresh overworld context after pressing the buttons.
+            Fresh screenshot and the actual button-sequence result.
         """
         result = await press_buttons_service(
             rolling_memory=context.state.rolling_memory,

@@ -1,4 +1,4 @@
-"""Data models for Sokoban solver in the overworld subflow."""
+"""Data models for the overworld Sokoban solver tool."""
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING

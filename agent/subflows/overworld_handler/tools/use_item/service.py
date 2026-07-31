@@ -1,4 +1,4 @@
-"""Business logic for use item in the overworld subflow."""
+"""Business logic for the overworld item-use tool."""
 
 from typing import TYPE_CHECKING
 

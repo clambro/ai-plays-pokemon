@@ -52,7 +52,7 @@ def build_update_sprites_tool(
             updates: Sprite indices and their complete new descriptions.
 
         Returns:
-            Fresh overworld context after updating the descriptions.
+            Fresh screenshot and the description-update result.
         """
         valid_updates = {
             update.index: update.description
