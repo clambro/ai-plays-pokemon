@@ -1,6 +1,6 @@
 # AI Workflow Architecture
 
-This page describes the current hybrid workflow. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology is used here. A Junjo root graph handles shared memory and goal work before routing execution into one of three gameplay domains: overworld navigation, battles, or text interactions. The overworld handler runs as a Junjo subflow. Battles and text interactions run as local Pydantic AI agent loops reached through adapter nodes.
+This page describes the current hybrid workflow. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology is used here. A Junjo root graph handles shared memory and goal work before routing execution into one of three gameplay domains: overworld navigation, battles, or text interactions. Each domain runs locally through a Pydantic AI agent reached through a root adapter node.
 
 Note: Pretty much all the constants below are default values that can be edited in [`common/constants.py`](/common/constants.py).
 
@@ -26,7 +26,7 @@ This is purely topological to simplify the flow of the graph. It does nothing.
 
 ### The Three Gameplay Domains
 
-At this point, the flow is diverted into one of the three gameplay domains. Overworld interactions enter a Junjo subflow. Battles and text interactions enter adapter nodes that invoke their complete local runners.
+At this point, the flow is diverted into one of the three gameplay domains. Each adapter invokes its domain's complete local runner and returns control when that runner reaches its boundary.
 
 ### Do Updates
 
@@ -41,21 +41,62 @@ This is the final node in every successful top-level workflow. It writes the com
 
 Outside the graph, the application captures the emulator state and creates a backup every 20 minutes, as well as after a caught workflow error. The copied SQLite database contains the complete finalized memory history, while the serialized agent state contains only its current in-memory block. Initialization recognizes a block that has already been finalized and advances to the next iteration without duplicating it.
 
-## The Overworld Handler Subflow
+## The Overworld Agent
 
-![The Overworld Handler Subflow](../visualization/agent_graph/subflow_OEE7uI0clMr6XDlM4jJIj.svg)
+The overworld handler prepares the explored map and then gives one Pydantic AI agent the local navigation loop. The runner returns to the root workflow as soon as a tool moves the player or the game enters another gameplay domain.
 
-### Load Map
+```mermaid
+flowchart LR
+    root["Junjo root<br/>Overworld adapter"] --> prepare["Load and update map<br/>Capture initial state and screenshot"]
+    prepare --> agent["GPT-5.6 Luna<br/>overworld agent"]
+    agent --> choice{"Function tool call"}
 
-This is the entrypoint for the overworld handler. It loads the current map from the database into the agent state, or creates a new one if we've just entered a new map.
+    subgraph toolset["Stable toolset for this overworld run"]
+        navigate["navigation"]
+        buttons["press_buttons"]
+        item["use_item"]
+        swap["swap_first_pokemon"]
+        sokoban["sokoban_solver"]
+        sprites["update_sprites"]
+        signs["update_signs"]
+    end
 
-### Update Map
+    choice --> navigate
+    choice --> buttons
+    choice --> item
+    choice --> swap
+    choice --> sokoban
+    choice --> sprites
+    choice --> signs
 
-This uses the current visible screen information to update the map memory in the database. It updates the tiles, revealing any formerly unseen tiles that are now visible, and adds on-screen sprites/signs/warps to the map entity database table.
+    navigate --> observe["Return actual result<br/>and fresh screenshot"]
+    buttons --> observe
+    item --> observe
+    swap --> observe
+    sokoban --> observe
+    sprites --> observe
+    signs --> observe
 
-### Select Tool
+    observe -->|"Still in place and in the overworld"| agent
+    observe -->|"Player moved or gameplay domain changed"| finish["Return to root graph"]
+```
 
-This is the main decision maker in the overworld subflow. It looks at the game state and the various memory objects and selects which tool the AI should use for this iteration. The tools are all described in detail below. The current iteration's memory "thought" created in this node is continued by whichever tool is selected.
+### Prepare Map
+
+Before constructing the agent, deterministic preparation loads the current explored map from SQLite or creates it when entering a new map. The current visible screen reveals terrain and synchronizes sprites, signs, and warps. The prepared map, initial game state, and screenshot are then used to build one static prompt and tool registry for the run.
+
+The prompt includes rolling and long-term memory, goals, player and party state, inventory indices, the explored map, accessible coordinates, exploration candidates, and connected-map boundaries.
+
+Tool availability is derived once from the prepared state:
+
+- `press_buttons` is always available;
+- `navigation` is unavailable while biking;
+- `swap_first_pokemon` requires more than one party member;
+- `use_item` requires a non-empty inventory;
+- `sokoban_solver` requires a visible boulder and goal plus access to Strength; and
+- sprite and sign updates require an eligible entity within two tiles.
+
+Keeping the registry fixed preserves prompt caching. Actions that depend on changing game state validate what they need immediately before acting rather than rebuilding the tool definitions during the run.
 
 ### Press Buttons
 
@@ -75,11 +116,17 @@ This lets the model swap its first Pokémon with another Pokémon in the party. 
 
 ### Sokoban Solver
 
-This was my least favourite node to code because it is so complicated and we only need it in two areas, one of which is optional. "Sokoban" puzzles, named for the classic Japanese video game that popularized them, are the style of puzzles that appear in Pokémon as the boulder pushing puzzles in Victory Road and the Seafoam Islands. There is no way that the AI is solving these on its own, so we need an algorithm to do it. This category of problems is technically NP-hard, but thankfully the ones found in-game are simple enough to be solved quickly with A* search.
+This was my least favourite tool to code because it is so complicated and we only need it in two areas, one of which is optional. "Sokoban" puzzles, named for the classic Japanese video game that popularized them, are the style of puzzles that appear in Pokémon as the boulder pushing puzzles in Victory Road and the Seafoam Islands. There is no way that the AI is solving these on its own, so we need an algorithm to do it. This category of problems is technically NP-hard, but thankfully the ones found in-game are simple enough to be solved quickly with a bounded search.
 
-### Dummy Node
+### Update Sprites and Signs
 
-Purely topological, as are all dummy nodes in the workflow. This is the sink node the signals the end of the overworld subflow.
+These tools let the agent persist useful descriptions of nearby map entities after learning something new about them. The model can update only the sprites or signs exposed by the fixed tool definition at the start of the run; the service persists accepted descriptions through the map-entity repository.
+
+### Memory and Display Updates
+
+The agent narrates its decision alongside each tool call. The tool then produces the actual outcome of the action. That same outcome is appended to the current rolling-memory block and returned with a fresh screenshot to the local conversation, so the HTML activity log and the agent cannot disagree about what happened.
+
+If the action leaves the player in place and the game in the overworld, the agent can make another decision using that result. Once the player moves or the game enters a text interaction or battle, the runner returns to the root graph. The complete overworld run remains one top-level workflow iteration.
 
 ## The Battle Agent
 

@@ -28,7 +28,8 @@ The application loop performs three operations:
 
 The mode handlers have different boundaries:
 
-- Overworld prepares fresh context and runs one agent-selected action.
+- Overworld prepares fresh context and keeps one conversation alive until the
+  player moves.
 - Battle remains in a local observe-decide-act loop until battle mode ends.
 - Text remains in a local observe-decide-act loop until the interaction ends.
 
@@ -263,6 +264,12 @@ This policy is decided per mode without changing tool architecture. A
 single-step agent still selects and executes an actual Pydantic AI function
 tool.
 
+Before extending a single-step runner into a multi-action agent loop, audit
+every tool result contract. Once the model continues after a tool call, the
+returned value must accurately report success or failure and provide the
+updated observation needed for the next decision; generic "attempted action"
+messages are not sufficient.
+
 ## Root Graph
 
 The root Pydantic Graph stays deliberately small:
@@ -288,8 +295,9 @@ the internal battle and text loops.
 
 Preserve the existing Junjo iteration behavior during the mode migrations
 because it is tightly coupled to agent state, rolling-memory finalization, and
-SQLite persistence. This temporarily means one overworld action advances the
-iteration while an entire battle or text loop shares one iteration.
+SQLite persistence. This temporarily means each overworld run advances the
+iteration when player movement or a gameplay-domain transition ends it, while
+an entire battle or text loop shares one iteration.
 
 After the root graph migration is complete, revisit this boundary. Advancing
 the iteration for each agent-loop decision may provide a cleaner and more
@@ -300,7 +308,8 @@ migration.
 ## Overworld Agent
 
 The overworld runner prepares `OverworldContext`, supplies the overworld
-registry, and runs one agent-selected action.
+registry, and keeps one conversation alive until the player moves or the game
+enters another gameplay domain.
 
 Its tools cover capabilities such as:
 
@@ -441,14 +450,23 @@ Each phase is implemented separately and leaves the application working.
 
 - Introduce `OverworldContext`, its preparation function, overworld agent,
   tool registry, and per-tool interface/service packages.
-- Run one actual agent tool decision per overworld turn.
-- Move goal and durable-memory changes into overworld tools.
+- Keep one agent conversation alive across non-movement tools and return to
+  the root workflow when the player moves or the gameplay domain changes.
 - Replace the Junjo overworld subflow with one temporary adapter that invokes
   the overworld runner.
 - Remove the superseded selector prompts, secondary argument prompts, graph,
   and nodes.
 
-### Phase 4: Replace the root graph
+### Phase 4: Move long-term memory and goals into the overworld agent
+
+- Replace the separate long-term-memory retrieval model call with an
+  overworld tool that selects from the available titles.
+- Add overworld tools for long-term-memory creation and updates.
+- Add an overworld tool for goal updates.
+- Remove the superseded root nodes, model calls, scheduling branches, and
+  unused state.
+
+### Phase 5: Replace the root graph
 
 - Implement the small functional Pydantic Graph.
 - Route directly to the three completed mode runners.

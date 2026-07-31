@@ -76,11 +76,29 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
     )
 
 
-async def update_map_with_screen_info(
+async def prepare_overworld_map(
+    iteration: int,
+    game_state: YellowLegacyGameState,
+) -> OverworldMap:
+    """Load the explored map and apply the current visible observation.
+
+    Args:
+        iteration: Current agent iteration used to timestamp persistence updates.
+        game_state: Current parsed game state and visible screen.
+
+    Returns:
+        The prepared explored map for the agent.
+    """
+    overworld_map = await get_overworld_map(iteration, game_state)
+    await update_overworld_map(iteration, game_state, overworld_map)
+    return overworld_map
+
+
+async def update_overworld_map(
     iteration: int,
     game_state: YellowLegacyGameState,
     overworld_map: OverworldMap,
-) -> OverworldMap:
+) -> None:
     """Update explored-map memory from the current visible screen.
 
     Terrain and entities are persisted only when no text obscures the screen and the supplied map
@@ -90,14 +108,10 @@ async def update_map_with_screen_info(
         iteration: Current agent iteration used to timestamp persistence updates.
         game_state: Current parsed game state and visible screen.
         overworld_map: Explored map expected to match ``game_state``.
-
-    Returns:
-        A freshly loaded explored map reflecting any accepted updates.
     """
     if not game_state.is_text_on_screen() and overworld_map.id == game_state.map.id:
         await _add_remove_map_entities(iteration, game_state, overworld_map)
         await _update_overworld_map_tiles(iteration, game_state, overworld_map)
-    return await get_overworld_map(iteration, game_state)
 
 
 async def _add_remove_map_entities(
@@ -109,7 +123,30 @@ async def _add_remove_map_entities(
     if overworld_map.id != game_state.map.id:
         raise ValueError("Overworld map does not match current game state.")
 
+    overworld_map.known_sprites.update(
+        {
+            entity_id: OverworldSprite.from_sprite(
+                game_state.sprites[entity_id],
+                sprite.description,
+            )
+            for entity_id, sprite in overworld_map.known_sprites.items()
+            if entity_id in game_state.sprites
+        },
+    )
     ascii_screen = game_state.get_ascii_screen()
+
+    new_sprites = [
+        sprite
+        for sprite in ascii_screen.sprites
+        if sprite.is_rendered and sprite.index not in overworld_map.known_sprites
+    ]
+    new_warps = [warp for warp in ascii_screen.warps if warp.index not in overworld_map.known_warps]
+    new_signs = [sign for sign in ascii_screen.signs if sign.index not in overworld_map.known_signs]
+    removed_sprites = [
+        sprite
+        for sprite in overworld_map.known_sprites.values()
+        if game_state.to_screen_coords(sprite.coords) is not None and not sprite.is_rendered
+    ]
 
     creates = [
         MapEntityMemoryCreate(
@@ -118,8 +155,7 @@ async def _add_remove_map_entities(
             entity_id=sprite.index,
             entity_type=MapEntityType.SPRITE,
         )
-        for sprite in ascii_screen.sprites
-        if sprite.is_rendered and sprite.index not in overworld_map.known_sprites
+        for sprite in new_sprites
     ]
     creates.extend(
         MapEntityMemoryCreate(
@@ -128,8 +164,7 @@ async def _add_remove_map_entities(
             entity_id=warp.index,
             entity_type=MapEntityType.WARP,
         )
-        for warp in ascii_screen.warps
-        if warp.index not in overworld_map.known_warps
+        for warp in new_warps
     )
     creates.extend(
         MapEntityMemoryCreate(
@@ -138,8 +173,7 @@ async def _add_remove_map_entities(
             entity_id=sign.index,
             entity_type=MapEntityType.SIGN,
         )
-        for sign in ascii_screen.signs
-        if sign.index not in overworld_map.known_signs
+        for sign in new_signs
     )
     # Previously seen sprite has been de-rendered. Likely an item that has been picked up, or a
     # scripted character that has walked off the screen. Sprites are the only entity types that can
@@ -150,10 +184,23 @@ async def _add_remove_map_entities(
             entity_id=sprite.index,
             entity_type=MapEntityType.SPRITE,
         )
-        for sprite in overworld_map.known_sprites.values()
-        if game_state.to_screen_coords(sprite.coords) is not None and not sprite.is_rendered
+        for sprite in removed_sprites
     ]
     await apply_map_entity_changes(creates=creates, deletes=deletes)
+
+    overworld_map.known_sprites.update(
+        {sprite.index: OverworldSprite.from_sprite(sprite, None) for sprite in new_sprites},
+    )
+    overworld_map.known_signs.update(
+        {sign.index: OverworldSign.from_sign(sign, None) for sign in new_signs},
+    )
+    if new_warps:
+        visited_maps = await get_visited_maps()
+        overworld_map.known_warps.update(
+            {warp.index: OverworldWarp.from_warp(warp, visited_maps) for warp in new_warps},
+        )
+    for sprite in removed_sprites:
+        del overworld_map.known_sprites[sprite.index]
 
 
 async def _update_overworld_map_tiles(
