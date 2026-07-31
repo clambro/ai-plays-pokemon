@@ -45,17 +45,17 @@ following root-replacement ticket.
 
 ## Staged Implementation Plan
 
-### 1. Move long-term-memory retrieval
-
-Prepare the available titles for the overworld agent and add a retrieval tool
-that loads the requested existing titles directly. Remove the separate
-retrieval model call and its root-graph path at the same time.
-
-### 2. Move long-term-memory mutation
+### 1. Move long-term-memory mutation
 
 Add creation and update tools backed by the existing repository behavior.
 Delete the corresponding root nodes and obsolete model prompts alongside the
 migration.
+
+### 2. Move long-term-memory retrieval
+
+Add a retrieval tool that loads requested existing titles directly from the
+available titles already prepared for the overworld agent. Remove the separate
+retrieval model call and its root-graph path at the same time.
 
 ### 3. Move goal updates
 

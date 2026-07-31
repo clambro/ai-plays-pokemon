@@ -1,6 +1,6 @@
 # AI Workflow Architecture
 
-This page describes the current hybrid workflow. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology is used here. A Junjo root graph handles shared memory and goal work before routing execution into one of three gameplay domains: overworld navigation, battles, or text interactions. Each domain runs locally through a Pydantic AI agent reached through a root adapter node.
+This page describes the current hybrid workflow. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology is used here. A Junjo root graph handles long-term-memory retrieval and goal work before routing execution into one of three gameplay domains: overworld navigation, battles, or text interactions. Each domain runs locally through a Pydantic AI agent reached through a root adapter node.
 
 Note: Pretty much all the constants below are default values that can be edited in [`common/constants.py`](/common/constants.py).
 
@@ -11,10 +11,6 @@ Note: Pretty much all the constants below are default values that can be edited 
 ### Prepare Agent Store
 
 This is the entrypoint for the entire AI workflow. It is responsible for taking the previous agent state and preparing for the next iteration of the loop. It loads the current rolling-memory summary frontier and exact raw tail from SQLite, creates the next mutable iteration block when necessary, increments certain counters, waits for any in-game animations to finish, and determines which subflow the workflow will route to depending on whether the current game state is in a battle, free to move in the overworld, or reading dialog/menu text.
-
-### Create/Update Long-Term Memory
-
-These are two nodes that run in parallel if the Prepare Agent Store node determines that a refresh of the long-term memory is required. They do exactly what their names suggest: One creates new long-term memory objects in the database, and the other updates and edits the ones that are currently in memory.
 
 ### Retrieve Long-Term Memory
 
@@ -59,6 +55,8 @@ flowchart LR
         sokoban["sokoban_solver"]
         sprites["update_sprites"]
         signs["update_signs"]
+        create_memory["create_long_term_memory"]
+        update_memory["update_long_term_memory"]
     end
 
     choice --> navigate
@@ -68,6 +66,8 @@ flowchart LR
     choice --> sokoban
     choice --> sprites
     choice --> signs
+    choice --> create_memory
+    choice --> update_memory
 
     navigate --> observe["Return actual result<br/>and fresh screenshot"]
     buttons --> observe
@@ -76,20 +76,22 @@ flowchart LR
     sokoban --> observe
     sprites --> observe
     signs --> observe
+    create_memory --> observe
+    update_memory --> observe
 
     observe -->|"Still in place and in the overworld"| agent
     observe -->|"Player moved or gameplay domain changed"| finish["Return to root graph"]
 ```
 
-### Prepare Map
+### Prepare Context
 
-Before constructing the agent, deterministic preparation loads the current explored map from SQLite or creates it when entering a new map. The current visible screen reveals terrain and synchronizes sprites, signs, and warps. The prepared map, initial game state, and screenshot are then used to build one static prompt and tool registry for the run.
+Before constructing the agent, deterministic preparation loads the current explored map from SQLite or creates it when entering a new map. The current visible screen reveals terrain and synchronizes sprites, signs, and warps. Preparation also loads every existing long-term-memory title so creation can avoid duplicate documents. The prepared context, initial game state, and screenshot are then used to build one static prompt and tool registry for the run.
 
-The prompt includes rolling and long-term memory, goals, player and party state, inventory indices, the explored map, accessible coordinates, exploration candidates, and connected-map boundaries.
+The prompt includes rolling and currently loaded long-term memory, every available long-term-memory title, goals, player and party state, inventory indices, the explored map, accessible coordinates, exploration candidates, and connected-map boundaries.
 
 Tool availability is derived once from the prepared state:
 
-- `press_buttons` is always available;
+- `press_buttons`, `create_long_term_memory`, and `update_long_term_memory` are always available;
 - `navigation` is unavailable while biking;
 - `swap_first_pokemon` requires more than one party member;
 - `use_item` requires a non-empty inventory;
@@ -121,6 +123,10 @@ This was my least favourite tool to code because it is so complicated and we onl
 ### Update Sprites and Signs
 
 These tools let the agent persist useful descriptions of nearby map entities after learning something new about them. The model can update only the sprites or signs exposed by the fixed tool definition at the start of the run; the service persists accepted descriptions through the map-entity repository.
+
+### Create and Update Long-Term Memory
+
+These tools let the overworld agent persist concise documents that will remain useful far beyond the current interaction. Creation checks the complete title list prepared at mode entry, while updates are restricted to the memories currently loaded into agent state. A newly created memory is added to both sets immediately, so the fixed update tool can revise it later in the same conversation. Each successful write goes through the long-term-memory repository and updates the live agent state without ending the overworld run.
 
 ### Memory and Display Updates
 

@@ -32,3 +32,4 @@ class OverworldAgentNode(Node[AgentStore]):
             logger.warning(f"Error running overworld agent. Skipping. {error}")
 
         await store.set_rolling_memory(state.rolling_memory)
+        await store.set_long_term_memory(state.long_term_memory)

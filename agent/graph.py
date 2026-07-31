@@ -6,14 +6,12 @@ from junjo import Edge, Graph, RunConcurrent
 
 from agent.conditions import AgentHandlerIs, ShouldRetrieveMemory
 from agent.enums import AgentStateHandler
-from agent.nodes.create_long_term_memory.node import CreateLongTermMemoryNode
 from agent.nodes.dummy.node import DummyNode
 from agent.nodes.finalize_memory.node import FinalizeMemoryNode
 from agent.nodes.prepare_agent_store.node import PrepareAgentStoreNode
 from agent.nodes.retrieve_long_term_memory.node import RetrieveLongTermMemoryNode
 from agent.nodes.update_background_stream.node import UpdateBackgroundStreamNode
 from agent.nodes.update_goals.node import UpdateGoalsNode
-from agent.nodes.update_long_term_memory.node import UpdateLongTermMemoryNode
 from agent.subflows.battle_handler.node import BattleAgentNode
 from agent.subflows.overworld_handler.node import OverworldAgentNode
 from agent.subflows.text_handler.node import TextHandlerNode
@@ -27,8 +25,6 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     prepare_agent_store = PrepareAgentStoreNode(emulator)
     retrieve_long_term_memory = RetrieveLongTermMemoryNode(emulator)
     update_goals = UpdateGoalsNode(emulator)
-    create_long_term_memory = CreateLongTermMemoryNode(emulator)
-    update_long_term_memory = UpdateLongTermMemoryNode(emulator)
     update_background_stream = UpdateBackgroundStreamNode(emulator)
     finalize_memory = FinalizeMemoryNode()
 
@@ -36,10 +32,6 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     text_handler = TextHandlerNode(emulator)
     overworld_agent = OverworldAgentNode(emulator)
 
-    create_update_long_term_memory = RunConcurrent(
-        name="CreateUpdateLongTermMemory",
-        items=[create_long_term_memory, update_long_term_memory],
-    )
     do_updates = RunConcurrent(
         name="DoUpdates",
         items=[update_goals, update_background_stream],
@@ -53,10 +45,9 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
         edges=[
             Edge(
                 prepare_agent_store,
-                create_update_long_term_memory,
+                retrieve_long_term_memory,
                 ShouldRetrieveMemory(value=True),
             ),
-            Edge(create_update_long_term_memory, retrieve_long_term_memory),
             Edge(
                 prepare_agent_store,
                 post_retrieval_dummy,
