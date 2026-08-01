@@ -4,8 +4,14 @@ from typing import TYPE_CHECKING
 
 from pydantic_ai import FunctionToolset
 
+from agent.subflows.overworld_handler.tools.create_goal.interface import (
+    build_create_goal_tool,
+)
 from agent.subflows.overworld_handler.tools.create_long_term_memory.interface import (
     build_create_long_term_memory_tool,
+)
+from agent.subflows.overworld_handler.tools.delete_goal.interface import (
+    build_delete_goal_tool,
 )
 from agent.subflows.overworld_handler.tools.navigate.interface import build_navigation_tool
 from agent.subflows.overworld_handler.tools.press_buttons.interface import (
@@ -19,6 +25,9 @@ from agent.subflows.overworld_handler.tools.sokoban_solver.interface import (
 )
 from agent.subflows.overworld_handler.tools.swap_first_pokemon.interface import (
     build_swap_first_pokemon_tool,
+)
+from agent.subflows.overworld_handler.tools.update_goal.interface import (
+    build_update_goal_tool,
 )
 from agent.subflows.overworld_handler.tools.update_long_term_memory.interface import (
     build_update_long_term_memory_tool,
@@ -46,6 +55,9 @@ def build_overworld_toolset(
     """Build the fixed toolset available for the current overworld state."""
     tools: list[Tool[OverworldContext]] = [
         build_press_buttons_tool(context),
+        build_create_goal_tool(context),
+        build_update_goal_tool(context),
+        build_delete_goal_tool(context),
         build_create_long_term_memory_tool(context),
         build_update_long_term_memory_tool(context),
     ]

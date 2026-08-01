@@ -33,3 +33,4 @@ class OverworldAgentNode(Node[AgentStore]):
 
         await store.set_rolling_memory(state.rolling_memory)
         await store.set_long_term_memory(state.long_term_memory)
+        await store.set_goals(state.goals)

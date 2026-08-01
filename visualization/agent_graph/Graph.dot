@@ -3,27 +3,25 @@ digraph "G" {
   compound=true;
   node [shape=box, style="rounded,filled", fillcolor="#EFEFEF", fontname="Helvetica", fontsize=10];
   edge [fontname="Helvetica", fontsize=9];
-  subgraph "cluster_EBMINl28wcsFjYqtcwsTw" {
+  subgraph "cluster_ri0qSM21yvzR25hUkkhGd" {
     label="DoUpdates (Concurrent)";
     style="filled"; fillcolor="lightblue"; color="blue";
     node [fillcolor="lightblue", style="filled,rounded"];
-    "EBMINl28wcsFjYqtcwsTw__entry" [label="", shape=point, width=0.01, style=invis];
-    "EBMINl28wcsFjYqtcwsTw__exit"  [label="", shape=point, width=0.01, style=invis];
-    "3Bk9Mu7C37rnCyAWb4a7A" [label="UpdateGoalsNode"];
-    uqeFjNTKfzETajd6GJebe [label="UpdateBackgroundStreamNode"];
+    "ri0qSM21yvzR25hUkkhGd__entry" [label="", shape=point, width=0.01, style=invis];
+    "ri0qSM21yvzR25hUkkhGd__exit"  [label="", shape=point, width=0.01, style=invis];
+    "0sIttTuNuawDVPxqcEt94" [label="UpdateBackgroundStreamNode"];
   }
-  lCmUOiLAdUr0rNhJ0sqKT [label="OverworldAgentNode"];
-  "3Bk9Mu7C37rnCyAWb4a7A" [label="UpdateGoalsNode"];
-  NhVAVohcwsO7f3eqTsHCY [label="FinalizeMemoryNode"];
-  uqeFjNTKfzETajd6GJebe [label="UpdateBackgroundStreamNode"];
-  zTFdiq7Pos0t6KFOES5SS [label="TextHandlerNode"];
-  "3xT1kzI3iiRTxR75mLp8z" [label="BattleAgentNode"];
-  L8DfUTak3TVlXZizpNcud [label="PrepareAgentStoreNode"];
-  L8DfUTak3TVlXZizpNcud -> lCmUOiLAdUr0rNhJ0sqKT [style="dashed", label="AgentHandlerIs(overworld)"];
-  L8DfUTak3TVlXZizpNcud -> "3xT1kzI3iiRTxR75mLp8z" [style="dashed", label="AgentHandlerIs(battle)"];
-  L8DfUTak3TVlXZizpNcud -> zTFdiq7Pos0t6KFOES5SS [style="dashed", label="AgentHandlerIs(text)"];
-  zTFdiq7Pos0t6KFOES5SS -> EBMINl28wcsFjYqtcwsTw__entry [lhead="cluster_EBMINl28wcsFjYqtcwsTw", style="solid"];
-  "3xT1kzI3iiRTxR75mLp8z" -> EBMINl28wcsFjYqtcwsTw__entry [lhead="cluster_EBMINl28wcsFjYqtcwsTw", style="solid"];
-  lCmUOiLAdUr0rNhJ0sqKT -> EBMINl28wcsFjYqtcwsTw__entry [lhead="cluster_EBMINl28wcsFjYqtcwsTw", style="solid"];
-  EBMINl28wcsFjYqtcwsTw__exit -> NhVAVohcwsO7f3eqTsHCY [ltail="cluster_EBMINl28wcsFjYqtcwsTw", style="solid"];
+  EBc3jzNS20Plp2qRxk1Ug [label="FinalizeMemoryNode"];
+  "0sIttTuNuawDVPxqcEt94" [label="UpdateBackgroundStreamNode"];
+  GXuuz6CfqNvq3xtspZgLd [label="BattleAgentNode"];
+  M9HgUponvtZ0vsJhdWhxV [label="TextHandlerNode"];
+  zoOuA6fHni9Cumptuzwmc [label="OverworldAgentNode"];
+  Xb1br1DCIXmqv68DjniIZ [label="PrepareAgentStoreNode"];
+  Xb1br1DCIXmqv68DjniIZ -> zoOuA6fHni9Cumptuzwmc [style="dashed", label="AgentHandlerIs(overworld)"];
+  Xb1br1DCIXmqv68DjniIZ -> GXuuz6CfqNvq3xtspZgLd [style="dashed", label="AgentHandlerIs(battle)"];
+  Xb1br1DCIXmqv68DjniIZ -> M9HgUponvtZ0vsJhdWhxV [style="dashed", label="AgentHandlerIs(text)"];
+  M9HgUponvtZ0vsJhdWhxV -> ri0qSM21yvzR25hUkkhGd__entry [lhead="cluster_ri0qSM21yvzR25hUkkhGd", style="solid"];
+  GXuuz6CfqNvq3xtspZgLd -> ri0qSM21yvzR25hUkkhGd__entry [lhead="cluster_ri0qSM21yvzR25hUkkhGd", style="solid"];
+  zoOuA6fHni9Cumptuzwmc -> ri0qSM21yvzR25hUkkhGd__entry [lhead="cluster_ri0qSM21yvzR25hUkkhGd", style="solid"];
+  ri0qSM21yvzR25hUkkhGd__exit -> EBc3jzNS20Plp2qRxk1Ug [ltail="cluster_ri0qSM21yvzR25hUkkhGd", style="solid"];
 }

@@ -44,4 +44,5 @@ def test_retrieval_tool_requires_an_existing_memory(
 
     toolset = build_overworld_toolset(context, game_state)
 
+    assert {"create_goal", "update_goal", "delete_goal"} <= toolset.tools.keys()
     assert toolset.tools.keys() & {"retrieve_long_term_memory"} == expected_tools

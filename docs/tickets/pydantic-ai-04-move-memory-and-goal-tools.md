@@ -2,8 +2,8 @@
 
 ## Outcome
 
-Move long-term-memory retrieval, creation, and updates, plus goal updates, out
-of the root Junjo graph and into the overworld agent's toolset.
+Move long-term-memory retrieval, creation, and updates, plus goal lifecycle
+changes, out of the root Junjo graph and into the overworld agent's toolset.
 
 The overworld agent should decide when this information is relevant and make
 the change through ordinary typed tools. Their services perform deterministic
@@ -23,21 +23,24 @@ Add tools for:
 - retrieving one selected long-term memory by title;
 - creating a new long-term-memory entry;
 - updating an existing long-term-memory entry; and
-- updating goals.
+- creating, updating, and deleting one goal at a time.
 
 The retrieval tool replaces the separate model call that currently chooses
 memory titles. The overworld agent supplies one title directly, and the
 service performs the existing key-based lookup. Creation and update tools
-write through the existing repository boundary. Goal changes update the live
-agent state through the existing goals behavior.
+write through the existing repository boundary. Separate goal tools create,
+revise, or delete one goal through the existing goals behavior. Goal deletion
+covers both completing a goal and deciding not to pursue it anymore.
 
 Each successful tool call must update `AgentState` immediately so later tools
 and agents in the same iteration see the change. Retrieval appends its one
 document to the loaded long-term-memory set and returns it with a fresh
 screenshot to the active conversation; it does not duplicate that durable
 document into rolling memory. Loaded long-term memory is cleared when the
-workflow advances to the next iteration. Mutation results continue to be
-recorded in rolling memory and returned to the active conversation.
+workflow advances to the next iteration. Long-term-memory mutation results
+continue to be recorded in rolling memory and returned to the active
+conversation. Goal changes update the authoritative goal state and are
+returned to the active conversation without being copied into rolling memory.
 
 These are non-movement tools, so they do not end the overworld run.
 
@@ -62,8 +65,8 @@ retrieval model call, scheduler state, and root-graph path at the same time.
 
 ### 3. Move goal updates
 
-Add the goal-update tool and remove the root goal-update node and its separate
-model call.
+Add separate goal-creation, goal-update, and goal-deletion tools, then remove
+the root goal-update node and its separate model call.
 
 ### 4. Simplify the remaining root
 

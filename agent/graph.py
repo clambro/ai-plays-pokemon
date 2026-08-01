@@ -9,7 +9,6 @@ from agent.enums import AgentStateHandler
 from agent.nodes.finalize_memory.node import FinalizeMemoryNode
 from agent.nodes.prepare_agent_store.node import PrepareAgentStoreNode
 from agent.nodes.update_background_stream.node import UpdateBackgroundStreamNode
-from agent.nodes.update_goals.node import UpdateGoalsNode
 from agent.subflows.battle_handler.node import BattleAgentNode
 from agent.subflows.overworld_handler.node import OverworldAgentNode
 from agent.subflows.text_handler.node import TextHandlerNode
@@ -21,7 +20,6 @@ if TYPE_CHECKING:
 def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     """Build the Junjo agent graph."""
     prepare_agent_store = PrepareAgentStoreNode(emulator)
-    update_goals = UpdateGoalsNode(emulator)
     update_background_stream = UpdateBackgroundStreamNode(emulator)
     finalize_memory = FinalizeMemoryNode()
 
@@ -31,7 +29,7 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
 
     do_updates = RunConcurrent(
         name="DoUpdates",
-        items=[update_goals, update_background_stream],
+        items=[update_background_stream],
     )
 
     return Graph(

@@ -1,6 +1,6 @@
 # AI Workflow Architecture
 
-This page describes the current hybrid workflow. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology is used here. A Junjo root graph handles goal and display updates around one of three gameplay domains: overworld navigation, battles, or text interactions. Each domain runs locally through a Pydantic AI agent reached through a root adapter node.
+This page describes the current hybrid workflow. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology is used here. A Junjo root graph handles display updates around one of three gameplay domains: overworld navigation, battles, or text interactions. Each domain runs locally through a Pydantic AI agent reached through a root adapter node.
 
 Note: Pretty much all the constants below are default values that can be edited in [`common/constants.py`](/common/constants.py).
 
@@ -18,10 +18,7 @@ At this point, the flow is diverted into one of the three gameplay domains. Each
 
 ### Do Updates
 
-This is another collection of parallel nodes:
-
-- Update Goals: Optionally sets/edits/completes the AI's goals
-- Update Background Stream: Updates the live background for streaming at `localhost:8080` with the latest information from the workflow and game states
+This remaining update stage refreshes the live background for streaming at `localhost:8080` with the latest information from the workflow and game states. Goal management now belongs to the overworld agent rather than a periodic root model call.
 
 ### Finalize Memory
 
@@ -50,6 +47,9 @@ flowchart LR
         retrieve_memory["retrieve_long_term_memory"]
         create_memory["create_long_term_memory"]
         update_memory["update_long_term_memory"]
+        create_goal["create_goal"]
+        update_goal["update_goal"]
+        delete_goal["delete_goal"]
     end
 
     choice --> navigate
@@ -62,6 +62,9 @@ flowchart LR
     choice --> retrieve_memory
     choice --> create_memory
     choice --> update_memory
+    choice --> create_goal
+    choice --> update_goal
+    choice --> delete_goal
 
     navigate --> observe["Return actual result<br/>and fresh screenshot"]
     buttons --> observe
@@ -73,6 +76,9 @@ flowchart LR
     retrieve_memory --> observe
     create_memory --> observe
     update_memory --> observe
+    create_goal --> observe
+    update_goal --> observe
+    delete_goal --> observe
 
     observe -->|"Still in place and in the overworld"| agent
     observe -->|"Player moved or gameplay domain changed"| finish["Return to root graph"]
@@ -86,7 +92,7 @@ The prompt includes rolling and currently loaded long-term memory, every availab
 
 Tool availability is derived once from the prepared state:
 
-- `press_buttons`, `create_long_term_memory`, and `update_long_term_memory` are always available;
+- `press_buttons`, the three goal lifecycle tools, `create_long_term_memory`, and `update_long_term_memory` are always available;
 - `retrieve_long_term_memory` requires at least one existing memory title;
 - `navigation` is unavailable while biking;
 - `swap_first_pokemon` requires more than one party member;
@@ -124,9 +130,13 @@ These tools let the agent persist useful descriptions of nearby map entities aft
 
 These tools let the overworld agent manage concise documents that remain useful far beyond the current interaction. Each call retrieves, creates, or updates exactly one document. Retrieval selects one document directly from the available titles, appends it to the loaded context for the current iteration, and returns it to the active conversation; it is omitted from the fixed registry when the mode-entry title list is empty. Creation checks the complete title list for duplicates, while updates are restricted to loaded memories. A newly created memory is added to both sets immediately and reported in the tool response, so fixed retrieval and update tools can use it later in the same conversation when retrieval was available at mode entry. Each successful call updates live agent state without ending the overworld run, and writes go through the long-term-memory repository.
 
+### Create, Update, and Delete Goals
+
+Three tools give the overworld agent distinct one-goal-at-a-time lifecycle operations. Creation carries the detailed priority, SMART-goal, distinctness, relevance, and evidence guidance for choosing a new objective. Updating revises the text or priority of a goal that is still being pursued. Deleting covers both completing a goal and deciding not to chase it anymore. Every accepted change uses the existing goal collection behavior, updates authoritative live goal state immediately, and returns the complete revised list to the active conversation without copying it into rolling memory. Goal management is discretionary rather than scheduled: when the current goals remain appropriate, the agent uses another tool instead.
+
 ### Memory and Display Updates
 
-The agent narrates its decision alongside each tool call. The tool then produces the actual outcome of the action. Action and mutation outcomes are appended to the current rolling-memory block and returned with a fresh screenshot to the local conversation, so the HTML activity log and the agent cannot disagree about what happened. Retrieval instead returns the durable document directly and appends it to the iteration-scoped long-term-memory set without copying its content into rolling memory.
+The agent narrates its decision alongside each tool call. The tool then produces the actual outcome of the action. Action and long-term-memory mutation outcomes are appended to the current rolling-memory block and returned with a fresh screenshot to the local conversation, so the HTML activity log and the agent cannot disagree about what happened. Retrieval returns the durable document directly and appends it to the iteration-scoped long-term-memory set without copying its content into rolling memory. Goal tools likewise return their result directly and update authoritative goal state without copying the result into rolling memory.
 
 If the action leaves the player in place and the game in the overworld, the agent can make another decision using that result. Once the player moves or the game enters a text interaction or battle, the runner returns to the root graph. The complete overworld run remains one top-level workflow iteration.
 
