@@ -49,15 +49,24 @@ async def test_goal_tools_create_update_and_delete_one_goal_at_a_time(
         delete_interface.build_delete_goal_tool(context).function,
     )
 
-    create_result = await create("Reach Cerulean City.", GoalPriority.SECONDARY)
+    created = Goal(goal="Reach Cerulean City.", priority=GoalPriority.SECONDARY)
+    create_result = await create(created.goal, created.priority)
+    assert context.state.goals.goals == [primary, created]
+
+    revised = Goal(
+        goal="Reach Cerulean City through Mt. Moon.",
+        priority=GoalPriority.SECONDARY,
+    )
     update_result = await update(
         1,
-        "Reach Cerulean City through Mt. Moon.",
-        GoalPriority.SECONDARY,
+        revised.goal,
+        revised.priority,
     )
-    delete_result = await delete(1)
+    assert context.state.goals.goals == [primary, revised]
 
+    delete_result = await delete(1)
     assert context.state.goals.goals == [primary]
+
     assert "Created goal" in cast("str", create_result[-1])
     assert "Updated goal" in cast("str", update_result[-1])
     assert "Deleted goal" in cast("str", delete_result[-1])
