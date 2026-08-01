@@ -1,6 +1,6 @@
 # AI Workflow Architecture
 
-This page describes the current hybrid workflow. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology is used here. A Junjo root graph handles display updates around one of three gameplay domains: overworld navigation, battles, or text interactions. Each domain runs locally through a Pydantic AI agent reached through a root adapter node.
+This page describes the current hybrid workflow. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology is used here. A small Junjo root prepares shared state, routes to one of three gameplay domains, refreshes the display, and finalizes rolling memory. Each domain runs locally through a Pydantic AI agent reached through a root adapter node.
 
 Note: Pretty much all the constants below are default values that can be edited in [`common/constants.py`](/common/constants.py).
 
@@ -16,9 +16,9 @@ This is the entrypoint for the entire AI workflow. It is responsible for taking 
 
 At this point, the flow is diverted into one of the three gameplay domains. Each adapter invokes its domain's complete local runner and returns control when that runner reaches its boundary.
 
-### Do Updates
+### Update Background Stream
 
-This remaining update stage refreshes the live background for streaming at `localhost:8080` with the latest information from the workflow and game states. Goal management now belongs to the overworld agent rather than a periodic root model call.
+After the selected gameplay domain returns, this node refreshes the live background for streaming at `localhost:8080` with the latest workflow and game state. Goal and long-term-memory management now belong to the overworld agent rather than periodic root model calls.
 
 ### Finalize Memory
 

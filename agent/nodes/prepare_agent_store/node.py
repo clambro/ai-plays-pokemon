@@ -43,5 +43,4 @@ class PrepareAgentStoreNode(Node[AgentStore]):
         if rolling_memory.current_block.iteration != state.iteration:
             await store.set_long_term_memory(LongTermMemory())
         update_background_log_from_memory(rolling_memory)
-        await store.set_previous_handler(state.handler)
         await store.set_handler(handler)

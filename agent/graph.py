@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from junjo import Edge, Graph, RunConcurrent
+from junjo import Edge, Graph
 
 from agent.conditions import AgentHandlerIs
 from agent.enums import AgentStateHandler
@@ -27,11 +27,6 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     text_handler = TextHandlerNode(emulator)
     overworld_agent = OverworldAgentNode(emulator)
 
-    do_updates = RunConcurrent(
-        name="DoUpdates",
-        items=[update_background_stream],
-    )
-
     return Graph(
         source=prepare_agent_store,
         sink=finalize_memory,
@@ -47,9 +42,9 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
                 AgentHandlerIs(AgentStateHandler.BATTLE),
             ),
             Edge(prepare_agent_store, text_handler, AgentHandlerIs(AgentStateHandler.TEXT)),
-            Edge(text_handler, do_updates),
-            Edge(battle_agent, do_updates),
-            Edge(overworld_agent, do_updates),
-            Edge(do_updates, finalize_memory),
+            Edge(text_handler, update_background_stream),
+            Edge(battle_agent, update_background_stream),
+            Edge(overworld_agent, update_background_stream),
+            Edge(update_background_stream, finalize_memory),
         ],
     )

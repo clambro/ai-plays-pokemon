@@ -25,7 +25,6 @@ class AgentState(BaseState):
     long_term_memory: LongTermMemory = Field(default_factory=LongTermMemory)
     goals: Goals = Field(default_factory=Goals)
     handler: AgentStateHandler | None = None
-    previous_handler: AgentStateHandler | None = None
     emulator_save_state: str | None = None
     total_tokens: int = 0
     total_cost: float = 0.0
@@ -77,10 +76,6 @@ class AgentStore(BaseStore[AgentState]):
     async def set_handler(self, handler: AgentStateHandler) -> None:
         """Set the handler."""
         await self.set_state({"handler": handler})
-
-    async def set_previous_handler(self, previous_handler: AgentStateHandler | None) -> None:
-        """Set the previous handler."""
-        await self.set_state({"previous_handler": previous_handler})
 
     async def add_llm_usage(self, tokens: int, cost: float) -> None:
         """Add one LLM call's usage to the run totals.
