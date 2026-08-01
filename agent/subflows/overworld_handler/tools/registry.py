@@ -11,6 +11,9 @@ from agent.subflows.overworld_handler.tools.navigate.interface import build_navi
 from agent.subflows.overworld_handler.tools.press_buttons.interface import (
     build_press_buttons_tool,
 )
+from agent.subflows.overworld_handler.tools.retrieve_long_term_memory.interface import (
+    build_retrieve_long_term_memory_tool,
+)
 from agent.subflows.overworld_handler.tools.sokoban_solver.interface import (
     build_sokoban_solver_tool,
 )
@@ -46,6 +49,8 @@ def build_overworld_toolset(
         build_create_long_term_memory_tool(context),
         build_update_long_term_memory_tool(context),
     ]
+    if context.available_long_term_memory_titles:
+        tools.append(build_retrieve_long_term_memory_tool(context))
     if not game_state.player.is_biking:
         tools.append(build_navigation_tool(context))
     if len(game_state.party) > 1:

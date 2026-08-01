@@ -20,21 +20,24 @@ run so prompt caching is preserved.
 
 Add tools for:
 
-- retrieving selected long-term memories by title;
+- retrieving one selected long-term memory by title;
 - creating a new long-term-memory entry;
 - updating an existing long-term-memory entry; and
 - updating goals.
 
 The retrieval tool replaces the separate model call that currently chooses
-memory titles. The overworld agent supplies the titles directly, and the
+memory titles. The overworld agent supplies one title directly, and the
 service performs the existing key-based lookup. Creation and update tools
 write through the existing repository boundary. Goal changes update the live
 agent state through the existing goals behavior.
 
 Each successful tool call must update `AgentState` immediately so later tools
-in the same overworld conversation see the change. As with the other
-overworld tools, the actual result is both recorded in rolling memory and
-returned with a fresh screenshot to the active conversation.
+and agents in the same iteration see the change. Retrieval appends its one
+document to the loaded long-term-memory set and returns it with a fresh
+screenshot to the active conversation; it does not duplicate that durable
+document into rolling memory. Loaded long-term memory is cleared when the
+workflow advances to the next iteration. Mutation results continue to be
+recorded in rolling memory and returned to the active conversation.
 
 These are non-movement tools, so they do not end the overworld run.
 
@@ -53,9 +56,9 @@ migration.
 
 ### 2. Move long-term-memory retrieval
 
-Add a retrieval tool that loads requested existing titles directly from the
+Add a retrieval tool that loads one requested existing title directly from the
 available titles already prepared for the overworld agent. Remove the separate
-retrieval model call and its root-graph path at the same time.
+retrieval model call, scheduler state, and root-graph path at the same time.
 
 ### 3. Move goal updates
 
@@ -64,6 +67,6 @@ model call.
 
 ### 4. Simplify the remaining root
 
-Remove scheduling and state that no longer has a consumer, update the current
-architecture documentation, and leave the root graph ready for its dedicated
-replacement ticket.
+Remove any remaining obsolete root state, update the current architecture
+documentation, and leave the root graph ready for its dedicated replacement
+ticket.

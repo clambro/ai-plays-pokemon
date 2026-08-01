@@ -17,8 +17,9 @@ observations.
 
 {state}
 
-The following titles already exist in your long-term memory. Use them to avoid
-creating duplicate or near-duplicate memory documents:
+The following titles already exist in your long-term memory. They are the
+documents available to the retrieval tool. Use them both to select relevant
+memories and to avoid creating duplicate or near-duplicate documents:
 <available_long_term_memory_titles>
 {available_long_term_memory_titles}
 </available_long_term_memory_titles>
