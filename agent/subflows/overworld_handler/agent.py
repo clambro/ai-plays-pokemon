@@ -5,14 +5,16 @@ from typing import TYPE_CHECKING
 from pydantic_ai import Agent, BinaryContent, CallToolsNode, ModelResponse
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 
-from agent.subflows.overworld_handler.context import OverworldContext
+from agent.subflows.overworld_handler.context import (
+    OverworldContext,
+    prepare_overworld_context,
+)
 from agent.subflows.overworld_handler.prompts import build_overworld_decision_prompt
 from agent.subflows.overworld_handler.tools.registry import build_overworld_toolset
 from agent.utils import build_screenshot_content, is_battle_handler_state
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 from llm.usage import update_pydantic_ai_usage
-from overworld_map.service import prepare_overworld_map
 
 if TYPE_CHECKING:
     from PIL import Image
@@ -48,11 +50,10 @@ async def run_overworld(
 ) -> None:
     """Run the overworld agent until the player moves or leaves the overworld."""
     initial_game_state, initial_screenshot = await emulator.get_game_state_with_screenshot()
-    current_map = await prepare_overworld_map(state.iteration, initial_game_state)
-    context = OverworldContext(
-        state=state,
-        emulator=emulator,
-        current_map=current_map,
+    context = await prepare_overworld_context(
+        state,
+        emulator,
+        initial_game_state,
     )
     agent = build_overworld_agent(context, initial_game_state)
     async with agent.iter(

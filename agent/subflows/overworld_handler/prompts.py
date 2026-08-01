@@ -17,6 +17,13 @@ observations.
 
 {state}
 
+The following titles already exist in your long-term memory. They are the
+documents available to the retrieval tool. Use them both to select relevant
+memories and to avoid creating duplicate or near-duplicate documents:
+<available_long_term_memory_titles>
+{available_long_term_memory_titles}
+</available_long_term_memory_titles>
+
 The coordinates in the format (row, col, tile type) that are accessible from
 your current position are as follows:
 <accessible_coords>
@@ -103,6 +110,9 @@ def build_overworld_decision_prompt(
                 current_map.to_string(game_state),
                 game_state.player_info,
             ),
+        ),
+        available_long_term_memory_titles="\n".join(
+            context.available_long_term_memory_titles,
         ),
         accessible_coords=accessible_coords,
         exploration_candidates=exploration_candidates,

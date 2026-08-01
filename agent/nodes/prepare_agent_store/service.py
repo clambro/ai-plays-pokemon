@@ -4,11 +4,9 @@ from typing import TYPE_CHECKING
 
 from agent.enums import AgentStateHandler
 from agent.utils import is_battle_handler_state
-from common.constants import ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
-    from memory.long_term_memory import LongTermMemory
 
 
 async def wait_for_animations(emulator: YellowLegacyEmulator) -> None:
@@ -33,22 +31,3 @@ async def determine_handler(emulator: YellowLegacyEmulator) -> AgentStateHandler
     ):
         return AgentStateHandler.TEXT
     return AgentStateHandler.OVERWORLD
-
-
-def should_retrieve_memory(
-    iterations_since_last_ltm_retrieval: int,
-    long_term_memory: LongTermMemory,
-) -> bool:
-    """Determine whether the next agent iteration should retrieve long-term memory.
-
-    Args:
-        iterations_since_last_ltm_retrieval: Iterations elapsed since the previous retrieval.
-        long_term_memory: Memories currently loaded into the agent context.
-
-    Returns:
-        Whether the retrieval interval elapsed or no long-term memory is currently loaded.
-    """
-    return (
-        iterations_since_last_ltm_retrieval >= ITERATIONS_PER_LONG_TERM_MEMORY_RETRIEVAL
-        or not long_term_memory.pieces
-    )

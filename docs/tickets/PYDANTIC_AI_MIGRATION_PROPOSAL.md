@@ -226,7 +226,9 @@ toolset = FunctionToolset[OverworldContext](
         navigate,
         press_buttons,
         use_item,
-        update_goals,
+        create_goal,
+        update_goal,
+        delete_goal,
         update_memory,
     ],
 )
@@ -462,7 +464,7 @@ Each phase is implemented separately and leaves the application working.
 - Replace the separate long-term-memory retrieval model call with an
   overworld tool that selects from the available titles.
 - Add overworld tools for long-term-memory creation and updates.
-- Add an overworld tool for goal updates.
+- Add separate overworld tools for creating, updating, and deleting goals.
 - Remove the superseded root nodes, model calls, scheduling branches, and
   unused state.
 

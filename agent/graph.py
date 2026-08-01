@@ -2,18 +2,13 @@
 
 from typing import TYPE_CHECKING
 
-from junjo import Edge, Graph, RunConcurrent
+from junjo import Edge, Graph
 
-from agent.conditions import AgentHandlerIs, ShouldRetrieveMemory
+from agent.conditions import AgentHandlerIs
 from agent.enums import AgentStateHandler
-from agent.nodes.create_long_term_memory.node import CreateLongTermMemoryNode
-from agent.nodes.dummy.node import DummyNode
 from agent.nodes.finalize_memory.node import FinalizeMemoryNode
 from agent.nodes.prepare_agent_store.node import PrepareAgentStoreNode
-from agent.nodes.retrieve_long_term_memory.node import RetrieveLongTermMemoryNode
 from agent.nodes.update_background_stream.node import UpdateBackgroundStreamNode
-from agent.nodes.update_goals.node import UpdateGoalsNode
-from agent.nodes.update_long_term_memory.node import UpdateLongTermMemoryNode
 from agent.subflows.battle_handler.node import BattleAgentNode
 from agent.subflows.overworld_handler.node import OverworldAgentNode
 from agent.subflows.text_handler.node import TextHandlerNode
@@ -25,10 +20,6 @@ if TYPE_CHECKING:
 def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     """Build the Junjo agent graph."""
     prepare_agent_store = PrepareAgentStoreNode(emulator)
-    retrieve_long_term_memory = RetrieveLongTermMemoryNode(emulator)
-    update_goals = UpdateGoalsNode(emulator)
-    create_long_term_memory = CreateLongTermMemoryNode(emulator)
-    update_long_term_memory = UpdateLongTermMemoryNode(emulator)
     update_background_stream = UpdateBackgroundStreamNode(emulator)
     finalize_memory = FinalizeMemoryNode()
 
@@ -36,47 +27,24 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
     text_handler = TextHandlerNode(emulator)
     overworld_agent = OverworldAgentNode(emulator)
 
-    create_update_long_term_memory = RunConcurrent(
-        name="CreateUpdateLongTermMemory",
-        items=[create_long_term_memory, update_long_term_memory],
-    )
-    do_updates = RunConcurrent(
-        name="DoUpdates",
-        items=[update_goals, update_background_stream],
-    )
-
-    post_retrieval_dummy = DummyNode()
-
     return Graph(
         source=prepare_agent_store,
         sink=finalize_memory,
         edges=[
             Edge(
                 prepare_agent_store,
-                create_update_long_term_memory,
-                ShouldRetrieveMemory(value=True),
-            ),
-            Edge(create_update_long_term_memory, retrieve_long_term_memory),
-            Edge(
-                prepare_agent_store,
-                post_retrieval_dummy,
-                ShouldRetrieveMemory(value=False),
-            ),
-            Edge(retrieve_long_term_memory, post_retrieval_dummy),
-            Edge(
-                post_retrieval_dummy,
                 overworld_agent,
                 AgentHandlerIs(AgentStateHandler.OVERWORLD),
             ),
             Edge(
-                post_retrieval_dummy,
+                prepare_agent_store,
                 battle_agent,
                 AgentHandlerIs(AgentStateHandler.BATTLE),
             ),
-            Edge(post_retrieval_dummy, text_handler, AgentHandlerIs(AgentStateHandler.TEXT)),
-            Edge(text_handler, do_updates),
-            Edge(battle_agent, do_updates),
-            Edge(overworld_agent, do_updates),
-            Edge(do_updates, finalize_memory),
+            Edge(prepare_agent_store, text_handler, AgentHandlerIs(AgentStateHandler.TEXT)),
+            Edge(text_handler, update_background_stream),
+            Edge(battle_agent, update_background_stream),
+            Edge(overworld_agent, update_background_stream),
+            Edge(update_background_stream, finalize_memory),
         ],
     )

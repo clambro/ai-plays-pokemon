@@ -2,7 +2,7 @@
 
 import asyncio
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from junjo import BaseState, BaseStore
 from pydantic import Field, field_serializer
@@ -21,13 +21,10 @@ class AgentState(BaseState):
 
     folder: Path
     iteration: int = 0
-    iterations_since_last_ltm_retrieval: int = 0
     rolling_memory: RollingMemory = Field(default_factory=RollingMemory)
     long_term_memory: LongTermMemory = Field(default_factory=LongTermMemory)
     goals: Goals = Field(default_factory=Goals)
     handler: AgentStateHandler | None = None
-    previous_handler: AgentStateHandler | None = None
-    should_retrieve_memory: bool | None = None
     emulator_save_state: str | None = None
     total_tokens: int = 0
     total_cost: float = 0.0
@@ -79,26 +76,6 @@ class AgentStore(BaseStore[AgentState]):
     async def set_handler(self, handler: AgentStateHandler) -> None:
         """Set the handler."""
         await self.set_state({"handler": handler})
-
-    async def set_previous_handler(self, previous_handler: AgentStateHandler | None) -> None:
-        """Set the previous handler."""
-        await self.set_state({"previous_handler": previous_handler})
-
-    async def set_should_retrieve_memory(
-        self,
-        should_retrieve_memory: Literal[True, False],
-    ) -> None:
-        """Set the should retrieve memory."""
-        await self.set_state({"should_retrieve_memory": should_retrieve_memory})
-
-    async def set_iterations_since_last_ltm_retrieval(
-        self,
-        iterations_since_last_ltm_retrieval: int,
-    ) -> None:
-        """Set the iterations since the last long-term memory retrieval."""
-        await self.set_state(
-            {"iterations_since_last_ltm_retrieval": iterations_since_last_ltm_retrieval}
-        )
 
     async def add_llm_usage(self, tokens: int, cost: float) -> None:
         """Add one LLM call's usage to the run totals.

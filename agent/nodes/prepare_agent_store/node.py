@@ -7,10 +7,10 @@ from loguru import logger
 
 from agent.nodes.prepare_agent_store.service import (
     determine_handler,
-    should_retrieve_memory,
     wait_for_animations,
 )
 from agent.state import AgentStore
+from memory.long_term_memory import LongTermMemory
 from memory.rolling_memory import initialize_memory
 from streaming.server import update_background_log_from_memory
 
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 class PrepareAgentStoreNode(Node[AgentStore]):
     """Prepare the agent store for its next iteration.
 
-    This first node selects the appropriate handler and determines whether to retrieve memory.
+    This first node selects the appropriate handler and initializes rolling memory.
     """
 
     def __init__(self, emulator: YellowLegacyEmulator) -> None:
@@ -36,18 +36,11 @@ class PrepareAgentStoreNode(Node[AgentStore]):
         state = await store.get_state()
         await wait_for_animations(self.emulator)
         handler = await determine_handler(self.emulator)
-        retrieve_memory = should_retrieve_memory(
-            iterations_since_last_ltm_retrieval=state.iterations_since_last_ltm_retrieval,
-            long_term_memory=state.long_term_memory,
-        )
         rolling_memory = await initialize_memory(state.rolling_memory.current_block)
 
         await store.set_iteration(rolling_memory.current_block.iteration)
         await store.set_rolling_memory(rolling_memory)
+        if rolling_memory.current_block.iteration != state.iteration:
+            await store.set_long_term_memory(LongTermMemory())
         update_background_log_from_memory(rolling_memory)
-        await store.set_previous_handler(state.handler)
         await store.set_handler(handler)
-        await store.set_should_retrieve_memory(retrieve_memory)
-        await store.set_iterations_since_last_ltm_retrieval(
-            state.iterations_since_last_ltm_retrieval + 1  # Is set to zero in the retrieval step.
-        )
