@@ -12,10 +12,10 @@ from agent.subflows.text_handler.tools.errors import TextActionUnavailableError
 from agent.subflows.text_handler.utils import TextToolResult, complete_text_action
 
 if TYPE_CHECKING:
-    from agent.subflows.text_handler.context import TextContext
+    from agent.context import AgentContext
 
 
-def build_assign_name_tool(context: TextContext) -> Tool[TextContext]:
+def build_assign_name_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the naming tool bound to the current text context."""
 
     async def assign_name(

@@ -13,7 +13,7 @@ from agent.subflows.text_handler.utils import TextToolResult, complete_text_acti
 from common.enums import Button
 
 if TYPE_CHECKING:
-    from agent.subflows.text_handler.context import TextContext
+    from agent.context import AgentContext
 
 type TextButton = Literal[
     Button.A,
@@ -26,7 +26,7 @@ type TextButton = Literal[
 ]
 
 
-def build_press_buttons_tool(context: TextContext) -> Tool[TextContext]:
+def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the button-input tool bound to the current text context."""
 
     async def press_buttons(

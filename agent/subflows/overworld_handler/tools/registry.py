@@ -44,57 +44,64 @@ from common.enums import AsciiTile, SpriteLabel
 if TYPE_CHECKING:
     from pydantic_ai import Tool
 
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
     from emulator.game_state import YellowLegacyGameState
+    from overworld_map.schemas import OverworldMap
 
 
 def build_overworld_toolset(
-    context: OverworldContext,
+    context: AgentContext,
+    current_map: OverworldMap,
+    available_long_term_memory_titles: list[str],
     game_state: YellowLegacyGameState,
-) -> FunctionToolset[OverworldContext]:
+) -> FunctionToolset[AgentContext]:
     """Build the fixed toolset available for the current overworld state."""
-    tools: list[Tool[OverworldContext]] = [
+    tools: list[Tool[AgentContext]] = [
         build_press_buttons_tool(context),
         build_create_goal_tool(context),
         build_update_goal_tool(context),
         build_delete_goal_tool(context),
-        build_create_long_term_memory_tool(context),
+        build_create_long_term_memory_tool(context, available_long_term_memory_titles),
         build_update_long_term_memory_tool(context),
     ]
-    if context.available_long_term_memory_titles:
-        tools.append(build_retrieve_long_term_memory_tool(context))
+    if available_long_term_memory_titles:
+        tools.append(
+            build_retrieve_long_term_memory_tool(
+                context,
+                available_long_term_memory_titles,
+            ),
+        )
     if not game_state.player.is_biking:
-        tools.append(build_navigation_tool(context))
+        tools.append(build_navigation_tool(context, current_map))
     if len(game_state.party) > 1:
         tools.append(build_swap_first_pokemon_tool(context))
     if game_state.inventory.items:
         tools.append(build_use_item_tool(context))
-    if _is_sokoban_available(context, game_state):
-        tools.append(build_sokoban_solver_tool(context))
+    if _is_sokoban_available(current_map, game_state):
+        tools.append(build_sokoban_solver_tool(context, current_map))
     max_distance = 2
     nearby_sprites = [
         sprite
-        for sprite in context.current_map.known_sprites.values()
+        for sprite in current_map.known_sprites.values()
         if (sprite.coords - game_state.player.coords).length <= max_distance
     ]
     nearby_signs = [
         sign
-        for sign in context.current_map.known_signs.values()
+        for sign in current_map.known_signs.values()
         if (sign.coords - game_state.player.coords).length <= max_distance
     ]
     if nearby_sprites:
-        tools.append(build_update_sprites_tool(context, nearby_sprites))
+        tools.append(build_update_sprites_tool(context, current_map, nearby_sprites))
     if nearby_signs:
-        tools.append(build_update_signs_tool(context, nearby_signs))
+        tools.append(build_update_signs_tool(context, current_map, nearby_signs))
     return FunctionToolset(tools=tools)
 
 
 def _is_sokoban_available(
-    context: OverworldContext,
+    current_map: OverworldMap,
     game_state: YellowLegacyGameState,
 ) -> bool:
     """Check whether the current map contains a usable Sokoban puzzle."""
-    current_map = context.current_map
     if not game_state.can_use_strength:
         return False
 

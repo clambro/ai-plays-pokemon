@@ -16,10 +16,10 @@ from agent.subflows.battle_handler.utils import (
 from common.enums import PokeballItem
 
 if TYPE_CHECKING:
-    from agent.subflows.battle_handler.context import BattleContext
+    from agent.context import AgentContext
 
 
-def build_throw_ball_tool(context: BattleContext) -> Tool[BattleContext]:
+def build_throw_ball_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the throw-ball tool bound to the current battle context."""
 
     async def throw_ball(

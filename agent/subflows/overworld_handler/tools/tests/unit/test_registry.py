@@ -5,8 +5,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from agent.context import AgentContext
 from agent.state import AgentState
-from agent.subflows.overworld_handler.context import OverworldContext
 from agent.subflows.overworld_handler.tools.registry import build_overworld_toolset
 
 if TYPE_CHECKING:
@@ -30,11 +30,9 @@ def test_retrieval_tool_requires_an_existing_memory(
     current_map = MagicMock()
     current_map.known_sprites = {}
     current_map.known_signs = {}
-    context = OverworldContext(
+    context = AgentContext(
         state=AgentState(folder=tmp_path),
         emulator=MagicMock(),
-        current_map=current_map,
-        available_long_term_memory_titles=titles,
     )
     game_state = MagicMock()
     game_state.player.is_biking = True
@@ -42,6 +40,6 @@ def test_retrieval_tool_requires_an_existing_memory(
     game_state.inventory.items = []
     game_state.can_use_strength = False
 
-    toolset = build_overworld_toolset(context, game_state)
+    toolset = build_overworld_toolset(context, current_map, list(titles), game_state)
 
     assert toolset.tools.keys() & {"retrieve_long_term_memory"} == expected_tools

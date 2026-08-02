@@ -17,10 +17,10 @@ from agent.subflows.overworld_handler.utils import (
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
 
 
-def build_delete_goal_tool(context: OverworldContext) -> Tool[OverworldContext]:
+def build_delete_goal_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the single-goal deletion tool."""
 
     async def delete_goal(

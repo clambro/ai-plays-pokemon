@@ -10,7 +10,7 @@ from pydantic_ai import (
 )
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 
-from agent.subflows.battle_handler.context import BattleContext
+from agent.context import AgentContext
 from agent.subflows.battle_handler.prompts import build_battle_decision_prompt
 from agent.subflows.battle_handler.tools.registry import build_battle_toolset
 from agent.utils import build_screenshot_content, is_battle_handler_state
@@ -26,14 +26,14 @@ if TYPE_CHECKING:
 
 
 def build_battle_agent(
-    context: BattleContext,
+    context: AgentContext,
     battle_type: BattleType | None,
-) -> Agent[BattleContext, str]:
+) -> Agent[AgentContext, str]:
     """Construct the Pydantic AI battle agent."""
     return Agent(
         model=f"openai-responses:{MODEL}",
         name="battle_agent",
-        deps_type=BattleContext,
+        deps_type=AgentContext,
         instructions=SYSTEM_PROMPT,
         toolsets=[build_battle_toolset(context, battle_type)],
         model_settings=OpenAIResponsesModelSettings(
@@ -45,7 +45,7 @@ def build_battle_agent(
     )
 
 
-async def run_battle(context: BattleContext) -> None:
+async def run_battle(context: AgentContext) -> None:
     """Run one agent conversation until the game exits battle mode."""
     initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
     agent = build_battle_agent(
@@ -86,7 +86,7 @@ async def run_battle(context: BattleContext) -> None:
 
 
 def build_battle_agent_input(
-    context: BattleContext,
+    context: AgentContext,
     *,
     initial_game_state: YellowLegacyGameState,
     initial_screenshot: Image.Image,
@@ -98,7 +98,7 @@ def build_battle_agent_input(
     ]
 
 
-async def _record_response_usage(context: BattleContext, response: ModelResponse) -> None:
+async def _record_response_usage(context: AgentContext, response: ModelResponse) -> None:
     """Record one model response in both persistent and displayed state."""
     tokens, cost = await update_pydantic_ai_usage(response)
     context.state.total_tokens += tokens

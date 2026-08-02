@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
+from agent.context import AgentContext
 from agent.state import AgentStore
 from agent.subflows.text_handler.agent import run_text
-from agent.subflows.text_handler.context import TextContext
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
@@ -26,7 +26,7 @@ class TextHandlerNode(Node[AgentStore]):
         logger.info("Running the text handler...")
 
         state = await store.get_state()
-        context = TextContext(
+        context = AgentContext(
             state=state,
             emulator=self.emulator,
         )

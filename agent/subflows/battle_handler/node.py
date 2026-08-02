@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING
 from junjo import Node
 from loguru import logger
 
+from agent.context import AgentContext
 from agent.state import AgentStore
 from agent.subflows.battle_handler.agent import run_battle
-from agent.subflows.battle_handler.context import BattleContext
 
 if TYPE_CHECKING:
     from emulator.emulator import YellowLegacyEmulator
@@ -26,7 +26,7 @@ class BattleAgentNode(Node[AgentStore]):
         logger.info("Running the battle agent...")
 
         state = await store.get_state()
-        context = BattleContext(
+        context = AgentContext(
             state=state,
             emulator=self.emulator,
         )

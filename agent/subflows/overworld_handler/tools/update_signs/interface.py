@@ -15,8 +15,8 @@ from agent.subflows.overworld_handler.utils import (
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
-    from overworld_map.schemas import OverworldSign
+    from agent.context import AgentContext
+    from overworld_map.schemas import OverworldMap, OverworldSign
 
 
 class SignDescriptionUpdate(BaseModel):
@@ -27,11 +27,11 @@ class SignDescriptionUpdate(BaseModel):
 
 
 def build_update_signs_tool(
-    context: OverworldContext,
+    context: AgentContext,
+    current_map: OverworldMap,
     eligible_signs: list[OverworldSign],
-) -> Tool[OverworldContext]:
+) -> Tool[AgentContext]:
     """Build the sign-description tool for the nearby signs."""
-    current_map = context.current_map
     eligible_indices = {sign.index for sign in eligible_signs}
 
     async def update_signs(

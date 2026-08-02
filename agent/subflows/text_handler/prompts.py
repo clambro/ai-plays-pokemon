@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from agent.subflows.text_handler.context import TextContext
+    from agent.context import AgentContext
     from emulator.game_state import YellowLegacyGameState
 
 TEXT_DECISION_PROMPT = """
@@ -20,7 +20,7 @@ If you see garbled, nonsensical text in the onscreen text, it is because the gam
 
 
 def build_text_decision_prompt(
-    context: TextContext,
+    context: AgentContext,
     initial_game_state: YellowLegacyGameState,
 ) -> str:
     """Build the prompt for the initial actionable text screen."""

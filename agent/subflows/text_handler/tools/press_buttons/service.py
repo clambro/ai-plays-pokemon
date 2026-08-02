@@ -8,11 +8,11 @@ from agent.utils import is_battle_handler_state
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from agent.subflows.text_handler.context import TextContext
+    from agent.context import AgentContext
     from common.enums import Button
 
 
-async def press_buttons(*, context: TextContext, buttons: Sequence[Button]) -> str:
+async def press_buttons(*, context: AgentContext, buttons: Sequence[Button]) -> str:
     """Press the selected buttons until the text state changes or an action fails.
 
     Args:

@@ -10,7 +10,7 @@ from common.schemas import Coords
 from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
-    from agent.subflows.battle_handler.context import BattleContext
+    from agent.context import AgentContext
     from emulator.game_state import YellowLegacyGameState
 
 type BattleToolResult = list[str | BinaryContent]
@@ -52,7 +52,7 @@ def get_cursor_pos_in_fight_menu(game_state: YellowLegacyGameState) -> Coords | 
     return None
 
 
-async def complete_battle_action(context: BattleContext, action_result: str) -> BattleToolResult:
+async def complete_battle_action(context: AgentContext, action_result: str) -> BattleToolResult:
     """Advance dialog, refresh state, and build the in-run tool result.
 
     Args:
@@ -71,7 +71,7 @@ async def complete_battle_action(context: BattleContext, action_result: str) -> 
 
 
 async def refresh_battle_observation(
-    context: BattleContext,
+    context: AgentContext,
     *,
     action_result: str,
     dialog: str = "",
@@ -89,7 +89,7 @@ async def refresh_battle_observation(
     ]
 
 
-async def handle_battle_dialog(context: BattleContext) -> str:
+async def handle_battle_dialog(context: AgentContext) -> str:
     """Advance battle dialog and record any text that was read.
 
     Args:

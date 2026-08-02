@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from agent.subflows.battle_handler.context import BattleContext
+    from agent.context import AgentContext
     from common.enums import Button
 
 
 async def press_buttons(
     *,
-    context: BattleContext,
+    context: AgentContext,
     buttons: Sequence[Button],
 ) -> str:
     """Press the selected buttons.

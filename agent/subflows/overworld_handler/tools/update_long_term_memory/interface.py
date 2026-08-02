@@ -20,12 +20,12 @@ from agent.subflows.overworld_handler.utils import (
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
 
 
 def build_update_long_term_memory_tool(
-    context: OverworldContext,
-) -> Tool[OverworldContext]:
+    context: AgentContext,
+) -> Tool[AgentContext]:
     """Build the long-term-memory update tool."""
 
     async def update_long_term_memory(

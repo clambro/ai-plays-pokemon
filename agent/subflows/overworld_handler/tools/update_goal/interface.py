@@ -20,10 +20,10 @@ from memory.goals import (  # noqa: TC001  # Pydantic AI evaluates annotations a
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
 
 
-def build_update_goal_tool(context: OverworldContext) -> Tool[OverworldContext]:
+def build_update_goal_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the single-goal update tool."""
 
     async def update_goal(

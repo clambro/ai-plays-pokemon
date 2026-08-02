@@ -17,10 +17,10 @@ from memory.goals import (  # noqa: TC001  # Pydantic AI evaluates annotations a
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
 
 
-def build_create_goal_tool(context: OverworldContext) -> Tool[OverworldContext]:
+def build_create_goal_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the goal-creation tool."""
 
     async def create_goal(

@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING
 from agent.subflows.overworld_handler.tools.navigate import formatting, utils
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
     from emulator.game_state import YellowLegacyGameState
+    from overworld_map.schemas import OverworldMap
 
 OVERWORLD_DECISION_PROMPT = """
 You are navigating the overworld. At entry, you are standing still, there is no
@@ -64,12 +65,12 @@ will be returned after each tool executes.
 
 
 def build_overworld_decision_prompt(
-    context: OverworldContext,
+    context: AgentContext,
+    current_map: OverworldMap,
+    available_long_term_memory_titles: list[str],
     game_state: YellowLegacyGameState,
 ) -> str:
     """Build the initial prompt for one overworld-agent run."""
-    current_map = context.current_map
-
     if game_state.player.is_biking:
         unavailable = "Navigation data is unavailable while riding a bike."
         accessible_coords = unavailable
@@ -112,7 +113,7 @@ def build_overworld_decision_prompt(
             ),
         ),
         available_long_term_memory_titles="\n".join(
-            context.available_long_term_memory_titles,
+            available_long_term_memory_titles,
         ),
         accessible_coords=accessible_coords,
         exploration_candidates=exploration_candidates,

@@ -15,7 +15,7 @@ from agent.subflows.overworld_handler.utils import (
 from common.enums import Button
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
 
 type OverworldButton = Literal[
     Button.A,
@@ -28,7 +28,7 @@ type OverworldButton = Literal[
 ]
 
 
-def build_press_buttons_tool(context: OverworldContext) -> Tool[OverworldContext]:
+def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the button-input tool bound to the current overworld context."""
 
     async def press_buttons(

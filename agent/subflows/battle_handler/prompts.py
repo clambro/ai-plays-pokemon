@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from common.enums import BattleType, PokeballItem
 
 if TYPE_CHECKING:
-    from agent.subflows.battle_handler.context import BattleContext
+    from agent.context import AgentContext
     from emulator.game_state import YellowLegacyGameState
 
 BATTLE_DECISION_PROMPT = """
@@ -26,7 +26,7 @@ Note: If you keep seeing the text "There's no will to fight" over and over again
 
 
 def build_battle_decision_prompt(
-    context: BattleContext,
+    context: AgentContext,
     initial_game_state: YellowLegacyGameState,
 ) -> str:
     """Build the prompt for the battle-entry observation."""

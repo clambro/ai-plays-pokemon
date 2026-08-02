@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from agent.context import AgentContext
 from agent.state import AgentState
-from agent.subflows.overworld_handler.context import OverworldContext
 from agent.subflows.overworld_handler.tools.create_long_term_memory import (
     interface as create_interface,
 )
@@ -49,13 +49,15 @@ async def test_created_memory_can_be_updated_in_the_same_overworld_run(
     monkeypatch.setattr(create_interface, "complete_overworld_action", complete_action)
     monkeypatch.setattr(update_interface, "complete_overworld_action", complete_action)
 
-    context = OverworldContext(
+    context = AgentContext(
         state=AgentState(folder=tmp_path, iteration=31),
         emulator=MagicMock(),
-        current_map=MagicMock(),
-        available_long_term_memory_titles=("MAP_PALLET_TOWN",),
     )
-    create_tool = create_interface.build_create_long_term_memory_tool(context)
+    available_titles = ["MAP_PALLET_TOWN"]
+    create_tool = create_interface.build_create_long_term_memory_tool(
+        context,
+        available_titles,
+    )
     update_tool = update_interface.build_update_long_term_memory_tool(context)
     create_memory = cast(
         "Callable[[str, str], Awaitable[OverworldToolResult]]",
@@ -76,10 +78,10 @@ async def test_created_memory_can_be_updated_in_the_same_overworld_run(
         "Electric attacks are its specialty.",
     )
 
-    assert context.available_long_term_memory_titles == (
+    assert available_titles == [
         "MAP_PALLET_TOWN",
         "TEAM_PIKACHU",
-    )
+    ]
     assert context.state.long_term_memory.pieces["TEAM_PIKACHU"].content == (
         "Pikachu is a fast and reliable lead.\nElectric attacks are its specialty."
     )

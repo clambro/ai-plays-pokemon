@@ -14,12 +14,12 @@ from agent.subflows.overworld_handler.utils import (
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
 
 
 def build_swap_first_pokemon_tool(
-    context: OverworldContext,
-) -> Tool[OverworldContext]:
+    context: AgentContext,
+) -> Tool[AgentContext]:
     """Build the party-reordering tool bound to the current overworld context."""
 
     async def swap_first_pokemon(

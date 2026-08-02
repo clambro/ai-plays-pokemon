@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pydantic_ai import Agent, BinaryContent, CallToolsNode, ModelResponse
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 
-from agent.subflows.text_handler.context import TextContext
+from agent.context import AgentContext
 from agent.subflows.text_handler.prompts import build_text_decision_prompt
 from agent.subflows.text_handler.tools.registry import build_text_toolset
 from agent.subflows.text_handler.utils import (
@@ -24,12 +24,12 @@ if TYPE_CHECKING:
     from emulator.game_state import YellowLegacyGameState
 
 
-def build_text_agent(context: TextContext) -> Agent[TextContext, str]:
+def build_text_agent(context: AgentContext) -> Agent[AgentContext, str]:
     """Construct the Pydantic AI text agent."""
     return Agent(
         model=f"openai-responses:{MODEL}",
         name="text_agent",
-        deps_type=TextContext,
+        deps_type=AgentContext,
         instructions=SYSTEM_PROMPT,
         toolsets=[build_text_toolset(context)],
         model_settings=OpenAIResponsesModelSettings(
@@ -41,7 +41,7 @@ def build_text_agent(context: TextContext) -> Agent[TextContext, str]:
     )
 
 
-async def run_text(context: TextContext) -> None:
+async def run_text(context: AgentContext) -> None:
     """Handle one complete text interaction, using an agent only for decisions."""
     agent_input = await _prepare_text_agent_input(context)
     if agent_input is None:
@@ -78,7 +78,7 @@ async def run_text(context: TextContext) -> None:
 
 
 async def _prepare_text_agent_input(
-    context: TextContext,
+    context: AgentContext,
 ) -> list[str | BinaryContent] | None:
     """Drain ordinary dialog and prepare input if a decision remains."""
     game_state = await context.emulator.get_game_state()
@@ -96,7 +96,7 @@ async def _prepare_text_agent_input(
 
 
 def build_text_agent_input(
-    context: TextContext,
+    context: AgentContext,
     *,
     initial_game_state: YellowLegacyGameState,
     initial_screenshot: Image.Image,
@@ -108,7 +108,7 @@ def build_text_agent_input(
     ]
 
 
-async def _record_response_usage(context: TextContext, response: ModelResponse) -> None:
+async def _record_response_usage(context: AgentContext, response: ModelResponse) -> None:
     """Record one model response in both persistent and displayed state."""
     tokens, cost = await update_pydantic_ai_usage(response)
     context.state.total_tokens += tokens

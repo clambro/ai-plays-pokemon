@@ -1,4 +1,4 @@
-"""Dependencies and mutable state for one battle-agent run."""
+"""Shared dependencies for every gameplay agent."""
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -9,8 +9,8 @@ if TYPE_CHECKING:
 
 
 @dataclass(slots=True, kw_only=True)
-class BattleContext:
-    """Live dependencies for one complete battle."""
+class AgentContext:
+    """Live dependencies shared by all gameplay agents."""
 
     state: AgentState
     emulator: YellowLegacyEmulator

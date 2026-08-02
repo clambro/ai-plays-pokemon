@@ -15,8 +15,8 @@ from agent.subflows.overworld_handler.utils import (
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
-    from overworld_map.schemas import OverworldSprite
+    from agent.context import AgentContext
+    from overworld_map.schemas import OverworldMap, OverworldSprite
 
 
 class SpriteDescriptionUpdate(BaseModel):
@@ -27,11 +27,11 @@ class SpriteDescriptionUpdate(BaseModel):
 
 
 def build_update_sprites_tool(
-    context: OverworldContext,
+    context: AgentContext,
+    current_map: OverworldMap,
     eligible_sprites: list[OverworldSprite],
-) -> Tool[OverworldContext]:
+) -> Tool[AgentContext]:
     """Build the sprite-description tool for the nearby sprites."""
-    current_map = context.current_map
     eligible_indices = {sprite.index for sprite in eligible_sprites}
 
     async def update_sprites(

@@ -8,13 +8,13 @@ from agent.utils import build_screenshot_content
 from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
 
 type OverworldToolResult = list[str | BinaryContent]
 
 
 async def complete_overworld_action(
-    context: OverworldContext,
+    context: AgentContext,
     action_result: str,
 ) -> OverworldToolResult:
     """Capture and render a fresh observation after an overworld tool call."""

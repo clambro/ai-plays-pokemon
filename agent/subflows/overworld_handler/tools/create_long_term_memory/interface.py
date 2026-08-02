@@ -17,12 +17,13 @@ from agent.subflows.overworld_handler.utils import (
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
 
 
 def build_create_long_term_memory_tool(
-    context: OverworldContext,
-) -> Tool[OverworldContext]:
+    context: AgentContext,
+    available_long_term_memory_titles: list[str],
+) -> Tool[AgentContext]:
     """Build the long-term-memory creation tool."""
 
     async def create_long_term_memory(
@@ -101,7 +102,7 @@ def build_create_long_term_memory_tool(
                 title=title,
                 content=content,
                 iteration=context.state.iteration,
-                existing_titles=context.available_long_term_memory_titles,
+                existing_titles=available_long_term_memory_titles,
             )
         except LongTermMemoryAlreadyExistsError as error:
             result = str(error)
@@ -109,9 +110,7 @@ def build_create_long_term_memory_tool(
             long_term_memory = context.state.long_term_memory.model_copy(deep=True)
             long_term_memory.pieces[memory.title] = memory
             context.state.long_term_memory = long_term_memory
-            context.available_long_term_memory_titles = tuple(
-                sorted((*context.available_long_term_memory_titles, memory.title)),
-            )
+            available_long_term_memory_titles.append(memory.title)
             result = (
                 f"Created long-term memory:\n<memory>\n{memory.title}\n{memory.content}\n</memory>"
             )

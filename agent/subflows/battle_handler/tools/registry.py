@@ -16,15 +16,15 @@ from common.enums import BattleType
 if TYPE_CHECKING:
     from pydantic_ai import Tool
 
-    from agent.subflows.battle_handler.context import BattleContext
+    from agent.context import AgentContext
 
 
 def build_battle_toolset(
-    context: BattleContext,
+    context: AgentContext,
     battle_type: BattleType | None,
-) -> FunctionToolset[BattleContext]:
+) -> FunctionToolset[AgentContext]:
     """Build the fixed toolset for the current battle type."""
-    tools: list[Tool[BattleContext]] = []
+    tools: list[Tool[AgentContext]] = []
     if battle_type in (BattleType.TRAINER, BattleType.WILD):
         tools.extend(
             (

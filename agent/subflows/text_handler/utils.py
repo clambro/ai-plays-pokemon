@@ -9,7 +9,7 @@ from agent.utils import DialogReader, build_screenshot_content, is_battle_handle
 from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
-    from agent.subflows.text_handler.context import TextContext
+    from agent.context import AgentContext
     from emulator.game_state import YellowLegacyGameState
 
 type TextToolResult = list[str | BinaryContent]
@@ -32,7 +32,7 @@ def is_plain_text_dialog(game_state: YellowLegacyGameState) -> bool:
 
 
 async def complete_text_action(
-    context: TextContext,
+    context: AgentContext,
     action_result: str,
 ) -> TextToolResult:
     """Advance ordinary dialog and return the resulting screen to the agent."""
@@ -56,7 +56,7 @@ async def complete_text_action(
     ]
 
 
-async def handle_text_dialog(context: TextContext) -> str:
+async def handle_text_dialog(context: AgentContext) -> str:
     """Advance ordinary dialog and record the text that was read."""
     dialog_reader = DialogReader(context.emulator)
     game_state = await dialog_reader.observe_current_state()

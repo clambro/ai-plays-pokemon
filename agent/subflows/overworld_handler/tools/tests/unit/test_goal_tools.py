@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from agent.context import AgentContext
 from agent.state import AgentState
-from agent.subflows.overworld_handler.context import OverworldContext
 from agent.subflows.overworld_handler.tools.create_goal import interface as create_interface
 from agent.subflows.overworld_handler.tools.delete_goal import interface as delete_interface
 from agent.subflows.overworld_handler.tools.update_goal import interface as update_interface
@@ -26,11 +26,9 @@ async def test_goal_tools_create_update_and_delete_one_goal_at_a_time(
 ) -> None:
     """Make each lifecycle change immediately visible to later tool calls."""
     primary = Goal(goal="Defeat Brock.", priority=GoalPriority.PRIMARY)
-    context = OverworldContext(
+    context = AgentContext(
         state=AgentState(folder=tmp_path, goals=Goals(goals=[primary])),
         emulator=MagicMock(),
-        current_map=MagicMock(),
-        available_long_term_memory_titles=(),
     )
     complete_action = AsyncMock(side_effect=lambda _context, result: ["screenshot", result])
     monkeypatch.setattr(create_interface, "complete_overworld_action", complete_action)

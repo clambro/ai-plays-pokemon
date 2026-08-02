@@ -16,10 +16,10 @@ from agent.subflows.battle_handler.utils import (
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.battle_handler.context import BattleContext
+    from agent.context import AgentContext
 
 
-def build_switch_pokemon_tool(context: BattleContext) -> Tool[BattleContext]:
+def build_switch_pokemon_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the switch tool bound to the current battle context."""
 
     async def switch_pokemon(

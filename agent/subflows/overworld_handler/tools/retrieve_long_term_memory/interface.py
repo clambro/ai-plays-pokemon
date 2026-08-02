@@ -14,12 +14,13 @@ from agent.subflows.overworld_handler.utils import (
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
 
 
 def build_retrieve_long_term_memory_tool(
-    context: OverworldContext,
-) -> Tool[OverworldContext]:
+    context: AgentContext,
+    available_long_term_memory_titles: list[str],
+) -> Tool[AgentContext]:
     """Build the long-term-memory retrieval tool."""
 
     async def retrieve_long_term_memory(
@@ -41,7 +42,7 @@ def build_retrieve_long_term_memory_tool(
         """
         retrieved_memory = await retrieve_long_term_memory_service(
             title=title,
-            available_titles=context.available_long_term_memory_titles,
+            available_titles=available_long_term_memory_titles,
         )
         if retrieved_memory.pieces:
             long_term_memory = context.state.long_term_memory.model_copy(deep=True)

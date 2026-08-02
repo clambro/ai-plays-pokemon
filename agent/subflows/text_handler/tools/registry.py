@@ -12,10 +12,10 @@ from agent.subflows.text_handler.tools.press_buttons.interface import (
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.text_handler.context import TextContext
+    from agent.context import AgentContext
 
 
-def build_text_toolset(context: TextContext) -> FunctionToolset[TextContext]:
+def build_text_toolset(context: AgentContext) -> FunctionToolset[AgentContext]:
     """Build the text agent's fixed toolset."""
     return FunctionToolset(
         tools=[

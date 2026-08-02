@@ -6,6 +6,7 @@ from junjo import Node
 from loguru import logger
 from pydantic_ai import AgentRunError
 
+from agent.context import AgentContext
 from agent.state import AgentStore
 from agent.subflows.overworld_handler.agent import run_overworld
 
@@ -26,8 +27,12 @@ class OverworldAgentNode(Node[AgentStore]):
         logger.info("Running the overworld agent...")
 
         state = await store.get_state()
+        context = AgentContext(
+            state=state,
+            emulator=self.emulator,
+        )
         try:
-            await run_overworld(state, self.emulator)
+            await run_overworld(context)
         except AgentRunError as error:
             logger.warning(f"Error running overworld agent. Skipping. {error}")
 

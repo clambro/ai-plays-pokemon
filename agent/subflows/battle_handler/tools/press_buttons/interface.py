@@ -12,7 +12,7 @@ from agent.subflows.battle_handler.utils import BattleToolResult, complete_battl
 from common.enums import Button
 
 if TYPE_CHECKING:
-    from agent.subflows.battle_handler.context import BattleContext
+    from agent.context import AgentContext
 
 type BattleButton = Literal[
     Button.A,
@@ -24,7 +24,7 @@ type BattleButton = Literal[
 ]
 
 
-def build_press_buttons_tool(context: BattleContext) -> Tool[BattleContext]:
+def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the button-input tool bound to the current battle context."""
 
     async def press_buttons(

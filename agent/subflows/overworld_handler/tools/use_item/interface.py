@@ -12,10 +12,10 @@ from agent.subflows.overworld_handler.utils import (
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
 
 
-def build_use_item_tool(context: OverworldContext) -> Tool[OverworldContext]:
+def build_use_item_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the item-use tool bound to the current overworld context."""
 
     async def use_item(

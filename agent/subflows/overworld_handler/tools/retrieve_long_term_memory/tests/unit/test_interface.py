@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from agent.context import AgentContext
 from agent.state import AgentState
-from agent.subflows.overworld_handler.context import OverworldContext
 from agent.subflows.overworld_handler.tools.retrieve_long_term_memory import (
     interface,
     service,
@@ -37,17 +37,16 @@ async def test_retrieve_tool_appends_live_memory_and_returns_the_new_document(
     )
     complete_action = AsyncMock(side_effect=lambda _context, result: ["screenshot", result])
     monkeypatch.setattr(interface, "complete_overworld_action", complete_action)
-    context = OverworldContext(
+    context = AgentContext(
         state=AgentState(
             folder=tmp_path,
             iteration=41,
             long_term_memory=LongTermMemory(pieces={previous.title: previous}),
         ),
         emulator=MagicMock(),
-        current_map=MagicMock(),
-        available_long_term_memory_titles=(previous.title, retrieved.title),
     )
-    tool = interface.build_retrieve_long_term_memory_tool(context)
+    available_titles = [previous.title, retrieved.title]
+    tool = interface.build_retrieve_long_term_memory_tool(context, available_titles)
     retrieve = cast(
         "Callable[[str], Awaitable[OverworldToolResult]]",
         tool.function,

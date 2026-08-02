@@ -13,10 +13,10 @@ from agent.subflows.battle_handler.utils import (
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.battle_handler.context import BattleContext
+    from agent.context import AgentContext
 
 
-def build_run_tool(context: BattleContext) -> Tool[BattleContext]:
+def build_run_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the run tool bound to the current battle context."""
 
     async def run() -> BattleToolResult:

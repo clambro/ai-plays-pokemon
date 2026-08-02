@@ -11,10 +11,14 @@ from agent.subflows.overworld_handler.utils import (
 )
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
+    from overworld_map.schemas import OverworldMap
 
 
-def build_sokoban_solver_tool(context: OverworldContext) -> Tool[OverworldContext]:
+def build_sokoban_solver_tool(
+    context: AgentContext,
+    current_map: OverworldMap,
+) -> Tool[AgentContext]:
     """Build the Sokoban tool bound to the current overworld context."""
 
     async def sokoban_solver() -> OverworldToolResult:
@@ -29,7 +33,7 @@ def build_sokoban_solver_tool(context: OverworldContext) -> Tool[OverworldContex
         """
         service = SokobanSolverService(
             emulator=context.emulator,
-            current_map=context.current_map,
+            current_map=current_map,
             rolling_memory=context.state.rolling_memory,
         )
         result = await service.solve()

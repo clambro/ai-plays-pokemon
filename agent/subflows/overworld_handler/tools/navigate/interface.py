@@ -12,10 +12,14 @@ from agent.subflows.overworld_handler.utils import (
 from common.schemas import Coords
 
 if TYPE_CHECKING:
-    from agent.subflows.overworld_handler.context import OverworldContext
+    from agent.context import AgentContext
+    from overworld_map.schemas import OverworldMap
 
 
-def build_navigation_tool(context: OverworldContext) -> Tool[OverworldContext]:
+def build_navigation_tool(
+    context: AgentContext,
+    current_map: OverworldMap,
+) -> Tool[AgentContext]:
     """Build the navigation tool bound to the current overworld context."""
 
     async def navigation(row: int, col: int) -> OverworldToolResult:
@@ -86,7 +90,7 @@ def build_navigation_tool(context: OverworldContext) -> Tool[OverworldContext]:
         service = NavigationService(
             iteration=state.iteration,
             emulator=context.emulator,
-            current_map=context.current_map,
+            current_map=current_map,
             rolling_memory=state.rolling_memory,
         )
         result = await service.navigate(target)
