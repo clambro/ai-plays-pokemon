@@ -2,7 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from pydantic_ai import Agent, BinaryContent, CallToolsNode
+from loguru import logger
+from pydantic_ai import Agent, AgentRunError, BinaryContent, CallToolsNode
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 
 from agent.context import AgentContext
@@ -44,19 +45,24 @@ def build_text_agent(context: AgentContext) -> Agent[AgentContext, str]:
 
 async def run_text(context: AgentContext) -> None:
     """Handle one complete text interaction, using an agent only for decisions."""
+    logger.info("Running the text handler...")
     await context.begin_iteration()
     agent_input = await _prepare_text_agent_input(context)
     if agent_input is not None:
         agent = build_text_agent(context)
-        async with agent.iter(agent_input, deps=context) as agent_run:
-            node = agent_run.next_node
-            while not agent.is_end_node(node):
-                current_node = node
-                node = await agent_run.next(node)
-                if isinstance(current_node, CallToolsNode):
-                    game_state = await context.emulator.get_game_state()
-                    if not is_text_interaction_state(game_state):
-                        break
+        try:
+            async with agent.iter(agent_input, deps=context) as agent_run:
+                node = agent_run.next_node
+                while not agent.is_end_node(node):
+                    current_node = node
+                    node = await agent_run.next(node)
+                    if isinstance(current_node, CallToolsNode):
+                        game_state = await context.emulator.get_game_state()
+                        if not is_text_interaction_state(game_state):
+                            break
+        except AgentRunError as error:
+            logger.warning(f"Error running text interaction. Skipping. {error}")
+            return
     await finalize_iteration(context.state.rolling_memory)
 
 

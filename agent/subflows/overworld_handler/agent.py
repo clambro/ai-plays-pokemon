@@ -2,7 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from pydantic_ai import Agent, BinaryContent, CallToolsNode
+from loguru import logger
+from pydantic_ai import Agent, AgentRunError, BinaryContent, CallToolsNode
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 
 from agent.context import AgentContext
@@ -56,6 +57,7 @@ async def run_overworld(
     context: AgentContext,
 ) -> None:
     """Run the overworld agent until the player moves or leaves the overworld."""
+    logger.info("Running the overworld agent...")
     await context.begin_iteration()
     initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
     current_map = await prepare_overworld_map(context.state.iteration, initial_game_state)
@@ -66,24 +68,28 @@ async def run_overworld(
         available_long_term_memory_titles,
         initial_game_state,
     )
-    async with agent.iter(
-        build_overworld_agent_input(
-            context,
-            current_map,
-            available_long_term_memory_titles,
-            initial_game_state=initial_game_state,
-            initial_screenshot=initial_screenshot,
-        ),
-        deps=context,
-    ) as agent_run:
-        node = agent_run.next_node
-        while not agent.is_end_node(node):
-            current_node = node
-            node = await agent_run.next(node)
-            if isinstance(current_node, CallToolsNode):
-                game_state = await context.emulator.get_game_state()
-                if _should_end_overworld_run(initial_game_state, game_state):
-                    break
+    try:
+        async with agent.iter(
+            build_overworld_agent_input(
+                context,
+                current_map,
+                available_long_term_memory_titles,
+                initial_game_state=initial_game_state,
+                initial_screenshot=initial_screenshot,
+            ),
+            deps=context,
+        ) as agent_run:
+            node = agent_run.next_node
+            while not agent.is_end_node(node):
+                current_node = node
+                node = await agent_run.next(node)
+                if isinstance(current_node, CallToolsNode):
+                    game_state = await context.emulator.get_game_state()
+                    if _should_end_overworld_run(initial_game_state, game_state):
+                        break
+    except AgentRunError as error:
+        logger.warning(f"Error running overworld agent. Skipping. {error}")
+        return
     await finalize_iteration(context.state.rolling_memory)
 
 

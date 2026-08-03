@@ -2,7 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from pydantic_ai import Agent, BinaryContent, CallToolsNode
+from loguru import logger
+from pydantic_ai import Agent, AgentRunError, BinaryContent, CallToolsNode
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 
 from agent.context import AgentContext
@@ -42,28 +43,33 @@ def build_battle_agent(
 
 async def run_battle(context: AgentContext) -> None:
     """Run one agent conversation until the game exits battle mode."""
+    logger.info("Running the battle agent...")
     await context.begin_iteration()
     initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
     agent = build_battle_agent(
         context,
         initial_game_state.battle.battle_type,
     )
-    async with agent.iter(
-        build_battle_agent_input(
-            context,
-            initial_game_state=initial_game_state,
-            initial_screenshot=initial_screenshot,
-        ),
-        deps=context,
-    ) as agent_run:
-        node = agent_run.next_node
-        while not agent.is_end_node(node):
-            current_node = node
-            node = await agent_run.next(node)
-            if isinstance(current_node, CallToolsNode):
-                game_state = await context.emulator.get_game_state()
-                if not is_battle_handler_state(game_state):
-                    break
+    try:
+        async with agent.iter(
+            build_battle_agent_input(
+                context,
+                initial_game_state=initial_game_state,
+                initial_screenshot=initial_screenshot,
+            ),
+            deps=context,
+        ) as agent_run:
+            node = agent_run.next_node
+            while not agent.is_end_node(node):
+                current_node = node
+                node = await agent_run.next(node)
+                if isinstance(current_node, CallToolsNode):
+                    game_state = await context.emulator.get_game_state()
+                    if not is_battle_handler_state(game_state):
+                        break
+    except AgentRunError as error:
+        logger.warning(f"Error running battle agent. Skipping. {error}")
+        return
     await finalize_iteration(context.state.rolling_memory)
 
 
