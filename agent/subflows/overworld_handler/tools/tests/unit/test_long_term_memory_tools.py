@@ -41,10 +41,6 @@ async def test_created_memory_can_be_updated_in_the_same_overworld_run(
     update_record = AsyncMock()
     monkeypatch.setattr(create_service, "create_long_term_memory_record", create_record)
     monkeypatch.setattr(update_service, "update_long_term_memory_record", update_record)
-    monkeypatch.setattr(
-        "streaming.server.update_background_log_from_memory",
-        MagicMock(),
-    )
     complete_action = AsyncMock(side_effect=lambda _context, result: ["screenshot", result])
     monkeypatch.setattr(create_interface, "complete_overworld_action", complete_action)
     monkeypatch.setattr(update_interface, "complete_overworld_action", complete_action)

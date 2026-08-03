@@ -4,35 +4,29 @@ from typing import TYPE_CHECKING
 
 from junjo import Node
 from loguru import logger
+from pydantic_ai import AgentRunError
 
-from agent.context import AgentContext
 from agent.state import AgentStore
 from agent.subflows.text_handler.agent import run_text
 
 if TYPE_CHECKING:
-    from emulator.emulator import YellowLegacyEmulator
+    from agent.context import AgentContext
 
 
 class TextHandlerNode(Node[AgentStore]):
     """Run one complete text interaction from the root Junjo graph."""
 
-    def __init__(self, emulator: YellowLegacyEmulator) -> None:
+    def __init__(self, context: AgentContext) -> None:
         """Initialize the text-handler adapter."""
-        self.emulator = emulator
+        self.context = context
         super().__init__()
 
     async def service(self, store: AgentStore) -> None:
         """Handle the current dialog and any decisions it reveals."""
+        del store
         logger.info("Running the text handler...")
 
-        state = await store.get_state()
-        context = AgentContext(
-            state=state,
-            emulator=self.emulator,
-        )
         try:
-            await run_text(context)
-        except Exception as error:  # noqa: BLE001
+            await run_text(self.context)
+        except AgentRunError as error:
             logger.warning(f"Error running text interaction. Skipping. {error}")
-
-        await store.set_rolling_memory(context.state.rolling_memory)

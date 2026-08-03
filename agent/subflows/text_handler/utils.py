@@ -41,7 +41,6 @@ async def complete_text_action(
     if is_plain_text_dialog(game_state):
         dialog = await handle_text_dialog(context)
     game_state, screenshot = await context.emulator.get_game_state_with_screenshot()
-    update_background_from_states(context.state, game_state)
     return [
         build_screenshot_content(screenshot),
         "\n\n".join(
@@ -74,6 +73,7 @@ async def handle_text_dialog(context: AgentContext) -> str:
         and not is_battle_handler_state(game_state)
         and (is_blinking_cursor or not is_text_outside_dialog_box)
     ):
+        update_background_from_states(context.state, game_state)
         await dialog_reader.advance()
         await asyncio.sleep(0.5)  # Buffer to ensure that no new dialog boxes have opened.
         game_state = await dialog_reader.observe_current_state()
@@ -86,5 +86,4 @@ async def handle_text_dialog(context: AgentContext) -> str:
         context.state.rolling_memory.add_memory(
             content=f'Onscreen text: "{dialog}"{dialog_status}',
         )
-    update_background_from_states(context.state, game_state)
     return dialog

@@ -1,6 +1,5 @@
 """State models for the top-level agent graph."""
 
-import asyncio
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -52,43 +51,12 @@ class AgentState(BaseState):
 class AgentStore(BaseStore[AgentState]):
     """Concrete store for the agent state."""
 
-    def __init__(self, initial_state: AgentState) -> None:
-        """Initialize the store."""
-        super().__init__(initial_state)
-        self._llm_usage_lock = asyncio.Lock()
-
-    async def set_iteration(self, iteration: int) -> None:
-        """Set the iteration."""
-        await self.set_state({"iteration": iteration})
-
-    async def set_rolling_memory(self, rolling_memory: RollingMemory) -> None:
-        """Set the rolling memory."""
-        await self.set_state({"rolling_memory": rolling_memory})
-
-    async def set_long_term_memory(self, long_term_memory: LongTermMemory) -> None:
-        """Set the long-term memory."""
-        await self.set_state({"long_term_memory": long_term_memory})
-
-    async def set_goals(self, goals: Goals) -> None:
-        """Set the goals."""
-        await self.set_state({"goals": goals})
-
     async def set_handler(self, handler: AgentStateHandler) -> None:
         """Set the handler."""
         await self.set_state({"handler": handler})
 
-    async def add_llm_usage(self, tokens: int, cost: float) -> None:
-        """Add one LLM call's usage to the run totals.
-
-        Args:
-            tokens: Tokens consumed by the call.
-            cost: Cost incurred by the call.
-        """
-        async with self._llm_usage_lock:
-            state = await self.get_state()
-            await self.set_state(
-                {
-                    "total_tokens": state.total_tokens + tokens,
-                    "total_cost": state.total_cost + cost,
-                },
-            )
+    async def replace_state(self, state: AgentState) -> None:
+        """Copy the shared agent state back into the temporary Junjo store."""
+        await self.set_state(
+            {field_name: getattr(state, field_name) for field_name in AgentState.model_fields},
+        )

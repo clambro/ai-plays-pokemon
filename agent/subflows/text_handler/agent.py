@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from pydantic_ai import Agent, BinaryContent, CallToolsNode, ModelResponse
+from pydantic_ai import Agent, BinaryContent, CallToolsNode
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 
 from agent.context import AgentContext
@@ -13,10 +13,10 @@ from agent.subflows.text_handler.utils import (
     is_plain_text_dialog,
     is_text_interaction_state,
 )
-from agent.utils import build_screenshot_content
+from agent.utils import AGENT_HOOKS, build_screenshot_content
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
-from llm.usage import update_pydantic_ai_usage
+from memory.rolling_memory import finalize_iteration
 
 if TYPE_CHECKING:
     from PIL import Image
@@ -26,12 +26,13 @@ if TYPE_CHECKING:
 
 def build_text_agent(context: AgentContext) -> Agent[AgentContext, str]:
     """Construct the Pydantic AI text agent."""
-    return Agent(
+    return Agent[AgentContext, str](
         model=f"openai-responses:{MODEL}",
         name="text_agent",
         deps_type=AgentContext,
         instructions=SYSTEM_PROMPT,
         toolsets=[build_text_toolset(context)],
+        capabilities=[AGENT_HOOKS],
         model_settings=OpenAIResponsesModelSettings(
             openai_reasoning_effort=REASONING_EFFORT,
             openai_prompt_cache_key="text-agent",
@@ -43,38 +44,20 @@ def build_text_agent(context: AgentContext) -> Agent[AgentContext, str]:
 
 async def run_text(context: AgentContext) -> None:
     """Handle one complete text interaction, using an agent only for decisions."""
+    await context.begin_iteration()
     agent_input = await _prepare_text_agent_input(context)
-    if agent_input is None:
-        return
-
-    agent = build_text_agent(context)
-    async with agent.iter(
-        agent_input,
-        deps=context,
-    ) as agent_run:
-        accounted_responses = 0
-        try:
+    if agent_input is not None:
+        agent = build_text_agent(context)
+        async with agent.iter(agent_input, deps=context) as agent_run:
             node = agent_run.next_node
             while not agent.is_end_node(node):
                 current_node = node
-                if isinstance(current_node, CallToolsNode):
-                    await _record_response_usage(context, current_node.model_response)
-                    accounted_responses += 1
-                    if reasoning := current_node.model_response.text:
-                        context.state.rolling_memory.add_memory(reasoning)
                 node = await agent_run.next(node)
                 if isinstance(current_node, CallToolsNode):
                     game_state = await context.emulator.get_game_state()
                     if not is_text_interaction_state(game_state):
                         break
-        finally:
-            responses = [
-                message
-                for message in agent_run.new_messages()
-                if isinstance(message, ModelResponse)
-            ]
-            for response in responses[accounted_responses:]:
-                await _record_response_usage(context, response)
+    await finalize_iteration(context.state.rolling_memory)
 
 
 async def _prepare_text_agent_input(
@@ -106,10 +89,3 @@ def build_text_agent_input(
         build_screenshot_content(initial_screenshot),
         build_text_decision_prompt(context, initial_game_state),
     ]
-
-
-async def _record_response_usage(context: AgentContext, response: ModelResponse) -> None:
-    """Record one model response in both persistent and displayed state."""
-    tokens, cost = await update_pydantic_ai_usage(response)
-    context.state.total_tokens += tokens
-    context.state.total_cost += cost

@@ -31,10 +31,6 @@ async def test_retrieve_tool_appends_live_memory_and_returns_the_new_document(
     retrieved = LongTermMemoryRead(title="TEAM_PIKACHU", content="Reliable Electric Pokemon.")
     get_memories = AsyncMock(return_value=[retrieved])
     monkeypatch.setattr(service, "get_long_term_memories", get_memories)
-    monkeypatch.setattr(
-        "streaming.server.update_background_log_from_memory",
-        MagicMock(),
-    )
     complete_action = AsyncMock(side_effect=lambda _context, result: ["screenshot", result])
     monkeypatch.setattr(interface, "complete_overworld_action", complete_action)
     context = AgentContext(

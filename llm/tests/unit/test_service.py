@@ -11,7 +11,8 @@ from openai.types.responses.response_usage import (
 from PIL import Image
 from pydantic import BaseModel
 
-from agent.state import AgentState, AgentStore
+from agent.context import AgentContext
+from agent.state import AgentState
 from llm import service
 from llm.usage import bind_llm_usage_updater
 
@@ -38,19 +39,21 @@ async def test_get_llm_response_updates_agent_usage() -> None:
     )
     client = MagicMock()
     client.responses.create = AsyncMock(return_value=response)
-    store = AgentStore(AgentState(folder="output"))
+    context = AgentContext(
+        state=AgentState(folder="output"),
+        emulator=MagicMock(),
+    )
 
     with (
         patch("llm.service.AsyncOpenAI", return_value=client),
-        bind_llm_usage_updater(store.add_llm_usage),
+        bind_llm_usage_updater(context.add_llm_usage),
     ):
         llm_service = service.OpenAILLMService()
         result = await llm_service.get_llm_response("prompt")
 
     assert result == "response"
-    state = await store.get_state()
-    assert state.total_tokens == expected_total_tokens
-    assert state.total_cost == pytest.approx(expected_cost)
+    assert context.state.total_tokens == expected_total_tokens
+    assert context.state.total_cost == pytest.approx(expected_cost)
     client.responses.create.assert_awaited_once_with(
         model=service.MODEL,
         input="prompt",

@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from emulator.game_state import YellowLegacyGameState
 
 BATTLE_DECISION_PROMPT = """
-You are in a Pokemon battle. The screenshot provided above shows the battle at entry. After each tool call, its returned context is the freshest state and supersedes earlier observations. Briefly explain your reasoning in first person as ordinary response text, then use exactly one tool to take the next battle action. Every response must include a tool call; the agent loop ends automatically when the game exits battle mode.
+You are in a Pokemon battle. The screenshot provided above shows the battle at entry. After each tool call, its returned context is the freshest state and supersedes earlier observations. Briefly explain your reasoning in first person as ordinary response text, then use exactly one tool to take the next battle action. Every response must include one tool call; the agent loop ends automatically when the game exits battle mode.
 
 {state}
 

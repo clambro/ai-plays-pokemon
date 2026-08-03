@@ -7,7 +7,6 @@ from pydantic_ai import BinaryContent
 from agent.subflows.battle_handler.prompts import build_battle_tool_result
 from agent.utils import DialogReader, build_screenshot_content
 from common.schemas import Coords
-from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
@@ -52,7 +51,10 @@ def get_cursor_pos_in_fight_menu(game_state: YellowLegacyGameState) -> Coords | 
     return None
 
 
-async def complete_battle_action(context: AgentContext, action_result: str) -> BattleToolResult:
+async def complete_battle_action(
+    context: AgentContext,
+    action_result: str,
+) -> BattleToolResult:
     """Advance dialog, refresh state, and build the in-run tool result.
 
     Args:
@@ -78,7 +80,6 @@ async def refresh_battle_observation(
 ) -> BattleToolResult:
     """Capture and render a fresh battle observation for the agent."""
     game_state, screenshot = await context.emulator.get_game_state_with_screenshot()
-    update_background_from_states(context.state, game_state)
     return [
         build_screenshot_content(screenshot),
         build_battle_tool_result(

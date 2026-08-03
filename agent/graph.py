@@ -2,34 +2,44 @@
 
 from typing import TYPE_CHECKING
 
-from junjo import Edge, Graph
+from junjo import Edge, Graph, Node
 
 from agent.conditions import AgentHandlerIs
 from agent.enums import AgentStateHandler
-from agent.nodes.finalize_memory.node import FinalizeMemoryNode
 from agent.nodes.prepare_agent_store.node import PrepareAgentStoreNode
-from agent.nodes.update_background_stream.node import UpdateBackgroundStreamNode
+from agent.state import AgentStore
 from agent.subflows.battle_handler.node import BattleAgentNode
 from agent.subflows.overworld_handler.node import OverworldAgentNode
 from agent.subflows.text_handler.node import TextHandlerNode
 
 if TYPE_CHECKING:
-    from emulator.emulator import YellowLegacyEmulator
+    from agent.context import AgentContext
 
 
-def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
+class _SyncAgentStateNode(Node[AgentStore]):
+    """Copy shared context state into Junjo before the workflow returns."""
+
+    def __init__(self, context: AgentContext) -> None:
+        self.context = context
+        super().__init__()
+
+    async def service(self, store: AgentStore) -> None:
+        """Synchronize the completed handler activation."""
+        await store.replace_state(self.context.state)
+
+
+def build_agent_graph(context: AgentContext) -> Graph:
     """Build the Junjo agent graph."""
-    prepare_agent_store = PrepareAgentStoreNode(emulator)
-    update_background_stream = UpdateBackgroundStreamNode(emulator)
-    finalize_memory = FinalizeMemoryNode()
+    prepare_agent_store = PrepareAgentStoreNode(context)
+    sync_agent_state = _SyncAgentStateNode(context)
 
-    battle_agent = BattleAgentNode(emulator)
-    text_handler = TextHandlerNode(emulator)
-    overworld_agent = OverworldAgentNode(emulator)
+    battle_agent = BattleAgentNode(context)
+    text_handler = TextHandlerNode(context)
+    overworld_agent = OverworldAgentNode(context)
 
     return Graph(
         source=prepare_agent_store,
-        sink=finalize_memory,
+        sink=sync_agent_state,
         edges=[
             Edge(
                 prepare_agent_store,
@@ -42,9 +52,8 @@ def build_agent_graph(emulator: YellowLegacyEmulator) -> Graph:
                 AgentHandlerIs(AgentStateHandler.BATTLE),
             ),
             Edge(prepare_agent_store, text_handler, AgentHandlerIs(AgentStateHandler.TEXT)),
-            Edge(text_handler, update_background_stream),
-            Edge(battle_agent, update_background_stream),
-            Edge(overworld_agent, update_background_stream),
-            Edge(update_background_stream, finalize_memory),
+            Edge(text_handler, sync_agent_state),
+            Edge(battle_agent, sync_agent_state),
+            Edge(overworld_agent, sync_agent_state),
         ],
     )

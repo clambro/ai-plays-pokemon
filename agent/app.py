@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from junjo import Workflow
 
+from agent.context import AgentContext
 from agent.graph import build_agent_graph
 from agent.state import AgentState, AgentStore
 from llm.usage import bind_llm_usage_updater
@@ -17,12 +18,13 @@ async def run_agent_workflow(
     emulator: YellowLegacyEmulator,
 ) -> AgentState:
     """Run one top-level agent workflow."""
+    context = AgentContext(state=initial_state, emulator=emulator)
     store = AgentStore(initial_state)
     workflow = Workflow[AgentState, AgentStore](
         name="Pokemon Yellow Legacy Agent",
-        graph_factory=lambda: build_agent_graph(emulator),
+        graph_factory=lambda: build_agent_graph(context),
         store_factory=lambda: store,
     )
-    with bind_llm_usage_updater(store.add_llm_usage):
+    with bind_llm_usage_updater(context.add_llm_usage):
         await workflow.execute()
     return await workflow.get_state()

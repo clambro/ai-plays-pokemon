@@ -19,7 +19,7 @@ The replacement should center the agents:
 - all three agents operate through one shared application context;
 - one ordinary typed orchestrator selects the handler responsible for the
   current gameplay domain;
-- shared agent execution publishes the background immediately before tool
+- shared model-turn support publishes the background immediately before tool
   calls; and
 - the handlers own rolling-memory iteration boundaries.
 
@@ -82,20 +82,26 @@ receive irrelevant overworld state.
 Junjo `BaseState` parent with Pydantic `BaseModel`; the broader conversion of
 internal models belongs to the model-boundary follow-up.
 
-## Central Agent Execution
+## Shared Agent Runtime
 
-Once every agent has the same dependency type, replace the three duplicated
-`Agent.iter()` loops with one fully typed supervisor. Mode handlers remain
-responsible for constructing their agent, initial input, and fixed toolset,
-then pass those to the supervisor with a typed exit policy.
-
-The supervisor owns the behavior common to every model turn:
+Register typed Pydantic AI hooks that:
 
 1. account for each model response exactly once;
 2. append ordinary-text reasoning to the active rolling-memory block;
-3. capture the freshest game state and publish the background;
-4. execute the selected function tool; and
-5. stop or continue according to the active handler's exit policy.
+3. capture the freshest game state and publish the background immediately
+   before Pydantic AI executes a selected function tool.
+
+The hooks are independent adapters at the model-response and tool-execution
+boundaries. Handlers do not count responses, publish the background, or
+coordinate hook ordering.
+
+Handlers continue to drive `Agent.iter()` directly because gameplay-domain
+boundaries do not coincide with individual tool calls. Their loops should do
+only two things: advance Pydantic AI's nodes and inspect game state after a
+tool-execution node to decide whether the current domain has ended. All tools
+remain ordinary function tools and return fresh observations to the same
+agent conversation. In particular, battle actions such as `fight` do not end
+the battle-agent run.
 
 Publication happens after the model has explained its decision and immediately
 before its tool executes. The viewer therefore sees the current state, token
@@ -110,7 +116,7 @@ helper when useful, but background publication is never an orchestration stage.
 
 Mode-specific behavior remains explicit:
 
-- **Overworld** prepares its map observation and conditional toolset, and
+- **Overworld** prepares its map observation and conditional toolset, then
   returns after movement, a map change, or a transition into text or battle.
 - **Battle** prepares its battle-type toolset and keeps one conversation alive
   until battle mode exits.
@@ -122,26 +128,25 @@ Mode-specific behavior remains explicit:
 The orchestrator should not define an "application iteration." Iteration is
 rolling-memory lifecycle metadata owned by each handler.
 
-Preserve the current semantic boundary initially: one complete handler
-activation produces one rolling-memory iteration, even when that handler makes
-several tool calls. Each handler should enter a shared, typed iteration
-lifecycle around its own work. That lifecycle:
+One complete handler activation produces one rolling-memory iteration, even
+when that activation contains several model responses and tool calls. Each
+handler explicitly:
 
 1. initializes the active rolling-memory block;
 2. updates `AgentState.iteration` from that block;
-3. clears loaded long-term-memory context only when the iteration advances;
-4. lets the handler run; and
-5. persists and compacts the completed block when the handler returns.
+3. clears loaded long-term-memory context for the new top-level activation;
+4. runs its deterministic preparation and optional agent invocation; and
+5. persists and compacts the completed block after successful completion.
 
-The lifecycle implementation may be shared, but the handler invokes it. It is
-not wrapped around the handler by the root orchestrator. Text-only deterministic
-interactions remain handler activations and retain their existing iteration
-behavior.
+Initialization may be a method on the shared context, but it is not another
+context manager. The handler invokes both boundaries explicitly; the root
+orchestrator does not wrap them. Text-only deterministic interactions remain
+handler activations and retain their existing iteration behavior.
 
-The active agent conversation remains independent of this bookkeeping. Tool
-results enter the conversation normally, retrieved long-term memory remains
-available to later turns in that conversation, and static instructions and tool
-definitions remain cacheable.
+The active agent conversation remains independent of this bookkeeping.
+Tool results enter the conversation normally, retrieved long-term memory
+remains available to later turns in that conversation, and static instructions
+and tool definitions remain cacheable.
 
 `AgentStore` is no longer needed. Bind usage accounting directly to the shared
 context's active state and keep the update operation task-safe without
@@ -187,18 +192,22 @@ concurrent services; that is independent of Junjo removal.
   be reviewed independently.
 - Do not introduce dependency-erasing types or a bag of optional mode data.
 
-### Stage 2: Centralize agent and iteration lifecycles
+### Stage 2: Simplify shared turn behavior and iteration lifecycles
 
-- Replace the three duplicated `Agent.iter()` loops with one supervisor using
-  the shared context.
-- Move usage accounting, reasoning capture, pre-tool publication, and common
-  model-run cleanup into that supervisor.
+- Move usage accounting and reasoning capture to an `after_model_request`
+  hook, and background publication to a function-tool pre-execution hook.
+- Keep gameplay actions as ordinary tools whose fresh observations feed the
+  current agent conversation.
+- Retain small handler-specific `Agent.iter()` loops that only advance nodes
+  and check the existing domain exit condition. Do not introduce a supervisor,
+  exit policy, wrapper toolset, or exception-based termination signal.
 - Give each handler ownership of the shared rolling-memory lifecycle and
-  iteration update around its activation.
+  iteration update using explicit start and successful-finish calls rather
+  than a context manager.
 - Remove publication from ordinary tool-result helpers and from
   `RollingMemory.add_memory`.
-- Preserve handler boundaries, agent conversations, prompts, tool results, and
-  cache behavior.
+- Preserve complete handler conversations, prompt caching, and cross-mode
+  routing.
 
 The temporary Junjo path may need a narrow compatibility adapter during this
 stage, but Junjo must no longer own iteration state.
@@ -241,9 +250,9 @@ wiring.
   zero-sized transition maps.
 - Shared-context coverage proves state written by one handler is visible to the
   next handler without conversion or copying.
-- Supervisor tests cover response accounting, reasoning capture, publication
-  before tool execution, handler-directed termination, and error cleanup
-  without live model calls.
+- Handler and runtime tests cover response accounting, reasoning capture,
+  publication before function-tool execution, and domain termination without
+  live model calls.
 - Handler-lifecycle tests cover memory initialization, iteration updates,
   long-term-memory clearing, and finalization for all three modes, including
   text interactions that require no model call.
@@ -262,11 +271,12 @@ diagram contents.
   `AgentContext` dependency type.
 - New orchestration code contains no `typing.Any`, unparameterized framework
   generics, dependency-erasing casts, or universal optional mode state.
-- One shared supervisor owns response accounting, reasoning capture, pre-tool
-  background publication, tool execution, and mode termination.
+- Pydantic AI hooks own response accounting, reasoning capture, and pre-tool
+  background publication. Mode handlers contain only shallow node-driving
+  loops and their existing gameplay-domain exit checks.
 - Handlers own rolling-memory initialization, iteration updates, loaded-memory
-  clearing, and finalization; root orchestration does not represent or perform
-  those operations.
+  reloading, and finalization; internal model/tool turns do not reload memory,
+  and root orchestration does not represent or perform those operations.
 - The root is an ordinary typed classifier and three-handler dispatcher unless
   a concrete graph requirement is documented during implementation.
 - `AgentStore`, the persisted handler field, temporary adapters, and every
@@ -281,16 +291,11 @@ diagram contents.
 
 ## Open Questions
 
-1. **Iteration granularity:** The proposal moves the existing one-handler-per-
-   iteration behavior into the handlers. Should this ticket instead redefine
-   an iteration as one model-selected tool action? That would be a larger
-   rolling-memory semantic change, particularly for retrieved memory that must
-   remain loaded across several turns in one overworld conversation.
-2. **Permanent dispatcher:** Should the orchestrator return after one handler
+1. **Permanent dispatcher:** Should the orchestrator return after one handler
    activation and leave backups in the existing outer loop, as proposed, or
    should this ticket also create a permanent domain-to-domain loop and move
    backup scheduling out of `main.py`?
-3. **Unexpected failures:** Should the shared agent lifecycle recover from
+2. **Unexpected failures:** Should the shared agent lifecycle recover from
    known `AgentRunError` failures but propagate unexpected exceptions to
-   `main.py` for backup and shutdown? That is the proposed default; the current
-   battle and text adapters instead swallow every exception.
+   `main.py` for backup and shutdown? That is the proposed default and the
+   behavior of the temporary mode adapters.
