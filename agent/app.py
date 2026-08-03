@@ -3,10 +3,10 @@
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
+from agent.battle.agent import run_battle
 from agent.context import AgentContext
-from agent.subflows.battle_handler.agent import run_battle
-from agent.subflows.overworld_handler.agent import run_overworld
-from agent.subflows.text_handler.agent import run_text
+from agent.overworld.agent import run_overworld
+from agent.text.agent import run_text
 from agent.utils import is_battle_handler_state
 from llm.usage import bind_llm_usage_updater
 

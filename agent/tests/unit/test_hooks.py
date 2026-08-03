@@ -16,7 +16,7 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 from agent import utils
 from agent.context import AgentContext
 from agent.state import AgentState
-from agent.subflows.text_handler.agent import build_text_agent
+from agent.text.agent import build_text_agent
 from llm.service import MODEL
 
 if TYPE_CHECKING:
