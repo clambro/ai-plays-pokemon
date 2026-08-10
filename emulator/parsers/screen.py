@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, computed_field
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
-from emulator.parsers.utils import get_text_from_tile_array
+from emulator.parsers.screen_text import decode_screen_tiles
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
@@ -19,10 +19,10 @@ class Screen(BaseModel):
     bottom: int
     right: int
     tiles: list[list[int]]  # Each block on screen is a 2x2 square of tiles.
+    decoded_tiles: list[list[str]]
     cursor_index: int
     menu_item_index: int
     list_scroll_offset: int
-    uses_battle_font: bool
 
     model_config = ConfigDict(frozen=True)
 
@@ -44,19 +44,21 @@ class Screen(BaseModel):
     @computed_field
     @property
     def text(self) -> str:
-        """The tiles on screen converted to text if possible."""
-        return "\n".join(
-            get_text_from_tile_array(row, uses_battle_font=self.uses_battle_font)
-            for row in self.tiles
-        )
+        """The rendered text recognized on screen."""
+        return "\n".join("".join(row) for row in self.decoded_tiles)
 
     @computed_field
     @property
     def tiles_without_cursor(self) -> list[list[int]]:
         """The tiles on screen without the blinking cursor."""
-        cursor = 0xEE
         blank = 0x7F
-        return [[t if t != cursor else blank for t in row] for row in self.tiles]
+        return [
+            [
+                blank if glyph == "▼" else tile
+                for tile, glyph in zip(tile_row, glyph_row, strict=True)
+            ]
+            for tile_row, glyph_row in zip(self.tiles, self.decoded_tiles, strict=True)
+        ]
 
     @property
     def naming_screen_name_limit(self) -> int:
@@ -93,8 +95,8 @@ def parse_screen(mem: PyBoyMemoryView) -> Screen:
         bottom=bottom,
         right=right,
         tiles=tiles,
+        decoded_tiles=decode_screen_tiles(mem, tiles),
         cursor_index=mem[0xCC30],
         menu_item_index=mem[0xCC26],
         list_scroll_offset=mem[0xCC36],
-        uses_battle_font=mem[0xD057] in {1, 2},
     )

@@ -15,7 +15,7 @@ Here is the game memory's representation of the onscreen text. The text you see 
 <onscreen_text>
 {text}
 </onscreen_text>
-If you see garbled, nonsensical text in the onscreen text, it is because the game is rendering an image, which the memory stores as text. If this is the case, use the screenshot to help you better understand what is going on.
+Onscreen text includes only recognized glyphs. Graphical elements may be omitted, so use the screenshot when the text is incomplete or visual context matters.
 """.strip()
 
 

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from emulator.parsers.utils import get_text_from_byte_array
+from emulator.parsers.screen_text import get_text_from_byte_array
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView

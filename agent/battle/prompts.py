@@ -17,7 +17,7 @@ Here is the game memory's representation of the onscreen text. The text you see 
 <onscreen_text>
 {text}
 </onscreen_text>
-If you see garbled, nonsensical text in the onscreen text, it is because the game is rendering an image, which the memory stores as text. If this is the case, use the screenshot to help you better understand what is going on.
+Onscreen text includes only recognized glyphs. Graphical elements may be omitted, so use the screenshot when the text is incomplete or visual context matters.
 
 Fighting, voluntarily switching Pokemon, throwing a Poke Ball, and attempting to run all use up your turn, giving the opponent an opportunity to attack. In particular, switching gives the opponent a free attack against the Pokemon you switch in. Experience is granted only to Pokemon used in the battle, provided they have not fainted and are not at the level cap.
 

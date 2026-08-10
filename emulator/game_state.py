@@ -17,7 +17,6 @@ from emulator.parsers.pokemon import BoxPokemon, Pokemon, parse_party_pokemon, p
 from emulator.parsers.screen import Screen, parse_screen
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
-from emulator.parsers.utils import get_text_from_tile_array
 from emulator.parsers.warp import Warp, parse_warps
 from emulator.schemas import AsciiScreenWithEntities, DialogBox
 
@@ -290,14 +289,8 @@ class GameState(BaseModel):
         if not self.screen.is_dialog_box_on_screen:
             return None
 
-        top_line = get_text_from_tile_array(
-            self.screen.tiles[14][1:-1],
-            uses_battle_font=self.screen.uses_battle_font,
-        )
-        bottom_line = get_text_from_tile_array(
-            self.screen.tiles[16][1:-1],
-            uses_battle_font=self.screen.uses_battle_font,
-        )
+        top_line = "".join(self.screen.decoded_tiles[14][1:-1])
+        bottom_line = "".join(self.screen.decoded_tiles[16][1:-1])
         has_cursor = bottom_line.endswith("▼")
         if has_cursor:
             bottom_line = bottom_line[:-1]
