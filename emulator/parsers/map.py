@@ -74,7 +74,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         ledge_tiles_down = []
         cut_tree_tiles = None
 
-    water_tile = 0x14 if tileset_id in [0, 3, 5, 7, 15, 16, 17, 19, 24, 25] else None
+    water_tile = 0x14 if tileset_id in _WATER_TILESETS else None
     grass_tile = _GRASS_TILE_MAP.get(tileset_id)
     cut_tree_tiles = _CUT_TREE_TILE_MAP.get(tileset_id)
     boulder_hole_tiles = (0x2F, 0x2F, 0x22, 0x22) if tileset_id == _Tileset.CAVERN else None
@@ -146,12 +146,22 @@ class _Tileset(IntEnum):
     LAB = 20
     CLUB = 21
     FACILITY = 22
-    BEACH_HOUSE = 23
-    PLATEAU = 24
-    BEACH = 25
+    PLATEAU = 23
+    BEACH_HOUSE = 24
     PLACEHOLDER = 128  # Required to avoid crashes if you load a saved game, but shouldn't be used.
 
 
+_WATER_TILESETS = {
+    _Tileset.OVERWORLD,
+    _Tileset.FOREST,
+    _Tileset.DOJO,
+    _Tileset.GYM,
+    _Tileset.SHIP,
+    _Tileset.SHIP_PORT,
+    _Tileset.CAVERN,
+    _Tileset.FACILITY,
+    _Tileset.PLATEAU,
+}
 _GRASS_TILE_MAP = {
     _Tileset.OVERWORLD: 0x52,
     _Tileset.FOREST: 0x20,

@@ -90,7 +90,7 @@ def parse_player_battle_pokemon(mem: PyBoyMemoryView) -> Pokemon | None:
     hp = (mem[0xD014] << 8) | mem[0xD015]
     max_hp = (mem[0xD022] << 8) | mem[0xD023]
 
-    status_loc = mem[0xD022]
+    status_loc = mem[0xD017]
     status = _INT_TO_STATUS_MAP[status_loc] if status_loc != 0 else None
 
     return Pokemon(
@@ -118,7 +118,7 @@ def parse_enemy_battle_pokemon(mem: PyBoyMemoryView) -> EnemyPokemon | None:
     # The gen 1 health bar is 48 pixels long, so about 2% resolution for health percentage.
     hp_pct = math.ceil(hp / max_hp * 50) * 2
 
-    status_loc = mem[0xCFF3]
+    status_loc = mem[0xCFE8]
     status = _INT_TO_STATUS_MAP[status_loc] if status_loc != 0 else None
 
     return EnemyPokemon(

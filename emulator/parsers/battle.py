@@ -43,7 +43,7 @@ def parse_battle_state(mem: PyBoyMemoryView) -> Battle:
         An immutable battle snapshot.
     """
     is_battle_flag = mem[0xD057]
-    battle_type_flag = mem[0xD057]
+    battle_type_flag = mem[0xD05A]
     is_in_battle = is_battle_flag > 0
     if not is_in_battle:
         return Battle(
@@ -56,12 +56,12 @@ def parse_battle_state(mem: PyBoyMemoryView) -> Battle:
         )
 
     # Note that both flags are used to determine the battle type.
-    if is_battle_flag == _WILD_BATTLE_FLAG:
+    if battle_type_flag == _SAFARI_ZONE_BATTLE_FLAG:
+        battle_type = BattleType.SAFARI_ZONE
+    elif is_battle_flag == _WILD_BATTLE_FLAG:
         battle_type = BattleType.WILD
     elif is_battle_flag == _TRAINER_BATTLE_FLAG:
         battle_type = BattleType.TRAINER
-    elif battle_type_flag == _SAFARI_ZONE_BATTLE_FLAG:
-        battle_type = BattleType.SAFARI_ZONE
     else:
         battle_type = BattleType.OTHER
 
