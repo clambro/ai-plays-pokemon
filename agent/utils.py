@@ -130,9 +130,7 @@ class DialogReader:
 
     async def wait_for_animation(self) -> GameState:
         """Capture transient dialog while waiting for the current animation."""
-        return await self.emulator.wait_for_animation_to_finish(
-            on_game_state=self.observe,
-        )
+        return await self.emulator.wait_for_animation_to_finish(on_game_state=self.observe)
 
     async def advance(self) -> GameState:
         """Press A and capture dialog while the resulting animation runs."""

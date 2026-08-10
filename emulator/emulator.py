@@ -165,20 +165,26 @@ class Emulator(AbstractAsyncContextManager):
         logger.info("Checking for animations and waiting for them to finish.")
         successes = 0
         required_successes = 5
+        game_state = await self.get_game_state()
+        if on_game_state:
+            on_game_state(game_state)
         while successes < required_successes:
-            game_state = await self.get_game_state()
-            if on_game_state:
-                on_game_state(game_state)
             await asyncio.sleep(0.15)
             new_game_state = await self.get_game_state()
             if on_game_state:
                 on_game_state(new_game_state)
-            # The blinking cursor should not block progress, so we ignore it.
-            if game_state.screen.tiles_without_cursor == new_game_state.screen.tiles_without_cursor:
+            if (
+                # The blinking cursor should not block progress, so we ignore it.
+                game_state.screen.tiles_without_cursor == new_game_state.screen.tiles_without_cursor
+                and game_state.map.id == new_game_state.map.id
+                and game_state.player.coords == new_game_state.player.coords
+                and game_state.player.direction == new_game_state.player.direction
+            ):
                 successes += 1
             else:
                 successes = 0
-        return new_game_state
+            game_state = new_game_state
+        return game_state
 
     async def get_emulator_save_state(self) -> str:
         """Get the current save state as a Base64 encoded string."""
