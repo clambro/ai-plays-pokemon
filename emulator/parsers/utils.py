@@ -1,6 +1,7 @@
 """Utilities for parsing Pokémon Yellow memory."""
 
 INT_TO_CHAR_MAP = {
+    0x6D: ":",  # Tiny colon used by the Pokédex rating screen.
     0x70: "‘",  # noqa: RUF001
     0x71: "’",  # noqa: RUF001
     0x72: "“",
@@ -102,11 +103,37 @@ INT_TO_CHAR_MAP = {
     0xFE: "8",
     0xFF: "9",
 }
+_BATTLE_FONT_OVERRIDES = {
+    # The battle HUD replaces these ordinary punctuation glyphs with status graphics.
+    0x6D: " ",
+    0x6E: " ",
+    0x6F: " ",
+    0x70: "to",
+    0x72: "P",
+    0x73: " ",
+    0x74: " ",
+    0x75: " ",
+    0x76: " ",
+    0x77: " ",
+    0x78: " ",
+}
 _NAME_TERMINATOR = 0x50
 
 
-def get_text_from_tile_array(tiles: list[int]) -> str:
-    """Decode ordinary English text-font tiles, replacing unknown tiles with spaces."""
+def get_text_from_tile_array(tiles: list[int], *, uses_battle_font: bool = False) -> str:
+    """Decode English text-font tiles, replacing unknown tiles with spaces.
+
+    Args:
+        tiles: Tile IDs to decode.
+        uses_battle_font: Whether the battle HUD has replaced overloaded font tiles.
+
+    Returns:
+        The decoded text.
+    """
+    if uses_battle_font:
+        return "".join(
+            _BATTLE_FONT_OVERRIDES.get(tile, INT_TO_CHAR_MAP.get(tile, " ")) for tile in tiles
+        )
     return "".join(INT_TO_CHAR_MAP.get(tile, " ") for tile in tiles)
 
 

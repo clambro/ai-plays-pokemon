@@ -22,6 +22,7 @@ class Screen(BaseModel):
     cursor_index: int
     menu_item_index: int
     list_scroll_offset: int
+    uses_battle_font: bool
 
     model_config = ConfigDict(frozen=True)
 
@@ -44,7 +45,10 @@ class Screen(BaseModel):
     @property
     def text(self) -> str:
         """The tiles on screen converted to text if possible."""
-        return "\n".join(get_text_from_tile_array(row) for row in self.tiles)
+        return "\n".join(
+            get_text_from_tile_array(row, uses_battle_font=self.uses_battle_font)
+            for row in self.tiles
+        )
 
     @computed_field
     @property
@@ -92,4 +96,5 @@ def parse_screen(mem: PyBoyMemoryView) -> Screen:
         cursor_index=mem[0xCC30],
         menu_item_index=mem[0xCC26],
         list_scroll_offset=mem[0xCC36],
+        uses_battle_font=mem[0xD057] in {1, 2},
     )

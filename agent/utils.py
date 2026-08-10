@@ -149,15 +149,14 @@ class DialogReader:
     def text(self) -> str:
         """Combine captured pages without repeating lines that scrolled upward."""
         text: list[str] = []
+        previous_page: DialogBox | None = None
         for dialog_box in self._pages:
             top_line = dialog_box.top_line
             bottom_line = dialog_box.bottom_line
-            previous_lines = [
-                text[-1] if text else None,
-                text[-2] if len(text) > 1 else None,
-            ]
-            if not text or (top_line and top_line not in previous_lines):
+            top_line_scrolled = previous_page is not None and top_line == previous_page.bottom_line
+            if top_line and not top_line_scrolled:
                 text.append(top_line)
-            if not text or (bottom_line and bottom_line not in previous_lines):
+            if bottom_line:
                 text.append(bottom_line)
+            previous_page = dialog_box
         return " ".join(text).strip()

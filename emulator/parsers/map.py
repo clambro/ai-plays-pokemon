@@ -10,6 +10,8 @@ from common.enums import MapId
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
 
+_SEAFOAM_CURRENT_SLOWED_EVENT_MASK = 0x03
+
 
 class SpinnerTileIds(BaseModel):
     """The tiles that are used for the spinner.
@@ -47,6 +49,7 @@ class Map(BaseModel):
     south_connection: MapId | None
     east_connection: MapId | None
     west_connection: MapId | None
+    seafoam_current_slowed: bool
 
     model_config = ConfigDict(frozen=True)
 
@@ -119,6 +122,10 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         south_connection=MapId(mem[0xD3C9]) if mem[0xD3C9] != terminator else None,
         east_connection=MapId(mem[0xD3DF]) if mem[0xD3DF] != terminator else None,
         west_connection=MapId(mem[0xD3D4]) if mem[0xD3D4] != terminator else None,
+        # EVENT_SEAFOAM4_BOULDER1_DOWN_HOLE and EVENT_SEAFOAM4_BOULDER2_DOWN_HOLE.
+        seafoam_current_slowed=(
+            mem[0xD880] & _SEAFOAM_CURRENT_SLOWED_EVENT_MASK == _SEAFOAM_CURRENT_SLOWED_EVENT_MASK
+        ),
     )
 
 

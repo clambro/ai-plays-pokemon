@@ -248,7 +248,8 @@ class OverworldMap(BaseModel):
         row, col = row_col_map[direction]
 
         tile = screen.screen[row][col]
-        blockage = screen.blockages.get(Coords(row=row, col=col))
+        player_coords = Coords(row=PLAYER_OFFSET_Y, col=PLAYER_OFFSET_X)
+        blockage = screen.blockages.get(player_coords)
         blocked_text = text if blockage and blockage & direction else ""
         return tile, blocked_text
 

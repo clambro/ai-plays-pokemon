@@ -7,7 +7,7 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_SHAPE
-from common.enums import AsciiTile, Badge, BattleType, BlockedDirection
+from common.enums import AsciiTile, Badge, BattleType, BlockedDirection, MapId
 from common.schemas import Coords
 from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.inventory import Inventory, parse_inventory
@@ -185,7 +185,16 @@ class GameState(BaseModel):
         movepool = [m.name for p in self.party for m in p.moves]
         if "CUT" in movepool and Badge.CASCADEBADGE in self.player.badges:
             hm_tiles.append(AsciiTile.CUT_TREE)
-        if "SURF" in movepool and Badge.SOULBADGE in self.player.badges:
+        seafoam_current_blocks_surf = (
+            self.map.id == MapId.SEAFOAM_ISLANDS_B4F
+            and self.player.coords == Coords(row=11, col=7)
+            and not self.map.seafoam_current_slowed
+        )
+        if (
+            "SURF" in movepool
+            and Badge.SOULBADGE in self.player.badges
+            and not seafoam_current_blocks_surf
+        ):
             hm_tiles.append(AsciiTile.WATER)
         return hm_tiles
 
@@ -206,6 +215,22 @@ class GameState(BaseModel):
         ):
             return None
         return coords - (self.screen.top, self.screen.left)
+
+    def get_collision_tile_id(self, coords: Coords) -> int | None:
+        """Get the ROM collision tile for a visible map coordinate.
+
+        Tile-pair collision checks use the lower-left tile of each 2x2 map cell.
+
+        Args:
+            coords: Coordinates on the current map.
+
+        Returns:
+            The lower-left tile ID, or ``None`` when the coordinate is offscreen.
+        """
+        screen_coords = self.to_screen_coords(coords)
+        if screen_coords is None:
+            return None
+        return self.screen.tiles[screen_coords.row * 2 + 1][screen_coords.col * 2]
 
     def get_ascii_screen(self) -> AsciiScreenWithEntities:
         """Get an ASCII representation of the current screen.
@@ -265,8 +290,14 @@ class GameState(BaseModel):
         if not self.screen.is_dialog_box_on_screen:
             return None
 
-        top_line = get_text_from_tile_array(self.screen.tiles[14][1:-1])
-        bottom_line = get_text_from_tile_array(self.screen.tiles[16][1:-1])
+        top_line = get_text_from_tile_array(
+            self.screen.tiles[14][1:-1],
+            uses_battle_font=self.screen.uses_battle_font,
+        )
+        bottom_line = get_text_from_tile_array(
+            self.screen.tiles[16][1:-1],
+            uses_battle_font=self.screen.uses_battle_font,
+        )
         has_cursor = bottom_line.endswith("▼")
         if has_cursor:
             bottom_line = bottom_line[:-1]

@@ -61,12 +61,13 @@ def parse_pikachu_sprite(mem: PyBoyMemoryView) -> Sprite:
     Returns:
         Pikachu's follower sprite state.
     """
+    picture_id = mem[0xC1F0]
     return Sprite(
         index=15,
         label="PIKACHU",
         # Sprite coordinates start counting from 4 for some reason.
         coords=Coords(row=mem[0xC2F4] - 4, col=mem[0xC2F5] - 4),
-        is_rendered=mem[0xC1F2] != _NOT_RENDERED,
+        is_rendered=picture_id != 0 and mem[0xC1F2] != _NOT_RENDERED,
         moves_randomly=False,
     )
 

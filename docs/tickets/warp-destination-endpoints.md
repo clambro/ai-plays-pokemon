@@ -9,6 +9,10 @@ map. Replace the current adjacency-based single/double classification with the
 actual per-record activation rule so prompts and route execution know whether a
 warp activates on entry or requires another directional step.
 
+Retain the bounded strip and coordinate alignment of each outdoor map
+connection as well. A cardinal connection does not make every tile along that
+edge a valid transition point.
+
 The durable fact is:
 
 ```text
@@ -78,6 +82,28 @@ Resolution may read the exact ROM through its banked map headers or use a table
 generated from decomp `warp_event` declarations. A generated table must be
 tied to the exact ROM build/checksum.
 
+### Outdoor map connections
+
+The four connection records copied into WRAM contain more than the connected
+map ID. Each 11-byte `map_connection_struct` also carries the source and
+destination strip pointers, strip length, connected-map width, Y/X alignment,
+and view pointer. The parser currently retains only the map ID, and
+`get_map_boundary_tiles()` consequently advertises every accessible cell on
+that edge as an exit.
+
+Connection availability must be limited to the strip encoded by the ROM and
+must preserve the coordinate alignment needed to map a source boundary cell to
+its destination coordinate. For example, Saffron City's north connection to
+Route 5 occupies columns 10 through 29; column 0 is on the north edge but is not
+a Route 5 exit.
+
+Relevant code and decomp sources include:
+
+- `emulator/parsers/map.py` (`parse_map_state`);
+- `agent/overworld/tools/navigate/utils.py` (`get_map_boundary_tiles`);
+- `resources/pokeyellow/macros/ram.asm` (`map_connection_struct`); and
+- `resources/pokeyellow/macros/scripts/maps.asm` (`connection`).
+
 ## Scope
 
 - Add the destination warp index to the parsed warp representation.
@@ -99,6 +125,11 @@ tied to the exact ROM build/checksum.
 - Record the before/after map and player coordinate whenever a map changes.
 - Resolve normal destination coordinates from the ROM when the active
   information policy allows it.
+- Parse and retain each outdoor connection's valid source strip and coordinate
+  alignment instead of reducing it to a connected map ID.
+- Use those bounds when advertising reachable map-edge exits, and preserve the
+  source-to-destination coordinate mapping for transition execution and
+  persistence.
 - Update prompts to include the destination coordinate when it is agent-visible
   and give the exact per-warp entry instruction. Remove the single/double-warp
   explanation.
@@ -152,10 +183,12 @@ observed destination over placeholders such as `OUTSIDE`.
 Cover normal record parsing, destination index bounds, per-record activation,
 ROM lookup against known decomp examples, ROM checksum mismatch, transition
 observation, directed/non-reciprocal edges, dynamic exits, holes, outdoor
-connections, and prompt visibility under both information policies. Activation
-coverage must include the independent Celadon Mansion 2F stairs, the shared
-Celadon City entrance, both directions through the Route 11 gate, and a genuine
-map-edge exit.
+connections, and prompt visibility under both information policies. Outdoor
+connection coverage must verify bounded strips and coordinate alignment,
+including Saffron City's north Route 5 connection at columns 10 through 29 and
+the rejection of column 0. Activation coverage must include the independent
+Celadon Mansion 2F stairs, the shared Celadon City entrance, both directions
+through the Route 11 gate, and a genuine map-edge exit.
 
 ## Acceptance Criteria
 
@@ -167,6 +200,10 @@ map-edge exit.
 - [ ] Normal destination coordinates resolve correctly for the configured ROM.
 - [ ] Observed map changes persist exact directed endpoint pairs.
 - [ ] Special and dynamic transitions fall back to observation.
+- [ ] Outdoor connections retain their ROM-defined strip bounds and coordinate
+      alignment.
+- [ ] Navigation advertises only boundary cells that belong to the relevant
+      connection strip.
 - [ ] Provenance and visibility policy are explicit.
 - [ ] Prompts show the most specific permitted destination without leaking full
       map terrain.
