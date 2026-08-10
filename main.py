@@ -8,7 +8,8 @@ import aiofiles
 import aiofiles.os
 from loguru import logger
 
-from agent.app import run_agent_workflow
+from agent.app import dispatch_agent
+from agent.context import AgentContext
 from agent.state import AgentState
 from common.backup_service import create_backup, get_output_folder, load_backup, load_latest_backup
 from common.constants import BACKUP_INTERVAL_SECONDS, DEFAULT_ROM_PATH
@@ -62,22 +63,23 @@ async def main(
         YellowLegacyEmulator(str(rom_path), emulator_state, mute_sound=mute_sound) as emulator,
         BackgroundStreamServer() as stream_server,
     ):
-        stream_server.update_data(state, await emulator.get_game_state())  # Initialize the view.
+        context = AgentContext(state=state, emulator=emulator)
+        stream_server.update_data(context.state, await emulator.get_game_state())
         if not emulator_state:
             await asyncio.sleep(30)  # Some time to manually get to the new game screen.
         loop = asyncio.get_running_loop()
         next_backup_at = loop.time() + BACKUP_INTERVAL_SECONDS
         try:
             while True:
-                state = await run_agent_workflow(state, emulator)
+                await dispatch_agent(context)
                 if loop.time() >= next_backup_at:
                     emulator_save_state = await emulator.get_emulator_save_state()
-                    await create_backup(state, emulator_save_state)
+                    await create_backup(context.state, emulator_save_state)
                     next_backup_at = loop.time() + BACKUP_INTERVAL_SECONDS
         except Exception:  # noqa: BLE001
             logger.exception("Agent workflow raised an exception.")
             emulator_save_state = await emulator.get_emulator_save_state()
-            await create_backup(state, emulator_save_state)
+            await create_backup(context.state, emulator_save_state)
 
 
 if __name__ == "__main__":

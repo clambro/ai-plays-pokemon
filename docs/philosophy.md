@@ -34,12 +34,12 @@ Given that the core philosophy here is "freedom within constraint," we need an o
   - Pydantic AI's typed agent contexts, function-tool arguments, and structured model responses.
   - The [repository pattern](/database/) used to read objects from and write objects to the SQLite database.
   - The [backup service](/common/backup_service.py) that serializes states to and deserializes states from the disk.
-  - The [background server](/streaming/server.py) that displays the workflow and game states on an HTML page.
+  - The [background server](/streaming/server.py) that displays agent and game state on an HTML page.
 - It must be lightweight and promote modular code. We need to be able to add or rearrange agents, tools, and deterministic services as our understanding of the game evolves.
 
-The application is organized around three gameplay domains: overworld navigation, battles, and text interactions. Shared deterministic preparation loads the memory, goals, game state, and other context needed by a domain before its agent runs. Each Pydantic AI agent has its own typed context and a focused registry of tools. Those tools expose a thin model-facing interface while separate deterministic services handle the underlying game mechanics.
+The application is organized around three gameplay domains: overworld navigation, battles, and text interactions. A typed dispatcher selects the current domain, and all three handlers use one shared context containing live agent state and the emulator. Each handler prepares only its own run-local observations and focused tool registry. Those tools expose a thin model-facing interface while separate deterministic services handle the underlying game mechanics.
 
-An agent may use several tools within its domain before returning control to the outer workflow. Tool results provide fresh observations for the next decision, while only information useful beyond that local loop becomes durable memory. Work that involves no meaningful model decision remains ordinary deterministic code. The migration is phased so the application remains usable as each domain adopts this structure; the [workflow documentation](/docs/workflow.md) describes the current hybrid implementation.
+An agent may use several tools within its domain before returning control to the dispatcher. Tool results provide fresh observations for the next decision, while only information useful beyond that local loop becomes durable memory. Work that involves no meaningful model decision remains ordinary deterministic code. The [workflow documentation](/docs/workflow.md) describes the complete runtime architecture.
 
 ## Overcoming the LLM's Flaws
 
@@ -53,9 +53,9 @@ Note: Pretty much all the constants I mention below are default values that can 
 
 #### Rolling Memory
 
-One raw memory block represents one complete top-level workflow iteration. Every thought, observation, and tool result produced during that iteration is appended to the same mutable block in order. The block is finalized only after the workflow finishes, at which point it is written once to SQLite and the next iteration begins with a new block.
+One raw memory block represents one complete gameplay-handler activation. Every thought, observation, and durable action result produced during that iteration is appended to the same mutable block in order. The block is finalized only after the handler finishes, at which point it is written once to SQLite and the next handler activation begins with a new block.
 
-The raw table is the permanent source of truth: compaction never deletes or rewrites it. The active agent state carries the current block and the bounded view needed for the current workflow, but only the current block is serialized with the state. Because database files are included in backups, the complete history is restored without serializing it into every agent-state snapshot.
+The raw table is the permanent source of truth: compaction never deletes or rewrites it. The active agent state carries the current block and the bounded view needed for the current handler activation, but only the current block is serialized with the state. Because database files are included in backups, the complete history is restored without serializing it into every agent-state snapshot.
 
 Prompts receive a chronological mixture of summaries and exact recent blocks. Once two batches of twenty raw blocks are available, the older batch is compressed into a level-one summary while the newer twenty remain exact. Adjacent summaries at the same level are later combined into a parent summary covering both ranges. Repeating this process creates a binary hierarchy in which older history occupies progressively less space and recent history retains full detail. Every entry includes the iteration or iteration range it covers, so the prompt view remains ordered and gap-free.
 
@@ -65,7 +65,7 @@ The live HTML activity log uses only the exact raw working set and the unfinishe
 
 The final kind of memory given to the model is the long-term memory. This is effectively a database table of documents with unique titles. The overworld agent can retrieve, create, and update those documents through ordinary tools. At overworld entry it sees every available title and can load one relevant document directly by title whenever that context would help. Long term memories are never deleted (though I may change that if it becomes a problem).
 
-The model is encouraged to summarize memories if they go over a certain length, but there are no hard rules for what it can put in there. Common topics include notes on maps, characters, party members, goals, etc. Each retrieval appends one document to the long-term-memory context for the current iteration. That loaded set is cleared when the workflow advances to the next iteration.
+The model is encouraged to summarize memories if they go over a certain length, but there are no hard rules for what it can put in there. Common topics include notes on maps, characters, party members, goals, etc. Each retrieval appends one document to the long-term-memory context for the current iteration. That loaded set is cleared when the next handler activation begins.
 
 ### Mapping
 
@@ -106,7 +106,7 @@ Legend:
 ‼ Sign
 ```
 
-This map (plus a plethora of additional notes in the [overworld map prompt](/overworld_map/prompts.py)) helps the AI understand its surroundings far better than by simply looking at the game screen. It also comes with an index of all the sprites, signs, and warp tiles that the player has currently seen on it. The workflow has the ability to add persistent notes to each of these entities as it approaches and interacts with them.
+This map (plus a plethora of additional notes in the [overworld map prompt](/overworld_map/prompts.py)) helps the AI understand its surroundings far better than by simply looking at the game screen. It also comes with an index of all the sprites, signs, and warp tiles that the player has currently seen on it. The overworld agent can add persistent notes to nearby sprites and signs as it approaches and interacts with them.
 
 You will notice that the tile characters chosen above are unusual Unicode characters, and there is a reason for this: Each tile must be exactly one token that doesn't combine with any of its neighbours. LLMs read tokens, not individual characters. If I were to use "w" to represent water, then three water tiles "www" would get consolidated into a single token, different from the original "w" token. This completely breaks the model's ability to count tiles, so we have to ensure that the tiles don't combine. [There is a test](/common/tests/integration/test_enums.py) that validates this for us.
 

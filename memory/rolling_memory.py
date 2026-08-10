@@ -96,14 +96,11 @@ class RollingMemory:
 
     def add_memory(self, content: str) -> None:
         """Add content to the current application iteration."""
-        from streaming.server import update_background_log_from_memory  # noqa: PLC0415
-
         if self.current_block.content:
             logger.info(f"Appending to thought: {content}")
         else:
             logger.info(f"Adding new thought: [{self.current_block.iteration}]: {content}")
         self.current_block.append(content)
-        update_background_log_from_memory(self)
 
 
 async def initialize_memory(current_block: CurrentMemoryBlock) -> RollingMemory:

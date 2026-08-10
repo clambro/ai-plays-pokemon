@@ -8,14 +8,13 @@ import aiofiles
 from aiohttp import web
 from loguru import logger
 
-from streaming.schemas import GameStateView, LogEntryView
+from streaming.schemas import GameStateView
 
 if TYPE_CHECKING:
     from aiohttp.web import Request, Response
 
     from agent.state import AgentState
     from emulator.game_state import YellowLegacyGameState
-    from memory.rolling_memory import RollingMemory
 
 
 class BackgroundStreamServer(AbstractAsyncContextManager):
@@ -113,25 +112,9 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
             return web.Response()
         return web.json_response(self._current_data.model_dump(mode="json"))
 
-    def update_log(self, memory: RollingMemory) -> None:
-        """Update the current log data."""
-        if self._current_data is not None:
-            self._current_data.log = LogEntryView.from_memory(memory)
-        else:
-            logger.warning("Current data is not set. Cannot update log")
-
     def update_data(self, agent_state: AgentState, game_state: YellowLegacyGameState) -> None:
         """Update the current state data."""
         self._current_data = GameStateView.from_states(agent_state, game_state)
-
-
-def update_background_log_from_memory(memory: RollingMemory) -> None:
-    """Update the background log from the memory."""
-    server = BackgroundStreamServer.get_instance()
-    if server is not None:
-        server.update_log(memory)
-    else:
-        logger.warning("Stream server not available for update")
 
 
 def update_background_from_states(

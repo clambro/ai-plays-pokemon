@@ -1,16 +1,26 @@
-"""Shared utilities for the agent graph."""
+"""Shared utilities and lifecycle hooks for gameplay agents."""
 
 import asyncio
 from dataclasses import dataclass, field
 from io import BytesIO
 from typing import TYPE_CHECKING
 
-from pydantic_ai import BinaryContent
+from pydantic_ai import (
+    BinaryContent,
+    ModelResponse,
+    RunContext,
+    ToolDefinition,
+)
+from pydantic_ai.capabilities.hooks import Hooks
 
+from agent.context import AgentContext
 from common.enums import Button
+from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
     from PIL import Image
+    from pydantic_ai.messages import ToolCallPart
+    from pydantic_ai.models import ModelRequestContext
 
     from emulator.emulator import YellowLegacyEmulator
     from emulator.game_state import YellowLegacyGameState
@@ -33,6 +43,41 @@ def is_battle_handler_state(game_state: YellowLegacyGameState) -> bool:
     # The nickname screen after catching a Pokemon is considered a battle state by the game,
     # but we need to route it to the text handler instead.
     return game_state.battle.is_in_battle and not game_state.is_naming_screen()
+
+
+async def record_model_response(
+    ctx: RunContext[AgentContext],
+    *,
+    request_context: ModelRequestContext,  # noqa: ARG001
+    response: ModelResponse,
+) -> ModelResponse:
+    """Account for a model response and retain its ordinary-text reasoning."""
+    await ctx.deps.add_llm_usage(
+        response.usage.total_tokens,
+        float(response.cost().total_price),
+    )
+    if reasoning := response.text:
+        ctx.deps.state.rolling_memory.add_memory(reasoning)
+    return response
+
+
+async def publish_before_tool(
+    ctx: RunContext[AgentContext],
+    *,
+    call: ToolCallPart,  # noqa: ARG001
+    tool_def: ToolDefinition,  # noqa: ARG001
+    args: dict[str, object],
+) -> dict[str, object]:
+    """Publish shared state before an ordinary function tool executes."""
+    game_state = await ctx.deps.emulator.get_game_state()
+    update_background_from_states(ctx.deps.state, game_state)
+    return args
+
+
+AGENT_HOOKS = Hooks[AgentContext](
+    after_model_request=record_model_response,
+    before_tool_execute=publish_before_tool,
+)
 
 
 @dataclass(slots=True)
