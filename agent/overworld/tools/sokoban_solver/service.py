@@ -36,7 +36,6 @@ class SokobanSolverService:
 
     async def solve(self) -> str:
         """Solve the Sokoban puzzle."""
-        game_state = await self.emulator.get_game_state()
         sokoban_map = self._get_simplified_map()
 
         if not sokoban_map.boulders or not sokoban_map.goals:
@@ -45,6 +44,8 @@ class SokobanSolverService:
             self.rolling_memory.add_memory(result)
             return result
 
+        game_state, collision_tiles = await self.emulator.get_game_state_with_map_collision_tiles()
+        sokoban_map.collision_tiles = collision_tiles
         solution = self._solve_sokoban(sokoban_map, game_state)
 
         if not solution:
@@ -175,7 +176,11 @@ class SokobanSolverService:
             return False
 
         if is_boulder:
-            if not game_state.map.is_boulder_push_terrain_legal(source, destination):
+            if not game_state.map.is_boulder_push_terrain_legal(
+                sokoban_map.collision_tiles,
+                source,
+                destination,
+            ):
                 return False
         else:
             direction = destination - source

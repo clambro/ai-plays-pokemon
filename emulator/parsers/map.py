@@ -56,7 +56,6 @@ class Map(BaseModel):
     pc_tiles: tuple[int, int, int, int] | None
     walkable_tiles: list[int]
     collision_pairs: list[frozenset[int]]
-    collision_tiles: list[list[int]]
     boulder_blocked_tiles: frozenset[int]
     north_connection: MapId | None
     south_connection: MapId | None
@@ -65,19 +64,9 @@ class Map(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    def get_collision_tile_id(self, coords: Coords) -> int | None:
-        """Get the collision tile for a coordinate anywhere on the current map."""
-        if (
-            coords.row < 0
-            or coords.row >= self.height
-            or coords.col < 0
-            or coords.col >= self.width
-        ):
-            return None
-        return self.collision_tiles[coords.row][coords.col]
-
     def is_boulder_push_terrain_legal(
         self,
+        collision_tiles: list[list[int]],
         player_coords: Coords,
         boulder_destination: Coords,
     ) -> bool:
@@ -86,8 +75,8 @@ class Map(BaseModel):
         if (abs(offset.row), abs(offset.col)) not in {(0, 2), (2, 0)}:
             return False
 
-        source_tile = self.get_collision_tile_id(player_coords)
-        destination_tile = self.get_collision_tile_id(boulder_destination)
+        source_tile = _get_collision_tile_id(collision_tiles, player_coords)
+        destination_tile = _get_collision_tile_id(collision_tiles, boulder_destination)
         return (
             source_tile is not None
             and destination_tile is not None
@@ -166,7 +155,6 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         pc_tiles=pc_tiles,
         walkable_tiles=walkable_tiles,
         collision_pairs=collision_pairs,
-        collision_tiles=_parse_collision_tiles(mem, height=height, width=width),
         boulder_blocked_tiles=(
             _CAVERN_BOULDER_BLOCKED_TILES if tileset_id == _Tileset.CAVERN else frozenset()
         ),
@@ -196,7 +184,6 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
         pc_tiles=None,
         walkable_tiles=[],
         collision_pairs=[],
-        collision_tiles=[],
         boulder_blocked_tiles=frozenset(),
         north_connection=None,
         south_connection=None,
@@ -205,13 +192,10 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
     )
 
 
-def _parse_collision_tiles(
-    mem: PyBoyMemoryView,
-    *,
-    height: int,
-    width: int,
-) -> list[list[int]]:
-    """Expand the current map's block grid into collision tiles for every map cell."""
+def parse_map_collision_tiles(mem: PyBoyMemoryView) -> list[list[int]]:
+    """Expand the current map's block grid into collision tiles on demand."""
+    height = mem[0xD571]
+    width = mem[0xD572]
     tileset_bank = mem[_TILESET_BANK_ADDRESS]
     blocks_pointer = mem[_TILESET_BLOCKS_POINTER_ADDRESS] | (
         mem[_TILESET_BLOCKS_POINTER_ADDRESS + 1] << 8
@@ -237,6 +221,18 @@ def _parse_collision_tiles(
             )
         collision_tiles.append(collision_row)
     return collision_tiles
+
+
+def _get_collision_tile_id(collision_tiles: list[list[int]], coords: Coords) -> int | None:
+    """Get a collision tile by map coordinate, if the coordinate is in bounds."""
+    if (
+        coords.row < 0
+        or coords.row >= len(collision_tiles)
+        or coords.col < 0
+        or coords.col >= len(collision_tiles[coords.row])
+    ):
+        return None
+    return collision_tiles[coords.row][coords.col]
 
 
 class _Tileset(IntEnum):

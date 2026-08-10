@@ -1,6 +1,6 @@
 """Data models for the overworld Sokoban solver tool."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -14,3 +14,4 @@ class SokobanMap:
     tiles: list[list[str]]
     boulders: set[Coords]
     goals: set[Coords]
+    collision_tiles: list[list[int]] = field(default_factory=list)
