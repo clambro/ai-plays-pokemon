@@ -44,7 +44,7 @@ def parse_battle_state(mem: PyBoyMemoryView) -> Battle:
     """
     is_battle_flag = mem[0xD057]
     battle_type_flag = mem[0xD05A]
-    is_in_battle = is_battle_flag > 0
+    is_in_battle = is_battle_flag in {_WILD_BATTLE_FLAG, _TRAINER_BATTLE_FLAG}
     if not is_in_battle:
         return Battle(
             is_in_battle=False,
