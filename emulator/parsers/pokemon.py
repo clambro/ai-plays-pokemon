@@ -38,6 +38,19 @@ class Pokemon(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
+class BoxPokemon(BaseModel):
+    """The useful state of a pokemon stored in the active PC box."""
+
+    name: str
+    species: str
+    type1: str
+    type2: str | None
+    level: int
+    moves: list[PokemonMove]
+
+    model_config = ConfigDict(frozen=True)
+
+
 class EnemyPokemon(BaseModel):
     """The state of an enemy pokemon in the battle."""
 
@@ -57,7 +70,7 @@ def parse_party_pokemon(mem: PyBoyMemoryView) -> list[Pokemon]:
     return party
 
 
-def parse_pc_pokemon(mem: PyBoyMemoryView) -> list[Pokemon]:
+def parse_pc_pokemon(mem: PyBoyMemoryView) -> list[BoxPokemon]:
     """Parse the pokemon in the active PC box from the memory."""
     pc = []
     for i in range(mem[0xDA7F]):
@@ -169,7 +182,7 @@ def _parse_party_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
     )
 
 
-def _parse_pc_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
+def _parse_pc_pokemon(mem: PyBoyMemoryView, index: int) -> BoxPokemon | None:
     """Parse a single pokemon in the active PC box from the memory."""
     increment = index * 0x21
     species_id = mem[0xDA95 + increment]
@@ -190,17 +203,12 @@ def _parse_pc_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
         pp = mem[0xDAB2 + increment + i] & _PP_MASK
         moves.append(PokemonMove(name=_INT_TO_MOVE_MAP[move_id], pp=pp))
 
-    max_hp = (mem[0xDA96 + increment] << 8) | mem[0xDA96 + increment + 1]
-
-    return Pokemon(
+    return BoxPokemon(
         name=name,
         species=_INT_TO_SPECIES_MAP[species_id],
         type1=type1,
         type2=type2,
         level=mem[0xDA98 + increment],
-        hp=max_hp,  # Always at max HP when in the PC.
-        max_hp=max_hp,
-        status=None,  # No status ailments when in the PC.
         moves=moves,
     )
 
