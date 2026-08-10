@@ -67,6 +67,18 @@ class NavigationService:
         await self._handle_pikachu(path[0])
         for button in path:
             next_tile = self._get_next_tile(button, game_state)
+            next_coords = game_state.player.coords + _BUTTON_OFFSETS[button]
+            unresolved_spinner = (
+                next_tile in AsciiTile.get_spinner_tiles()
+                and utils.get_spinner_destination(
+                    next_coords,
+                    self.current_map.ascii_tiles_ndarray,
+                )
+                is None
+            )
+            if unresolved_spinner:
+                result = await self._explore_spinner(button, coords, game_state)
+                return self._record_result(result)
             if next_tile in hm_tiles:
                 await self._handle_hm_use(button, game_state)
             else:
@@ -88,6 +100,42 @@ class NavigationService:
                 self.current_map,
             )
         return self._record_result(f"Completed navigation to {coords}.")
+
+    async def _explore_spinner(
+        self,
+        button: Button,
+        target: Coords,
+        game_state: GameState,
+    ) -> str:
+        """Traverse an unresolved spinner, record its path, and report its destination."""
+        if game_state.player.direction != _BUTTON_DIRECTIONS[button]:
+            await self.emulator.press_button(button, wait_for_animation=False)
+            game_state = await self.emulator.wait_for_animation_to_finish()
+
+        spinner_start = game_state.player.coords
+        observations = []
+        await self.emulator.press_button(button, wait_for_animation=False)
+        game_state = await self.emulator.wait_for_animation_to_finish(
+            on_game_state=observations.append,
+        )
+
+        previous_observation = None
+        for observation in observations:
+            observation_key = (observation.map.id, observation.player.coords)
+            if observation_key != previous_observation:
+                await update_overworld_map(
+                    self.iteration,
+                    observation,
+                    self.current_map,
+                )
+                previous_observation = observation_key
+
+        if game_state.player.coords == spinner_start:
+            return f"Navigation to {target} interrupted at position {game_state.player.coords}."
+        return (
+            f"The spinner carried me to {game_state.player.coords}."
+            " Navigation stopped so I can plan a new route from here."
+        )
 
     def _get_target_error(
         self,
@@ -223,3 +271,18 @@ class NavigationService:
         """Record and return one coherent navigation result."""
         self.rolling_memory.add_memory(result)
         return result
+
+
+_BUTTON_OFFSETS = {
+    Button.UP: (-1, 0),
+    Button.DOWN: (1, 0),
+    Button.LEFT: (0, -1),
+    Button.RIGHT: (0, 1),
+}
+
+_BUTTON_DIRECTIONS = {
+    Button.UP: FacingDirection.UP,
+    Button.DOWN: FacingDirection.DOWN,
+    Button.LEFT: FacingDirection.LEFT,
+    Button.RIGHT: FacingDirection.RIGHT,
+}

@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
     from common.schemas import Coords
 
-_SEAFOAM_CURRENT_SLOWED_EVENT_MASK = 0x03
 _OVERWORLD_MAP_ADDRESS = 0xC6E8
 _MAP_BORDER_BLOCKS = 3
 _TILESET_BANK_ADDRESS = 0xD578
@@ -63,7 +62,6 @@ class Map(BaseModel):
     south_connection: MapId | None
     east_connection: MapId | None
     west_connection: MapId | None
-    seafoam_current_slowed: bool
 
     model_config = ConfigDict(frozen=True)
 
@@ -177,10 +175,6 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         south_connection=MapId(mem[0xD3C9]) if mem[0xD3C9] != terminator else None,
         east_connection=MapId(mem[0xD3DF]) if mem[0xD3DF] != terminator else None,
         west_connection=MapId(mem[0xD3D4]) if mem[0xD3D4] != terminator else None,
-        # EVENT_SEAFOAM4_BOULDER1_DOWN_HOLE and EVENT_SEAFOAM4_BOULDER2_DOWN_HOLE.
-        seafoam_current_slowed=(
-            mem[0xD880] & _SEAFOAM_CURRENT_SLOWED_EVENT_MASK == _SEAFOAM_CURRENT_SLOWED_EVENT_MASK
-        ),
     )
 
 
@@ -208,7 +202,6 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
         south_connection=None,
         east_connection=None,
         west_connection=None,
-        seafoam_current_slowed=False,
     )
 
 

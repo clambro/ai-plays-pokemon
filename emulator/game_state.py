@@ -7,7 +7,7 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_SHAPE
-from common.enums import AsciiTile, Badge, BattleType, BlockedDirection, MapId
+from common.enums import AsciiTile, Badge, BattleType, BlockedDirection
 from common.schemas import Coords
 from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.inventory import Inventory, parse_inventory
@@ -184,16 +184,7 @@ class GameState(BaseModel):
         movepool = [m.name for p in self.party for m in p.moves]
         if "CUT" in movepool and Badge.CASCADEBADGE in self.player.badges:
             hm_tiles.append(AsciiTile.CUT_TREE)
-        seafoam_current_blocks_surf = (
-            self.map.id == MapId.SEAFOAM_ISLANDS_B4F
-            and self.player.coords == Coords(row=11, col=7)
-            and not self.map.seafoam_current_slowed
-        )
-        if (
-            "SURF" in movepool
-            and Badge.SOULBADGE in self.player.badges
-            and not seafoam_current_blocks_surf
-        ):
+        if "SURF" in movepool and Badge.SOULBADGE in self.player.badges:
             hm_tiles.append(AsciiTile.WATER)
         return hm_tiles
 
