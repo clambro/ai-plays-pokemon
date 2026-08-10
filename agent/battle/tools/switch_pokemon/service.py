@@ -68,14 +68,14 @@ def _get_available_party_member(
     party_slot: int,
 ) -> Pokemon | None:
     """Resolve a legal party slot against the current battle state."""
-    player_pokemon = game_state.battle.player_pokemon
-    if player_pokemon is None or party_slot >= len(game_state.party):
+    active_party_slot = game_state.battle.active_party_slot
+    if active_party_slot is None or party_slot >= len(game_state.party):
         return None
 
     target = game_state.party[party_slot]
     if target.hp <= 0:
         return None
-    if (target.name, target.species) == (player_pokemon.name, player_pokemon.species):
+    if party_slot == active_party_slot:
         return None
     return target
 
