@@ -162,13 +162,13 @@ class SokobanSolverService:
         *,
         is_boulder: bool,
     ) -> bool:
-        """Check if a position is valid (within bounds, walkable, and not blocked)."""
+        """Check if a destination is valid (within bounds, walkable, and not blocked)."""
         if (
             pos.row < 0
             or pos.row >= len(sokoban_map.tiles)
             or pos.col < 0
             or pos.col >= len(sokoban_map.tiles[0])
-            or self._is_blocked(pos, direction.row, direction.col)
+            or self._is_blocked(pos - direction, direction.row, direction.col)
         ):
             return False
         valid_tiles = (FREE_TILE,)
