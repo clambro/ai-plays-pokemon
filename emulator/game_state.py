@@ -215,22 +215,6 @@ class GameState(BaseModel):
             return None
         return coords - (self.screen.top, self.screen.left)
 
-    def get_collision_tile_id(self, coords: Coords) -> int | None:
-        """Get the ROM collision tile for a visible map coordinate.
-
-        Tile-pair collision checks use the lower-left tile of each 2x2 map cell.
-
-        Args:
-            coords: Coordinates on the current map.
-
-        Returns:
-            The lower-left tile ID, or ``None`` when the coordinate is offscreen.
-        """
-        screen_coords = self.to_screen_coords(coords)
-        if screen_coords is None:
-            return None
-        return self.screen.tiles[screen_coords.row * 2 + 1][screen_coords.col * 2]
-
     def get_ascii_screen(self) -> AsciiScreenWithEntities:
         """Get an ASCII representation of the current screen.
 

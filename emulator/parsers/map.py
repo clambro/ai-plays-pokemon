@@ -10,7 +10,19 @@ from common.enums import MapId
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
 
+    from common.schemas import Coords
+
 _SEAFOAM_CURRENT_SLOWED_EVENT_MASK = 0x03
+_OVERWORLD_MAP_ADDRESS = 0xC6E8
+_MAP_BORDER_BLOCKS = 3
+_TILESET_BANK_ADDRESS = 0xD578
+_TILESET_BLOCKS_POINTER_ADDRESS = 0xD579
+_MAP_BLOCK_WIDTH_ADDRESS = 0xD3B6
+_BLOCK_TILE_WIDTH = 4
+_BLOCK_TILE_COUNT = 16
+_COLLISION_TILE_ROW_OFFSET = 1
+_MAP_CELL_TILE_WIDTH = 2
+_CAVERN_BOULDER_BLOCKED_TILES = frozenset({0x15})
 
 
 class SpinnerTileIds(BaseModel):
@@ -45,6 +57,8 @@ class Map(BaseModel):
     pc_tiles: tuple[int, int, int, int] | None
     walkable_tiles: list[int]
     collision_pairs: list[frozenset[int]]
+    collision_tiles: list[list[int]]
+    boulder_blocked_tiles: frozenset[int]
     north_connection: MapId | None
     south_connection: MapId | None
     east_connection: MapId | None
@@ -52,6 +66,36 @@ class Map(BaseModel):
     seafoam_current_slowed: bool
 
     model_config = ConfigDict(frozen=True)
+
+    def get_collision_tile_id(self, coords: Coords) -> int | None:
+        """Get the collision tile for a coordinate anywhere on the current map."""
+        if (
+            coords.row < 0
+            or coords.row >= self.height
+            or coords.col < 0
+            or coords.col >= self.width
+        ):
+            return None
+        return self.collision_tiles[coords.row][coords.col]
+
+    def is_boulder_push_terrain_legal(
+        self,
+        player_coords: Coords,
+        boulder_destination: Coords,
+    ) -> bool:
+        """Check terrain rules for pushing a boulder two cells from the player."""
+        offset = boulder_destination - player_coords
+        if (abs(offset.row), abs(offset.col)) not in {(0, 2), (2, 0)}:
+            return False
+
+        source_tile = self.get_collision_tile_id(player_coords)
+        destination_tile = self.get_collision_tile_id(boulder_destination)
+        return (
+            source_tile is not None
+            and destination_tile is not None
+            and destination_tile not in self.boulder_blocked_tiles
+            and frozenset((source_tile, destination_tile)) not in self.collision_pairs
+        )
 
 
 def parse_map_state(mem: PyBoyMemoryView) -> Map:
@@ -124,6 +168,10 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         pc_tiles=pc_tiles,
         walkable_tiles=walkable_tiles,
         collision_pairs=collision_pairs,
+        collision_tiles=_parse_collision_tiles(mem, height=height, width=width),
+        boulder_blocked_tiles=(
+            _CAVERN_BOULDER_BLOCKED_TILES if tileset_id == _Tileset.CAVERN else frozenset()
+        ),
         spinner_tiles=_SPINNER_TILE_MAP.get(tileset_id),
         north_connection=MapId(mem[0xD3BE]) if mem[0xD3BE] != terminator else None,
         south_connection=MapId(mem[0xD3C9]) if mem[0xD3C9] != terminator else None,
@@ -154,12 +202,48 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
         pc_tiles=None,
         walkable_tiles=[],
         collision_pairs=[],
+        collision_tiles=[],
+        boulder_blocked_tiles=frozenset(),
         north_connection=None,
         south_connection=None,
         east_connection=None,
         west_connection=None,
         seafoam_current_slowed=False,
     )
+
+
+def _parse_collision_tiles(
+    mem: PyBoyMemoryView,
+    *,
+    height: int,
+    width: int,
+) -> list[list[int]]:
+    """Expand the current map's block grid into collision tiles for every map cell."""
+    tileset_bank = mem[_TILESET_BANK_ADDRESS]
+    blocks_pointer = mem[_TILESET_BLOCKS_POINTER_ADDRESS] | (
+        mem[_TILESET_BLOCKS_POINTER_ADDRESS + 1] << 8
+    )
+    block_stride = mem[_MAP_BLOCK_WIDTH_ADDRESS] + _MAP_BORDER_BLOCKS * 2
+
+    collision_tiles = []
+    for row in range(height):
+        collision_row = []
+        for col in range(width):
+            block_address = (
+                _OVERWORLD_MAP_ADDRESS
+                + (row // 2 + _MAP_BORDER_BLOCKS) * block_stride
+                + col // 2
+                + _MAP_BORDER_BLOCKS
+            )
+            block_id = mem[block_address]
+            tile_row = row % 2 * _MAP_CELL_TILE_WIDTH + _COLLISION_TILE_ROW_OFFSET
+            tile_col = col % 2 * _MAP_CELL_TILE_WIDTH
+            tile_offset = tile_row * _BLOCK_TILE_WIDTH + tile_col
+            collision_row.append(
+                mem[tileset_bank, blocks_pointer + block_id * _BLOCK_TILE_COUNT + tile_offset]
+            )
+        collision_tiles.append(collision_row)
+    return collision_tiles
 
 
 class _Tileset(IntEnum):

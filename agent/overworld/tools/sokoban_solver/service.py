@@ -175,13 +175,7 @@ class SokobanSolverService:
             return False
 
         if is_boulder:
-            source_tile = game_state.get_collision_tile_id(source)
-            destination_tile = game_state.get_collision_tile_id(destination)
-            if source_tile is None or destination_tile is None:
-                # The ROM compares the player's tile with the tile two steps away. Do not plan a
-                # push when those live tile IDs are outside the current observation.
-                return False
-            if frozenset((source_tile, destination_tile)) in game_state.map.collision_pairs:
+            if not game_state.map.is_boulder_push_terrain_legal(source, destination):
                 return False
         else:
             direction = destination - source
