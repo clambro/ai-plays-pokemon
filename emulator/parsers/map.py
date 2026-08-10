@@ -65,8 +65,10 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     tileset_id = _Tileset(mem[0xD3B4])
 
     if tileset_id == _Tileset.OVERWORLD:
+        # These are visual tile pairs within one 2x2 screen cell, not the standing/front tile
+        # transitions in data/tilesets/ledge_tiles.asm.
         ledge_tiles_left = [(0x27, 0x2C), (0x27, 0x39)]
-        ledge_tiles_right = [(0x2C, 0x0D), (0x2C, 0x1D), (0x1D, 0x24)]
+        ledge_tiles_right = [(0x0D, 0x24), (0x1D, 0x24)]
         ledge_tiles_down = [(0x2C, 0x37), (0x39, 0x36), (0x39, 0x37)]
     else:
         ledge_tiles_left = []
