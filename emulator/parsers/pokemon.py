@@ -54,7 +54,7 @@ class BoxPokemon(BaseModel):
 class EnemyPokemon(BaseModel):
     """The state of an enemy pokemon in the battle."""
 
-    species: str
+    name: str
     level: int
     hp_pct: float
     status: str | None
@@ -125,6 +125,7 @@ def parse_enemy_battle_pokemon(mem: PyBoyMemoryView) -> EnemyPokemon | None:
     if species_id == 0:
         return None
 
+    name = get_text_from_byte_array(mem[0xCFD9:0xCFE4])
     hp = (mem[0xCFE5] << 8) | mem[0xCFE6]
     max_hp = (mem[0xCFF3] << 8) | mem[0xCFF4]
 
@@ -135,7 +136,7 @@ def parse_enemy_battle_pokemon(mem: PyBoyMemoryView) -> EnemyPokemon | None:
     status = _INT_TO_STATUS_MAP[status_loc] if status_loc != 0 else None
 
     return EnemyPokemon(
-        species=_INT_TO_SPECIES_MAP[species_id],
+        name=name,
         level=mem[0xCFF2],
         hp_pct=hp_pct,
         status=status,
@@ -427,7 +428,7 @@ _INT_TO_MOVE_MAP = {
     0x19: "MEGA KICK",
     0x1A: "JUMP KICK",
     0x1B: "ROLLING KICK",
-    0x1C: "SAND ATTACK",
+    0x1C: "SAND-ATTACK",
     0x1D: "HEADBUTT",
     0x1E: "HORN ATTACK",
     0x1F: "FURY ATTACK",
@@ -437,7 +438,7 @@ _INT_TO_MOVE_MAP = {
     0x23: "WRAP",
     0x24: "TAKE DOWN",
     0x25: "THRASH",
-    0x26: "DOUBLE EDGE",
+    0x26: "DOUBLE-EDGE",
     0x27: "TAIL WHIP",
     0x28: "POISON STING",
     0x29: "TWINEEDLE",

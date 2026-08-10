@@ -145,7 +145,7 @@ class GameState(BaseModel):
 
         if self.battle.enemy_pokemon:
             out += "<enemy_pokemon>\n"
-            out += f"Name: {self.battle.enemy_pokemon.species}\n"
+            out += f"Name: {self.battle.enemy_pokemon.name}\n"
             out += f"Level: {self.battle.enemy_pokemon.level}\n"
             out += f"HP Percentage: {self.battle.enemy_pokemon.hp_pct:.0f}%\n"
             out += f"Status Ailment: {self.battle.enemy_pokemon.status}\n"
@@ -318,7 +318,7 @@ class GameState(BaseModel):
 
     def _classify_background_block(self, block: np.ndarray) -> AsciiTile:
         """Classify a 2x2 block of background tiles."""
-        if self.map.water_tile and np.isin(block, self.map.water_tile).any():
+        if block[1, 0] in self.map.water_tiles:
             return AsciiTile.WATER
         if ledge_type := self._get_ledge_type(block):
             return ledge_type

@@ -32,7 +32,7 @@ class Map(BaseModel):
     height: int
     width: int
     grass_tile: int | None
-    water_tile: int | None
+    water_tiles: frozenset[int]
     ledge_tiles_left: list[tuple[int, int]]
     ledge_tiles_right: list[tuple[int, int]]
     ledge_tiles_down: list[tuple[int, int]]
@@ -74,7 +74,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         ledge_tiles_down = []
         cut_tree_tiles = None
 
-    water_tile = 0x14 if tileset_id in _WATER_TILESETS else None
+    water_tiles = _get_water_tiles(tileset_id)
     grass_tile = _GRASS_TILE_MAP.get(tileset_id)
     cut_tree_tiles = _CUT_TREE_TILE_MAP.get(tileset_id)
     boulder_hole_tiles = (0x2F, 0x2F, 0x22, 0x22) if tileset_id == _Tileset.CAVERN else None
@@ -102,7 +102,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         height=mem[0xD571],
         width=mem[0xD572],
         grass_tile=grass_tile,
-        water_tile=water_tile,
+        water_tiles=water_tiles,
         ledge_tiles_left=ledge_tiles_left,
         ledge_tiles_right=ledge_tiles_right,
         ledge_tiles_down=ledge_tiles_down,
@@ -162,6 +162,20 @@ _WATER_TILESETS = {
     _Tileset.FACILITY,
     _Tileset.PLATEAU,
 }
+_WATER_TILE = 0x14
+_SHORE_TILES = frozenset({0x48, 0x32})
+_WATER_ONLY_TILESETS = {_Tileset.SHIP_PORT, _Tileset.GYM, _Tileset.DOJO}
+
+
+def _get_water_tiles(tileset_id: _Tileset) -> frozenset[int]:
+    """Return lower-left tiles the ROM permits Surf to enter for a tileset."""
+    if tileset_id not in _WATER_TILESETS:
+        return frozenset()
+    if tileset_id in _WATER_ONLY_TILESETS:
+        return frozenset({_WATER_TILE})
+    return _SHORE_TILES | {_WATER_TILE}
+
+
 _GRASS_TILE_MAP = {
     _Tileset.OVERWORLD: 0x52,
     _Tileset.FOREST: 0x20,

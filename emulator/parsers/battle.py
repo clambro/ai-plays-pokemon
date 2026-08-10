@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 _WILD_BATTLE_FLAG = 1
 _TRAINER_BATTLE_FLAG = 2
+_NORMAL_BATTLE_TYPE_FLAG = 0
 _SAFARI_ZONE_BATTLE_FLAG = 2
 
 
@@ -58,12 +59,14 @@ def parse_battle_state(mem: PyBoyMemoryView) -> Battle:
     # Note that both flags are used to determine the battle type.
     if battle_type_flag == _SAFARI_ZONE_BATTLE_FLAG:
         battle_type = BattleType.SAFARI_ZONE
+    elif battle_type_flag != _NORMAL_BATTLE_TYPE_FLAG:
+        battle_type = BattleType.OTHER
     elif is_battle_flag == _WILD_BATTLE_FLAG:
         battle_type = BattleType.WILD
     elif is_battle_flag == _TRAINER_BATTLE_FLAG:
         battle_type = BattleType.TRAINER
     else:
-        battle_type = BattleType.OTHER
+        battle_type = BattleType.OTHER  # Should be inaccessible, but just in case.
 
     player_pokemon = (
         parse_player_battle_pokemon(mem) if battle_type != BattleType.SAFARI_ZONE else None
