@@ -26,6 +26,7 @@ class Player(BaseModel):
     money: int
     badges: list[Badge]
     level_cap: int
+    has_pokedex: bool
     pokedex_caught: int
     pokedex_seen: int
     play_time_seconds: int
@@ -70,6 +71,7 @@ def parse_player(mem: PyBoyMemoryView) -> Player:
         money=_read_money(mem),
         badges=badges,
         level_cap=_read_level_cap(mem, len(badges)),
+        has_pokedex=bool(mem[0xD74A] & 0x20),  # EVENT_GOT_POKEDEX
         pokedex_caught=pokedex_caught,
         pokedex_seen=pokedex_seen,
         play_time_seconds=play_time_seconds,

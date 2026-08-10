@@ -73,10 +73,11 @@ def build_overworld_toolset(
         )
     if not game_state.player.is_biking:
         tools.append(build_navigation_tool(context, current_map))
-    if len(game_state.party) > 1:
-        tools.append(build_swap_first_pokemon_tool(context))
-    if game_state.inventory.items:
-        tools.append(build_use_item_tool(context))
+    if game_state.player.has_pokedex:
+        if len(game_state.party) > 1:
+            tools.append(build_swap_first_pokemon_tool(context))
+        if game_state.inventory.items:
+            tools.append(build_use_item_tool(context))
     if _is_sokoban_available(current_map, game_state):
         tools.append(build_sokoban_solver_tool(context, current_map))
     max_distance = 2

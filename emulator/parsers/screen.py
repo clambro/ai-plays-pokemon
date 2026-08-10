@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, computed_field
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
-from emulator.parsers.utils import INT_TO_CHAR_MAP
+from emulator.parsers.utils import get_text_from_tile_array
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
@@ -44,7 +44,7 @@ class Screen(BaseModel):
     @property
     def text(self) -> str:
         """The tiles on screen converted to text if possible."""
-        return "\n".join("".join(INT_TO_CHAR_MAP.get(t, " ") for t in row) for row in self.tiles)
+        return "\n".join(get_text_from_tile_array(row) for row in self.tiles)
 
     @computed_field
     @property

@@ -17,6 +17,7 @@ from emulator.parsers.pokemon import BoxPokemon, Pokemon, parse_party_pokemon, p
 from emulator.parsers.screen import Screen, parse_screen
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
+from emulator.parsers.utils import get_text_from_tile_array
 from emulator.parsers.warp import Warp, parse_warps
 from emulator.schemas import AsciiScreenWithEntities, DialogBox
 
@@ -263,11 +264,17 @@ class GameState(BaseModel):
         """Get the text in the dialog box. Return the top and bottom lines."""
         if not self.screen.is_dialog_box_on_screen:
             return None
-        lines = self.screen.text.split("\n")
+
+        top_line = get_text_from_tile_array(self.screen.tiles[14][1:-1])
+        bottom_line = get_text_from_tile_array(self.screen.tiles[16][1:-1])
+        has_cursor = bottom_line.endswith("▼")
+        if has_cursor:
+            bottom_line = bottom_line[:-1]
+
         return DialogBox(
-            top_line=lines[14][1:-2].strip(),
-            bottom_line=lines[16][1:-2].strip(),
-            has_cursor=lines[16][-2] == "▼",
+            top_line=top_line.strip(),
+            bottom_line=bottom_line.strip(),
+            has_cursor=has_cursor,
         )
 
     def _pokemon_list_to_str(self, pokemon_list: list[Pokemon]) -> str:
