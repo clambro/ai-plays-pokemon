@@ -10,8 +10,8 @@ from overworld_map.service import update_overworld_map
 
 if TYPE_CHECKING:
     from common.schemas import Coords
-    from emulator.emulator import YellowLegacyEmulator
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.emulator import Emulator
+    from emulator.game_state import GameState
     from memory.rolling_memory import RollingMemory
     from overworld_map.schemas import OverworldMap
 
@@ -26,7 +26,7 @@ class NavigationService:
     def __init__(
         self,
         iteration: int,
-        emulator: YellowLegacyEmulator,
+        emulator: Emulator,
         current_map: OverworldMap,
         rolling_memory: RollingMemory,
     ) -> None:
@@ -91,7 +91,7 @@ class NavigationService:
 
     def _get_target_error(
         self,
-        game_state: YellowLegacyGameState,
+        game_state: GameState,
         coords: Coords,
         accessible_coords: list[Coords],
     ) -> str | None:
@@ -161,7 +161,7 @@ class NavigationService:
         ):
             await self.emulator.press_button(Button.RIGHT)
 
-    def _get_next_tile(self, button: Button, game_state: YellowLegacyGameState) -> AsciiTile:
+    def _get_next_tile(self, button: Button, game_state: GameState) -> AsciiTile:
         """Get the next tile type that the player will move to."""
         tile_arr = self.current_map.ascii_tiles_ndarray
         player_pos = game_state.player.coords
@@ -173,7 +173,7 @@ class NavigationService:
             return tile_arr[player_pos.row, player_pos.col - 1]
         return tile_arr[player_pos.row, player_pos.col + 1]
 
-    async def _handle_hm_use(self, button: Button, game_state: YellowLegacyGameState) -> None:
+    async def _handle_hm_use(self, button: Button, game_state: GameState) -> None:
         """Handle using an HM to access a tile."""
         if game_state.player.is_surfing:
             await self.emulator.press_button(button)
@@ -202,7 +202,7 @@ class NavigationService:
 
     @staticmethod
     def _get_navigation_result(
-        game_state: YellowLegacyGameState,
+        game_state: GameState,
         prev_pos: Coords,
         starting_map_id: MapId,
         target_pos: Coords,

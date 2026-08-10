@@ -7,7 +7,7 @@ import pytest
 from agent.overworld.tools.swap_first_pokemon.service import (
     SwapFirstPokemonService,
 )
-from emulator.emulator import YellowLegacyEmulator
+from emulator.emulator import Emulator
 from memory.rolling_memory import RollingMemory
 
 
@@ -15,7 +15,7 @@ from memory.rolling_memory import RollingMemory
 async def test_switch_to_pokemon() -> None:
     """Test switching the first Pokemon in the party with the one at position 3."""
     save_file = Path(__file__).parent / "saves" / "save.state"
-    async with YellowLegacyEmulator(
+    async with Emulator(
         save_state_path=save_file,
         mute_sound=True,
         headless=True,

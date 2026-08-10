@@ -22,7 +22,7 @@ from memory.rolling_memory import finalize_iteration
 if TYPE_CHECKING:
     from PIL import Image
 
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
 
 
 def build_text_agent(context: AgentContext) -> Agent[AgentContext, str]:
@@ -87,7 +87,7 @@ async def _prepare_text_agent_input(
 def build_text_agent_input(
     context: AgentContext,
     *,
-    initial_game_state: YellowLegacyGameState,
+    initial_game_state: GameState,
     initial_screenshot: Image.Image,
 ) -> list[str | BinaryContent]:
     """Build the initial multimodal input for a text-agent run."""

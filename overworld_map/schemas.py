@@ -12,7 +12,7 @@ from emulator.schemas import AsciiScreenWithEntities, Sign, Sprite, Warp
 from overworld_map.prompts import LEGEND_MAP, OVERWORLD_MAP_STR_FORMAT
 
 if TYPE_CHECKING:
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
 
 DEFAULT_ENTITY_DESCRIPTION = (
     "No description added yet. Approach and interact with this entity to add a description."
@@ -163,7 +163,7 @@ class OverworldMap(BaseModel):
         """The ascii tiles as a string."""
         return "\n".join("".join(row) for row in self.ascii_tiles)
 
-    def to_string(self, game_state: YellowLegacyGameState) -> str:
+    def to_string(self, game_state: GameState) -> str:
         """Return a string representation of the map."""
         tiles = self.ascii_tiles_str
         legend = self._get_legend()
@@ -209,7 +209,7 @@ class OverworldMap(BaseModel):
         tiles = {AsciiTile(t) for row in self.ascii_tiles for t in row} | _ALWAYS_VISIBLE_TILES
         return "\n".join(f'- "{t}": {LEGEND_MAP[t]}' for t in tiles)
 
-    def _get_facing_tile_notes(self, game_state: YellowLegacyGameState) -> tuple[str, Coords]:
+    def _get_facing_tile_notes(self, game_state: GameState) -> tuple[str, Coords]:
         """Get tile and coords of the tile the player is facing."""
         offset_map = {
             FacingDirection.UP: Coords(row=-1, col=0),

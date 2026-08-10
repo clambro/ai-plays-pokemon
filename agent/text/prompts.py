@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
 
 TEXT_DECISION_PROMPT = """
 There is actionable text on the screen. The screenshot provided above shows the screen at entry. After each tool call, its returned context is the freshest state and supersedes earlier observations. Briefly explain your reasoning in first person as ordinary response text, then use exactly one tool to take the next action. Every response must include one tool call; the agent loop ends automatically when the game exits text mode or enters a battle.
@@ -21,7 +21,7 @@ If you see garbled, nonsensical text in the onscreen text, it is because the gam
 
 def build_text_decision_prompt(
     context: AgentContext,
-    initial_game_state: YellowLegacyGameState,
+    initial_game_state: GameState,
 ) -> str:
     """Build the prompt for the initial actionable text screen."""
     return TEXT_DECISION_PROMPT.format(

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from PIL import Image
 
     from common.enums import BattleType
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
 
 
 def build_battle_agent(
@@ -76,7 +76,7 @@ async def run_battle(context: AgentContext) -> None:
 def build_battle_agent_input(
     context: AgentContext,
     *,
-    initial_game_state: YellowLegacyGameState,
+    initial_game_state: GameState,
     initial_screenshot: Image.Image,
 ) -> list[str | BinaryContent]:
     """Build the initial multimodal input for a battle-agent run."""

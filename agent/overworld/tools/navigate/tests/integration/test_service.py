@@ -8,7 +8,7 @@ import pytest
 from agent.overworld.tools.navigate.service import NavigationService
 from common.enums import FacingDirection
 from common.schemas import Coords
-from emulator.emulator import YellowLegacyEmulator
+from emulator.emulator import Emulator
 from memory.rolling_memory import RollingMemory
 from overworld_map.service import prepare_overworld_map
 
@@ -17,7 +17,7 @@ from overworld_map.service import prepare_overworld_map
 async def test_navigate_through_pikachu() -> None:
     """Test navigating through Pikachu."""
     save_file = Path(__file__).parent / "saves" / "viridian.state"
-    async with YellowLegacyEmulator(
+    async with Emulator(
         save_state_path=save_file,
         mute_sound=True,
         headless=True,
@@ -41,7 +41,7 @@ async def test_navigate_through_pikachu() -> None:
 async def test_navigate_through_cut_tree() -> None:
     """Test rotating towards and navigating through a cut tree."""
     save_file = Path(__file__).parent / "saves" / "cut_tree.state"
-    async with YellowLegacyEmulator(
+    async with Emulator(
         save_state_path=save_file,
         mute_sound=True,
         headless=True,
@@ -61,7 +61,7 @@ async def test_navigate_through_cut_tree() -> None:
 async def test_navigate_through_spinners() -> None:
     """Test navigating through spinners."""
     save_file = Path(__file__).parent / "saves" / "rocket_spinners.state"
-    async with YellowLegacyEmulator(
+    async with Emulator(
         save_state_path=save_file,
         mute_sound=True,
         headless=True,
@@ -81,7 +81,7 @@ async def test_navigate_through_spinners() -> None:
 async def test_navigate_through_water() -> None:
     """Test navigating through water."""
     save_file = Path(__file__).parent / "saves" / "celadon_water.state"
-    async with YellowLegacyEmulator(
+    async with Emulator(
         save_state_path=save_file,
         mute_sound=True,
         headless=True,
@@ -97,7 +97,7 @@ async def test_navigate_through_water() -> None:
         assert game_state.player.coords == Coords(row=16, col=21)
 
 
-async def _get_nav_service(emulator: YellowLegacyEmulator) -> NavigationService:
+async def _get_nav_service(emulator: Emulator) -> NavigationService:
     """Helper function to get a navigation service with the proper mocks."""
     game_state = await emulator.get_game_state()
     with (

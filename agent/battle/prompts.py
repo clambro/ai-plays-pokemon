@@ -6,7 +6,7 @@ from common.enums import BattleType, PokeballItem
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
 
 BATTLE_DECISION_PROMPT = """
 You are in a Pokemon battle. The screenshot provided above shows the battle at entry. After each tool call, its returned context is the freshest state and supersedes earlier observations. Briefly explain your reasoning in first person as ordinary response text, then use exactly one tool to take the next battle action. Every response must include one tool call; the agent loop ends automatically when the game exits battle mode.
@@ -27,7 +27,7 @@ Note: If you keep seeing the text "There's no will to fight" over and over again
 
 def build_battle_decision_prompt(
     context: AgentContext,
-    initial_game_state: YellowLegacyGameState,
+    initial_game_state: GameState,
 ) -> str:
     """Build the prompt for the battle-entry observation."""
     state = "\n\n".join(
@@ -46,7 +46,7 @@ def build_battle_decision_prompt(
 
 
 def build_battle_tool_result(
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
     *,
     action_result: str,
     dialog: str = "",

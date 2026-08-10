@@ -45,7 +45,7 @@ if TYPE_CHECKING:
     from pydantic_ai import Tool
 
     from agent.context import AgentContext
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
     from overworld_map.schemas import OverworldMap
 
 
@@ -53,7 +53,7 @@ def build_overworld_toolset(
     context: AgentContext,
     current_map: OverworldMap,
     available_long_term_memory_titles: list[str],
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
 ) -> FunctionToolset[AgentContext]:
     """Build the fixed toolset available for the current overworld state."""
     tools: list[Tool[AgentContext]] = [
@@ -99,7 +99,7 @@ def build_overworld_toolset(
 
 def _is_sokoban_available(
     current_map: OverworldMap,
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
 ) -> bool:
     """Check whether the current map contains a usable Sokoban puzzle."""
     if not game_state.can_use_strength:

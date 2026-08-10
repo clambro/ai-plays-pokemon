@@ -10,8 +10,8 @@ from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, S
 from common.schemas import Coords
 
 if TYPE_CHECKING:
-    from emulator.emulator import YellowLegacyEmulator
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.emulator import Emulator
+    from emulator.game_state import GameState
     from memory.rolling_memory import RollingMemory
     from overworld_map.schemas import OverworldMap
 
@@ -25,7 +25,7 @@ class SokobanSolverService:
 
     def __init__(
         self,
-        emulator: YellowLegacyEmulator,
+        emulator: Emulator,
         current_map: OverworldMap,
         rolling_memory: RollingMemory,
     ) -> None:
@@ -229,7 +229,7 @@ class SokobanSolverService:
     async def _face_next_pos(
         self,
         button: Button,
-        game_state: YellowLegacyGameState,
+        game_state: GameState,
     ) -> None:
         """Face the next position."""
         if (

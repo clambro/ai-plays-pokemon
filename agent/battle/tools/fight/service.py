@@ -8,13 +8,13 @@ from common.enums import Button
 
 if TYPE_CHECKING:
     from common.schemas import Coords
-    from emulator.emulator import YellowLegacyEmulator
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.emulator import Emulator
+    from emulator.game_state import GameState
 
 _STRUGGLE = "STRUGGLE"
 
 
-async def fight(*, emulator: YellowLegacyEmulator, move_slot: int) -> str:
+async def fight(*, emulator: Emulator, move_slot: int) -> str:
     """Select a move from the battle menu.
 
     Args:
@@ -51,7 +51,7 @@ async def fight(*, emulator: YellowLegacyEmulator, move_slot: int) -> str:
     return f"Attempted to use {move_name}."
 
 
-def _get_available_move_name(game_state: YellowLegacyGameState, move_slot: int) -> str | None:
+def _get_available_move_name(game_state: GameState, move_slot: int) -> str | None:
     """Resolve a legal move slot against the current battle state."""
     player_pokemon = game_state.battle.player_pokemon
     if player_pokemon is None:
@@ -67,7 +67,7 @@ def _get_available_move_name(game_state: YellowLegacyGameState, move_slot: int) 
     return next((name for slot, name in available_moves if slot == move_slot), None)
 
 
-async def _open_move_menu(emulator: YellowLegacyEmulator, cursor_pos: Coords) -> None:
+async def _open_move_menu(emulator: Emulator, cursor_pos: Coords) -> None:
     """Move to FIGHT and open the move menu."""
     if cursor_pos.col == 1:
         await emulator.press_button(Button.LEFT)
@@ -77,7 +77,7 @@ async def _open_move_menu(emulator: YellowLegacyEmulator, cursor_pos: Coords) ->
 
 
 async def _select_move(
-    emulator: YellowLegacyEmulator,
+    emulator: Emulator,
     cursor_index: int,
     move_slot: int,
 ) -> None:
@@ -92,7 +92,7 @@ async def _select_move(
     await emulator.press_button(Button.A, wait_for_animation=False)
 
 
-def _get_move_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:
+def _get_move_menu_cursor_index(game_state: GameState) -> int | None:
     """Get the cursor index in the move menu."""
     text = game_state.screen.text
     # A disabled highlighted move replaces the normal TYPE/PP panel with "Disabled".

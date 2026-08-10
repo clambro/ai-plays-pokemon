@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
 
 
-class YellowLegacyGameState(BaseModel):
+class GameState(BaseModel):
     """A snapshot of the Pokemon Yellow Legacy game state."""
 
     player: Player

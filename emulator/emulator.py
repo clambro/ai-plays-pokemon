@@ -11,7 +11,7 @@ from loguru import logger
 from PIL import Image
 
 from common.constants import DEFAULT_ROM_PATH
-from emulator.game_state import YellowLegacyGameState
+from emulator.game_state import GameState
 from emulator.pyboy_worker import PyBoyWorker
 
 if TYPE_CHECKING:
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from common.enums import Button
 
 
-class YellowLegacyEmulator(AbstractAsyncContextManager):
+class Emulator(AbstractAsyncContextManager):
     """Control Pokémon Yellow Legacy through a thread-owned PyBoy instance.
 
     The public API owns Pokémon-specific behavior. A private worker owns PyBoy and executes each
@@ -83,15 +83,13 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         if exc_type is None and shutdown_error is not None:
             raise shutdown_error
 
-    async def get_game_state(self) -> YellowLegacyGameState:
+    async def get_game_state(self) -> GameState:
         """Get the current game state."""
-        return await self._worker.execute(
-            lambda pyboy: YellowLegacyGameState.from_memory(pyboy.memory)
-        )
+        return await self._worker.execute(lambda pyboy: GameState.from_memory(pyboy.memory))
 
     async def get_game_state_with_screenshot(
         self,
-    ) -> tuple[YellowLegacyGameState, Image.Image]:
+    ) -> tuple[GameState, Image.Image]:
         """Capture the current game state and screen image together.
 
         Returns:
@@ -105,8 +103,8 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
 
         def _capture_game_state_with_screenshot(
             pyboy: PyBoy,
-        ) -> tuple[YellowLegacyGameState, Image.Image]:
-            game_state = YellowLegacyGameState.from_memory(pyboy.memory)
+        ) -> tuple[GameState, Image.Image]:
+            game_state = GameState.from_memory(pyboy.memory)
             screenshot = deepcopy(pyboy.screen.image)
             if not isinstance(screenshot, Image.Image):
                 raise TypeError("No screenshot available")
@@ -139,8 +137,8 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
 
     async def wait_for_animation_to_finish(
         self,
-        on_game_state: Callable[[YellowLegacyGameState], None] | None = None,
-    ) -> YellowLegacyGameState:
+        on_game_state: Callable[[GameState], None] | None = None,
+    ) -> GameState:
         """Wait until all ongoing animations have finished.
 
         The various hyperparameters here are a bit wishy-washy. I determined emperically that they

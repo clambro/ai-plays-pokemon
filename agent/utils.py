@@ -22,8 +22,8 @@ if TYPE_CHECKING:
     from pydantic_ai.messages import ToolCallPart
     from pydantic_ai.models import ModelRequestContext
 
-    from emulator.emulator import YellowLegacyEmulator
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.emulator import Emulator
+    from emulator.game_state import GameState
     from emulator.schemas import DialogBox
 
 
@@ -38,7 +38,7 @@ def build_screenshot_content(screenshot: Image.Image) -> BinaryContent:
     )
 
 
-def is_battle_handler_state(game_state: YellowLegacyGameState) -> bool:
+def is_battle_handler_state(game_state: GameState) -> bool:
     """Determine whether the game state belongs to the battle handler."""
     # The nickname screen after catching a Pokemon is considered a battle state by the game,
     # but we need to route it to the text handler instead.
@@ -84,10 +84,10 @@ AGENT_HOOKS = Hooks[AgentContext](
 class DialogReader:
     """Capture complete dialog pages while advancing an emulator."""
 
-    emulator: YellowLegacyEmulator
+    emulator: Emulator
     _pages: list[DialogBox] = field(default_factory=list, init=False)
 
-    def observe(self, game_state: YellowLegacyGameState) -> None:
+    def observe(self, game_state: GameState) -> None:
         """Capture the most complete snapshot of the visible dialog page."""
         dialog_box = game_state.get_dialog_box()
         if not dialog_box or (not dialog_box.top_line and not dialog_box.bottom_line):
@@ -115,19 +115,19 @@ class DialogReader:
         else:
             self._pages.append(dialog_box)
 
-    async def observe_current_state(self) -> YellowLegacyGameState:
+    async def observe_current_state(self) -> GameState:
         """Capture and return the emulator's current state."""
         game_state = await self.emulator.get_game_state()
         self.observe(game_state)
         return game_state
 
-    async def wait_for_animation(self) -> YellowLegacyGameState:
+    async def wait_for_animation(self) -> GameState:
         """Capture transient dialog while waiting for the current animation."""
         return await self.emulator.wait_for_animation_to_finish(
             on_game_state=self.observe,
         )
 
-    async def advance(self) -> YellowLegacyGameState:
+    async def advance(self) -> GameState:
         """Press A and capture dialog while the resulting animation runs."""
         await self.emulator.press_button(Button.A, wait_for_animation=False)
         return await self.wait_for_animation()

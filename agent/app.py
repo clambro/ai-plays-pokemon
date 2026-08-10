@@ -11,12 +11,12 @@ from agent.utils import is_battle_handler_state
 from llm.usage import bind_llm_usage_updater
 
 if TYPE_CHECKING:
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
 
 type AgentHandler = Callable[[AgentContext], Awaitable[None]]
 
 
-def select_agent_handler(game_state: YellowLegacyGameState) -> AgentHandler:
+def select_agent_handler(game_state: GameState) -> AgentHandler:
     """Select the gameplay handler responsible for the observed state."""
     if is_battle_handler_state(game_state):
         return run_battle

@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from agent.overworld.tools.use_item.service import UseItemService
-from emulator.emulator import YellowLegacyEmulator
+from emulator.emulator import Emulator
 from memory.rolling_memory import RollingMemory
 
 
@@ -13,7 +13,7 @@ from memory.rolling_memory import RollingMemory
 async def test_use_item() -> None:
     """Test using an item from the inventory."""
     save_file = Path(__file__).parent / "saves" / "save.state"
-    async with YellowLegacyEmulator(
+    async with Emulator(
         save_state_path=save_file,
         mute_sound=True,
         headless=True,

@@ -5,14 +5,14 @@ from pathlib import Path
 import pytest
 
 from agent.battle.tools.fight.service import fight
-from emulator.emulator import YellowLegacyEmulator
+from emulator.emulator import Emulator
 
 
 @pytest.mark.integration
 async def test_use_move() -> None:
     """Test using the move with index 2 in battle."""
     save_file = Path(__file__).parent / "saves" / "save.state"
-    async with YellowLegacyEmulator(
+    async with Emulator(
         save_state_path=save_file,
         mute_sound=True,
         headless=True,

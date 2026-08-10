@@ -7,14 +7,14 @@ import pytest
 
 from agent.battle.tools.throw_ball.service import throw_ball
 from common.enums import PokeballItem
-from emulator.emulator import YellowLegacyEmulator
+from emulator.emulator import Emulator
 
 
 @pytest.mark.integration
 async def test_throw_pokeball() -> None:
     """Test throwing a Poke Ball in battle."""
     save_file = Path(__file__).parent / "saves" / "save.state"
-    async with YellowLegacyEmulator(
+    async with Emulator(
         save_state_path=save_file,
         mute_sound=True,
         headless=True,
