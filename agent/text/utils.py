@@ -5,7 +5,12 @@ from typing import TYPE_CHECKING
 
 from pydantic_ai import BinaryContent
 
-from agent.utils import DialogReader, build_screenshot_content, is_battle_handler_state
+from agent.utils import (
+    DialogReader,
+    build_screenshot_content,
+    is_battle_handler_state,
+    is_text_handler_state,
+)
 from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
@@ -17,7 +22,7 @@ type TextToolResult = list[str | BinaryContent]
 
 def is_text_interaction_state(game_state: GameState) -> bool:
     """Check whether the current state still belongs to the text handler."""
-    return game_state.is_text_on_screen() and not is_battle_handler_state(game_state)
+    return is_text_handler_state(game_state)
 
 
 def is_plain_text_dialog(game_state: GameState) -> bool:

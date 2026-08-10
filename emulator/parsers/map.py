@@ -65,7 +65,14 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     Returns:
         An immutable snapshot of the current map and its traversal metadata.
     """
-    tileset_id = _Tileset(mem[0xD3B4])
+    height = mem[0xD571]
+    width = mem[0xD572]
+    try:
+        tileset_id = _Tileset(mem[0xD3B4])
+    except ValueError:
+        return _unavailable_map(mem)  # Usually means you're on a title screen or between maps.
+    if height == 0 or width == 0:
+        return _unavailable_map(mem)  # Ditto here.
 
     if tileset_id == _Tileset.OVERWORLD:
         # These are visual tile pairs within one 2x2 screen cell, not the standing/front tile
@@ -104,8 +111,8 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
 
     return Map(
         id=MapId(mem[0xD3AB]),
-        height=mem[0xD571],
-        width=mem[0xD572],
+        height=height,
+        width=width,
         grass_tile=grass_tile,
         water_tiles=water_tiles,
         ledge_tiles_left=ledge_tiles_left,
@@ -126,6 +133,32 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         seafoam_current_slowed=(
             mem[0xD880] & _SEAFOAM_CURRENT_SLOWED_EVENT_MASK == _SEAFOAM_CURRENT_SLOWED_EVENT_MASK
         ),
+    )
+
+
+def _unavailable_map(mem: PyBoyMemoryView) -> Map:
+    """Represent startup screens with zero dimensions or non-map data in the tileset byte."""
+    return Map(
+        id=MapId(mem[0xD3AB]),
+        height=0,
+        width=0,
+        grass_tile=None,
+        water_tiles=frozenset(),
+        ledge_tiles_left=[],
+        ledge_tiles_right=[],
+        ledge_tiles_down=[],
+        spinner_tiles=None,
+        cut_tree_tiles=None,
+        boulder_hole_tiles=None,
+        pressure_plate_tiles=None,
+        pc_tiles=None,
+        walkable_tiles=[],
+        collision_pairs=[],
+        north_connection=None,
+        south_connection=None,
+        east_connection=None,
+        west_connection=None,
+        seafoam_current_slowed=False,
     )
 
 
