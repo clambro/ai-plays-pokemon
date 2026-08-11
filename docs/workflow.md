@@ -136,7 +136,7 @@ These tools let the agent persist useful descriptions of nearby map entities aft
 
 ### Create, Update, and Delete Goals
 
-Three tools give the overworld agent distinct one-goal-at-a-time lifecycle operations. Creation carries the detailed priority, SMART-goal, distinctness, relevance, and evidence guidance for choosing a new objective. Updating revises the text or priority of a goal that is still being pursued. Deleting covers both completing a goal and deciding not to chase it anymore. Every accepted change uses the existing goal collection behavior, updates authoritative live goal state immediately, and returns the complete revised list to the active conversation without copying it into rolling memory. Goal management is discretionary rather than scheduled: when the current goals remain appropriate, the agent uses another tool instead.
+The create, update, and delete tools let the agent maintain one primary goal and up to five other goals. Goal management is discretionary: when the current goals remain appropriate, the agent uses another tool instead.
 
 ### Memory and Display Updates
 

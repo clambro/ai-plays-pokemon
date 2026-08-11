@@ -15,9 +15,6 @@ from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
 )
-from memory.goals import (  # noqa: TC001  # Pydantic AI evaluates annotations at runtime.
-    GoalPriority,
-)
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
@@ -29,20 +26,19 @@ def build_update_goal_tool(context: AgentContext) -> Tool[AgentContext]:
     async def update_goal(
         index: Annotated[int, Field(ge=0)],
         goal: Annotated[str, Field(min_length=1)],
-        priority: GoalPriority,
     ) -> OverworldToolResult:
         """Revise one existing goal after acquiring new information.
 
-        Use this tool to edit a goal's text, priority, or both while continuing
-        to pursue the same objective. Goals are referred to by the indices in
-        the current goal list. Supply the complete replacement goal, including
-        all information that should remain after the update.
+        Use this tool to replace a goal's text. Goals are referred to by the
+        indices in the current goal list. Supply the complete replacement goal,
+        including all information that should remain after the update. Updating
+        a goal cannot change whether it is primary; delete it and create a
+        replacement to change that designation.
 
         Do not use this tool for a goal that has been completed or that you no
-        longer want to pursue; delete that goal instead. Update primary goals
-        sparingly. If a primary goal changes, you must also update or delete
-        secondary goals that are no longer relevant, because every secondary
-        goal must directly support the current primary goal.
+        longer want to pursue; delete that goal instead. Update the primary
+        goal sparingly. You must have exactly one primary goal and up to five
+        other goals.
 
         The revised goal must remain specific, measurable, achievable,
         relevant to becoming Champion, and time-bound when appropriate. It
@@ -53,8 +49,6 @@ def build_update_goal_tool(context: AgentContext) -> Tool[AgentContext]:
         Args:
             index: Zero-based index of the existing goal to revise.
             goal: Complete replacement text for the goal.
-            priority: Complete replacement priority: Primary, Secondary, or
-                Tertiary.
 
         Returns:
             Fresh screenshot and either the complete revised goal list or a
@@ -65,7 +59,6 @@ def build_update_goal_tool(context: AgentContext) -> Tool[AgentContext]:
                 goals=context.state.goals,
                 index=index,
                 goal=goal,
-                priority=priority,
             )
         except GoalNotFoundError as error:
             result = str(error)

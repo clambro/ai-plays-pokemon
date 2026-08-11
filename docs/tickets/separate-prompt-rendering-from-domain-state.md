@@ -137,7 +137,7 @@ Retain state-derived behavior that is used independently of prompting:
   `ascii_tiles_str`, which are also used by map persistence and navigation;
 - entity construction such as `from_sprite()`, `from_sign()`, and `from_warp()`;
 - memory mutation, ordering, lifecycle, and compaction behavior; and
-- goal mutation and priority ordering.
+- goal mutation and primary/other ordering.
 
 Do not replace the removed methods with generic names such as `render()`,
 `to_xml()`, or `to_prompt()` on the same records. That would preserve the same

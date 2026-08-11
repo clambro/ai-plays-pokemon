@@ -6,14 +6,14 @@ from pydantic import Field
 from pydantic_ai import Tool
 
 from agent.overworld.tools.create_goal.service import (
+    PrimaryGoalAlreadyExistsError,
+)
+from agent.overworld.tools.create_goal.service import (
     create_goal as create_goal_service,
 )
 from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
-)
-from memory.goals import (  # noqa: TC001  # Pydantic AI evaluates annotations at runtime.
-    GoalPriority,
 )
 
 if TYPE_CHECKING:
@@ -25,27 +25,24 @@ def build_create_goal_tool(context: AgentContext) -> Tool[AgentContext]:
 
     async def create_goal(
         goal: Annotated[str, Field(min_length=1)],
-        priority: GoalPriority,
+        *,
+        is_primary: bool,
     ) -> OverworldToolResult:
         """Create one new goal worth pursuing.
 
-        There are three priority levels for goals:
+        Set ``is_primary`` to true only for your one primary goal. The primary
+        goal represents a major milestone such as a gym battle or another key
+        objective required to progress through the game. You must have exactly
+        one primary goal at a time and should change it sparingly. You cannot
+        create a new primary goal while one exists; update or delete the
+        current primary goal first.
 
-        - Primary: These represent major milestones like gym battles or other
-          key objectives required to progress the game. You must have exactly
-          one primary goal at a time, and you should change it sparingly.
-        - Secondary: These directly support the primary goal. Examples include
-          finding a specific item required for the primary goal, or navigating
-          to a specific map to get to the primary goal. You can have up to
-          three secondary goals at once. There is no minimum requirement.
-          Achieving a secondary goal should be a meaningful step towards
-          achieving the primary goal. Secondary goals must support the current
-          primary goal.
-        - Tertiary: These are not related to the primary goal, but could still
-          be important to pursue. Examples include catching Pokemon, training
-          your Pokemon, healing your Pokemon, buying items, or exploring an
-          area. You can have up to three tertiary goals at once. There is no
-          minimum requirement.
+        Set ``is_primary`` to false for other goals. Other goals may directly
+        support the primary goal, such as finding a required item or navigating
+        to the primary objective, or may be independently useful, such as
+        catching or training Pokemon, healing, buying items, or exploring an
+        area. You can have up to five other goals at once. There is no minimum
+        requirement.
 
         A good goal must be SMART:
 
@@ -77,30 +74,33 @@ def build_create_goal_tool(context: AgentContext) -> Tool[AgentContext]:
             heading to [next location]"
 
         New goals must be distinct from existing goals. Do not create a goal
-        that is essentially the same as another goal, even at a different
-        priority. Base new goals on your experience in the game as recorded in
-        memory or player information, not on prior Pokemon knowledge, which is
-        prone to error.
+        that is essentially the same as another goal. Base new goals on your
+        experience in the game as recorded in memory or player information,
+        not on prior Pokemon knowledge, which is prone to error.
 
         Create a goal only when recent events warrant it and the goal is not
-        already in your list. You must have at least one goal at any given
-        time. Try to have no more than five active goals at once.
+        already in your list. You must have a primary goal at any given time,
+        but do not create other goals merely to fill the available slots.
 
         Args:
             goal: Complete text of the specific new goal, without an index.
-            priority: Importance of the new goal: Primary, Secondary, or
-                Tertiary.
+            is_primary: Whether this is the one primary goal rather than an
+                other goal.
 
         Returns:
             Fresh screenshot and the complete revised goal list.
         """
-        goals = create_goal_service(
-            goals=context.state.goals,
-            goal=goal,
-            priority=priority,
-        )
-        context.state.goals = goals
-        result = f"Created goal:\n{goals}"
+        try:
+            goals = create_goal_service(
+                goals=context.state.goals,
+                goal=goal,
+                is_primary=is_primary,
+            )
+        except PrimaryGoalAlreadyExistsError as error:
+            result = str(error)
+        else:
+            context.state.goals = goals
+            result = f"Created goal:\n{goals}"
         return await complete_overworld_action(context, result)
 
     return Tool(create_goal, require_parameter_descriptions=True)
