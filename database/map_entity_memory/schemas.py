@@ -11,17 +11,6 @@ class MapEntityMemoryCreate(BaseModel):
     map_id: MapId
     entity_id: int
     entity_type: MapEntityType
-    iteration: int
-
-
-class MapEntityMemoryUpdate(BaseModel):
-    """Update model for a map entity memory."""
-
-    map_id: MapId
-    entity_id: int
-    entity_type: MapEntityType
-    description: str
-    iteration: int
 
 
 class MapEntityMemoryRead(BaseModel):
@@ -30,7 +19,6 @@ class MapEntityMemoryRead(BaseModel):
     map_id: MapId
     entity_id: int
     entity_type: MapEntityType
-    description: str | None
 
     model_config = ConfigDict(from_attributes=True)
 

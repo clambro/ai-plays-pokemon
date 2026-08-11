@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 
-from memory.goals import Goal, GoalPriority, Goals
+from memory.goals import Goal, Goals
 
 
 class GoalNotFoundError(ValueError):
@@ -14,7 +14,6 @@ def update_goal(
     goals: Goals,
     index: int,
     goal: str,
-    priority: GoalPriority,
 ) -> Goals:
     """Replace one existing goal through the existing goal behavior.
 
@@ -22,7 +21,6 @@ def update_goal(
         goals: Current live goal collection.
         index: Zero-based index of the goal to replace.
         goal: Complete revised goal text.
-        priority: Priority assigned to the revised goal.
 
     Returns:
         A revised goal collection containing the replacement.
@@ -36,6 +34,7 @@ def update_goal(
         )
 
     updated_goals = deepcopy(goals)
+    is_primary = updated_goals.goals[index].is_primary
     updated_goals.remove(index)
-    updated_goals.append(Goal(goal=goal, priority=priority))
+    updated_goals.append(Goal(goal=goal, is_primary=is_primary))
     return updated_goals

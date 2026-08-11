@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from memory.goals import Goals
-from memory.long_term_memory import LongTermMemory
 from memory.rolling_memory.schemas import RollingMemory
 
 if TYPE_CHECKING:
@@ -19,7 +18,6 @@ class AgentState(BaseModel):
     folder: Path
     iteration: int = 0
     rolling_memory: RollingMemory = Field(default_factory=RollingMemory, exclude=True)
-    long_term_memory: LongTermMemory = Field(default_factory=LongTermMemory)
     goals: Goals = Field(default_factory=Goals)
     emulator_save_state: str | None = None
     total_tokens: int = 0
@@ -30,7 +28,6 @@ class AgentState(BaseModel):
         return "\n\n".join(
             (
                 str(self.rolling_memory),
-                str(self.long_term_memory),
                 str(self.goals),
                 game_state.player_info,
             ),

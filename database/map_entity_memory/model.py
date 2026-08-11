@@ -1,6 +1,6 @@
 """SQLAlchemy model for map entity memory."""
 
-from sqlalchemy import Enum, Integer, String
+from sqlalchemy import Enum, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from common.enums import MapEntityType, MapId
@@ -19,6 +19,3 @@ class MapEntityMemoryDBModel(SQLAlchemyBase):
         nullable=False,
         primary_key=True,
     )
-    description: Mapped[str | None] = mapped_column(String, nullable=True)
-    create_iteration: Mapped[int] = mapped_column(Integer, nullable=False)
-    update_iteration: Mapped[int] = mapped_column(Integer, nullable=False)

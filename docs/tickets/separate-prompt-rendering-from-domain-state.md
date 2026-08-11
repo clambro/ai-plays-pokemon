@@ -19,15 +19,14 @@ packages:
   `player_info`, `party_info`, `pc_info`, `battle_info`, and
   `_pokemon_list_to_str()`.
 - `overworld_map/schemas.py` renders the complete explored-map prompt, entity
-  descriptions, warp instructions, legends, connection notes, and adjacent-tile
+  details, warp instructions, legends, connection notes, and adjacent-tile
   guidance.
 - `overworld_map/prompts.py` contains agent instructions even though the
   `overworld_map` package otherwise owns explored-map state and persistence.
-- `agent/state.py` knows how rolling memory, long-term memory, goals, and player
-  state are assembled for a prompt.
-- `memory/long_term_memory.py`, `memory/goals.py`, and
-  `memory/rolling_memory/schemas.py` use `__str__` to emit agent-facing prose and
-  XML.
+- `agent/state.py` knows how rolling memory, goals, and player state are
+  assembled for a prompt.
+- `memory/goals.py` and `memory/rolling_memory/schemas.py` use `__str__` to emit
+  agent-facing prose and XML.
 
 These methods do more than provide ordinary diagnostic string representations.
 They decide what the model sees, explain how it should interpret the data, and
@@ -50,7 +49,6 @@ overworld agents. It should own functions equivalent to:
 - `format_pc_info(game_state)`;
 - `format_battle_info(game_state)`;
 - `format_rolling_memory(memory)`;
-- `format_long_term_memory(memory)`;
 - `format_goals(goals)`; and
 - `format_agent_state(state, game_state)`, which joins the shared memory, goals,
   and player sections currently assembled in `AgentState.to_prompt_string()`.
@@ -74,13 +72,11 @@ a second implementation of those sections.
 ### Overworld map and entities
 
 Add `agent/overworld/formatting.py` for model-facing map and entity rendering.
-This separate module is justified because its public formatters are consumed by
-both `agent/overworld/prompts.py` and the sprite/sign tool descriptions. It
-should own:
+This separate module keeps the substantial overworld presentation policy out of
+the explored-map domain records. It should own:
 
 - the current `OVERWORLD_MAP_STR_FORMAT` template;
 - `LEGEND_MAP` and the always-visible legend set;
-- the default unknown-entity description;
 - `format_overworld_map(current_map, game_state)`;
 - `format_overworld_sprite(sprite, map_id)`;
 - `format_overworld_sign(sign, map_id)`;
@@ -91,10 +87,12 @@ should own:
 Move the contents of `overworld_map/prompts.py` into this agent-owned module and
 delete the old file. Update the link in `docs/philosophy.md` to the new owner.
 
-The sprite and sign update-tool descriptions currently call entity
-`to_string()` methods. They should call the corresponding formatter so that the
-initial overworld prompt and the tool schemas continue to describe entities in
-the same way.
+Revisit `OverworldSprite` and `OverworldSign` as part of this move. After entity
+descriptions were removed, these subclasses remain only to construct copies of
+the parsed `Sprite` and `Sign` models and stringify them for the overworld
+prompt. Moving that formatting into the agent layer may eliminate their last
+reason to exist; if so, store the parser models directly on `OverworldMap`
+instead of preserving presentation-only domain types.
 
 ### Rolling-memory compaction
 
@@ -127,8 +125,8 @@ Remove these presentation APIs:
 - `OverworldWarp.description`;
 - `OverworldWarp.to_string()`;
 - `OverworldMap.to_string()` and its prompt-note helpers;
-- agent-facing `__str__` methods on `Goal`, `Goals`, `LongTermMemory`, and the
-  rolling-memory records.
+- agent-facing `__str__` methods on `Goal`, `Goals`, and the rolling-memory
+  records.
 
 Retain state-derived behavior that is used independently of prompting:
 
@@ -139,7 +137,7 @@ Retain state-derived behavior that is used independently of prompting:
   `ascii_tiles_str`, which are also used by map persistence and navigation;
 - entity construction such as `from_sprite()`, `from_sign()`, and `from_warp()`;
 - memory mutation, ordering, lifecycle, and compaction behavior; and
-- goal mutation and priority ordering.
+- goal mutation and primary/other ordering.
 
 Do not replace the removed methods with generic names such as `render()`,
 `to_xml()`, or `to_prompt()` on the same records. That would preserve the same
@@ -149,16 +147,16 @@ ownership problem under different names.
 
 1. Add the shared functions in `agent/prompts.py` and switch the text, battle,
    and overworld initial prompts plus battle tool results to them.
-2. Add `agent/overworld/formatting.py`, switch the initial overworld prompt and
-   sprite/sign tool descriptions to it, then remove map/entity presentation
-   methods and `overworld_map/prompts.py`.
-3. Move agent-facing goal and memory rendering into `agent/prompts.py`. Move
+2. Add `agent/overworld/formatting.py`, switch the initial overworld prompt to
+   it, then remove map/entity presentation methods and
+   `overworld_map/prompts.py`.
+3. Move agent-facing goal and rolling-memory rendering into `agent/prompts.py`. Move
    compaction-source formatting into `memory/rolling_memory/prompts.py`, then
    remove the prompt-oriented `__str__` methods.
 4. Remove `AgentState.to_prompt_string()` and all now-unused presentation
    imports and constants from the domain modules.
-5. Update documentation references and verify that the constructed prompts and
-   tool descriptions have not changed.
+5. Update documentation references and verify that the constructed prompts
+   have not changed.
 
 Keep each stage behavior-preserving so failures can be attributed to one
 boundary move rather than a simultaneous prompt rewrite.
@@ -174,7 +172,7 @@ Before removing the old methods, compare representative old and new outputs for:
 - party members at and below the level cap, dual-typed Pokemon, empty inventory,
   and populated PC storage;
 - rolling memory containing raw blocks and multi-level summaries; and
-- empty and populated goals and long-term memory.
+- empty and populated goals.
 
 The comparison should be byte-for-byte for this refactor, including XML,
 whitespace, ordering, and instructional text. Use temporary/local comparison
@@ -194,7 +192,6 @@ tests when implementation is complete.
 - Changing XML tags, whitespace, ordering, or empty-section behavior.
 - Changing parsed emulator state, explored-map behavior, navigation, or map
   persistence.
-- Changing long-term-memory database schemas or repository boundaries.
 - Reworking prompt caching, tool registration, or agent lifecycle.
 - Moving compaction prompts into `agent/`.
 - Introducing new package initializers or re-export APIs.
@@ -206,11 +203,10 @@ tests when implementation is complete.
 - Shared gameplay-state prompt fragments have one implementation in
   `agent/prompts.py`.
 - Overworld map and entity presentation is owned by
-  `agent/overworld/formatting.py` and shared by prompts and relevant tool
-  descriptions.
+  `agent/overworld/formatting.py`.
 - Rolling-memory compaction formatting remains explicitly owned by the memory
   compaction prompt module.
 - No replacement prompt-rendering methods are added to domain records.
-- Agent-visible prompts and tool descriptions are unchanged by the refactor.
+- Agent-visible prompts are unchanged by the refactor.
 - Documentation points to the new prompt owner.
 - Ruff, ty, and relevant tests pass.

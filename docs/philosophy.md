@@ -45,9 +45,9 @@ An agent may use several tools within its domain before returning control to the
 
 LLMs have various shortcomings that prevent them from reaching the holy grail of perfect autonomy described above. The two greatest issues we have to deal with are a limited context window, and a lack of spatial reasoning ability. Like CPP and GPP then, we must create some tools and structures to overcome these deficiencies.
 
-### Rolling and Long-Term Memory
+### Rolling Memory
 
-The first issue we will tackle is the LLM's finite context window, which stops it from holding an entire playthrough in detail. Replaying every previous action in every prompt would grow continuously more expensive, while simply discarding old actions would eventually erase important context. The project handles these two needs with rolling memory for chronological history and long-term memory for agent-maintained notes.
+The first issue we will tackle is the LLM's finite context window, which stops it from holding an entire playthrough in detail. Replaying every previous action in every prompt would grow continuously more expensive, while simply discarding old actions would eventually erase important context. Hierarchical rolling memory keeps recent history exact and compresses older history into progressively broader summaries.
 
 Note: Pretty much all the constants I mention below are default values that can be edited in [`common/constants.py`](/common/constants.py).
 
@@ -60,12 +60,6 @@ The raw table is the permanent source of truth: compaction never deletes or rewr
 Prompts receive a chronological mixture of summaries and exact recent blocks. Once two batches of twenty raw blocks are available, the older batch is compressed into a level-one summary while the newer twenty remain exact. Adjacent summaries at the same level are later combined into a parent summary covering both ranges. Repeating this process creates a binary hierarchy in which older history occupies progressively less space and recent history retains full detail. Every entry includes the iteration or iteration range it covers, so the prompt view remains ordered and gap-free.
 
 The live HTML activity log uses only the exact raw working set and the unfinished current block. It updates whenever memory is appended and never displays the derived summaries, so compaction does not replace the recent on-screen log.
-
-#### The Long-Term Memory
-
-The final kind of memory given to the model is the long-term memory. This is effectively a database table of documents with unique titles. The overworld agent can retrieve, create, and update those documents through ordinary tools. At overworld entry it sees every available title and can load one relevant document directly by title whenever that context would help. Long term memories are never deleted (though I may change that if it becomes a problem).
-
-The model is encouraged to summarize memories if they go over a certain length, but there are no hard rules for what it can put in there. Common topics include notes on maps, characters, party members, goals, etc. Each retrieval appends one document to the long-term-memory context for the current iteration. That loaded set is cleared when the next handler activation begins.
 
 ### Mapping
 
@@ -106,7 +100,7 @@ Legend:
 ‼ Sign
 ```
 
-This map (plus a plethora of additional notes in the [overworld map prompt](/overworld_map/prompts.py)) helps the AI understand its surroundings far better than by simply looking at the game screen. It also comes with an index of all the sprites, signs, and warp tiles that the player has currently seen on it. The overworld agent can add persistent notes to nearby sprites and signs as it approaches and interacts with them.
+This map (plus a plethora of additional notes in the [overworld map prompt](/overworld_map/prompts.py)) helps the AI understand its surroundings far better than by simply looking at the game screen. It also comes with an index of all the sprites, signs, and warp tiles that the player has currently seen on it.
 
 You will notice that the tile characters chosen above are unusual Unicode characters, and there is a reason for this: Each tile must be exactly one token that doesn't combine with any of its neighbours. LLMs read tokens, not individual characters. If I were to use "w" to represent water, then three water tiles "www" would get consolidated into a single token, different from the original "w" token. This completely breaks the model's ability to count tiles, so we have to ensure that the tiles don't combine. [There is a test](/common/tests/integration/test_enums.py) that validates this for us.
 

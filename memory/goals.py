@@ -1,17 +1,8 @@
 """Goal memory rendered into agent context."""
 
 from dataclasses import dataclass, field
-from enum import StrEnum
 
 from loguru import logger
-
-
-class GoalPriority(StrEnum):
-    """The priority of a goal. Alphabetical order is thankfully the same as numerical order."""
-
-    PRIMARY = "Primary"
-    SECONDARY = "Secondary"
-    TERTIARY = "Tertiary"
 
 
 @dataclass(slots=True, kw_only=True)
@@ -19,11 +10,12 @@ class Goal:
     """A goal for the agent."""
 
     goal: str
-    priority: GoalPriority
+    is_primary: bool
 
     def __str__(self) -> str:
         """Return a string representation of the goal."""
-        return f"{self.priority}: {self.goal}"
+        role = "Primary goal" if self.is_primary else "Other goal"
+        return f"{role}: {self.goal}"
 
 
 @dataclass(slots=True, kw_only=True)
@@ -56,7 +48,7 @@ class Goals:
             logger.info(f'Adding new goal: "{goal.goal}"')
             goal.goal = goal.goal.strip()
             self.goals.append(goal)
-        self.goals = sorted(self.goals, key=lambda g: g.priority.value)
+        self.goals = sorted(self.goals, key=lambda g: not g.is_primary)
 
     def remove(self, *indices: int) -> None:
         """Remove goals from the list."""

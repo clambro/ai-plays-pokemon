@@ -42,7 +42,7 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
 
     game_sprites = game_state.sprites
     sprites = {
-        mem.entity_id: OverworldSprite.from_sprite(game_sprites[mem.entity_id], mem.description)
+        mem.entity_id: OverworldSprite.from_sprite(game_sprites[mem.entity_id])
         for mem in map_entity_memories
         if mem.entity_type == MapEntityType.SPRITE and mem.entity_id in game_sprites
     }
@@ -57,7 +57,7 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
 
     game_signs = game_state.signs
     signs = {
-        mem.entity_id: OverworldSign.from_sign(game_signs[mem.entity_id], mem.description)
+        mem.entity_id: OverworldSign.from_sign(game_signs[mem.entity_id])
         for mem in map_entity_memories
         if mem.entity_type == MapEntityType.SIGN and mem.entity_id in game_signs
     }
@@ -110,12 +110,11 @@ async def update_overworld_map(
         overworld_map: Explored map expected to match ``game_state``.
     """
     if not game_state.is_text_on_screen() and overworld_map.id == game_state.map.id:
-        await _add_remove_map_entities(iteration, game_state, overworld_map)
+        await _add_remove_map_entities(game_state, overworld_map)
         await _update_overworld_map_tiles(iteration, game_state, overworld_map)
 
 
 async def _add_remove_map_entities(
-    iteration: int,
     game_state: GameState,
     overworld_map: OverworldMap,
 ) -> None:
@@ -125,11 +124,8 @@ async def _add_remove_map_entities(
 
     overworld_map.known_sprites.update(
         {
-            entity_id: OverworldSprite.from_sprite(
-                game_state.sprites[entity_id],
-                sprite.description,
-            )
-            for entity_id, sprite in overworld_map.known_sprites.items()
+            entity_id: OverworldSprite.from_sprite(game_state.sprites[entity_id])
+            for entity_id in overworld_map.known_sprites
             if entity_id in game_state.sprites
         },
     )
@@ -150,7 +146,6 @@ async def _add_remove_map_entities(
 
     creates = [
         MapEntityMemoryCreate(
-            iteration=iteration,
             map_id=overworld_map.id,
             entity_id=sprite.index,
             entity_type=MapEntityType.SPRITE,
@@ -159,7 +154,6 @@ async def _add_remove_map_entities(
     ]
     creates.extend(
         MapEntityMemoryCreate(
-            iteration=iteration,
             map_id=overworld_map.id,
             entity_id=warp.index,
             entity_type=MapEntityType.WARP,
@@ -168,7 +162,6 @@ async def _add_remove_map_entities(
     )
     creates.extend(
         MapEntityMemoryCreate(
-            iteration=iteration,
             map_id=overworld_map.id,
             entity_id=sign.index,
             entity_type=MapEntityType.SIGN,
@@ -189,10 +182,10 @@ async def _add_remove_map_entities(
     await apply_map_entity_changes(creates=creates, deletes=deletes)
 
     overworld_map.known_sprites.update(
-        {sprite.index: OverworldSprite.from_sprite(sprite, None) for sprite in new_sprites},
+        {sprite.index: OverworldSprite.from_sprite(sprite) for sprite in new_sprites},
     )
     overworld_map.known_signs.update(
-        {sign.index: OverworldSign.from_sign(sign, None) for sign in new_signs},
+        {sign.index: OverworldSign.from_sign(sign) for sign in new_signs},
     )
     if new_warps:
         visited_maps = await get_visited_maps()

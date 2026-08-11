@@ -32,12 +32,12 @@ def build_delete_goal_tool(context: AgentContext) -> Tool[AgentContext]:
         longer want to chase it. Use this tool only for one of those reasons.
         Goals are referred to by the indices in the current goal list.
 
-        Do not delete a goal merely to revise its text or priority; update it
-        instead. Do not assume that you have accomplished a goal until memory
-        or current player information makes that certain. You must have at
-        least one goal at any given time, including exactly one primary goal,
-        so plan any related creation or update before deleting a goal that is
-        still required.
+        Do not delete a goal merely to revise its text; update it instead. To
+        change whether a goal is primary, delete it and create its replacement
+        with the correct designation. Do not assume that you have accomplished
+        a goal until memory or current player information makes that certain.
+        You must have exactly one primary goal at any given time, so plan any
+        related creation or update before deleting the primary goal.
 
         Args:
             index: Zero-based index of the completed or abandoned goal to

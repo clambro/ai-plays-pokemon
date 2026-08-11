@@ -29,7 +29,6 @@ async def init_fresh_db() -> None:
     await aiofiles.os.makedirs(db_folder)
 
     # Import all models here to ensure they are registered with the engine.
-    from database.long_term_memory.model import LongTermMemoryDBModel  # noqa: F401, PLC0415
     from database.map_entity_memory.model import (  # noqa: F401, PLC0415
         MapEntityMemoryDBModel,
     )

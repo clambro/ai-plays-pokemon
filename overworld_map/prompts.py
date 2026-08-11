@@ -57,8 +57,6 @@ You have discovered the following signs on the portion of the map that you have 
 {{known_signs}}
 </known_signs>
 
-Note that your descriptions of the above sprites, warps, and signs are only as accurate as your own memories are. The positional information, destinations of warp tiles, and labels of sprites come from the game's memory, but the descriptions are based on your own observations and are therefore fallible.
-
 Navigation tips:
 - You should explore as much of the map as possible to reveal the unexplored tiles, as they may be hiding important sprites or warp tiles. Tiles are considered explored once they are on screen, so move towards the unexplored tiles to reveal them.
 - Exploring the map to reveal unexplored tiles is always a good idea, especially if you feel stuck or unsure of how to proceed.
