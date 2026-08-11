@@ -11,7 +11,7 @@ import pytest
 
 from common.enums import BlockedDirection
 from common.schemas import Coords
-from emulator.emulator import YellowLegacyEmulator
+from emulator.emulator import Emulator
 
 
 @pytest.mark.integration
@@ -338,7 +338,7 @@ async def _helper_test_expected_screen(
         expected_screen: Expected rows of classified ASCII tiles.
     """
     save_file = Path(__file__).parent / "saves" / state_filename
-    async with YellowLegacyEmulator(
+    async with Emulator(
         save_state_path=save_file,
         mute_sound=True,
         headless=True,

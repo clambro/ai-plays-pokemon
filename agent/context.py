@@ -9,7 +9,7 @@ from memory.rolling_memory import initialize_memory
 
 if TYPE_CHECKING:
     from agent.state import AgentState
-    from emulator.emulator import YellowLegacyEmulator
+    from emulator.emulator import Emulator
 
 
 @dataclass(slots=True, kw_only=True)
@@ -17,7 +17,7 @@ class AgentContext:
     """Live dependencies shared by all gameplay agents."""
 
     state: AgentState
-    emulator: YellowLegacyEmulator
+    emulator: Emulator
     _llm_usage_lock: asyncio.Lock = field(
         default_factory=asyncio.Lock,
         init=False,

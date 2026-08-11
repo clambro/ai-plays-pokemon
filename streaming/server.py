@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from aiohttp.web import Request, Response
 
     from agent.state import AgentState
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
 
 
 class BackgroundStreamServer(AbstractAsyncContextManager):
@@ -112,14 +112,14 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
             return web.Response()
         return web.json_response(self._current_data.model_dump(mode="json"))
 
-    def update_data(self, agent_state: AgentState, game_state: YellowLegacyGameState) -> None:
+    def update_data(self, agent_state: AgentState, game_state: GameState) -> None:
         """Update the current state data."""
         self._current_data = GameStateView.from_states(agent_state, game_state)
 
 
 def update_background_from_states(
     agent_state: AgentState,
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
 ) -> None:
     """Helper function to update the stream server from anywhere in the codebase."""
     server = BackgroundStreamServer.get_instance()

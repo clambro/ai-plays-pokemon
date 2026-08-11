@@ -18,10 +18,10 @@ from database.map_memory.schemas import MapMemoryCreateUpdate
 from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
 
 if TYPE_CHECKING:
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
 
 
-async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -> OverworldMap:
+async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldMap:
     """Load the explored map for a game-state snapshot.
 
     Existing terrain and entity memories are loaded from the database. An unseen map is initialized
@@ -78,7 +78,7 @@ async def get_overworld_map(iteration: int, game_state: YellowLegacyGameState) -
 
 async def prepare_overworld_map(
     iteration: int,
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
 ) -> OverworldMap:
     """Load the explored map and apply the current visible observation.
 
@@ -96,7 +96,7 @@ async def prepare_overworld_map(
 
 async def update_overworld_map(
     iteration: int,
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
     overworld_map: OverworldMap,
 ) -> None:
     """Update explored-map memory from the current visible screen.
@@ -116,7 +116,7 @@ async def update_overworld_map(
 
 async def _add_remove_map_entities(
     iteration: int,
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
     overworld_map: OverworldMap,
 ) -> None:
     """Add or remove entities from the overworld map depending on the current screen."""
@@ -205,7 +205,7 @@ async def _add_remove_map_entities(
 
 async def _update_overworld_map_tiles(
     iteration: int,
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
     overworld_map: OverworldMap,
 ) -> None:
     """Update the overworld map with the current game state, revealing new tiles."""
@@ -258,7 +258,7 @@ async def _update_overworld_map_tiles(
 
 async def _create_overworld_map_from_game_state(
     iteration: int,
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
 ) -> OverworldMap:
     """Create a new overworld map from the game state."""
     tiles = [[AsciiTile.UNSEEN.value] * game_state.map.width] * game_state.map.height

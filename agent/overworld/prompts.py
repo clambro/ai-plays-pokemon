@@ -6,7 +6,7 @@ from agent.overworld.tools.navigate import formatting, utils
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
     from overworld_map.schemas import OverworldMap
 
 OVERWORLD_DECISION_PROMPT = """
@@ -68,7 +68,7 @@ def build_overworld_decision_prompt(
     context: AgentContext,
     current_map: OverworldMap,
     available_long_term_memory_titles: list[str],
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
 ) -> str:
     """Build the initial prompt for one overworld-agent run."""
     if game_state.player.is_biking:

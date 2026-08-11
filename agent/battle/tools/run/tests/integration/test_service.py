@@ -6,14 +6,14 @@ import pytest
 
 from agent.battle.tools.errors import BattleActionUnavailableError
 from agent.battle.tools.run.service import run
-from emulator.emulator import YellowLegacyEmulator
+from emulator.emulator import Emulator
 
 
 @pytest.mark.integration
 async def test_cannot_run_from_trainer_battle() -> None:
     """Test rejecting a run attempt during a trainer battle."""
     save_file = Path(__file__).parent / "saves" / "save.state"
-    async with YellowLegacyEmulator(
+    async with Emulator(
         save_state_path=save_file,
         mute_sound=True,
         headless=True,

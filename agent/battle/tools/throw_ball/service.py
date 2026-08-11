@@ -8,13 +8,13 @@ from common.enums import BattleType, Button, PokeballItem
 
 if TYPE_CHECKING:
     from common.schemas import Coords
-    from emulator.emulator import YellowLegacyEmulator
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.emulator import Emulator
+    from emulator.game_state import GameState
 
 
 async def throw_ball(
     *,
-    emulator: YellowLegacyEmulator,
+    emulator: Emulator,
     ball_type: PokeballItem,
 ) -> str:
     """Select a Poke Ball from the battle item menu.
@@ -59,7 +59,7 @@ async def throw_ball(
     return f"Attempted to throw a {ball_type.value}."
 
 
-async def _open_item_menu(emulator: YellowLegacyEmulator, cursor_pos: Coords) -> None:
+async def _open_item_menu(emulator: Emulator, cursor_pos: Coords) -> None:
     """Move to ITEM and open the item menu."""
     if cursor_pos.col == 1:
         await emulator.press_button(Button.LEFT)
@@ -69,7 +69,7 @@ async def _open_item_menu(emulator: YellowLegacyEmulator, cursor_pos: Coords) ->
 
 
 async def _select_item(
-    emulator: YellowLegacyEmulator,
+    emulator: Emulator,
     cursor_index: int,
     item_index: int,
 ) -> None:
@@ -84,7 +84,7 @@ async def _select_item(
     await emulator.press_button(Button.A, wait_for_animation=False)
 
 
-def _get_item_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:
+def _get_item_menu_cursor_index(game_state: GameState) -> int | None:
     """Get the cursor index in the item menu."""
     index = game_state.screen.menu_item_index + game_state.screen.list_scroll_offset
     if index >= len(game_state.inventory.items):

@@ -9,20 +9,20 @@ import pytest
 from agent.overworld.tools.sokoban_solver.service import SokobanSolverService
 from common.enums import Button, SpriteLabel
 from common.schemas import Coords
-from emulator.emulator import YellowLegacyEmulator
+from emulator.emulator import Emulator
 from memory.rolling_memory import RollingMemory
 from overworld_map.schemas import OverworldSprite
 from overworld_map.service import prepare_overworld_map
 
 if TYPE_CHECKING:
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
 
 
 @pytest.mark.integration
 async def test_solve_sokoban_puzzle_victory_road() -> None:
     """Test solving a Sokoban puzzle in Victory Road with pressure plates."""
     save_file = Path(__file__).parent / "saves" / "sokoban_victory_road.state"
-    async with YellowLegacyEmulator(
+    async with Emulator(
         save_state_path=save_file,
         mute_sound=True,
         headless=True,
@@ -50,7 +50,7 @@ async def test_solve_sokoban_puzzle_seafoam_islands() -> None:
     expected_num_boulders_after = 2
 
     save_file = Path(__file__).parent / "saves" / "sokoban_seafoam.state"
-    async with YellowLegacyEmulator(
+    async with Emulator(
         save_state_path=save_file,
         mute_sound=True,
         headless=True,
@@ -81,7 +81,7 @@ async def test_solve_sokoban_puzzle_seafoam_islands() -> None:
         assert Coords(row=12, col=9) in boulders
 
 
-async def _get_sokoban_service(emulator: YellowLegacyEmulator) -> SokobanSolverService:
+async def _get_sokoban_service(emulator: Emulator) -> SokobanSolverService:
     """Helper function to get a Sokoban solver service with the proper mocks."""
     game_state = await emulator.get_game_state()
     with (
@@ -104,7 +104,7 @@ async def _get_sokoban_service(emulator: YellowLegacyEmulator) -> SokobanSolverS
     )
 
 
-def _get_boulders(game_state: YellowLegacyGameState) -> set[Coords]:
+def _get_boulders(game_state: GameState) -> set[Coords]:
     """Get the boulders from the game state."""
     return {
         s.coords

@@ -10,8 +10,8 @@ from overworld_map.service import update_overworld_map
 
 if TYPE_CHECKING:
     from common.schemas import Coords
-    from emulator.emulator import YellowLegacyEmulator
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.emulator import Emulator
+    from emulator.game_state import GameState
     from memory.rolling_memory import RollingMemory
     from overworld_map.schemas import OverworldMap
 
@@ -26,7 +26,7 @@ class NavigationService:
     def __init__(
         self,
         iteration: int,
-        emulator: YellowLegacyEmulator,
+        emulator: Emulator,
         current_map: OverworldMap,
         rolling_memory: RollingMemory,
     ) -> None:
@@ -67,6 +67,18 @@ class NavigationService:
         await self._handle_pikachu(path[0])
         for button in path:
             next_tile = self._get_next_tile(button, game_state)
+            next_coords = game_state.player.coords + _BUTTON_OFFSETS[button]
+            unresolved_spinner = (
+                next_tile in AsciiTile.get_spinner_tiles()
+                and utils.get_spinner_destination(
+                    next_coords,
+                    self.current_map.ascii_tiles_ndarray,
+                )
+                is None
+            )
+            if unresolved_spinner:
+                result = await self._explore_spinner(button, coords, game_state)
+                return self._record_result(result)
             if next_tile in hm_tiles:
                 await self._handle_hm_use(button, game_state)
             else:
@@ -89,9 +101,45 @@ class NavigationService:
             )
         return self._record_result(f"Completed navigation to {coords}.")
 
+    async def _explore_spinner(
+        self,
+        button: Button,
+        target: Coords,
+        game_state: GameState,
+    ) -> str:
+        """Traverse an unresolved spinner, record its path, and report its destination."""
+        if game_state.player.direction != _BUTTON_DIRECTIONS[button]:
+            await self.emulator.press_button(button, wait_for_animation=False)
+            game_state = await self.emulator.wait_for_animation_to_finish()
+
+        spinner_start = game_state.player.coords
+        observations = []
+        await self.emulator.press_button(button, wait_for_animation=False)
+        game_state = await self.emulator.wait_for_animation_to_finish(
+            on_game_state=observations.append,
+        )
+
+        previous_observation = None
+        for observation in observations:
+            observation_key = (observation.map.id, observation.player.coords)
+            if observation_key != previous_observation:
+                await update_overworld_map(
+                    self.iteration,
+                    observation,
+                    self.current_map,
+                )
+                previous_observation = observation_key
+
+        if game_state.player.coords == spinner_start:
+            return f"Navigation to {target} interrupted at position {game_state.player.coords}."
+        return (
+            f"The spinner carried me to {game_state.player.coords}."
+            " Navigation stopped so I can plan a new route from here."
+        )
+
     def _get_target_error(
         self,
-        game_state: YellowLegacyGameState,
+        game_state: GameState,
         coords: Coords,
         accessible_coords: list[Coords],
     ) -> str | None:
@@ -161,7 +209,7 @@ class NavigationService:
         ):
             await self.emulator.press_button(Button.RIGHT)
 
-    def _get_next_tile(self, button: Button, game_state: YellowLegacyGameState) -> AsciiTile:
+    def _get_next_tile(self, button: Button, game_state: GameState) -> AsciiTile:
         """Get the next tile type that the player will move to."""
         tile_arr = self.current_map.ascii_tiles_ndarray
         player_pos = game_state.player.coords
@@ -173,7 +221,7 @@ class NavigationService:
             return tile_arr[player_pos.row, player_pos.col - 1]
         return tile_arr[player_pos.row, player_pos.col + 1]
 
-    async def _handle_hm_use(self, button: Button, game_state: YellowLegacyGameState) -> None:
+    async def _handle_hm_use(self, button: Button, game_state: GameState) -> None:
         """Handle using an HM to access a tile."""
         if game_state.player.is_surfing:
             await self.emulator.press_button(button)
@@ -202,7 +250,7 @@ class NavigationService:
 
     @staticmethod
     def _get_navigation_result(
-        game_state: YellowLegacyGameState,
+        game_state: GameState,
         prev_pos: Coords,
         starting_map_id: MapId,
         target_pos: Coords,
@@ -223,3 +271,18 @@ class NavigationService:
         """Record and return one coherent navigation result."""
         self.rolling_memory.add_memory(result)
         return result
+
+
+_BUTTON_OFFSETS = {
+    Button.UP: (-1, 0),
+    Button.DOWN: (1, 0),
+    Button.LEFT: (0, -1),
+    Button.RIGHT: (0, 1),
+}
+
+_BUTTON_DIRECTIONS = {
+    Button.UP: FacingDirection.UP,
+    Button.DOWN: FacingDirection.DOWN,
+    Button.LEFT: FacingDirection.LEFT,
+    Button.RIGHT: FacingDirection.RIGHT,
+}

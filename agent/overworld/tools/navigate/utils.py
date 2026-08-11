@@ -185,8 +185,9 @@ def _get_neighbors(
     spinner_tiles = AsciiTile.get_spinner_tiles()
 
     tiles = map_data.ascii_tiles_ndarray
-    if tiles[pos.row, pos.col] in [AsciiTile.WARP, AsciiTile.BOULDER_HOLE]:
-        return []  # You can walk on these tiles, but they have no neighbours because they warp you.
+    current_tile = tiles[pos.row, pos.col]
+    if current_tile in [AsciiTile.WARP, AsciiTile.BOULDER_HOLE] or current_tile in spinner_tiles:
+        return []  # These transition tiles cannot be used as stable intermediate positions.
 
     for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
         new_pos = pos + (dy, dx)  # noqa: RUF005
@@ -211,8 +212,10 @@ def _get_neighbors(
             ledge_pos = new_pos + (dy, dx)  # noqa: RUF005
             neighbors.append((ledge_pos, button))
         elif target_tile in spinner_tiles:
-            destination = _get_spinner_destination(new_pos, tiles)
-            neighbors.append((destination, button))
+            destination = get_spinner_destination(new_pos, tiles)
+            # An unresolved spinner is still reachable as an exploration action, but it is
+            # terminal until traversing it reveals where it leads.
+            neighbors.append((destination if destination is not None else new_pos, button))
         elif not _is_blocked(pos, dy, dx, map_data) and (
             target_tile in walkable_tiles
             or (target_tile == AsciiTile.CUT_TREE and AsciiTile.CUT_TREE in hm_tiles)
@@ -239,19 +242,16 @@ def _is_blocked(current: Coords, dy: int, dx: int, map_data: OverworldMap) -> bo
     return False
 
 
-def _get_spinner_destination(pos: Coords, tiles: np.ndarray) -> Coords:
-    """Get the destination of a spinner tile."""
+def get_spinner_destination(pos: Coords, tiles: np.ndarray) -> Coords | None:
+    """Get a spinner's known destination, if its full path has been revealed."""
     tile = tiles[pos.row, pos.col]
     direction = _SPINNER_DIRECTION_MAP[tile]
 
     while True:
         new_pos = pos + direction
         new_tile = tiles[new_pos.row, new_pos.col]
-        # Unseen is an edge case. We don't know where it goes, but we can't follow it any further.
-        # Assume we stop just before it. This breaks navigation, but there's nothing we can do
-        # until the tile is revealed on the next Agent iteration.
         if new_tile == AsciiTile.UNSEEN:
-            return pos
+            return None
         if new_tile == AsciiTile.SPINNER_STOP:
             return new_pos
         if new_tile in AsciiTile.get_spinner_tiles():

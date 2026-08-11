@@ -22,8 +22,8 @@ if TYPE_CHECKING:
     from pydantic_ai.messages import ToolCallPart
     from pydantic_ai.models import ModelRequestContext
 
-    from emulator.emulator import YellowLegacyEmulator
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.emulator import Emulator
+    from emulator.game_state import GameState
     from emulator.schemas import DialogBox
 
 
@@ -38,11 +38,18 @@ def build_screenshot_content(screenshot: Image.Image) -> BinaryContent:
     )
 
 
-def is_battle_handler_state(game_state: YellowLegacyGameState) -> bool:
+def is_battle_handler_state(game_state: GameState) -> bool:
     """Determine whether the game state belongs to the battle handler."""
     # The nickname screen after catching a Pokemon is considered a battle state by the game,
     # but we need to route it to the text handler instead.
     return game_state.battle.is_in_battle and not game_state.is_naming_screen()
+
+
+def is_text_handler_state(game_state: GameState) -> bool:
+    """Determine whether the current state belongs to the text handler."""
+    return not is_battle_handler_state(game_state) and (
+        game_state.is_text_on_screen() or game_state.map.height == 0 or game_state.map.width == 0
+    )
 
 
 async def record_model_response(
@@ -84,10 +91,10 @@ AGENT_HOOKS = Hooks[AgentContext](
 class DialogReader:
     """Capture complete dialog pages while advancing an emulator."""
 
-    emulator: YellowLegacyEmulator
+    emulator: Emulator
     _pages: list[DialogBox] = field(default_factory=list, init=False)
 
-    def observe(self, game_state: YellowLegacyGameState) -> None:
+    def observe(self, game_state: GameState) -> None:
         """Capture the most complete snapshot of the visible dialog page."""
         dialog_box = game_state.get_dialog_box()
         if not dialog_box or (not dialog_box.top_line and not dialog_box.bottom_line):
@@ -115,19 +122,17 @@ class DialogReader:
         else:
             self._pages.append(dialog_box)
 
-    async def observe_current_state(self) -> YellowLegacyGameState:
+    async def observe_current_state(self) -> GameState:
         """Capture and return the emulator's current state."""
         game_state = await self.emulator.get_game_state()
         self.observe(game_state)
         return game_state
 
-    async def wait_for_animation(self) -> YellowLegacyGameState:
+    async def wait_for_animation(self) -> GameState:
         """Capture transient dialog while waiting for the current animation."""
-        return await self.emulator.wait_for_animation_to_finish(
-            on_game_state=self.observe,
-        )
+        return await self.emulator.wait_for_animation_to_finish(on_game_state=self.observe)
 
-    async def advance(self) -> YellowLegacyGameState:
+    async def advance(self) -> GameState:
         """Press A and capture dialog while the resulting animation runs."""
         await self.emulator.press_button(Button.A, wait_for_animation=False)
         return await self.wait_for_animation()
@@ -149,15 +154,14 @@ class DialogReader:
     def text(self) -> str:
         """Combine captured pages without repeating lines that scrolled upward."""
         text: list[str] = []
+        previous_page: DialogBox | None = None
         for dialog_box in self._pages:
             top_line = dialog_box.top_line
             bottom_line = dialog_box.bottom_line
-            previous_lines = [
-                text[-1] if text else None,
-                text[-2] if len(text) > 1 else None,
-            ]
-            if not text or (top_line and top_line not in previous_lines):
+            top_line_scrolled = previous_page is not None and top_line == previous_page.bottom_line
+            if top_line and not top_line_scrolled:
                 text.append(top_line)
-            if not text or (bottom_line and bottom_line not in previous_lines):
+            if bottom_line:
                 text.append(bottom_line)
+            previous_page = dialog_box
         return " ".join(text).strip()

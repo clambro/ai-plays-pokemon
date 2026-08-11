@@ -6,14 +6,14 @@ from common.enums import Button, FacingDirection, MapId
 
 if TYPE_CHECKING:
     from common.schemas import Coords
-    from emulator.emulator import YellowLegacyEmulator
+    from emulator.emulator import Emulator
     from memory.rolling_memory import RollingMemory
 
 
 async def press_buttons(
     *,
     rolling_memory: RollingMemory,
-    emulator: YellowLegacyEmulator,
+    emulator: Emulator,
     buttons: list[Button],
 ) -> str:
     """Execute a short overworld button sequence.
@@ -64,7 +64,7 @@ async def _check_for_collision(
     prev_coords: Coords,
     prev_direction: FacingDirection,
     *,
-    emulator: YellowLegacyEmulator,
+    emulator: Emulator,
 ) -> str | None:
     """Check whether a directional press collided or changed maps.
 
@@ -95,7 +95,7 @@ async def _check_for_collision(
 async def _check_for_action(
     button: Button,
     *,
-    emulator: YellowLegacyEmulator,
+    emulator: Emulator,
 ) -> str | None:
     """Check whether an action-button press produced an interaction.
 
@@ -123,7 +123,7 @@ async def _check_for_action(
     return None
 
 
-async def _check_for_state_change(emulator: YellowLegacyEmulator) -> bool:
+async def _check_for_state_change(emulator: Emulator) -> bool:
     """Check if the movement triggered a state change to dialog or a battle."""
     game_state = await emulator.get_game_state()
     return game_state.is_text_on_screen() or game_state.battle.is_in_battle

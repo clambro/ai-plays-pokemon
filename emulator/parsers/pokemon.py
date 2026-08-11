@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from emulator.parsers.utils import get_text_from_byte_array
+from emulator.parsers.screen_text import get_text_from_byte_array
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
@@ -38,10 +38,23 @@ class Pokemon(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
+class BoxPokemon(BaseModel):
+    """The useful state of a pokemon stored in the active PC box."""
+
+    name: str
+    species: str
+    type1: str
+    type2: str | None
+    level: int
+    moves: list[PokemonMove]
+
+    model_config = ConfigDict(frozen=True)
+
+
 class EnemyPokemon(BaseModel):
     """The state of an enemy pokemon in the battle."""
 
-    species: str
+    name: str
     level: int
     hp_pct: float
     status: str | None
@@ -57,7 +70,7 @@ def parse_party_pokemon(mem: PyBoyMemoryView) -> list[Pokemon]:
     return party
 
 
-def parse_pc_pokemon(mem: PyBoyMemoryView) -> list[Pokemon]:
+def parse_pc_pokemon(mem: PyBoyMemoryView) -> list[BoxPokemon]:
     """Parse the pokemon in the active PC box from the memory."""
     pc = []
     for i in range(mem[0xDA7F]):
@@ -90,7 +103,7 @@ def parse_player_battle_pokemon(mem: PyBoyMemoryView) -> Pokemon | None:
     hp = (mem[0xD014] << 8) | mem[0xD015]
     max_hp = (mem[0xD022] << 8) | mem[0xD023]
 
-    status_loc = mem[0xD022]
+    status_loc = mem[0xD017]
     status = _INT_TO_STATUS_MAP[status_loc] if status_loc != 0 else None
 
     return Pokemon(
@@ -112,17 +125,18 @@ def parse_enemy_battle_pokemon(mem: PyBoyMemoryView) -> EnemyPokemon | None:
     if species_id == 0:
         return None
 
+    name = get_text_from_byte_array(mem[0xCFD9:0xCFE4])
     hp = (mem[0xCFE5] << 8) | mem[0xCFE6]
     max_hp = (mem[0xCFF3] << 8) | mem[0xCFF4]
 
     # The gen 1 health bar is 48 pixels long, so about 2% resolution for health percentage.
     hp_pct = math.ceil(hp / max_hp * 50) * 2
 
-    status_loc = mem[0xCFF3]
+    status_loc = mem[0xCFE8]
     status = _INT_TO_STATUS_MAP[status_loc] if status_loc != 0 else None
 
     return EnemyPokemon(
-        species=_INT_TO_SPECIES_MAP[species_id],
+        name=name,
         level=mem[0xCFF2],
         hp_pct=hp_pct,
         status=status,
@@ -169,7 +183,7 @@ def _parse_party_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
     )
 
 
-def _parse_pc_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
+def _parse_pc_pokemon(mem: PyBoyMemoryView, index: int) -> BoxPokemon | None:
     """Parse a single pokemon in the active PC box from the memory."""
     increment = index * 0x21
     species_id = mem[0xDA95 + increment]
@@ -190,17 +204,12 @@ def _parse_pc_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
         pp = mem[0xDAB2 + increment + i] & _PP_MASK
         moves.append(PokemonMove(name=_INT_TO_MOVE_MAP[move_id], pp=pp))
 
-    max_hp = (mem[0xDA96 + increment] << 8) | mem[0xDA96 + increment + 1]
-
-    return Pokemon(
+    return BoxPokemon(
         name=name,
         species=_INT_TO_SPECIES_MAP[species_id],
         type1=type1,
         type2=type2,
         level=mem[0xDA98 + increment],
-        hp=max_hp,  # Always at max HP when in the PC.
-        max_hp=max_hp,
-        status=None,  # No status ailments when in the PC.
         moves=moves,
     )
 
@@ -419,7 +428,7 @@ _INT_TO_MOVE_MAP = {
     0x19: "MEGA KICK",
     0x1A: "JUMP KICK",
     0x1B: "ROLLING KICK",
-    0x1C: "SAND ATTACK",
+    0x1C: "SAND-ATTACK",
     0x1D: "HEADBUTT",
     0x1E: "HORN ATTACK",
     0x1F: "FURY ATTACK",
@@ -429,7 +438,7 @@ _INT_TO_MOVE_MAP = {
     0x23: "WRAP",
     0x24: "TAKE DOWN",
     0x25: "THRASH",
-    0x26: "DOUBLE EDGE",
+    0x26: "DOUBLE-EDGE",
     0x27: "TAIL WHIP",
     0x28: "POISON STING",
     0x29: "TWINEEDLE",

@@ -7,7 +7,7 @@ from loguru import logger
 from common.enums import Button
 
 if TYPE_CHECKING:
-    from emulator.emulator import YellowLegacyEmulator
+    from emulator.emulator import Emulator
     from memory.rolling_memory import RollingMemory
 
 
@@ -21,7 +21,7 @@ class UseItemService:
     def __init__(
         self,
         rolling_memory: RollingMemory,
-        emulator: YellowLegacyEmulator,
+        emulator: Emulator,
     ) -> None:
         """Initialize the use item service."""
         self.rolling_memory = rolling_memory

@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from agent.state import AgentState
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
     from memory.rolling_memory import RollingMemory
 
 
@@ -24,7 +24,7 @@ class PartyPokemonView(BaseModel):
     moves: list[str]
 
     @classmethod
-    def from_game_state(cls, game_state: YellowLegacyGameState) -> list[PartyPokemonView]:
+    def from_game_state(cls, game_state: GameState) -> list[PartyPokemonView]:
         """Create a view of the Pokemon from the game state."""
         return [
             cls(
@@ -84,7 +84,7 @@ class GameStateView(BaseModel):
     def from_states(
         cls,
         agent_state: AgentState,
-        game_state: YellowLegacyGameState,
+        game_state: GameState,
     ) -> GameStateView:
         """Create a view of the game state from the agent and game states."""
         pokemon = PartyPokemonView.from_game_state(game_state)

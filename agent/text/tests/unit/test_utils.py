@@ -12,7 +12,7 @@ from agent.text import utils
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
 
 
 @pytest.mark.unit
@@ -38,7 +38,7 @@ async def test_plain_dialog_is_published_before_it_advances(
     monkeypatch.setattr(utils, "DialogReader", MagicMock(return_value=dialog_reader))
     monkeypatch.setattr(utils.asyncio, "sleep", AsyncMock())
 
-    def publish(_state: AgentState, _game_state: YellowLegacyGameState) -> None:
+    def publish(_state: AgentState, _game_state: GameState) -> None:
         events.append("publish")
 
     monkeypatch.setattr(utils, "update_background_from_states", publish)

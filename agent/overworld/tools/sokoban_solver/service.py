@@ -10,8 +10,8 @@ from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, S
 from common.schemas import Coords
 
 if TYPE_CHECKING:
-    from emulator.emulator import YellowLegacyEmulator
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.emulator import Emulator
+    from emulator.game_state import GameState
     from memory.rolling_memory import RollingMemory
     from overworld_map.schemas import OverworldMap
 
@@ -25,7 +25,7 @@ class SokobanSolverService:
 
     def __init__(
         self,
-        emulator: YellowLegacyEmulator,
+        emulator: Emulator,
         current_map: OverworldMap,
         rolling_memory: RollingMemory,
     ) -> None:
@@ -44,8 +44,9 @@ class SokobanSolverService:
             self.rolling_memory.add_memory(result)
             return result
 
-        player_pos = (await self.emulator.get_game_state()).player.coords
-        solution = self._solve_sokoban(sokoban_map, player_pos)
+        game_state, collision_tiles = await self.emulator.get_game_state_with_map_collision_tiles()
+        sokoban_map.collision_tiles = collision_tiles
+        solution = self._solve_sokoban(sokoban_map, game_state)
 
         if not solution:
             result = (
@@ -91,13 +92,13 @@ class SokobanSolverService:
     def _solve_sokoban(
         self,
         sokoban_map: SokobanMap,
-        player_pos: Coords,
+        game_state: GameState,
     ) -> list[Button] | None:
         """Solve the Sokoban puzzle using breadth-first search.
 
         The search is deliberately simple because Pokémon's Sokoban state spaces are small.
         """
-        initial_state = (player_pos, frozenset(sokoban_map.boulders))
+        initial_state = (game_state.player.coords, frozenset(sokoban_map.boulders))
 
         queue = [(initial_state, [])]
         visited = {initial_state}
@@ -117,9 +118,10 @@ class SokobanSolverService:
             ]:
                 new_player_pos = current_player_pos + direction
                 if not self._is_movement_possible(
+                    current_player_pos,
                     new_player_pos,
-                    direction,
                     sokoban_map,
+                    game_state,
                     is_boulder=False,
                 ):
                     continue
@@ -128,9 +130,10 @@ class SokobanSolverService:
                 if new_player_pos in current_boulders:  # Pushing a boulder.
                     new_boulder_pos = new_player_pos + direction
                     is_boulder_tile_free = self._is_movement_possible(
+                        current_player_pos,
                         new_boulder_pos,
-                        direction,
                         sokoban_map,
+                        game_state,
                         is_boulder=True,
                     )
                     if new_boulder_pos in current_boulders or not is_boulder_tile_free:
@@ -156,26 +159,39 @@ class SokobanSolverService:
 
     def _is_movement_possible(
         self,
-        pos: Coords,
-        direction: Coords,
+        source: Coords,
+        destination: Coords,
         sokoban_map: SokobanMap,
+        game_state: GameState,
         *,
         is_boulder: bool,
     ) -> bool:
-        """Check if a position is valid (within bounds, walkable, and not blocked)."""
+        """Check if a destination is valid (within bounds, walkable, and not blocked)."""
         if (
-            pos.row < 0
-            or pos.row >= len(sokoban_map.tiles)
-            or pos.col < 0
-            or pos.col >= len(sokoban_map.tiles[0])
-            or self._is_blocked(pos, direction.row, direction.col)
+            destination.row < 0
+            or destination.row >= len(sokoban_map.tiles)
+            or destination.col < 0
+            or destination.col >= len(sokoban_map.tiles[0])
         ):
             return False
+
+        if is_boulder:
+            if not game_state.map.is_boulder_push_terrain_legal(
+                sokoban_map.collision_tiles,
+                source,
+                destination,
+            ):
+                return False
+        else:
+            direction = destination - source
+            if self._is_blocked(source, direction.row, direction.col):
+                return False
+
         valid_tiles = (FREE_TILE,)
         if is_boulder:
             # Boulders can be pushed onto warp tiles, but the player should avoid them.
             valid_tiles += (WARP_TILE,)
-        return sokoban_map.tiles[pos.row][pos.col] in valid_tiles
+        return sokoban_map.tiles[destination.row][destination.col] in valid_tiles
 
     async def _execute_solution(self, solution: list[Button], sokoban_map: SokobanMap) -> str:
         """Execute the solution by pressing buttons."""
@@ -229,7 +245,7 @@ class SokobanSolverService:
     async def _face_next_pos(
         self,
         button: Button,
-        game_state: YellowLegacyGameState,
+        game_state: GameState,
     ) -> None:
         """Face the next position."""
         if (

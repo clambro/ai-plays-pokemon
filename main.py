@@ -15,7 +15,7 @@ from common.backup_service import create_backup, get_output_folder, load_backup,
 from common.constants import BACKUP_INTERVAL_SECONDS, DEFAULT_ROM_PATH
 from common.telemetry import setup_telemetry
 from database.db_config import init_fresh_db
-from emulator.emulator import YellowLegacyEmulator
+from emulator.emulator import Emulator
 from streaming.server import BackgroundStreamServer
 
 
@@ -60,7 +60,7 @@ async def main(
     await aiofiles.os.makedirs(folder)
 
     async with (
-        YellowLegacyEmulator(str(rom_path), emulator_state, mute_sound=mute_sound) as emulator,
+        Emulator(str(rom_path), emulator_state, mute_sound=mute_sound) as emulator,
         BackgroundStreamServer() as stream_server,
     ):
         context = AgentContext(state=state, emulator=emulator)

@@ -8,8 +8,8 @@ from agent.text.tools.errors import TextActionUnavailableError
 from common.enums import Button
 
 if TYPE_CHECKING:
-    from emulator.emulator import YellowLegacyEmulator
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.emulator import Emulator
+    from emulator.game_state import GameState
 
 _LETTER_GRID = np.array(
     [
@@ -23,7 +23,7 @@ _VALID_NAME_CHARACTERS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZ ")
 
 async def assign_name(
     *,
-    emulator: YellowLegacyEmulator,
+    emulator: Emulator,
     name: str,
 ) -> str:
     """Enter a name through the game's naming screen.
@@ -50,7 +50,7 @@ async def assign_name(
 
 def _validate_name(
     name: str,
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
 ) -> None:
     """Reject names that cannot be entered completely on the current screen."""
     if not name or name != name.strip() or not set(name).issubset(_VALID_NAME_CHARACTERS):
@@ -70,7 +70,7 @@ def _validate_name(
 
 def _validate_name_uniqueness(
     name: str,
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
 ) -> None:
     """Reject a name already used by the player or one of their Pokemon."""
     existing_names = [
@@ -83,7 +83,7 @@ def _validate_name_uniqueness(
 
 
 async def _enter_name(
-    emulator: YellowLegacyEmulator,
+    emulator: Emulator,
     name: str,
 ) -> None:
     """Navigate the naming grid and confirm the supplied name."""

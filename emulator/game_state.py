@@ -13,7 +13,7 @@ from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.inventory import Inventory, parse_inventory
 from emulator.parsers.map import Map, parse_map_state
 from emulator.parsers.player import Player, parse_player
-from emulator.parsers.pokemon import Pokemon, parse_party_pokemon, parse_pc_pokemon
+from emulator.parsers.pokemon import BoxPokemon, Pokemon, parse_party_pokemon, parse_pc_pokemon
 from emulator.parsers.screen import Screen, parse_screen
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
@@ -24,12 +24,12 @@ if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
 
 
-class YellowLegacyGameState(BaseModel):
+class GameState(BaseModel):
     """A snapshot of the Pokemon Yellow Legacy game state."""
 
     player: Player
     party: list[Pokemon]
-    pc_pokemon: list[Pokemon]
+    pc_pokemon: list[BoxPokemon]
     inventory: Inventory
     map: Map
     sprites: dict[int, Sprite]
@@ -102,8 +102,14 @@ class YellowLegacyGameState(BaseModel):
         if not self.pc_pokemon:
             return ""
         out = "<pc_pokemon>\n"
-        out += "These are the Pokemon in the active PC box. They are NOT in your party.\n"
-        out += self._pokemon_list_to_str(self.pc_pokemon)
+        out += "Stored in the active PC box, not in the party:\n"
+        for pokemon in self.pc_pokemon:
+            pokemon_type = f"{pokemon.type1}/{pokemon.type2}" if pokemon.type2 else pokemon.type1
+            moves = ", ".join(f"{move.name} ({move.pp} PP)" for move in pokemon.moves)
+            out += (
+                f"- {pokemon.name} ({pokemon.species}, Level {pokemon.level}, {pokemon_type}): "
+                f"{moves}\n"
+            )
         out += "</pc_pokemon>\n"
         return out
 
@@ -139,7 +145,7 @@ class YellowLegacyGameState(BaseModel):
 
         if self.battle.enemy_pokemon:
             out += "<enemy_pokemon>\n"
-            out += f"Name: {self.battle.enemy_pokemon.species}\n"
+            out += f"Name: {self.battle.enemy_pokemon.name}\n"
             out += f"Level: {self.battle.enemy_pokemon.level}\n"
             out += f"HP Percentage: {self.battle.enemy_pokemon.hp_pct:.0f}%\n"
             out += f"Status Ailment: {self.battle.enemy_pokemon.status}\n"
@@ -176,7 +182,7 @@ class YellowLegacyGameState(BaseModel):
         """Get the tiles that are accessible using the player's current HMs and movepool."""
         hm_tiles = []
         movepool = [m.name for p in self.party for m in p.moves]
-        if "CUT" in movepool and Badge.BOULDERBADGE in self.player.badges:
+        if "CUT" in movepool and Badge.CASCADEBADGE in self.player.badges:
             hm_tiles.append(AsciiTile.CUT_TREE)
         if "SURF" in movepool and Badge.SOULBADGE in self.player.badges:
             hm_tiles.append(AsciiTile.WATER)
@@ -257,11 +263,17 @@ class YellowLegacyGameState(BaseModel):
         """Get the text in the dialog box. Return the top and bottom lines."""
         if not self.screen.is_dialog_box_on_screen:
             return None
-        lines = self.screen.text.split("\n")
+
+        top_line = "".join(self.screen.decoded_tiles[14][1:-1])
+        bottom_line = "".join(self.screen.decoded_tiles[16][1:-1])
+        has_cursor = bottom_line.endswith("▼")
+        if has_cursor:
+            bottom_line = bottom_line[:-1]
+
         return DialogBox(
-            top_line=lines[14][1:-2].strip(),
-            bottom_line=lines[16][1:-2].strip(),
-            has_cursor=lines[16][-2] == "▼",
+            top_line=top_line.strip(),
+            bottom_line=bottom_line.strip(),
+            has_cursor=has_cursor,
         )
 
     def _pokemon_list_to_str(self, pokemon_list: list[Pokemon]) -> str:
@@ -312,7 +324,7 @@ class YellowLegacyGameState(BaseModel):
 
     def _classify_background_block(self, block: np.ndarray) -> AsciiTile:
         """Classify a 2x2 block of background tiles."""
-        if self.map.water_tile and np.isin(block, self.map.water_tile).any():
+        if block[1, 0] in self.map.water_tiles:
             return AsciiTile.WATER
         if ledge_type := self._get_ledge_type(block):
             return ledge_type

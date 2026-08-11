@@ -5,10 +5,14 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, computed_field
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
-from emulator.parsers.utils import INT_TO_CHAR_MAP
+from emulator.parsers.screen_text import decode_screen_tiles
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
+
+
+_WINDOW_Y_ADDRESS = 0xFF4A
+_SCREEN_HEIGHT_PIXELS = 144
 
 
 class Screen(BaseModel):
@@ -19,6 +23,8 @@ class Screen(BaseModel):
     bottom: int
     right: int
     tiles: list[list[int]]  # Each block on screen is a 2x2 square of tiles.
+    decoded_tiles: list[list[str]]
+    is_text_window_visible: bool
     cursor_index: int
     menu_item_index: int
     list_scroll_offset: int
@@ -27,12 +33,13 @@ class Screen(BaseModel):
 
     @computed_field
     @property
-    def is_dialog_box_on_screen(self) -> int:
-        """Check if the dialog box is on the screen by checking for the correct border tiles."""
+    def is_dialog_box_on_screen(self) -> bool:
+        """Check whether the visible text window contains a dialog box."""
         top_left, top_right, bottom_left, bottom_right = 0x79, 0x7B, 0x7D, 0x7E
         horizontal_border = 0x7A
         return (
-            self.tiles[12][0] == top_left
+            self.is_text_window_visible
+            and self.tiles[12][0] == top_left
             and self.tiles[12][-1] == top_right
             and self.tiles[17][0] == bottom_left
             and self.tiles[17][-1] == bottom_right
@@ -43,16 +50,21 @@ class Screen(BaseModel):
     @computed_field
     @property
     def text(self) -> str:
-        """The tiles on screen converted to text if possible."""
-        return "\n".join("".join(INT_TO_CHAR_MAP.get(t, " ") for t in row) for row in self.tiles)
+        """The rendered text recognized on screen."""
+        return "\n".join("".join(row) for row in self.decoded_tiles)
 
     @computed_field
     @property
     def tiles_without_cursor(self) -> list[list[int]]:
         """The tiles on screen without the blinking cursor."""
-        cursor = 0xEE
         blank = 0x7F
-        return [[t if t != cursor else blank for t in row] for row in self.tiles]
+        return [
+            [
+                blank if glyph == "▼" else tile
+                for tile, glyph in zip(tile_row, glyph_row, strict=True)
+            ]
+            for tile_row, glyph_row in zip(self.tiles, self.decoded_tiles, strict=True)
+        ]
 
     @property
     def naming_screen_name_limit(self) -> int:
@@ -89,6 +101,8 @@ def parse_screen(mem: PyBoyMemoryView) -> Screen:
         bottom=bottom,
         right=right,
         tiles=tiles,
+        decoded_tiles=decode_screen_tiles(mem, tiles),
+        is_text_window_visible=mem[_WINDOW_Y_ADDRESS] < _SCREEN_HEIGHT_PIXELS,
         cursor_index=mem[0xCC30],
         menu_item_index=mem[0xCC26],
         list_scroll_offset=mem[0xCC36],

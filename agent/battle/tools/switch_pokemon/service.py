@@ -7,14 +7,14 @@ from agent.battle.utils import get_cursor_pos_in_fight_menu
 from common.enums import Button
 
 if TYPE_CHECKING:
-    from emulator.emulator import YellowLegacyEmulator
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.emulator import Emulator
+    from emulator.game_state import GameState
     from emulator.parsers.pokemon import Pokemon
 
 
 async def switch_pokemon(
     *,
-    emulator: YellowLegacyEmulator,
+    emulator: Emulator,
     party_slot: int,
 ) -> str:
     """Select a party Pokemon from the battle menu.
@@ -64,24 +64,24 @@ async def switch_pokemon(
 
 
 def _get_available_party_member(
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
     party_slot: int,
 ) -> Pokemon | None:
     """Resolve a legal party slot against the current battle state."""
-    player_pokemon = game_state.battle.player_pokemon
-    if player_pokemon is None or party_slot >= len(game_state.party):
+    active_party_slot = game_state.battle.active_party_slot
+    if active_party_slot is None or party_slot >= len(game_state.party):
         return None
 
     target = game_state.party[party_slot]
     if target.hp <= 0:
         return None
-    if (target.name, target.species) == (player_pokemon.name, player_pokemon.species):
+    if party_slot == active_party_slot:
         return None
     return target
 
 
 async def _move_cursor(
-    emulator: YellowLegacyEmulator,
+    emulator: Emulator,
     current_index: int,
     target_index: int,
 ) -> None:
@@ -98,7 +98,7 @@ async def _move_cursor(
         await emulator.press_button(button)
 
 
-def _get_pkmn_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:
+def _get_pkmn_menu_cursor_index(game_state: GameState) -> int | None:
     """Get the cursor index in the Pokemon menu."""
     menu_index = game_state.screen.menu_item_index
     if "Choose a POKéMON." not in game_state.screen.text or menu_index >= len(game_state.party):
@@ -106,7 +106,7 @@ def _get_pkmn_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None
     return menu_index
 
 
-def _get_switch_menu_cursor_index(game_state: YellowLegacyGameState) -> int | None:
+def _get_switch_menu_cursor_index(game_state: GameState) -> int | None:
     """Get the cursor index in the switch menu."""
     text = game_state.screen.text
     if "▶SWITCH" in text:

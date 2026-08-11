@@ -6,7 +6,7 @@ from common.enums import BattleType, PokeballItem
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
 
 BATTLE_DECISION_PROMPT = """
 You are in a Pokemon battle. The screenshot provided above shows the battle at entry. After each tool call, its returned context is the freshest state and supersedes earlier observations. Briefly explain your reasoning in first person as ordinary response text, then use exactly one tool to take the next battle action. Every response must include one tool call; the agent loop ends automatically when the game exits battle mode.
@@ -17,7 +17,7 @@ Here is the game memory's representation of the onscreen text. The text you see 
 <onscreen_text>
 {text}
 </onscreen_text>
-If you see garbled, nonsensical text in the onscreen text, it is because the game is rendering an image, which the memory stores as text. If this is the case, use the screenshot to help you better understand what is going on.
+Onscreen text includes only recognized glyphs. Graphical elements may be omitted, so use the screenshot when the text is incomplete or visual context matters.
 
 Fighting, voluntarily switching Pokemon, throwing a Poke Ball, and attempting to run all use up your turn, giving the opponent an opportunity to attack. In particular, switching gives the opponent a free attack against the Pokemon you switch in. Experience is granted only to Pokemon used in the battle, provided they have not fainted and are not at the level cap.
 
@@ -27,7 +27,7 @@ Note: If you keep seeing the text "There's no will to fight" over and over again
 
 def build_battle_decision_prompt(
     context: AgentContext,
-    initial_game_state: YellowLegacyGameState,
+    initial_game_state: GameState,
 ) -> str:
     """Build the prompt for the battle-entry observation."""
     state = "\n\n".join(
@@ -46,7 +46,7 @@ def build_battle_decision_prompt(
 
 
 def build_battle_tool_result(
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
     *,
     action_result: str,
     dialog: str = "",

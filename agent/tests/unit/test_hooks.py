@@ -22,7 +22,7 @@ from llm.service import MODEL
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
 
 
 @pytest.mark.unit
@@ -69,7 +69,7 @@ async def test_hooks_publish_accounted_reasoning_before_tool_execution(
     )
     context.emulator.get_game_state = AsyncMock(return_value=game_state)
 
-    def publish(state: AgentState, observed_state: YellowLegacyGameState) -> None:
+    def publish(state: AgentState, observed_state: GameState) -> None:
         assert observed_state is game_state
         assert state.total_tokens == first_usage.total_tokens
         assert state.rolling_memory.current_block.content == reasoning

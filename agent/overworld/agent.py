@@ -19,7 +19,7 @@ from overworld_map.service import prepare_overworld_map
 if TYPE_CHECKING:
     from PIL import Image
 
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
     from overworld_map.schemas import OverworldMap
 
 
@@ -27,7 +27,7 @@ def build_overworld_agent(
     context: AgentContext,
     current_map: OverworldMap,
     available_long_term_memory_titles: list[str],
-    game_state: YellowLegacyGameState,
+    game_state: GameState,
 ) -> Agent[AgentContext, str]:
     """Construct the Pydantic AI overworld agent."""
     return Agent[AgentContext, str](
@@ -98,7 +98,7 @@ def build_overworld_agent_input(
     current_map: OverworldMap,
     available_long_term_memory_titles: list[str],
     *,
-    initial_game_state: YellowLegacyGameState,
+    initial_game_state: GameState,
     initial_screenshot: Image.Image,
 ) -> list[str | BinaryContent]:
     """Build the multimodal input for one overworld-agent run."""
@@ -114,8 +114,8 @@ def build_overworld_agent_input(
 
 
 def _should_end_overworld_run(
-    initial_game_state: YellowLegacyGameState,
-    game_state: YellowLegacyGameState,
+    initial_game_state: GameState,
+    game_state: GameState,
 ) -> bool:
     """Check whether control should return to the dispatcher."""
     return (

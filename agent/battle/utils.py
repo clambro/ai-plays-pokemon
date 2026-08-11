@@ -10,12 +10,12 @@ from common.schemas import Coords
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
-    from emulator.game_state import YellowLegacyGameState
+    from emulator.game_state import GameState
 
 type BattleToolResult = list[str | BinaryContent]
 
 
-def is_fight_menu_open(game_state: YellowLegacyGameState) -> bool:
+def is_fight_menu_open(game_state: GameState) -> bool:
     """Check if the fight menu is open.
 
     Args:
@@ -28,7 +28,7 @@ def is_fight_menu_open(game_state: YellowLegacyGameState) -> bool:
     return "FIGHTPKMNITEMRUN" in screen_text
 
 
-def get_cursor_pos_in_fight_menu(game_state: YellowLegacyGameState) -> Coords | None:
+def get_cursor_pos_in_fight_menu(game_state: GameState) -> Coords | None:
     """Get the cursor position in the fight menu.
 
     Args:
