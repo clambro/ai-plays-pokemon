@@ -21,13 +21,6 @@ observations.
 
 {state}
 
-The following titles already exist in your long-term memory. They are the
-documents available to the retrieval tool. Use them both to select relevant
-memories and to avoid creating duplicate or near-duplicate documents:
-<available_long_term_memory_titles>
-{available_long_term_memory_titles}
-</available_long_term_memory_titles>
-
 The coordinates in the format (row, col, tile type) that are accessible from
 your current position are as follows:
 <accessible_coords>
@@ -70,7 +63,6 @@ will be returned after each tool executes.
 def build_overworld_decision_prompt(
     context: AgentContext,
     current_map: OverworldMap,
-    available_long_term_memory_titles: list[str],
     game_state: GameState,
 ) -> str:
     """Build the initial prompt for one overworld-agent run."""
@@ -109,14 +101,10 @@ def build_overworld_decision_prompt(
         state="\n\n".join(
             (
                 str(context.state.rolling_memory),
-                str(context.state.long_term_memory),
                 str(context.state.goals),
                 current_map.to_string(game_state),
                 game_state.player_info,
             ),
-        ),
-        available_long_term_memory_titles="\n".join(
-            available_long_term_memory_titles,
         ),
         accessible_coords=accessible_coords,
         exploration_candidates=exploration_candidates,

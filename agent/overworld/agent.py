@@ -11,7 +11,6 @@ from agent.overworld.prompts import build_overworld_decision_prompt
 from agent.overworld.tools.registry import build_overworld_toolset
 from agent.utils import AGENT_HOOKS, build_screenshot_content, is_battle_handler_state
 from common.prompts import SYSTEM_PROMPT
-from database.long_term_memory.repository import get_all_long_term_memory_titles
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 from memory.rolling_memory.service import finalize_iteration
 from overworld_map.service import prepare_overworld_map
@@ -26,7 +25,6 @@ if TYPE_CHECKING:
 def build_overworld_agent(
     context: AgentContext,
     current_map: OverworldMap,
-    available_long_term_memory_titles: list[str],
     game_state: GameState,
 ) -> Agent[AgentContext, str]:
     """Construct the Pydantic AI overworld agent."""
@@ -39,7 +37,6 @@ def build_overworld_agent(
             build_overworld_toolset(
                 context,
                 current_map,
-                available_long_term_memory_titles,
                 game_state,
             ),
         ],
@@ -61,11 +58,9 @@ async def run_overworld(
     await context.begin_iteration()
     initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
     current_map = await prepare_overworld_map(context.state.iteration, initial_game_state)
-    available_long_term_memory_titles = sorted(await get_all_long_term_memory_titles())
     agent = build_overworld_agent(
         context,
         current_map,
-        available_long_term_memory_titles,
         initial_game_state,
     )
     try:
@@ -73,7 +68,6 @@ async def run_overworld(
             build_overworld_agent_input(
                 context,
                 current_map,
-                available_long_term_memory_titles,
                 initial_game_state=initial_game_state,
                 initial_screenshot=initial_screenshot,
             ),
@@ -96,7 +90,6 @@ async def run_overworld(
 def build_overworld_agent_input(
     context: AgentContext,
     current_map: OverworldMap,
-    available_long_term_memory_titles: list[str],
     *,
     initial_game_state: GameState,
     initial_screenshot: Image.Image,
@@ -107,7 +100,6 @@ def build_overworld_agent_input(
         build_overworld_decision_prompt(
             context,
             current_map,
-            available_long_term_memory_titles,
             initial_game_state,
         ),
     ]

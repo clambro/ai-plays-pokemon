@@ -8,8 +8,6 @@ import pytest
 from agent import context as context_module
 from agent.context import AgentContext
 from agent.state import AgentState
-from database.long_term_memory.schemas import LongTermMemoryRead
-from memory.long_term_memory import LongTermMemory
 from memory.rolling_memory.schemas import CurrentMemoryBlock, RollingMemory
 
 if TYPE_CHECKING:
@@ -21,15 +19,13 @@ async def test_begin_iteration_prepares_handler_state(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Reload long-term memory at the top level, not during internal turns."""
+    """Initialize rolling memory once at the start of a handler activation."""
     iteration = 6
-    memory = LongTermMemoryRead(title="TEAM_PIKACHU", content="Reliable Electric Pokemon.")
     context = AgentContext(
         state=AgentState(
             folder=tmp_path,
             iteration=iteration,
             rolling_memory=RollingMemory(current_block=CurrentMemoryBlock(iteration=iteration)),
-            long_term_memory=LongTermMemory(pieces={memory.title: memory}),
         ),
         emulator=MagicMock(),
     )
@@ -44,4 +40,3 @@ async def test_begin_iteration_prepares_handler_state(
 
     initialize_memory.assert_awaited_once_with(original_block)
     assert context.state.iteration == iteration
-    assert not context.state.long_term_memory.pieces

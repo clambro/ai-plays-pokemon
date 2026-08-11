@@ -4,7 +4,6 @@ import asyncio
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from memory.long_term_memory import LongTermMemory
 from memory.rolling_memory.service import initialize_memory
 
 if TYPE_CHECKING:
@@ -36,4 +35,3 @@ class AgentContext:
         rolling_memory = await initialize_memory(self.state.rolling_memory.current_block)
         self.state.rolling_memory = rolling_memory
         self.state.iteration = rolling_memory.current_block.iteration
-        self.state.long_term_memory = LongTermMemory()

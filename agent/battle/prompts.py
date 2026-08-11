@@ -31,7 +31,6 @@ def build_battle_decision_prompt(
     state = "\n\n".join(
         (
             str(context.state.rolling_memory),
-            str(context.state.long_term_memory),
             str(context.state.goals),
             initial_game_state.player_info,
             initial_game_state.battle_info,

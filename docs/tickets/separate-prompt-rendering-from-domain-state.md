@@ -23,11 +23,10 @@ packages:
   guidance.
 - `overworld_map/prompts.py` contains agent instructions even though the
   `overworld_map` package otherwise owns explored-map state and persistence.
-- `agent/state.py` knows how rolling memory, long-term memory, goals, and player
-  state are assembled for a prompt.
-- `memory/long_term_memory.py`, `memory/goals.py`, and
-  `memory/rolling_memory/schemas.py` use `__str__` to emit agent-facing prose and
-  XML.
+- `agent/state.py` knows how rolling memory, goals, and player state are
+  assembled for a prompt.
+- `memory/goals.py` and `memory/rolling_memory/schemas.py` use `__str__` to emit
+  agent-facing prose and XML.
 
 These methods do more than provide ordinary diagnostic string representations.
 They decide what the model sees, explain how it should interpret the data, and
@@ -50,7 +49,6 @@ overworld agents. It should own functions equivalent to:
 - `format_pc_info(game_state)`;
 - `format_battle_info(game_state)`;
 - `format_rolling_memory(memory)`;
-- `format_long_term_memory(memory)`;
 - `format_goals(goals)`; and
 - `format_agent_state(state, game_state)`, which joins the shared memory, goals,
   and player sections currently assembled in `AgentState.to_prompt_string()`.
@@ -127,8 +125,8 @@ Remove these presentation APIs:
 - `OverworldWarp.description`;
 - `OverworldWarp.to_string()`;
 - `OverworldMap.to_string()` and its prompt-note helpers;
-- agent-facing `__str__` methods on `Goal`, `Goals`, `LongTermMemory`, and the
-  rolling-memory records.
+- agent-facing `__str__` methods on `Goal`, `Goals`, and the rolling-memory
+  records.
 
 Retain state-derived behavior that is used independently of prompting:
 
@@ -152,7 +150,7 @@ ownership problem under different names.
 2. Add `agent/overworld/formatting.py`, switch the initial overworld prompt and
    sprite/sign tool descriptions to it, then remove map/entity presentation
    methods and `overworld_map/prompts.py`.
-3. Move agent-facing goal and memory rendering into `agent/prompts.py`. Move
+3. Move agent-facing goal and rolling-memory rendering into `agent/prompts.py`. Move
    compaction-source formatting into `memory/rolling_memory/prompts.py`, then
    remove the prompt-oriented `__str__` methods.
 4. Remove `AgentState.to_prompt_string()` and all now-unused presentation
@@ -174,7 +172,7 @@ Before removing the old methods, compare representative old and new outputs for:
 - party members at and below the level cap, dual-typed Pokemon, empty inventory,
   and populated PC storage;
 - rolling memory containing raw blocks and multi-level summaries; and
-- empty and populated goals and long-term memory.
+- empty and populated goals.
 
 The comparison should be byte-for-byte for this refactor, including XML,
 whitespace, ordering, and instructional text. Use temporary/local comparison
@@ -194,7 +192,6 @@ tests when implementation is complete.
 - Changing XML tags, whitespace, ordering, or empty-section behavior.
 - Changing parsed emulator state, explored-map behavior, navigation, or map
   persistence.
-- Changing long-term-memory database schemas or repository boundaries.
 - Reworking prompt caching, tool registration, or agent lifecycle.
 - Moving compaction prompts into `agent/`.
 - Introducing new package initializers or re-export APIs.
