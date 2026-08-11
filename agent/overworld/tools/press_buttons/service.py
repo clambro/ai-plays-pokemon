@@ -7,7 +7,7 @@ from common.enums import Button, FacingDirection, MapId
 if TYPE_CHECKING:
     from common.schemas import Coords
     from emulator.emulator import Emulator
-    from memory.rolling_memory import RollingMemory
+    from memory.rolling_memory.schemas import RollingMemory
 
 
 async def press_buttons(

@@ -8,7 +8,7 @@ from common.enums import Button
 
 if TYPE_CHECKING:
     from emulator.emulator import Emulator
-    from memory.rolling_memory import RollingMemory
+    from memory.rolling_memory.schemas import RollingMemory
 
 
 class UseItemError(Exception):

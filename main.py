@@ -11,7 +11,7 @@ from loguru import logger
 from agent.app import dispatch_agent
 from agent.context import AgentContext
 from agent.state import AgentState
-from common.backup_service import create_backup, get_output_folder, load_backup, load_latest_backup
+from backup import create_backup, get_output_folder, load_backup, load_latest_backup
 from common.constants import BACKUP_INTERVAL_SECONDS, DEFAULT_ROM_PATH
 from common.telemetry import setup_telemetry
 from database.db_config import init_fresh_db

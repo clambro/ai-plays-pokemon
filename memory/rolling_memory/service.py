@@ -1,27 +1,90 @@
-"""Business logic for hierarchical rolling-memory compaction."""
+"""Persistence and compaction workflow for rolling memory."""
 
 import asyncio
-from typing import TYPE_CHECKING
 
 from common.constants import (
     ROLLING_MEMORY_LEAF_SIZE,
     ROLLING_MEMORY_SUMMARY_MAX_CHARACTERS,
 )
-from database.rolling_memory.repository import store_memory_summary
+from database.rolling_memory.repository import (
+    finalize_raw_memory_block,
+    get_memory_summary_frontier,
+    get_raw_memory_blocks_after,
+    store_memory_summary,
+)
 from database.rolling_memory.schemas import (
     MemorySummaryCreate,
     MemorySummaryRead,
+    RawMemoryBlockCreate,
 )
 from llm.service import OpenAILLMService
-from memory.compaction.prompts import COMPACTION_PROMPT, SYSTEM_PROMPT
-
-if TYPE_CHECKING:
-    from memory.rolling_memory import (
-        MemorySummary,
-        RollingMemory,
-    )
+from memory.rolling_memory.prompts import COMPACTION_PROMPT, SYSTEM_PROMPT
+from memory.rolling_memory.schemas import (
+    CurrentMemoryBlock,
+    MemorySummary,
+    RawMemoryBlock,
+    RollingMemory,
+)
 
 llm_service = OpenAILLMService()
+
+
+async def initialize_memory(current_block: CurrentMemoryBlock) -> RollingMemory:
+    """Initialize a loop's working memory from SQLite and its current block."""
+    summary_records = await get_memory_summary_frontier()
+    summary_frontier = tuple(
+        MemorySummary(
+            start_iteration=record.start_iteration,
+            end_iteration=record.end_iteration,
+            level=record.level,
+            content=record.content,
+        )
+        for record in summary_records
+    )
+    covered_iteration = summary_frontier[-1].end_iteration if summary_frontier else -1
+    raw_records = await get_raw_memory_blocks_after(covered_iteration)
+    loaded_raw_blocks = tuple(
+        RawMemoryBlock(
+            iteration=record.iteration,
+            content=record.content,
+        )
+        for record in raw_records
+    )
+
+    latest_finalized_iteration = (
+        loaded_raw_blocks[-1].iteration if loaded_raw_blocks else covered_iteration
+    )
+    if current_block.iteration <= latest_finalized_iteration:
+        current_block = CurrentMemoryBlock(
+            iteration=latest_finalized_iteration + 1,
+        )
+
+    return RollingMemory(
+        current_block=current_block,
+        summary_frontier=summary_frontier,
+        loaded_raw_blocks=loaded_raw_blocks,
+    )
+
+
+async def finalize_iteration(memory: RollingMemory) -> None:
+    """Persist and compact the completed iteration."""
+    record = await finalize_raw_memory_block(
+        RawMemoryBlockCreate(
+            iteration=memory.current_block.iteration,
+            content=memory.current_block.content,
+        ),
+    )
+    finalized_block = RawMemoryBlock(
+        iteration=record.iteration,
+        content=record.content,
+    )
+    await compact_memory(
+        RollingMemory(
+            current_block=memory.current_block,
+            summary_frontier=memory.summary_frontier,
+            loaded_raw_blocks=(*memory.loaded_raw_blocks, finalized_block),
+        ),
+    )
 
 
 async def compact_memory(memory: RollingMemory) -> list[MemorySummaryRead]:
@@ -67,10 +130,7 @@ async def _summarize(
         max_characters=ROLLING_MEMORY_SUMMARY_MAX_CHARACTERS,
         source=source,
     )
-    summary = await llm_service.get_llm_response(
-        prompt,
-        system_prompt=SYSTEM_PROMPT,
-    )
+    summary = await llm_service.get_llm_response(prompt, system_prompt=SYSTEM_PROMPT)
     return await store_memory_summary(
         MemorySummaryCreate(
             start_iteration=start_iteration,

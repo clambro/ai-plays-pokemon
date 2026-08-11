@@ -1,16 +1,8 @@
-"""Working state for rolling memory."""
+"""In-memory records for rolling memory."""
 
 from dataclasses import dataclass, field
 
 from loguru import logger
-
-from database.rolling_memory.repository import (
-    finalize_raw_memory_block,
-    get_memory_summary_frontier,
-    get_raw_memory_blocks_after,
-)
-from database.rolling_memory.schemas import RawMemoryBlockCreate
-from memory.compaction.service import compact_memory
 
 
 @dataclass(slots=True, kw_only=True)
@@ -101,61 +93,3 @@ class RollingMemory:
         else:
             logger.info(f"Adding new thought: [{self.current_block.iteration}]: {content}")
         self.current_block.append(content)
-
-
-async def initialize_memory(current_block: CurrentMemoryBlock) -> RollingMemory:
-    """Initialize a loop's working memory from SQLite and its current block."""
-    summary_records = await get_memory_summary_frontier()
-    summary_frontier = tuple(
-        MemorySummary(
-            start_iteration=record.start_iteration,
-            end_iteration=record.end_iteration,
-            level=record.level,
-            content=record.content,
-        )
-        for record in summary_records
-    )
-    covered_iteration = summary_frontier[-1].end_iteration if summary_frontier else -1
-    raw_records = await get_raw_memory_blocks_after(covered_iteration)
-    loaded_raw_blocks = tuple(
-        RawMemoryBlock(
-            iteration=record.iteration,
-            content=record.content,
-        )
-        for record in raw_records
-    )
-
-    latest_finalized_iteration = (
-        loaded_raw_blocks[-1].iteration if loaded_raw_blocks else covered_iteration
-    )
-    if current_block.iteration <= latest_finalized_iteration:
-        current_block = CurrentMemoryBlock(
-            iteration=latest_finalized_iteration + 1,
-        )
-
-    return RollingMemory(
-        current_block=current_block,
-        summary_frontier=summary_frontier,
-        loaded_raw_blocks=loaded_raw_blocks,
-    )
-
-
-async def finalize_iteration(memory: RollingMemory) -> None:
-    """Persist and compact the completed iteration."""
-    record = await finalize_raw_memory_block(
-        RawMemoryBlockCreate(
-            iteration=memory.current_block.iteration,
-            content=memory.current_block.content,
-        ),
-    )
-    finalized_block = RawMemoryBlock(
-        iteration=record.iteration,
-        content=record.content,
-    )
-    await compact_memory(
-        RollingMemory(
-            current_block=memory.current_block,
-            summary_frontier=memory.summary_frontier,
-            loaded_raw_blocks=(*memory.loaded_raw_blocks, finalized_block),
-        ),
-    )

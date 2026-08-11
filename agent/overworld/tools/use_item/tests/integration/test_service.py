@@ -6,7 +6,7 @@ import pytest
 
 from agent.overworld.tools.use_item.service import UseItemService
 from emulator.emulator import Emulator
-from memory.rolling_memory import RollingMemory
+from memory.rolling_memory.schemas import RollingMemory
 
 
 @pytest.mark.integration

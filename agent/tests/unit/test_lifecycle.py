@@ -10,7 +10,7 @@ from agent.context import AgentContext
 from agent.state import AgentState
 from database.long_term_memory.schemas import LongTermMemoryRead
 from memory.long_term_memory import LongTermMemory
-from memory.rolling_memory import CurrentMemoryBlock, RollingMemory
+from memory.rolling_memory.schemas import CurrentMemoryBlock, RollingMemory
 
 if TYPE_CHECKING:
     from pathlib import Path

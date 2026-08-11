@@ -10,7 +10,7 @@ from agent.overworld.tools.sokoban_solver.service import SokobanSolverService
 from common.enums import Button, SpriteLabel
 from common.schemas import Coords
 from emulator.emulator import Emulator
-from memory.rolling_memory import RollingMemory
+from memory.rolling_memory.schemas import RollingMemory
 from overworld_map.schemas import OverworldSprite
 from overworld_map.service import prepare_overworld_map
 

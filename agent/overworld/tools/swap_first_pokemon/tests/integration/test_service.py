@@ -8,7 +8,7 @@ from agent.overworld.tools.swap_first_pokemon.service import (
     SwapFirstPokemonService,
 )
 from emulator.emulator import Emulator
-from memory.rolling_memory import RollingMemory
+from memory.rolling_memory.schemas import RollingMemory
 
 
 @pytest.mark.integration

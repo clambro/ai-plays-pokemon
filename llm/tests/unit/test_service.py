@@ -16,6 +16,8 @@ from agent.state import AgentState
 from llm import service
 from llm.usage import bind_llm_usage_updater
 
+TEST_SYSTEM_PROMPT = "Test system prompt."
+
 
 class SampleResponse(BaseModel):
     """Structured response used by the service tests."""
@@ -49,7 +51,10 @@ async def test_get_llm_response_updates_agent_usage() -> None:
         bind_llm_usage_updater(context.add_llm_usage),
     ):
         llm_service = service.OpenAILLMService()
-        result = await llm_service.get_llm_response("prompt")
+        result = await llm_service.get_llm_response(
+            "prompt",
+            system_prompt=TEST_SYSTEM_PROMPT,
+        )
 
     assert result == "response"
     assert context.state.total_tokens == expected_total_tokens
@@ -57,7 +62,7 @@ async def test_get_llm_response_updates_agent_usage() -> None:
     client.responses.create.assert_awaited_once_with(
         model=service.MODEL,
         input="prompt",
-        instructions=service.SYSTEM_PROMPT,
+        instructions=TEST_SYSTEM_PROMPT,
         reasoning={"effort": "low"},
     )
 
@@ -80,6 +85,7 @@ async def test_get_llm_response_pydantic_preserves_message_order() -> None:
         result = await llm_service.get_llm_response_pydantic(
             [screenshot, "prompt"],
             SampleResponse,
+            system_prompt=TEST_SYSTEM_PROMPT,
         )
 
     assert result == parsed
@@ -128,7 +134,10 @@ async def test_get_llm_response_rejects_incomplete_output() -> None:
         bind_llm_usage_updater(AsyncMock()),
         pytest.raises(ValueError, match="max_output_tokens"),
     ):
-        await llm_service.get_llm_response("prompt")
+        await llm_service.get_llm_response(
+            "prompt",
+            system_prompt=TEST_SYSTEM_PROMPT,
+        )
 
 
 def _response(

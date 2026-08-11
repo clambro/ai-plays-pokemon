@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, field_serializer
 
 from memory.goals import Goals
 from memory.long_term_memory import LongTermMemory
-from memory.rolling_memory import CurrentMemoryBlock, RollingMemory
+from memory.rolling_memory.schemas import CurrentMemoryBlock, RollingMemory
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState

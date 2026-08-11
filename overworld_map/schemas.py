@@ -8,11 +8,14 @@ from pydantic import BaseModel
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpType
 from common.schemas import Coords
-from emulator.schemas import AsciiScreenWithEntities, Sign, Sprite, Warp
+from emulator.parsers.sign import Sign
+from emulator.parsers.sprite import Sprite
+from emulator.parsers.warp import Warp
 from overworld_map.prompts import LEGEND_MAP, OVERWORLD_MAP_STR_FORMAT
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
+    from emulator.schemas import AsciiScreenWithEntities
 
 DEFAULT_ENTITY_DESCRIPTION = (
     "No description added yet. Approach and interact with this entity to add a description."

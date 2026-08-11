@@ -9,7 +9,6 @@ from openai import AsyncOpenAI
 from openai.lib._parsing._responses import type_to_text_format_param
 from pydantic import BaseModel
 
-from common.prompts import SYSTEM_PROMPT
 from common.settings import settings
 from llm.usage import update_llm_usage
 
@@ -43,7 +42,8 @@ class OpenAILLMService:
     async def get_llm_response(
         self,
         messages: str | list[str | Image],
-        system_prompt: str = SYSTEM_PROMPT,
+        *,
+        system_prompt: str,
     ) -> str:
         """Get an ordinary text response from GPT-5.6 Luna.
 
@@ -74,7 +74,7 @@ class OpenAILLMService:
         messages: str | list[str | Image],
         schema: type[ResponseModel],
         *,
-        system_prompt: str = SYSTEM_PROMPT,
+        system_prompt: str,
     ) -> ResponseModel:
         """Get a Pydantic model parsed from a GPT-5.6 Luna response.
 
