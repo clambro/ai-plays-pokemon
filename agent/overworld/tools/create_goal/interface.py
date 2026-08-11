@@ -6,6 +6,7 @@ from pydantic import Field
 from pydantic_ai import Tool
 
 from agent.overworld.tools.create_goal.service import (
+    OtherGoalLimitReachedError,
     PrimaryGoalAlreadyExistsError,
 )
 from agent.overworld.tools.create_goal.service import (
@@ -96,7 +97,7 @@ def build_create_goal_tool(context: AgentContext) -> Tool[AgentContext]:
                 goal=goal,
                 is_primary=is_primary,
             )
-        except PrimaryGoalAlreadyExistsError as error:
+        except (OtherGoalLimitReachedError, PrimaryGoalAlreadyExistsError) as error:
             result = str(error)
         else:
             context.state.goals = goals
