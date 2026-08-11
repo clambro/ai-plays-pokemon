@@ -8,7 +8,7 @@ from pydantic_ai import Tool
 from agent.overworld.tools.retrieve_long_term_memory.service import (
     retrieve_long_term_memory as retrieve_long_term_memory_service,
 )
-from agent.overworld.utils import (
+from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
 )

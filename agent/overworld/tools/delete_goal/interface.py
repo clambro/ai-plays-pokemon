@@ -11,7 +11,7 @@ from agent.overworld.tools.delete_goal.service import (
 from agent.overworld.tools.delete_goal.service import (
     delete_goal as delete_goal_service,
 )
-from agent.overworld.utils import (
+from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
 )

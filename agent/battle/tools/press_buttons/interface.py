@@ -8,7 +8,7 @@ from pydantic_ai import Tool
 from agent.battle.tools.press_buttons.service import (
     press_buttons as press_buttons_service,
 )
-from agent.battle.utils import BattleToolResult, complete_battle_action
+from agent.battle.tools.utils import BattleToolResult, complete_battle_action
 from common.enums import Button
 
 if TYPE_CHECKING:

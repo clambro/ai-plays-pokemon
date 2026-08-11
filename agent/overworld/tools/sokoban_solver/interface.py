@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pydantic_ai import Tool
 
 from agent.overworld.tools.sokoban_solver.service import SokobanSolverService
-from agent.overworld.utils import (
+from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
 )

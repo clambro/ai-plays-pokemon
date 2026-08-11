@@ -8,7 +8,7 @@ from pydantic_ai import Tool
 from agent.overworld.tools.create_goal.service import (
     create_goal as create_goal_service,
 )
-from agent.overworld.utils import (
+from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
 )

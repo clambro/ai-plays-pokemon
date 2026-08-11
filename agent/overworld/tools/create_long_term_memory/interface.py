@@ -11,7 +11,7 @@ from agent.overworld.tools.create_long_term_memory.service import (
 from agent.overworld.tools.create_long_term_memory.service import (
     create_long_term_memory as create_long_term_memory_service,
 )
-from agent.overworld.utils import (
+from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
 )

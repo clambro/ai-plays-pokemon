@@ -14,7 +14,7 @@ from agent.overworld.tools.update_long_term_memory.service import (
 from agent.overworld.tools.update_long_term_memory.service import (
     update_long_term_memory as update_long_term_memory_service,
 )
-from agent.overworld.utils import (
+from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
 )

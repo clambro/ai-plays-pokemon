@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 
 from pydantic_ai import BinaryContent
 
-from agent.battle.prompts import build_battle_tool_result
 from agent.utils import DialogReader, build_screenshot_content
+from common.enums import BattleType, PokeballItem
 from common.schemas import Coords
 
 if TYPE_CHECKING:
@@ -13,6 +13,35 @@ if TYPE_CHECKING:
     from emulator.game_state import GameState
 
 type BattleToolResult = list[str | BinaryContent]
+
+
+def build_battle_tool_result(
+    game_state: GameState,
+    *,
+    action_result: str,
+    dialog: str = "",
+) -> str:
+    """Build the fresh context returned by a battle tool."""
+    sections = [action_result]
+    if dialog:
+        sections.append(f'Battle dialog: "{dialog}"')
+    available_balls: list[str] = []
+    if game_state.battle.battle_type == BattleType.WILD:
+        pokeball_names = {ball.value for ball in PokeballItem}
+        available_balls = [
+            f"- {item.name} (x{item.quantity})"
+            for item in game_state.inventory.items
+            if item.name in pokeball_names
+        ]
+    sections.extend(
+        (
+            game_state.party_info,
+            "Available Poke Balls:\n" + "\n".join(available_balls) if available_balls else "",
+            game_state.battle_info,
+            "Current onscreen text:\n" + game_state.screen.text,
+        ),
+    )
+    return "\n\n".join(section for section in sections if section)
 
 
 def is_fight_menu_open(game_state: GameState) -> bool:

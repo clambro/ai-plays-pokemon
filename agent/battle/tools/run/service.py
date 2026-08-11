@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from agent.battle.tools.errors import BattleActionUnavailableError
-from agent.battle.utils import get_cursor_pos_in_fight_menu
+from agent.battle.tools.utils import get_cursor_pos_in_fight_menu
 from common.enums import BattleType, Button
 
 if TYPE_CHECKING:

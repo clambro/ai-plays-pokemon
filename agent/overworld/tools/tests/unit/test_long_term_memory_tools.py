@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
     from pathlib import Path
 
-    from agent.overworld.utils import OverworldToolResult
+    from agent.overworld.tools.utils import OverworldToolResult
 
 
 @pytest.mark.unit
