@@ -9,7 +9,7 @@ from agent.battle.tools.errors import BattleActionUnavailableError
 from agent.battle.tools.switch_pokemon.service import (
     switch_pokemon as switch_pokemon_service,
 )
-from agent.battle.utils import (
+from agent.battle.tools.utils import (
     BattleToolResult,
     complete_battle_action,
     refresh_battle_observation,

@@ -2,7 +2,7 @@
 
 import pytest
 
-from memory.rolling_memory import (
+from memory.rolling_memory.schemas import (
     CurrentMemoryBlock,
     MemorySummary,
     RawMemoryBlock,

@@ -1,10 +1,10 @@
 """Game-state extraction from the running emulator."""
 
 from collections import defaultdict
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Self
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_SHAPE
 from common.enums import AsciiTile, Badge, BattleType, BlockedDirection
@@ -24,7 +24,8 @@ if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
 
 
-class GameState(BaseModel):
+@dataclass(frozen=True, slots=True, kw_only=True)
+class GameState:
     """A snapshot of the Pokemon Yellow Legacy game state."""
 
     player: Player
@@ -38,8 +39,6 @@ class GameState(BaseModel):
     signs: dict[int, Sign]
     screen: Screen
     battle: Battle
-
-    model_config = ConfigDict(frozen=True)
 
     @classmethod
     def from_memory(cls, mem: PyBoyMemoryView) -> Self:

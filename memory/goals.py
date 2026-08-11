@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 
 from loguru import logger
-from pydantic import BaseModel
 
 
 class GoalPriority(StrEnum):
@@ -15,7 +14,8 @@ class GoalPriority(StrEnum):
     TERTIARY = "Tertiary"
 
 
-class Goal(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class Goal:
     """A goal for the agent."""
 
     goal: str

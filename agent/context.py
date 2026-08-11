@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from memory.long_term_memory import LongTermMemory
-from memory.rolling_memory import initialize_memory
+from memory.rolling_memory.service import initialize_memory
 
 if TYPE_CHECKING:
     from agent.state import AgentState

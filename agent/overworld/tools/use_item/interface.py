@@ -6,7 +6,7 @@ from pydantic import Field
 from pydantic_ai import Tool
 
 from agent.overworld.tools.use_item.service import UseItemService
-from agent.overworld.utils import (
+from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
 )

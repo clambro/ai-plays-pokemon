@@ -3,11 +3,11 @@
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field
 
 from memory.goals import Goals
 from memory.long_term_memory import LongTermMemory
-from memory.rolling_memory import CurrentMemoryBlock, RollingMemory
+from memory.rolling_memory.schemas import RollingMemory
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -18,7 +18,7 @@ class AgentState(BaseModel):
 
     folder: Path
     iteration: int = 0
-    rolling_memory: RollingMemory = Field(default_factory=RollingMemory)
+    rolling_memory: RollingMemory = Field(default_factory=RollingMemory, exclude=True)
     long_term_memory: LongTermMemory = Field(default_factory=LongTermMemory)
     goals: Goals = Field(default_factory=Goals)
     emulator_save_state: str | None = None
@@ -35,11 +35,3 @@ class AgentState(BaseModel):
                 game_state.player_info,
             ),
         )
-
-    @field_serializer("rolling_memory")
-    def serialize_rolling_memory(
-        self,
-        rolling_memory: RollingMemory,
-    ) -> dict[str, CurrentMemoryBlock]:
-        """Serialize only the current block; database views are restored from SQLite."""
-        return {"current_block": rolling_memory.current_block}

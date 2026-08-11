@@ -13,7 +13,7 @@ from agent.utils import AGENT_HOOKS, build_screenshot_content, is_battle_handler
 from common.prompts import SYSTEM_PROMPT
 from database.long_term_memory.repository import get_all_long_term_memory_titles
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
-from memory.rolling_memory import finalize_iteration
+from memory.rolling_memory.service import finalize_iteration
 from overworld_map.service import prepare_overworld_map
 
 if TYPE_CHECKING:

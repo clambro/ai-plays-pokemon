@@ -9,7 +9,7 @@ from pydantic_ai import Tool
 from agent.overworld.tools.update_signs.service import (
     update_signs as update_signs_service,
 )
-from agent.overworld.utils import (
+from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
 )

@@ -8,7 +8,7 @@ from agent.battle.tools.errors import BattleActionUnavailableError
 from agent.battle.tools.throw_ball.service import (
     throw_ball as throw_ball_service,
 )
-from agent.battle.utils import (
+from agent.battle.tools.utils import (
     BattleToolResult,
     complete_battle_action,
     refresh_battle_observation,

@@ -32,7 +32,17 @@ Model turns and tool calls inside a handler do not start new iterations. Retriev
 
 Pydantic AI hooks account for every model response, append ordinary-text reasoning to the active rolling-memory block, and publish the latest state to the HTML background immediately before a selected function tool executes. Tools return their real outcome and a fresh observation to the same conversation. Deterministic dialog handling publishes before advancing the emulator as well.
 
-The application loop owns emulator and streaming-server lifetimes. It captures the emulator state and creates a backup every 20 minutes and after an unexpected handler failure. The copied SQLite database contains finalized memory history, while serialized `AgentState` contains the current in-memory block and application totals.
+The application loop owns emulator and streaming-server lifetimes. It captures the emulator state and creates a backup every 20 minutes and after an unexpected handler failure. The copied SQLite database contains finalized memory history, while serialized `AgentState` contains the remaining live application state and totals. Rolling memory is rebuilt from the copied database rather than serialized into `AgentState`.
+
+### Model Boundaries
+
+Pydantic models represent values that cross validation or serialization
+boundaries. This includes raw-ROM parser outputs, coordinates, live
+`AgentState`, database DTOs, Pydantic AI tool inputs, streaming responses, and
+settings. Standard-library dataclasses represent trusted internal aggregates
+such as `GameState`, rolling memory, goals, long-term-memory context, explored
+maps, and solver state. Loading a backup validates `AgentState` directly, then
+the next handler reconstructs rolling memory from SQLite.
 
 ## The Overworld Agent
 

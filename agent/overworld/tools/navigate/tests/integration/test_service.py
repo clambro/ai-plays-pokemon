@@ -9,7 +9,7 @@ from agent.overworld.tools.navigate.service import NavigationService
 from common.enums import FacingDirection
 from common.schemas import Coords
 from emulator.emulator import Emulator
-from memory.rolling_memory import RollingMemory
+from memory.rolling_memory.schemas import RollingMemory
 from overworld_map.service import prepare_overworld_map
 
 

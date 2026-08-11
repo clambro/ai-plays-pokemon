@@ -12,7 +12,7 @@ from common.schemas import Coords
 if TYPE_CHECKING:
     from emulator.emulator import Emulator
     from emulator.game_state import GameState
-    from memory.rolling_memory import RollingMemory
+    from memory.rolling_memory.schemas import RollingMemory
     from overworld_map.schemas import OverworldMap
 
 FREE_TILE = "F"

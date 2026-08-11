@@ -1,14 +1,16 @@
 """Long-term memory rendered into agent context."""
 
-from pydantic import BaseModel, Field
+from dataclasses import dataclass, field
 
-from database.long_term_memory.schemas import LongTermMemoryRead
+# Pydantic resolves this nested dataclass annotation when building AgentState.
+from database.long_term_memory.schemas import LongTermMemoryRead  # noqa: TC001
 
 
-class LongTermMemory(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class LongTermMemory:
     """A long-term memory object."""
 
-    pieces: dict[str, LongTermMemoryRead] = Field(default_factory=dict)
+    pieces: dict[str, LongTermMemoryRead] = field(default_factory=dict)
 
     def __str__(self) -> str:
         """Get a string representation of the long-term memory."""

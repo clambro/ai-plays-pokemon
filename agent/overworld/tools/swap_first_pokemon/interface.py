@@ -8,7 +8,7 @@ from pydantic_ai import Tool
 from agent.overworld.tools.swap_first_pokemon.service import (
     SwapFirstPokemonService,
 )
-from agent.overworld.utils import (
+from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
 )

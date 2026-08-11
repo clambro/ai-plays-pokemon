@@ -1,8 +1,8 @@
-"""Tests for rolling-memory behavior."""
+"""Tests for rolling-memory schema behavior."""
 
 import pytest
 
-from memory.rolling_memory import (
+from memory.rolling_memory.schemas import (
     CurrentMemoryBlock,
     MemorySummary,
     RawMemoryBlock,

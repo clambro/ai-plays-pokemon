@@ -1,18 +1,21 @@
 """Data models for the explored overworld map."""
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import numpy as np
-from pydantic import BaseModel
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpType
 from common.schemas import Coords
-from emulator.schemas import AsciiScreenWithEntities, Sign, Sprite, Warp
+from emulator.parsers.sign import Sign
+from emulator.parsers.sprite import Sprite
+from emulator.parsers.warp import Warp
 from overworld_map.prompts import LEGEND_MAP, OVERWORLD_MAP_STR_FORMAT
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
+    from emulator.schemas import AsciiScreenWithEntities
 
 DEFAULT_ENTITY_DESCRIPTION = (
     "No description added yet. Approach and interact with this entity to add a description."
@@ -129,7 +132,8 @@ class OverworldWarp(Warp):
         return f"warp_{map_id}_{self.index} at {self.coords}. {visited_text} {self.description}"
 
 
-class OverworldMap(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class OverworldMap:
     """A map of a particular region of the overworld."""
 
     id: MapId
@@ -260,8 +264,8 @@ class OverworldMap(BaseModel):
             # This is a bit of a hack, but the model really struggles to find the PC otherwise.
             loc = np.argwhere(self.ascii_tiles_ndarray == AsciiTile.PC_TILE)[0]
             out += (
-                f"- There is a PC at {Coords(row=loc[0], col=loc[1])}. It can only be interacted"
-                f" with from below.\n"
+                f"- There is a PC at {Coords(row=int(loc[0]), col=int(loc[1]))}. It can only be"
+                " interacted with from below.\n"
             )
         elif not self.known_sprites:
             return "No sprites discovered."

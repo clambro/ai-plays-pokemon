@@ -9,7 +9,7 @@ from pydantic_ai import Tool
 from agent.overworld.tools.update_sprites.service import (
     update_sprites as update_sprites_service,
 )
-from agent.overworld.utils import (
+from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
 )

@@ -11,7 +11,7 @@ from agent.overworld.tools.update_goal.service import (
 from agent.overworld.tools.update_goal.service import (
     update_goal as update_goal_service,
 )
-from agent.overworld.utils import (
+from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
 )

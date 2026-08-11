@@ -1,26 +1,29 @@
 """Data models representing parsed emulator state."""
 
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 import numpy as np
-from pydantic import BaseModel, ConfigDict
 
-from common.enums import BlockedDirection
-from common.schemas import Coords
-from emulator.parsers.sign import Sign
-from emulator.parsers.sprite import Sprite
-from emulator.parsers.warp import Warp
+if TYPE_CHECKING:
+    from common.enums import BlockedDirection
+    from common.schemas import Coords
+    from emulator.parsers.sign import Sign
+    from emulator.parsers.sprite import Sprite
+    from emulator.parsers.warp import Warp
 
 
-class DialogBox(BaseModel):
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DialogBox:
     """The state of the dialog box."""
 
     top_line: str
     bottom_line: str
     has_cursor: bool
 
-    model_config = ConfigDict(frozen=True)
 
-
-class AsciiScreenWithEntities(BaseModel):
+@dataclass(frozen=True, slots=True, kw_only=True)
+class AsciiScreenWithEntities:
     """An ASCII representation of a screen with entities on it."""
 
     screen: list[list[str]]
@@ -28,8 +31,6 @@ class AsciiScreenWithEntities(BaseModel):
     sprites: list[Sprite]
     warps: list[Warp]
     signs: list[Sign]
-
-    model_config = ConfigDict(frozen=True)
 
     def __str__(self) -> str:
         """Return a string representation of the screen."""

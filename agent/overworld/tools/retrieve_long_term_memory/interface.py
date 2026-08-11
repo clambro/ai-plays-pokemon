@@ -1,5 +1,6 @@
 """Pydantic AI interface for retrieving long-term memory."""
 
+from copy import deepcopy
 from typing import TYPE_CHECKING, Annotated
 
 from pydantic import Field
@@ -8,7 +9,7 @@ from pydantic_ai import Tool
 from agent.overworld.tools.retrieve_long_term_memory.service import (
     retrieve_long_term_memory as retrieve_long_term_memory_service,
 )
-from agent.overworld.utils import (
+from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
 )
@@ -45,7 +46,7 @@ def build_retrieve_long_term_memory_tool(
             available_titles=available_long_term_memory_titles,
         )
         if retrieved_memory.pieces:
-            long_term_memory = context.state.long_term_memory.model_copy(deep=True)
+            long_term_memory = deepcopy(context.state.long_term_memory)
             long_term_memory.pieces.update(retrieved_memory.pieces)
             context.state.long_term_memory = long_term_memory
 

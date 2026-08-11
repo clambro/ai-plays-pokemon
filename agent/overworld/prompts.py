@@ -1,11 +1,14 @@
 """Prompts for the Pydantic AI overworld agent."""
 
+from itertools import groupby
 from typing import TYPE_CHECKING
 
-from agent.overworld.tools.navigate import formatting, utils
+from agent.overworld.tools.navigate import utils
+from common.enums import FacingDirection
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
+    from common.schemas import Coords
     from emulator.game_state import GameState
     from overworld_map.schemas import OverworldMap
 
@@ -90,12 +93,12 @@ def build_overworld_decision_prompt(
         )
         exploration = utils.get_exploration_candidates(accessible, current_map)
         boundaries = utils.get_map_boundary_tiles(accessible, current_map)
-        accessible_coords = formatting.format_coordinates_grid(accessible, current_map)
-        exploration_candidates = formatting.format_exploration_candidates(
+        accessible_coords = _format_coordinates_grid(accessible, current_map)
+        exploration_candidates = _format_exploration_candidates(
             exploration,
             current_map,
         )
-        map_boundaries = formatting.format_map_boundary_tiles(boundaries, current_map)
+        map_boundaries = _format_map_boundary_tiles(boundaries, current_map)
         biking_warning = ""
 
     inventory_indices = "\n".join(
@@ -121,3 +124,60 @@ def build_overworld_decision_prompt(
         biking_warning=biking_warning,
         inventory_indices=inventory_indices,
     )
+
+
+def _format_coordinates_grid(coordinates: list[Coords], map_data: OverworldMap) -> str:
+    """Format coordinates and their tile types as a grid."""
+    if not coordinates:
+        return ""
+
+    coordinates = sorted(coordinates, key=lambda c: (c.row, c.col))
+    rows = []
+    for _, row_coords in groupby(coordinates, key=lambda c: c.row):
+        row_str = ", ".join(
+            f"({c.row}, {c.col}, {map_data.ascii_tiles[c.row][c.col]})" for c in row_coords
+        )
+        rows.append(row_str)
+    return "\n".join(rows)
+
+
+def _format_exploration_candidates(
+    candidates: list[Coords],
+    map_data: OverworldMap,
+) -> str:
+    """Format exploration candidates for LLM consumption."""
+    if not candidates:
+        return "No exploration candidates found."
+    return _format_coordinates_grid(candidates, map_data)
+
+
+def _format_map_boundary_tiles(
+    boundary_tiles: dict[FacingDirection, list[Coords]],
+    map_data: OverworldMap,
+) -> str:
+    """Format accessible map boundaries for LLM consumption."""
+    output = []
+    map_connections = {
+        FacingDirection.UP: ("NORTH", map_data.north_connection),
+        FacingDirection.DOWN: ("SOUTH", map_data.south_connection),
+        FacingDirection.RIGHT: ("EAST", map_data.east_connection),
+        FacingDirection.LEFT: ("WEST", map_data.west_connection),
+    }
+
+    for facing_dir, (cardinal_dir, connection) in map_connections.items():
+        if connection is not None and boundary_tiles[facing_dir]:
+            coord_str = ", ".join(str(c) for c in boundary_tiles[facing_dir])
+            output.append(
+                f"The {connection.name} map boundary at the far {cardinal_dir} of the current map"
+                f" is accessible from {coord_str}.",
+            )
+        elif connection is not None:
+            output.append(
+                f"You have not yet discovered a valid path to the {connection.name} map"
+                f" boundary at the far {cardinal_dir} of the current map. You can likely find it"
+                f" either by visiting more exploration candidates, or perhaps by getting to a new"
+                f" part of the current map via an intermediate map (e.g. through a building or"
+                f" cave).",
+            )
+
+    return "\n".join(output)

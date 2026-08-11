@@ -7,7 +7,7 @@ from pydantic import BaseModel
 if TYPE_CHECKING:
     from agent.state import AgentState
     from emulator.game_state import GameState
-    from memory.rolling_memory import RollingMemory
+    from memory.rolling_memory.schemas import RollingMemory
 
 
 class PartyPokemonView(BaseModel):
