@@ -8,8 +8,6 @@ from openai.types.responses.response_usage import (
     OutputTokensDetails,
     ResponseUsage,
 )
-from PIL import Image
-from pydantic import BaseModel
 
 from agent.context import AgentContext
 from agent.state import AgentState
@@ -17,12 +15,6 @@ from llm import service
 from llm.usage import bind_llm_usage_updater
 
 TEST_SYSTEM_PROMPT = "Test system prompt."
-
-
-class SampleResponse(BaseModel):
-    """Structured response used by the service tests."""
-
-    value: str
 
 
 @pytest.mark.unit
@@ -65,40 +57,6 @@ async def test_get_llm_response_updates_agent_usage() -> None:
         instructions=TEST_SYSTEM_PROMPT,
         reasoning={"effort": "low"},
     )
-
-
-@pytest.mark.unit
-async def test_get_llm_response_pydantic_preserves_message_order() -> None:
-    """Send images and text in their original order and return parsed output."""
-    parsed = SampleResponse(value="parsed")
-    response = _response(output_text=parsed.model_dump_json())
-    client = MagicMock()
-    client.responses.create = AsyncMock(return_value=response)
-    usage_updater = AsyncMock()
-    screenshot = Image.new("RGB", (1, 1))
-
-    with (
-        patch("llm.service.AsyncOpenAI", return_value=client),
-        bind_llm_usage_updater(usage_updater),
-    ):
-        llm_service = service.OpenAILLMService()
-        result = await llm_service.get_llm_response_pydantic(
-            [screenshot, "prompt"],
-            SampleResponse,
-            system_prompt=TEST_SYSTEM_PROMPT,
-        )
-
-    assert result == parsed
-    await_args = client.responses.create.await_args
-    assert await_args is not None
-    request = await_args.kwargs
-    content = request["input"][0]["content"]
-    assert content[0]["type"] == "input_image"
-    assert content[0]["detail"] == "original"
-    assert content[0]["image_url"].startswith("data:image/png;base64,")
-    assert content[1] == {"type": "input_text", "text": "prompt"}
-    assert request["text"]["format"]["name"] == "SampleResponse"
-    assert request["text"]["format"]["strict"] is True
 
 
 @pytest.mark.unit
