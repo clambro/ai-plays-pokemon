@@ -2,51 +2,44 @@
 
 ## Outcome
 
-Determine whether sprite and sign memories provide enough decision quality to
-justify their prompt, tool-schema, and persistence costs. Evaluate each
-mechanism independently, then retain, simplify, consolidate, replace, or remove
-it based on evidence from actual play rather than preserving it by default.
+Remove unused agent-authored sprite and sign descriptions while retaining the
+discovered entity records used to reconstruct explored maps.
 
-Long-term memory was removed as the first part of this cleanup. The agent did
-not use it enough to justify a second durable memory system alongside rolling
-memory.
+Long-term memory and editable entity descriptions were removed as part of this
+cleanup. Neither justified a second durable semantic-memory mechanism alongside
+rolling memory.
 
 ## Motivation
 
-Sprite and sign memories should receive the same scrutiny. Their descriptions
-are persisted with explored-map entities and rendered back into map context,
-with separate tools for maintaining them. They may preserve useful local
-knowledge, but they may also repeat dialogue or observations already captured
-elsewhere, become stale, or consume prompt space without changing decisions.
+Map-entity persistence has a real structural consumer. It records which
+sprites, signs, and warps have been discovered, allowing the explored map to
+reconstruct current coordinates, sprite labels, warp destinations, and entity
+visibility from live emulator state.
+
+The editable description layer had no effective producer. In representative
+play, the agent discovered 18 sprites and 8 signs without writing a single
+description. Dialogue already entered rolling memory, while the optional update
+tools competed with gameplay actions and could not reliably attribute trainer
+battles, scripted scenes, or moving sprites to a single entity.
 
 ## Evaluation
 
-- Measure how often representative playthroughs call the `update_sprites` and
-  `update_signs` tools.
-- Review whether entity descriptions materially change later decisions or
-  merely repeat information already present in rolling memory, dialogue
-  history, goals, or current map state.
-- Evaluate sprite and sign memories separately; their stability and value may
-  differ, and they need not receive the same treatment.
-- Measure the prompt cost of stored entity descriptions and the associated tool
-  schemas as the data grows.
-- Review sprite and sign descriptions for usefulness, duplication, and
-  staleness over representative playthroughs.
-- Identify the appropriate owner and lifecycle for durable entity knowledge if
-  it remains: map entities, another existing context source, or no persistent
-  store.
-- Compare removal with simpler alternatives, including deterministic context
-  loading at meaningful boundaries and cheaper map annotations.
+- Preserve discovered entity identities and their existing structural
+  consumers.
+- Remove the unused description field, description-update tools, and associated
+  prompt text.
+- Remove entity creation and update timestamps, which existed only to support
+  editable descriptions and have no remaining consumer.
+- Keep explored-map timestamps unchanged because terrain discovery is still an
+  evolving persisted record.
 
 ## Decision
 
 Long-term memory, its tools, prompt preparation, agent state, and persistence
 code are removed. Rolling memory remains the durable chronological context.
 
-Document the evidence and make a separate decision for sprite memory and sign
-memory. For each mechanism:
-
-- retain it with a clear demonstrated use case;
-- simplify or consolidate it into a cheaper context policy; or
-- remove it and its prompt preparation, tools, and persistence behavior when
-  those no longer have a consumer.
+Map-entity discovery remains. Agent-authored sprite and sign descriptions,
+their tools, persistence fields, timestamps, and prompt guidance are removed.
+If actual play later demonstrates a need for spatially indexed semantic memory,
+it should be reintroduced with a concrete producer and retrieval lifecycle
+rather than restoring unused manual annotation tools.

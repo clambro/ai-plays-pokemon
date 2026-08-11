@@ -95,7 +95,7 @@ async def _get_sokoban_service(emulator: Emulator) -> SokobanSolverService:
     ):
         overworld_map = await prepare_overworld_map(0, game_state)
         overworld_map.known_sprites = {
-            s.index: OverworldSprite.from_sprite(s, None) for s in game_state.sprites.values()
+            s.index: OverworldSprite.from_sprite(s) for s in game_state.sprites.values()
         }
     return SokobanSolverService(
         emulator=emulator,

@@ -23,12 +23,6 @@ from agent.overworld.tools.swap_first_pokemon.interface import (
 from agent.overworld.tools.update_goal.interface import (
     build_update_goal_tool,
 )
-from agent.overworld.tools.update_signs.interface import (
-    build_update_signs_tool,
-)
-from agent.overworld.tools.update_sprites.interface import (
-    build_update_sprites_tool,
-)
 from agent.overworld.tools.use_item.interface import build_use_item_tool
 from common.enums import AsciiTile, SpriteLabel
 
@@ -61,21 +55,6 @@ def build_overworld_toolset(
             tools.append(build_use_item_tool(context))
     if _is_sokoban_available(current_map, game_state):
         tools.append(build_sokoban_solver_tool(context, current_map))
-    max_distance = 2
-    nearby_sprites = [
-        sprite
-        for sprite in current_map.known_sprites.values()
-        if (sprite.coords - game_state.player.coords).length <= max_distance
-    ]
-    nearby_signs = [
-        sign
-        for sign in current_map.known_signs.values()
-        if (sign.coords - game_state.player.coords).length <= max_distance
-    ]
-    if nearby_sprites:
-        tools.append(build_update_sprites_tool(context, current_map, nearby_sprites))
-    if nearby_signs:
-        tools.append(build_update_signs_tool(context, current_map, nearby_signs))
     return FunctionToolset(tools=tools)
 
 

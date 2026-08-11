@@ -70,7 +70,7 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         - ``right``: Used to move the player right.
 
         You can interact with warp tiles by walking on or through them,
-        depending on the instructions provided in the warp tile's description.
+        depending on the instructions provided for the warp tile.
 
         You can interact with sprites or signs using the action button, but you
         must be facing the entity you wish to interact with before doing so. If

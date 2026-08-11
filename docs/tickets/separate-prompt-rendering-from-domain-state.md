@@ -19,7 +19,7 @@ packages:
   `player_info`, `party_info`, `pc_info`, `battle_info`, and
   `_pokemon_list_to_str()`.
 - `overworld_map/schemas.py` renders the complete explored-map prompt, entity
-  descriptions, warp instructions, legends, connection notes, and adjacent-tile
+  details, warp instructions, legends, connection notes, and adjacent-tile
   guidance.
 - `overworld_map/prompts.py` contains agent instructions even though the
   `overworld_map` package otherwise owns explored-map state and persistence.
@@ -72,13 +72,11 @@ a second implementation of those sections.
 ### Overworld map and entities
 
 Add `agent/overworld/formatting.py` for model-facing map and entity rendering.
-This separate module is justified because its public formatters are consumed by
-both `agent/overworld/prompts.py` and the sprite/sign tool descriptions. It
-should own:
+This separate module keeps the substantial overworld presentation policy out of
+the explored-map domain records. It should own:
 
 - the current `OVERWORLD_MAP_STR_FORMAT` template;
 - `LEGEND_MAP` and the always-visible legend set;
-- the default unknown-entity description;
 - `format_overworld_map(current_map, game_state)`;
 - `format_overworld_sprite(sprite, map_id)`;
 - `format_overworld_sign(sign, map_id)`;
@@ -89,10 +87,12 @@ should own:
 Move the contents of `overworld_map/prompts.py` into this agent-owned module and
 delete the old file. Update the link in `docs/philosophy.md` to the new owner.
 
-The sprite and sign update-tool descriptions currently call entity
-`to_string()` methods. They should call the corresponding formatter so that the
-initial overworld prompt and the tool schemas continue to describe entities in
-the same way.
+Revisit `OverworldSprite` and `OverworldSign` as part of this move. After entity
+descriptions were removed, these subclasses remain only to construct copies of
+the parsed `Sprite` and `Sign` models and stringify them for the overworld
+prompt. Moving that formatting into the agent layer may eliminate their last
+reason to exist; if so, store the parser models directly on `OverworldMap`
+instead of preserving presentation-only domain types.
 
 ### Rolling-memory compaction
 
@@ -147,16 +147,16 @@ ownership problem under different names.
 
 1. Add the shared functions in `agent/prompts.py` and switch the text, battle,
    and overworld initial prompts plus battle tool results to them.
-2. Add `agent/overworld/formatting.py`, switch the initial overworld prompt and
-   sprite/sign tool descriptions to it, then remove map/entity presentation
-   methods and `overworld_map/prompts.py`.
+2. Add `agent/overworld/formatting.py`, switch the initial overworld prompt to
+   it, then remove map/entity presentation methods and
+   `overworld_map/prompts.py`.
 3. Move agent-facing goal and rolling-memory rendering into `agent/prompts.py`. Move
    compaction-source formatting into `memory/rolling_memory/prompts.py`, then
    remove the prompt-oriented `__str__` methods.
 4. Remove `AgentState.to_prompt_string()` and all now-unused presentation
    imports and constants from the domain modules.
-5. Update documentation references and verify that the constructed prompts and
-   tool descriptions have not changed.
+5. Update documentation references and verify that the constructed prompts
+   have not changed.
 
 Keep each stage behavior-preserving so failures can be attributed to one
 boundary move rather than a simultaneous prompt rewrite.
@@ -203,11 +203,10 @@ tests when implementation is complete.
 - Shared gameplay-state prompt fragments have one implementation in
   `agent/prompts.py`.
 - Overworld map and entity presentation is owned by
-  `agent/overworld/formatting.py` and shared by prompts and relevant tool
-  descriptions.
+  `agent/overworld/formatting.py`.
 - Rolling-memory compaction formatting remains explicitly owned by the memory
   compaction prompt module.
 - No replacement prompt-rendering methods are added to domain records.
-- Agent-visible prompts and tool descriptions are unchanged by the refactor.
+- Agent-visible prompts are unchanged by the refactor.
 - Documentation points to the new prompt owner.
 - Ruff, ty, and relevant tests pass.

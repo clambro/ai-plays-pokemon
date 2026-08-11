@@ -66,7 +66,7 @@ underlying tile is recoverable, or deliberate regeneration of explored maps.
 - Compose current entities onto terrain at the presentation boundary.
 - Make routing account for current blocking sprites without treating stale
   historical positions as terrain.
-- Preserve discovered descriptions and other durable entity metadata.
+- Preserve discovered entity identities and other durable structural metadata.
 - Remove stale player, Pikachu, and sprite glyphs when a map is revisited from
   a non-overlapping viewport.
 - Handle same-map Fly and other same-map relocation mechanisms explicitly.
@@ -104,7 +104,7 @@ rather than tests that restate overlay helper implementations. Include:
 - [ ] Same-map Fly cannot leave a duplicate player at the departure location.
 - [ ] Moving and removed sprites cannot leave stale routing obstacles.
 - [ ] Current blocking sprites still affect routing where appropriate.
-- [ ] Signs, warps, descriptions, and discovery state remain available without
+- [ ] Signs, warps, and discovery state remain available without
       being embedded as accidental terrain state.
 - [ ] Existing persisted maps are migrated, normalized, or deliberately
       regenerated with an explicit policy.

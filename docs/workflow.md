@@ -60,8 +60,6 @@ flowchart LR
         item["use_item"]
         swap["swap_first_pokemon"]
         sokoban["sokoban_solver"]
-        sprites["update_sprites"]
-        signs["update_signs"]
         create_goal["create_goal"]
         update_goal["update_goal"]
         delete_goal["delete_goal"]
@@ -72,8 +70,6 @@ flowchart LR
     choice --> item
     choice --> swap
     choice --> sokoban
-    choice --> sprites
-    choice --> signs
     choice --> create_goal
     choice --> update_goal
     choice --> delete_goal
@@ -83,8 +79,6 @@ flowchart LR
     item --> observe
     swap --> observe
     sokoban --> observe
-    sprites --> observe
-    signs --> observe
     create_goal --> observe
     update_goal --> observe
     delete_goal --> observe
@@ -105,8 +99,7 @@ Tool availability is derived once from the prepared state:
 - `navigation` is unavailable while biking;
 - `swap_first_pokemon` requires more than one party member;
 - `use_item` requires a non-empty inventory;
-- `sokoban_solver` requires a visible boulder and goal plus access to Strength; and
-- sprite and sign updates require an eligible entity within two tiles.
+- `sokoban_solver` requires a visible boulder and goal plus access to Strength.
 
 Keeping the registry fixed preserves prompt caching. Actions that depend on changing game state validate what they need immediately before acting rather than rebuilding the tool definitions during the run.
 
@@ -129,10 +122,6 @@ This lets the model swap its first Pokémon with another Pokémon in the party. 
 ### Sokoban Solver
 
 This was my least favourite tool to code because it is so complicated and we only need it in two areas, one of which is optional. "Sokoban" puzzles, named for the classic Japanese video game that popularized them, are the style of puzzles that appear in Pokémon as the boulder pushing puzzles in Victory Road and the Seafoam Islands. There is no way that the AI is solving these on its own, so we need an algorithm to do it. This category of problems is technically NP-hard, but thankfully the ones found in-game are simple enough to be solved quickly with a bounded search.
-
-### Update Sprites and Signs
-
-These tools let the agent persist useful descriptions of nearby map entities after learning something new about them. The model can update only the sprites or signs exposed by the fixed tool definition at the start of the run; the service persists accepted descriptions through the map-entity repository.
 
 ### Create, Update, and Delete Goals
 

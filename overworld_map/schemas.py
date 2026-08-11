@@ -17,9 +17,6 @@ if TYPE_CHECKING:
     from emulator.game_state import GameState
     from emulator.schemas import AsciiScreenWithEntities
 
-DEFAULT_ENTITY_DESCRIPTION = (
-    "No description added yet. Approach and interact with this entity to add a description."
-)
 _ALWAYS_VISIBLE_TILES = {
     AsciiTile.UNSEEN,
     AsciiTile.WALL,
@@ -37,12 +34,10 @@ _ALWAYS_VISIBLE_TILES = {
 class OverworldSprite(Sprite):
     """A sprite on the overworld map, known to the player."""
 
-    description: str | None
-
     @classmethod
-    def from_sprite(cls, sprite: Sprite, description: str | None) -> OverworldSprite:
-        """Create an overworld sprite from a sprite and a description."""
-        return cls(**sprite.model_dump(), description=description)
+    def from_sprite(cls, sprite: Sprite) -> OverworldSprite:
+        """Create an overworld sprite from parsed sprite state."""
+        return cls(**sprite.model_dump())
 
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sprite."""
@@ -54,31 +49,24 @@ class OverworldSprite(Sprite):
                 " Warning: This sprite wanders randomly around the map. Your reactions are too slow"
                 " to catch it. Sprites like this are not worth interacting with."
             )
-        out += f" Your description is: {self.description or DEFAULT_ENTITY_DESCRIPTION}"
         return out
 
 
 class OverworldSign(Sign):
     """A sign on the overworld map, known to the player."""
 
-    description: str | None
-
     @classmethod
-    def from_sign(cls, sign: Sign, description: str | None) -> OverworldSign:
-        """Create an overworld sign from a sign and a description."""
-        return cls(**sign.model_dump(), description=description)
+    def from_sign(cls, sign: Sign) -> OverworldSign:
+        """Create an overworld sign from parsed sign state."""
+        return cls(**sign.model_dump())
 
     def to_string(self, map_id: MapId) -> str:
         """Get a string representation of the sign."""
-        description = self.description or DEFAULT_ENTITY_DESCRIPTION
-        return f"sign_{map_id}_{self.index} at {self.coords}. Your description is: {description}"
+        return f"sign_{map_id}_{self.index} at {self.coords}."
 
 
 class OverworldWarp(Warp):
-    """A warp on the overworld map, known to the player.
-
-    Unlike signs and sprites, warps do not have an editable description.
-    """
+    """A warp on the overworld map, known to the player."""
 
     visited: bool
 

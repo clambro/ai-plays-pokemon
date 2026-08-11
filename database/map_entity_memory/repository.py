@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import and_, delete, or_, select, update
+from sqlalchemy import and_, delete, or_, select
 
 from database.db_config import db_sessionmaker
 from database.map_entity_memory.model import MapEntityMemoryDBModel
@@ -10,7 +10,6 @@ from database.map_entity_memory.schemas import (
     MapEntityMemoryCreate,
     MapEntityMemoryDelete,
     MapEntityMemoryRead,
-    MapEntityMemoryUpdate,
 )
 
 if TYPE_CHECKING:
@@ -32,11 +31,10 @@ async def get_map_entity_memories_for_map(map_id: MapId) -> list[MapEntityMemory
 async def apply_map_entity_changes(
     *,
     creates: Sequence[MapEntityMemoryCreate] = (),
-    updates: Sequence[MapEntityMemoryUpdate] = (),
     deletes: Sequence[MapEntityMemoryDelete] = (),
 ) -> None:
     """Apply a batch of map-entity changes in one transaction."""
-    if not creates and not updates and not deletes:
+    if not creates and not deletes:
         return
 
     async with db_sessionmaker.begin() as session:
@@ -46,28 +44,10 @@ async def apply_map_entity_changes(
                     map_id=entity.map_id,
                     entity_id=entity.entity_id,
                     entity_type=entity.entity_type,
-                    description=None,
-                    create_iteration=entity.iteration,
-                    update_iteration=entity.iteration,
                 )
                 for entity in creates
             ],
         )
-
-        if updates:
-            await session.execute(
-                update(MapEntityMemoryDBModel),
-                [
-                    {
-                        "map_id": entity.map_id,
-                        "entity_id": entity.entity_id,
-                        "entity_type": entity.entity_type,
-                        "description": entity.description,
-                        "update_iteration": entity.iteration,
-                    }
-                    for entity in updates
-                ],
-            )
 
         if deletes:
             await session.execute(
