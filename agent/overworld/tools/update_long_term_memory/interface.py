@@ -1,5 +1,6 @@
 """Pydantic AI interface for updating long-term memory."""
 
+from copy import deepcopy
 from typing import TYPE_CHECKING, Annotated
 
 from pydantic import Field
@@ -93,7 +94,7 @@ def build_update_long_term_memory_tool(
         except LongTermMemoryNotLoadedError as error:
             result = str(error)
         else:
-            long_term_memory = context.state.long_term_memory.model_copy(deep=True)
+            long_term_memory = deepcopy(context.state.long_term_memory)
             long_term_memory.pieces[memory.title] = memory
             context.state.long_term_memory = long_term_memory
             result = (
