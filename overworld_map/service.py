@@ -1,4 +1,4 @@
-"""Storage and rendering for the explored overworld map."""
+"""Persistence and updates for the explored overworld map."""
 
 from typing import TYPE_CHECKING
 

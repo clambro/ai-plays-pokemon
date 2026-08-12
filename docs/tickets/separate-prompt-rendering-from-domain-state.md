@@ -82,21 +82,17 @@ There must not be a second implementation of those sections.
 
 ### Overworld map and entities
 
-Add `agent/overworld/formatting.py` for model-facing map and entity rendering.
-This separate module keeps the substantial overworld presentation policy out of
-the explored-map domain records. It should own:
+Use the same two-file split as the other agent features:
 
-- the current `OVERWORLD_MAP_STR_FORMAT` template;
-- `LEGEND_MAP` and the always-visible legend set;
-- `format_overworld_map(current_map, game_state)`;
-- `format_overworld_sprite(sprite, map_id)`;
-- `format_overworld_sign(sign, map_id)`;
-- `format_overworld_warp(warp, map_id)`; and
-- private helpers for the legend, facing tile, adjacent-tile blockage notes,
-  known entities, map connections, and warp-entry instructions.
+- `agent/overworld/prompts.py` owns both complete prompt templates, their
+  model-facing literal text, `LEGEND_MAP`, and complete prompt composition; and
+- `agent/overworld/formatting.py` owns the map, entity, navigation-coordinate,
+  exploration-candidate, and map-boundary text fragments, plus their private
+  helpers.
 
-Move the contents of `overworld_map/prompts.py` into this agent-owned module and
-delete the old file. Update the link in `docs/philosophy.md` to the new owner.
+This keeps prompt text visibly in a prompt module while removing presentation
+behavior from explored-map records. Delete `overworld_map/prompts.py` and update
+the link in `docs/philosophy.md` to the agent-owned prompt module.
 
 Revisit `OverworldSprite` and `OverworldSign` as part of this move. After entity
 descriptions were removed, these subclasses remain only to construct copies of
@@ -241,11 +237,14 @@ work before presentation ownership continues moving across additional modules.
 
 ### Commit 4: Move overworld rendering into the agent layer
 
-- Add `agent/overworld/formatting.py` and move the map template, legend,
-  always-visible legend set, complete map formatter, sprite/sign/warp
-  formatters, and all presentation-only map helpers into it.
-- Switch `agent/overworld/prompts.py` from `OverworldMap.to_string()` to
-  `format_overworld_map()`.
+- Move the map template and legend text into `agent/overworld/prompts.py`
+  alongside the existing decision prompt, and compose the complete map section
+  there.
+- Add `agent/overworld/formatting.py` for sprite/sign/warp fragments,
+  navigation-coordinate formatting, and the remaining presentation-only map
+  helpers.
+- Switch `agent/overworld/prompts.py` from `OverworldMap.to_string()` to its
+  agent-owned map composition and formatting functions.
 - Remove `OverworldMap.to_string()` and its legend, facing-tile,
   adjacent-tile, entity-note, and connection-note helpers. Remove entity
   `to_string()` methods and `OverworldWarp.description`; the new formatter must
@@ -352,8 +351,8 @@ tests when implementation is complete.
 - Shared gameplay-state prompt fragments have one implementation in the
   focused modules under `agent/formatting/`, while each feature prompt owns its
   composition.
-- Overworld map and entity presentation is owned by
-  `agent/overworld/formatting.py`.
+- Overworld prompt text is owned by `agent/overworld/prompts.py`, while its map
+  and entity formatting is owned by `agent/overworld/formatting.py`.
 - Rolling-memory compaction formatting remains explicitly owned by the memory
   compaction prompt module.
 - No replacement prompt-rendering methods are added to domain records.

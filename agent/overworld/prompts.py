@@ -1,18 +1,119 @@
 """Prompts for the Pydantic AI overworld agent."""
 
-from itertools import groupby
 from typing import TYPE_CHECKING
 
 from agent.formatting.game_state import format_player_info
 from agent.formatting.memory import format_goals, format_rolling_memory
+from agent.overworld import formatting
 from agent.overworld.tools.navigate import utils
-from common.enums import FacingDirection
+from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
+from common.enums import AsciiTile, BlockedDirection
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
-    from common.schemas import Coords
     from emulator.game_state import GameState
     from overworld_map.schemas import OverworldMap
+
+OVERWORLD_MAP_PROMPT = f"""
+<map_info>
+Map name: {{map_name}}
+<ascii_screen>
+{{ascii_screen}}
+</ascii_screen>
+<whole_map>
+{{ascii_map}}
+</whole_map>
+You have explored {{explored_percentage}} of this map.
+<legend>
+{{legend}}
+</legend>
+
+The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map in row-column order is {{height}}x{{width}} blocks.
+
+<screen_position>
+The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size). This should help you navigate from one map to another.
+
+The top of the screen is currently at row {{screen_top}} in map coordinates.
+The bottom of the screen is currently at row {{screen_bottom}} in map coordinates.
+The left side of the screen is currently at column {{screen_left}} in map coordinates.
+The right side of the screen is currently at column {{screen_right}} in map coordinates.
+</screen_position>
+
+<player_position>
+You, the player, are at position {{player_coords}} in map coordinates.
+You are facing {{player_direction}}. The tile you are facing is "{{facing_tile}}" at position {{facing_tile_coords}}.
+
+The tile directly above you is "{{tile_above}}"{{blocked_above}}.
+The tile directly below you is "{{tile_below}}"{{blocked_below}}.
+The tile directly to the left of you is "{{tile_left}}"{{blocked_left}}.
+The tile directly to the right of you is "{{tile_right}}"{{blocked_right}}.
+</player_position>
+
+<map_connections>
+{{connections}}
+</map_connections>
+
+You have discovered the following sprites on the portion of the map that you have revealed so far. Do not make any assumptions about who or what a sprite is before you have interacted with it.
+<known_sprites>
+{{known_sprites}}
+</known_sprites>
+
+You have discovered the following warp tiles on the portion of the map that you have revealed so far:
+<known_warps>
+{{known_warps}}
+</known_warps>
+
+You have discovered the following signs on the portion of the map that you have revealed so far:
+<known_signs>
+{{known_signs}}
+</known_signs>
+
+Navigation tips:
+- You should explore as much of the map as possible to reveal the unexplored tiles, as they may be hiding important sprites or warp tiles. Tiles are considered explored once they are on screen, so move towards the unexplored tiles to reveal them.
+- Exploring the map to reveal unexplored tiles is always a good idea, especially if you feel stuck or unsure of how to proceed.
+- The orientation of the map and screen is always fixed, regardless of the direction that you are facing.
+- Warp tiles come in two varieties: single and double.
+  - Single warp tiles (staircases, teleporters, doors, etc.) are activated by standing on them. If you are standing on a warp tile and not going anywhere, it means that you have just warped to this tile from somewhere else. If you want to go back to your previous location and are standing on a single warp tile, you have to walk off the tile and then back on it to warp back.
+  - Double warp tiles (two warp tiles side by side, usually a doormat) are usually found on the edge of a map, and have to be walked through to warp. This is the only instance in which you are allowed to walk into a barrier tile.
+  - Do not attempt to interact with a warp tile using the action button. You have to walk on or through the tile depending on its type to warp.
+- To connect from one map to another, you must either use a warp tile, or, *in outdoor maps only*, walk off the edge of the map. In outdoor maps, you will never be able to walk through a wall or barrier for any reason. You have to find where the edge of the map connects to the next map by looking at the ASCII screen.
+- If you are indoors, the edges of the map (indicated by a black void in the screenshot) are impassable. You cannot walk off the edge of an indoor map. The only exception to this is the case of double warp tiles, as described above. Warp tiles are the only way to move between maps indoors.
+- Pay attention to the "leading to" description in each warp tile. This comes straight from the game's memory and will tell you which map you will be warped to from that tile.
+- To interact with a sprite, you need to be directly adjacent to it, face it, and press the action button. The only exception to the direct adjacency rule is in Poke Marts, Pokemon Centers, or gates where you interact with the clerk/nurse/guard respectively from across the counter. In these cases, you must stand two tiles away from the sprite (horizontally or vertically depending on the counter, but not diagonally), face it across the counter (an adjacent "{AsciiTile.WALL}" tile), and press the action button.
+- If you want to interact with a sprite, you should move to the tile adjacent to it. Do not attempt to move onto the sprite's tile. You cannot walk on or through sprites (except for Pikachu, as described above).
+- Note that some sprites move around, so their position may change between screenshots. Do not let this confuse you. The information that you have in the <known_sprites> section is the most accurate information available to you since it comes straight from the game's memory at this moment in time.
+- It is generally not worth interacting with sprites and signs more than once. They usually do not change between interactions.
+- Pay attention to the "sprite is labeled" section in each sprite. This will tell you what the sprite is labeled as in the game's memory, and should help you determine what the sprite is.
+- Focus on the map when you are trying to navigate within a map. Focus on the screen when you are trying to navigate between maps.
+
+Note that this ASCII information comes straight from the game's memory and is therefore perfectly reliable. Screenshot images can be misinterpreted, so use the ASCII map and screen to determine the exact location of any sprites or tiles, and consider the screenshot image as supplemental information to help you visually interpret the ASCII.
+</map_info>
+""".strip()
+
+LEGEND_MAP = {
+    AsciiTile.UNSEEN: "Tiles that you have not yet explored. Move toward these tiles to reveal them.",
+    AsciiTile.WALL: "A barrier (usually a wall or an object) that you cannot pass through.",
+    AsciiTile.WATER: "Water.",
+    AsciiTile.GRASS: "Tall grass, where wild Pokemon can be found.",
+    AsciiTile.LEDGE_DOWN: "A ledge that you can jump down from above. These tiles are only passable if you approach them from above and walk downwards.",
+    AsciiTile.LEDGE_LEFT: "A ledge that you can jump over from right to left. These tiles are only passable if you approach them from the right and walk leftwards.",
+    AsciiTile.LEDGE_RIGHT: "A ledge that you can jump over from left to right. These tiles are only passable if you approach them from the left and walk rightwards.",
+    AsciiTile.FREE: "A walkable tile with nothing noteworthy in it.",
+    AsciiTile.PLAYER: "Your current location.",
+    AsciiTile.SPRITE: "A sprite that you can interact with from an adjacent tile. This could be an NPC, an item you can pick up, or some other interactable entity. You cannot walk through sprites, nor can you stand on top of them.",
+    AsciiTile.WARP: "A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.",
+    AsciiTile.CUT_TREE: "A tree that can be cut down.",
+    AsciiTile.BOULDER_HOLE: "A hole in the ground that you can fall through by standing on it. You can also push boulders into these holes to drop them to the floor below.",
+    AsciiTile.PRESSURE_PLATE: "A pressure plate that you can activate by pushing a boulder onto it.",
+    AsciiTile.PC_TILE: "The PC in a Pokemon Center. You can swap your party members with boxed Pokemon by interacting with it. The PC can only be interacted with from below.",
+    AsciiTile.PIKACHU: "Your companion Pikachu that follows you around. Unlike other sprites, you can walk through Pikachu, which will cause it to switch places with you. You can speak to Pikachu like any other sprite, but doing so only provides flavour text.",
+    AsciiTile.SIGN: "An object that you can interact with to read something. Usually a signpost, but could be a TV, radio, or other object. The main distinction between signs and sprites is that signs are static. They will never move, and their text will never change. Signs are usually interacted with from below, and cannot be walked through.",
+    AsciiTile.SPINNER_UP: "A spinner tile that moves you upwards.",
+    AsciiTile.SPINNER_DOWN: "A spinner tile that moves you downwards.",
+    AsciiTile.SPINNER_LEFT: "A spinner tile that moves you leftwards.",
+    AsciiTile.SPINNER_RIGHT: "A spinner tile that moves you rightwards.",
+    AsciiTile.SPINNER_STOP: "The tile that stops your spinner movement.",
+}
 
 OVERWORLD_DECISION_PROMPT = """
 You are navigating the overworld. At entry, you are standing still, there is no
@@ -62,6 +163,45 @@ will be returned after each tool executes.
 """.strip()
 
 
+def _format_overworld_map(current_map: OverworldMap, game_state: GameState) -> str:
+    """Build the explored-map portion of the overworld prompt."""
+    screen = game_state.get_ascii_screen()
+    facing_tile, facing_tile_coords = formatting.get_facing_tile_notes(game_state)
+    tile_above, blocked_above = formatting.get_tile_notes(BlockedDirection.UP, screen)
+    tile_below, blocked_below = formatting.get_tile_notes(BlockedDirection.DOWN, screen)
+    tile_left, blocked_left = formatting.get_tile_notes(BlockedDirection.LEFT, screen)
+    tile_right, blocked_right = formatting.get_tile_notes(BlockedDirection.RIGHT, screen)
+    return OVERWORLD_MAP_PROMPT.format(
+        map_name=current_map.id.name,
+        ascii_map=current_map.ascii_tiles_str,
+        legend=formatting.format_legend(current_map, LEGEND_MAP),
+        height=current_map.height,
+        width=current_map.width,
+        known_sprites=formatting.format_sprite_notes(current_map),
+        known_warps=formatting.format_warp_notes(current_map),
+        known_signs=formatting.format_sign_notes(current_map),
+        explored_percentage=formatting.format_explored_percentage(current_map),
+        ascii_screen=screen,
+        player_coords=game_state.player.coords,
+        player_direction=game_state.player.direction,
+        facing_tile=facing_tile,
+        facing_tile_coords=facing_tile_coords,
+        tile_above=tile_above,
+        blocked_above=blocked_above,
+        tile_below=tile_below,
+        blocked_below=blocked_below,
+        tile_left=tile_left,
+        blocked_left=blocked_left,
+        tile_right=tile_right,
+        blocked_right=blocked_right,
+        screen_top=game_state.screen.top,
+        screen_left=game_state.screen.left,
+        screen_bottom=game_state.screen.bottom,
+        screen_right=game_state.screen.right,
+        connections=formatting.format_connection_notes(current_map),
+    )
+
+
 def build_overworld_decision_prompt(
     context: AgentContext,
     current_map: OverworldMap,
@@ -87,12 +227,12 @@ def build_overworld_decision_prompt(
         )
         exploration = utils.get_exploration_candidates(accessible, current_map)
         boundaries = utils.get_map_boundary_tiles(accessible, current_map)
-        accessible_coords = _format_coordinates_grid(accessible, current_map)
-        exploration_candidates = _format_exploration_candidates(
+        accessible_coords = formatting.format_coordinates_grid(accessible, current_map)
+        exploration_candidates = formatting.format_exploration_candidates(
             exploration,
             current_map,
         )
-        map_boundaries = _format_map_boundary_tiles(boundaries, current_map)
+        map_boundaries = formatting.format_map_boundary_tiles(boundaries, current_map)
         biking_warning = ""
 
     inventory_indices = "\n".join(
@@ -104,7 +244,7 @@ def build_overworld_decision_prompt(
             (
                 format_rolling_memory(context.state.rolling_memory),
                 format_goals(context.state.goals),
-                current_map.to_string(game_state),
+                _format_overworld_map(current_map, game_state),
                 format_player_info(game_state),
             ),
         ),
@@ -114,60 +254,3 @@ def build_overworld_decision_prompt(
         biking_warning=biking_warning,
         inventory_indices=inventory_indices,
     )
-
-
-def _format_coordinates_grid(coordinates: list[Coords], map_data: OverworldMap) -> str:
-    """Format coordinates and their tile types as a grid."""
-    if not coordinates:
-        return ""
-
-    coordinates = sorted(coordinates, key=lambda c: (c.row, c.col))
-    rows = []
-    for _, row_coords in groupby(coordinates, key=lambda c: c.row):
-        row_str = ", ".join(
-            f"({c.row}, {c.col}, {map_data.ascii_tiles[c.row][c.col]})" for c in row_coords
-        )
-        rows.append(row_str)
-    return "\n".join(rows)
-
-
-def _format_exploration_candidates(
-    candidates: list[Coords],
-    map_data: OverworldMap,
-) -> str:
-    """Format exploration candidates for LLM consumption."""
-    if not candidates:
-        return "No exploration candidates found."
-    return _format_coordinates_grid(candidates, map_data)
-
-
-def _format_map_boundary_tiles(
-    boundary_tiles: dict[FacingDirection, list[Coords]],
-    map_data: OverworldMap,
-) -> str:
-    """Format accessible map boundaries for LLM consumption."""
-    output = []
-    map_connections = {
-        FacingDirection.UP: ("NORTH", map_data.north_connection),
-        FacingDirection.DOWN: ("SOUTH", map_data.south_connection),
-        FacingDirection.RIGHT: ("EAST", map_data.east_connection),
-        FacingDirection.LEFT: ("WEST", map_data.west_connection),
-    }
-
-    for facing_dir, (cardinal_dir, connection) in map_connections.items():
-        if connection is not None and boundary_tiles[facing_dir]:
-            coord_str = ", ".join(str(c) for c in boundary_tiles[facing_dir])
-            output.append(
-                f"The {connection.name} map boundary at the far {cardinal_dir} of the current map"
-                f" is accessible from {coord_str}.",
-            )
-        elif connection is not None:
-            output.append(
-                f"You have not yet discovered a valid path to the {connection.name} map"
-                f" boundary at the far {cardinal_dir} of the current map. You can likely find it"
-                f" either by visiting more exploration candidates, or perhaps by getting to a new"
-                f" part of the current map via an intermediate map (e.g. through a building or"
-                f" cave).",
-            )
-
-    return "\n".join(output)
