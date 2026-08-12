@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 from pydantic_ai import BinaryContent
 
+from agent.battle.formatting import format_battle_info
+from agent.formatting.game_state import format_party_info
 from agent.utils import DialogReader, build_screenshot_content
 from common.enums import BattleType, PokeballItem
 from common.schemas import Coords
@@ -35,9 +37,9 @@ def build_battle_tool_result(
         ]
     sections.extend(
         (
-            game_state.party_info,
+            format_party_info(game_state),
             "Available Poke Balls:\n" + "\n".join(available_balls) if available_balls else "",
-            game_state.battle_info,
+            format_battle_info(game_state),
             "Current onscreen text:\n" + game_state.screen.text,
         ),
     )

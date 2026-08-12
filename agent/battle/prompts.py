@@ -2,6 +2,9 @@
 
 from typing import TYPE_CHECKING
 
+from agent.battle.formatting import format_battle_info
+from agent.formatting.game_state import format_player_info
+
 if TYPE_CHECKING:
     from agent.context import AgentContext
     from emulator.game_state import GameState
@@ -32,8 +35,8 @@ def build_battle_decision_prompt(
         (
             str(context.state.rolling_memory),
             str(context.state.goals),
-            initial_game_state.player_info,
-            initial_game_state.battle_info,
+            format_player_info(initial_game_state),
+            format_battle_info(initial_game_state),
         ),
     )
     return BATTLE_DECISION_PROMPT.format(

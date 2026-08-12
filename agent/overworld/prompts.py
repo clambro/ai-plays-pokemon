@@ -3,6 +3,7 @@
 from itertools import groupby
 from typing import TYPE_CHECKING
 
+from agent.formatting.game_state import format_player_info
 from agent.overworld.tools.navigate import utils
 from common.enums import FacingDirection
 
@@ -103,7 +104,7 @@ def build_overworld_decision_prompt(
                 str(context.state.rolling_memory),
                 str(context.state.goals),
                 current_map.to_string(game_state),
-                game_state.player_info,
+                format_player_info(game_state),
             ),
         ),
         accessible_coords=accessible_coords,

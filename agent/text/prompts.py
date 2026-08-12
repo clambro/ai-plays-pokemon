@@ -2,6 +2,8 @@
 
 from typing import TYPE_CHECKING
 
+from agent.formatting.game_state import format_player_info
+
 if TYPE_CHECKING:
     from agent.context import AgentContext
     from emulator.game_state import GameState
@@ -24,7 +26,14 @@ def build_text_decision_prompt(
     initial_game_state: GameState,
 ) -> str:
     """Build the prompt for the initial actionable text screen."""
+    state = "\n\n".join(
+        (
+            str(context.state.rolling_memory),
+            str(context.state.goals),
+            format_player_info(initial_game_state),
+        ),
+    )
     return TEXT_DECISION_PROMPT.format(
-        state=context.state.to_prompt_string(initial_game_state),
+        state=state,
         text=initial_game_state.screen.text,
     )
