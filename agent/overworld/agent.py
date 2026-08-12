@@ -54,7 +54,6 @@ async def run_overworld(
     context: AgentContext,
 ) -> None:
     """Run the overworld agent until the player moves or leaves the overworld."""
-    logger.info("Running the overworld agent...")
     await context.begin_iteration()
     initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
     current_map = await prepare_overworld_map(context.state.iteration, initial_game_state)
@@ -82,7 +81,9 @@ async def run_overworld(
                     if _should_end_overworld_run(initial_game_state, game_state):
                         break
     except AgentRunError as error:
-        logger.warning(f"Error running overworld agent. Skipping. {error}")
+        logger.opt(exception=error).warning(
+            "Overworld agent run failed; returning control to the dispatcher."
+        )
         return
     await finalize_iteration(context.state.rolling_memory)
 

@@ -2,8 +2,6 @@
 
 from dataclasses import dataclass, field
 
-from loguru import logger
-
 
 @dataclass(slots=True, kw_only=True)
 class CurrentMemoryBlock:
@@ -59,8 +57,4 @@ class RollingMemory:
 
     def add_memory(self, content: str) -> None:
         """Add content to the current application iteration."""
-        if self.current_block.content:
-            logger.info(f"Appending to thought: {content}")
-        else:
-            logger.info(f"Adding new thought: [{self.current_block.iteration}]: {content}")
         self.current_block.append(content)

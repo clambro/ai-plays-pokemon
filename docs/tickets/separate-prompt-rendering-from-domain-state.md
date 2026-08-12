@@ -157,9 +157,11 @@ ownership problem under different names.
 
 ## Staged Commit Plan
 
-Implement and commit these stages in order. Each commit must remove the old
-path it replaces, preserve the current output byte-for-byte, and leave the
-repository in a coherent state without a temporary compatibility API.
+Implement and commit these stages in order. The ownership commits must remove
+the old paths they replace, preserve current output byte-for-byte, and leave the
+repository in a coherent state without temporary compatibility APIs. Commit 3
+changes only operational logging; Commit 6 is the explicit prompt-content
+review where deliberate wording changes are allowed.
 
 Before the first code change, generate untracked representative prompt and
 compaction-source outputs under `/tmp`. Use those outputs as the byte-for-byte
@@ -204,8 +206,6 @@ prompts, while every existing caller moves to the new shared owner atomically.
   compaction requests in `memory/rolling_memory/service.py`.
 - Remove prompt-oriented `__str__` methods from `Goal`, `Goals`,
   `CurrentMemoryBlock`, `RawMemoryBlock`, `MemorySummary`, and `RollingMemory`.
-  Update goal logging to select its fields explicitly rather than falling back
-  to a dataclass representation.
 - Keep the existing domain test for chronological memory accumulation by
   asserting stored content directly. Move the substantive chronological prompt
   ordering assertion to the agent formatter tests; do not add full prompt
@@ -217,7 +217,29 @@ prompts, while every existing caller moves to the new shared owner atomically.
 This stage updates both consumers of rolling memory together, so removing its
 string API cannot break compaction while fixing agent prompt ownership.
 
-### Commit 3: Move overworld rendering into the agent layer
+### Commit 3: Tighten operational logging
+
+- Remove high-frequency narration of handler dispatch, animation waits, goal
+  mutation, and rolling-memory contents. These are ordinary control flow or
+  authoritative application state, not operational logs.
+- Remove warnings for expected tool outcomes such as rejected navigation and
+  unavailable Sokoban puzzles. The result already belongs in the tool response
+  and rolling memory.
+- Keep rare lifecycle messages, but emit backup and fresh-database messages only
+  after successful completion. Treat missing optional telemetry as informational.
+- Preserve traceback context for recovered agent failures. Do not log expected
+  item-use or party-order validation failures; log only unexpected exceptions at
+  the boundary that converts them into a recoverable tool result.
+- Document the boundary between operational logging, Logfire telemetry, and
+  gameplay history in `AGENTS.md`.
+- Run static checks and the focused existing checks for the touched agent,
+  memory, navigation, tool, and streaming paths before committing. Prompt output
+  and application behavior must not change.
+
+This intermezzo removes telemetry-like logging exposed by the prompt and memory
+work before presentation ownership continues moving across additional modules.
+
+### Commit 4: Move overworld rendering into the agent layer
 
 - Add `agent/overworld/formatting.py` and move the map template, legend,
   always-visible legend set, complete map formatter, sprite/sign/warp
@@ -232,7 +254,7 @@ string API cannot break compaction while fixing agent prompt ownership.
   `docs/philosophy.md`, and change any map-service wording that still claims
   the domain package owns rendering.
 - Leave `OverworldSprite` and `OverworldSign` as temporarily empty data wrappers
-  in this commit. Removing them is a separate state-model change in Commit 4,
+  in this commit. Removing them is a separate state-model change in Commit 5,
   which keeps this already-large rendering move reviewable.
 - Compare representative explored-map prompts covering the conditional cases
   listed under Verification with the baseline. Run the focused overworld-map,
@@ -241,7 +263,7 @@ string API cannot break compaction while fixing agent prompt ownership.
 This commit moves one complete presentation surface without simultaneously
 changing the types stored by explored-map memory.
 
-### Commit 4: Remove presentation-only sprite and sign wrappers
+### Commit 5: Remove presentation-only sprite and sign wrappers
 
 - Delete `OverworldSprite` and `OverworldSign`.
 - Type `OverworldMap.known_sprites` and `known_signs` as the parsed `Sprite` and
@@ -255,10 +277,32 @@ changing the types stored by explored-map memory.
 - Recompare overworld output with the baseline, then run the focused map,
   navigation, and Sokoban checks before committing.
 
-This final code stage removes types whose only purpose disappeared in Commit 3,
+This state-model stage removes types whose only purpose disappeared in Commit 4,
 without conflating that model cleanup with the rendering move itself.
 
-After Commit 4, audit for the removed APIs and old module path with `rg`, then
+### Commit 6: Audit and refine the prompt contents
+
+- Manually review every complete text, battle, overworld, and rolling-memory
+  compaction prompt, plus tool instructions and model-facing tool results, after
+  presentation ownership is settled.
+- Evaluate whether each instruction is still accurate, necessary, placed in the
+  correct prompt, and useful to the model. Remove stale guidance, accidental
+  duplication, and details already communicated by structured state or tool
+  schemas.
+- Review section ordering, XML boundaries, whitespace, and terminology across
+  prompt surfaces for consistency without forcing unrelated agents into one
+  generic template.
+- Exercise representative prompt outputs manually and review them as complete
+  model inputs. Unlike the preceding ownership commits, wording changes are
+  expected here and must be evaluated deliberately rather than compared with the
+  old byte-for-byte baseline.
+- Run the focused prompt and agent checks after the content is approved.
+
+This final stage is a content review, not another ownership refactor. Keeping it
+separate makes prompt behavior changes visible and prevents mechanical moves
+from silently endorsing the existing wording.
+
+After Commit 5, audit for the removed APIs and old module path with `rg`, then
 run Ruff, ty, and the full relevant test set. Any cleanup found by that audit
 belongs in the commit whose extraction left it behind rather than in a mixed
 catch-all commit.
@@ -276,10 +320,11 @@ Before removing the old methods, compare representative old and new outputs for:
 - rolling memory containing raw blocks and multi-level summaries; and
 - empty and populated goals.
 
-The comparison should be byte-for-byte for this refactor, including XML,
+The comparison should be byte-for-byte through Commit 5, including XML,
 whitespace, ordering, and instructional text. Use temporary/local comparison
 code where useful; do not add large snapshot fixtures or tests that merely copy
-the prompt implementation.
+the prompt implementation. Commit 6 should instead review and approve its prompt
+changes as intentional content changes.
 
 Retain or add committed tests only where they protect a substantive formatting
 rule likely to regress independently, such as stable ordering or conditional
@@ -290,8 +335,10 @@ tests when implementation is complete.
 
 ## Out of Scope
 
-- Rewriting, shortening, or otherwise improving prompt content.
-- Changing XML tags, whitespace, ordering, or empty-section behavior.
+- Changing prompt content during the ownership stages; content changes are
+  reserved for the explicit audit in Commit 6.
+- Changing XML tags, whitespace, ordering, or empty-section behavior outside
+  the explicit audit in Commit 6.
 - Changing parsed emulator state, explored-map behavior, navigation, or map
   persistence.
 - Reworking prompt caching, tool registration, or agent lifecycle.
@@ -310,6 +357,7 @@ tests when implementation is complete.
 - Rolling-memory compaction formatting remains explicitly owned by the memory
   compaction prompt module.
 - No replacement prompt-rendering methods are added to domain records.
-- Agent-visible prompts are unchanged by the refactor.
+- Agent-visible prompts are unchanged through the ownership refactor, and any
+  later content changes are isolated in the final prompt-audit commit.
 - Documentation points to the new prompt owner.
 - Ruff, ty, and relevant tests pass.

@@ -43,7 +43,6 @@ def build_battle_agent(
 
 async def run_battle(context: AgentContext) -> None:
     """Run one agent conversation until the game exits battle mode."""
-    logger.info("Running the battle agent...")
     await context.begin_iteration()
     initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
     agent = build_battle_agent(
@@ -68,7 +67,9 @@ async def run_battle(context: AgentContext) -> None:
                     if not is_battle_handler_state(game_state):
                         break
     except AgentRunError as error:
-        logger.warning(f"Error running battle agent. Skipping. {error}")
+        logger.opt(exception=error).warning(
+            "Battle agent run failed; returning control to the dispatcher."
+        )
         return
     await finalize_iteration(context.state.rolling_memory)
 

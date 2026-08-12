@@ -7,7 +7,6 @@ from contextlib import AbstractAsyncContextManager
 from copy import deepcopy
 from typing import TYPE_CHECKING, Self
 
-from loguru import logger
 from PIL import Image
 
 from common.constants import DEFAULT_ROM_PATH
@@ -162,7 +161,6 @@ class Emulator(AbstractAsyncContextManager):
         Returns:
             The final observed game state.
         """
-        logger.info("Checking for animations and waiting for them to finish.")
         successes = 0
         required_successes = 5
         game_state = await self.get_game_state()

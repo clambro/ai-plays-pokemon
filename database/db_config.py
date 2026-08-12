@@ -18,8 +18,6 @@ db_sessionmaker = async_sessionmaker(_engine, expire_on_commit=False)
 
 async def init_fresh_db() -> None:
     """Initialize a fresh database by deleting the database folder and recreating it."""
-    logger.info(f"Initializing a fresh database at: {DB_URL}")
-
     db_folder = DB_FILE_PATH.parent
     if db_folder.exists():
         for file in db_folder.iterdir():
@@ -45,4 +43,4 @@ async def init_fresh_db() -> None:
         await conn.execute(text("PRAGMA journal_mode=WAL"))
         await conn.execute(text("PRAGMA synchronous = NORMAL"))
 
-    logger.info("Database initialized successfully.")
+    logger.info("Initialized fresh database at {}.", DB_FILE_PATH)
