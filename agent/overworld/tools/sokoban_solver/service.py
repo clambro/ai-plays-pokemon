@@ -46,7 +46,7 @@ class SokobanSolverService:
         sokoban_map.collision_tiles = collision_tiles
         solution = self._solve_sokoban(sokoban_map, game_state)
 
-        if not solution:
+        if solution is None:
             result = (
                 "The Sokoban solver was unable to find a solution. The map may not have been"
                 " explored enough, boulders may need to be moved from other locations first,"
@@ -74,7 +74,8 @@ class SokobanSolverService:
         for row_idx, row in enumerate(navigation_tiles):
             simplified_row = []
             for col_idx, t in enumerate(row):
-                if t in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE):
+                terrain = self.current_map.terrain[row_idx][col_idx]
+                if t == AsciiTile.BOULDER_HOLE or terrain == AsciiTile.PRESSURE_PLATE:
                     goals.add(Coords(row=row_idx, col=col_idx))
 
                 if t in (AsciiTile.WARP, AsciiTile.BOULDER_HOLE):
