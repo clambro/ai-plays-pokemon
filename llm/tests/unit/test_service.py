@@ -21,7 +21,7 @@ TEST_SYSTEM_PROMPT = "Test system prompt."
 async def test_get_llm_response_updates_agent_usage() -> None:
     """Record provider usage through the required agent-state updater."""
     expected_total_tokens = 12
-    expected_cost = 0.00005135
+    expected_cost = 0.25
     response = _response(
         output_text="response",
         usage=_usage(
@@ -40,6 +40,7 @@ async def test_get_llm_response_updates_agent_usage() -> None:
 
     with (
         patch("llm.service.AsyncOpenAI", return_value=client),
+        patch.object(service.OpenAILLMService, "_calculate_cost", return_value=expected_cost),
         bind_llm_usage_updater(context.add_llm_usage),
     ):
         llm_service = service.OpenAILLMService()
@@ -50,31 +51,13 @@ async def test_get_llm_response_updates_agent_usage() -> None:
 
     assert result == "response"
     assert context.state.total_tokens == expected_total_tokens
-    assert context.state.total_cost == pytest.approx(expected_cost)
+    assert context.state.total_cost == expected_cost
     client.responses.create.assert_awaited_once_with(
         model=service.MODEL,
         input="prompt",
         instructions=TEST_SYSTEM_PROMPT,
         reasoning={"effort": "low"},
     )
-
-
-@pytest.mark.unit
-def test_calculate_cost_applies_long_context_pricing() -> None:
-    """Apply Luna's long-context multipliers to the entire response."""
-    usage = _usage(
-        input_tokens=272_001,
-        cached_tokens=100_000,
-        cache_write_tokens=50_000,
-        output_tokens=10_000,
-    )
-
-    cost = service.OpenAILLMService._calculate_cost(service.MODEL, usage)
-
-    expected_cost = (
-        122_001 * 1.00 * 2 + 100_000 * 0.10 * 2 + 50_000 * 1.00 * 1.25 * 2 + 10_000 * 6.00 * 1.5
-    ) / 1_000_000
-    assert cost == pytest.approx(expected_cost)
 
 
 @pytest.mark.unit

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from loguru import logger
 from pydantic_ai import Agent, AgentRunError, BinaryContent, CallToolsNode
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
+from pydantic_graph import End
 
 from agent.context import AgentContext
 from agent.overworld.prompts import build_overworld_decision_prompt
@@ -73,7 +74,7 @@ async def run_overworld(
             deps=context,
         ) as agent_run:
             node = agent_run.next_node
-            while not agent.is_end_node(node):
+            while not isinstance(node, End):
                 current_node = node
                 node = await agent_run.next(node)
                 if isinstance(current_node, CallToolsNode):
