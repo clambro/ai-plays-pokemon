@@ -18,7 +18,6 @@ from agent.text.utils import (
 from agent.utils import AGENT_HOOKS, build_screenshot_content
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
-from memory.rolling_memory.service import finalize_iteration
 
 if TYPE_CHECKING:
     from PIL import Image
@@ -65,7 +64,7 @@ async def run_text(context: AgentContext) -> None:
                 "Text agent run failed; returning control to the dispatcher."
             )
             return
-    await finalize_iteration(context.state.rolling_memory)
+    await context.complete_iteration()
 
 
 async def _prepare_text_agent_input(

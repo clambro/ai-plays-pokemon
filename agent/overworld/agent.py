@@ -13,7 +13,6 @@ from agent.overworld.tools.registry import build_overworld_toolset
 from agent.utils import AGENT_HOOKS, build_screenshot_content, is_battle_handler_state
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
-from memory.rolling_memory.service import finalize_iteration
 from overworld_map.service import prepare_overworld_map
 
 if TYPE_CHECKING:
@@ -86,7 +85,7 @@ async def run_overworld(
             "Overworld agent run failed; returning control to the dispatcher."
         )
         return
-    await finalize_iteration(context.state.rolling_memory)
+    await context.complete_iteration()
 
 
 def build_overworld_agent_input(

@@ -13,7 +13,6 @@ from agent.context import AgentContext
 from agent.utils import AGENT_HOOKS, build_screenshot_content, is_battle_handler_state
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
-from memory.rolling_memory.service import finalize_iteration
 
 if TYPE_CHECKING:
     from PIL import Image
@@ -72,7 +71,7 @@ async def run_battle(context: AgentContext) -> None:
             "Battle agent run failed; returning control to the dispatcher."
         )
         return
-    await finalize_iteration(context.state.rolling_memory)
+    await context.complete_iteration()
 
 
 def build_battle_agent_input(

@@ -70,25 +70,27 @@ async def initialize_memory(current_block: CurrentMemoryBlock) -> RollingMemory:
     )
 
 
-async def finalize_iteration(memory: RollingMemory) -> None:
-    """Persist and compact the completed iteration."""
+async def finalize_iteration(memory: RollingMemory) -> RollingMemory:
+    """Finalize a non-empty iteration and return the next memory view."""
+    if not memory.current_block.content.strip():
+        return memory
+
     record = await finalize_raw_memory_block(
         RawMemoryBlockCreate(
             iteration=memory.current_block.iteration,
             content=memory.current_block.content,
         ),
     )
-    finalized_block = RawMemoryBlock(
-        iteration=record.iteration,
-        content=record.content,
-    )
-    await compact_memory(
-        RollingMemory(
-            current_block=memory.current_block,
-            summary_frontier=memory.summary_frontier,
-            loaded_raw_blocks=(*memory.loaded_raw_blocks, finalized_block),
+    finalized_memory = RollingMemory(
+        current_block=CurrentMemoryBlock(iteration=record.iteration + 1),
+        summary_frontier=memory.summary_frontier,
+        loaded_raw_blocks=(
+            *memory.loaded_raw_blocks,
+            RawMemoryBlock(iteration=record.iteration, content=record.content),
         ),
     )
+    await compact_memory(finalized_memory)
+    return await initialize_memory(finalized_memory.current_block)
 
 
 async def compact_memory(memory: RollingMemory) -> list[MemorySummaryRead]:
