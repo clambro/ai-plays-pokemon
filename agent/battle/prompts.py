@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from agent.battle.formatting import format_battle_info
 from agent.formatting.game_state import format_player_info
+from agent.formatting.memory import format_goals, format_rolling_memory
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
@@ -33,8 +34,8 @@ def build_battle_decision_prompt(
     """Build the prompt for the battle-entry observation."""
     state = "\n\n".join(
         (
-            str(context.state.rolling_memory),
-            str(context.state.goals),
+            format_rolling_memory(context.state.rolling_memory),
+            format_goals(context.state.goals),
             format_player_info(initial_game_state),
             format_battle_info(initial_game_state),
         ),

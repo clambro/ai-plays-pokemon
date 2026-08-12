@@ -4,6 +4,7 @@ from itertools import groupby
 from typing import TYPE_CHECKING
 
 from agent.formatting.game_state import format_player_info
+from agent.formatting.memory import format_goals, format_rolling_memory
 from agent.overworld.tools.navigate import utils
 from common.enums import FacingDirection
 
@@ -101,8 +102,8 @@ def build_overworld_decision_prompt(
     return OVERWORLD_DECISION_PROMPT.format(
         state="\n\n".join(
             (
-                str(context.state.rolling_memory),
-                str(context.state.goals),
+                format_rolling_memory(context.state.rolling_memory),
+                format_goals(context.state.goals),
                 current_map.to_string(game_state),
                 format_player_info(game_state),
             ),
