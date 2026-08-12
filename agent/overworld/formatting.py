@@ -101,7 +101,7 @@ def format_legend(
     tiles = {
         AsciiTile(tile) for row in current_map.ascii_tiles for tile in row
     } | _ALWAYS_VISIBLE_TILES
-    return "\n".join(f'- "{tile}": {legend[tile]}' for tile in tiles)
+    return "\n".join(f'- "{tile}": {legend[tile]}' for tile in AsciiTile if tile in tiles)
 
 
 def get_facing_tile_notes(game_state: GameState) -> tuple[str, Coords]:

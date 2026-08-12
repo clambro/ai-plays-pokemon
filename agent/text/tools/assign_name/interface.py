@@ -19,7 +19,7 @@ def build_assign_name_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the naming tool bound to the current text context."""
 
     async def assign_name(
-        name: Annotated[str, Field(pattern=r"^[A-Z ]{1,10}$")],
+        name: Annotated[str, Field(pattern=r"^[A-Z](?:[A-Z ]{0,8}[A-Z])?$")],
     ) -> TextToolResult:
         """Choose and enter a name while the naming screen is open.
 

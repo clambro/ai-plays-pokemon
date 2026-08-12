@@ -37,13 +37,12 @@ def build_navigation_tool(
         - Navigating directly to warp tiles.
         - Navigating to the boundaries of the current map.
 
-        The navigation tool can be used to navigate beyond the current screen,
-        but only as far as the edge of the current map. Navigation from one map
-        to another is not possible using this tool, but you can navigate to the
-        edge of the current map and then transition from this map to the next
-        in the next iteration. You may also use the navigation tool to navigate
-        directly to any accessible warp tile that you have discovered on the
-        current map.
+        The navigation tool can navigate beyond the current screen, but it
+        plans paths only within the current map and cannot target coordinates
+        on another map. For a direct outdoor connection, navigate to the edge
+        and cross it in the next iteration. The tool can navigate directly onto
+        an accessible warp tile; if that step changes maps, navigation ends
+        after the transition.
 
         The navigation tool cannot be used to interact with entities, but it
         can be used to move to the tile next to them so that you can interact

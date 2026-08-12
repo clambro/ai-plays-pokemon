@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import Field
 from pydantic_ai import Tool
 
+from agent.formatting.memory import format_goals
 from agent.overworld.tools.create_goal.service import (
     OtherGoalLimitReachedError,
     PrimaryGoalAlreadyExistsError,
@@ -33,10 +34,11 @@ def build_create_goal_tool(context: AgentContext) -> Tool[AgentContext]:
 
         Set ``is_primary`` to true only for your one primary goal. The primary
         goal represents a major milestone such as a gym battle or another key
-        objective required to progress through the game. You must have exactly
-        one primary goal at a time and should change it sparingly. You cannot
-        create a new primary goal while one exists; update or delete the
-        current primary goal first.
+        objective required to progress through the game. You should normally
+        maintain one primary goal and change it sparingly. You cannot create a
+        new primary goal while one exists; either update the current goal's
+        text, or delete it and create its replacement in a subsequent tool
+        call.
 
         Set ``is_primary`` to false for other goals. Other goals may directly
         support the primary goal, such as finding a required item or navigating
@@ -80,8 +82,8 @@ def build_create_goal_tool(context: AgentContext) -> Tool[AgentContext]:
         not on prior Pokemon knowledge, which is prone to error.
 
         Create a goal only when recent events warrant it and the goal is not
-        already in your list. You must have a primary goal at any given time,
-        but do not create other goals merely to fill the available slots.
+        already in your list. You should normally have a primary goal, but do
+        not create other goals merely to fill the available slots.
 
         Args:
             goal: Complete text of the specific new goal, without an index.
@@ -101,7 +103,7 @@ def build_create_goal_tool(context: AgentContext) -> Tool[AgentContext]:
             result = str(error)
         else:
             context.state.goals = goals
-            result = f"Created goal:\n{goals}"
+            result = f"Created goal.\n\n{format_goals(goals)}"
         return await complete_overworld_action(context, result)
 
     return Tool(create_goal, require_parameter_descriptions=True)

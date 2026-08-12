@@ -86,7 +86,7 @@ Navigation tips:
 - Pay attention to the "sprite is labeled" section in each sprite. This will tell you what the sprite is labeled as in the game's memory, and should help you determine what the sprite is.
 - Focus on the map when you are trying to navigate within a map. Focus on the screen when you are trying to navigate between maps.
 
-Note that this ASCII information comes straight from the game's memory and is therefore perfectly reliable. Screenshot images can be misinterpreted, so use the ASCII map and screen to determine the exact location of any sprites or tiles, and consider the screenshot image as supplemental information to help you visually interpret the ASCII.
+The current ASCII screen is derived from current game memory, while the whole map combines those observations over time. Prefer the ASCII information for tile and coordinate reasoning, and use the screenshot as supplemental visual context.
 </map_info>
 """.strip()
 

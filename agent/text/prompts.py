@@ -14,11 +14,11 @@ There is actionable text on the screen. The screenshot provided above shows the 
 
 {state}
 
-Here is the game memory's representation of the onscreen text. The text you see below is exactly what the game is displaying on the screen, but the formatting may be somewhat messed up because it is not rendering images. Use it to help you understand the text on the screen, as well as the position of any cursors. If you see multiple cursors "▷" and "▶", you are probably in a nested menu. The active cursor is always "▶". This is a more reliable way to navigate menus than the screenshot, but keep the screenshot in mind as well.
+Here is the decoded onscreen text from the game's memory. It preserves recognized text glyphs and cursor positions, but graphical tiles may be omitted. Use it to read labels and navigate menus. If multiple cursors "▷" and "▶" are present, the active cursor is "▶".
 <onscreen_text>
 {text}
 </onscreen_text>
-Onscreen text includes only recognized glyphs. Graphical elements may be omitted, so use the screenshot when the text is incomplete or visual context matters.
+Use the screenshot when the decoded text is incomplete or visual context matters.
 """.strip()
 
 
