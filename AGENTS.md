@@ -74,8 +74,7 @@ exactly because emulator changes can affect existing save states.
 - `agent/`: shared orchestration plus the overworld, battle, and text Pydantic
   AI agents and tools.
 - `emulator/`: PyBoy lifecycle, game-state snapshots, and ROM-memory parsers.
-- `overworld_map/`: explored-map state, persistence integration, and prompt
-  formatting.
+- `overworld_map/`: explored-map state and persistence integration.
 - `memory/`: goals and rolling-memory compaction behavior.
 - `database/`: SQLite models and repositories.
 - `llm/`: model definitions and provider access.

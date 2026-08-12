@@ -32,7 +32,8 @@ Relevant code:
 
 - `emulator/game_state.py` (`get_ascii_screen` and background classification);
 - `overworld_map/service.py` (`_update_overworld_map_tiles` and entity updates);
-- `overworld_map/schemas.py` (map rendering and prompt composition);
+- `agent/overworld/prompts.py` and `agent/overworld/formatting.py` (map prompt
+  composition and rendering);
 - `agent/overworld/tools/navigate/utils.py` (routing over persisted tiles); and
 - `database/map_memory` and `database/map_entity_memory` (current persistence
   boundaries).
