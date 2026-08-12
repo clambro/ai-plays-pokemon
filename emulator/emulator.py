@@ -11,7 +11,7 @@ from PIL import Image
 
 from common.constants import DEFAULT_ROM_PATH
 from emulator.game_state import GameState
-from emulator.parsers.map import parse_map_collision_tiles
+from emulator.parsers.map_collision import read_map_collision_tiles
 from emulator.pyboy_worker import PyBoyWorker
 
 if TYPE_CHECKING:
@@ -93,7 +93,7 @@ class Emulator(AbstractAsyncContextManager):
         """Get the current game state and its full map collision grid on demand."""
 
         def _capture(pyboy: PyBoy) -> tuple[GameState, list[list[int]]]:
-            return GameState.from_memory(pyboy.memory), parse_map_collision_tiles(pyboy.memory)
+            return GameState.from_memory(pyboy.memory), read_map_collision_tiles(pyboy.memory)
 
         return await self._worker.execute(_capture)
 

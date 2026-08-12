@@ -6,9 +6,11 @@ Derive connected regions from revealed terrain, explain them compactly in map
 prompts, and build a deterministic global graph that can route between locally
 separate areas through other maps.
 
+Warp activation, normal destination coordinates, and bounded outdoor map
+connections are already available to the routing work.
+
 **Depends on:**
 
-- [`warp-destination-endpoints.md`](warp-destination-endpoints.md)
 - [`enforce-code-structure-and-model-discipline.md`](enforce-code-structure-and-model-discipline.md)
 
 ## Core Principle

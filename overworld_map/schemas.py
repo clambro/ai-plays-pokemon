@@ -8,6 +8,7 @@ import numpy as np
 if TYPE_CHECKING:
     from common.enums import BlockedDirection, MapId
     from common.schemas import Coords
+    from emulator.parsers.map import MapConnection
     from emulator.parsers.sign import Sign
     from emulator.parsers.sprite import Sprite
     from emulator.parsers.warp import Warp
@@ -24,10 +25,10 @@ class OverworldMap:
     known_signs: dict[int, Sign]
     known_warps: dict[int, Warp]
     known_map_ids: frozenset[MapId]
-    north_connection: MapId | None
-    south_connection: MapId | None
-    east_connection: MapId | None
-    west_connection: MapId | None
+    north_connection: MapConnection | None
+    south_connection: MapConnection | None
+    east_connection: MapConnection | None
+    west_connection: MapConnection | None
 
     @property
     def height(self) -> int:

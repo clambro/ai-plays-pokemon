@@ -12,6 +12,7 @@ import pytest
 from agent.overworld.tools.navigate import utils
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, MapId
 from common.schemas import Coords
+from emulator.parsers.map import MapConnection
 from overworld_map.schemas import OverworldMap
 
 PLATEAU_MAP = [
@@ -211,7 +212,12 @@ def test_get_map_boundary_tiles_plateau() -> None:
     """Test that the map boundary tiles are correct for the plateau map if we add a map below."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
-    map_data.south_connection = MapId.ROUTE_1
+    map_data.south_connection = MapConnection(
+        destination_map=MapId.ROUTE_1,
+        source_coordinate_start=0,
+        source_coordinate_end=len(PLATEAU_MAP[0]),
+        destination_offset=Coords(row=0, col=0),
+    )
 
     accessible_coords = utils.get_accessible_coords(PLATEAU_CENTER, map_data, [])
     boundary_tiles = utils.get_map_boundary_tiles(accessible_coords, map_data)
@@ -231,8 +237,13 @@ def test_get_map_boundary_tiles_collision_pairs() -> None:
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = COLLISION_PAIRS_MAP
     map_data.blockages = COLLISION_PAIRS_BLOCKAGES
-    map_data.east_connection = MapId.ROUTE_1
-    map_data.west_connection = MapId.ROUTE_1
+    map_data.east_connection = MapConnection(
+        destination_map=MapId.ROUTE_1,
+        source_coordinate_start=0,
+        source_coordinate_end=len(COLLISION_PAIRS_MAP),
+        destination_offset=Coords(row=0, col=0),
+    )
+    map_data.west_connection = map_data.east_connection
 
     accessible_coords = utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
     boundary_tiles = utils.get_map_boundary_tiles(accessible_coords, map_data)

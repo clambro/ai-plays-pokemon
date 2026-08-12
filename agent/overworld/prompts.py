@@ -71,12 +71,9 @@ You have discovered the following signs on the portion of the map that you have 
 Navigation tips:
 - You should explore as much of the map as possible to reveal unexplored tiles, as they may be hiding important sprites or warp tiles. Tiles are considered explored once they are on screen, so move towards unseen territory when you are stuck or unsure how to proceed.
 - The orientation of the map and screen is always fixed, regardless of the direction that you are facing.
-- Warp tiles come in two varieties: single and double.
-  - Single warp tiles (staircases, teleporters, doors, etc.) are activated by standing on them. If you are standing on a warp tile and not going anywhere, it means that you have just warped to this tile from somewhere else. If you want to go back to your previous location and are standing on a single warp tile, you have to walk off the tile and then back on it to warp back.
-  - Double warp tiles (two warp tiles side by side, usually a doormat) are usually found on the edge of a map, and have to be walked through to warp. This is the only instance in which you are allowed to walk into a barrier tile.
-  - Do not attempt to interact with a warp tile using the action button. You have to walk on or through the tile depending on its type to warp.
+- Do not use the action button on a warp.
 - To connect from one map to another, you must either use a warp tile, or, *in outdoor maps only*, walk off the edge of the map. In outdoor maps, you will never be able to walk through a wall or barrier for any reason. You have to find where the edge of the map connects to the next map by looking at the ASCII screen.
-- If you are indoors, the edges of the map (indicated by a black void in the screenshot) are impassable. You cannot walk off the edge of an indoor map. The only exception to this is the case of double warp tiles, as described above. Warp tiles are the only way to move between maps indoors.
+- If you are indoors, the edges of the map (indicated by a black void in the screenshot) are normally impassable. Move outward at an indoor edge only when a discovered warp's instruction explicitly requires it.
 - Pay attention to the "leading to" description in each warp tile. This comes straight from the game's memory and will tell you which map you will be warped to from that tile.
 - To interact with a sprite, you need to be directly adjacent to it, face it, and press the action button. The only exception to the direct adjacency rule is in Poke Marts, Pokemon Centers, or gates where you interact with the clerk/nurse/guard respectively from across the counter. In these cases, you must stand two tiles away from the sprite (horizontally or vertically depending on the counter, but not diagonally), face it across the counter (an adjacent "{AsciiTile.WALL}" tile), and press the action button.
 - If you want to interact with a sprite, you should move to the tile adjacent to it. Do not attempt to move onto the sprite's tile. You cannot walk on or through sprites (except for Pikachu, as described above).
@@ -123,18 +120,11 @@ observations.
 
 {state}
 
-The coordinates in the format (row, col, tile type) that are accessible from
-your current position are as follows:
-<accessible_coords>
-{accessible_coords}
-</accessible_coords>
-
-The following coordinates (a subset of the accessible coordinates provided
-above) are adjacent to unseen territory on the current map. They are therefore
-top candidates for exploration. If the section below is empty, then you have
-already explored all of the accessible tiles on the current map. Navigating
-towards any of these exploration candidates is the most efficient way to
-explore the map.
+The following accessible coordinates are adjacent to unseen territory on the
+current map. They are therefore top candidates for exploration. If the section
+below is empty, then you have already explored all of the accessible tiles on
+the current map. Navigating towards any of these exploration candidates is the
+most efficient way to explore the map.
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>
@@ -153,10 +143,10 @@ Your current inventory is listed below:
 {inventory_indices}
 </inventory_indices>
 
-Use navigation for ordinary movement to a listed accessible coordinate. Use
-press_buttons for direct interactions, changing direction, or sending the final
-directional input needed to cross a map boundary or warp. Prefer a specialized
-tool whenever it directly matches the action you want to take.
+Use navigation for ordinary movement within the current map. Use press_buttons
+for direct interactions, changing direction, or sending the final directional
+input needed to cross a map boundary or warp. Prefer a specialized tool
+whenever it directly matches the action you want to take.
 
 Briefly explain your reasoning in first person as ordinary response text, then
 use exactly one available tool to act. Be sure to consider all the tools at
@@ -182,7 +172,7 @@ def _format_overworld_map(current_map: OverworldMap, game_state: GameState) -> s
         height=current_map.height,
         width=current_map.width,
         known_sprites=formatting.format_sprite_notes(current_map),
-        known_warps=formatting.format_warp_notes(current_map),
+        known_warps=formatting.format_warp_notes(current_map, game_state.player.coords),
         known_signs=formatting.format_sign_notes(current_map),
         explored_percentage=formatting.format_explored_percentage(current_map),
         ascii_screen=screen,
@@ -214,7 +204,6 @@ def build_overworld_decision_prompt(
     """Build the initial prompt for one overworld-agent run."""
     if game_state.player.is_biking:
         unavailable = "Navigation data is unavailable while riding a bike."
-        accessible_coords = unavailable
         exploration_candidates = unavailable
         map_boundaries = unavailable
         biking_warning = (
@@ -231,7 +220,6 @@ def build_overworld_decision_prompt(
         )
         exploration = utils.get_exploration_candidates(accessible, current_map)
         boundaries = utils.get_map_boundary_tiles(accessible, current_map)
-        accessible_coords = formatting.format_coordinates_grid(accessible, current_map)
         exploration_candidates = formatting.format_exploration_candidates(
             exploration,
             current_map,
@@ -253,7 +241,6 @@ def build_overworld_decision_prompt(
     )
     return OVERWORLD_DECISION_PROMPT.format(
         state="\n\n".join(section for section in sections if section),
-        accessible_coords=accessible_coords,
         exploration_candidates=exploration_candidates,
         map_boundaries=map_boundaries,
         biking_warning=biking_warning,

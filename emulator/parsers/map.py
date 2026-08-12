@@ -1,27 +1,47 @@
 """Parser for map data in Pokémon Yellow memory."""
 
-from enum import IntEnum
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from common.enums import MapId
+from common.enums import FacingDirection, MapId, Tileset
+from common.schemas import Coords
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
 
-    from common.schemas import Coords
-
-_OVERWORLD_MAP_ADDRESS = 0xC6E8
-_MAP_BORDER_BLOCKS = 3
-_TILESET_BANK_ADDRESS = 0xD578
-_TILESET_BLOCKS_POINTER_ADDRESS = 0xD579
-_MAP_BLOCK_WIDTH_ADDRESS = 0xD3B6
-_BLOCK_TILE_WIDTH = 4
-_BLOCK_TILE_COUNT = 16
-_COLLISION_TILE_ROW_OFFSET = 1
-_MAP_CELL_TILE_WIDTH = 2
 _CAVERN_BOULDER_BLOCKED_TILES = frozenset({0x15})
+_NORTH_CONNECTION_ADDRESS = 0xD3BE
+_SOUTH_CONNECTION_ADDRESS = 0xD3C9
+_WEST_CONNECTION_ADDRESS = 0xD3D4
+_EAST_CONNECTION_ADDRESS = 0xD3DF
+_NO_CONNECTION = 0xFF
+_CONNECTION_STRIP_LENGTH_OFFSET = 5
+_CONNECTION_Y_ALIGNMENT_OFFSET = 7
+_CONNECTION_X_ALIGNMENT_OFFSET = 8
+_MAP_BORDER_BLOCKS = 3
+_SIGNED_BYTE_START = 0x80
+_BYTE_VALUE_COUNT = 0x100
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MapConnection:
+    """A bounded walk-off-map connection and its destination alignment."""
+
+    destination_map: MapId
+    source_coordinate_start: int
+    source_coordinate_end: int
+    destination_offset: Coords
+
+    @property
+    def source_coordinates(self) -> range:
+        """Return the valid row or column coordinates along the source edge."""
+        return range(self.source_coordinate_start, self.source_coordinate_end)
+
+    def get_destination(self, source: Coords) -> Coords:
+        """Map a valid source boundary coordinate to the connected map."""
+        return source + self.destination_offset
 
 
 class SpinnerTileIds(BaseModel):
@@ -57,10 +77,10 @@ class Map(BaseModel):
     walkable_tiles: list[int]
     collision_pairs: list[frozenset[int]]
     boulder_blocked_tiles: frozenset[int]
-    north_connection: MapId | None
-    south_connection: MapId | None
-    east_connection: MapId | None
-    west_connection: MapId | None
+    north_connection: MapConnection | None
+    south_connection: MapConnection | None
+    east_connection: MapConnection | None
+    west_connection: MapConnection | None
 
     model_config = ConfigDict(frozen=True)
 
@@ -99,13 +119,13 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     height = mem[0xD571]
     width = mem[0xD572]
     try:
-        tileset_id = _Tileset(mem[0xD3B4])
+        tileset_id = Tileset(mem[0xD3B4])
     except ValueError:
         return _unavailable_map(mem)  # Usually means you're on a title screen or between maps.
     if height == 0 or width == 0:
         return _unavailable_map(mem)  # Ditto here.
 
-    if tileset_id == _Tileset.OVERWORLD:
+    if tileset_id == Tileset.OVERWORLD:
         # These are visual tile pairs within one 2x2 screen cell, not the standing/front tile
         # transitions in data/tilesets/ledge_tiles.asm.
         ledge_tiles_left = [(0x27, 0x2C), (0x27, 0x39)]
@@ -120,9 +140,9 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     water_tiles = _get_water_tiles(tileset_id)
     grass_tile = _GRASS_TILE_MAP.get(tileset_id)
     cut_tree_tiles = _CUT_TREE_TILE_MAP.get(tileset_id)
-    boulder_hole_tiles = (0x2F, 0x2F, 0x22, 0x22) if tileset_id == _Tileset.CAVERN else None
-    pressure_plate_tiles = (0x2B, 0x2C, 0x2D, 0x2E) if tileset_id == _Tileset.CAVERN else None
-    pc_tiles = (0x42, 0x46, 0x52, 0x56) if tileset_id == _Tileset.POKECENTER else None
+    boulder_hole_tiles = (0x2F, 0x2F, 0x22, 0x22) if tileset_id == Tileset.CAVERN else None
+    pressure_plate_tiles = (0x2B, 0x2C, 0x2D, 0x2E) if tileset_id == Tileset.CAVERN else None
+    pc_tiles = (0x42, 0x46, 0x52, 0x56) if tileset_id == Tileset.POKECENTER else None
 
     walkable_tile_ptr = mem[0xD57D] | (mem[0xD57E] << 8)
     tile_bank, tile_offset = divmod(walkable_tile_ptr, 0x4000)
@@ -156,13 +176,37 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         walkable_tiles=walkable_tiles,
         collision_pairs=collision_pairs,
         boulder_blocked_tiles=(
-            _CAVERN_BOULDER_BLOCKED_TILES if tileset_id == _Tileset.CAVERN else frozenset()
+            _CAVERN_BOULDER_BLOCKED_TILES if tileset_id == Tileset.CAVERN else frozenset()
         ),
         spinner_tiles=_SPINNER_TILE_MAP.get(tileset_id),
-        north_connection=MapId(mem[0xD3BE]) if mem[0xD3BE] != terminator else None,
-        south_connection=MapId(mem[0xD3C9]) if mem[0xD3C9] != terminator else None,
-        east_connection=MapId(mem[0xD3DF]) if mem[0xD3DF] != terminator else None,
-        west_connection=MapId(mem[0xD3D4]) if mem[0xD3D4] != terminator else None,
+        north_connection=_parse_map_connection(
+            mem,
+            _NORTH_CONNECTION_ADDRESS,
+            FacingDirection.UP,
+            height,
+            width,
+        ),
+        south_connection=_parse_map_connection(
+            mem,
+            _SOUTH_CONNECTION_ADDRESS,
+            FacingDirection.DOWN,
+            height,
+            width,
+        ),
+        east_connection=_parse_map_connection(
+            mem,
+            _EAST_CONNECTION_ADDRESS,
+            FacingDirection.RIGHT,
+            height,
+            width,
+        ),
+        west_connection=_parse_map_connection(
+            mem,
+            _WEST_CONNECTION_ADDRESS,
+            FacingDirection.LEFT,
+            height,
+            width,
+        ),
     )
 
 
@@ -192,35 +236,76 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
     )
 
 
-def parse_map_collision_tiles(mem: PyBoyMemoryView) -> list[list[int]]:
-    """Expand the current map's block grid into collision tiles on demand."""
-    height = mem[0xD571]
-    width = mem[0xD572]
-    tileset_bank = mem[_TILESET_BANK_ADDRESS]
-    blocks_pointer = mem[_TILESET_BLOCKS_POINTER_ADDRESS] | (
-        mem[_TILESET_BLOCKS_POINTER_ADDRESS + 1] << 8
-    )
-    block_stride = mem[_MAP_BLOCK_WIDTH_ADDRESS] + _MAP_BORDER_BLOCKS * 2
+def _parse_map_connection(
+    mem: PyBoyMemoryView,
+    address: int,
+    direction: FacingDirection,
+    map_height: int,
+    map_width: int,
+) -> MapConnection | None:
+    """Parse one connection record copied from the current map header."""
+    if mem[address] == _NO_CONNECTION:
+        return None
 
-    collision_tiles = []
-    for row in range(height):
-        collision_row = []
-        for col in range(width):
-            block_address = (
-                _OVERWORLD_MAP_ADDRESS
-                + (row // 2 + _MAP_BORDER_BLOCKS) * block_stride
-                + col // 2
-                + _MAP_BORDER_BLOCKS
-            )
-            block_id = mem[block_address]
-            tile_row = row % 2 * _MAP_CELL_TILE_WIDTH + _COLLISION_TILE_ROW_OFFSET
-            tile_col = col % 2 * _MAP_CELL_TILE_WIDTH
-            tile_offset = tile_row * _BLOCK_TILE_WIDTH + tile_col
-            collision_row.append(
-                mem[tileset_bank, blocks_pointer + block_id * _BLOCK_TILE_COUNT + tile_offset]
-            )
-        collision_tiles.append(collision_row)
-    return collision_tiles
+    if direction in (FacingDirection.UP, FacingDirection.DOWN):
+        source_size = map_width
+        alignment = _signed_byte(mem[address + _CONNECTION_X_ALIGNMENT_OFFSET])
+        source_row = 0 if direction == FacingDirection.UP else map_height - 1
+        destination_offset = Coords(
+            row=mem[address + _CONNECTION_Y_ALIGNMENT_OFFSET] - source_row,
+            col=alignment,
+        )
+    else:
+        source_size = map_height
+        alignment = _signed_byte(mem[address + _CONNECTION_Y_ALIGNMENT_OFFSET])
+        source_col = 0 if direction == FacingDirection.LEFT else map_width - 1
+        destination_offset = Coords(
+            row=alignment,
+            col=mem[address + _CONNECTION_X_ALIGNMENT_OFFSET] - source_col,
+        )
+
+    source_start, source_end = _get_connection_source_bounds(
+        source_size,
+        alignment,
+        mem[address + _CONNECTION_STRIP_LENGTH_OFFSET],
+    )
+    return MapConnection(
+        destination_map=MapId(mem[address]),
+        source_coordinate_start=source_start,
+        source_coordinate_end=source_end,
+        destination_offset=destination_offset,
+    )
+
+
+def _get_connection_source_bounds(
+    source_size: int,
+    alignment: int,
+    connection_strip_length: int,
+) -> tuple[int, int]:
+    """Convert the ROM's block strip and alignment into source tile coordinates."""
+    source_block_count = source_size // 2
+    connection_offset = -(alignment // 2)
+    skipped_destination_blocks = max(-connection_offset - _MAP_BORDER_BLOCKS, 0)
+    available_destination_blocks = connection_strip_length + skipped_destination_blocks
+    source_start_block = max(connection_offset, 0)
+
+    # The copied strip includes the three-block map border. If it reaches the far side of that
+    # border, the current map bounds limit the connection; otherwise the destination map does.
+    source_limited_length = source_block_count + _MAP_BORDER_BLOCKS - connection_offset
+    if available_destination_blocks < source_limited_length:
+        source_end_block = min(
+            source_block_count,
+            connection_offset + available_destination_blocks,
+        )
+    else:
+        source_end_block = source_block_count
+
+    return source_start_block * 2, source_end_block * 2
+
+
+def _signed_byte(value: int) -> int:
+    """Interpret an unsigned byte as the ROM's signed alignment value."""
+    return value - _BYTE_VALUE_COUNT if value >= _SIGNED_BYTE_START else value
 
 
 def _get_collision_tile_id(collision_tiles: list[list[int]], coords: Coords) -> int | None:
@@ -235,54 +320,23 @@ def _get_collision_tile_id(collision_tiles: list[list[int]], coords: Coords) -> 
     return collision_tiles[coords.row][coords.col]
 
 
-class _Tileset(IntEnum):
-    """The tileset of the current map."""
-
-    OVERWORLD = 0
-    REDS_HOUSE_1 = 1
-    MART = 2
-    FOREST = 3
-    REDS_HOUSE_2 = 4
-    DOJO = 5
-    POKECENTER = 6
-    GYM = 7
-    HOUSE = 8
-    FOREST_GATE = 9
-    MUSEUM = 10
-    UNDERGROUND = 11
-    GATE = 12
-    SHIP = 13
-    SHIP_PORT = 14
-    CEMETERY = 15
-    INTERIOR = 16
-    CAVERN = 17
-    LOBBY = 18
-    MANSION = 19
-    LAB = 20
-    CLUB = 21
-    FACILITY = 22
-    PLATEAU = 23
-    BEACH_HOUSE = 24
-    PLACEHOLDER = 128  # Required to avoid crashes if you load a saved game, but shouldn't be used.
-
-
 _WATER_TILESETS = {
-    _Tileset.OVERWORLD,
-    _Tileset.FOREST,
-    _Tileset.DOJO,
-    _Tileset.GYM,
-    _Tileset.SHIP,
-    _Tileset.SHIP_PORT,
-    _Tileset.CAVERN,
-    _Tileset.FACILITY,
-    _Tileset.PLATEAU,
+    Tileset.OVERWORLD,
+    Tileset.FOREST,
+    Tileset.DOJO,
+    Tileset.GYM,
+    Tileset.SHIP,
+    Tileset.SHIP_PORT,
+    Tileset.CAVERN,
+    Tileset.FACILITY,
+    Tileset.PLATEAU,
 }
 _WATER_TILE = 0x14
 _SHORE_TILES = frozenset({0x48, 0x32})
-_WATER_ONLY_TILESETS = {_Tileset.SHIP_PORT, _Tileset.GYM, _Tileset.DOJO}
+_WATER_ONLY_TILESETS = {Tileset.SHIP_PORT, Tileset.GYM, Tileset.DOJO}
 
 
-def _get_water_tiles(tileset_id: _Tileset) -> frozenset[int]:
+def _get_water_tiles(tileset_id: Tileset) -> frozenset[int]:
     """Return lower-left tiles the ROM permits Surf to enter for a tileset."""
     if tileset_id not in _WATER_TILESETS:
         return frozenset()
@@ -292,20 +346,20 @@ def _get_water_tiles(tileset_id: _Tileset) -> frozenset[int]:
 
 
 _GRASS_TILE_MAP = {
-    _Tileset.OVERWORLD: 0x52,
-    _Tileset.FOREST: 0x20,
-    _Tileset.PLATEAU: 0x45,
+    Tileset.OVERWORLD: 0x52,
+    Tileset.FOREST: 0x20,
+    Tileset.PLATEAU: 0x45,
 }
 
 _COLLISION_PAIRS = {
-    _Tileset.CAVERN: [
+    Tileset.CAVERN: [
         frozenset([0x20, 0x05]),
         frozenset([0x41, 0x05]),
         frozenset([0x2A, 0x05]),
         frozenset([0x05, 0x21]),
         frozenset([0x14, 0x05]),
     ],
-    _Tileset.FOREST: [
+    Tileset.FOREST: [
         frozenset([0x30, 0x2E]),
         frozenset([0x52, 0x2E]),
         frozenset([0x55, 0x2E]),
@@ -319,19 +373,19 @@ _COLLISION_PAIRS = {
 }
 
 _CUT_TREE_TILE_MAP = {
-    _Tileset.OVERWORLD: (0x2D, 0x2E, 0x3D, 0x3E),
-    _Tileset.GYM: (0x40, 0x41, 0x50, 0x51),
+    Tileset.OVERWORLD: (0x2D, 0x2E, 0x3D, 0x3E),
+    Tileset.GYM: (0x40, 0x41, 0x50, 0x51),
 }
 
 _SPINNER_TILE_MAP = {
-    _Tileset.FACILITY: SpinnerTileIds(
+    Tileset.FACILITY: SpinnerTileIds(
         up=(0x21, 0x31, 0x21, 0x31),
         down=(0x20, 0x30, 0x20, 0x30),
         left=(0x21, 0x21, 0x20, 0x20),
         right=(0x31, 0x31, 0x30, 0x30),
         stop=(0x5E, 0x5E, 0x5E, 0x5E),
     ),
-    _Tileset.GYM: SpinnerTileIds(
+    Tileset.GYM: SpinnerTileIds(
         up=(0x3C, 0x3D, 0x3C, 0x3D),
         down=(0x4C, 0x4D, 0x4C, 0x4D),
         left=(0x3C, 0x3C, 0x4C, 0x4C),

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
-from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpType
+from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpActivation
 from common.schemas import Coords
 
 if TYPE_CHECKING:
@@ -62,10 +62,14 @@ def _format_overworld_warp(
     warp: Warp,
     map_id: MapId,
     known_map_ids: frozenset[MapId],
+    player_coords: Coords,
 ) -> str:
     """Format a known overworld warp for the agent."""
     if warp.destination in known_map_ids or warp.destination in {MapId.OUTSIDE, MapId.UNKNOWN}:
-        destination_text = f"This warp leads to {warp.destination.name}."
+        destination = warp.destination.name
+        if warp.destination_coords is not None:
+            destination += f" at {warp.destination_coords}"
+        destination_text = f"This warp leads to {destination}."
     else:
         destination_text = (
             "You have not been to this warp's destination yet. Visiting it will add a new "
@@ -74,23 +78,20 @@ def _format_overworld_warp(
         )
     return (
         f"warp_{map_id}_{warp.index} at {warp.coords}. {destination_text}"
-        f" {_get_warp_description(warp)}"
+        f" {_get_warp_description(warp, player_coords)}"
     )
 
 
-def _get_warp_description(warp: Warp) -> str:
+def _get_warp_description(warp: Warp, player_coords: Coords) -> str:
     """Format instructions for entering a warp."""
-    if warp.warp_type == WarpType.SINGLE:
-        return "This is a single warp tile. Stand on it to warp."
-    if warp.warp_type == WarpType.DOUBLE_VERTICAL and warp.coords.col == 0:
-        return "This is a vertical double warp tile. Stand on either tile and walk LEFT to warp."
-    if warp.warp_type == WarpType.DOUBLE_VERTICAL:
-        return "This is a vertical double warp tile. Stand on either tile and walk RIGHT to warp."
-    if warp.warp_type == WarpType.DOUBLE_HORIZONTAL and warp.coords.row == 0:
-        return "This is a horizontal double warp tile. Stand on either tile and walk UP to warp."
-    if warp.warp_type == WarpType.DOUBLE_HORIZONTAL:
-        return "This is a horizontal double warp tile. Stand on either tile and walk DOWN to warp."
-    raise ValueError(f"Unknown warp type: {warp.warp_type}")
+    if warp.activation == WarpActivation.STEP_ON:
+        if player_coords == warp.coords:
+            return "Walk off this coordinate, then step back onto it to activate the warp."
+        return "Step onto this coordinate to activate the warp."
+    return (
+        f"Stand on this coordinate and press {warp.activation.value} to activate the warp, even"
+        " if that direction appears blocked."
+    )
 
 
 def format_legend(
@@ -160,12 +161,18 @@ def format_sprite_notes(current_map: OverworldMap) -> str:
     return output.strip()
 
 
-def format_warp_notes(current_map: OverworldMap) -> str:
+def format_warp_notes(current_map: OverworldMap, player_coords: Coords) -> str:
     """Format known warps in index order."""
     if not current_map.known_warps:
         return "No warp tiles discovered."
     return "\n".join(
-        f"- {_format_overworld_warp(warp, current_map.id, current_map.known_map_ids)}"
+        "- "
+        + _format_overworld_warp(
+            warp,
+            current_map.id,
+            current_map.known_map_ids,
+            player_coords,
+        )
         for _, warp in sorted(current_map.known_warps.items())
     )
 
@@ -200,7 +207,7 @@ def format_connection_notes(current_map: OverworldMap) -> str:
         ("WEST", current_map.west_connection),
     ]:
         if connection is not None:
-            output += f"- The map to the {direction} is {connection.name}.\n"
+            output += f"- The map to the {direction} is {connection.destination_map.name}.\n"
         else:
             output += f"- There is no map connection to the {direction}.\n"
     output += (
@@ -257,16 +264,16 @@ def format_map_boundary_tiles(
         if connection is not None and boundary_tiles[facing_dir]:
             coord_str = ", ".join(str(coord) for coord in boundary_tiles[facing_dir])
             output.append(
-                f"The {connection.name} map boundary at the far {cardinal_dir} of the current map"
-                f" is accessible from {coord_str}.",
+                f"The {connection.destination_map.name} map boundary at the far {cardinal_dir}"
+                f" of the current map is accessible from {coord_str}.",
             )
         elif connection is not None:
             output.append(
-                f"You have not yet discovered a valid path to the {connection.name} map"
-                f" boundary at the far {cardinal_dir} of the current map. You can likely find it"
-                f" either by visiting more exploration candidates, or perhaps by getting to a new"
-                f" part of the current map via an intermediate map (e.g. through a building or"
-                f" cave).",
+                "You have not yet discovered a valid path to the"
+                f" {connection.destination_map.name} map boundary at the far {cardinal_dir} of the"
+                f" current map. You can likely find it either by visiting more exploration"
+                f" candidates, or perhaps by getting to a new part of the current map via an"
+                f" intermediate map (e.g. through a building or cave).",
             )
 
     return "\n".join(output)

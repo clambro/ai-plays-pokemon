@@ -83,11 +83,11 @@ async def _check_for_collision(
 
     game_state = await emulator.get_game_state()
     if prev_map_id != game_state.map.id:
-        return f"I changed maps from {prev_map_id.name} to {game_state.map.id.name}."
+        return f"Map changed from {prev_map_id.name} to {game_state.map.id.name}."
     if prev_coords == game_state.player.coords and prev_direction == game_state.player.direction:
         return (
-            f"My position did not change after pressing the '{button}' button. Did I"
-            f" bump into something?"
+            f"The player's position did not change after pressing the '{button}' button."
+            " The player may have bumped into something."
         )
     return None
 
@@ -112,14 +112,14 @@ async def _check_for_action(
     game_state = await emulator.get_game_state()
     if not game_state.is_text_on_screen():
         return (
-            "I pressed the action button but nothing happened. There must not be"
-            " anything to interact with in the direction I am facing."
+            "The action button was pressed, but nothing happened. There may not be anything to"
+            " interact with in the direction the player is facing."
         )
     if dialog_box := game_state.get_dialog_box():
         # Some dialog boxes (e.g. if you pick up an item) disappear automatically before we can
         # start a new agent loop to parse them, so we have to capture them immediately.
         text = f"{dialog_box.top_line} {dialog_box.bottom_line}".strip()
-        return f'I pressed the action button and a dialog box opened, saying: "{text}"'
+        return f'The action button opened a dialog box saying: "{text}"'
     return None
 
 
