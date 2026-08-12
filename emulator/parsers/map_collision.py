@@ -50,10 +50,10 @@ def read_map_collision_tiles(mem: PyBoyMemoryView) -> list[list[int]]:
 
 
 def read_map_collision_tile(mem: PyBoyMemoryView, coords: Coords) -> int | None:
-    """Read one collision tile, or return ``None`` outside the loaded map."""
+    """Read one collision tile from the map or its immediately adjacent border."""
     height = mem[0xD571]
     width = mem[0xD572]
-    if coords.row < 0 or coords.row >= height or coords.col < 0 or coords.col >= width:
+    if coords.row < -1 or coords.row > height or coords.col < -1 or coords.col > width:
         return None
 
     block_stride = mem[_MAP_BLOCK_WIDTH_ADDRESS] + _MAP_BORDER_BLOCKS * 2
