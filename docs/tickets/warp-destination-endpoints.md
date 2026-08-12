@@ -2,26 +2,26 @@
 
 ## Outcome
 
-Retain the destination warp index already present in normal ROM warp records,
-resolve destination coordinates when policy permits, and persist directed
-transition endpoints so routing can distinguish multiple entrances to the same
-map. Replace the current adjacency-based single/double classification with the
-actual per-record activation rule so prompts and route execution know whether a
-warp activates on entry or requires another directional step.
+Retain the destination warp index already present in normal ROM warp records
+and use it to resolve each normal warp's destination coordinate directly from
+the loaded ROM. Replace the adjacency-based single/double classification with
+the actual per-record activation rule so prompts and route execution know
+whether a warp activates on entry or requires another directional step.
 
 Retain the bounded strip and coordinate alignment of each outdoor map
 connection as well. A cardinal connection does not make every tile along that
 edge a valid transition point.
 
-The durable fact is:
+Together, the parsed record identifies:
 
 ```text
 (source map, source coordinate)
     -> (destination map, destination coordinate)
 ```
 
-Region/component IDs must not be stored with transitions because regions are
-derived from incomplete explored terrain and may change.
+This ticket does not persist a transition graph. That belongs with the future
+global route planner, which will have an actual consumer for observed and
+scripted transitions.
 
 ## ROM Findings
 
@@ -34,10 +34,10 @@ zero-based destination warp index
 destination map ID
 ```
 
-The current parser ignores byte 2. The destination coordinate is resolved by
-loading the indexed warp record from the destination map and using that
-record's source Y/X coordinate. The game performs the equivalent lookup in
-`LoadDestinationWarpPosition`.
+Before stage 1, the parser ignored byte 2. The destination coordinate is
+resolved by loading the indexed warp record from the destination map and using
+that record's source Y/X coordinate. The game performs the equivalent lookup
+in `LoadDestinationWarpPosition`.
 
 ### Warp activation
 
@@ -48,9 +48,10 @@ Otherwise, `ExtraWarpCheck` requires either an outward-facing map-edge movement
 or a direction whose tile in front appears in the corresponding warp-carpet
 table.
 
-The current parser instead joins every pair of Manhattan-adjacent records and
-guesses the entry direction from the pair orientation and whether its row or
-column is zero. This produces both false pairs and false directions:
+Before stage 1, the parser instead joined every pair of Manhattan-adjacent
+records and guessed the entry direction from the pair orientation and whether
+its row or column was zero. This produced both false pairs and false
+directions:
 
 - Celadon Mansion 2F has adjacent stairs at `(1, 6)` and `(1, 7)` with different
   destinations. Their Mansion tiles are immediate warp tiles, so both are
@@ -84,17 +85,16 @@ and the Celadon City script does not enable it later. It is vestigial raw data,
 not an application-level "inactive warp," so actionable warp parsing excludes
 it.
 
-Resolution may read the exact ROM through its banked map headers or use a table
-generated from decomp `warp_event` declarations. A generated table must be
-tied to the exact ROM build/checksum.
+Resolution should read the exact loaded ROM through its banked map headers, as
+the game does, rather than introducing a second generated source of truth.
 
 ### Outdoor map connections
 
 The four connection records copied into WRAM contain more than the connected
 map ID. Each 11-byte `map_connection_struct` also carries the source and
 destination strip pointers, strip length, connected-map width, Y/X alignment,
-and view pointer. The parser currently retains only the map ID, and
-`get_map_boundary_tiles()` consequently advertises every accessible cell on
+and view pointer. Before stage 2, the parser retained only the map ID, and
+`get_map_boundary_tiles()` consequently advertised every accessible cell on
 that edge as an exit.
 
 Connection availability must be limited to the strip encoded by the ROM and
@@ -120,48 +120,24 @@ Relevant code and decomp sources include:
   `ExtraWarpCheck`.
 - Keep adjacent records independent even when they share an activation
   direction or destination.
-- Persist typed known-warp metadata independently of free-form entity
-  descriptions, including the activation rule needed for later route execution.
-- Persist directed transitions with source/destination endpoints, transition
-  kind, provenance, and observation timestamps.
-- Allow multiple destinations from one source when scripted or state-dependent
-  behavior requires it.
-- Observe map changes at the general emulator/action boundary so button presses,
-  navigation, scripts, forced movement, and other actions are covered.
-- Record the before/after map and player coordinate whenever a map changes.
-- Resolve normal destination coordinates from the ROM when the active
-  information policy allows it.
+- Resolve normal destination coordinates from the destination map's indexed
+  warp record in the loaded ROM.
+- Leave dynamic destinations and invalid destination indices unresolved.
 - Parse and retain each outdoor connection's valid source strip and coordinate
   alignment instead of reducing it to a connected map ID.
 - Use those bounds when advertising reachable map-edge exits, and preserve the
-  source-to-destination coordinate mapping for transition execution and
-  persistence.
-- Update prompts to include the destination coordinate when it is agent-visible
-  and give the exact per-warp entry instruction. Remove the single/double-warp
-  explanation.
+  source-to-destination coordinate mapping for later route execution.
+- Update prompts to include a resolved coordinate only when the destination map
+  is already known, and give the exact per-warp entry instruction. Remove the
+  single/double-warp explanation.
 
-Suggested provenance:
+## Prompt Visibility
 
-- observed;
-- ROM-resolved; and
-- inferred.
-
-Suggested transition kinds include normal warp, dungeon hole, map connection,
-scripted, Fly, Dig/Escape Rope, blackout, and unknown. Transitions remain
-directed; never invent a reverse edge.
-
-## Information Policy
-
-Observed mode is the default:
-
-- the destination warp index may be stored internally;
-- destination coordinates become prompt-visible only after traversal or other
-  discovery; and
-- observed before/after endpoints are authoritative.
-
-An optional ROM-informed mode may expose normal warp destinations immediately.
-Prompts must not imply those endpoints were personally observed. Inferred
-transitions must remain distinguishable from confirmed information.
+Destination indices and resolved coordinates are parser data. A resolved
+coordinate becomes prompt-visible only when the existing `known_map_ids` set
+already considers its destination map known. An unvisited destination keeps
+the existing generic exploration description. No additional policy or
+provenance layer is needed for this ticket.
 
 ## Special Cases
 
@@ -173,14 +149,17 @@ Normal indexed lookup does not cover:
 - scripted map changes;
 - Fly, blackout, Dig, Escape Rope, and special placements.
 
-The general transition observer is the required fallback. Prefer a concrete
-observed destination over placeholders such as `OUTSIDE`.
+These cases remain unresolved here. Their observed endpoints can be added with
+the global route planner, when the application has somewhere useful to store
+and consume them.
 
 ## Out of Scope
 
 - Revealing complete unexplored maps.
 - Persisting connected-component IDs.
 - Assuming all doors, ladders, or holes are reciprocal.
+- Persisting observed transitions, timestamps, or provenance.
+- Building a transition-observer or endpoint-visibility policy subsystem.
 - Building the global route planner; that belongs to
   [`provisional-map-regions-and-routing.md`](provisional-map-regions-and-routing.md).
 
@@ -189,37 +168,28 @@ observed destination over placeholders such as `OUTSIDE`.
 Each stage is a self-contained commit that leaves the project valid and
 establishes the inputs needed by the next stage.
 
-1. **Parse actionable warp activation.** Retain the destination warp index,
-   replace `WarpType` and adjacency pairing with one working activation
+1. **Parse actionable warp activation** (`fcd7433`). Retain the destination warp
+   index, replace `WarpType` and adjacency pairing with one working activation
    instruction per independent record, exclude inaccessible raw records, and
    update model-facing instructions.
-2. **Model bounded outdoor connections.** Parse each connection's valid source
-   strip and coordinate alignment, advertise only valid boundary exits, and
-   preserve source-to-destination coordinate mapping.
-3. **Persist typed known-warp metadata.** Store warp coordinates, destination
-   map/index, activation instruction, and discovery timestamps independently
-   of generic entity descriptions.
-4. **Resolve and persist ROM destination endpoints.** Resolve normal destination
-   coordinates from their destination indices, persist directed endpoint facts
-   with provenance, and leave dynamic or invalid destinations unresolved.
-5. **Observe actual transitions.** Detect map changes at the emulator/action
-   boundary and persist authoritative before/after coordinates for indexed
-   warps, scripts, holes, connections, and other transitions.
-6. **Apply endpoint visibility policy.** Default to observed-only destination
-   coordinates, optionally expose ROM-resolved endpoints, and make provenance
-   explicit in prompts and documentation.
+2. **Model bounded outdoor connections** (`fbfe411`). Parse each connection's
+   valid source strip and coordinate alignment, advertise only valid boundary
+   exits, and preserve source-to-destination coordinate mapping.
+3. **Resolve normal warp destination coordinates.** Read the destination map's
+   indexed warp record from the loaded ROM, retain its coordinate on `Warp`,
+   leave dynamic or invalid destinations unresolved, and include the coordinate
+   in the existing warp description when the destination map is already known.
 
 ## Validation
 
 Cover normal record parsing, destination index bounds, per-record activation,
-ROM lookup against known decomp examples, ROM checksum mismatch, transition
-observation, directed/non-reciprocal edges, dynamic exits, holes, outdoor
-connections, and prompt visibility under both information policies. Outdoor
-connection coverage must verify bounded strips and coordinate alignment,
-including Saffron City's north Route 5 connection at columns 10 through 29 and
-the rejection of column 0. Activation coverage must include the independent
-Celadon Mansion 2F stairs, the shared Celadon City entrance, both directions
-through the Route 11 gate, and a genuine map-edge exit.
+ROM lookup against known decomp examples, dynamic exits, outdoor connections,
+and destination visibility for known versus unvisited maps. Outdoor connection
+coverage must verify bounded strips and coordinate alignment, including
+Saffron City's north Route 5 connection at columns 10 through 29 and the
+rejection of column 0. Activation coverage must include the independent Celadon
+Mansion 2F stairs, the shared Celadon City entrance, both directions through
+the Route 11 gate, and a genuine map-edge exit.
 
 ## Acceptance Criteria
 
@@ -227,17 +197,13 @@ through the Route 11 gate, and a genuine map-edge exit.
 - [ ] Adjacent warp records remain independent and carry their own activation
       rule and destination.
 - [ ] Step-on, map-edge, and directional warp-carpet activation match the ROM.
-- [ ] Known warp metadata remains available when a map is not current.
 - [ ] Normal destination coordinates resolve correctly for the configured ROM.
-- [ ] Observed map changes persist exact directed endpoint pairs.
-- [ ] Special and dynamic transitions fall back to observation.
+- [ ] Dynamic destinations and invalid destination indices remain unresolved.
 - [ ] Outdoor connections retain their ROM-defined strip bounds and coordinate
       alignment.
 - [ ] Navigation advertises only boundary cells that belong to the relevant
       connection strip.
-- [ ] Provenance and visibility policy are explicit.
-- [ ] Prompts show the most specific permitted destination without leaking full
-      map terrain.
+- [ ] Prompts include a resolved coordinate for known destination maps without
+      revealing it for unvisited maps.
 - [ ] Prompts and route execution use exact entry directions and no longer rely
       on a single/double-warp heuristic.
-- [ ] Stored transitions use coordinates, not provisional region IDs.

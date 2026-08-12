@@ -65,7 +65,10 @@ def _format_overworld_warp(
 ) -> str:
     """Format a known overworld warp for the agent."""
     if warp.destination in known_map_ids or warp.destination in {MapId.OUTSIDE, MapId.UNKNOWN}:
-        destination_text = f"This warp leads to {warp.destination.name}."
+        destination = warp.destination.name
+        if warp.destination_coords is not None:
+            destination += f" at {warp.destination_coords}"
+        destination_text = f"This warp leads to {destination}."
     else:
         destination_text = (
             "You have not been to this warp's destination yet. Visiting it will add a new "

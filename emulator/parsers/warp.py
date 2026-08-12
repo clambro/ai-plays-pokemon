@@ -19,6 +19,15 @@ _WARP_COUNT_ADDRESS = 0xD3FB
 _WARP_ENTRIES_ADDRESS = 0xD3FC
 _WARP_RECORD_SIZE = 4
 
+_MAP_HEADER_TABLE_BANK = 0x3F
+_MAP_HEADER_POINTERS_ADDRESS = 0x41F2
+_MAP_HEADER_BANKS_ADDRESS = 0x43E4
+_MAP_HEADER_CONNECTIONS_OFFSET = 9
+_MAP_HEADER_SIZE = 10
+_MAP_CONNECTION_RECORD_SIZE = 11
+_OBJECT_WARP_COUNT_OFFSET = 1
+_OBJECT_WARP_ENTRIES_OFFSET = 2
+
 
 class Warp(BaseModel):
     """An actionable normal warp on the current map."""
@@ -27,6 +36,7 @@ class Warp(BaseModel):
     coords: Coords
     destination: MapId
     destination_warp_index: int
+    destination_coords: Coords | None
     activation: WarpActivation
 
     model_config = ConfigDict(frozen=True)
@@ -61,14 +71,74 @@ def parse_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
         )
         if activation is None:
             continue
+        destination_warp_index = mem[base + 2]
+        destination = MapId(mem[base + 3])
         warps[index] = Warp(
             index=index,
             coords=coords,
-            destination_warp_index=mem[base + 2],
-            destination=MapId(mem[base + 3]),
+            destination=destination,
+            destination_warp_index=destination_warp_index,
+            destination_coords=_resolve_destination_coords(
+                mem,
+                destination,
+                destination_warp_index,
+            ),
             activation=activation,
         )
     return warps
+
+
+def _resolve_destination_coords(
+    mem: PyBoyMemoryView,
+    destination: MapId,
+    destination_warp_index: int,
+) -> Coords | None:
+    """Resolve an ordinary destination warp record from the loaded ROM."""
+    if destination in {MapId.OUTSIDE, MapId.UNKNOWN}:
+        return None
+
+    map_id = int(destination)
+    map_header_bank = mem[
+        _MAP_HEADER_TABLE_BANK,
+        _MAP_HEADER_BANKS_ADDRESS + map_id,
+    ]
+    map_header_pointer_address = _MAP_HEADER_POINTERS_ADDRESS + 2 * map_id
+    map_header_address = _read_rom_word(
+        mem,
+        _MAP_HEADER_TABLE_BANK,
+        map_header_pointer_address,
+    )
+
+    connection_flags = mem[
+        map_header_bank,
+        map_header_address + _MAP_HEADER_CONNECTIONS_OFFSET,
+    ]
+    object_pointer_address = (
+        map_header_address
+        + _MAP_HEADER_SIZE
+        + connection_flags.bit_count() * _MAP_CONNECTION_RECORD_SIZE
+    )
+    object_address = _read_rom_word(
+        mem,
+        map_header_bank,
+        object_pointer_address,
+    )
+    warp_count = mem[map_header_bank, object_address + _OBJECT_WARP_COUNT_OFFSET]
+    if destination_warp_index >= warp_count:
+        return None
+
+    warp_address = (
+        object_address + _OBJECT_WARP_ENTRIES_OFFSET + destination_warp_index * _WARP_RECORD_SIZE
+    )
+    return Coords(
+        row=mem[map_header_bank, warp_address],
+        col=mem[map_header_bank, warp_address + 1],
+    )
+
+
+def _read_rom_word(mem: PyBoyMemoryView, bank: int, address: int) -> int:
+    """Read a little-endian pointer from a specific ROM bank."""
+    return mem[bank, address] | mem[bank, address + 1] << 8
 
 
 def _resolve_activation(
