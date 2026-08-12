@@ -5,8 +5,11 @@ from typing import TYPE_CHECKING
 from agent.overworld.tools.navigate import utils
 from common.enums import AsciiTile, Button, FacingDirection, MapId
 from overworld_map.service import update_overworld_map
+from overworld_map.views import get_current_map_tiles
 
 if TYPE_CHECKING:
+    import numpy as np
+
     from common.schemas import Coords
     from emulator.emulator import Emulator
     from emulator.game_state import GameState
@@ -38,18 +41,26 @@ class NavigationService:
         """Navigate to the requested target coordinates."""
         game_state = await self.emulator.get_game_state()
         hm_tiles = game_state.get_hm_tiles()
+        navigation_tiles = get_current_map_tiles(self.current_map, game_state)
         accessible_coords = utils.get_accessible_coords(
             game_state.player.coords,
-            self.current_map,
+            navigation_tiles,
+            self.current_map.blockages,
             hm_tiles,
         )
-        if error := self._get_target_error(game_state, coords, accessible_coords):
+        if error := self._get_target_error(
+            game_state,
+            coords,
+            accessible_coords,
+            navigation_tiles,
+        ):
             return self._record_result(error)
 
         path = utils.calculate_path_to_target(
             game_state.player.coords,
             coords,
-            self.current_map,
+            navigation_tiles,
+            self.current_map.blockages,
             hm_tiles,
         )
         if not path:
@@ -68,7 +79,7 @@ class NavigationService:
                 next_tile in AsciiTile.get_spinner_tiles()
                 and utils.get_spinner_destination(
                     next_coords,
-                    self.current_map.ascii_tiles_ndarray,
+                    navigation_tiles,
                 )
                 is None
             )
@@ -138,6 +149,7 @@ class NavigationService:
         game_state: GameState,
         coords: Coords,
         accessible_coords: list[Coords],
+        navigation_tiles: np.ndarray,
     ) -> str | None:
         """Return why the target coordinates are invalid, if applicable."""
         if game_state.player.is_biking:
@@ -154,7 +166,7 @@ class NavigationService:
             )
         if coords == game_state.player.coords:
             return f"Navigation skipped because the player is already at {coords}."
-        if self.current_map.ascii_tiles[coords.row][coords.col] == AsciiTile.SPRITE:
+        if navigation_tiles[coords.row, coords.col] == AsciiTile.SPRITE:
             return (
                 f"Navigation failed. The target coordinates {coords} are occupied by a sprite."
                 " To interact with it, navigate to an adjacent tile and then use the button tool."
@@ -206,7 +218,7 @@ class NavigationService:
 
     def _get_next_tile(self, button: Button, game_state: GameState) -> AsciiTile:
         """Get the next tile type that the player will move to."""
-        tile_arr = self.current_map.ascii_tiles_ndarray
+        tile_arr = self.current_map.terrain_ndarray
         player_pos = game_state.player.coords
         if button == Button.UP:
             return tile_arr[player_pos.row - 1, player_pos.col]

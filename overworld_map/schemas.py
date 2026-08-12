@@ -13,10 +13,10 @@ if TYPE_CHECKING:
 
 @dataclass(slots=True, kw_only=True)
 class OverworldMap:
-    """A map of a particular region of the overworld."""
+    """Persistent explored terrain and discoveries for one overworld map."""
 
     id: MapId
-    ascii_tiles: list[list[str]]
+    terrain: list[list[str]]
     blockages: dict[Coords, BlockedDirection]
     known_sprite_ids: set[int]
     known_sign_ids: set[int]
@@ -30,19 +30,19 @@ class OverworldMap:
     @property
     def height(self) -> int:
         """The height of the map."""
-        return len(self.ascii_tiles)
+        return len(self.terrain)
 
     @property
     def width(self) -> int:
         """The width of the map."""
-        return len(self.ascii_tiles[0])
+        return len(self.terrain[0])
 
     @property
-    def ascii_tiles_ndarray(self) -> np.ndarray:
-        """The ascii tiles as a numpy array."""
-        return np.array(self.ascii_tiles)
+    def terrain_ndarray(self) -> np.ndarray:
+        """Return the terrain as a NumPy array."""
+        return np.asarray(self.terrain)
 
     @property
-    def ascii_tiles_str(self) -> str:
-        """The ascii tiles as a string."""
-        return "\n".join("".join(row) for row in self.ascii_tiles)
+    def terrain_str(self) -> str:
+        """Return the serialized terrain."""
+        return "\n".join("".join(row) for row in self.terrain)

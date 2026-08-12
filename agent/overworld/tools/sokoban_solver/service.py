@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from agent.overworld.tools.sokoban_solver.schemas import SokobanMap
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, SpriteLabel
 from common.schemas import Coords
+from overworld_map.views import get_navigation_tiles
 
 if TYPE_CHECKING:
     from emulator.emulator import Emulator
@@ -60,7 +61,7 @@ class SokobanSolverService:
 
     def _get_simplified_map(self, game_state: GameState) -> SokobanMap:
         """Get a simplified map of the Sokoban puzzle with the boulders and goals."""
-        ascii_tiles = self.current_map.ascii_tiles
+        navigation_tiles = get_navigation_tiles(self.current_map, game_state)
         boulders = {
             sprite.coords
             for entity_id in self.current_map.known_sprite_ids
@@ -70,7 +71,7 @@ class SokobanSolverService:
         }
         simplified_tiles = []
         goals = set()
-        for row_idx, row in enumerate(ascii_tiles):
+        for row_idx, row in enumerate(navigation_tiles):
             simplified_row = []
             for col_idx, t in enumerate(row):
                 if t in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE):

@@ -68,7 +68,7 @@ def _is_sokoban_available(
 
     has_goal = any(
         tile in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE)
-        for row in current_map.ascii_tiles
+        for row in current_map.terrain
         for tile in row
     )
     has_boulder = any(

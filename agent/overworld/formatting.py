@@ -35,7 +35,7 @@ _ALWAYS_VISIBLE_TILES = {
 
 def format_explored_percentage(current_map: OverworldMap) -> str:
     """Format the portion of the map that has been explored."""
-    explored = np.mean(current_map.ascii_tiles_ndarray != AsciiTile.UNSEEN)
+    explored = np.mean(current_map.terrain_ndarray != AsciiTile.UNSEEN)
     return f"{explored:.0%}"
 
 
@@ -99,9 +99,7 @@ def format_legend(
     legend: Mapping[AsciiTile, str],
 ) -> str:
     """Format the legend for the tile types present on the map."""
-    tiles = {
-        AsciiTile(tile) for row in current_map.ascii_tiles for tile in row
-    } | _ALWAYS_VISIBLE_TILES
+    tiles = {AsciiTile(tile) for row in current_map.terrain for tile in row} | _ALWAYS_VISIBLE_TILES
     return "\n".join(f'- "{tile}": {legend[tile]}' for tile in AsciiTile if tile in tiles)
 
 
@@ -150,9 +148,9 @@ def format_sprite_notes(current_map: OverworldMap, game_state: GameState) -> str
         for entity_id in sorted(current_map.known_sprite_ids)
         if entity_id in game_state.sprites
     ]
-    if np.isin(AsciiTile.PC_TILE, current_map.ascii_tiles_ndarray):
+    if np.isin(AsciiTile.PC_TILE, current_map.terrain_ndarray):
         # This is a bit of a hack, but the model really struggles to find the PC otherwise.
-        location = np.argwhere(current_map.ascii_tiles_ndarray == AsciiTile.PC_TILE)[0]
+        location = np.argwhere(current_map.terrain_ndarray == AsciiTile.PC_TILE)[0]
         output += (
             f"- There is a PC at {Coords(row=int(location[0]), col=int(location[1]))}. It can only"
             " be interacted with from below.\n"
@@ -241,7 +239,7 @@ def format_coordinates_grid(coordinates: list[Coords], map_data: OverworldMap) -
     rows = []
     for _, row_coords in groupby(coordinates, key=lambda coord: coord.row):
         row_str = ", ".join(
-            f"({coord.row}, {coord.col}, {map_data.ascii_tiles[coord.row][coord.col]})"
+            f"({coord.row}, {coord.col}, {map_data.terrain[coord.row][coord.col]})"
             for coord in row_coords
         )
         rows.append(row_str)

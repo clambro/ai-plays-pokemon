@@ -84,12 +84,10 @@ async def _get_sokoban_service(emulator: Emulator) -> SokobanSolverService:
     """Helper function to get a Sokoban solver service with the proper mocks."""
     game_state = await emulator.get_game_state()
     with (
-        patch("database.map_memory.repository.get_map_memory", return_value=None),
-        patch(
-            "database.map_entity_memory.repository.get_map_entity_memories_for_map",
-            return_value=[],
-        ),
-        patch("database.map_memory.repository.update_map_tiles", return_value=None),
+        patch("overworld_map.service.get_map_memory", return_value=None),
+        patch("overworld_map.service.get_visited_maps", return_value=[]),
+        patch("overworld_map.service.create_map_memory", return_value=None),
+        patch("overworld_map.service.update_map_terrain", return_value=None),
         patch("overworld_map.service._add_remove_map_entities", return_value=None),
     ):
         overworld_map = await prepare_overworld_map(0, game_state)

@@ -1,4 +1,4 @@
-"""Tests for explored-map entity discovery."""
+"""Tests for explored-map behavior."""
 
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
@@ -6,15 +6,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from common.enums import MapEntityType, MapId
+from common.enums import AsciiTile, MapEntityType, MapId
 from common.schemas import Coords
 from database.map_entity_memory.schemas import MapEntityMemoryRead
 from database.map_memory.schemas import MapMemoryRead
+from overworld_map.schemas import OverworldMap
 from overworld_map.service import get_overworld_map, update_overworld_map
+from overworld_map.views import get_current_map_tiles, get_navigation_tiles
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
-    from overworld_map.schemas import OverworldMap
 
 _MAP_STATE = SimpleNamespace(
     id=MapId.PALLET_TOWN,
@@ -43,7 +44,7 @@ async def test_load_preserves_discovered_ids_without_live_records() -> None:
         get_map_memory=AsyncMock(
             return_value=MapMemoryRead(
                 map_id=MapId.PALLET_TOWN,
-                tiles="∙",
+                terrain="∙",
                 blockages={},
             ),
         ),
@@ -87,7 +88,7 @@ async def test_update_persists_discovery_and_derendering() -> None:
             new_callable=AsyncMock,
         ) as apply_changes,
         patch(
-            "overworld_map.service._update_overworld_map_tiles",
+            "overworld_map.service._update_overworld_map_terrain",
             new_callable=AsyncMock,
         ),
     ):
@@ -106,3 +107,50 @@ async def test_update_persists_discovery_and_derendering() -> None:
     assert [(change.entity_type, change.entity_id) for change in changes["deletes"]] == [
         (MapEntityType.SPRITE, 2)
     ]
+
+
+@pytest.mark.unit
+def test_derived_views_follow_current_entities_without_changing_terrain() -> None:
+    """Moving and removed entities never become terrain or stale routing blockers."""
+    current_map = OverworldMap(
+        id=MapId.PALLET_TOWN,
+        terrain=[list("∙∙∙")],
+        blockages={},
+        known_sprite_ids={1},
+        known_sign_ids=set(),
+        known_warp_ids=set(),
+        known_map_ids=frozenset(),
+        north_connection=None,
+        south_connection=None,
+        east_connection=None,
+        west_connection=None,
+    )
+    sprite = SimpleNamespace(coords=Coords(row=0, col=1), is_rendered=True)
+    player = SimpleNamespace(coords=Coords(row=0, col=0))
+    game_state = cast(
+        "GameState",
+        SimpleNamespace(
+            sprites={1: sprite},
+            warps={},
+            signs={},
+            pikachu=SimpleNamespace(is_rendered=False),
+            player=player,
+        ),
+    )
+
+    assert get_current_map_tiles(current_map, game_state).tolist() == [
+        [AsciiTile.PLAYER, AsciiTile.SPRITE, AsciiTile.FREE]
+    ]
+    assert get_navigation_tiles(current_map, game_state).tolist() == [
+        [AsciiTile.FREE, AsciiTile.SPRITE, AsciiTile.FREE]
+    ]
+
+    sprite.coords = Coords(row=0, col=2)
+    player.coords = Coords(row=0, col=1)
+    assert get_current_map_tiles(current_map, game_state).tolist() == [
+        [AsciiTile.FREE, AsciiTile.PLAYER, AsciiTile.SPRITE]
+    ]
+
+    sprite.is_rendered = False
+    assert get_navigation_tiles(current_map, game_state).tolist() == [list("∙∙∙")]
+    assert current_map.terrain == [list("∙∙∙")]

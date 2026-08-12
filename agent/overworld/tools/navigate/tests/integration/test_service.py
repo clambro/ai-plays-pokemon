@@ -1,6 +1,7 @@
 """Tests for the navigate service."""
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
@@ -11,6 +12,21 @@ from common.schemas import Coords
 from emulator.emulator import Emulator
 from memory.rolling_memory.schemas import RollingMemory
 from overworld_map.service import prepare_overworld_map
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+
+@pytest.fixture(autouse=True)
+def _isolate_map_memory() -> Iterator[None]:
+    with (
+        patch("overworld_map.service.get_map_memory", return_value=None),
+        patch("overworld_map.service.get_visited_maps", return_value=[]),
+        patch("overworld_map.service.create_map_memory", return_value=None),
+        patch("overworld_map.service.update_map_terrain", return_value=None),
+        patch("overworld_map.service.apply_map_entity_changes", return_value=None),
+    ):
+        yield
 
 
 @pytest.mark.integration
@@ -100,16 +116,7 @@ async def test_navigate_through_water() -> None:
 async def _get_nav_service(emulator: Emulator) -> NavigationService:
     """Helper function to get a navigation service with the proper mocks."""
     game_state = await emulator.get_game_state()
-    with (
-        patch("database.map_memory.repository.get_map_memory", return_value=None),
-        patch(
-            "database.map_entity_memory.repository.get_map_entity_memories_for_map",
-            return_value=[],
-        ),
-        patch("database.map_memory.repository.update_map_tiles", return_value=None),
-        patch("overworld_map.service._add_remove_map_entities", return_value=None),
-    ):
-        overworld_map = await prepare_overworld_map(0, game_state)
+    overworld_map = await prepare_overworld_map(0, game_state)
 
     return NavigationService(
         iteration=0,

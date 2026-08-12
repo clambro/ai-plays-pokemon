@@ -12,7 +12,7 @@ from database.map_memory.repository import (
     create_map_memory,
     get_map_memory,
     get_visited_maps,
-    update_map_tiles,
+    update_map_terrain,
 )
 from database.map_memory.schemas import MapMemoryCreateUpdate
 from overworld_map.schemas import OverworldMap
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldMap:
     """Load the explored map for a game-state snapshot.
 
-    Existing map tiles and discovered entity identities are loaded from the database. An unseen
+    Existing terrain and discovered entity identities are loaded from the database. An unseen
     map is initialized and persisted before being returned.
 
     Args:
@@ -44,7 +44,7 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
 
     return OverworldMap(
         id=map_memory.map_id,
-        ascii_tiles=[list(row) for row in map_memory.tiles.split("\n")],
+        terrain=[list(row) for row in map_memory.terrain.split("\n")],
         blockages=map_memory.blockages,
         known_sprite_ids={
             memory.entity_id
@@ -104,7 +104,7 @@ async def update_overworld_map(
     """
     if not game_state.is_text_on_screen() and overworld_map.id == game_state.map.id:
         await _add_remove_map_entities(game_state, overworld_map)
-        await _update_overworld_map_tiles(iteration, game_state, overworld_map)
+        await _update_overworld_map_terrain(iteration, game_state, overworld_map)
 
 
 async def _add_remove_map_entities(
@@ -178,14 +178,14 @@ async def _add_remove_map_entities(
     overworld_map.known_warp_ids.update(new_warp_ids)
 
 
-async def _update_overworld_map_tiles(
+async def _update_overworld_map_terrain(
     iteration: int,
     game_state: GameState,
     overworld_map: OverworldMap,
 ) -> None:
-    """Update the overworld map with the current game state, revealing new tiles."""
-    ascii_screen_with_entities = game_state.get_ascii_screen()
-    ascii_screen = ascii_screen_with_entities.ndarray
+    """Reveal and persist entity-free terrain from the current screen."""
+    terrain_screen = game_state.get_ascii_screen_terrain()
+    screen_terrain = terrain_screen.ndarray
     screen = game_state.screen
 
     top = screen.top
@@ -197,35 +197,32 @@ async def _update_overworld_map_tiles(
 
     # We have to convert the blockages from screen coordinates to map coordinates before we crop.
     overworld_map.blockages.update(
-        {
-            screen.to_map_coords(coord): block
-            for coord, block in ascii_screen_with_entities.blockages.items()
-        }
+        {screen.to_map_coords(coord): block for coord, block in terrain_screen.blockages.items()}
     )
 
     # Crop the screen to the area that's part of the current map.
     if top < 0:
-        ascii_screen = ascii_screen[-top:]
+        screen_terrain = screen_terrain[-top:]
         top = 0
     if left < 0:
-        ascii_screen = ascii_screen[:, -left:]
+        screen_terrain = screen_terrain[:, -left:]
         left = 0
     if bottom > height:
-        ascii_screen = ascii_screen[: height - bottom]
+        screen_terrain = screen_terrain[: height - bottom]
         bottom = height
     if right > width:
-        ascii_screen = ascii_screen[:, : width - right]
+        screen_terrain = screen_terrain[:, : width - right]
         right = width
 
-    overworld_screen_tiles = overworld_map.ascii_tiles_ndarray
-    overworld_screen_tiles[top:bottom, left:right] = ascii_screen
-    overworld_map.ascii_tiles = overworld_screen_tiles.tolist()
+    terrain = overworld_map.terrain_ndarray.copy()
+    terrain[top:bottom, left:right] = screen_terrain
+    overworld_map.terrain = terrain.tolist()
 
-    await update_map_tiles(
+    await update_map_terrain(
         MapMemoryCreateUpdate(
             iteration=iteration,
             map_id=overworld_map.id,
-            tiles=overworld_map.ascii_tiles_str,
+            terrain=overworld_map.terrain_str,
             blockages={str(coord): block for coord, block in overworld_map.blockages.items()},
         ),
     )
@@ -236,11 +233,13 @@ async def _create_overworld_map_from_game_state(
     game_state: GameState,
 ) -> OverworldMap:
     """Create a new overworld map from the game state."""
-    tiles = [[AsciiTile.UNSEEN.value] * game_state.map.width] * game_state.map.height
+    terrain = [
+        [AsciiTile.UNSEEN.value] * game_state.map.width for _ in range(game_state.map.height)
+    ]
     known_map_ids = frozenset(await get_visited_maps()) | {game_state.map.id}
     overworld_map = OverworldMap(
         id=game_state.map.id,
-        ascii_tiles=tiles,
+        terrain=terrain,
         blockages={},
         known_sprite_ids=set(),
         known_warp_ids=set(),
@@ -255,7 +254,7 @@ async def _create_overworld_map_from_game_state(
         MapMemoryCreateUpdate(
             iteration=iteration,
             map_id=overworld_map.id,
-            tiles=overworld_map.ascii_tiles_str,
+            terrain=overworld_map.terrain_str,
             blockages={str(coord): block for coord, block in overworld_map.blockages.items()},
         ),
     )
