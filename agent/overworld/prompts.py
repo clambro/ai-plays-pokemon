@@ -120,18 +120,11 @@ observations.
 
 {state}
 
-The coordinates in the format (row, col, tile type) that are accessible from
-your current position are as follows:
-<accessible_coords>
-{accessible_coords}
-</accessible_coords>
-
-The following coordinates (a subset of the accessible coordinates provided
-above) are adjacent to unseen territory on the current map. They are therefore
-top candidates for exploration. If the section below is empty, then you have
-already explored all of the accessible tiles on the current map. Navigating
-towards any of these exploration candidates is the most efficient way to
-explore the map.
+The following accessible coordinates are adjacent to unseen territory on the
+current map. They are therefore top candidates for exploration. If the section
+below is empty, then you have already explored all of the accessible tiles on
+the current map. Navigating towards any of these exploration candidates is the
+most efficient way to explore the map.
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>
@@ -150,10 +143,10 @@ Your current inventory is listed below:
 {inventory_indices}
 </inventory_indices>
 
-Use navigation for ordinary movement to a listed accessible coordinate. Use
-press_buttons for direct interactions, changing direction, or sending the final
-directional input needed to cross a map boundary or warp. Prefer a specialized
-tool whenever it directly matches the action you want to take.
+Use navigation for ordinary movement within the current map. Use press_buttons
+for direct interactions, changing direction, or sending the final directional
+input needed to cross a map boundary or warp. Prefer a specialized tool
+whenever it directly matches the action you want to take.
 
 Briefly explain your reasoning in first person as ordinary response text, then
 use exactly one available tool to act. Be sure to consider all the tools at
@@ -211,7 +204,6 @@ def build_overworld_decision_prompt(
     """Build the initial prompt for one overworld-agent run."""
     if game_state.player.is_biking:
         unavailable = "Navigation data is unavailable while riding a bike."
-        accessible_coords = unavailable
         exploration_candidates = unavailable
         map_boundaries = unavailable
         biking_warning = (
@@ -228,7 +220,6 @@ def build_overworld_decision_prompt(
         )
         exploration = utils.get_exploration_candidates(accessible, current_map)
         boundaries = utils.get_map_boundary_tiles(accessible, current_map)
-        accessible_coords = formatting.format_coordinates_grid(accessible, current_map)
         exploration_candidates = formatting.format_exploration_candidates(
             exploration,
             current_map,
@@ -250,7 +241,6 @@ def build_overworld_decision_prompt(
     )
     return OVERWORLD_DECISION_PROMPT.format(
         state="\n\n".join(section for section in sections if section),
-        accessible_coords=accessible_coords,
         exploration_candidates=exploration_candidates,
         map_boundaries=map_boundaries,
         biking_warning=biking_warning,

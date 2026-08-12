@@ -47,14 +47,12 @@ def build_navigation_tool(
         Do not attempt to navigate to the tile that you are currently standing
         on. This does nothing.
 
-        The row and column must be one of the ``accessible_coords`` provided in
-        the prompt. Do not invent coordinates. If the exact destination you
-        want is inaccessible, choose the listed coordinate that best satisfies
-        the same intent.
+        Choose a revealed coordinate from the current map. The tool will reject
+        coordinates that cannot be reached from the current position.
 
         Args:
-            row: Map row from the provided accessible coordinates.
-            col: Map column from the provided accessible coordinates.
+            row: Target row on the current map.
+            col: Target column on the current map.
 
         Returns:
             Fresh screenshot and the actual navigation result.

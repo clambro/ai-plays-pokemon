@@ -162,8 +162,8 @@ class NavigationService:
             )
         if coords not in accessible_coords:
             return (
-                f"Navigation failed. The target coordinates {coords} are not in the list of"
-                f" accessible coordinates that was provided to me."
+                f"Navigation failed. The target coordinates {coords} cannot be reached from my"
+                " current position."
             )
         return None
 
