@@ -5,44 +5,12 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from common.enums import BlockedDirection, MapId
-from emulator.parsers.sign import Sign
-from emulator.parsers.sprite import Sprite
-from emulator.parsers.warp import Warp
-
 if TYPE_CHECKING:
+    from common.enums import BlockedDirection, MapId
     from common.schemas import Coords
-
-
-class OverworldSprite(Sprite):
-    """A sprite on the overworld map, known to the player."""
-
-    @classmethod
-    def from_sprite(cls, sprite: Sprite) -> OverworldSprite:
-        """Create an overworld sprite from parsed sprite state."""
-        return cls(**sprite.model_dump())
-
-
-class OverworldSign(Sign):
-    """A sign on the overworld map, known to the player."""
-
-    @classmethod
-    def from_sign(cls, sign: Sign) -> OverworldSign:
-        """Create an overworld sign from parsed sign state."""
-        return cls(**sign.model_dump())
-
-
-class OverworldWarp(Warp):
-    """A warp on the overworld map, known to the player."""
-
-    visited: bool
-
-    @classmethod
-    def from_warp(cls, warp: Warp, visited_maps: list[MapId]) -> OverworldWarp:
-        """Create an overworld warp from a warp."""
-        # The OUTSIDE placeholder map is not in the DB, so we assume it's always visited.
-        visited = warp.destination in visited_maps or warp.destination == MapId.OUTSIDE
-        return cls(**warp.model_dump(), visited=visited)
+    from emulator.parsers.sign import Sign
+    from emulator.parsers.sprite import Sprite
+    from emulator.parsers.warp import Warp
 
 
 @dataclass(slots=True, kw_only=True)
@@ -52,9 +20,10 @@ class OverworldMap:
     id: MapId
     ascii_tiles: list[list[str]]
     blockages: dict[Coords, BlockedDirection]
-    known_sprites: dict[int, OverworldSprite]
-    known_signs: dict[int, OverworldSign]
-    known_warps: dict[int, OverworldWarp]
+    known_sprites: dict[int, Sprite]
+    known_signs: dict[int, Sign]
+    known_warps: dict[int, Warp]
+    known_map_ids: frozenset[MapId]
     north_connection: MapId | None
     south_connection: MapId | None
     east_connection: MapId | None

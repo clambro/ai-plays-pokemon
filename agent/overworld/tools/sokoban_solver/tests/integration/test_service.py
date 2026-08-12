@@ -11,7 +11,6 @@ from common.enums import Button, SpriteLabel
 from common.schemas import Coords
 from emulator.emulator import Emulator
 from memory.rolling_memory.schemas import RollingMemory
-from overworld_map.schemas import OverworldSprite
 from overworld_map.service import prepare_overworld_map
 
 if TYPE_CHECKING:
@@ -94,9 +93,7 @@ async def _get_sokoban_service(emulator: Emulator) -> SokobanSolverService:
         patch("overworld_map.service._add_remove_map_entities", return_value=None),
     ):
         overworld_map = await prepare_overworld_map(0, game_state)
-        overworld_map.known_sprites = {
-            s.index: OverworldSprite.from_sprite(s) for s in game_state.sprites.values()
-        }
+        overworld_map.known_sprites = game_state.sprites.copy()
     return SokobanSolverService(
         emulator=emulator,
         current_map=overworld_map,

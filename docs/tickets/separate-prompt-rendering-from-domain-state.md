@@ -94,12 +94,12 @@ This keeps prompt text visibly in a prompt module while removing presentation
 behavior from explored-map records. Delete `overworld_map/prompts.py` and update
 the link in `docs/philosophy.md` to the agent-owned prompt module.
 
-Revisit `OverworldSprite` and `OverworldSign` as part of this move. After entity
-descriptions were removed, these subclasses remain only to construct copies of
-the parsed `Sprite` and `Sign` models and stringify them for the overworld
-prompt. Moving that formatting into the agent layer may eliminate their last
-reason to exist; if so, store the parser models directly on `OverworldMap`
-instead of preserving presentation-only domain types.
+Revisit the `OverworldSprite`, `OverworldSign`, and `OverworldWarp` wrappers as
+part of this move. The sprite and sign subclasses remain only to copy parsed
+models. The warp subclass adds a derived `visited` flag whose only consumer is
+prompt formatting. Store the immutable parser models directly on `OverworldMap`
+and carry the known map IDs needed for the formatter to decide whether a warp's
+destination can be named.
 
 ### Rolling-memory compaction
 
@@ -142,8 +142,8 @@ Retain state-derived behavior that is used independently of prompting:
   and tile-classification behavior on `GameState`;
 - `OverworldMap.height`, `width`, `ascii_tiles_ndarray`, and
   `ascii_tiles_str`, which are also used by map persistence and navigation;
-- `OverworldWarp.from_warp()`, which adds remembered destination-visit state to
-  a parsed warp; sprites and signs should use their parser models directly;
+- parsed `Sprite`, `Sign`, and `Warp` records stored directly on `OverworldMap`,
+  plus the known map IDs needed to interpret warp destinations;
 - memory mutation, ordering, lifecycle, and compaction behavior; and
 - goal mutation and primary/other ordering.
 
@@ -262,14 +262,16 @@ work before presentation ownership continues moving across additional modules.
 This commit moves one complete presentation surface without simultaneously
 changing the types stored by explored-map memory.
 
-### Commit 5: Remove presentation-only sprite and sign wrappers
+### Commit 5: Remove presentation-only entity wrappers
 
-- Delete `OverworldSprite` and `OverworldSign`.
-- Type `OverworldMap.known_sprites` and `known_signs` as the parsed `Sprite` and
-  `Sign` models, and have `overworld_map/service.py` store those immutable parser
-  records directly instead of copying them through `model_dump()`.
-- Keep `OverworldWarp`: its `visited` field and `from_warp()` constructor add
-  explored-map state that is independent of rendering.
+- Delete `OverworldSprite`, `OverworldSign`, and `OverworldWarp`.
+- Type `OverworldMap.known_sprites`, `known_signs`, and `known_warps` as the
+  parsed `Sprite`, `Sign`, and `Warp` models, and have `overworld_map/service.py`
+  store those immutable parser records directly instead of copying them through
+  `model_dump()`.
+- Store the authoritative set of known map IDs once on `OverworldMap`. Derive
+  whether a warp destination can be named in the agent formatter instead of
+  caching that presentation decision as `OverworldWarp.visited`.
 - Update the Sokoban integration fixture and any other callers that construct
   the removed wrappers. Do not change navigation, entity persistence, or
   Sokoban behavior.

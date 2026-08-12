@@ -13,8 +13,11 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from emulator.game_state import GameState
+    from emulator.parsers.sign import Sign
+    from emulator.parsers.sprite import Sprite
+    from emulator.parsers.warp import Warp
     from emulator.schemas import AsciiScreenWithEntities
-    from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
+    from overworld_map.schemas import OverworldMap
 
 _ALWAYS_VISIBLE_TILES = {
     AsciiTile.UNSEEN,
@@ -36,7 +39,7 @@ def format_explored_percentage(current_map: OverworldMap) -> str:
     return f"{explored:.0%}"
 
 
-def _format_overworld_sprite(sprite: OverworldSprite, map_id: MapId) -> str:
+def _format_overworld_sprite(sprite: Sprite, map_id: MapId) -> str:
     """Format a known overworld sprite for the agent."""
     output = (
         f"sprite_{map_id}_{sprite.index} at {sprite.coords}."
@@ -50,27 +53,32 @@ def _format_overworld_sprite(sprite: OverworldSprite, map_id: MapId) -> str:
     return output
 
 
-def _format_overworld_sign(sign: OverworldSign, map_id: MapId) -> str:
+def _format_overworld_sign(sign: Sign, map_id: MapId) -> str:
     """Format a known overworld sign for the agent."""
     return f"sign_{map_id}_{sign.index} at {sign.coords}."
 
 
-def _format_overworld_warp(warp: OverworldWarp, map_id: MapId) -> str:
+def _format_overworld_warp(
+    warp: Warp,
+    map_id: MapId,
+    known_map_ids: frozenset[MapId],
+) -> str:
     """Format a known overworld warp for the agent."""
-    if warp.visited or warp.destination in [MapId.OUTSIDE, MapId.UNKNOWN]:
-        visited_text = f"This warp leads to {warp.destination.name}."
+    if warp.destination in known_map_ids or warp.destination in {MapId.OUTSIDE, MapId.UNKNOWN}:
+        destination_text = f"This warp leads to {warp.destination.name}."
     else:
-        visited_text = (
+        destination_text = (
             "You have not been to this warp's destination yet. Visiting it will add a new "
             " building/floor/location to your memory. It might be a good candidate for"
             " exploration if it is accessible."
         )
     return (
-        f"warp_{map_id}_{warp.index} at {warp.coords}. {visited_text} {_get_warp_description(warp)}"
+        f"warp_{map_id}_{warp.index} at {warp.coords}. {destination_text}"
+        f" {_get_warp_description(warp)}"
     )
 
 
-def _get_warp_description(warp: OverworldWarp) -> str:
+def _get_warp_description(warp: Warp) -> str:
     """Format instructions for entering a warp."""
     if warp.warp_type == WarpType.SINGLE:
         return "This is a single warp tile. Stand on it to warp."
@@ -157,7 +165,7 @@ def format_warp_notes(current_map: OverworldMap) -> str:
     if not current_map.known_warps:
         return "No warp tiles discovered."
     return "\n".join(
-        f"- {_format_overworld_warp(warp, current_map.id)}"
+        f"- {_format_overworld_warp(warp, current_map.id, current_map.known_map_ids)}"
         for _, warp in sorted(current_map.known_warps.items())
     )
 
