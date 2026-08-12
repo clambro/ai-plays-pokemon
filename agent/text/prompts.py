@@ -2,7 +2,12 @@
 
 from typing import TYPE_CHECKING
 
-from agent.formatting.game_state import format_player_info
+from agent.formatting.game_state import (
+    format_inventory_info,
+    format_party_info,
+    format_pc_info,
+    format_player_info,
+)
 from agent.formatting.memory import format_goals, format_rolling_memory
 
 if TYPE_CHECKING:
@@ -27,13 +32,15 @@ def build_text_decision_prompt(
     initial_game_state: GameState,
 ) -> str:
     """Build the prompt for the initial actionable text screen."""
-    state = "\n\n".join(
-        (
-            format_rolling_memory(context.state.rolling_memory),
-            format_goals(context.state.goals),
-            format_player_info(initial_game_state),
-        ),
+    sections = (
+        format_rolling_memory(context.state.rolling_memory),
+        format_goals(context.state.goals),
+        format_player_info(initial_game_state),
+        format_party_info(initial_game_state),
+        format_inventory_info(initial_game_state),
+        format_pc_info(initial_game_state),
     )
+    state = "\n\n".join(section for section in sections if section)
     return TEXT_DECISION_PROMPT.format(
         state=state,
         text=initial_game_state.screen.text,

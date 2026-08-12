@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from common.enums import BattleType
+from common.enums import BattleType, PokeballItem
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -54,3 +54,19 @@ def format_battle_info(game_state: GameState) -> str:
 
     out += "</battle_info>"
     return out
+
+
+def format_available_pokeballs(game_state: GameState) -> str:
+    """Format Poke Balls currently available during a wild battle."""
+    if game_state.battle.battle_type != BattleType.WILD:
+        return ""
+
+    pokeball_names = {ball.value for ball in PokeballItem}
+    available_balls = [
+        f"- {item.name} (x{item.quantity})"
+        for item in game_state.inventory.items
+        if item.name in pokeball_names
+    ]
+    if not available_balls:
+        return ""
+    return "Available Poke Balls:\n" + "\n".join(available_balls)

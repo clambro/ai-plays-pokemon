@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 
 def format_player_info(game_state: GameState) -> str:
-    """Format the player's state for agent prompts."""
+    """Format the player's core state for agent prompts."""
     out = "<player_info>\n"
     if game_state.player.name:
         out += f"Name: {game_state.player.name}\n"
@@ -16,13 +16,6 @@ def format_player_info(game_state: GameState) -> str:
     if game_state.player.badges:
         out += f"Badges Earned: {', '.join(game_state.player.badges)}\n"
     out += f"Current Level Cap: {game_state.player.level_cap}\n"
-    out += format_party_info(game_state)
-    if game_state.inventory.items:
-        out += "<inventory>\n"
-        for item in game_state.inventory.items:
-            out += f"- {item.name} (x{item.quantity})\n"
-        out += "</inventory>\n"
-    out += format_pc_info(game_state)
     out += "</player_info>"
     return out
 
@@ -34,7 +27,18 @@ def format_party_info(game_state: GameState) -> str:
     out = "<party>\n"
     out += "These are the Pokemon in your party, in their current order.\n"
     out += _format_pokemon_list(game_state.party)
-    out += "</party>\n"
+    out += "</party>"
+    return out
+
+
+def format_inventory_info(game_state: GameState) -> str:
+    """Format the player's current inventory for agent prompts."""
+    if not game_state.inventory.items:
+        return ""
+    out = "<inventory>\n"
+    for item in game_state.inventory.items:
+        out += f"- {item.name} (x{item.quantity})\n"
+    out += "</inventory>"
     return out
 
 
@@ -51,7 +55,7 @@ def format_pc_info(game_state: GameState) -> str:
             f"- {pokemon.name} ({pokemon.species}, Level {pokemon.level}, {pokemon_type}): "
             f"{moves}\n"
         )
-    out += "</pc_pokemon>\n"
+    out += "</pc_pokemon>"
     return out
 
 

@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from agent.formatting.game_state import format_player_info
+from agent.formatting.game_state import format_party_info, format_pc_info, format_player_info
 from agent.formatting.memory import format_goals, format_rolling_memory
 from agent.overworld import formatting
 from agent.overworld.tools.navigate import utils
@@ -243,15 +243,16 @@ def build_overworld_decision_prompt(
         f"[{index}] {item.name} (x{item.quantity})"
         for index, item in enumerate(game_state.inventory.items)
     )
+    sections = (
+        format_rolling_memory(context.state.rolling_memory),
+        format_goals(context.state.goals),
+        _format_overworld_map(current_map, game_state),
+        format_player_info(game_state),
+        format_party_info(game_state),
+        format_pc_info(game_state),
+    )
     return OVERWORLD_DECISION_PROMPT.format(
-        state="\n\n".join(
-            (
-                format_rolling_memory(context.state.rolling_memory),
-                format_goals(context.state.goals),
-                _format_overworld_map(current_map, game_state),
-                format_player_info(game_state),
-            ),
-        ),
+        state="\n\n".join(section for section in sections if section),
         accessible_coords=accessible_coords,
         exploration_candidates=exploration_candidates,
         map_boundaries=map_boundaries,

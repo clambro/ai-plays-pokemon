@@ -2,8 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from agent.battle.formatting import format_battle_info
-from agent.formatting.game_state import format_player_info
+from agent.battle.formatting import format_available_pokeballs, format_battle_info
+from agent.formatting.game_state import format_party_info, format_player_info
 from agent.formatting.memory import format_goals, format_rolling_memory
 from common.enums import BattleType
 
@@ -51,14 +51,15 @@ def build_battle_decision_prompt(
     initial_game_state: GameState,
 ) -> str:
     """Build the prompt for the battle-entry observation."""
-    state = "\n\n".join(
-        (
-            format_rolling_memory(context.state.rolling_memory),
-            format_goals(context.state.goals),
-            format_player_info(initial_game_state),
-            format_battle_info(initial_game_state),
-        ),
+    sections = (
+        format_rolling_memory(context.state.rolling_memory),
+        format_goals(context.state.goals),
+        format_player_info(initial_game_state),
+        format_party_info(initial_game_state),
+        format_available_pokeballs(initial_game_state),
+        format_battle_info(initial_game_state),
     )
+    state = "\n\n".join(section for section in sections if section)
     return BATTLE_DECISION_PROMPT.format(
         state=state,
         text=initial_game_state.screen.text,
