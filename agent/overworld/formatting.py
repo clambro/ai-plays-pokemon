@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
-from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpType
+from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpActivation
 from common.schemas import Coords
 
 if TYPE_CHECKING:
@@ -80,17 +80,15 @@ def _format_overworld_warp(
 
 def _get_warp_description(warp: Warp) -> str:
     """Format instructions for entering a warp."""
-    if warp.warp_type == WarpType.SINGLE:
-        return "This is a single warp tile. Stand on it to warp."
-    if warp.warp_type == WarpType.DOUBLE_VERTICAL and warp.coords.col == 0:
-        return "This is a vertical double warp tile. Stand on either tile and walk LEFT to warp."
-    if warp.warp_type == WarpType.DOUBLE_VERTICAL:
-        return "This is a vertical double warp tile. Stand on either tile and walk RIGHT to warp."
-    if warp.warp_type == WarpType.DOUBLE_HORIZONTAL and warp.coords.row == 0:
-        return "This is a horizontal double warp tile. Stand on either tile and walk UP to warp."
-    if warp.warp_type == WarpType.DOUBLE_HORIZONTAL:
-        return "This is a horizontal double warp tile. Stand on either tile and walk DOWN to warp."
-    raise ValueError(f"Unknown warp type: {warp.warp_type}")
+    if warp.activation == WarpActivation.STEP_ON:
+        return (
+            "Step onto this coordinate to activate the warp. If you arrived standing on it,"
+            " walk off and then step back onto it to return."
+        )
+    return (
+        f"Stand on this coordinate and press {warp.activation.value} to activate the warp, even"
+        " if that direction appears blocked."
+    )
 
 
 def format_legend(

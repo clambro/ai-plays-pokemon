@@ -78,6 +78,12 @@ Relevant decomp sources:
 - `resources/pokeyellow/data/maps/map_header_banks.asm`
 - `resources/pokeyellow/data/maps/map_header_pointers.asm`
 
+The ROM also contains an inaccessible Celadon City record at `(19, 39)` that
+points to Celadon Mart 5F. No current tile or directional input activates it,
+and the Celadon City script does not enable it later. It is vestigial raw data,
+not an application-level "inactive warp," so actionable warp parsing excludes
+it.
+
 Resolution may read the exact ROM through its banked map headers or use a table
 generated from decomp `warp_event` declarations. A generated table must be
 tied to the exact ROM build/checksum.
@@ -177,6 +183,31 @@ observed destination over placeholders such as `OUTSIDE`.
 - Assuming all doors, ladders, or holes are reciprocal.
 - Building the global route planner; that belongs to
   [`provisional-map-regions-and-routing.md`](provisional-map-regions-and-routing.md).
+
+## Staged Implementation Plan
+
+Each stage is a self-contained commit that leaves the project valid and
+establishes the inputs needed by the next stage.
+
+1. **Parse actionable warp activation.** Retain the destination warp index,
+   replace `WarpType` and adjacency pairing with one working activation
+   instruction per independent record, exclude inaccessible raw records, and
+   update model-facing instructions.
+2. **Model bounded outdoor connections.** Parse each connection's valid source
+   strip and coordinate alignment, advertise only valid boundary exits, and
+   preserve source-to-destination coordinate mapping.
+3. **Persist typed known-warp metadata.** Store warp coordinates, destination
+   map/index, activation instruction, and discovery timestamps independently
+   of generic entity descriptions.
+4. **Resolve and persist ROM destination endpoints.** Resolve normal destination
+   coordinates from their destination indices, persist directed endpoint facts
+   with provenance, and leave dynamic or invalid destinations unresolved.
+5. **Observe actual transitions.** Detect map changes at the emulator/action
+   boundary and persist authoritative before/after coordinates for indexed
+   warps, scripts, holes, connections, and other transitions.
+6. **Apply endpoint visibility policy.** Default to observed-only destination
+   coordinates, optionally expose ROM-resolved endpoints, and make provenance
+   explicit in prompts and documentation.
 
 ## Validation
 
