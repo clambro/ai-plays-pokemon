@@ -23,14 +23,11 @@ class DialogBox:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class AsciiScreenWithEntities:
-    """An ASCII representation of a screen with entities on it."""
+class AsciiScreenTerrain:
+    """An entity-free ASCII terrain observation for the visible screen."""
 
     screen: list[list[str]]
     blockages: dict[Coords, BlockedDirection]
-    sprites: list[Sprite]
-    warps: list[Warp]
-    signs: list[Sign]
 
     def __str__(self) -> str:
         """Return a string representation of the screen."""
@@ -40,3 +37,12 @@ class AsciiScreenWithEntities:
     def ndarray(self) -> np.ndarray:
         """Convert the screen to a numpy array."""
         return np.asarray(self.screen)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class AsciiScreenWithEntities(AsciiScreenTerrain):
+    """An ASCII representation of a screen with entities on it."""
+
+    sprites: list[Sprite]
+    warps: list[Warp]
+    signs: list[Sign]

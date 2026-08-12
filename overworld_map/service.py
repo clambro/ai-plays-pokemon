@@ -142,7 +142,7 @@ async def _add_remove_map_entities(
     removed_sprites = [
         sprite
         for sprite in overworld_map.known_sprites.values()
-        if game_state.to_screen_coords(sprite.coords) is not None and not sprite.is_rendered
+        if game_state.screen.to_screen_coords(sprite.coords) is not None and not sprite.is_rendered
     ]
 
     creates = [
@@ -209,7 +209,7 @@ async def _update_overworld_map_tiles(
     # We have to convert the blockages from screen coordinates to map coordinates before we crop.
     overworld_map.blockages.update(
         {
-            coord + (top, left): block  # noqa: RUF005
+            screen.to_map_coords(coord): block
             for coord, block in ascii_screen_with_entities.blockages.items()
         }
     )
