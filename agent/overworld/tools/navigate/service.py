@@ -55,8 +55,8 @@ class NavigationService:
         if not path:
             return self._record_result(
                 f"Navigation failed. No path found to target coordinates {coords}."
-                f" This either means that the location is inaccessible, or that I have not"
-                f" explored enough of the map to reveal the path.",
+                " The location is either inaccessible or not enough of the map has been"
+                " explored to reveal the path.",
             )
 
         starting_map_id = self.current_map.id
@@ -129,8 +129,8 @@ class NavigationService:
         if game_state.player.coords == spinner_start:
             return f"Navigation to {target} interrupted at position {game_state.player.coords}."
         return (
-            f"The spinner carried me to {game_state.player.coords}."
-            " Navigation stopped so I can plan a new route from here."
+            f"The spinner moved the player to {game_state.player.coords}."
+            " Navigation stopped so a new route can be planned from there."
         )
 
     def _get_target_error(
@@ -153,17 +153,16 @@ class NavigationService:
                 f" map bounds. The navigation tool cannot cross map boundaries."
             )
         if coords == game_state.player.coords:
-            return f"Navigation skipped because I am already at {coords}."
+            return f"Navigation skipped because the player is already at {coords}."
         if self.current_map.ascii_tiles[coords.row][coords.col] == AsciiTile.SPRITE:
             return (
                 f"Navigation failed. The target coordinates {coords} are occupied by a sprite."
-                f" If I want to interact with the sprite, I have to navigate to a tile adjacent"
-                f" to it and then use the button tool to interact with it."
+                " To interact with it, navigate to an adjacent tile and then use the button tool."
             )
         if coords not in accessible_coords:
             return (
-                f"Navigation failed. The target coordinates {coords} cannot be reached from my"
-                " current position."
+                f"Navigation failed. The target coordinates {coords} cannot be reached from the"
+                " player's current position."
             )
         return None
 

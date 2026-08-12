@@ -31,11 +31,11 @@ class UseItemService:
         """Use the item at the requested inventory index."""
         try:
             item_name = await self._use_item(item_index)
-            result = f"I used {item_name} from inventory slot {item_index}."
+            result = f"Used {item_name} from inventory slot {item_index}."
         except Exception as error:  # noqa: BLE001
             if not isinstance(error, UseItemError):
                 logger.exception("Unexpected error while using an inventory item.")
-            result = f"I failed to use an item from my inventory. {error}"
+            result = f"Failed to use an inventory item: {error}"
         self.rolling_memory.add_memory(result)
         return result
 

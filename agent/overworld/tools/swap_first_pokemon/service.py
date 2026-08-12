@@ -33,18 +33,17 @@ class SwapFirstPokemonService:
             await self._swap_first_pokemon(pokemon_index)
             game_state = await self.emulator.get_game_state()
             result = (
-                f"I successfully swapped the order of my Pokemon. The new party order is "
-                f"{[p.name for p in game_state.party]}. My lead Pokemon is now "
-                f"{game_state.party[0].name}."
+                f"Successfully changed the party order to {[p.name for p in game_state.party]}."
+                f" The lead Pokemon is now {game_state.party[0].name}."
             )
         except Exception as error:  # noqa: BLE001
             if not isinstance(error, SwapPokemonError):
                 logger.exception("Unexpected error while changing the party order.")
             game_state = await self.emulator.get_game_state()
             result = (
-                f"An error occurred while swapping the first Pokemon in my party: {error}"
-                f"The current party order is {[p.name for p in game_state.party]}. My lead"
-                f" Pokemon is {game_state.party[0].name}."
+                f"Failed to change the party order: {error} The current party order is"
+                f" {[p.name for p in game_state.party]}. The lead Pokemon is"
+                f" {game_state.party[0].name}."
             )
         self.rolling_memory.add_memory(result)
         return result

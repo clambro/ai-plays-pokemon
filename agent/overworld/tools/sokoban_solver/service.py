@@ -47,9 +47,9 @@ class SokobanSolverService:
 
         if not solution:
             result = (
-                "The Sokoban solver was unable to find a solution. This is likely because I"
-                " haven't explored enough of the map yet, or I need to get boulders from"
-                " other locations first, or because I already solved the puzzle previously."
+                "The Sokoban solver was unable to find a solution. The map may not have been"
+                " explored enough, boulders may need to be moved from other locations first,"
+                " or the puzzle may already be solved."
             )
             self.rolling_memory.add_memory(result)
             return result
