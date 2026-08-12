@@ -9,9 +9,6 @@ if TYPE_CHECKING:
     from common.enums import BlockedDirection, MapId
     from common.schemas import Coords
     from emulator.parsers.map import MapConnection
-    from emulator.parsers.sign import Sign
-    from emulator.parsers.sprite import Sprite
-    from emulator.parsers.warp import Warp
 
 
 @dataclass(slots=True, kw_only=True)
@@ -21,9 +18,9 @@ class OverworldMap:
     id: MapId
     ascii_tiles: list[list[str]]
     blockages: dict[Coords, BlockedDirection]
-    known_sprites: dict[int, Sprite]
-    known_signs: dict[int, Sign]
-    known_warps: dict[int, Warp]
+    known_sprite_ids: set[int]
+    known_sign_ids: set[int]
+    known_warp_ids: set[int]
     known_map_ids: frozenset[MapId]
     north_connection: MapConnection | None
     south_connection: MapConnection | None

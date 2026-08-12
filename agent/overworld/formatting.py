@@ -142,9 +142,14 @@ def get_tile_notes(
     return tile, blocked_text
 
 
-def format_sprite_notes(current_map: OverworldMap) -> str:
+def format_sprite_notes(current_map: OverworldMap, game_state: GameState) -> str:
     """Format known sprites in index order."""
     output = ""
+    sprites = [
+        game_state.sprites[entity_id]
+        for entity_id in sorted(current_map.known_sprite_ids)
+        if entity_id in game_state.sprites
+    ]
     if np.isin(AsciiTile.PC_TILE, current_map.ascii_tiles_ndarray):
         # This is a bit of a hack, but the model really struggles to find the PC otherwise.
         location = np.argwhere(current_map.ascii_tiles_ndarray == AsciiTile.PC_TILE)[0]
@@ -152,18 +157,22 @@ def format_sprite_notes(current_map: OverworldMap) -> str:
             f"- There is a PC at {Coords(row=int(location[0]), col=int(location[1]))}. It can only"
             " be interacted with from below.\n"
         )
-    elif not current_map.known_sprites:
+    elif not sprites:
         return "No sprites discovered."
     output += "\n".join(
-        f"- {_format_overworld_sprite(sprite, current_map.id)}"
-        for _, sprite in sorted(current_map.known_sprites.items())
+        f"- {_format_overworld_sprite(sprite, current_map.id)}" for sprite in sprites
     )
     return output.strip()
 
 
-def format_warp_notes(current_map: OverworldMap, player_coords: Coords) -> str:
+def format_warp_notes(current_map: OverworldMap, game_state: GameState) -> str:
     """Format known warps in index order."""
-    if not current_map.known_warps:
+    warps = [
+        game_state.warps[entity_id]
+        for entity_id in sorted(current_map.known_warp_ids)
+        if entity_id in game_state.warps
+    ]
+    if not warps:
         return "No warp tiles discovered."
     return "\n".join(
         "- "
@@ -171,20 +180,22 @@ def format_warp_notes(current_map: OverworldMap, player_coords: Coords) -> str:
             warp,
             current_map.id,
             current_map.known_map_ids,
-            player_coords,
+            game_state.player.coords,
         )
-        for _, warp in sorted(current_map.known_warps.items())
+        for warp in warps
     )
 
 
-def format_sign_notes(current_map: OverworldMap) -> str:
+def format_sign_notes(current_map: OverworldMap, game_state: GameState) -> str:
     """Format known signs in index order."""
-    if not current_map.known_signs:
+    signs = [
+        game_state.signs[entity_id]
+        for entity_id in sorted(current_map.known_sign_ids)
+        if entity_id in game_state.signs
+    ]
+    if not signs:
         return "No signs discovered."
-    return "\n".join(
-        f"- {_format_overworld_sign(sign, current_map.id)}"
-        for _, sign in sorted(current_map.known_signs.items())
-    )
+    return "\n".join(f"- {_format_overworld_sign(sign, current_map.id)}" for sign in signs)
 
 
 def format_connection_notes(current_map: OverworldMap) -> str:

@@ -93,7 +93,7 @@ async def _get_sokoban_service(emulator: Emulator) -> SokobanSolverService:
         patch("overworld_map.service._add_remove_map_entities", return_value=None),
     ):
         overworld_map = await prepare_overworld_map(0, game_state)
-        overworld_map.known_sprites = game_state.sprites.copy()
+        overworld_map.known_sprite_ids = set(game_state.sprites)
     return SokobanSolverService(
         emulator=emulator,
         current_map=overworld_map,

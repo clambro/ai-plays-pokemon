@@ -24,15 +24,15 @@ if TYPE_CHECKING:
 async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldMap:
     """Load the explored map for a game-state snapshot.
 
-    Existing terrain and entity memories are loaded from the database. An unseen map is initialized
-    and persisted before being returned.
+    Existing map tiles and discovered entity identities are loaded from the database. An unseen
+    map is initialized and persisted before being returned.
 
     Args:
         iteration: Current agent iteration used when creating new map memory.
         game_state: Current parsed game state and map metadata.
 
     Returns:
-        The explored map populated with remembered entities and current map connections.
+        The explored map populated with remembered entity identities and current map connections.
     """
     map_memory = await get_map_memory(game_state.map.id)
     if map_memory is None:
@@ -40,35 +40,27 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
 
     map_entity_memories = await get_map_entity_memories_for_map(map_memory.map_id)
 
-    game_sprites = game_state.sprites
-    sprites = {
-        mem.entity_id: game_sprites[mem.entity_id]
-        for mem in map_entity_memories
-        if mem.entity_type == MapEntityType.SPRITE and mem.entity_id in game_sprites
-    }
-
-    game_warps = game_state.warps
-    warps = {
-        mem.entity_id: game_warps[mem.entity_id]
-        for mem in map_entity_memories
-        if mem.entity_type == MapEntityType.WARP and mem.entity_id in game_warps
-    }
-
-    game_signs = game_state.signs
-    signs = {
-        mem.entity_id: game_signs[mem.entity_id]
-        for mem in map_entity_memories
-        if mem.entity_type == MapEntityType.SIGN and mem.entity_id in game_signs
-    }
     known_map_ids = frozenset(await get_visited_maps())
 
     return OverworldMap(
         id=map_memory.map_id,
         ascii_tiles=[list(row) for row in map_memory.tiles.split("\n")],
         blockages=map_memory.blockages,
-        known_sprites=sprites,
-        known_warps=warps,
-        known_signs=signs,
+        known_sprite_ids={
+            memory.entity_id
+            for memory in map_entity_memories
+            if memory.entity_type == MapEntityType.SPRITE
+        },
+        known_warp_ids={
+            memory.entity_id
+            for memory in map_entity_memories
+            if memory.entity_type == MapEntityType.WARP
+        },
+        known_sign_ids={
+            memory.entity_id
+            for memory in map_entity_memories
+            if memory.entity_type == MapEntityType.SIGN
+        },
         known_map_ids=known_map_ids,
         north_connection=game_state.map.north_connection,
         south_connection=game_state.map.south_connection,
@@ -123,51 +115,49 @@ async def _add_remove_map_entities(
     if overworld_map.id != game_state.map.id:
         raise ValueError("Overworld map does not match current game state.")
 
-    overworld_map.known_sprites.update(
-        {
-            entity_id: game_state.sprites[entity_id]
-            for entity_id in overworld_map.known_sprites
-            if entity_id in game_state.sprites
-        },
-    )
     ascii_screen = game_state.get_ascii_screen()
 
-    new_sprites = [
-        sprite
+    new_sprite_ids = {
+        sprite.index
         for sprite in ascii_screen.sprites
-        if sprite.is_rendered and sprite.index not in overworld_map.known_sprites
-    ]
-    new_warps = [warp for warp in ascii_screen.warps if warp.index not in overworld_map.known_warps]
-    new_signs = [sign for sign in ascii_screen.signs if sign.index not in overworld_map.known_signs]
-    removed_sprites = [
-        sprite
-        for sprite in overworld_map.known_sprites.values()
+        if sprite.is_rendered and sprite.index not in overworld_map.known_sprite_ids
+    }
+    new_warp_ids = {
+        warp.index for warp in ascii_screen.warps if warp.index not in overworld_map.known_warp_ids
+    }
+    new_sign_ids = {
+        sign.index for sign in ascii_screen.signs if sign.index not in overworld_map.known_sign_ids
+    }
+    removed_sprite_ids = {
+        entity_id
+        for entity_id in overworld_map.known_sprite_ids
+        if (sprite := game_state.sprites.get(entity_id)) is not None
         if game_state.screen.to_screen_coords(sprite.coords) is not None and not sprite.is_rendered
-    ]
+    }
 
     creates = [
         MapEntityMemoryCreate(
             map_id=overworld_map.id,
-            entity_id=sprite.index,
+            entity_id=entity_id,
             entity_type=MapEntityType.SPRITE,
         )
-        for sprite in new_sprites
+        for entity_id in sorted(new_sprite_ids)
     ]
     creates.extend(
         MapEntityMemoryCreate(
             map_id=overworld_map.id,
-            entity_id=warp.index,
+            entity_id=entity_id,
             entity_type=MapEntityType.WARP,
         )
-        for warp in new_warps
+        for entity_id in sorted(new_warp_ids)
     )
     creates.extend(
         MapEntityMemoryCreate(
             map_id=overworld_map.id,
-            entity_id=sign.index,
+            entity_id=entity_id,
             entity_type=MapEntityType.SIGN,
         )
-        for sign in new_signs
+        for entity_id in sorted(new_sign_ids)
     )
     # Previously seen sprite has been de-rendered. Likely an item that has been picked up, or a
     # scripted character that has walked off the screen. Sprites are the only entity types that can
@@ -175,18 +165,17 @@ async def _add_remove_map_entities(
     deletes = [
         MapEntityMemoryDelete(
             map_id=overworld_map.id,
-            entity_id=sprite.index,
+            entity_id=entity_id,
             entity_type=MapEntityType.SPRITE,
         )
-        for sprite in removed_sprites
+        for entity_id in sorted(removed_sprite_ids)
     ]
     await apply_map_entity_changes(creates=creates, deletes=deletes)
 
-    overworld_map.known_sprites.update({sprite.index: sprite for sprite in new_sprites})
-    overworld_map.known_signs.update({sign.index: sign for sign in new_signs})
-    overworld_map.known_warps.update({warp.index: warp for warp in new_warps})
-    for sprite in removed_sprites:
-        del overworld_map.known_sprites[sprite.index]
+    overworld_map.known_sprite_ids.update(new_sprite_ids)
+    overworld_map.known_sprite_ids.difference_update(removed_sprite_ids)
+    overworld_map.known_sign_ids.update(new_sign_ids)
+    overworld_map.known_warp_ids.update(new_warp_ids)
 
 
 async def _update_overworld_map_tiles(
@@ -253,9 +242,9 @@ async def _create_overworld_map_from_game_state(
         id=game_state.map.id,
         ascii_tiles=tiles,
         blockages={},
-        known_sprites={},
-        known_warps={},
-        known_signs={},
+        known_sprite_ids=set(),
+        known_warp_ids=set(),
+        known_sign_ids=set(),
         known_map_ids=known_map_ids,
         north_connection=game_state.map.north_connection,
         south_connection=game_state.map.south_connection,

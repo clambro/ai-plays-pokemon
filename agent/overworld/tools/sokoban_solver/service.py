@@ -34,14 +34,14 @@ class SokobanSolverService:
 
     async def solve(self) -> str:
         """Solve the Sokoban puzzle."""
-        sokoban_map = self._get_simplified_map()
+        game_state, collision_tiles = await self.emulator.get_game_state_with_map_collision_tiles()
+        sokoban_map = self._get_simplified_map(game_state)
 
         if not sokoban_map.boulders or not sokoban_map.goals:
             result = "The Sokoban solver found no boulders or goals and did not run."
             self.rolling_memory.add_memory(result)
             return result
 
-        game_state, collision_tiles = await self.emulator.get_game_state_with_map_collision_tiles()
         sokoban_map.collision_tiles = collision_tiles
         solution = self._solve_sokoban(sokoban_map, game_state)
 
@@ -58,13 +58,15 @@ class SokobanSolverService:
         self.rolling_memory.add_memory(result)
         return result
 
-    def _get_simplified_map(self) -> SokobanMap:
+    def _get_simplified_map(self, game_state: GameState) -> SokobanMap:
         """Get a simplified map of the Sokoban puzzle with the boulders and goals."""
         ascii_tiles = self.current_map.ascii_tiles
         boulders = {
             sprite.coords
-            for sprite in self.current_map.known_sprites.values()
-            if sprite.label == SpriteLabel.BOULDER and sprite.is_rendered
+            for entity_id in self.current_map.known_sprite_ids
+            if (sprite := game_state.sprites.get(entity_id)) is not None
+            and sprite.label == SpriteLabel.BOULDER
+            and sprite.is_rendered
         }
         simplified_tiles = []
         goals = set()
