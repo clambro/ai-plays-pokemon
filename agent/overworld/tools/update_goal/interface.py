@@ -45,7 +45,9 @@ def build_update_goal_tool(context: AgentContext) -> Tool[AgentContext]:
         relevant to becoming Champion, and time-bound when appropriate. It
         must remain distinct from every other goal. Base the revision on your
         experience recorded in memory or current player information, not
-        prior Pokemon knowledge, which is prone to error.
+        prior Pokemon knowledge, which is prone to error. Write the complete
+        replacement goal in the first person, just like your reasoning and
+        memories.
 
         Args:
             index: Zero-based index of the existing goal to revise.

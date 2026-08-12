@@ -14,7 +14,7 @@ class MapMemoryDBModel(SQLAlchemyBase):
     __tablename__ = "map_memory"
 
     map_id: Mapped[MapId] = mapped_column(Integer, primary_key=True, index=True)
-    tiles: Mapped[str] = mapped_column(String, nullable=False)
+    terrain: Mapped[str] = mapped_column(String, nullable=False)
     blockages: Mapped[dict[Coords, BlockedDirection]] = mapped_column(JSON, nullable=False)
     create_iteration: Mapped[int] = mapped_column(Integer, nullable=False)
     update_iteration: Mapped[int] = mapped_column(Integer, nullable=False)

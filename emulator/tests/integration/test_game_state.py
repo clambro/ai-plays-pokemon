@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from common.enums import BlockedDirection
+from common.enums import AsciiTile, BlockedDirection
 from common.schemas import Coords
 from emulator.emulator import Emulator
 
@@ -345,7 +345,16 @@ async def _helper_test_expected_screen(
     ) as emulator:
         game_state = await emulator.get_game_state()
 
+    terrain = game_state.get_ascii_screen_terrain()
     screen = game_state.get_ascii_screen()
 
     assert str(screen).split("\n") == expected_screen
     assert screen.blockages == expected_blockages
+    assert terrain.blockages == expected_blockages
+    assert not {
+        AsciiTile.PLAYER,
+        AsciiTile.PIKACHU,
+        AsciiTile.SPRITE,
+        AsciiTile.WARP,
+        AsciiTile.SIGN,
+    } & {tile for row in terrain.screen for tile in row}

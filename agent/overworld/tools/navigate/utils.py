@@ -10,6 +10,8 @@ from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection
 from common.schemas import Coords
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     import numpy as np
 
     from overworld_map.schemas import OverworldMap
@@ -17,19 +19,18 @@ if TYPE_CHECKING:
 
 def get_exploration_candidates(
     accessible_coords: list[Coords],
-    map_data: OverworldMap,
+    tiles: np.ndarray,
 ) -> list[Coords]:
     """Get all accessible coordinates adjacent to an unseen tile.
 
     Args:
         accessible_coords: Coordinates the player can currently reach.
-        map_data: Explored map containing known and unseen tiles.
+        tiles: Current navigation tiles containing known and unseen terrain.
 
     Returns:
         Reachable coordinates from which the player can reveal unseen terrain.
     """
     candidates = []
-    tiles = map_data.ascii_tiles_ndarray
     height, width = tiles.shape
 
     for c in accessible_coords:
@@ -55,8 +56,8 @@ def get_map_boundary_tiles(
     Returns:
         Accessible boundary coordinates grouped by their cardinal direction.
     """
-    tiles = map_data.ascii_tiles_ndarray
-    height, width = tiles.shape
+    height = map_data.height
+    width = map_data.width
     boundary_tiles = {
         FacingDirection.UP: [],
         FacingDirection.DOWN: [],
@@ -95,14 +96,16 @@ def get_map_boundary_tiles(
 
 def get_accessible_coords(
     start_pos: Coords,
-    map_data: OverworldMap,
+    tiles: np.ndarray,
+    blockages: Mapping[Coords, BlockedDirection],
     hm_tiles: list[AsciiTile],
 ) -> list[Coords]:
     """Find every coordinate reachable from the player's position.
 
     Args:
         start_pos: Coordinate at which to begin the search.
-        map_data: Explored map containing tiles and paired-tile blockages.
+        tiles: Current navigation tiles.
+        blockages: Known paired-tile movement blockages.
         hm_tiles: Additional tile types traversable with the player's current HMs.
 
     Returns:
@@ -113,7 +116,7 @@ def get_accessible_coords(
     accessible = [start_pos]
     while queue:
         current = queue.pop(0)
-        for neighbor, _ in _get_neighbors(current, map_data, hm_tiles):
+        for neighbor, _ in _get_neighbors(current, tiles, blockages, hm_tiles):
             if neighbor not in visited:
                 visited.add(neighbor)
                 queue.append(neighbor)
@@ -125,7 +128,8 @@ def get_accessible_coords(
 def calculate_path_to_target(
     start_pos: Coords,
     target_pos: Coords,
-    map_data: OverworldMap,
+    tiles: np.ndarray,
+    blockages: Mapping[Coords, BlockedDirection],
     hm_tiles: list[AsciiTile],
 ) -> list[Button] | None:
     """Calculate an A* path to the target as a sequence of button presses.
@@ -133,7 +137,8 @@ def calculate_path_to_target(
     Args:
         start_pos: Coordinate at which to begin the path.
         target_pos: Coordinate the path should reach.
-        map_data: Explored map containing tiles and paired-tile blockages.
+        tiles: Current navigation tiles.
+        blockages: Known paired-tile movement blockages.
         hm_tiles: Additional tile types traversable with the player's current HMs.
 
     Returns:
@@ -143,7 +148,6 @@ def calculate_path_to_target(
     came_from: dict[Coords, tuple[Coords, Button]] = {}
     g_score = {start_pos: 0}
     f_score = {start_pos: (start_pos - target_pos).length}
-    tile_arr = map_data.ascii_tiles_ndarray
     expensive_tiles = [
         AsciiTile.GRASS,
         AsciiTile.CUT_TREE,
@@ -166,9 +170,9 @@ def calculate_path_to_target(
 
         open_set.remove(current)
 
-        for neighbor, button in _get_neighbors(current, map_data, hm_tiles):
+        for neighbor, button in _get_neighbors(current, tiles, blockages, hm_tiles):
             # Bias movement away from tiles that take more time to traverse.
-            increment = 5 if tile_arr[neighbor.row, neighbor.col] in expensive_tiles else 1
+            increment = 5 if tiles[neighbor.row, neighbor.col] in expensive_tiles else 1
             tentative_g_score = g_score[current] + increment
 
             if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
@@ -183,14 +187,16 @@ def calculate_path_to_target(
 
 def _get_neighbors(
     pos: Coords,
-    map_data: OverworldMap,
+    tiles: np.ndarray,
+    blockages: Mapping[Coords, BlockedDirection],
     hm_tiles: list[AsciiTile],
 ) -> list[tuple[Coords, Button]]:
     """Get valid neighboring coordinates from a position.
 
     Args:
         pos: Coordinate whose neighbors should be evaluated.
-        map_data: Explored map containing tiles and paired-tile blockages.
+        tiles: Current navigation tiles.
+        blockages: Known paired-tile movement blockages.
         hm_tiles: Additional tile types traversable with the player's current HMs.
 
     Returns:
@@ -200,7 +206,6 @@ def _get_neighbors(
     walkable_tiles = AsciiTile.get_walkable_tiles()
     spinner_tiles = AsciiTile.get_spinner_tiles()
 
-    tiles = map_data.ascii_tiles_ndarray
     current_tile = tiles[pos.row, pos.col]
     if current_tile in [AsciiTile.WARP, AsciiTile.BOULDER_HOLE] or current_tile in spinner_tiles:
         return []  # These transition tiles cannot be used as stable intermediate positions.
@@ -211,9 +216,9 @@ def _get_neighbors(
 
         if (
             new_pos.row < 0
-            or new_pos.row >= map_data.height
+            or new_pos.row >= tiles.shape[0]
             or new_pos.col < 0
-            or new_pos.col >= map_data.width
+            or new_pos.col >= tiles.shape[1]
         ):
             continue
 
@@ -232,7 +237,7 @@ def _get_neighbors(
             # An unresolved spinner is still reachable as an exploration action, but it is
             # terminal until traversing it reveals where it leads.
             neighbors.append((destination if destination is not None else new_pos, button))
-        elif not _is_blocked(pos, dy, dx, map_data) and (
+        elif not _is_blocked(pos, dy, dx, blockages) and (
             target_tile in walkable_tiles
             or (target_tile == AsciiTile.CUT_TREE and AsciiTile.CUT_TREE in hm_tiles)
             or (target_tile == AsciiTile.WATER and AsciiTile.WATER in hm_tiles)
@@ -242,19 +247,24 @@ def _get_neighbors(
     return neighbors
 
 
-def _is_blocked(current: Coords, dy: int, dx: int, map_data: OverworldMap) -> bool:
+def _is_blocked(
+    current: Coords,
+    dy: int,
+    dx: int,
+    blockages: Mapping[Coords, BlockedDirection],
+) -> bool:
     """Check if the movement is blocked by a paired tile collision."""
-    blockages = map_data.blockages.get(current)
-    if not blockages:
+    blocked_directions = blockages.get(current)
+    if not blocked_directions:
         return False
     if dy == 1:
-        return bool(blockages & BlockedDirection.DOWN)
+        return bool(blocked_directions & BlockedDirection.DOWN)
     if dy == -1:
-        return bool(blockages & BlockedDirection.UP)
+        return bool(blocked_directions & BlockedDirection.UP)
     if dx == 1:
-        return bool(blockages & BlockedDirection.RIGHT)
+        return bool(blocked_directions & BlockedDirection.RIGHT)
     if dx == -1:
-        return bool(blockages & BlockedDirection.LEFT)
+        return bool(blocked_directions & BlockedDirection.LEFT)
     return False
 
 

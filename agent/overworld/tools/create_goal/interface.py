@@ -83,7 +83,8 @@ def build_create_goal_tool(context: AgentContext) -> Tool[AgentContext]:
 
         Create a goal only when recent events warrant it and the goal is not
         already in your list. You should normally have a primary goal, but do
-        not create other goals merely to fill the available slots.
+        not create other goals merely to fill the available slots. Write every
+        goal in the first person, just like your reasoning and memories.
 
         Args:
             goal: Complete text of the specific new goal, without an index.

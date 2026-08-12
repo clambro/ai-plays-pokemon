@@ -89,7 +89,7 @@ flowchart LR
 
 ### Prepare Context
 
-Before constructing the agent, deterministic preparation loads the current explored map from SQLite or creates it when entering a new map. The current visible screen reveals terrain and synchronizes sprites, signs, and warps. The prepared context, initial game state, and screenshot are then used to build one static prompt and tool registry for the run.
+Before constructing the agent, deterministic preparation loads the current explored terrain from SQLite or creates it when entering a new map. The current visible screen reveals only entity-free terrain while separately synchronizing discovered sprite, sign, and warp identities. The prompt composes those discoveries with live emulator positions, including the player and Pikachu, without writing any overlays back into terrain. The prepared context, initial game state, and screenshot are then used to build one static prompt and tool registry for the run.
 
 The prompt includes rolling memory, goals, player and party state, inventory indices, the explored map, exploration candidates, and accessible connected-map boundaries.
 
@@ -109,7 +109,7 @@ This is the simplest of all the overworld tools, and it does exactly what it say
 
 ### Navigation
 
-This is the main tool used for navigating the overworld, and also the most complex deterministic service in the workflow. The AI chooses a revealed destination from the explored map, aided by exploration candidates and accessible connected-map boundaries. The tool rejects inaccessible destinations, and an A* algorithm finds the shortest path and starts walking there. Every step, it checks for interruptions and updates the map. The navigation algorithm is sophisticated enough to handle ledges, surfing, cut trees, Team Rocket spinner tiles, and elevation changes in caverns.
+This is the main tool used for navigating the overworld, and also the most complex deterministic service in the workflow. The AI chooses a revealed destination from the explored map, aided by exploration candidates and accessible connected-map boundaries. Each route is derived from stable terrain plus discovered structural tiles and currently rendered blocking sprites, so old sprite positions cannot become permanent obstacles. The tool rejects inaccessible destinations, and an A* algorithm finds the shortest path and starts walking there. Every step, it checks for interruptions and updates the terrain and discoveries. The navigation algorithm is sophisticated enough to handle ledges, surfing, cut trees, Team Rocket spinner tiles, and elevation changes in caverns.
 
 ### Use Item
 

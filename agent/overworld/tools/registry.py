@@ -68,11 +68,12 @@ def _is_sokoban_available(
 
     has_goal = any(
         tile in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE)
-        for row in current_map.ascii_tiles
+        for row in current_map.terrain
         for tile in row
     )
     has_boulder = any(
         sprite.label == SpriteLabel.BOULDER and sprite.is_rendered
-        for sprite in current_map.known_sprites.values()
+        for entity_id in current_map.known_sprite_ids
+        if (sprite := game_state.sprites.get(entity_id)) is not None
     )
     return has_goal and has_boulder

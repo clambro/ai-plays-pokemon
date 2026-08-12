@@ -13,7 +13,7 @@ async def create_map_memory(map_memory: MapMemoryCreateUpdate) -> MapMemoryRead:
     async with db_sessionmaker() as session:
         db_obj = MapMemoryDBModel(
             map_id=map_memory.map_id,
-            tiles=map_memory.tiles,
+            terrain=map_memory.terrain,
             blockages=map_memory.blockages,
             create_iteration=map_memory.iteration,
             update_iteration=map_memory.iteration,
@@ -46,8 +46,8 @@ async def get_visited_maps() -> list[MapId]:
         return [MapId(map_id) for map_id in result.scalars().all()]
 
 
-async def update_map_tiles(map_memory: MapMemoryCreateUpdate) -> MapMemoryRead:
-    """Update an explored map's tiles and blockages.
+async def update_map_terrain(map_memory: MapMemoryCreateUpdate) -> MapMemoryRead:
+    """Update an explored map's terrain and blockages.
 
     Args:
         map_memory: Map identity, serialized terrain, blockages, and update iteration.
@@ -63,7 +63,7 @@ async def update_map_tiles(map_memory: MapMemoryCreateUpdate) -> MapMemoryRead:
             update(MapMemoryDBModel)
             .where(MapMemoryDBModel.map_id == map_memory.map_id)
             .values(
-                tiles=map_memory.tiles,
+                terrain=map_memory.terrain,
                 blockages=map_memory.blockages,
                 update_iteration=map_memory.iteration,
             )

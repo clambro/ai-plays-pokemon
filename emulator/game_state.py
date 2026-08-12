@@ -18,7 +18,7 @@ from emulator.parsers.screen import Screen, parse_screen
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
 from emulator.parsers.warp import Warp, parse_warps
-from emulator.schemas import AsciiScreenWithEntities, DialogBox
+from emulator.schemas import AsciiScreenTerrain, AsciiScreenWithEntities, DialogBox
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
@@ -92,23 +92,29 @@ class GameState:
             hm_tiles.append(AsciiTile.WATER)
         return hm_tiles
 
-    def to_screen_coords(self, coords: Coords) -> Coords | None:
-        """Convert map coordinates to screen coordinates.
-
-        Args:
-            coords: Coordinates on the current map.
+    def get_ascii_screen_terrain(self) -> AsciiScreenTerrain:
+        """Get the entity-free ASCII terrain visible on the current screen.
 
         Returns:
-            Coordinates relative to the visible screen, or ``None`` when they are offscreen.
+            The classified background grid and elevation blockages without
+            sprites, warps, signs, Pikachu, or the player.
         """
-        if (
-            coords.row < self.screen.top
-            or coords.row >= self.screen.bottom
-            or coords.col < self.screen.left
-            or coords.col >= self.screen.right
-        ):
-            return None
-        return coords - (self.screen.top, self.screen.left)
+        tiles = np.array(self.screen.tiles)
+        # Each block on screen is a 2x2 square of tiles.
+        blocks = np.full(SCREEN_SHAPE, AsciiTile.WALL, dtype=AsciiTile)
+        blockages: defaultdict[Coords, BlockedDirection] = defaultdict(lambda: BlockedDirection(0))
+
+        for i in range(0, tiles.shape[0], 2):
+            for j in range(0, tiles.shape[1], 2):
+                block = tiles[i : i + 2, j : j + 2]
+                blocks[i // 2, j // 2] = self._classify_background_block(block)
+                blockages = self._get_blockage(i, j, tiles, blockages)
+
+        # Return a plain dict so missing-key access cannot create new blockage entries.
+        return AsciiScreenTerrain(
+            screen=blocks.tolist(),
+            blockages=dict(blockages),
+        )
 
     def get_ascii_screen(self) -> AsciiScreenWithEntities:
         """Get an ASCII representation of the current screen.
@@ -118,17 +124,18 @@ class GameState:
         Returns:
             The classified visible screen, its elevation blockages, and rendered entities.
         """
-        blocks, blockages = self._get_background_blocks()
+        terrain = self.get_ascii_screen_terrain()
+        blocks = terrain.ndarray.copy()
 
         on_screen_sprites = []
         for s in self.sprites.values():
-            if s.is_rendered and (sc := self.to_screen_coords(s.coords)):
+            if s.is_rendered and (sc := self.screen.to_screen_coords(s.coords)):
                 on_screen_sprites.append(s)
                 blocks[sc.row, sc.col] = AsciiTile.SPRITE
 
         on_screen_warps = []
         for w in self.warps.values():
-            sc = self.to_screen_coords(w.coords)
+            sc = self.screen.to_screen_coords(w.coords)
             # There's a funny edge case with warps where they can be rendered on top of walls and
             # are therefore inaccessible. An example is in map 50, when entering Viridian Forest.
             if sc and blocks[sc.row, sc.col] != AsciiTile.WALL:
@@ -137,20 +144,20 @@ class GameState:
 
         on_screen_signs = []
         for s in self.signs.values():
-            if sc := self.to_screen_coords(s.coords):
+            if sc := self.screen.to_screen_coords(s.coords):
                 blocks[sc.row, sc.col] = AsciiTile.SIGN
                 on_screen_signs.append(s)
 
         # The player and Pikachu must be drawn last so they're on top of everything else.
         pikachu = self.pikachu
-        if pikachu.is_rendered and (sc := self.to_screen_coords(pikachu.coords)):
+        if pikachu.is_rendered and (sc := self.screen.to_screen_coords(pikachu.coords)):
             blocks[sc.row, sc.col] = AsciiTile.PIKACHU
 
         blocks[PLAYER_OFFSET_Y, PLAYER_OFFSET_X] = AsciiTile.PLAYER
 
         return AsciiScreenWithEntities(
             screen=blocks.tolist(),
-            blockages=blockages,
+            blockages=terrain.blockages,
             sprites=on_screen_sprites,
             warps=on_screen_warps,
             signs=on_screen_signs,
@@ -179,26 +186,6 @@ class GameState:
             bottom_line=bottom_line.strip(),
             has_cursor=has_cursor,
         )
-
-    def _get_background_blocks(self) -> tuple[np.ndarray, dict[Coords, BlockedDirection]]:
-        """Get background blocks and paired-tile movement restrictions.
-
-        Returns:
-            The classified background grid and elevation blockages, excluding map entities.
-        """
-        tiles = np.array(self.screen.tiles)
-        # Each block on screen is a 2x2 square of tiles.
-        blocks = np.full(SCREEN_SHAPE, AsciiTile.WALL, dtype=AsciiTile)
-        blockages: defaultdict[Coords, BlockedDirection] = defaultdict(lambda: BlockedDirection(0))
-
-        for i in range(0, tiles.shape[0], 2):
-            for j in range(0, tiles.shape[1], 2):
-                block = tiles[i : i + 2, j : j + 2]
-                blocks[i // 2, j // 2] = self._classify_background_block(block)
-                blockages = self._get_blockage(i, j, tiles, blockages)
-
-        # Remove the default behaviour so we can query blockages without adding new ones.
-        return np.array(blocks), dict(blockages)
 
     def _classify_background_block(self, block: np.ndarray) -> AsciiTile:
         """Classify a 2x2 block of background tiles."""

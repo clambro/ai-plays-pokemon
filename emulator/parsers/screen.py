@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, computed_field
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
+from common.schemas import Coords
 from emulator.parsers.screen_text import decode_screen_tiles
 
 if TYPE_CHECKING:
@@ -71,6 +72,39 @@ class Screen(BaseModel):
         """Get the number of name slots displayed on the naming screen."""
         name_slot_tiles = {0x76, 0x77}
         return sum(tile in name_slot_tiles for tile in self.tiles[3][10:])
+
+    def to_screen_coords(self, map_coords: Coords) -> Coords | None:
+        """Convert map coordinates to coordinates within this screen.
+
+        Args:
+            map_coords: Coordinates on the current map.
+
+        Returns:
+            Coordinates relative to this screen, or ``None`` when the map
+            coordinates are outside its viewport.
+        """
+        if (
+            map_coords.row < self.top
+            or map_coords.row >= self.bottom
+            or map_coords.col < self.left
+            or map_coords.col >= self.right
+        ):
+            return None
+        return map_coords - (self.top, self.left)
+
+    def to_map_coords(self, screen_coords: Coords) -> Coords:
+        """Convert coordinates within this screen to current-map coordinates.
+
+        Args:
+            screen_coords: Coordinates relative to this screen.
+
+        Returns:
+            The corresponding coordinates on the current map.
+        """
+        return Coords(
+            row=screen_coords.row + self.top,
+            col=screen_coords.col + self.left,
+        )
 
 
 def parse_screen(mem: PyBoyMemoryView) -> Screen:

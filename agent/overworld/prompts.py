@@ -8,6 +8,7 @@ from agent.overworld import formatting
 from agent.overworld.tools.navigate import utils
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
 from common.enums import AsciiTile, BlockedDirection
+from overworld_map.views import get_current_map_tiles
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
@@ -41,6 +42,7 @@ The right side of the screen is currently at column {{screen_right}} in map coor
 
 <player_position>
 You, the player, are at position {{player_coords}} in map coordinates.
+The terrain tile beneath you is "{{player_terrain}}".
 You are facing {{player_direction}}. The tile you are facing is "{{facing_tile}}" at position {{facing_tile_coords}}.
 
 The tile directly above you is "{{tile_above}}"{{blocked_above}}.
@@ -165,18 +167,22 @@ def _format_overworld_map(current_map: OverworldMap, game_state: GameState) -> s
     tile_below, blocked_below = formatting.get_tile_notes(BlockedDirection.DOWN, screen)
     tile_left, blocked_left = formatting.get_tile_notes(BlockedDirection.LEFT, screen)
     tile_right, blocked_right = formatting.get_tile_notes(BlockedDirection.RIGHT, screen)
+    current_tiles = get_current_map_tiles(current_map, game_state)
     return OVERWORLD_MAP_PROMPT.format(
         map_name=current_map.id.name,
-        ascii_map=current_map.ascii_tiles_str,
+        ascii_map="\n".join("".join(row) for row in current_tiles),
         legend=formatting.format_legend(current_map, LEGEND_MAP),
         height=current_map.height,
         width=current_map.width,
-        known_sprites=formatting.format_sprite_notes(current_map),
-        known_warps=formatting.format_warp_notes(current_map, game_state.player.coords),
-        known_signs=formatting.format_sign_notes(current_map),
+        known_sprites=formatting.format_sprite_notes(current_map, game_state),
+        known_warps=formatting.format_warp_notes(current_map, game_state),
+        known_signs=formatting.format_sign_notes(current_map, game_state),
         explored_percentage=formatting.format_explored_percentage(current_map),
         ascii_screen=screen,
         player_coords=game_state.player.coords,
+        player_terrain=current_map.terrain[game_state.player.coords.row][
+            game_state.player.coords.col
+        ],
         player_direction=game_state.player.direction,
         facing_tile=facing_tile,
         facing_tile_coords=facing_tile_coords,
@@ -213,12 +219,14 @@ def build_overworld_decision_prompt(
             "button tool to move around the map."
         )
     else:
+        navigation_tiles = get_current_map_tiles(current_map, game_state)
         accessible = utils.get_accessible_coords(
             game_state.player.coords,
-            current_map,
+            navigation_tiles,
+            current_map.blockages,
             game_state.get_hm_tiles(),
         )
-        exploration = utils.get_exploration_candidates(accessible, current_map)
+        exploration = utils.get_exploration_candidates(accessible, navigation_tiles)
         boundaries = utils.get_map_boundary_tiles(accessible, current_map)
         exploration_candidates = formatting.format_exploration_candidates(
             exploration,
