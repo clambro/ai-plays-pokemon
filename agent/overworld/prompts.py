@@ -69,8 +69,7 @@ You have discovered the following signs on the portion of the map that you have 
 </known_signs>
 
 Navigation tips:
-- You should explore as much of the map as possible to reveal the unexplored tiles, as they may be hiding important sprites or warp tiles. Tiles are considered explored once they are on screen, so move towards the unexplored tiles to reveal them.
-- Exploring the map to reveal unexplored tiles is always a good idea, especially if you feel stuck or unsure of how to proceed.
+- You should explore as much of the map as possible to reveal unexplored tiles, as they may be hiding important sprites or warp tiles. Tiles are considered explored once they are on screen, so move towards unseen territory when you are stuck or unsure how to proceed.
 - The orientation of the map and screen is always fixed, regardless of the direction that you are facing.
 - Warp tiles come in two varieties: single and double.
   - Single warp tiles (staircases, teleporters, doors, etc.) are activated by standing on them. If you are standing on a warp tile and not going anywhere, it means that you have just warped to this tile from somewhere else. If you want to go back to your previous location and are standing on a single warp tile, you have to walk off the tile and then back on it to warp back.
@@ -153,6 +152,11 @@ Your current inventory is listed below:
 <inventory_indices>
 {inventory_indices}
 </inventory_indices>
+
+Use navigation for ordinary movement to a listed accessible coordinate. Use
+press_buttons for direct interactions, changing direction, or sending the final
+directional input needed to cross a map boundary or warp. Prefer a specialized
+tool whenever it directly matches the action you want to take.
 
 Briefly explain your reasoning in first person as ordinary response text, then
 use exactly one available tool to act. Be sure to consider all the tools at

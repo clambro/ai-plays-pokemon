@@ -25,57 +25,32 @@ def build_navigation_tool(
     async def navigation(row: int, col: int) -> OverworldToolResult:
         """Navigate to a revealed, accessible tile on the current map.
 
-        The navigation tool allows you to navigate to any revealed, accessible
-        tile on the current map using an A* search algorithm. It is useful for:
+        This should be your primary mode of ordinary movement, especially when
+        moving more than one tile. It uses an A* search to reach accessible
+        coordinates beyond the current screen, including exploration
+        candidates, specific terrain, known warp tiles, and map boundaries.
 
-        - Moving the player around the current map. This should be your primary
-          mode of movement, especially if you are trying to move more than a
-          single tile at a time.
-        - Moving to a specific tile type (e.g. moving into tall grass or water
-          to find wild Pokemon. You need access to Surf to move into water).
-        - Revealing unexplored territory on the current map.
-        - Navigating directly to warp tiles.
-        - Navigating to the boundaries of the current map.
+        Paths are planned only within the current map and cannot target
+        coordinates on another map. For a direct outdoor connection, navigate
+        to the edge and cross it in the next iteration. The tool can navigate
+        directly onto an accessible warp tile; if that step changes maps,
+        navigation ends after the transition.
 
-        The navigation tool can navigate beyond the current screen, but it
-        plans paths only within the current map and cannot target coordinates
-        on another map. For a direct outdoor connection, navigate to the edge
-        and cross it in the next iteration. The tool can navigate directly onto
-        an accessible warp tile; if that step changes maps, navigation ends
-        after the transition.
+        This tool cannot interact with entities. To interact with a sprite,
+        sign, or object, navigate to an accessible adjacent coordinate.
 
-        The navigation tool cannot be used to interact with entities, but it
-        can be used to move to the tile next to them so that you can interact
-        with them via the button tool on the next iteration.
-
-        The navigation tool intentionally tries to avoid random encounters with
-        wild Pokemon for smoother navigation, and is thus not an efficient way
-        to find wild Pokemon.
+        Navigation intentionally avoids random encounters where possible. When
+        deliberately seeking wild Pokemon, choose suitable grass, cave, or
+        water at least five tiles away so that the route crosses more
+        encounter-capable tiles.
 
         Do not attempt to navigate to the tile that you are currently standing
         on. This does nothing.
 
-        Navigating directly to warp tiles that are marked in your overworld map
-        as not yet visited is another effective way to explore new areas. Doing
-        so will take you to a new map, usually a building, a cave, or a new
-        floor of a building or cave.
-
         The row and column must be one of the ``accessible_coords`` provided in
-        the prompt. Do not invent coordinates.
-
-        When choosing a destination:
-
-        - Navigate directly to a specific warp, boundary, or location when it
-          is accessible.
-        - To interact with a sprite, sign, or object, navigate to an accessible
-          adjacent coordinate.
-        - When seeking a specific tile type, select an accessible coordinate of
-          that type.
-        - When seeking wild Pokemon, select suitable grass, cave, or water at
-          least five tiles away so the route crosses more encounter-capable
-          tiles.
-        - Replace an inaccessible requested destination with the accessible
-          coordinate that best satisfies the same intent.
+        the prompt. Do not invent coordinates. If the exact destination you
+        want is inaccessible, choose the listed coordinate that best satisfies
+        the same intent.
 
         Args:
             row: Map row from the provided accessible coordinates.
