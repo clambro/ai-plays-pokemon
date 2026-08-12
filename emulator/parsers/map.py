@@ -1,17 +1,47 @@
 """Parser for map data in Pokémon Yellow memory."""
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from common.enums import MapId, Tileset
+from common.enums import FacingDirection, MapId, Tileset
+from common.schemas import Coords
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
 
-    from common.schemas import Coords
-
 _CAVERN_BOULDER_BLOCKED_TILES = frozenset({0x15})
+_NORTH_CONNECTION_ADDRESS = 0xD3BE
+_SOUTH_CONNECTION_ADDRESS = 0xD3C9
+_WEST_CONNECTION_ADDRESS = 0xD3D4
+_EAST_CONNECTION_ADDRESS = 0xD3DF
+_NO_CONNECTION = 0xFF
+_CONNECTION_STRIP_LENGTH_OFFSET = 5
+_CONNECTION_Y_ALIGNMENT_OFFSET = 7
+_CONNECTION_X_ALIGNMENT_OFFSET = 8
+_MAP_BORDER_BLOCKS = 3
+_SIGNED_BYTE_START = 0x80
+_BYTE_VALUE_COUNT = 0x100
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MapConnection:
+    """A bounded walk-off-map connection and its destination alignment."""
+
+    destination_map: MapId
+    source_coordinate_start: int
+    source_coordinate_end: int
+    destination_offset: Coords
+
+    @property
+    def source_coordinates(self) -> range:
+        """Return the valid row or column coordinates along the source edge."""
+        return range(self.source_coordinate_start, self.source_coordinate_end)
+
+    def get_destination(self, source: Coords) -> Coords:
+        """Map a valid source boundary coordinate to the connected map."""
+        return source + self.destination_offset
 
 
 class SpinnerTileIds(BaseModel):
@@ -47,10 +77,10 @@ class Map(BaseModel):
     walkable_tiles: list[int]
     collision_pairs: list[frozenset[int]]
     boulder_blocked_tiles: frozenset[int]
-    north_connection: MapId | None
-    south_connection: MapId | None
-    east_connection: MapId | None
-    west_connection: MapId | None
+    north_connection: MapConnection | None
+    south_connection: MapConnection | None
+    east_connection: MapConnection | None
+    west_connection: MapConnection | None
 
     model_config = ConfigDict(frozen=True)
 
@@ -149,10 +179,34 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
             _CAVERN_BOULDER_BLOCKED_TILES if tileset_id == Tileset.CAVERN else frozenset()
         ),
         spinner_tiles=_SPINNER_TILE_MAP.get(tileset_id),
-        north_connection=MapId(mem[0xD3BE]) if mem[0xD3BE] != terminator else None,
-        south_connection=MapId(mem[0xD3C9]) if mem[0xD3C9] != terminator else None,
-        east_connection=MapId(mem[0xD3DF]) if mem[0xD3DF] != terminator else None,
-        west_connection=MapId(mem[0xD3D4]) if mem[0xD3D4] != terminator else None,
+        north_connection=_parse_map_connection(
+            mem,
+            _NORTH_CONNECTION_ADDRESS,
+            FacingDirection.UP,
+            height,
+            width,
+        ),
+        south_connection=_parse_map_connection(
+            mem,
+            _SOUTH_CONNECTION_ADDRESS,
+            FacingDirection.DOWN,
+            height,
+            width,
+        ),
+        east_connection=_parse_map_connection(
+            mem,
+            _EAST_CONNECTION_ADDRESS,
+            FacingDirection.RIGHT,
+            height,
+            width,
+        ),
+        west_connection=_parse_map_connection(
+            mem,
+            _WEST_CONNECTION_ADDRESS,
+            FacingDirection.LEFT,
+            height,
+            width,
+        ),
     )
 
 
@@ -180,6 +234,78 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
         east_connection=None,
         west_connection=None,
     )
+
+
+def _parse_map_connection(
+    mem: PyBoyMemoryView,
+    address: int,
+    direction: FacingDirection,
+    map_height: int,
+    map_width: int,
+) -> MapConnection | None:
+    """Parse one connection record copied from the current map header."""
+    if mem[address] == _NO_CONNECTION:
+        return None
+
+    if direction in (FacingDirection.UP, FacingDirection.DOWN):
+        source_size = map_width
+        alignment = _signed_byte(mem[address + _CONNECTION_X_ALIGNMENT_OFFSET])
+        source_row = 0 if direction == FacingDirection.UP else map_height - 1
+        destination_offset = Coords(
+            row=mem[address + _CONNECTION_Y_ALIGNMENT_OFFSET] - source_row,
+            col=alignment,
+        )
+    else:
+        source_size = map_height
+        alignment = _signed_byte(mem[address + _CONNECTION_Y_ALIGNMENT_OFFSET])
+        source_col = 0 if direction == FacingDirection.LEFT else map_width - 1
+        destination_offset = Coords(
+            row=alignment,
+            col=mem[address + _CONNECTION_X_ALIGNMENT_OFFSET] - source_col,
+        )
+
+    source_start, source_end = _get_connection_source_bounds(
+        source_size,
+        alignment,
+        mem[address + _CONNECTION_STRIP_LENGTH_OFFSET],
+    )
+    return MapConnection(
+        destination_map=MapId(mem[address]),
+        source_coordinate_start=source_start,
+        source_coordinate_end=source_end,
+        destination_offset=destination_offset,
+    )
+
+
+def _get_connection_source_bounds(
+    source_size: int,
+    alignment: int,
+    connection_strip_length: int,
+) -> tuple[int, int]:
+    """Convert the ROM's block strip and alignment into source tile coordinates."""
+    source_block_count = source_size // 2
+    connection_offset = -(alignment // 2)
+    skipped_destination_blocks = max(-connection_offset - _MAP_BORDER_BLOCKS, 0)
+    available_destination_blocks = connection_strip_length + skipped_destination_blocks
+    source_start_block = max(connection_offset, 0)
+
+    # The copied strip includes the three-block map border. If it reaches the far side of that
+    # border, the current map bounds limit the connection; otherwise the destination map does.
+    source_limited_length = source_block_count + _MAP_BORDER_BLOCKS - connection_offset
+    if available_destination_blocks < source_limited_length:
+        source_end_block = min(
+            source_block_count,
+            connection_offset + available_destination_blocks,
+        )
+    else:
+        source_end_block = source_block_count
+
+    return source_start_block * 2, source_end_block * 2
+
+
+def _signed_byte(value: int) -> int:
+    """Interpret an unsigned byte as the ROM's signed alignment value."""
+    return value - _BYTE_VALUE_COUNT if value >= _SIGNED_BYTE_START else value
 
 
 def _get_collision_tile_id(collision_tiles: list[list[int]], coords: Coords) -> int | None:

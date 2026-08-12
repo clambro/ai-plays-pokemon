@@ -198,7 +198,7 @@ def format_connection_notes(current_map: OverworldMap) -> str:
         ("WEST", current_map.west_connection),
     ]:
         if connection is not None:
-            output += f"- The map to the {direction} is {connection.name}.\n"
+            output += f"- The map to the {direction} is {connection.destination_map.name}.\n"
         else:
             output += f"- There is no map connection to the {direction}.\n"
     output += (
@@ -255,16 +255,16 @@ def format_map_boundary_tiles(
         if connection is not None and boundary_tiles[facing_dir]:
             coord_str = ", ".join(str(coord) for coord in boundary_tiles[facing_dir])
             output.append(
-                f"The {connection.name} map boundary at the far {cardinal_dir} of the current map"
-                f" is accessible from {coord_str}.",
+                f"The {connection.destination_map.name} map boundary at the far {cardinal_dir}"
+                f" of the current map is accessible from {coord_str}.",
             )
         elif connection is not None:
             output.append(
-                f"You have not yet discovered a valid path to the {connection.name} map"
-                f" boundary at the far {cardinal_dir} of the current map. You can likely find it"
-                f" either by visiting more exploration candidates, or perhaps by getting to a new"
-                f" part of the current map via an intermediate map (e.g. through a building or"
-                f" cave).",
+                "You have not yet discovered a valid path to the"
+                f" {connection.destination_map.name} map boundary at the far {cardinal_dir} of the"
+                f" current map. You can likely find it either by visiting more exploration"
+                f" candidates, or perhaps by getting to a new part of the current map via an"
+                f" intermediate map (e.g. through a building or cave).",
             )
 
     return "\n".join(output)

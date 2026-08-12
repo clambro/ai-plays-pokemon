@@ -65,13 +65,29 @@ def get_map_boundary_tiles(
     }
 
     for c in accessible_coords:
-        if c.row == 0 and map_data.north_connection is not None:
+        if (
+            c.row == 0
+            and map_data.north_connection is not None
+            and c.col in map_data.north_connection.source_coordinates
+        ):
             boundary_tiles[FacingDirection.UP].append(c)
-        elif c.row == height - 1 and map_data.south_connection is not None:
+        elif (
+            c.row == height - 1
+            and map_data.south_connection is not None
+            and c.col in map_data.south_connection.source_coordinates
+        ):
             boundary_tiles[FacingDirection.DOWN].append(c)
-        elif c.col == 0 and map_data.west_connection is not None:
+        elif (
+            c.col == 0
+            and map_data.west_connection is not None
+            and c.row in map_data.west_connection.source_coordinates
+        ):
             boundary_tiles[FacingDirection.LEFT].append(c)
-        elif c.col == width - 1 and map_data.east_connection is not None:
+        elif (
+            c.col == width - 1
+            and map_data.east_connection is not None
+            and c.row in map_data.east_connection.source_coordinates
+        ):
             boundary_tiles[FacingDirection.RIGHT].append(c)
 
     return boundary_tiles

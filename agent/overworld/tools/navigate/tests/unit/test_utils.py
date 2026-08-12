@@ -12,6 +12,7 @@ import pytest
 from agent.overworld.tools.navigate import utils
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, MapId
 from common.schemas import Coords
+from emulator.parsers.map import MapConnection
 from overworld_map.schemas import OverworldMap
 
 PLATEAU_MAP = [
@@ -211,7 +212,12 @@ def test_get_map_boundary_tiles_plateau() -> None:
     """Test that the map boundary tiles are correct for the plateau map if we add a map below."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = PLATEAU_MAP
-    map_data.south_connection = MapId.ROUTE_1
+    map_data.south_connection = MapConnection(
+        destination_map=MapId.ROUTE_1,
+        source_coordinate_start=0,
+        source_coordinate_end=len(PLATEAU_MAP[0]),
+        destination_offset=Coords(row=0, col=0),
+    )
 
     accessible_coords = utils.get_accessible_coords(PLATEAU_CENTER, map_data, [])
     boundary_tiles = utils.get_map_boundary_tiles(accessible_coords, map_data)
@@ -231,8 +237,13 @@ def test_get_map_boundary_tiles_collision_pairs() -> None:
     map_data = deepcopy(DUMMY_MAP)
     map_data.ascii_tiles = COLLISION_PAIRS_MAP
     map_data.blockages = COLLISION_PAIRS_BLOCKAGES
-    map_data.east_connection = MapId.ROUTE_1
-    map_data.west_connection = MapId.ROUTE_1
+    map_data.east_connection = MapConnection(
+        destination_map=MapId.ROUTE_1,
+        source_coordinate_start=0,
+        source_coordinate_end=len(COLLISION_PAIRS_MAP),
+        destination_offset=Coords(row=0, col=0),
+    )
+    map_data.west_connection = map_data.east_connection
 
     accessible_coords = utils.get_accessible_coords(Coords(row=0, col=0), map_data, [])
     boundary_tiles = utils.get_map_boundary_tiles(accessible_coords, map_data)
@@ -244,6 +255,30 @@ def test_get_map_boundary_tiles_collision_pairs() -> None:
         Coords(row=2, col=2),
     }
     assert boundary_tiles[FacingDirection.UP] == []
+
+
+@pytest.mark.unit
+def test_saffron_north_connection_is_bounded_and_aligned() -> None:
+    """Only Saffron's connected section of its north edge should lead to Route 5."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.ascii_tiles = [list(40 * "∙") for _ in range(36)]
+    connection = MapConnection(
+        destination_map=MapId.ROUTE_5,
+        source_coordinate_start=10,
+        source_coordinate_end=30,
+        destination_offset=Coords(row=35, col=-10),
+    )
+    map_data.north_connection = connection
+    accessible_edge = [Coords(row=0, col=col) for col in (0, 9, 10, 29, 30, 39)]
+
+    boundary_tiles = utils.get_map_boundary_tiles(accessible_edge, map_data)
+
+    valid_sources = [Coords(row=0, col=10), Coords(row=0, col=29)]
+    assert boundary_tiles[FacingDirection.UP] == valid_sources
+    assert [connection.get_destination(coords) for coords in valid_sources] == [
+        Coords(row=35, col=0),
+        Coords(row=35, col=19),
+    ]
 
 
 @pytest.mark.unit
