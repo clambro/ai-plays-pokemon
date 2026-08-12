@@ -2,6 +2,14 @@
 
 from typing import TYPE_CHECKING
 
+from agent.formatting.game_state import (
+    format_inventory_info,
+    format_party_info,
+    format_pc_info,
+    format_player_info,
+)
+from agent.formatting.memory import format_goals, format_rolling_memory
+
 if TYPE_CHECKING:
     from agent.context import AgentContext
     from emulator.game_state import GameState
@@ -11,11 +19,11 @@ There is actionable text on the screen. The screenshot provided above shows the 
 
 {state}
 
-Here is the game memory's representation of the onscreen text. The text you see below is exactly what the game is displaying on the screen, but the formatting may be somewhat messed up because it is not rendering images. Use it to help you understand the text on the screen, as well as the position of any cursors. If you see multiple cursors "▷" and "▶", you are probably in a nested menu. The active cursor is always "▶". This is a more reliable way to navigate menus than the screenshot, but keep the screenshot in mind as well.
+Here is the decoded onscreen text from the game's memory. It preserves recognized text glyphs and cursor positions, but graphical tiles may be omitted. Use it to read labels and navigate menus. If multiple cursors "▷" and "▶" are present, the active cursor is "▶".
 <onscreen_text>
 {text}
 </onscreen_text>
-Onscreen text includes only recognized glyphs. Graphical elements may be omitted, so use the screenshot when the text is incomplete or visual context matters.
+Use the screenshot when the decoded text is incomplete or visual context matters.
 """.strip()
 
 
@@ -24,7 +32,16 @@ def build_text_decision_prompt(
     initial_game_state: GameState,
 ) -> str:
     """Build the prompt for the initial actionable text screen."""
+    sections = (
+        format_rolling_memory(context.state.rolling_memory),
+        format_goals(context.state.goals),
+        format_player_info(initial_game_state),
+        format_party_info(initial_game_state),
+        format_inventory_info(initial_game_state),
+        format_pc_info(initial_game_state),
+    )
+    state = "\n\n".join(section for section in sections if section)
     return TEXT_DECISION_PROMPT.format(
-        state=context.state.to_prompt_string(initial_game_state),
+        state=state,
         text=initial_game_state.screen.text,
     )

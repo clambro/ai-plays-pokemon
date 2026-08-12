@@ -18,7 +18,11 @@ from database.rolling_memory.schemas import (
     RawMemoryBlockCreate,
 )
 from llm.service import OpenAILLMService
-from memory.rolling_memory.prompts import COMPACTION_PROMPT, SYSTEM_PROMPT
+from memory.rolling_memory.prompts import (
+    COMPACTION_PROMPT,
+    SYSTEM_PROMPT,
+    format_compaction_source,
+)
 from memory.rolling_memory.schemas import (
     CurrentMemoryBlock,
     MemorySummary,
@@ -97,7 +101,7 @@ async def compact_memory(memory: RollingMemory) -> list[MemorySummaryRead]:
                 start_iteration=raw_blocks[0].iteration,
                 end_iteration=raw_blocks[-1].iteration,
                 level=1,
-                source="\n\n".join(map(str, raw_blocks)),
+                source=format_compaction_source(raw_blocks),
             ),
         )
 
@@ -106,7 +110,7 @@ async def compact_memory(memory: RollingMemory) -> list[MemorySummaryRead]:
             start_iteration=left.start_iteration,
             end_iteration=right.end_iteration,
             level=left.level + 1,
-            source=f"{left}\n\n{right}",
+            source=format_compaction_source((left, right)),
         )
         for left, right in _find_parent_pairs(memory.summary_frontier)
     )

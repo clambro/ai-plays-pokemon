@@ -54,13 +54,27 @@ exactly because emulator changes can affect existing save states.
   deliberately enforce a project convention.
 - Keep changes focused and preserve unrelated worktree changes.
 
+## Logging and Telemetry
+
+- Use logs for local operational health, Logfire for telemetry, and application
+  state or persistence for gameplay history. Do not use logs as another record
+  of agent reasoning, goals, prompts, dialog, tool results, or other domain
+  state.
+- Keep `INFO` logs to rare lifecycle milestones such as a service starting or a
+  backup completing. Expected validation failures, ordinary control flow, and
+  recoverable gameplay outcomes should not be logged.
+- Use `WARNING` for unexpected degradation from which the application recovers,
+  and `ERROR` or `EXCEPTION` for failed operations and workflow faults. Log an
+  exception once, at the boundary that handles it, and retain its traceback.
+- Keep log context compact and metadata-oriented. Never log secrets, full
+  prompts, model-generated reasoning, or other potentially sensitive content.
+
 ## Repository Layout
 
 - `agent/`: shared orchestration plus the overworld, battle, and text Pydantic
   AI agents and tools.
 - `emulator/`: PyBoy lifecycle, game-state snapshots, and ROM-memory parsers.
-- `overworld_map/`: explored-map state, persistence integration, and prompt
-  formatting.
+- `overworld_map/`: explored-map state and persistence integration.
 - `memory/`: goals and rolling-memory compaction behavior.
 - `database/`: SQLite models and repositories.
 - `llm/`: model definitions and provider access.

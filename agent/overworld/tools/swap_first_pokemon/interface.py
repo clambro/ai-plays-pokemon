@@ -44,7 +44,7 @@ def build_swap_first_pokemon_tool(
         guarantee that it will gain experience (assuming it has not fainted and
         is not at the level cap).
 
-        The current party order is shown in the ``player_info`` section of the
+        The current party order is shown in the ``party`` section of the
         prompt. If you are happy with the order of your party, don't use this
         tool.
 

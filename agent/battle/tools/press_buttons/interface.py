@@ -45,6 +45,10 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         semantic tools. Prefer one button at a time. Use a short sequence only
         when navigating to a clearly identified menu choice.
 
+        If a forced switch repeatedly displays "There's no will to fight," the
+        highlighted Pokemon has fainted. Use the directional buttons to select
+        a different Pokemon that is still able to fight.
+
         Args:
             buttons: Buttons to press in order.
 

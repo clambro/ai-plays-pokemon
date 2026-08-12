@@ -45,7 +45,6 @@ def build_text_agent(context: AgentContext) -> Agent[AgentContext, str]:
 
 async def run_text(context: AgentContext) -> None:
     """Handle one complete text interaction, using an agent only for decisions."""
-    logger.info("Running the text handler...")
     await context.begin_iteration()
     agent_input = await _prepare_text_agent_input(context)
     if agent_input is not None:
@@ -61,7 +60,9 @@ async def run_text(context: AgentContext) -> None:
                         if not is_text_interaction_state(game_state):
                             break
         except AgentRunError as error:
-            logger.warning(f"Error running text interaction. Skipping. {error}")
+            logger.opt(exception=error).warning(
+                "Text agent run failed; returning control to the dispatcher."
+            )
             return
     await finalize_iteration(context.state.rolling_memory)
 

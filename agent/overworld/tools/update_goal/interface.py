@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import Field
 from pydantic_ai import Tool
 
+from agent.formatting.memory import format_goals
 from agent.overworld.tools.update_goal.service import (
     GoalNotFoundError,
 )
@@ -37,8 +38,8 @@ def build_update_goal_tool(context: AgentContext) -> Tool[AgentContext]:
 
         Do not use this tool for a goal that has been completed or that you no
         longer want to pursue; delete that goal instead. Update the primary
-        goal sparingly. You must have exactly one primary goal and up to five
-        other goals.
+        goal sparingly. You should maintain exactly one primary goal and may
+        have up to five other goals.
 
         The revised goal must remain specific, measurable, achievable,
         relevant to becoming Champion, and time-bound when appropriate. It
@@ -64,7 +65,7 @@ def build_update_goal_tool(context: AgentContext) -> Tool[AgentContext]:
             result = str(error)
         else:
             context.state.goals = goals
-            result = f"Updated goal:\n{goals}"
+            result = f"Updated goal.\n\n{format_goals(goals)}"
 
         return await complete_overworld_action(context, result)
 

@@ -1,4 +1,4 @@
-"""Storage and rendering for the explored overworld map."""
+"""Persistence and updates for the explored overworld map."""
 
 from typing import TYPE_CHECKING
 
@@ -15,7 +15,7 @@ from database.map_memory.repository import (
     update_map_tiles,
 )
 from database.map_memory.schemas import MapMemoryCreateUpdate
-from overworld_map.schemas import OverworldMap, OverworldSign, OverworldSprite, OverworldWarp
+from overworld_map.schemas import OverworldMap
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -42,25 +42,25 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
 
     game_sprites = game_state.sprites
     sprites = {
-        mem.entity_id: OverworldSprite.from_sprite(game_sprites[mem.entity_id])
+        mem.entity_id: game_sprites[mem.entity_id]
         for mem in map_entity_memories
         if mem.entity_type == MapEntityType.SPRITE and mem.entity_id in game_sprites
     }
 
     game_warps = game_state.warps
-    visited_maps = await get_visited_maps()
     warps = {
-        mem.entity_id: OverworldWarp.from_warp(game_warps[mem.entity_id], visited_maps)
+        mem.entity_id: game_warps[mem.entity_id]
         for mem in map_entity_memories
         if mem.entity_type == MapEntityType.WARP and mem.entity_id in game_warps
     }
 
     game_signs = game_state.signs
     signs = {
-        mem.entity_id: OverworldSign.from_sign(game_signs[mem.entity_id])
+        mem.entity_id: game_signs[mem.entity_id]
         for mem in map_entity_memories
         if mem.entity_type == MapEntityType.SIGN and mem.entity_id in game_signs
     }
+    known_map_ids = frozenset(await get_visited_maps())
 
     return OverworldMap(
         id=map_memory.map_id,
@@ -69,6 +69,7 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
         known_sprites=sprites,
         known_warps=warps,
         known_signs=signs,
+        known_map_ids=known_map_ids,
         north_connection=game_state.map.north_connection,
         south_connection=game_state.map.south_connection,
         east_connection=game_state.map.east_connection,
@@ -124,7 +125,7 @@ async def _add_remove_map_entities(
 
     overworld_map.known_sprites.update(
         {
-            entity_id: OverworldSprite.from_sprite(game_state.sprites[entity_id])
+            entity_id: game_state.sprites[entity_id]
             for entity_id in overworld_map.known_sprites
             if entity_id in game_state.sprites
         },
@@ -181,17 +182,9 @@ async def _add_remove_map_entities(
     ]
     await apply_map_entity_changes(creates=creates, deletes=deletes)
 
-    overworld_map.known_sprites.update(
-        {sprite.index: OverworldSprite.from_sprite(sprite) for sprite in new_sprites},
-    )
-    overworld_map.known_signs.update(
-        {sign.index: OverworldSign.from_sign(sign) for sign in new_signs},
-    )
-    if new_warps:
-        visited_maps = await get_visited_maps()
-        overworld_map.known_warps.update(
-            {warp.index: OverworldWarp.from_warp(warp, visited_maps) for warp in new_warps},
-        )
+    overworld_map.known_sprites.update({sprite.index: sprite for sprite in new_sprites})
+    overworld_map.known_signs.update({sign.index: sign for sign in new_signs})
+    overworld_map.known_warps.update({warp.index: warp for warp in new_warps})
     for sprite in removed_sprites:
         del overworld_map.known_sprites[sprite.index]
 
@@ -255,6 +248,7 @@ async def _create_overworld_map_from_game_state(
 ) -> OverworldMap:
     """Create a new overworld map from the game state."""
     tiles = [[AsciiTile.UNSEEN.value] * game_state.map.width] * game_state.map.height
+    known_map_ids = frozenset(await get_visited_maps()) | {game_state.map.id}
     overworld_map = OverworldMap(
         id=game_state.map.id,
         ascii_tiles=tiles,
@@ -262,6 +256,7 @@ async def _create_overworld_map_from_game_state(
         known_sprites={},
         known_warps={},
         known_signs={},
+        known_map_ids=known_map_ids,
         north_connection=game_state.map.north_connection,
         south_connection=game_state.map.south_connection,
         east_connection=game_state.map.east_connection,

@@ -3,8 +3,6 @@
 import asyncio
 from typing import TYPE_CHECKING
 
-from loguru import logger
-
 from agent.overworld.tools.sokoban_solver.schemas import SokobanMap
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, SpriteLabel
 from common.schemas import Coords
@@ -39,7 +37,6 @@ class SokobanSolverService:
         sokoban_map = self._get_simplified_map()
 
         if not sokoban_map.boulders or not sokoban_map.goals:
-            logger.warning("No boulders or goals found in Sokoban map. Bailing.")
             result = "The Sokoban solver found no boulders or goals and did not run."
             self.rolling_memory.add_memory(result)
             return result

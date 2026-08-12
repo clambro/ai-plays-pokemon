@@ -2,8 +2,6 @@
 
 from typing import TYPE_CHECKING
 
-from loguru import logger
-
 from agent.overworld.tools.navigate import utils
 from common.enums import AsciiTile, Button, FacingDirection, MapId
 from overworld_map.service import update_overworld_map
@@ -46,7 +44,6 @@ class NavigationService:
             hm_tiles,
         )
         if error := self._get_target_error(game_state, coords, accessible_coords):
-            logger.warning("Cancelling navigation due to invalid target coordinates.")
             return self._record_result(error)
 
         path = utils.calculate_path_to_target(
@@ -56,7 +53,6 @@ class NavigationService:
             hm_tiles,
         )
         if not path:
-            logger.warning("No path found to target coordinates.")
             return self._record_result(
                 f"Navigation failed. No path found to target coordinates {coords}."
                 f" This either means that the location is inaccessible, or that I have not"
@@ -260,10 +256,8 @@ class NavigationService:
         if new_pos == target_pos:
             return f"Completed navigation to {target_pos}."
         if prev_pos == new_pos:
-            logger.warning("Navigation interrupted. Cancelling.")
             return f"Navigation to {target_pos} interrupted at position {new_pos}."
         if game_state.map.id != starting_map_id:
-            logger.warning("Map changed during navigation. Cancelling.")
             return "The map has changed during navigation. Cancelling further steps."
         return None
 

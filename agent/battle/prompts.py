@@ -2,6 +2,11 @@
 
 from typing import TYPE_CHECKING
 
+from agent.battle.formatting import format_available_pokeballs, format_battle_info
+from agent.formatting.game_state import format_party_info, format_player_info
+from agent.formatting.memory import format_goals, format_rolling_memory
+from common.enums import BattleType
+
 if TYPE_CHECKING:
     from agent.context import AgentContext
     from emulator.game_state import GameState
@@ -11,16 +16,34 @@ You are in a Pokemon battle. The screenshot provided above shows the battle at e
 
 {state}
 
-Here is the game memory's representation of the onscreen text. The text you see below is exactly what the game is displaying on the screen, but the formatting may be somewhat messed up because it is not rendering images. Use it to help you understand the text on the screen, as well as the position of any cursors. If you see multiple cursors "▷" and "▶", you are probably in a nested menu. The active cursor is always "▶". This is a more reliable way to navigate menus than the screenshot, but keep the screenshot in mind as well.
+Here is the decoded onscreen text from the game's memory. It preserves recognized text glyphs and cursor positions, but graphical tiles may be omitted. Use it to read labels and navigate menus. If multiple cursors "▷" and "▶" are present, the active cursor is "▶".
 <onscreen_text>
 {text}
 </onscreen_text>
-Onscreen text includes only recognized glyphs. Graphical elements may be omitted, so use the screenshot when the text is incomplete or visual context matters.
+Use the screenshot when the decoded text is incomplete or visual context matters.
 
-Fighting, voluntarily switching Pokemon, throwing a Poke Ball, and attempting to run all use up your turn, giving the opponent an opportunity to attack. In particular, switching gives the opponent a free attack against the Pokemon you switch in. Experience is granted only to Pokemon used in the battle, provided they have not fainted and are not at the level cap.
-
-Note: If you keep seeing the text "There's no will to fight" over and over again, it means that you are trying to switch into a fainted Pokemon. You cannot do this. You must switch to a Pokemon that has not fainted. If you are seeing this text, at least one of your Pokemon is still able to fight. Use the directional buttons to pick a different Pokemon to switch to.
+{battle_guidance}
 """.strip()
+
+
+def _format_battle_guidance(game_state: GameState) -> str:
+    """Format strategy that applies to the current kind of battle."""
+    battle_type = game_state.battle.battle_type
+    if battle_type not in {BattleType.TRAINER, BattleType.WILD}:
+        return ""
+
+    guidance = (
+        "Using a move or voluntarily switching Pokemon consumes the turn. Switching gives the "
+        "opponent an opportunity to attack the Pokemon switched in. Experience is granted only "
+        "to Pokemon used in the battle, provided they have not fainted and are not at the level "
+        "cap."
+    )
+    if battle_type == BattleType.WILD:
+        guidance += (
+            " An unsuccessful capture attempt or failed escape also gives the opponent an "
+            "opportunity to attack."
+        )
+    return guidance
 
 
 def build_battle_decision_prompt(
@@ -28,15 +51,17 @@ def build_battle_decision_prompt(
     initial_game_state: GameState,
 ) -> str:
     """Build the prompt for the battle-entry observation."""
-    state = "\n\n".join(
-        (
-            str(context.state.rolling_memory),
-            str(context.state.goals),
-            initial_game_state.player_info,
-            initial_game_state.battle_info,
-        ),
+    sections = (
+        format_rolling_memory(context.state.rolling_memory),
+        format_goals(context.state.goals),
+        format_player_info(initial_game_state),
+        format_party_info(initial_game_state),
+        format_available_pokeballs(initial_game_state),
+        format_battle_info(initial_game_state),
     )
+    state = "\n\n".join(section for section in sections if section)
     return BATTLE_DECISION_PROMPT.format(
         state=state,
         text=initial_game_state.screen.text,
-    )
+        battle_guidance=_format_battle_guidance(initial_game_state),
+    ).strip()

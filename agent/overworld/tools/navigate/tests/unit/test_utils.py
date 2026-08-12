@@ -69,6 +69,7 @@ DUMMY_MAP = OverworldMap(
     known_sprites={},
     known_signs={},
     known_warps={},
+    known_map_ids=frozenset(),
     north_connection=None,
     south_connection=None,
     east_connection=None,

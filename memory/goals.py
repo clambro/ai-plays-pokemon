@@ -1,8 +1,6 @@
-"""Goal memory rendered into agent context."""
+"""Mutable goal memory for gameplay agents."""
 
 from dataclasses import dataclass, field
-
-from loguru import logger
 
 
 @dataclass(slots=True, kw_only=True)
@@ -12,11 +10,6 @@ class Goal:
     goal: str
     is_primary: bool
 
-    def __str__(self) -> str:
-        """Return a string representation of the goal."""
-        role = "Primary goal" if self.is_primary else "Other goal"
-        return f"{role}: {self.goal}"
-
 
 @dataclass(slots=True, kw_only=True)
 class Goals:
@@ -24,28 +17,9 @@ class Goals:
 
     goals: list[Goal] = field(default_factory=list)
 
-    def __str__(self) -> str:
-        """Return a string representation of the goals."""
-        out = "<goals_info>\n"
-        out += (
-            "Here are the goals that you have set for yourself. Your ultimate goal is, of course,"
-            " to collect all eight badges and become the Elite Four Champion, but these goals here"
-            " are the next steps on your journey to that goal. The actions that you take and the"
-            " thoughts that you think should all be in service of these goals."
-        )
-        out += "\n<goals>\n"
-        if self.goals:
-            out += "\n".join(f"[{i}] {g}" for i, g in enumerate(self.goals))
-        else:
-            out += "You have not set any goals yet."
-        out += "\n</goals>\n"
-        out += "</goals_info>"
-        return out
-
     def append(self, *goals: Goal) -> None:
         """Append new goals to the list."""
         for goal in goals:
-            logger.info(f'Adding new goal: "{goal.goal}"')
             goal.goal = goal.goal.strip()
             self.goals.append(goal)
         self.goals = sorted(self.goals, key=lambda g: not g.is_primary)
@@ -53,5 +27,4 @@ class Goals:
     def remove(self, *indices: int) -> None:
         """Remove goals from the list."""
         for index in sorted(indices, reverse=True):  # Last-to-first to avoid index shifting.
-            logger.info(f'Removing goal: "{self.goals[index]}"')
             del self.goals[index]

@@ -36,24 +36,10 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
     ) -> OverworldToolResult:
         """Press one or more buttons directly in the overworld.
 
-        The button tool allows you to submit one or more button presses to the
-        emulator. It is useful for:
-
-        - Interacting with entities in the game (speaking to NPCs, picking up
-          items, reading signs, activating objects, etc.).
-        - Opening the main menu.
-        - Changing the direction that you are facing.
-        - Transitioning from one map to another if you are at the edge of the
-          current map or on/near a warp tile.
-        - Rotating in place repeatedly in tall grass to find wild Pokemon. If
-          you are doing this and failing to find wild Pokemon, you may not be
-          standing in a place where wild Pokemon can be found. You should have
-          at least two grass tiles adjacent to you to be confident that you are
-          in a tall grass area.
-
-        The button tool can be used to move around the map, but it is not as
-        reliable as the navigation tool. Do not use the button tool for general
-        navigation if the navigation tool is available.
+        Use this tool to interact with entities, change direction, open the
+        main menu, cross a map boundary or directional warp, or deliberately
+        rotate in place. Do not use it for general movement when the navigation
+        tool is available.
 
         The available buttons are:
 
@@ -69,8 +55,8 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         - ``left``: Used to move the player left.
         - ``right``: Used to move the player right.
 
-        You can interact with warp tiles by walking on or through them,
-        depending on the instructions provided for the warp tile.
+        Follow the map's instructions for each warp tile: walk on or through
+        the warp rather than pressing the action button.
 
         You can interact with sprites or signs using the action button, but you
         must be facing the entity you wish to interact with before doing so. If
@@ -80,17 +66,10 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         ``(r, c - 1)``, then you must face right to interact with it. If you are
         at ``(r + 1, c)``, then you must face up to interact with it.
 
-        With nearly all sprites, you must be directly adjacent to them before
-        using the action button. The only exceptions are if you are interacting
-        with a clerk at a mart, a nurse at a Pokemon Center, or a guard at a
-        gate. In these cases, you interact with the counter in front of the
-        sprite, meaning that you must be two tiles away from the sprite
-        (horizontally or vertically depending on the counter, but not
-        diagonally).
-
-        If you have been given instructions to rotate in place repeatedly in
-        tall grass to find wild Pokemon, use ``up, left, down, right, up, left,
-        down, right``.
+        To rotate in place repeatedly in tall grass, use ``up, left, down,
+        right, up, left, down, right``. If this fails to find wild Pokemon, you
+        may not be standing in an encounter area; having at least two adjacent
+        grass tiles is a useful indication.
 
         If you see specific button presses in your rolling memory, do not treat
         them as mandatory. You have more information available to you in the

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Self
 import numpy as np
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_SHAPE
-from common.enums import AsciiTile, Badge, BattleType, BlockedDirection
+from common.enums import AsciiTile, Badge, BlockedDirection
 from common.schemas import Coords
 from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.inventory import Inventory, parse_inventory
@@ -63,101 +63,6 @@ class GameState:
             screen=parse_screen(mem),
             battle=parse_battle_state(mem),
         )
-
-    @property
-    def player_info(self) -> str:
-        """Get a string representation of the player's information."""
-        out = "<player_info>\n"
-        if self.player.name:
-            out += f"Name: {self.player.name}\n"
-        out += f"Money: {self.player.money}\n"
-        if self.player.badges:
-            out += f"Badges Earned: {', '.join(self.player.badges)}\n"
-        out += f"Current Level Cap: {self.player.level_cap}\n"
-        out += self.party_info
-        if self.inventory.items:
-            out += "<inventory>\n"
-            for i in self.inventory.items:
-                out += f"- {i.name} (x{i.quantity})\n"
-            out += "</inventory>\n"
-        out += self.pc_info
-        out += "</player_info>"
-        return out
-
-    @property
-    def party_info(self) -> str:
-        """Get a string representation of the party."""
-        if not self.party:
-            return ""
-        out = "<party>\n"
-        out += "These are the Pokemon in your party, in their current order.\n"
-        out += self._pokemon_list_to_str(self.party)
-        out += "</party>\n"
-        return out
-
-    @property
-    def pc_info(self) -> str:
-        """Get a string representation of the PC."""
-        if not self.pc_pokemon:
-            return ""
-        out = "<pc_pokemon>\n"
-        out += "Stored in the active PC box, not in the party:\n"
-        for pokemon in self.pc_pokemon:
-            pokemon_type = f"{pokemon.type1}/{pokemon.type2}" if pokemon.type2 else pokemon.type1
-            moves = ", ".join(f"{move.name} ({move.pp} PP)" for move in pokemon.moves)
-            out += (
-                f"- {pokemon.name} ({pokemon.species}, Level {pokemon.level}, {pokemon_type}): "
-                f"{moves}\n"
-            )
-        out += "</pc_pokemon>\n"
-        return out
-
-    @property
-    def battle_info(self) -> str:
-        """Get a string representation of the battle state."""
-        if not self.battle.is_in_battle:
-            return ""
-        if self.battle.battle_type == BattleType.OTHER:
-            return "<battle_info>You are in a special battle, possibly a cutscene.</battle_info>"
-
-        out = "<battle_info>\n"
-        if self.battle.battle_type == BattleType.SAFARI_ZONE:
-            out += "You are in a Safari Zone battle.\n"
-        elif self.battle.battle_type == BattleType.TRAINER:
-            out += "You are in a trainer battle.\n"
-        elif self.battle.battle_type == BattleType.WILD:
-            out += "You are in a battle against a wild Pokemon.\n"
-
-        if self.battle.player_pokemon and self.battle.battle_type != BattleType.SAFARI_ZONE:
-            out += "<player_pokemon>\n"
-            out += f"Name: {self.battle.player_pokemon.name}\n"
-            out += f"Species: {self.battle.player_pokemon.species}\n"
-            out += f"Level: {self.battle.player_pokemon.level}\n"
-            out += f"HP: {self.battle.player_pokemon.hp} / {self.battle.player_pokemon.max_hp}\n"
-            out += f"Status Ailment: {self.battle.player_pokemon.status}\n"
-            out += "<moves>\n"
-            for slot, move in enumerate(self.battle.player_pokemon.moves):
-                disabled = " [DISABLED]" if slot == self.battle.disabled_move_slot else ""
-                out += f"- {move.name} (PP: {move.pp}){disabled}\n"
-            out += "</moves>\n"
-            out += "</player_pokemon>\n"
-
-        if self.battle.enemy_pokemon:
-            out += "<enemy_pokemon>\n"
-            out += f"Name: {self.battle.enemy_pokemon.name}\n"
-            out += f"Level: {self.battle.enemy_pokemon.level}\n"
-            out += f"HP Percentage: {self.battle.enemy_pokemon.hp_pct:.0f}%\n"
-            out += f"Status Ailment: {self.battle.enemy_pokemon.status}\n"
-            out += "</enemy_pokemon>\n"
-
-        if self.battle.num_enemy_pokemon:
-            out += (
-                f"The enemy trainer has {self.battle.num_enemy_pokemon} Pokemon remaining, "
-                "including the one you're battling.\n"
-            )
-
-        out += "</battle_info>"
-        return out
 
     @property
     def can_use_strength(self) -> bool:
@@ -274,32 +179,6 @@ class GameState:
             bottom_line=bottom_line.strip(),
             has_cursor=has_cursor,
         )
-
-    def _pokemon_list_to_str(self, pokemon_list: list[Pokemon]) -> str:
-        """Helper function to convert a list of Pokemon to a string."""
-        out = ""
-        for i, p in enumerate(pokemon_list):
-            out += f"<pokemon_{i}>\n"
-            out += f"Name: {p.name}\n"
-            out += f"Species: {p.species}\n"
-            if p.type2:
-                out += f"Type: {p.type1} / {p.type2}\n"
-            else:
-                out += f"Type: {p.type1}\n"
-            out += f"Level: {p.level}\n"
-            if p.level >= self.player.level_cap:
-                out += (
-                    "This Pokemon is at the level cap and cannot be leveled up further until the"
-                    " level cap is raised.\n"
-                )
-            out += f"HP: {p.hp} / {p.max_hp}\n"
-            out += f"Status Ailment: {p.status}\n"
-            out += "<moves>\n"
-            for m in p.moves:
-                out += f"- {m.name} (PP: {m.pp})\n"
-            out += "</moves>\n"
-            out += f"</pokemon_{i}>\n"
-        return out
 
     def _get_background_blocks(self) -> tuple[np.ndarray, dict[Coords, BlockedDirection]]:
         """Get background blocks and paired-tile movement restrictions.

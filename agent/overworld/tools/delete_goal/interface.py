@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import Field
 from pydantic_ai import Tool
 
+from agent.formatting.memory import format_goals
 from agent.overworld.tools.delete_goal.service import (
     GoalNotFoundError,
 )
@@ -36,8 +37,9 @@ def build_delete_goal_tool(context: AgentContext) -> Tool[AgentContext]:
         change whether a goal is primary, delete it and create its replacement
         with the correct designation. Do not assume that you have accomplished
         a goal until memory or current player information makes that certain.
-        You must have exactly one primary goal at any given time, so plan any
-        related creation or update before deleting the primary goal.
+        You should normally maintain one primary goal. When replacing it,
+        delete the current primary goal first and create its replacement in a
+        subsequent tool call.
 
         Args:
             index: Zero-based index of the completed or abandoned goal to
@@ -57,7 +59,8 @@ def build_delete_goal_tool(context: AgentContext) -> Tool[AgentContext]:
             result = str(error)
         else:
             context.state.goals = goals
-            result = f"Deleted goal:\n{deleted_goal}\n\nUpdated goals:\n{goals}"
+            role = "Primary goal" if deleted_goal.is_primary else "Other goal"
+            result = f"Deleted goal:\n{role}: {deleted_goal.goal}\n\n{format_goals(goals)}"
 
         return await complete_overworld_action(context, result)
 
