@@ -172,7 +172,7 @@ def _format_overworld_map(current_map: OverworldMap, game_state: GameState) -> s
         height=current_map.height,
         width=current_map.width,
         known_sprites=formatting.format_sprite_notes(current_map),
-        known_warps=formatting.format_warp_notes(current_map),
+        known_warps=formatting.format_warp_notes(current_map, game_state.player.coords),
         known_signs=formatting.format_sign_notes(current_map),
         explored_percentage=formatting.format_explored_percentage(current_map),
         ascii_screen=screen,

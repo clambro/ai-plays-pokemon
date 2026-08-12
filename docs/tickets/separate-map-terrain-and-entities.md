@@ -77,8 +77,7 @@ underlying tile is recoverable, or deliberate regeneration of explored maps.
 
 ## Out of Scope
 
-- The per-warp activation and destination work in
-  [`warp-destination-endpoints.md`](warp-destination-endpoints.md).
+- Per-warp activation and destination metadata, which is already implemented.
 - Global cross-map route planning.
 - Persisting unexplored terrain or revealing ROM map data the player has not
   observed.

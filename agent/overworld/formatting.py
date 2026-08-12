@@ -62,6 +62,7 @@ def _format_overworld_warp(
     warp: Warp,
     map_id: MapId,
     known_map_ids: frozenset[MapId],
+    player_coords: Coords,
 ) -> str:
     """Format a known overworld warp for the agent."""
     if warp.destination in known_map_ids or warp.destination in {MapId.OUTSIDE, MapId.UNKNOWN}:
@@ -77,17 +78,16 @@ def _format_overworld_warp(
         )
     return (
         f"warp_{map_id}_{warp.index} at {warp.coords}. {destination_text}"
-        f" {_get_warp_description(warp)}"
+        f" {_get_warp_description(warp, player_coords)}"
     )
 
 
-def _get_warp_description(warp: Warp) -> str:
+def _get_warp_description(warp: Warp, player_coords: Coords) -> str:
     """Format instructions for entering a warp."""
     if warp.activation == WarpActivation.STEP_ON:
-        return (
-            "Step onto this coordinate to activate the warp. If you arrived standing on it,"
-            " walk off and then step back onto it to return."
-        )
+        if player_coords == warp.coords:
+            return "Walk off this coordinate, then step back onto it to activate the warp."
+        return "Step onto this coordinate to activate the warp."
     return (
         f"Stand on this coordinate and press {warp.activation.value} to activate the warp, even"
         " if that direction appears blocked."
@@ -161,12 +161,18 @@ def format_sprite_notes(current_map: OverworldMap) -> str:
     return output.strip()
 
 
-def format_warp_notes(current_map: OverworldMap) -> str:
+def format_warp_notes(current_map: OverworldMap, player_coords: Coords) -> str:
     """Format known warps in index order."""
     if not current_map.known_warps:
         return "No warp tiles discovered."
     return "\n".join(
-        f"- {_format_overworld_warp(warp, current_map.id, current_map.known_map_ids)}"
+        "- "
+        + _format_overworld_warp(
+            warp,
+            current_map.id,
+            current_map.known_map_ids,
+            player_coords,
+        )
         for _, warp in sorted(current_map.known_warps.items())
     )
 
