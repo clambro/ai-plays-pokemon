@@ -2,6 +2,8 @@
 
 import asyncio
 
+from loguru import logger
+
 from common.constants import (
     ROLLING_MEMORY_LEAF_SIZE,
     ROLLING_MEMORY_RAW_BLOCK_SOFT_LIMIT,
@@ -90,8 +92,16 @@ async def finalize_iteration(memory: RollingMemory) -> RollingMemory:
             RawMemoryBlock(iteration=record.iteration, content=record.content),
         ),
     )
-    await compact_memory(finalized_memory)
-    return await initialize_memory(finalized_memory.current_block)
+    try:
+        await compact_memory(finalized_memory)
+        return await initialize_memory(finalized_memory.current_block)
+    except Exception as error:  # noqa: BLE001
+        logger.opt(exception=error).warning(
+            "Rolling-memory maintenance failed after iteration {} was finalized; "
+            "continuing with the advanced iteration.",
+            record.iteration,
+        )
+        return finalized_memory
 
 
 async def compact_memory(memory: RollingMemory) -> list[MemorySummaryRead]:

@@ -53,7 +53,7 @@ Note: Pretty much all the constants I mention below are default values that can 
 
 #### Rolling Memory
 
-One raw memory block represents one completed gameplay decision, combining the model's intent with the action's durable outcome. Deterministic activity that produces durable history is represented the same way. Iterations advance independently of the longer-lived handler conversation.
+One raw memory block represents one gameplay decision attempt, combining the model's intent with any durable outcome. Deterministic activity that produces durable history is represented the same way. Iterations advance independently of the longer-lived handler conversation.
 
 The raw table is the permanent source of truth: compaction never deletes or rewrites it. The active agent state carries the current block and the bounded view needed for the current handler activation, but only the current block is serialized with the state. Because database files are included in backups, the complete history is restored without serializing it into every agent-state snapshot.
 

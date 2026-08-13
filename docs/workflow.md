@@ -24,7 +24,7 @@ Battle takes precedence except on the post-catch naming screen, which belongs to
 
 ### Iterations
 
-An iteration represents one completed gameplay decision and its durable outcome. Deterministic work can also produce an iteration when it records meaningful activity.
+An iteration represents one gameplay decision attempt and any durable outcome. Deterministic work can also produce an iteration when it records meaningful activity.
 
 Handlers can complete several iterations while keeping one Pydantic AI conversation alive, preserving context across related decisions.
 
