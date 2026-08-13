@@ -16,12 +16,17 @@ if TYPE_CHECKING:
 class _HookName(StrEnum):
     """Semantic execution points in the ROM text engine."""
 
+    TEXT_PROCESSOR = auto()
     TEXT_COMMAND = auto()
     CONTINUE_WITHOUT_PAUSE = auto()
     AUTOMATIC_SCROLL = auto()
     WAIT_LOOP = auto()
     WAIT_EXIT = auto()
     MENU_INPUT = auto()
+    MENU_EXIT = auto()
+    MENU_TIMEOUT = auto()
+    SPECIAL_INTERFACE_WAIT = auto()
+    SPECIAL_INTERFACE_EXIT = auto()
     TEXT_DISPLAY_CLOSED = auto()
     BATTLE_ENDED = auto()
 
@@ -39,6 +44,12 @@ class _Hook:
 # Addresses and signatures from the required Yellow Legacy ROM build. Validate every location
 # before installing any breakpoint because a hook at the wrong executable address corrupts play.
 _HOOKS = (
+    _Hook(
+        name=_HookName.TEXT_PROCESSOR,
+        bank=0x00,
+        address=0x1925,  # TextCommandProcessor
+        signature=bytes.fromhex("fa a5 d3 f5 cb cf"),
+    ),
     _Hook(
         name=_HookName.TEXT_COMMAND,
         bank=0x00,
@@ -76,6 +87,18 @@ _HOOKS = (
         signature=bytes.fromhex("f0 8b f5 f0 8c f5"),
     ),
     _Hook(
+        name=_HookName.MENU_TIMEOUT,
+        bank=0x00,
+        address=0x3AF3,  # HandleMenuInput_.giveUpWaiting
+        signature=bytes.fromhex("f1 e0 8c f1 e0 8b"),
+    ),
+    _Hook(
+        name=_HookName.MENU_EXIT,
+        bank=0x00,
+        address=0x3B5D,  # HandleMenuInput_.skipPlayingSound
+        signature=bytes.fromhex("f1 e0 8c f1 e0 8b"),
+    ),
+    _Hook(
         name=_HookName.TEXT_DISPLAY_CLOSED,
         bank=0x00,
         address=0x284F,  # Completed CloseTextDisplay path
@@ -87,6 +110,18 @@ _HOOKS = (
         address=0x7CA1,  # EndOfBattle.resetVariables
         signature=bytes.fromhex("af ea 82 d0 ea 2a"),
     ),
+    _Hook(
+        name=_HookName.SPECIAL_INTERFACE_WAIT,
+        bank=0x10,
+        address=0x434A,  # ShowPokedexDataInternal.waitForButtonPress
+        signature=bytes.fromhex("cd 2b 38 f0 b5 e6"),
+    ),
+    _Hook(
+        name=_HookName.SPECIAL_INTERFACE_EXIT,
+        bank=0x10,
+        address=0x4353,  # ShowPokedexDataInternal wait completed
+        signature=bytes.fromhex("f1 e0 d7 cd f7 3d"),
+    ),
 )
 
 _TX_END = 0x50
@@ -95,6 +130,8 @@ _TILE_MAP_START = 0xC3A0
 _TILE_MAP_WIDTH = 20
 _WINDOW_Y_ADDRESS = 0xFF4A
 _SCREEN_HEIGHT_PIXELS = 144
+_AUDIO_FADE_FLAGS_ADDRESS = 0xD72B  # wd72c
+_REDUCED_VOLUME_INTERFACE_FLAG = 1 << 1
 
 _TOP_BORDER_ROW = 12
 _TOP_TEXT_ROW = 14
@@ -117,6 +154,7 @@ class RomTextRecorder:
         """Keep the owner-thread emulator and its transient event journal."""
         self._pyboy = pyboy
         self._journal = journal
+        self._text_processor_depth = 0
         self._inside_wait = False
 
     def install(self) -> None:
@@ -151,22 +189,49 @@ class RomTextRecorder:
         return callback
 
     def _handle(self, name: _HookName) -> None:
+        if name in {_HookName.TEXT_PROCESSOR, _HookName.TEXT_COMMAND}:
+            self._handle_text_processor(name)
+            return
+        if name in {
+            _HookName.MENU_INPUT,
+            _HookName.MENU_EXIT,
+            _HookName.MENU_TIMEOUT,
+            _HookName.SPECIAL_INTERFACE_WAIT,
+            _HookName.SPECIAL_INTERFACE_EXIT,
+        }:
+            self._handle_interface(name)
+            return
         match name:
-            case _HookName.TEXT_COMMAND:
-                if self._pyboy.memory[self._pyboy.register_file.HL] == _TX_END:
-                    self._record_page(TextEventKind.PAGE_COMPLETED)
             case _HookName.CONTINUE_WITHOUT_PAUSE | _HookName.AUTOMATIC_SCROLL:
                 self._record_page(TextEventKind.AUTOMATIC_SCROLL)
             case _HookName.WAIT_LOOP:
                 self._record_wait_entry()
             case _HookName.WAIT_EXIT:
                 self._record_wait_exit()
-            case _HookName.MENU_INPUT:
-                self._record(TextEventKind.MENU_OPENED)
             case _HookName.TEXT_DISPLAY_CLOSED:
                 self._record(TextEventKind.INTERACTION_CLOSED)
             case _HookName.BATTLE_ENDED:
                 self._record(TextEventKind.BATTLE_ENDED)
+
+    def _handle_text_processor(self, name: _HookName) -> None:
+        if name == _HookName.TEXT_PROCESSOR:
+            self._text_processor_depth += 1
+            return
+        if self._pyboy.memory[self._pyboy.register_file.HL] != _TX_END:
+            return
+        if self._text_processor_depth <= 1:
+            self._record_page(TextEventKind.PAGE_COMPLETED)
+        self._text_processor_depth = max(0, self._text_processor_depth - 1)
+
+    def _handle_interface(self, name: _HookName) -> None:
+        kind = {
+            _HookName.MENU_INPUT: TextEventKind.MENU_OPENED,
+            _HookName.MENU_EXIT: TextEventKind.MENU_CLOSED,
+            _HookName.MENU_TIMEOUT: TextEventKind.MENU_CLOSED,
+            _HookName.SPECIAL_INTERFACE_WAIT: TextEventKind.SPECIAL_INTERFACE_OPENED,
+            _HookName.SPECIAL_INTERFACE_EXIT: TextEventKind.SPECIAL_INTERFACE_CLOSED,
+        }[name]
+        self._record(kind)
 
     def _record_page(self, kind: TextEventKind) -> None:
         if page := _decode_standard_dialog_page(self._pyboy.memory):
@@ -176,13 +241,22 @@ class RomTextRecorder:
         if self._inside_wait:
             return
         self._inside_wait = True
-        self._record_page(TextEventKind.INPUT_REQUIRED)
+        page = _decode_standard_dialog_page(self._pyboy.memory)
+        if page is not None:
+            self._record(TextEventKind.INPUT_REQUIRED, page=page)
+        elif self._is_reduced_volume_interface_open():
+            self._record(TextEventKind.SPECIAL_INTERFACE_OPENED)
 
     def _record_wait_exit(self) -> None:
         page = _decode_standard_dialog_page(self._pyboy.memory)
         if self._inside_wait or page is not None:
             self._record(TextEventKind.INPUT_RESOLVED, page=page)
+        if page is None and self._is_reduced_volume_interface_open():
+            self._record(TextEventKind.SPECIAL_INTERFACE_CLOSED)
         self._inside_wait = False
+
+    def _is_reduced_volume_interface_open(self) -> bool:
+        return bool(self._pyboy.memory[_AUDIO_FADE_FLAGS_ADDRESS] & _REDUCED_VOLUME_INTERFACE_FLAG)
 
     def _record(self, kind: TextEventKind, *, page: DialogPage | None = None) -> None:
         self._journal.append(

@@ -4,6 +4,12 @@ import asyncio
 from dataclasses import dataclass
 from enum import StrEnum, auto
 from threading import Lock
+from typing import TYPE_CHECKING
+
+from common.enums import Button
+
+if TYPE_CHECKING:
+    from emulator.emulator import Emulator
 
 
 class TextEventKind(StrEnum):
@@ -14,6 +20,9 @@ class TextEventKind(StrEnum):
     INPUT_REQUIRED = auto()
     INPUT_RESOLVED = auto()
     MENU_OPENED = auto()
+    MENU_CLOSED = auto()
+    SPECIAL_INTERFACE_OPENED = auto()
+    SPECIAL_INTERFACE_CLOSED = auto()
     INTERACTION_CLOSED = auto()
     BATTLE_ENDED = auto()
 
@@ -34,6 +43,50 @@ class TextEvent:
     frame: int
     kind: TextEventKind
     page: DialogPage | None = None
+
+
+@dataclass(slots=True)
+class _DialogControlState:
+    """Current standard-dialog and menu state reduced from ordered events."""
+
+    input_required: bool = False
+    input_sent: bool = False
+    menu_open: bool = False
+    waiting_for_initial_menu_exit: bool = False
+
+    def apply(
+        self,
+        events: tuple[TextEvent, ...],
+        *,
+        initial_batch: bool,
+        stop_on: frozenset[TextEventKind],
+    ) -> bool:
+        """Apply one event batch and report whether a requested boundary is active."""
+        reached_boundary = False
+        for event in events:
+            if event.kind == TextEventKind.INPUT_REQUIRED:
+                self.input_required = True
+                self.input_sent = False
+            elif event.kind == TextEventKind.INPUT_RESOLVED:
+                self.input_required = False
+                self.input_sent = False
+            elif event.kind == TextEventKind.MENU_OPENED:
+                self.menu_open = True
+            elif event.kind == TextEventKind.MENU_CLOSED:
+                self.menu_open = False
+                if not initial_batch:
+                    self.waiting_for_initial_menu_exit = False
+
+            reached_boundary |= event.kind in stop_on - {TextEventKind.MENU_OPENED}
+
+        if initial_batch:
+            self.waiting_for_initial_menu_exit = self.menu_open
+        menu_boundary = (
+            self.menu_open
+            and not self.waiting_for_initial_menu_exit
+            and TextEventKind.MENU_OPENED in stop_on
+        )
+        return reached_boundary or menu_boundary
 
 
 class TextEventJournal:
@@ -138,6 +191,9 @@ def reduce_text_events(events: tuple[TextEvent, ...] | list[TextEvent]) -> str:
         if page is None:
             if event.kind in {
                 TextEventKind.MENU_OPENED,
+                TextEventKind.MENU_CLOSED,
+                TextEventKind.SPECIAL_INTERFACE_OPENED,
+                TextEventKind.SPECIAL_INTERFACE_CLOSED,
                 TextEventKind.INTERACTION_CLOSED,
                 TextEventKind.BATTLE_ENDED,
             }:
@@ -153,3 +209,38 @@ def reduce_text_events(events: tuple[TextEvent, ...] | list[TextEvent]) -> str:
             transcript.append(page.bottom_line)
         previous_page = page
     return " ".join(transcript).strip()
+
+
+async def drive_standard_dialog(
+    emulator: Emulator,
+    *,
+    stop_on: frozenset[TextEventKind],
+    initial_events: tuple[TextEvent, ...] = (),
+) -> str:
+    """Advance explicit dialog waits until the requested ROM boundary."""
+    events: list[TextEvent] = []
+    batch = initial_events
+    initial_batch = bool(batch)
+    control = _DialogControlState(waiting_for_initial_menu_exit=initial_batch)
+
+    while True:
+        if not batch:
+            batch = await emulator.wait_for_text_events()
+        if not batch:
+            raise RuntimeError("Emulator stopped before dialog reached a semantic boundary.")
+        events.extend(batch)
+
+        reached_boundary = control.apply(
+            batch,
+            initial_batch=initial_batch,
+            stop_on=stop_on,
+        )
+        initial_batch = False
+
+        if reached_boundary:
+            return reduce_text_events(events)
+
+        if control.input_required and not control.input_sent:
+            await emulator.press_button(Button.A, wait_for_animation=False)
+            control.input_sent = True
+        batch = ()

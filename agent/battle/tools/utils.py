@@ -6,7 +6,7 @@ from pydantic_ai import BinaryContent
 
 from agent.battle.formatting import format_available_pokeballs, format_battle_info
 from agent.formatting.game_state import format_party_info
-from agent.utils import DialogReader, build_screenshot_content
+from agent.utils import build_screenshot_content
 from common.schemas import Coords
 
 if TYPE_CHECKING:
@@ -121,24 +121,7 @@ async def handle_battle_dialog(context: AgentContext) -> str:
     Returns:
         The captured dialog text.
     """
-    dialog_reader = DialogReader(context.emulator)
-    game_state = await dialog_reader.wait_for_animation()
-    while True:
-        dialog_reader.observe(game_state)
-        dialog_box = game_state.get_dialog_box()
-        if not dialog_box:
-            break
-
-        if await dialog_reader.is_cursor_blinking():
-            game_state = await dialog_reader.advance()
-            continue
-
-        previous_state = game_state
-        game_state = await dialog_reader.wait_for_animation()
-        if game_state.screen.text == previous_state.screen.text:
-            break
-
-    dialog = dialog_reader.text
+    dialog = await context.emulator.advance_battle_dialog()
     if dialog:
         context.state.rolling_memory.add_memory(
             content=f'Onscreen text: "{dialog}"',

@@ -8,7 +8,11 @@ from pydantic_ai import Tool
 from agent.battle.tools.press_buttons.service import (
     press_buttons as press_buttons_service,
 )
-from agent.battle.tools.utils import BattleToolResult, complete_battle_action
+from agent.battle.tools.utils import (
+    BattleToolResult,
+    complete_battle_action,
+    refresh_battle_observation,
+)
 from common.enums import Button
 
 if TYPE_CHECKING:
@@ -59,6 +63,8 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
             context=context,
             buttons=buttons,
         )
+        if buttons[-1] in {Button.UP, Button.DOWN, Button.LEFT, Button.RIGHT}:
+            return await refresh_battle_observation(context, action_result=result)
         return await complete_battle_action(context, result)
 
     return Tool(press_buttons, require_parameter_descriptions=True)

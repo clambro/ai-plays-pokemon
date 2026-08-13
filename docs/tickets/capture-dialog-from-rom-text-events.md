@@ -64,6 +64,9 @@ currently guessing:
   require input.
 - `HandleMenuInput` marks a real interactive menu boundary. Dialog automation
   must stop and leave the choice to the applicable gameplay agent.
+- the post-capture Pokédex display has its own input loop rather than standard
+  dialog. Its wait marks a special-interface boundary so the current screen is
+  returned for explicit input before battle teardown continues.
 - the completed `CloseTextDisplay` path marks the end of an ordinary overworld
   text interaction after the window and map display have been restored.
 - battle menu/input and battle-exit paths provide corresponding battle decision
@@ -147,30 +150,28 @@ complete available batch before deciding to send input.
 
 Elapsed time must not become a text-completion rule.
 
-### Consumption and ownership
+### Consumption and memory
 
-The application has one serial gameplay workflow, so one runtime consumer
-cursor can claim text events exactly once. Take or advance that cursor at the
-same deterministic action boundary that owns the resulting dialog. Events
-already included in an overworld tool result must not be repeated when control
-passes to the text handler, while later pages from the still-open interaction
-must remain available to that handler.
+Consume the continuously recorded stream in order and append every completed
+standard-dialog page to rolling memory. Dialog does not need to be attributed
+to the particular input or tool that produced it; handler boundaries only
+determine when automation should stop and return control to an agent.
 
 ### Domain integration
 
-Battle actions should begin observing before the final confirming input, retain
-all pages produced while attacks, damage, EXP, fainting, switching, capture, or
-escape resolves, advance only explicit ROM button waits, and return when the
-next battle input interface is ready or battle state exits. HUD and EXP redraws
-produce no text event and therefore cannot corrupt the transcript.
+The battle handler should consume pending and subsequent events while attacks,
+damage, EXP, fainting, switching, capture, or escape resolves, advance only
+explicit ROM button waits, and return when the next battle input interface is
+ready or battle state exits. HUD and EXP redraws produce no text event and
+therefore cannot corrupt the transcript.
 
 The text handler should use the same driver for ordinary dialog. It should stop
 at menus, yes/no questions, naming and other special screens, battle entry, or
 ordinary interaction closure, leaving those decisions to the existing agent
 and dispatcher.
 
-Overworld emulator-input tools should claim any text events caused by their
-actions, even when the standard dialog has already closed. This includes action
+Overworld handling should consume recorded text even when the standard dialog
+has already closed. This includes action
 button interactions, visible and hidden item pickups, field and inventory item
 messages, and scripted interactions reached during deterministic movement.
 Remove the current special case that attempts to recover an item message only
@@ -206,8 +207,8 @@ without changing agent behavior.
 
 ### Stage 2: Replace battle dialog polling
 
-Begin event consumption before each battle tool's final input and drive dialog
-until the next input boundary or battle exit. Replace battle's animation
+Consume pending and subsequent battle text events until the next input boundary
+or battle exit. Replace battle's animation
 stability and cursor polling while retaining the current tool result, rolling
 memory, screenshot, and fresh battle-state behavior.
 
@@ -254,7 +255,7 @@ than one test per text command or string. Cover:
   corrupted suffix;
 - forced battle choices and battle exit;
 - ordered multiple events emitted in one frame;
-- exactly-once ownership when an interaction crosses from overworld to the text
+- retaining every page when an interaction crosses from overworld to the text
   handler.
 
 Automated tests must not read files under `resources/`.
@@ -272,7 +273,7 @@ Automated tests must not read files under `resources/`.
 - [ ] Battle transcripts contain complete semantic text and no HUD/EXP redraw
       corruption.
 - [ ] Menus and other decisions are never automatically advanced as dialog.
-- [ ] Interactions crossing handler boundaries retain every page exactly once.
+- [ ] Interactions crossing handler boundaries retain every page.
 - [ ] The emulator rejects a ROM whose required hook signatures do not match.
 - [ ] No dialog content is emitted to operational logs or persisted in a second
       history store.

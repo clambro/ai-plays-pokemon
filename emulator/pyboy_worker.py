@@ -133,7 +133,14 @@ class PyBoyWorker:
         max_wait_seconds: float | None = None,
     ) -> tuple[TextEvent, ...]:
         """Wait without blocking PyBoy, then claim the complete available event batch."""
-        return await self._text_events.wait_and_drain(max_wait_seconds)
+        events = await self._text_events.wait_and_drain(max_wait_seconds)
+        if not events:
+            return ()
+
+        # A hook wakes the async consumer from inside tick(). Drain again at the next owner-thread
+        # command boundary so every event from that emulated frame is considered before input.
+        settled_events = await self.execute(lambda _pyboy: self._text_events.drain())
+        return events + settled_events
 
     def _run(self) -> None:
         pyboy: PyBoy | None = None

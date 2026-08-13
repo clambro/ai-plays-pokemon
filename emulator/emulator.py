@@ -13,6 +13,7 @@ from common.constants import DEFAULT_ROM_PATH
 from emulator.game_state import GameState
 from emulator.parsers.map_collision import read_map_collision_tiles
 from emulator.pyboy_worker import PyBoyWorker
+from emulator.text_events import TextEventKind, drive_standard_dialog
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -98,6 +99,20 @@ class Emulator(AbstractAsyncContextManager):
     ) -> tuple[TextEvent, ...]:
         """Wait without blocking emulation, then claim the available event batch."""
         return await self._worker.wait_for_text_events(max_wait_seconds)
+
+    async def advance_battle_dialog(self) -> str:
+        """Advance battle dialog until the next decision or battle exit."""
+        return await drive_standard_dialog(
+            self,
+            stop_on=frozenset(
+                {
+                    TextEventKind.MENU_OPENED,
+                    TextEventKind.SPECIAL_INTERFACE_OPENED,
+                    TextEventKind.BATTLE_ENDED,
+                }
+            ),
+            initial_events=self.drain_text_events(),
+        )
 
     async def get_game_state_with_map_collision_tiles(
         self,
