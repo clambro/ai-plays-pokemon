@@ -18,7 +18,7 @@ def get_navigation_tiles(current_map: OverworldMap, game_state: GameState) -> np
 
     for entity_id in current_map.known_sprite_ids:
         sprite = game_state.sprites.get(entity_id)
-        if sprite is not None and sprite.is_rendered and _contains(tiles, sprite.coords):
+        if sprite is not None and _contains(tiles, sprite.coords):
             tiles[sprite.coords.row, sprite.coords.col] = AsciiTile.SPRITE
 
     for entity_id in current_map.known_warp_ids:
@@ -39,7 +39,7 @@ def get_navigation_tiles(current_map: OverworldMap, game_state: GameState) -> np
 
 
 def get_current_map_tiles(current_map: OverworldMap, game_state: GameState) -> np.ndarray:
-    """Compose the current player and visible entities over explored terrain."""
+    """Compose the current player and discovered entities over explored terrain."""
     tiles = get_navigation_tiles(current_map, game_state)
 
     if game_state.pikachu.is_rendered and _contains(tiles, game_state.pikachu.coords):
