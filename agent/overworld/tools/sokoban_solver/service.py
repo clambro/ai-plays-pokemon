@@ -39,7 +39,7 @@ class SokobanSolverService:
         sokoban_map = self._get_simplified_map(game_state)
 
         if not sokoban_map.boulders or not sokoban_map.goals:
-            result = "The Sokoban solver found no boulders or goals and did not run."
+            result = "I couldn't run the Sokoban solver because there were no boulders or goals."
             self.rolling_memory.add_memory(result)
             return result
 
@@ -48,9 +48,9 @@ class SokobanSolverService:
 
         if solution is None:
             result = (
-                "The Sokoban solver was unable to find a solution. The map may not have been"
-                " explored enough, boulders may need to be moved from other locations first,"
-                " or the puzzle may already be solved."
+                "The Sokoban solver was unable to find a solution. This is likely because I"
+                " haven't explored enough of the map yet, or I need to get boulders from"
+                " other locations first, or because I already solved the puzzle previously."
             )
             self.rolling_memory.add_memory(result)
             return result
@@ -224,9 +224,9 @@ class SokobanSolverService:
                 next_game_state.player.coords == game_state.player.coords
                 and next_game_state.sprites == game_state.sprites
             ):
-                return "Sokoban solver was interrupted. Skipping further execution."
+                return "The Sokoban solver was interrupted because my movement was blocked."
 
-        return "Executed a Sokoban solution."
+        return "I executed the Sokoban solution."
 
     def _is_blocked(self, current: Coords, dy: int, dx: int) -> bool:
         """Check if the movement is blocked by a paired tile collision."""

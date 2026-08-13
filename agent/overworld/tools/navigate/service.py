@@ -66,8 +66,8 @@ class NavigationService:
         if not path:
             return self._record_result(
                 f"Navigation failed. No path found to target coordinates {coords}."
-                " The location is either inaccessible or not enough of the map has been"
-                " explored to reveal the path.",
+                " This either means that the location is inaccessible, or that I have not"
+                " explored enough of the map to reveal the path.",
             )
 
         starting_map_id = self.current_map.id
@@ -106,7 +106,7 @@ class NavigationService:
                 game_state,
                 self.current_map,
             )
-        return self._record_result(f"Completed navigation to {coords}.")
+        return self._record_result(f"I reached {coords}.")
 
     async def _explore_spinner(
         self,
@@ -138,10 +138,10 @@ class NavigationService:
                 previous_observation = observation_key
 
         if game_state.player.coords == spinner_start:
-            return f"Navigation to {target} interrupted at position {game_state.player.coords}."
+            return f"My navigation to {target} was interrupted at {game_state.player.coords}."
         return (
-            f"The spinner moved the player to {game_state.player.coords}."
-            " Navigation stopped so a new route can be planned from there."
+            f"The spinner carried me to {game_state.player.coords}."
+            " Navigation stopped so I can plan a new route from here."
         )
 
     def _get_target_error(
@@ -153,7 +153,7 @@ class NavigationService:
     ) -> str | None:
         """Return why the target coordinates are invalid, if applicable."""
         if game_state.player.is_biking:
-            return "Navigation is unavailable while riding a bike."
+            return "I can't navigate while riding a bike."
         if (
             coords.row < 0
             or coords.col < 0
@@ -161,20 +161,21 @@ class NavigationService:
             or coords.col >= self.current_map.width
         ):
             return (
-                f"Navigation failed. The target coordinates {coords} are outside the current"
-                f" map bounds. The navigation tool cannot cross map boundaries."
+                f"I can't navigate to {coords} because those coordinates are outside the current"
+                " map bounds, and the navigation tool can't cross map boundaries."
             )
         if coords == game_state.player.coords:
-            return f"Navigation skipped because the player is already at {coords}."
+            return f"Navigation skipped because I am already at {coords}."
         if navigation_tiles[coords.row, coords.col] == AsciiTile.SPRITE:
             return (
                 f"Navigation failed. The target coordinates {coords} are occupied by a sprite."
-                " To interact with it, navigate to an adjacent tile and then use the button tool."
+                " If I want to interact with the sprite, I have to navigate to a tile adjacent"
+                " to it and then use the button tool to interact with it."
             )
         if coords not in accessible_coords:
             return (
-                f"Navigation failed. The target coordinates {coords} cannot be reached from the"
-                " player's current position."
+                f"Navigation failed. The target coordinates {coords} cannot be reached from my"
+                " current position."
             )
         return None
 
@@ -265,11 +266,11 @@ class NavigationService:
         """Return the result when navigation should stop, if applicable."""
         new_pos = game_state.player.coords
         if new_pos == target_pos:
-            return f"Completed navigation to {target_pos}."
+            return f"I reached {target_pos}."
         if prev_pos == new_pos:
-            return f"Navigation to {target_pos} interrupted at position {new_pos}."
+            return f"My navigation to {target_pos} was interrupted at position {new_pos}."
         if game_state.map.id != starting_map_id:
-            return "The map has changed during navigation. Cancelling further steps."
+            return "The map changed while I was navigating, so I stopped."
         return None
 
     def _record_result(self, result: str) -> str:
