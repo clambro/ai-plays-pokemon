@@ -77,6 +77,7 @@ async def run_overworld(
                 current_node = node
                 node = await agent_run.next(node)
                 if isinstance(current_node, CallToolsNode):
+                    await context.complete_iteration()
                     game_state = await context.emulator.get_game_state()
                     if _should_end_overworld_run(initial_game_state, game_state):
                         break
@@ -85,7 +86,6 @@ async def run_overworld(
             "Overworld agent run failed; returning control to the dispatcher."
         )
         return
-    await context.complete_iteration()
 
 
 def build_overworld_agent_input(

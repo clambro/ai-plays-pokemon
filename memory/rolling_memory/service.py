@@ -4,6 +4,7 @@ import asyncio
 
 from common.constants import (
     ROLLING_MEMORY_LEAF_SIZE,
+    ROLLING_MEMORY_RAW_BLOCK_SOFT_LIMIT,
     ROLLING_MEMORY_SUMMARY_MAX_CHARACTERS,
 )
 from database.rolling_memory.repository import (
@@ -96,7 +97,9 @@ async def finalize_iteration(memory: RollingMemory) -> RollingMemory:
 async def compact_memory(memory: RollingMemory) -> list[MemorySummaryRead]:
     """Compact every range eligible in the current rolling-memory view."""
     requests = []
-    if len(memory.loaded_raw_blocks) >= ROLLING_MEMORY_LEAF_SIZE * 2:
+    if len(memory.loaded_raw_blocks) >= (
+        ROLLING_MEMORY_RAW_BLOCK_SOFT_LIMIT + ROLLING_MEMORY_LEAF_SIZE
+    ):
         raw_blocks = memory.loaded_raw_blocks[:ROLLING_MEMORY_LEAF_SIZE]
         requests.append(
             _summarize(

@@ -56,6 +56,7 @@ async def run_text(context: AgentContext) -> None:
                     current_node = node
                     node = await agent_run.next(node)
                     if isinstance(current_node, CallToolsNode):
+                        await context.complete_iteration()
                         game_state = await context.emulator.get_game_state()
                         if not is_text_interaction_state(game_state):
                             break
@@ -64,7 +65,6 @@ async def run_text(context: AgentContext) -> None:
                 "Text agent run failed; returning control to the dispatcher."
             )
             return
-    await context.complete_iteration()
 
 
 async def _prepare_text_agent_input(
@@ -74,6 +74,7 @@ async def _prepare_text_agent_input(
     game_state = await context.emulator.get_game_state()
     if is_plain_text_dialog(game_state):
         await handle_text_dialog(context)
+    await context.complete_iteration()
 
     initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
     if not is_text_interaction_state(initial_game_state):

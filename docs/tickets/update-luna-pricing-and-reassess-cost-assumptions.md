@@ -139,11 +139,14 @@ iteration number never has different meanings in different handlers. Handle
 deterministic-only activity explicitly and avoid empty or half-completed
 iterations.
 
-Increase the rolling-memory leaf size to preserve a substantial exact tail when
-the unit changes from handler activations to decisions. Size the window in
-completed decisions, then keep the existing hierarchical compaction model for
-older history. Reassess the compaction trigger and prompt size as part of this
-same change.
+Increase the rolling-memory raw-tail soft limit to preserve substantial recent
+history when the unit changes from handler activations to decisions. Keep the
+twenty-block compaction leaf, target one hundred exact decision blocks, and
+compact the oldest leaf when the raw tail reaches one hundred and twenty. The
+active handler conversation retains its existing message history while the
+derived compacted view becomes available to future handlers. Keep the existing
+hierarchical compaction model and use a three-thousand-character summary budget
+for older history.
 
 Prompt caching remains mandatory. Do not rebuild the agent or initial prompt on
 each iteration. Calls inside one handler continue through the same
