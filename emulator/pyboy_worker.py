@@ -12,6 +12,9 @@ from typing import TYPE_CHECKING
 
 from pyboy import PyBoy
 
+from emulator.parsers.rom_text import RomTextRecorder
+from emulator.text_events import TextEvent, TextEventJournal
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -46,12 +49,15 @@ class PyBoyWorker:
         self._startup: Future[None] = Future()
         self._termination: Future[None] = Future()
         self._thread = Thread(target=self._run, name="pyboy-owner")
+        self._text_events = TextEventJournal()
+        self._text_recorder: RomTextRecorder | None = None
 
     async def start(self) -> None:
         """Start the owner thread and wait for PyBoy initialization."""
         with self._state_lock:
             if self._started:
                 raise RuntimeError("Emulator has already been started.")
+            self._text_events.bind(asyncio.get_running_loop())
             self._started = True
             self._accepting_commands = True
 
@@ -118,6 +124,17 @@ class PyBoyWorker:
         if self._failure is not None:
             raise self._failure
 
+    def drain_text_events(self) -> tuple[TextEvent, ...]:
+        """Claim every currently recorded text event exactly once."""
+        return self._text_events.drain()
+
+    async def wait_for_text_events(
+        self,
+        max_wait_seconds: float | None = None,
+    ) -> tuple[TextEvent, ...]:
+        """Wait without blocking PyBoy, then claim the complete available event batch."""
+        return await self._text_events.wait_and_drain(max_wait_seconds)
+
     def _run(self) -> None:
         pyboy: PyBoy | None = None
         pyboy_stopped = False
@@ -164,6 +181,8 @@ class PyBoyWorker:
         elif self._save_state_path:
             with self._save_state_path.open("rb") as file:
                 pyboy.load_state(file)
+        self._text_recorder = RomTextRecorder(pyboy, self._text_events)
+        self._text_recorder.install()
         return pyboy
 
     def _process_commands(self, pyboy: PyBoy) -> bool:
@@ -181,6 +200,7 @@ class PyBoyWorker:
             execute(pyboy)
 
     def _finish(self, failure: Exception | None) -> None:
+        self._text_events.close()
         pending_failures: list[Callable[[Exception], None]] = []
         terminal_error = failure or RuntimeError("Emulator is stopped.")
         with self._state_lock:

@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from pyboy import PyBoy
 
     from common.enums import Button
+    from emulator.text_events import TextEvent
 
 
 class Emulator(AbstractAsyncContextManager):
@@ -86,6 +87,17 @@ class Emulator(AbstractAsyncContextManager):
     async def get_game_state(self) -> GameState:
         """Get the current game state."""
         return await self._worker.execute(lambda pyboy: GameState.from_memory(pyboy.memory))
+
+    def drain_text_events(self) -> tuple[TextEvent, ...]:
+        """Claim every currently recorded text event exactly once."""
+        return self._worker.drain_text_events()
+
+    async def wait_for_text_events(
+        self,
+        max_wait_seconds: float | None = None,
+    ) -> tuple[TextEvent, ...]:
+        """Wait without blocking emulation, then claim the available event batch."""
+        return await self._worker.wait_for_text_events(max_wait_seconds)
 
     async def get_game_state_with_map_collision_tiles(
         self,
