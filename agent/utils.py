@@ -1,7 +1,5 @@
 """Shared utilities and lifecycle hooks for gameplay agents."""
 
-import asyncio
-from dataclasses import dataclass, field
 from io import BytesIO
 from typing import TYPE_CHECKING
 
@@ -14,7 +12,6 @@ from pydantic_ai import (
 from pydantic_ai.capabilities.hooks import Hooks
 
 from agent.context import AgentContext
-from common.enums import Button
 from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
@@ -22,9 +19,7 @@ if TYPE_CHECKING:
     from pydantic_ai.messages import ToolCallPart
     from pydantic_ai.models import ModelRequestContext
 
-    from emulator.emulator import Emulator
     from emulator.game_state import GameState
-    from emulator.schemas import DialogBox
 
 
 def build_screenshot_content(screenshot: Image.Image) -> BinaryContent:
@@ -85,83 +80,3 @@ AGENT_HOOKS = Hooks[AgentContext](
     after_model_request=record_model_response,
     before_tool_execute=publish_before_tool,
 )
-
-
-@dataclass(slots=True)
-class DialogReader:
-    """Capture complete dialog pages while advancing an emulator."""
-
-    emulator: Emulator
-    _pages: list[DialogBox] = field(default_factory=list, init=False)
-
-    def observe(self, game_state: GameState) -> None:
-        """Capture the most complete snapshot of the visible dialog page."""
-        dialog_box = game_state.get_dialog_box()
-        if not dialog_box or (not dialog_box.top_line and not dialog_box.bottom_line):
-            return
-        if not self._pages:
-            self._pages.append(dialog_box)
-            return
-
-        previous_page = self._pages[-1]
-        previous_lines = (previous_page.top_line, previous_page.bottom_line)
-        current_lines = (dialog_box.top_line, dialog_box.bottom_line)
-        if current_lines == previous_lines:
-            if dialog_box.has_cursor and not previous_page.has_cursor:
-                self._pages[-1] = dialog_box
-            return
-
-        top_line_continues = dialog_box.top_line == previous_page.top_line or (
-            bool(previous_page.top_line) and dialog_box.top_line.startswith(previous_page.top_line)
-        )
-        top_line_scrolled = bool(previous_page.bottom_line) and dialog_box.top_line.startswith(
-            previous_page.bottom_line,
-        )
-        if not previous_page.has_cursor and top_line_continues and not top_line_scrolled:
-            self._pages[-1] = dialog_box
-        else:
-            self._pages.append(dialog_box)
-
-    async def observe_current_state(self) -> GameState:
-        """Capture and return the emulator's current state."""
-        game_state = await self.emulator.get_game_state()
-        self.observe(game_state)
-        return game_state
-
-    async def wait_for_animation(self) -> GameState:
-        """Capture transient dialog while waiting for the current animation."""
-        return await self.emulator.wait_for_animation_to_finish(on_game_state=self.observe)
-
-    async def advance(self) -> GameState:
-        """Press A and capture dialog while the resulting animation runs."""
-        await self.emulator.press_button(Button.A, wait_for_animation=False)
-        return await self.wait_for_animation()
-
-    async def is_cursor_blinking(self) -> bool:
-        """Check for the blinking cursor while retaining every observed dialog page."""
-        blink_wait_time = 0.1
-        max_checks = 6  # Cursor blinks on/off a bit more than 2x per second.
-        for _ in range(max_checks):
-            await asyncio.sleep(blink_wait_time)
-            game_state = await self.emulator.get_game_state()
-            self.observe(game_state)
-            dialog_box = game_state.get_dialog_box()
-            if dialog_box and dialog_box.has_cursor:
-                return True
-        return False
-
-    @property
-    def text(self) -> str:
-        """Combine captured pages without repeating lines that scrolled upward."""
-        text: list[str] = []
-        previous_page: DialogBox | None = None
-        for dialog_box in self._pages:
-            top_line = dialog_box.top_line
-            bottom_line = dialog_box.bottom_line
-            top_line_scrolled = previous_page is not None and top_line == previous_page.bottom_line
-            if top_line and not top_line_scrolled:
-                text.append(top_line)
-            if bottom_line:
-                text.append(bottom_line)
-            previous_page = dialog_box
-        return " ".join(text).strip()

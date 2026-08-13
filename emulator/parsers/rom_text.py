@@ -231,7 +231,12 @@ class RomTextRecorder:
             _HookName.SPECIAL_INTERFACE_WAIT: TextEventKind.SPECIAL_INTERFACE_OPENED,
             _HookName.SPECIAL_INTERFACE_EXIT: TextEventKind.SPECIAL_INTERFACE_CLOSED,
         }[name]
-        self._record(kind)
+        page = (
+            _decode_standard_dialog_page(self._pyboy.memory)
+            if name == _HookName.MENU_INPUT
+            else None
+        )
+        self._record(kind, page=page)
 
     def _record_page(self, kind: TextEventKind) -> None:
         if page := _decode_standard_dialog_page(self._pyboy.memory):

@@ -203,8 +203,7 @@ hooks.
 
 Replace the dispatcher's duplicate settling waits with the established gameplay
 boundary invariant. Remove `wait_for_animation_to_finish`, the
-`wait_for_animation` button argument, `DialogReader` integration left solely for
-animation observation, and all remaining callers.
+`wait_for_animation` button argument, and all remaining callers.
 
 Each stage is a self-contained commit. At the end of every stage, each caller
 must use either the complete new behavior for its domain or the unchanged prior

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from pyboy import PyBoy
 
 from emulator.parsers.rom_text import RomTextRecorder
-from emulator.text_events import TextEvent, TextEventJournal
+from emulator.text_events import TextEvent, TextEventJournal, TextEventKind
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -127,6 +127,10 @@ class PyBoyWorker:
     def drain_text_events(self) -> tuple[TextEvent, ...]:
         """Claim every currently recorded text event exactly once."""
         return self._text_events.drain()
+
+    def drain_completed_text_events(self) -> tuple[TextEvent, ...]:
+        """Claim text events whose ordinary interaction has already closed."""
+        return self._text_events.drain_through_last(TextEventKind.INTERACTION_CLOSED)
 
     async def wait_for_text_events(
         self,

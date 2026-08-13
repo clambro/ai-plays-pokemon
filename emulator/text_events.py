@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING
 from common.enums import Button
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
     from emulator.emulator import Emulator
 
 
@@ -142,6 +144,23 @@ class TextEventJournal:
             self._events.clear()
         return events
 
+    def drain_through_last(self, kind: TextEventKind) -> tuple[TextEvent, ...]:
+        """Claim events through the last available boundary of the requested kind."""
+        with self._lock:
+            boundary = next(
+                (
+                    index
+                    for index in range(len(self._events) - 1, -1, -1)
+                    if self._events[index].kind == kind
+                ),
+                None,
+            )
+            if boundary is None:
+                return ()
+            events = tuple(self._events[: boundary + 1])
+            del self._events[: boundary + 1]
+        return events
+
     async def wait_and_drain(
         self,
         max_wait_seconds: float | None = None,
@@ -216,6 +235,7 @@ async def drive_standard_dialog(
     *,
     stop_on: frozenset[TextEventKind],
     initial_events: tuple[TextEvent, ...] = (),
+    before_input: Callable[[], Awaitable[None]] | None = None,
 ) -> str:
     """Advance explicit dialog waits until the requested ROM boundary."""
     events: list[TextEvent] = []
@@ -241,6 +261,8 @@ async def drive_standard_dialog(
             return reduce_text_events(events)
 
         if control.input_required and not control.input_sent:
+            if before_input is not None:
+                await before_input()
             await emulator.press_button(Button.A, wait_for_animation=False)
             control.input_sent = True
         batch = ()
