@@ -111,7 +111,7 @@ async def test_update_persists_discovery_and_derendering() -> None:
 
 @pytest.mark.unit
 def test_derived_views_follow_current_entities_without_changing_terrain() -> None:
-    """Moving and removed entities never become terrain or stale routing blockers."""
+    """Known offscreen sprites block routing until their identity is removed."""
     current_map = OverworldMap(
         id=MapId.PALLET_TOWN,
         terrain=[list("∙∙∙")],
@@ -152,5 +152,10 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
     ]
 
     sprite.is_rendered = False
+    assert get_navigation_tiles(current_map, game_state).tolist() == [
+        [AsciiTile.FREE, AsciiTile.FREE, AsciiTile.SPRITE]
+    ]
+
+    current_map.known_sprite_ids.remove(1)
     assert get_navigation_tiles(current_map, game_state).tolist() == [list("∙∙∙")]
     assert current_map.terrain == [list("∙∙∙")]

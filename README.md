@@ -109,7 +109,7 @@ I'd like to see it beat the game, and I'll try to support it so that it does (as
 
 ### How much does it cost to run?
 
-Roughly $8 USD per hour for the Luna API calls.
+Roughly $3 USD per hour for the GPT-5.6 Luna API calls.
 
 ### How fast does it play?
 

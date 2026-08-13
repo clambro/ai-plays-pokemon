@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from loguru import logger
 from pydantic_ai import Agent, AgentRunError, BinaryContent, CallToolsNode
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
+from pydantic_graph import End
 
 from agent.context import AgentContext
 from agent.text.prompts import build_text_decision_prompt
@@ -17,7 +18,6 @@ from agent.text.utils import (
 from agent.utils import AGENT_HOOKS, build_screenshot_content
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
-from memory.rolling_memory.service import finalize_iteration
 
 if TYPE_CHECKING:
     from PIL import Image
@@ -52,10 +52,11 @@ async def run_text(context: AgentContext) -> None:
         try:
             async with agent.iter(agent_input, deps=context) as agent_run:
                 node = agent_run.next_node
-                while not agent.is_end_node(node):
+                while not isinstance(node, End):
                     current_node = node
                     node = await agent_run.next(node)
                     if isinstance(current_node, CallToolsNode):
+                        await context.complete_iteration()
                         game_state = await context.emulator.get_game_state()
                         if not is_text_interaction_state(game_state):
                             break
@@ -64,7 +65,6 @@ async def run_text(context: AgentContext) -> None:
                 "Text agent run failed; returning control to the dispatcher."
             )
             return
-    await finalize_iteration(context.state.rolling_memory)
 
 
 async def _prepare_text_agent_input(
@@ -74,6 +74,7 @@ async def _prepare_text_agent_input(
     game_state = await context.emulator.get_game_state()
     if is_plain_text_dialog(game_state):
         await handle_text_dialog(context)
+    await context.complete_iteration()
 
     initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
     if not is_text_interaction_state(initial_game_state):

@@ -2,8 +2,11 @@
 
 import asyncio
 
+from loguru import logger
+
 from common.constants import (
     ROLLING_MEMORY_LEAF_SIZE,
+    ROLLING_MEMORY_RAW_BLOCK_SOFT_LIMIT,
     ROLLING_MEMORY_SUMMARY_MAX_CHARACTERS,
 )
 from database.rolling_memory.repository import (
@@ -70,31 +73,43 @@ async def initialize_memory(current_block: CurrentMemoryBlock) -> RollingMemory:
     )
 
 
-async def finalize_iteration(memory: RollingMemory) -> None:
-    """Persist and compact the completed iteration."""
+async def finalize_iteration(memory: RollingMemory) -> RollingMemory:
+    """Finalize a non-empty iteration and return the next memory view."""
+    if not memory.current_block.content.strip():
+        return memory
+
     record = await finalize_raw_memory_block(
         RawMemoryBlockCreate(
             iteration=memory.current_block.iteration,
             content=memory.current_block.content,
         ),
     )
-    finalized_block = RawMemoryBlock(
-        iteration=record.iteration,
-        content=record.content,
-    )
-    await compact_memory(
-        RollingMemory(
-            current_block=memory.current_block,
-            summary_frontier=memory.summary_frontier,
-            loaded_raw_blocks=(*memory.loaded_raw_blocks, finalized_block),
+    finalized_memory = RollingMemory(
+        current_block=CurrentMemoryBlock(iteration=record.iteration + 1),
+        summary_frontier=memory.summary_frontier,
+        loaded_raw_blocks=(
+            *memory.loaded_raw_blocks,
+            RawMemoryBlock(iteration=record.iteration, content=record.content),
         ),
     )
+    try:
+        await compact_memory(finalized_memory)
+        return await initialize_memory(finalized_memory.current_block)
+    except Exception as error:  # noqa: BLE001
+        logger.opt(exception=error).warning(
+            "Rolling-memory maintenance failed after iteration {} was finalized; "
+            "continuing with the advanced iteration.",
+            record.iteration,
+        )
+        return finalized_memory
 
 
 async def compact_memory(memory: RollingMemory) -> list[MemorySummaryRead]:
     """Compact every range eligible in the current rolling-memory view."""
     requests = []
-    if len(memory.loaded_raw_blocks) >= ROLLING_MEMORY_LEAF_SIZE * 2:
+    if len(memory.loaded_raw_blocks) >= (
+        ROLLING_MEMORY_RAW_BLOCK_SOFT_LIMIT + ROLLING_MEMORY_LEAF_SIZE
+    ):
         raw_blocks = memory.loaded_raw_blocks[:ROLLING_MEMORY_LEAF_SIZE]
         requests.append(
             _summarize(

@@ -53,11 +53,11 @@ Note: Pretty much all the constants I mention below are default values that can 
 
 #### Rolling Memory
 
-One raw memory block represents one complete gameplay-handler activation. Every thought, observation, and durable action result produced during that iteration is appended to the same mutable block in order. The block is finalized only after the handler finishes, at which point it is written once to SQLite and the next handler activation begins with a new block.
+One raw memory block represents one gameplay decision attempt, combining the model's intent with any durable outcome. Deterministic activity that produces durable history is represented the same way. Iterations advance independently of the longer-lived handler conversation.
 
 The raw table is the permanent source of truth: compaction never deletes or rewrites it. The active agent state carries the current block and the bounded view needed for the current handler activation, but only the current block is serialized with the state. Because database files are included in backups, the complete history is restored without serializing it into every agent-state snapshot.
 
-Prompts receive a chronological mixture of summaries and exact recent blocks. Once two batches of twenty raw blocks are available, the older batch is compressed into a level-one summary while the newer twenty remain exact. Adjacent summaries at the same level are later combined into a parent summary covering both ranges. Repeating this process creates a binary hierarchy in which older history occupies progressively less space and recent history retains full detail. Every entry includes the iteration or iteration range it covers, so the prompt view remains ordered and gap-free.
+Prompts receive a chronological mixture of summaries and exact recent blocks. As the exact tail grows, older history is incrementally compressed into summaries, and adjacent summaries are later combined into progressively broader summaries. This hierarchy keeps recent history detailed and older history bounded while preserving an ordered, gap-free view.
 
 The live HTML activity log uses only the exact raw working set and the unfinished current block. It updates whenever memory is appended and never displays the derived summaries, so compaction does not replace the recent on-screen log.
 

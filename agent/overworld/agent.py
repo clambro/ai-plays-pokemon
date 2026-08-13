@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from loguru import logger
 from pydantic_ai import Agent, AgentRunError, BinaryContent, CallToolsNode
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
+from pydantic_graph import End
 
 from agent.context import AgentContext
 from agent.overworld.prompts import build_overworld_decision_prompt
@@ -12,7 +13,6 @@ from agent.overworld.tools.registry import build_overworld_toolset
 from agent.utils import AGENT_HOOKS, build_screenshot_content, is_battle_handler_state
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
-from memory.rolling_memory.service import finalize_iteration
 from overworld_map.service import prepare_overworld_map
 
 if TYPE_CHECKING:
@@ -73,10 +73,11 @@ async def run_overworld(
             deps=context,
         ) as agent_run:
             node = agent_run.next_node
-            while not agent.is_end_node(node):
+            while not isinstance(node, End):
                 current_node = node
                 node = await agent_run.next(node)
                 if isinstance(current_node, CallToolsNode):
+                    await context.complete_iteration()
                     game_state = await context.emulator.get_game_state()
                     if _should_end_overworld_run(initial_game_state, game_state):
                         break
@@ -85,7 +86,6 @@ async def run_overworld(
             "Overworld agent run failed; returning control to the dispatcher."
         )
         return
-    await finalize_iteration(context.state.rolling_memory)
 
 
 def build_overworld_agent_input(

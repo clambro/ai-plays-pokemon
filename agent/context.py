@@ -4,7 +4,9 @@ import asyncio
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from memory.rolling_memory.service import initialize_memory
+from loguru import logger
+
+from memory.rolling_memory.service import finalize_iteration, initialize_memory
 
 if TYPE_CHECKING:
     from agent.state import AgentState
@@ -33,5 +35,17 @@ class AgentContext:
     async def begin_iteration(self) -> None:
         """Prepare memory for one top-level handler activation."""
         rolling_memory = await initialize_memory(self.state.rolling_memory.current_block)
+        self.state.rolling_memory = rolling_memory
+        self.state.iteration = rolling_memory.current_block.iteration
+
+    async def complete_iteration(self) -> None:
+        """Finalize the current block and advance the live iteration state."""
+        try:
+            rolling_memory = await finalize_iteration(self.state.rolling_memory)
+        except Exception as error:  # noqa: BLE001
+            logger.opt(exception=error).warning(
+                "Rolling-memory finalization failed; continuing with the current iteration."
+            )
+            return
         self.state.rolling_memory = rolling_memory
         self.state.iteration = rolling_memory.current_block.iteration

@@ -22,11 +22,11 @@ flowchart TD
 
 Battle takes precedence except on the post-catch naming screen, which belongs to the text handler. Visible text and zero-sized transition maps also route to text; all other states route to overworld. The dispatcher does not construct agents, manage memory, publish the background, or interpret tool calls.
 
-### Handler-Owned Iterations
+### Iterations
 
-Every handler activation initializes one rolling-memory iteration. Initialization loads the bounded summary frontier and exact raw tail from SQLite, advances the mutable block when necessary, and updates the shared iteration number. After a successful handler activation, the handler writes the completed block exactly once and performs one hierarchical compaction pass. Raw blocks remain permanently in SQLite; compaction only adds derived summaries.
+An iteration represents one gameplay decision attempt and any durable outcome. Deterministic work can also produce an iteration when it records meaningful activity.
 
-Model turns and tool calls inside a handler do not start new iterations. They contribute to the same current block until the handler returns control to the dispatcher.
+Handlers can complete several iterations while keeping one Pydantic AI conversation alive, preserving context across related decisions.
 
 ### Shared Agent Runtime
 
@@ -131,7 +131,7 @@ The create, update, and delete tools let the agent maintain one primary goal and
 
 The agent narrates its decision alongside each tool call. The tool then produces the actual outcome of the action. Action outcomes are appended to the current rolling-memory block and returned with a fresh screenshot to the local conversation, so the HTML activity log and the agent cannot disagree about what happened. Goal tools return their result directly and update authoritative goal state without copying the result into rolling memory.
 
-If the action leaves the player in place and the game in the overworld, the agent can make another decision using that result. Once the player moves or the game enters a text interaction or battle, the runner returns to the dispatcher. The complete overworld run remains one handler-owned iteration.
+If the action leaves the player in place and the game in the overworld, the agent can make another decision using that result. Once the player moves or the game enters a text interaction or battle, the runner returns to the dispatcher.
 
 ## The Battle Agent
 
@@ -204,7 +204,7 @@ Provides constrained directional, confirm, and cancel input for forced switches,
 
 ### Memory and Display Updates
 
-The agent emits a brief explanation alongside each tool call. That explanation and captured in-game dialog are appended to the current rolling-memory block and streamed to the HTML activity log. Detailed action results and refreshed observations stay inside the agent conversation, where they provide context for the next decision without flooding durable memory. The complete battle remains one handler-owned iteration.
+The agent emits a brief explanation alongside each tool call. That explanation and captured in-game dialog are appended to the current rolling-memory block and streamed to the HTML activity log. Detailed action results and refreshed observations stay inside the agent conversation, where they provide context for the next decision without flooding durable memory.
 
 ## The Text Runner
 
@@ -229,7 +229,7 @@ flowchart LR
 
 ### Handle Dialog Box
 
-This is the most common path through the text handler, and it is deliberately handled before the agent is even constructed. Its job is to read through any dialog that appears on screen and append it directly to the current iteration's memory block. This saves us a ton of time and tokens by pulling the text straight from the game state instead of making the AI read it screenshot by screenshot.
+This is the most common path through the text handler, and it is deliberately handled before the agent is even constructed. Its job is to read through any dialog that appears on screen and append it directly to the current rolling-memory block. This saves us a ton of time and tokens by pulling the text straight from the game state instead of making the AI read it screenshot by screenshot.
 
 The dialog reader exits if the box disappears, a battle begins, or text appears outside the dialog box. That last case usually means that a menu or yes/no question has opened and a real decision is finally required. If the dialog simply closes, the runner returns without making a model call at all. If it reveals a decision, the runner starts one text-agent conversation and keeps it alive until the interaction is over.
 
@@ -247,4 +247,4 @@ The tool checks that the naming screen is actually open before doing anything. I
 
 ### Memory and Display Updates
 
-The agent narrates each decision alongside its tool call. That explanation and any dialog read after the action are appended to the current rolling-memory block and streamed to the HTML activity log. The more mechanical tool results stay inside the local conversation, where they are useful for the next decision without cluttering long-term history. The complete text interaction counts as one handler-owned iteration.
+The agent narrates each decision alongside its tool call. That explanation and any dialog read after the action are appended to the current rolling-memory block and streamed to the HTML activity log. The more mechanical tool results stay inside the local conversation, where they are useful for the next decision without cluttering long-term history.

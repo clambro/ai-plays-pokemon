@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from loguru import logger
 from pydantic_ai import Agent, AgentRunError, BinaryContent, CallToolsNode
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
+from pydantic_graph import End
 
 from agent.battle.prompts import build_battle_decision_prompt
 from agent.battle.tools.registry import build_battle_toolset
@@ -12,7 +13,6 @@ from agent.context import AgentContext
 from agent.utils import AGENT_HOOKS, build_screenshot_content, is_battle_handler_state
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
-from memory.rolling_memory.service import finalize_iteration
 
 if TYPE_CHECKING:
     from PIL import Image
@@ -59,10 +59,11 @@ async def run_battle(context: AgentContext) -> None:
             deps=context,
         ) as agent_run:
             node = agent_run.next_node
-            while not agent.is_end_node(node):
+            while not isinstance(node, End):
                 current_node = node
                 node = await agent_run.next(node)
                 if isinstance(current_node, CallToolsNode):
+                    await context.complete_iteration()
                     game_state = await context.emulator.get_game_state()
                     if not is_battle_handler_state(game_state):
                         break
@@ -71,7 +72,6 @@ async def run_battle(context: AgentContext) -> None:
             "Battle agent run failed; returning control to the dispatcher."
         )
         return
-    await finalize_iteration(context.state.rolling_memory)
 
 
 def build_battle_agent_input(

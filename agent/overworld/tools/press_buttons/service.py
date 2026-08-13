@@ -86,8 +86,8 @@ async def _check_for_collision(
         return f"Map changed from {prev_map_id.name} to {game_state.map.id.name}."
     if prev_coords == game_state.player.coords and prev_direction == game_state.player.direction:
         return (
-            f"The player's position did not change after pressing the '{button}' button."
-            " The player may have bumped into something."
+            f"My position did not change after pressing the '{button}' button. Did I"
+            " bump into something?"
         )
     return None
 
@@ -112,8 +112,8 @@ async def _check_for_action(
     game_state = await emulator.get_game_state()
     if not game_state.is_text_on_screen():
         return (
-            "The action button was pressed, but nothing happened. There may not be anything to"
-            " interact with in the direction the player is facing."
+            "I pressed the action button but nothing happened. There must not be"
+            " anything to interact with in the direction I am facing."
         )
     if dialog_box := game_state.get_dialog_box():
         # Some dialog boxes (e.g. if you pick up an item) disappear automatically before we can
