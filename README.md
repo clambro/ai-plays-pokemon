@@ -109,7 +109,19 @@ I'd like to see it beat the game, and I'll try to support it so that it does (as
 
 ### How much does it cost to run?
 
-Roughly $3 USD per hour for the GPT-5.6 Luna API calls.
+Short answer: Roughly $1 USD per hour for the GPT-5.6 Luna API calls.
+
+Longer answer based on recent runs:
+
+- The workflow completes roughly 370 iterations per hour.
+- Instructions, screenshots, game state, tool calls, results, and model output account for ~5,600 tokens per iteration.
+- Rolling memory grows logarithmically, contributing roughly `2,800 + 400 × log₂ N` tokens to iteration N.
+
+Together, that is around `8,400 + 400 × log₂ N` tokens per iteration. Applying Luna's current prices to that token mix at 370 iterations per hour gives hourly cost growth of:
+
+`hourly cost ≈ $0.47 + $0.026 × log₂ N`
+
+The $1 headline is a nice round number for a run that has been progressing for a while.
 
 ### How fast does it play?
 

@@ -48,8 +48,8 @@ def format_rolling_memory(memory: RollingMemory) -> str:
         "with one number contains the exact memory from that iteration. An entry with a range "
         "is a compressed summary covering every iteration in that inclusive range, with older "
         "history represented in progressively less detail. The current iteration is "
-        f"{memory.current_block.iteration}. To give you an indication of the passage of time, "
-        "each iteration takes roughly three seconds.\n"
+        f"{memory.current_block.iteration}. To give you a rough idea of the passage of time, "
+        "each iteration takes a couple of seconds.\n"
         "<memory>\n" + "\n".join(_format_memory_entry(entry) for entry in entries) + "\n</memory>"
     )
 
