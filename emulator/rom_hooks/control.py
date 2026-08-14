@@ -24,10 +24,14 @@ class _HookName(StrEnum):
     """Executable boundaries used by control coordination."""
 
     OVERWORLD_INPUT = auto()
+    QUANTITY_READY = auto()
+    LOW_SENSITIVITY_INPUT_ACCEPTED = auto()
     MENU_INPUT_ACCEPTED = auto()
     MENU_READY = auto()
     NAMING_INPUT_ACCEPTED = auto()
     NAMING_READY = auto()
+    POKEDEX_PAGE_READY = auto()
+    POKEDEX_PAGE_INPUT_ACCEPTED = auto()
     PLAYER_STEP_COMPLETED = auto()
 
 
@@ -64,6 +68,18 @@ _HOOKS = (
         signature=bytes.fromhex("f0 b3 cb 5f 28 06"),
     ),
     RomHook(
+        name=_HookName.QUANTITY_READY,
+        bank=0x00,
+        address=0x2C35,  # DisplayChooseQuantityMenu.waitForKeyPressLoop
+        signature=bytes.fromhex("cd 2b 38 f0 b3 cb"),
+    ),
+    RomHook(
+        name=_HookName.LOW_SENSITIVITY_INPUT_ACCEPTED,
+        bank=0x00,
+        address=0x383E,  # JoypadLowSensitivity.newlyPressedButtons
+        signature=bytes.fromhex("3e 1e e0 d5 c9 f0"),
+    ),
+    RomHook(
         name=_HookName.MENU_INPUT_ACCEPTED,
         bank=0x00,
         address=0x3AFE,  # HandleMenuInput_.keyPressed
@@ -86,6 +102,18 @@ _HOOKS = (
         bank=0x01,
         address=0x6466,  # DisplayNamingScreen.inputLoop
         signature=bytes.fromhex("fa 26 cc f5 06 1c"),
+    ),
+    RomHook(
+        name=_HookName.POKEDEX_PAGE_READY,
+        bank=0x10,
+        address=0x464F,  # NewPageButtonPressCheck.waitForButtonPress
+        signature=bytes.fromhex("cd b9 01 f0 b4 e6"),
+    ),
+    RomHook(
+        name=_HookName.POKEDEX_PAGE_INPUT_ACCEPTED,
+        bank=0x10,
+        address=0x4658,  # NewPageButtonPressCheck accepted A or B
+        signature=bytes.fromhex("c9 8b 84 95 84 8b"),
     ),
     RomHook(
         name=_HookName.PLAYER_STEP_COMPLETED,
@@ -123,6 +151,28 @@ _SUPPRESSED_OR_SIMULATED_INPUT = (1 << 0) | (1 << 5) | (1 << 7)
 _DOOR_LEDGE_OR_SPINNER_MOVEMENT = (1 << 1) | (1 << 6) | (1 << 7)
 _BOULDER_MOVING = 1 << 1
 _RENDER_FENCE_FRAMES = 3
+
+_ACCEPTED_INPUT_HOOKS = {
+    _HookName.LOW_SENSITIVITY_INPUT_ACCEPTED: (
+        _ControlDomain.IMMEDIATE,
+        _JOY_PRESSED_ADDRESS,
+    ),
+    _HookName.MENU_INPUT_ACCEPTED: (_ControlDomain.MENU, _MENU_INPUT_ADDRESS),
+    _HookName.NAMING_INPUT_ACCEPTED: (_ControlDomain.NAMING, _JOY_PRESSED_ADDRESS),
+    _HookName.POKEDEX_PAGE_INPUT_ACCEPTED: (
+        _ControlDomain.IMMEDIATE,
+        _JOY_HELD_ADDRESS,
+    ),
+}
+_READY_HOOKS = {
+    _HookName.QUANTITY_READY: (_ControlDomain.IMMEDIATE, ControlBoundary.RENDER_READY),
+    _HookName.MENU_READY: (_ControlDomain.MENU, ControlBoundary.MENU_READY),
+    _HookName.NAMING_READY: (_ControlDomain.NAMING, ControlBoundary.NAMING_READY),
+    _HookName.POKEDEX_PAGE_READY: (
+        _ControlDomain.IMMEDIATE,
+        ControlBoundary.SPECIAL_INTERFACE_READY,
+    ),
+}
 
 
 class RomControlHooks:
@@ -273,19 +323,14 @@ class RomControlHooks:
             self._current_boundary = None
 
     def _handle_hook(self, name: _HookName) -> None:
-        match name:
-            case _HookName.OVERWORLD_INPUT:
-                self._observe_overworld_input()
-            case _HookName.MENU_INPUT_ACCEPTED:
-                self._observe_accepted_input(_ControlDomain.MENU, _MENU_INPUT_ADDRESS)
-            case _HookName.MENU_READY:
-                self._observe_ready(_ControlDomain.MENU, ControlBoundary.MENU_READY)
-            case _HookName.NAMING_INPUT_ACCEPTED:
-                self._observe_accepted_input(_ControlDomain.NAMING, _JOY_PRESSED_ADDRESS)
-            case _HookName.NAMING_READY:
-                self._observe_ready(_ControlDomain.NAMING, ControlBoundary.NAMING_READY)
-            case _HookName.PLAYER_STEP_COMPLETED:
-                self._observe_player_step_completed()
+        if accepted_input := _ACCEPTED_INPUT_HOOKS.get(name):
+            self._observe_accepted_input(*accepted_input)
+        elif ready := _READY_HOOKS.get(name):
+            self._observe_ready(*ready)
+        elif name == _HookName.OVERWORLD_INPUT:
+            self._observe_overworld_input()
+        elif name == _HookName.PLAYER_STEP_COMPLETED:
+            self._observe_player_step_completed()
 
     def _observe_overworld_input(self) -> None:
         overworld_ready = self._is_overworld_ready()
