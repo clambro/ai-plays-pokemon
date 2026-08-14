@@ -3,12 +3,12 @@
 from typing import TYPE_CHECKING
 
 from agent.utils import is_battle_handler_state
-from common.enums import Button
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from agent.context import AgentContext
+    from common.enums import Button
 
 
 async def press_buttons(
@@ -27,11 +27,7 @@ async def press_buttons(
     """
     pressed_buttons: list[str] = []
     for index, button in enumerate(buttons):
-        is_final_action = index == len(buttons) - 1 and button in {Button.A, Button.B}
-        if is_final_action:
-            await context.emulator.pulse_button(button)
-        else:
-            await context.emulator.press_button(button)
+        await context.emulator.press_button(button)
         pressed_buttons.append(button.value)
 
         if index < len(buttons) - 1:

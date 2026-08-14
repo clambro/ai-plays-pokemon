@@ -6,7 +6,7 @@ from pydantic_ai import BinaryContent
 
 from agent.battle.formatting import format_available_pokeballs, format_battle_info
 from agent.formatting.game_state import format_party_info
-from agent.utils import build_screenshot_content
+from agent.utils import build_screenshot_content, is_battle_handler_state
 from common.schemas import Coords
 
 if TYPE_CHECKING:
@@ -86,6 +86,10 @@ async def complete_battle_action(
     Returns:
         Fresh context for the agent's next decision.
     """
+    game_state = await context.emulator.get_game_state()
+    if not is_battle_handler_state(game_state):
+        return await refresh_battle_observation(context, action_result=action_result)
+
     dialog = await handle_battle_dialog(context)
     return await refresh_battle_observation(
         context,
