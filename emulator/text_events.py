@@ -77,12 +77,11 @@ class _DialogControlState:
                 self.menu_open = True
             elif event.kind == TextEventKind.MENU_CLOSED:
                 self.menu_open = False
-                if not initial_batch:
-                    self.waiting_for_initial_menu_exit = False
+                self.waiting_for_initial_menu_exit = False
 
             reached_boundary |= event.kind in stop_on - {TextEventKind.MENU_OPENED}
 
-        if initial_batch:
+        if initial_batch and self.waiting_for_initial_menu_exit:
             self.waiting_for_initial_menu_exit = self.menu_open
         menu_boundary = (
             self.menu_open

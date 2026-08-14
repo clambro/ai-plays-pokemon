@@ -1,6 +1,7 @@
 """Unit tests for core text-event logic."""
 
 import asyncio
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -9,6 +10,7 @@ from emulator.text_events import (
     TextEvent,
     TextEventJournal,
     TextEventKind,
+    drive_standard_dialog,
     reduce_text_events,
 )
 
@@ -66,6 +68,27 @@ def test_reduce_text_events_preserves_dialog_without_hook_duplicates() -> None:
     assert reduce_text_events(events) == (
         "VOLTAIL used THUNDERSHOCK! It's effective! THUNDERSHOCK! It's effective!"
     )
+
+
+@pytest.mark.unit
+async def test_dialog_driver_stops_when_an_initial_menu_is_replaced() -> None:
+    """Treat a menu opened after the initial menu closes as a new decision boundary."""
+    emulator = MagicMock()
+    events = (
+        _event(1, TextEventKind.MENU_OPENED),
+        _event(2, TextEventKind.MENU_CLOSED),
+        _event(3, TextEventKind.MENU_OPENED),
+    )
+
+    assert (
+        await drive_standard_dialog(
+            emulator,
+            stop_on=frozenset({TextEventKind.MENU_OPENED}),
+            initial_events=events,
+        )
+        == ""
+    )
+    emulator.wait_for_text_events.assert_not_called()
 
 
 def _event(

@@ -128,6 +128,10 @@ class PyBoyWorker:
         """Claim every currently recorded text event exactly once."""
         return self._text_events.drain()
 
+    async def drain_settled_text_events(self) -> tuple[TextEvent, ...]:
+        """Claim pending text events after the current emulated frame completes."""
+        return await self.execute(lambda _pyboy: self._text_events.drain())
+
     def drain_completed_text_events(self) -> tuple[TextEvent, ...]:
         """Claim text events whose ordinary interaction has already closed."""
         return self._text_events.drain_through_last(TextEventKind.INTERACTION_CLOSED)

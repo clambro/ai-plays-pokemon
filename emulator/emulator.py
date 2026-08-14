@@ -102,6 +102,7 @@ class Emulator(AbstractAsyncContextManager):
 
     async def advance_battle_dialog(self) -> str:
         """Advance battle dialog until the next decision or battle exit."""
+        initial_events = await self._worker.drain_settled_text_events()
         return await drive_standard_dialog(
             self,
             stop_on=frozenset(
@@ -111,7 +112,7 @@ class Emulator(AbstractAsyncContextManager):
                     TextEventKind.BATTLE_ENDED,
                 }
             ),
-            initial_events=self.drain_text_events(),
+            initial_events=initial_events,
         )
 
     async def advance_text_dialog(
@@ -120,6 +121,7 @@ class Emulator(AbstractAsyncContextManager):
         before_input: Callable[[], Awaitable[None]] | None = None,
     ) -> str:
         """Advance ordinary dialog until the interaction changes domain or closes."""
+        initial_events = await self._worker.drain_settled_text_events()
         return await drive_standard_dialog(
             self,
             stop_on=frozenset(
@@ -131,7 +133,7 @@ class Emulator(AbstractAsyncContextManager):
                     TextEventKind.BATTLE_ENDED,
                 }
             ),
-            initial_events=self.drain_text_events(),
+            initial_events=initial_events,
             before_input=before_input,
         )
 
