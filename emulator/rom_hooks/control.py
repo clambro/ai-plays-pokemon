@@ -5,7 +5,12 @@ from enum import StrEnum, auto
 from typing import TYPE_CHECKING
 
 from common.enums import Button
-from emulator.control_events import ControlBoundary, ControlResult, ControlResultWaiter
+from emulator.control_events import (
+    ControlBoundary,
+    ControlHandoff,
+    ControlResult,
+    ControlResultWaiter,
+)
 from emulator.rom_hooks.core import RomHook, install_hooks
 from emulator.text_events import TextEventKind
 
@@ -142,8 +147,15 @@ class RomControlHooks:
         """Arm input using the control domain most recently reached by the ROM."""
         return self._arm(button=button, input_domain=self._current_domain)
 
-    def arm_overworld_button(self, button: Button, *, observe_steps: bool = False) -> int:
-        """Arm an explicitly overworld-scoped button operation."""
+    def arm_overworld_button(
+        self,
+        button: Button,
+        *,
+        observe_steps: bool = False,
+    ) -> int:
+        """Arm overworld input only while the ROM still accepts external movement."""
+        if self._current_domain != _ControlDomain.OVERWORLD or not self._is_overworld_ready():
+            raise ControlHandoff
         return self._arm(
             button=button,
             input_domain=_ControlDomain.OVERWORLD,

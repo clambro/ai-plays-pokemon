@@ -14,7 +14,7 @@ from emulator.control_events import ControlBoundary
 from emulator.game_state import GameState
 from emulator.parsers.map_collision import read_map_collision_tiles
 from emulator.pyboy_worker import PyBoyWorker
-from emulator.text_events import TextEventKind, drive_standard_dialog, reduce_text_events
+from emulator.text_events import TextEventKind, TextEventReducer, drive_standard_dialog
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -64,6 +64,7 @@ class Emulator(AbstractAsyncContextManager):
             mute_sound=mute_sound,
             headless=headless,
         )
+        self._text_event_reducer = TextEventReducer()
 
     async def __aenter__(self) -> Self:
         """Start the PyBoy worker when entering the context."""
@@ -107,6 +108,7 @@ class Emulator(AbstractAsyncContextManager):
         initial_events = await self._worker.drain_settled_text_events()
         return await drive_standard_dialog(
             self,
+            reducer=self._text_event_reducer,
             stop_on=frozenset(
                 {
                     TextEventKind.MENU_OPENED,
@@ -126,6 +128,7 @@ class Emulator(AbstractAsyncContextManager):
         initial_events = await self._worker.drain_settled_text_events()
         return await drive_standard_dialog(
             self,
+            reducer=self._text_event_reducer,
             stop_on=frozenset(
                 {
                     TextEventKind.MENU_OPENED,
@@ -141,11 +144,11 @@ class Emulator(AbstractAsyncContextManager):
 
     def consume_pending_dialog(self) -> str:
         """Claim and reduce dialog already completed by the ROM."""
-        return reduce_text_events(self.drain_text_events())
+        return self._text_event_reducer.reduce(self.drain_text_events())
 
     def consume_completed_dialog(self) -> str:
         """Claim dialog through the last closed ordinary text interaction."""
-        return reduce_text_events(self._worker.drain_completed_text_events())
+        return self._text_event_reducer.reduce(self._worker.drain_completed_text_events())
 
     async def get_game_state_with_map_collision_tiles(
         self,

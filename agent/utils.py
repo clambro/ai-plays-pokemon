@@ -47,6 +47,11 @@ def is_text_handler_state(game_state: GameState) -> bool:
     )
 
 
+def is_overworld_handler_state(game_state: GameState) -> bool:
+    """Determine whether the current state belongs to the overworld handler."""
+    return not is_battle_handler_state(game_state) and not is_text_handler_state(game_state)
+
+
 async def record_model_response(
     ctx: RunContext[AgentContext],
     *,

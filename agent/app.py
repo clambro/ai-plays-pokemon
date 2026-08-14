@@ -8,6 +8,7 @@ from agent.context import AgentContext
 from agent.overworld.agent import run_overworld
 from agent.text.agent import run_text
 from agent.utils import is_battle_handler_state, is_text_handler_state
+from emulator.control_events import ControlHandoff
 from llm.usage import bind_llm_usage_updater
 
 if TYPE_CHECKING:
@@ -30,4 +31,7 @@ async def dispatch_agent(context: AgentContext) -> None:
     game_state = await context.emulator.get_game_state()
     handler = select_agent_handler(game_state)
     with bind_llm_usage_updater(context.add_llm_usage):
-        await handler(context)
+        try:
+            await handler(context)
+        except ControlHandoff:
+            return

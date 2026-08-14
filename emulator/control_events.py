@@ -21,6 +21,10 @@ class ControlBoundary(StrEnum):
     TEXT_INPUT_READY = auto()
 
 
+class ControlHandoff(Exception):  # noqa: N818 - internal control flow, not an application error
+    """Signal that the active gameplay handler no longer owns ROM control."""
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ControlResult:
     """The rendered boundary reached by one control operation."""

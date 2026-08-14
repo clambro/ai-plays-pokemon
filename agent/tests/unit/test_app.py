@@ -9,6 +9,7 @@ import pytest
 from agent import app
 from agent.context import AgentContext
 from agent.state import AgentState
+from emulator.control_events import ControlHandoff
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -82,3 +83,21 @@ async def test_dispatch_agent_uses_the_shared_context(
     emulator.get_game_state.assert_awaited_once_with()
     select_handler.assert_called_once_with(game_state)
     handler.assert_awaited_once_with(context)
+
+
+@pytest.mark.unit
+async def test_dispatch_agent_handles_control_handoff(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Return normally when ROM control has moved to another handler."""
+    emulator = MagicMock()
+    emulator.get_game_state = AsyncMock(return_value=_game_state())
+    context = AgentContext(state=AgentState(folder=tmp_path), emulator=emulator)
+    monkeypatch.setattr(
+        app,
+        "select_agent_handler",
+        MagicMock(return_value=AsyncMock(side_effect=ControlHandoff)),
+    )
+
+    await app.dispatch_agent(context)

@@ -45,6 +45,8 @@ async def run_battle(context: AgentContext) -> None:
     """Run one agent conversation until the game exits battle mode."""
     await context.begin_iteration()
     initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
+    if not is_battle_handler_state(initial_game_state):
+        return
     agent = build_battle_agent(
         context,
         initial_game_state.battle.battle_type,
