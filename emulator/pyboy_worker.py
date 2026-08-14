@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from pyboy import PyBoy
 
-from emulator.control_events import ControlResultWaiter
+from emulator.control_events import ControlBoundary, ControlResultWaiter
 from emulator.game_state import GameState
 from emulator.parsers.rom_control import RomControlRecorder
 from emulator.parsers.rom_text import RomTextRecorder
@@ -144,7 +144,10 @@ class PyBoyWorker:
         def _start(pyboy: PyBoy) -> int:
             if self._control_recorder is None:
                 raise RuntimeError("ROM control recorder is not installed.")
-            operation_id = self._control_recorder.arm(button, observe_steps=observe_steps)
+            operation_id = self._control_recorder.arm_overworld_button(
+                button,
+                observe_steps=observe_steps,
+            )
             # The overworld loop spans two rendered frames, so a three-frame pulse guarantees one
             # poll while remaining short enough not to carry into the following interface.
             pyboy.button(button, 3)
@@ -152,13 +155,25 @@ class PyBoyWorker:
 
         return await self.execute(_start)
 
-    async def start_overworld_resume(self) -> int:
-        """Arm a wait for external overworld control after scripted activity."""
+    async def start_control_button(self, button: Button) -> int:
+        """Arm coordination in the active input domain and schedule a short pulse."""
+
+        def _start(pyboy: PyBoy) -> int:
+            if self._control_recorder is None:
+                raise RuntimeError("ROM control recorder is not installed.")
+            operation_id = self._control_recorder.arm_button(button)
+            pyboy.button(button, 3)
+            return operation_id
+
+        return await self.execute(_start)
+
+    async def start_boundary_wait(self, boundary: ControlBoundary) -> int:
+        """Arm a wait for already-active ROM work to reach one ready boundary."""
 
         def _start(_pyboy: PyBoy) -> int:
             if self._control_recorder is None:
                 raise RuntimeError("ROM control recorder is not installed.")
-            return self._control_recorder.arm_overworld_resume()
+            return self._control_recorder.arm_boundary_wait(boundary)
 
         return await self.execute(_start)
 

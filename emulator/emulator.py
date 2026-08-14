@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Self
 from PIL import Image
 
 from common.constants import DEFAULT_ROM_PATH
+from emulator.control_events import ControlBoundary
 from emulator.game_state import GameState
 from emulator.parsers.map_collision import read_map_collision_tiles
 from emulator.pyboy_worker import PyBoyWorker
@@ -186,23 +187,25 @@ class Emulator(AbstractAsyncContextManager):
         button: Button,
         *,
         wait_for_animation: bool = True,
-    ) -> None:
-        """Send a button press and optionally wait for animations to finish.
+    ) -> ControlResult | None:
+        """Send a button and wait for the active input domain's rendered boundary.
 
         Args:
             button: Game Boy button to press.
-            wait_for_animation: Whether to wait for the resulting screen animation. Disable this
-                only when the caller handles subsequent activity itself.
+            wait_for_animation: Whether this operation owns semantic completion. Disable this only
+                for a dialog driver that consumes the resulting ROM events itself.
+
+        Returns:
+            The resulting control boundary, or ``None`` for an internal raw pulse.
 
         Raises:
             RuntimeError: The emulator has been stopped.
         """
-        # If we're deferring animation handling, we want to exit as quickly as possible. Two frames
-        # seems to be the minimum to guarantee that the button press is registered.
-        hold_frames = 10 if wait_for_animation else 2
-        await self._worker.execute(lambda pyboy: pyboy.button(button, hold_frames))
-        if wait_for_animation:
-            await self.wait_for_animation_to_finish()
+        if not wait_for_animation:
+            await self._worker.execute(lambda pyboy: pyboy.button(button, 2))
+            return None
+        operation_id = await self._worker.start_control_button(button)
+        return await self._worker.wait_for_control_result(operation_id)
 
     async def press_overworld_button(
         self,
@@ -225,7 +228,12 @@ class Emulator(AbstractAsyncContextManager):
 
     async def wait_for_overworld_ready(self) -> ControlResult:
         """Wait for scripted activity to restore external overworld control."""
-        operation_id = await self._worker.start_overworld_resume()
+        operation_id = await self._worker.start_boundary_wait(ControlBoundary.OVERWORLD_READY)
+        return await self._worker.wait_for_control_result(operation_id)
+
+    async def wait_for_menu_ready(self) -> ControlResult:
+        """Wait until a standard menu has completed cursor placement and rendering."""
+        operation_id = await self._worker.start_boundary_wait(ControlBoundary.MENU_READY)
         return await self._worker.wait_for_control_result(operation_id)
 
     async def wait_for_animation_to_finish(

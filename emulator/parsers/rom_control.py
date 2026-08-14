@@ -17,11 +17,23 @@ if TYPE_CHECKING:
 
 
 class _HookName(StrEnum):
-    """Executable boundaries used by overworld control coordination."""
+    """Executable boundaries used by control coordination."""
 
     OVERWORLD_INPUT = auto()
+    MENU_INPUT_ACCEPTED = auto()
     MENU_READY = auto()
+    NAMING_INPUT_ACCEPTED = auto()
+    NAMING_READY = auto()
     PLAYER_STEP_COMPLETED = auto()
+
+
+class _ControlDomain(StrEnum):
+    """The input engine currently waiting for an external decision."""
+
+    IMMEDIATE = auto()
+    MENU = auto()
+    NAMING = auto()
+    OVERWORLD = auto()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -41,9 +53,11 @@ class _PendingOperation:
     operation_id: int
     button: Button | None
     button_mask: int
-    overworld_only: bool = False
+    input_domain: _ControlDomain | None = None
+    required_boundary: ControlBoundary | None = None
     observe_steps: bool = False
     accepted_frame: int | None = None
+    render_ready_frame: int | None = None
     step_observations: list[GameState] = field(default_factory=list)
 
 
@@ -64,10 +78,28 @@ _HOOKS = (
         signature=bytes.fromhex("f0 b3 cb 5f 28 06"),
     ),
     _Hook(
+        name=_HookName.MENU_INPUT_ACCEPTED,
+        bank=0x00,
+        address=0x3AFE,  # HandleMenuInput_.keyPressed
+        signature=bytes.fromhex("af ea 4b cc f0 b5"),
+    ),
+    _Hook(
         name=_HookName.MENU_READY,
         bank=0x00,
         address=0x3ACD,  # HandleMenuInput_.loop2, after PlaceMenuCursor and Delay3
         signature=bytes.fromhex("e5 fa 9a d0 a7 28"),
+    ),
+    _Hook(
+        name=_HookName.NAMING_INPUT_ACCEPTED,
+        bank=0x01,
+        address=0x647F,  # DisplayNamingScreen.checkForPressedButton
+        signature=bytes.fromhex("cb 27 38 06 23 23"),
+    ),
+    _Hook(
+        name=_HookName.NAMING_READY,
+        bank=0x01,
+        address=0x6466,  # DisplayNamingScreen.inputLoop
+        signature=bytes.fromhex("fa 26 cc f5 06 1c"),
     ),
     _Hook(
         name=_HookName.PLAYER_STEP_COMPLETED,
@@ -98,15 +130,17 @@ _CURRENT_OPPONENT_ADDRESS = 0xD059
 _PLAYER_MOVING_DIRECTION_ADDRESS = 0xD575
 _JOY_PRESSED_ADDRESS = 0xFFB3
 _JOY_HELD_ADDRESS = 0xFFB4
+_MENU_INPUT_ADDRESS = 0xFFB5
 _OVERWORLD_FLAGS_ADDRESS = 0xCD60
 
 _SUPPRESSED_OR_SIMULATED_INPUT = (1 << 0) | (1 << 5) | (1 << 7)
 _DOOR_LEDGE_OR_SPINNER_MOVEMENT = (1 << 1) | (1 << 6) | (1 << 7)
 _BOULDER_MOVING = 1 << 1
+_RENDER_FENCE_FRAMES = 3
 
 
 class RomControlRecorder:
-    """Correlate an injected overworld button with the ROM's next ready boundary."""
+    """Correlate injected buttons with the ROM's next rendered decision boundary."""
 
     def __init__(self, pyboy: PyBoy, results: ControlResultWaiter) -> None:
         """Keep the owner-thread emulator and asynchronous result handoff."""
@@ -115,6 +149,7 @@ class RomControlRecorder:
         self._next_operation_id = 1
         self._pending: _PendingOperation | None = None
         self._completed: _CompletedOperation | None = None
+        self._current_domain = _ControlDomain.IMMEDIATE
         self._step_completed_this_tick = False
 
     def install(self) -> None:
@@ -133,8 +168,26 @@ class RomControlRecorder:
                 None,
             )
 
-    def arm(self, button: Button, *, observe_steps: bool = False) -> int:
-        """Arm one operation before its button pulse is scheduled."""
+    def arm_button(self, button: Button) -> int:
+        """Arm input using the control domain most recently reached by the ROM."""
+        return self._arm(button=button, input_domain=self._current_domain)
+
+    def arm_overworld_button(self, button: Button, *, observe_steps: bool = False) -> int:
+        """Arm an explicitly overworld-scoped button operation."""
+        return self._arm(
+            button=button,
+            input_domain=_ControlDomain.OVERWORLD,
+            observe_steps=observe_steps,
+        )
+
+    def _arm(
+        self,
+        *,
+        button: Button,
+        input_domain: _ControlDomain,
+        observe_steps: bool = False,
+    ) -> int:
+        """Create one correlated input operation before scheduling its pulse."""
         if self._pending is not None:
             raise RuntimeError("A control operation is already pending.")
         operation_id = self._next_operation_id
@@ -143,12 +196,13 @@ class RomControlRecorder:
             operation_id=operation_id,
             button=button,
             button_mask=_BUTTON_MASKS[button],
+            input_domain=input_domain,
             observe_steps=observe_steps,
         )
         return operation_id
 
-    def arm_overworld_resume(self) -> int:
-        """Wait for overworld control after an already-active scripted interaction."""
+    def arm_boundary_wait(self, boundary: ControlBoundary) -> int:
+        """Wait for a requested ready boundary after already-active ROM work."""
         if self._pending is not None:
             raise RuntimeError("A control operation is already pending.")
         operation_id = self._next_operation_id
@@ -157,7 +211,7 @@ class RomControlRecorder:
             operation_id=operation_id,
             button=None,
             button_mask=0,
-            overworld_only=True,
+            required_boundary=boundary,
             accepted_frame=self._pyboy.frame_count,
         )
         return operation_id
@@ -175,10 +229,17 @@ class RomControlRecorder:
                 pending.step_observations.append(step_observation)
             self._step_completed_this_tick = False
 
+        self._observe_immediate_input()
+
         if self._completed is None:
             return
         if pending is None or pending.accepted_frame is None:
             raise RuntimeError("Completed control operation has no pending input.")
+        if (
+            pending.button is not None
+            and self._pyboy.memory[_JOY_HELD_ADDRESS] & pending.button_mask
+        ):
+            return
         self._results.publish(
             ControlResult(
                 operation_id=pending.operation_id,
@@ -193,11 +254,31 @@ class RomControlRecorder:
         self._pending = None
 
     def observe_text_event(self, kind: TextEventKind) -> None:
-        """Complete accepted overworld input when standard text awaits input."""
-        if kind == TextEventKind.INPUT_REQUIRED and not (
-            self._pending is not None and self._pending.overworld_only
-        ):
+        """Track text-driven control domains without consuming their event journal."""
+        if kind == TextEventKind.INPUT_REQUIRED:
+            self._current_domain = _ControlDomain.IMMEDIATE
             self._complete(ControlBoundary.TEXT_INPUT_READY)
+        elif kind == TextEventKind.SPECIAL_INTERFACE_OPENED:
+            self._current_domain = _ControlDomain.IMMEDIATE
+            self._complete(ControlBoundary.SPECIAL_INTERFACE_READY)
+        elif kind == TextEventKind.MENU_CLOSED:
+            pending = self._pending
+            if (
+                pending is not None
+                and pending.input_domain == _ControlDomain.MENU
+                and pending.accepted_frame is not None
+            ):
+                pending.input_domain = _ControlDomain.IMMEDIATE
+            self._current_domain = _ControlDomain.IMMEDIATE
+        elif kind in {
+            TextEventKind.INPUT_RESOLVED,
+            TextEventKind.MENU_OPENED,
+            TextEventKind.SPECIAL_INTERFACE_CLOSED,
+            TextEventKind.INTERACTION_CLOSED,
+            TextEventKind.OVERWORLD_ENTERED,
+            TextEventKind.BATTLE_ENDED,
+        }:
+            self._current_domain = _ControlDomain.IMMEDIATE
 
     def _signature_matches(self, hook: _Hook) -> bool:
         actual = bytes(
@@ -210,42 +291,98 @@ class RomControlRecorder:
 
     def _build_callback(self, name: _HookName) -> Callable[[None], None]:
         def callback(_context: None) -> None:
-            if name == _HookName.OVERWORLD_INPUT:
-                self._observe_overworld_input()
-            elif name == _HookName.MENU_READY:
-                self._observe_menu_ready()
-            else:
-                self._observe_player_step_completed()
+            match name:
+                case _HookName.OVERWORLD_INPUT:
+                    self._observe_overworld_input()
+                case _HookName.MENU_INPUT_ACCEPTED:
+                    self._observe_accepted_input(_ControlDomain.MENU, _MENU_INPUT_ADDRESS)
+                case _HookName.MENU_READY:
+                    self._observe_ready(_ControlDomain.MENU, ControlBoundary.MENU_READY)
+                case _HookName.NAMING_INPUT_ACCEPTED:
+                    self._observe_accepted_input(_ControlDomain.NAMING, _JOY_PRESSED_ADDRESS)
+                case _HookName.NAMING_READY:
+                    self._observe_ready(_ControlDomain.NAMING, ControlBoundary.NAMING_READY)
+                case _HookName.PLAYER_STEP_COMPLETED:
+                    self._observe_player_step_completed()
 
         return callback
 
     def _observe_overworld_input(self) -> None:
+        overworld_ready = self._is_overworld_ready()
+        if overworld_ready:
+            self._current_domain = _ControlDomain.OVERWORLD
+
         pending = self._pending
         if pending is None:
             return
 
-        if pending.overworld_only:
-            if self._is_overworld_ready():
+        if pending.required_boundary is not None:
+            if overworld_ready and self._pyboy.memory[_JOY_HELD_ADDRESS] == 0:
                 self._complete(ControlBoundary.OVERWORLD_READY)
             return
 
         held = self._pyboy.memory[_JOY_HELD_ADDRESS]
         pressed = self._pyboy.memory[_JOY_PRESSED_ADDRESS]
         if pending.accepted_frame is None:
-            if pressed & pending.button_mask:
+            if pending.input_domain == _ControlDomain.OVERWORLD and pressed & pending.button_mask:
                 pending.accepted_frame = self._pyboy.frame_count
             return
 
-        if self._is_overworld_ready() and not held & pending.button_mask:
+        if overworld_ready and not held & pending.button_mask:
             self._complete(ControlBoundary.OVERWORLD_READY)
 
-    def _observe_menu_ready(self) -> None:
+    def _observe_accepted_input(self, domain: _ControlDomain, input_address: int) -> None:
+        """Record that the active input engine processed the requested button."""
         pending = self._pending
-        if pending is None or pending.overworld_only or pending.accepted_frame is None:
+        if pending is None or pending.input_domain != domain or pending.accepted_frame is not None:
+            return
+        if self._pyboy.memory[input_address] & pending.button_mask:
+            pending.accepted_frame = self._pyboy.frame_count
+
+    def _observe_ready(self, domain: _ControlDomain, boundary: ControlBoundary) -> None:
+        """Track and, when applicable, complete a prepared input boundary."""
+        self._current_domain = domain
+        pending = self._pending
+        if pending is None:
+            return
+        if pending.required_boundary == boundary:
+            if self._pyboy.memory[_JOY_HELD_ADDRESS] == 0:
+                self._complete(boundary)
+            return
+        if pending.required_boundary is not None or pending.accepted_frame is None:
             return
         if self._pyboy.memory[_JOY_HELD_ADDRESS] & pending.button_mask:
             return
-        self._complete(ControlBoundary.MENU_READY)
+        self._complete(boundary)
+
+    def _observe_immediate_input(self) -> None:
+        """Fence bespoke screens after their next accepted and released input poll."""
+        pending = self._pending
+        if (
+            pending is None
+            or pending.required_boundary is not None
+            or pending.input_domain != _ControlDomain.IMMEDIATE
+            or self._completed is not None
+        ):
+            return
+
+        frame = self._pyboy.frame_count
+        if pending.accepted_frame is None:
+            input_state = (
+                self._pyboy.memory[_JOY_PRESSED_ADDRESS] | self._pyboy.memory[_MENU_INPUT_ADDRESS]
+            )
+            if input_state & pending.button_mask:
+                pending.accepted_frame = frame
+            return
+
+        input_released = not self._pyboy.memory[_JOY_HELD_ADDRESS] & pending.button_mask
+        input_poll_cleared = not self._pyboy.memory[_MENU_INPUT_ADDRESS] & pending.button_mask
+        if pending.render_ready_frame is None:
+            if input_released and input_poll_cleared:
+                pending.render_ready_frame = frame + _RENDER_FENCE_FRAMES
+            return
+        if frame >= pending.render_ready_frame:
+            self._complete(ControlBoundary.RENDER_READY)
 
     def _observe_player_step_completed(self) -> None:
         pending = self._pending
@@ -274,6 +411,8 @@ class RomControlRecorder:
     def _complete(self, boundary: ControlBoundary) -> None:
         pending = self._pending
         if pending is None or pending.accepted_frame is None or self._completed is not None:
+            return
+        if pending.required_boundary is not None and pending.required_boundary != boundary:
             return
         self._completed = _CompletedOperation(
             boundary=boundary,

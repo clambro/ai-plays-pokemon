@@ -1,7 +1,7 @@
 """Unit tests for core text-event logic."""
 
 import asyncio
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -74,6 +74,7 @@ def test_reduce_text_events_preserves_dialog_without_hook_duplicates() -> None:
 async def test_dialog_driver_stops_when_an_initial_menu_is_replaced() -> None:
     """Treat a menu opened after the initial menu closes as a new decision boundary."""
     emulator = MagicMock()
+    emulator.wait_for_menu_ready = AsyncMock()
     events = (
         _event(1, TextEventKind.MENU_OPENED),
         _event(2, TextEventKind.MENU_CLOSED),
@@ -89,6 +90,7 @@ async def test_dialog_driver_stops_when_an_initial_menu_is_replaced() -> None:
         == ""
     )
     emulator.wait_for_text_events.assert_not_called()
+    emulator.wait_for_menu_ready.assert_awaited_once_with()
 
 
 def _event(

@@ -16,6 +16,9 @@ class ControlBoundary(StrEnum):
 
     OVERWORLD_READY = auto()
     MENU_READY = auto()
+    NAMING_READY = auto()
+    RENDER_READY = auto()
+    SPECIAL_INTERFACE_READY = auto()
     TEXT_INPUT_READY = auto()
 
 

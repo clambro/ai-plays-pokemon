@@ -259,6 +259,8 @@ async def drive_standard_dialog(
         initial_batch = False
 
         if reached_boundary:
+            if control.menu_open and TextEventKind.MENU_OPENED in stop_on:
+                await emulator.wait_for_menu_ready()
             return reduce_text_events(events)
 
         if control.input_required and not control.input_sent:
