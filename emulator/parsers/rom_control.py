@@ -150,6 +150,7 @@ class RomControlRecorder:
         self._pending: _PendingOperation | None = None
         self._completed: _CompletedOperation | None = None
         self._current_domain = _ControlDomain.IMMEDIATE
+        self._current_boundary: ControlBoundary | None = None
         self._step_completed_this_tick = False
 
     def install(self) -> None:
@@ -180,6 +181,12 @@ class RomControlRecorder:
             observe_steps=observe_steps,
         )
 
+    def begin_raw_input(self) -> None:
+        """Invalidate readiness before a dialog driver schedules its own input."""
+        if self._pending is not None:
+            raise RuntimeError("A control operation is already pending.")
+        self._current_boundary = None
+
     def _arm(
         self,
         *,
@@ -199,10 +206,11 @@ class RomControlRecorder:
             input_domain=input_domain,
             observe_steps=observe_steps,
         )
+        self._current_boundary = None
         return operation_id
 
-    def arm_boundary_wait(self, boundary: ControlBoundary) -> int:
-        """Wait for a requested ready boundary after already-active ROM work."""
+    def arm_boundary_wait(self, boundary: ControlBoundary | None = None) -> int:
+        """Wait for a requested or arbitrary ready boundary after active ROM work."""
         if self._pending is not None:
             raise RuntimeError("A control operation is already pending.")
         operation_id = self._next_operation_id
@@ -214,6 +222,10 @@ class RomControlRecorder:
             required_boundary=boundary,
             accepted_frame=self._pyboy.frame_count,
         )
+        if self._current_boundary is not None and (
+            boundary is None or boundary == self._current_boundary
+        ):
+            self._complete(self._current_boundary)
         return operation_id
 
     @property
@@ -235,7 +247,7 @@ class RomControlRecorder:
             return
         if pending is None or pending.accepted_frame is None:
             raise RuntimeError("Completed control operation has no pending input.")
-        if (
+        if (pending.button is None and self._pyboy.memory[_JOY_HELD_ADDRESS] != 0) or (
             pending.button is not None
             and self._pyboy.memory[_JOY_HELD_ADDRESS] & pending.button_mask
         ):
@@ -257,10 +269,10 @@ class RomControlRecorder:
         """Track text-driven control domains without consuming their event journal."""
         if kind == TextEventKind.INPUT_REQUIRED:
             self._current_domain = _ControlDomain.IMMEDIATE
-            self._complete(ControlBoundary.TEXT_INPUT_READY)
+            self._observe_ready_boundary(ControlBoundary.TEXT_INPUT_READY)
         elif kind == TextEventKind.SPECIAL_INTERFACE_OPENED:
             self._current_domain = _ControlDomain.IMMEDIATE
-            self._complete(ControlBoundary.SPECIAL_INTERFACE_READY)
+            self._observe_ready_boundary(ControlBoundary.SPECIAL_INTERFACE_READY)
         elif kind == TextEventKind.MENU_CLOSED:
             pending = self._pending
             if (
@@ -270,6 +282,7 @@ class RomControlRecorder:
             ):
                 pending.input_domain = _ControlDomain.IMMEDIATE
             self._current_domain = _ControlDomain.IMMEDIATE
+            self._current_boundary = None
         elif kind in {
             TextEventKind.INPUT_RESOLVED,
             TextEventKind.MENU_OPENED,
@@ -279,6 +292,7 @@ class RomControlRecorder:
             TextEventKind.BATTLE_ENDED,
         }:
             self._current_domain = _ControlDomain.IMMEDIATE
+            self._current_boundary = None
 
     def _signature_matches(self, hook: _Hook) -> bool:
         actual = bytes(
@@ -313,45 +327,58 @@ class RomControlRecorder:
             self._current_domain = _ControlDomain.OVERWORLD
 
         pending = self._pending
-        if pending is None:
-            return
-
-        if pending.required_boundary is not None:
-            if overworld_ready and self._pyboy.memory[_JOY_HELD_ADDRESS] == 0:
-                self._complete(ControlBoundary.OVERWORLD_READY)
-            return
-
         held = self._pyboy.memory[_JOY_HELD_ADDRESS]
         pressed = self._pyboy.memory[_JOY_PRESSED_ADDRESS]
+        if pending is None:
+            if overworld_ready and held == 0:
+                self._current_boundary = ControlBoundary.OVERWORLD_READY
+            elif pressed or held:
+                self._current_boundary = None
+            return
+
+        if pending.button is None:
+            if overworld_ready and held == 0:
+                self._observe_ready_boundary(ControlBoundary.OVERWORLD_READY)
+            return
+
         if pending.accepted_frame is None:
             if pending.input_domain == _ControlDomain.OVERWORLD and pressed & pending.button_mask:
                 pending.accepted_frame = self._pyboy.frame_count
+                self._current_boundary = None
             return
 
         if overworld_ready and not held & pending.button_mask:
-            self._complete(ControlBoundary.OVERWORLD_READY)
+            self._observe_ready_boundary(ControlBoundary.OVERWORLD_READY)
 
     def _observe_accepted_input(self, domain: _ControlDomain, input_address: int) -> None:
         """Record that the active input engine processed the requested button."""
+        input_state = self._pyboy.memory[input_address]
+        if input_state:
+            self._current_boundary = None
         pending = self._pending
         if pending is None or pending.input_domain != domain or pending.accepted_frame is not None:
             return
-        if self._pyboy.memory[input_address] & pending.button_mask:
+        if input_state & pending.button_mask:
             pending.accepted_frame = self._pyboy.frame_count
 
     def _observe_ready(self, domain: _ControlDomain, boundary: ControlBoundary) -> None:
         """Track and, when applicable, complete a prepared input boundary."""
         self._current_domain = domain
+        held = self._pyboy.memory[_JOY_HELD_ADDRESS]
+        if held == 0:
+            self._current_boundary = boundary
+        else:
+            self._current_boundary = None
         pending = self._pending
         if pending is None:
             return
-        if pending.required_boundary == boundary:
-            if self._pyboy.memory[_JOY_HELD_ADDRESS] == 0:
+        if pending.button is None:
+            if held == 0:
                 self._complete(boundary)
             return
-        if pending.required_boundary is not None or pending.accepted_frame is None:
+        if pending.accepted_frame is None:
             return
-        if self._pyboy.memory[_JOY_HELD_ADDRESS] & pending.button_mask:
+        if held & pending.button_mask:
             return
         self._complete(boundary)
 
@@ -373,6 +400,7 @@ class RomControlRecorder:
             )
             if input_state & pending.button_mask:
                 pending.accepted_frame = frame
+                self._current_boundary = None
             return
 
         input_released = not self._pyboy.memory[_JOY_HELD_ADDRESS] & pending.button_mask
@@ -382,7 +410,7 @@ class RomControlRecorder:
                 pending.render_ready_frame = frame + _RENDER_FENCE_FRAMES
             return
         if frame >= pending.render_ready_frame:
-            self._complete(ControlBoundary.RENDER_READY)
+            self._observe_ready_boundary(ControlBoundary.RENDER_READY)
 
     def _observe_player_step_completed(self) -> None:
         pending = self._pending
@@ -418,3 +446,8 @@ class RomControlRecorder:
             boundary=boundary,
             frame=self._pyboy.frame_count,
         )
+
+    def _observe_ready_boundary(self, boundary: ControlBoundary) -> None:
+        """Retain the latest live boundary and complete a compatible pending wait."""
+        self._current_boundary = boundary
+        self._complete(boundary)

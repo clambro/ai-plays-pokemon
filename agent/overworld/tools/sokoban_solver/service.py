@@ -205,10 +205,7 @@ class SokobanSolverService:
             if not is_strength_active and next_pos in sokoban_map.boulders:
                 await self._face_next_pos(button, game_state)
                 # Hand dialog progression to the ROM-event driver immediately after activation.
-                await self.emulator.press_button(
-                    Button.A,
-                    wait_for_animation=False,
-                )
+                await self.emulator.pulse_button(Button.A)
                 strength_dialog = await self.emulator.advance_text_dialog_until_overworld_ready()
                 is_strength_active = True
             elif next_pos == game_state.pikachu.coords:

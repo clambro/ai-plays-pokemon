@@ -89,7 +89,7 @@ async def _select_move(
     elif slot_difference < 0:
         for _ in range(-slot_difference):
             await emulator.press_button(Button.DOWN)
-    await emulator.press_button(Button.A, wait_for_animation=False)
+    await emulator.pulse_button(Button.A)
 
 
 def _get_move_menu_cursor_index(game_state: GameState) -> int | None:

@@ -26,9 +26,7 @@ def select_agent_handler(game_state: GameState) -> AgentHandler:
 
 
 async def dispatch_agent(context: AgentContext) -> None:
-    """Settle the game and run the handler for its current gameplay domain."""
-    await context.emulator.wait_for_animation_to_finish()
-    await context.emulator.wait_for_animation_to_finish()
+    """Run the handler for the current decision-ready gameplay domain."""
     game_state = await context.emulator.get_game_state()
     handler = select_agent_handler(game_state)
     with bind_llm_usage_updater(context.add_llm_usage):

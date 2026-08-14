@@ -185,27 +185,24 @@ class Emulator(AbstractAsyncContextManager):
     async def press_button(
         self,
         button: Button,
-        *,
-        wait_for_animation: bool = True,
-    ) -> ControlResult | None:
+    ) -> ControlResult:
         """Send a button and wait for the active input domain's rendered boundary.
 
         Args:
             button: Game Boy button to press.
-            wait_for_animation: Whether this operation owns semantic completion. Disable this only
-                for a dialog driver that consumes the resulting ROM events itself.
 
         Returns:
-            The resulting control boundary, or ``None`` for an internal raw pulse.
+            The resulting control boundary.
 
         Raises:
             RuntimeError: The emulator has been stopped.
         """
-        if not wait_for_animation:
-            await self._worker.execute(lambda pyboy: pyboy.button(button, 2))
-            return None
         operation_id = await self._worker.start_control_button(button)
         return await self._worker.wait_for_control_result(operation_id)
+
+    async def pulse_button(self, button: Button) -> None:
+        """Send a short button pulse whose completion is owned by a dialog driver."""
+        await self._worker.pulse_button(button)
 
     async def press_overworld_button(
         self,
@@ -236,44 +233,10 @@ class Emulator(AbstractAsyncContextManager):
         operation_id = await self._worker.start_boundary_wait(ControlBoundary.MENU_READY)
         return await self._worker.wait_for_control_result(operation_id)
 
-    async def wait_for_animation_to_finish(
-        self,
-        on_game_state: Callable[[GameState], None] | None = None,
-    ) -> GameState:
-        """Wait until all ongoing animations have finished.
-
-        The various hyperparameters here are a bit wishy-washy. I determined emperically that they
-        work pretty well, but they're probably not optimal, especially since different scenarios
-        have different animation speeds.
-
-        Args:
-            on_game_state: Optional observer called for each state already read while waiting.
-
-        Returns:
-            The final observed game state.
-        """
-        successes = 0
-        required_successes = 5
-        game_state = await self.get_game_state()
-        if on_game_state:
-            on_game_state(game_state)
-        while successes < required_successes:
-            await asyncio.sleep(0.15)
-            new_game_state = await self.get_game_state()
-            if on_game_state:
-                on_game_state(new_game_state)
-            if (
-                # The blinking cursor should not block progress, so we ignore it.
-                game_state.screen.tiles_without_cursor == new_game_state.screen.tiles_without_cursor
-                and game_state.map.id == new_game_state.map.id
-                and game_state.player.coords == new_game_state.player.coords
-                and game_state.player.direction == new_game_state.player.direction
-            ):
-                successes += 1
-            else:
-                successes = 0
-            game_state = new_game_state
-        return game_state
+    async def wait_until_ready(self) -> ControlResult:
+        """Wait until the ROM reaches any rendered external decision boundary."""
+        operation_id = await self._worker.start_boundary_wait()
+        return await self._worker.wait_for_control_result(operation_id)
 
     async def get_emulator_save_state(self) -> str:
         """Get the current save state as a Base64 encoded string."""

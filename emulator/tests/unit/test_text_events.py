@@ -93,6 +93,23 @@ async def test_dialog_driver_stops_when_an_initial_menu_is_replaced() -> None:
     emulator.wait_for_menu_ready.assert_awaited_once_with()
 
 
+@pytest.mark.unit
+async def test_dialog_driver_waits_through_a_transition_marker() -> None:
+    """Do not expose a closed interaction before its next rendered decision."""
+    emulator = MagicMock()
+    emulator.wait_until_ready = AsyncMock()
+
+    assert (
+        await drive_standard_dialog(
+            emulator,
+            stop_on=frozenset({TextEventKind.INTERACTION_CLOSED}),
+            initial_events=(_event(1, TextEventKind.INTERACTION_CLOSED),),
+        )
+        == ""
+    )
+    emulator.wait_until_ready.assert_awaited_once_with()
+
+
 def _event(
     sequence: int,
     kind: TextEventKind,

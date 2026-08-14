@@ -167,8 +167,19 @@ class PyBoyWorker:
 
         return await self.execute(_start)
 
-    async def start_boundary_wait(self, boundary: ControlBoundary) -> int:
-        """Arm a wait for already-active ROM work to reach one ready boundary."""
+    async def pulse_button(self, button: Button) -> None:
+        """Schedule input whose subsequent completion is owned by a dialog driver."""
+
+        def _pulse(pyboy: PyBoy) -> None:
+            if self._control_recorder is None:
+                raise RuntimeError("ROM control recorder is not installed.")
+            self._control_recorder.begin_raw_input()
+            pyboy.button(button, 2)
+
+        await self.execute(_pulse)
+
+    async def start_boundary_wait(self, boundary: ControlBoundary | None = None) -> int:
+        """Arm a wait for a requested or arbitrary ready ROM boundary."""
 
         def _start(_pyboy: PyBoy) -> int:
             if self._control_recorder is None:

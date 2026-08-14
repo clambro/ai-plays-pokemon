@@ -306,13 +306,13 @@ class NavigationService:
         elif button == Button.RIGHT and facing != FacingDirection.RIGHT:
             await self.emulator.press_overworld_button(Button.RIGHT)
 
-        await self.emulator.press_button(Button.A, wait_for_animation=False)
+        await self.emulator.pulse_button(Button.A)
         dialogs = [await self.emulator.advance_text_dialog()]
 
         # A valid field move stops at a yes/no menu. A rejected Surf attempt closes the
         # interaction directly, so only confirm when the menu is still on screen.
         if (await self.emulator.get_game_state()).is_text_on_screen():
-            await self.emulator.press_button(Button.A, wait_for_animation=False)
+            await self.emulator.pulse_button(Button.A)
             dialogs.append(await self.emulator.advance_text_dialog_until_overworld_ready())
         else:
             await self.emulator.wait_for_overworld_ready()

@@ -28,10 +28,10 @@ async def press_buttons(
     pressed_buttons: list[str] = []
     for index, button in enumerate(buttons):
         is_final_action = index == len(buttons) - 1 and button in {Button.A, Button.B}
-        await context.emulator.press_button(
-            button,
-            wait_for_animation=not is_final_action,
-        )
+        if is_final_action:
+            await context.emulator.pulse_button(button)
+        else:
+            await context.emulator.press_button(button)
         pressed_buttons.append(button.value)
 
         if index < len(buttons) - 1:

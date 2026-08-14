@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, call
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -65,10 +65,9 @@ async def test_dispatch_agent_uses_the_shared_context(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Settle and observe once before invoking the selected handler."""
+    """Observe once before invoking the selected handler."""
     game_state = _game_state()
     emulator = MagicMock()
-    emulator.wait_for_animation_to_finish = AsyncMock()
     emulator.get_game_state = AsyncMock(return_value=game_state)
     context = AgentContext(
         state=AgentState(folder=tmp_path),
@@ -80,7 +79,6 @@ async def test_dispatch_agent_uses_the_shared_context(
 
     await app.dispatch_agent(context)
 
-    assert emulator.wait_for_animation_to_finish.await_args_list == [call(), call()]
     emulator.get_game_state.assert_awaited_once_with()
     select_handler.assert_called_once_with(game_state)
     handler.assert_awaited_once_with(context)
