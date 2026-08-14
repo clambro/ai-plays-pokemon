@@ -6,12 +6,12 @@ Note: Pretty much all the constants below are default values that can be edited 
 
 ## Top-Level Orchestration
 
-`main.py` creates one `AgentContext` containing the mutable `AgentState` and the running emulator. The same context instance survives every gameplay-domain transition. On each pass, the dispatcher waits for animations to settle, reads the current game state, and selects exactly one handler:
+`main.py` creates one `AgentContext` containing the mutable `AgentState` and the running emulator. The same context instance survives every gameplay-domain transition. Startup or restoration first waits until the game is ready for an external decision. Thereafter, tools and deterministic handlers return at that same boundary, so each dispatcher pass can read the current game state and select exactly one handler:
 
 ```mermaid
 flowchart TD
-    dispatch([Dispatch]) --> settle[Settle and observe game]
-    settle --> classify{Classify gameplay domain}
+    dispatch([Dispatch]) --> observe[Observe decision-ready game]
+    observe --> classify{Classify gameplay domain}
     classify -->|Overworld| overworld[Run overworld handler]
     classify -->|Battle| battle[Run battle handler]
     classify -->|Text or transition| text[Run text handler]

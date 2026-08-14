@@ -7,7 +7,6 @@ from threading import Lock
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from common.enums import Button
     from emulator.game_state import GameState
 
 
@@ -24,12 +23,8 @@ class ControlBoundary(StrEnum):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ControlResult:
-    """The accepted input and subsequent boundary for one button operation."""
+    """The rendered boundary reached by one control operation."""
 
-    operation_id: int
-    button: Button | None
-    accepted_frame: int
-    boundary_frame: int
     boundary: ControlBoundary
     step_observations: tuple[GameState, ...] = ()
 
@@ -53,12 +48,12 @@ class ControlResultWaiter:
             self._loop = loop
             self._notification = asyncio.Event()
 
-    def publish(self, result: ControlResult) -> None:
+    def publish(self, operation_id: int, result: ControlResult) -> None:
         """Publish a result after the tick containing its boundary has rendered."""
         with self._lock:
             if self._closed:
                 return
-            self._results[result.operation_id] = result
+            self._results[operation_id] = result
             loop = self._loop
             notification = self._notification
 
