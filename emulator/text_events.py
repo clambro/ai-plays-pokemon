@@ -7,6 +7,7 @@ from threading import Lock
 from typing import TYPE_CHECKING
 
 from common.enums import Button
+from emulator.control_events import ControlBoundary
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -273,6 +274,12 @@ async def drive_standard_dialog(
             else:
                 await emulator.wait_until_ready()
             return reducer.reduce(events)
+
+        if any(event.kind == TextEventKind.INPUT_RESOLVED for event in batch):
+            boundary = (await emulator.wait_until_ready()).boundary
+            if boundary != ControlBoundary.TEXT_INPUT_READY:
+                events.extend(emulator.drain_text_events())
+                return reducer.reduce(events)
 
         if control.input_required and not control.input_sent:
             if before_input is not None:

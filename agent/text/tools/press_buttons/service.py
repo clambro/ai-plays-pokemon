@@ -25,15 +25,18 @@ async def press_buttons(*, context: AgentContext, buttons: Sequence[Button]) -> 
     pressed_buttons: list[str] = []
     result = ""
     for button in buttons:
-        previous_state = await context.emulator.get_game_state()
-        if not is_text_handler_state(previous_state):
-            raise TextActionUnavailableError("The text interaction is no longer active.")
+        (
+            previous_state,
+            previous_boundary,
+        ) = await context.emulator.get_game_state_with_control_boundary()
+        if not is_text_handler_state(previous_state, previous_boundary):
+            raise TextActionUnavailableError("The interactive screen is no longer active.")
 
-        await context.emulator.press_button(button)
+        control_result = await context.emulator.press_button(button)
         pressed_buttons.append(button.value)
 
         game_state = await context.emulator.get_game_state()
-        if not is_text_handler_state(game_state):
+        if not is_text_handler_state(game_state, control_result.boundary):
             break
         if game_state.screen.tiles == previous_state.screen.tiles:
             result = f"The screen did not change after pressing {button.value}."

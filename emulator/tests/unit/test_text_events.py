@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from emulator.control_events import ControlBoundary, ControlResult
 from emulator.text_events import (
     DialogPage,
     TextEvent,
@@ -133,6 +134,31 @@ async def test_dialog_driver_waits_through_a_transition_marker() -> None:
         == ""
     )
     emulator.wait_until_ready.assert_awaited_once_with()
+
+
+@pytest.mark.unit
+async def test_dialog_driver_hands_off_when_input_opens_a_custom_interface() -> None:
+    """Stop waiting for text events once the ROM exposes another ready interface."""
+    emulator = MagicMock()
+    emulator.wait_until_ready = AsyncMock(
+        return_value=ControlResult(boundary=ControlBoundary.RENDER_READY)
+    )
+    emulator.drain_text_events.return_value = ()
+    page = DialogPage(top_line="Take your time.", bottom_line="")
+
+    transcript = await drive_standard_dialog(
+        emulator,
+        reducer=TextEventReducer(),
+        stop_on=frozenset({TextEventKind.INTERACTION_CLOSED}),
+        initial_events=(
+            _event(1, TextEventKind.PAGE_COMPLETED, page),
+            _event(2, TextEventKind.INPUT_RESOLVED),
+        ),
+    )
+
+    assert transcript == "Take your time."
+    emulator.wait_until_ready.assert_awaited_once_with()
+    emulator.wait_for_text_events.assert_not_called()
 
 
 def _event(

@@ -25,6 +25,7 @@ class _HookName(StrEnum):
 
     OVERWORLD_INPUT = auto()
     QUANTITY_READY = auto()
+    BESPOKE_INTERFACE_READY = auto()
     LOW_SENSITIVITY_INPUT_ACCEPTED = auto()
     MENU_INPUT_ACCEPTED = auto()
     MENU_READY = auto()
@@ -32,6 +33,7 @@ class _HookName(StrEnum):
     NAMING_READY = auto()
     POKEDEX_PAGE_READY = auto()
     POKEDEX_PAGE_INPUT_ACCEPTED = auto()
+    SURF_GAME_OVER_READY = auto()
     PLAYER_STEP_COMPLETED = auto()
 
 
@@ -74,6 +76,42 @@ _HOOKS = (
         signature=bytes.fromhex("cd 2b 38 f0 b3 cb"),
     ),
     RomHook(
+        name=_HookName.BESPOKE_INTERFACE_READY,
+        bank=0x01,
+        address=0x429C,  # DisplayTitleScreen.titleScreenLoop
+        signature=bytes.fromhex("cd f7 43 da 0f 43"),
+    ),
+    RomHook(
+        name=_HookName.BESPOKE_INTERFACE_READY,
+        bank=0x0D,
+        address=0x7B62,  # SlotMachine_HandleInputWhileWheelsSpin
+        signature=bytes.fromhex("cd 05 1e cd 2b 38"),
+    ),
+    RomHook(
+        name=_HookName.BESPOKE_INTERFACE_READY,
+        bank=0x10,
+        address=0x5BD4,  # DisplayOptionMenu_.optionMenuLoop
+        signature=bytes.fromhex("cd 2b 38 f0 b5 e6"),
+    ),
+    RomHook(
+        name=_HookName.BESPOKE_INTERFACE_READY,
+        bank=0x1C,
+        address=0x4FE0,  # DisplayTownMap.inputLoop
+        signature=bytes.fromhex("cd f1 57 cd 2b 38"),
+    ),
+    RomHook(
+        name=_HookName.BESPOKE_INTERFACE_READY,
+        bank=0x1C,
+        address=0x512D,  # LoadTownMap_Fly.inputLoop
+        signature=bytes.fromhex("e5 cd 05 1e cd 2b"),
+    ),
+    RomHook(
+        name=_HookName.BESPOKE_INTERFACE_READY,
+        bank=0x3A,
+        address=0x4EC2,  # Printer_CheckPressingB
+        signature=bytes.fromhex("f0 b4 e6 02 20 02"),
+    ),
+    RomHook(
         name=_HookName.LOW_SENSITIVITY_INPUT_ACCEPTED,
         bank=0x00,
         address=0x383E,  # JoypadLowSensitivity.newlyPressedButtons
@@ -114,6 +152,12 @@ _HOOKS = (
         bank=0x10,
         address=0x4658,  # NewPageButtonPressCheck accepted A or B
         signature=bytes.fromhex("c9 8b 84 95 84 8b"),
+    ),
+    RomHook(
+        name=_HookName.SURF_GAME_OVER_READY,
+        bank=0x3E,
+        address=0x4435,  # SurfingMinigame_GameOver.wait_press_a
+        signature=bytes.fromhex("f0 b3 e6 01 c8 21"),
     ),
     RomHook(
         name=_HookName.PLAYER_STEP_COMPLETED,
@@ -166,6 +210,10 @@ _ACCEPTED_INPUT_HOOKS = {
 }
 _READY_HOOKS = {
     _HookName.QUANTITY_READY: (_ControlDomain.IMMEDIATE, ControlBoundary.RENDER_READY),
+    _HookName.BESPOKE_INTERFACE_READY: (
+        _ControlDomain.IMMEDIATE,
+        ControlBoundary.RENDER_READY,
+    ),
     _HookName.MENU_READY: (_ControlDomain.MENU, ControlBoundary.MENU_READY),
     _HookName.NAMING_READY: (_ControlDomain.NAMING, ControlBoundary.NAMING_READY),
     _HookName.POKEDEX_PAGE_READY: (
@@ -192,6 +240,11 @@ class RomControlHooks:
     def install(self) -> None:
         """Validate the required ROM layout and register the control hooks."""
         install_hooks(self._pyboy, _HOOKS, self._handle_hook)
+
+    @property
+    def current_boundary(self) -> ControlBoundary | None:
+        """Return the latest rendered external decision boundary."""
+        return self._current_boundary
 
     def arm_button(self, button: Button) -> int:
         """Arm input using the control domain most recently reached by the ROM."""
@@ -327,6 +380,11 @@ class RomControlHooks:
             self._observe_accepted_input(*accepted_input)
         elif ready := _READY_HOOKS.get(name):
             self._observe_ready(*ready)
+        elif name == _HookName.SURF_GAME_OVER_READY:
+            self._observe_ready(
+                _ControlDomain.IMMEDIATE,
+                ControlBoundary.SPECIAL_INTERFACE_READY,
+            )
         elif name == _HookName.OVERWORLD_INPUT:
             self._observe_overworld_input()
         elif name == _HookName.PLAYER_STEP_COMPLETED:

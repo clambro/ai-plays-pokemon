@@ -92,6 +92,14 @@ class Emulator(AbstractAsyncContextManager):
         """Get the current game state."""
         return await self._worker.execute(lambda pyboy: GameState.from_memory(pyboy.memory))
 
+    async def get_game_state_with_control_boundary(
+        self,
+    ) -> tuple[GameState, ControlBoundary | None]:
+        """Capture parsed game state and its rendered ROM decision boundary."""
+        return await self._worker.execute_with_control_boundary(
+            lambda pyboy: GameState.from_memory(pyboy.memory)
+        )
+
     def drain_text_events(self) -> tuple[TextEvent, ...]:
         """Claim every currently recorded text event exactly once."""
         return self._worker.drain_text_events()
@@ -184,6 +192,23 @@ class Emulator(AbstractAsyncContextManager):
             return game_state, screenshot
 
         return await self._worker.execute(_capture_game_state_with_screenshot)
+
+    async def get_game_state_with_screenshot_and_control_boundary(
+        self,
+    ) -> tuple[GameState, Image.Image, ControlBoundary | None]:
+        """Capture game state, screenshot, and rendered ROM boundary together."""
+
+        def _capture(pyboy: PyBoy) -> tuple[GameState, Image.Image]:
+            game_state = GameState.from_memory(pyboy.memory)
+            screenshot = deepcopy(pyboy.screen.image)
+            if not isinstance(screenshot, Image.Image):
+                raise TypeError("No screenshot available")
+            return game_state, screenshot
+
+        (game_state, screenshot), boundary = await self._worker.execute_with_control_boundary(
+            _capture
+        )
+        return game_state, screenshot, boundary
 
     async def press_button(
         self,

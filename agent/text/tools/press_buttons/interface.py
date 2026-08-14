@@ -32,7 +32,7 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
     async def press_buttons(
         buttons: Annotated[list[TextButton], Field(min_length=1)],
     ) -> TextToolResult:
-        """Press buttons to respond to the current text screen.
+        """Press buttons to respond to the current interactive screen.
 
         The available buttons are:
 

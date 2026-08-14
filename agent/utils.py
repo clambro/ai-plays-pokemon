@@ -12,6 +12,7 @@ from pydantic_ai import (
 from pydantic_ai.capabilities.hooks import Hooks
 
 from agent.context import AgentContext
+from emulator.control_events import ControlBoundary
 from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
@@ -40,16 +41,27 @@ def is_battle_handler_state(game_state: GameState) -> bool:
     return game_state.battle.is_in_battle and not game_state.is_naming_screen()
 
 
-def is_text_handler_state(game_state: GameState) -> bool:
+def is_text_handler_state(
+    game_state: GameState,
+    control_boundary: ControlBoundary | None,
+) -> bool:
     """Determine whether the current state belongs to the text handler."""
-    return not is_battle_handler_state(game_state) and (
-        game_state.is_text_on_screen() or game_state.map.height == 0 or game_state.map.width == 0
-    )
+    if is_battle_handler_state(game_state):
+        return False
+    if control_boundary is not None:
+        return control_boundary != ControlBoundary.OVERWORLD_READY
+    return game_state.is_text_on_screen() or game_state.map.height == 0 or game_state.map.width == 0
 
 
-def is_overworld_handler_state(game_state: GameState) -> bool:
+def is_overworld_handler_state(
+    game_state: GameState,
+    control_boundary: ControlBoundary | None,
+) -> bool:
     """Determine whether the current state belongs to the overworld handler."""
-    return not is_battle_handler_state(game_state) and not is_text_handler_state(game_state)
+    return not is_battle_handler_state(game_state) and not is_text_handler_state(
+        game_state,
+        control_boundary,
+    )
 
 
 async def record_model_response(

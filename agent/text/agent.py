@@ -17,6 +17,7 @@ from agent.text.utils import (
 )
 from agent.utils import AGENT_HOOKS, build_screenshot_content, is_text_handler_state
 from common.prompts import SYSTEM_PROMPT
+from emulator.control_events import ControlBoundary
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 
 if TYPE_CHECKING:
@@ -57,8 +58,11 @@ async def run_text(context: AgentContext) -> None:
                     node = await agent_run.next(node)
                     if isinstance(current_node, CallToolsNode):
                         await context.complete_iteration()
-                        game_state = await context.emulator.get_game_state()
-                        if not is_text_handler_state(game_state):
+                        (
+                            game_state,
+                            control_boundary,
+                        ) = await context.emulator.get_game_state_with_control_boundary()
+                        if not is_text_handler_state(game_state, control_boundary):
                             break
         except AgentRunError as error:
             logger.opt(exception=error).warning(
@@ -71,15 +75,19 @@ async def _prepare_text_agent_input(
     context: AgentContext,
 ) -> list[str | BinaryContent] | None:
     """Drain ordinary dialog and prepare input if a decision remains."""
-    game_state = await context.emulator.get_game_state()
-    if is_plain_text_dialog(game_state):
+    game_state, control_boundary = await context.emulator.get_game_state_with_control_boundary()
+    if control_boundary == ControlBoundary.TEXT_INPUT_READY and is_plain_text_dialog(game_state):
         await handle_text_dialog(context)
     else:
         capture_pending_dialog(context, game_state)
     await context.complete_iteration()
 
-    initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
-    if not is_text_handler_state(initial_game_state):
+    (
+        initial_game_state,
+        initial_screenshot,
+        control_boundary,
+    ) = await context.emulator.get_game_state_with_screenshot_and_control_boundary()
+    if not is_text_handler_state(initial_game_state, control_boundary):
         return None
     return build_text_agent_input(
         context,
