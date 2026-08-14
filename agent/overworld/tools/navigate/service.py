@@ -294,17 +294,11 @@ class NavigationService:
             result = await self._press_navigation_step(button, game_state)
             return "", result.boundary
 
-        facing = game_state.player.direction
-
         # Rotate to face the target.
-        if button == Button.UP and facing != FacingDirection.UP:
-            await self.emulator.press_overworld_button(Button.UP)
-        elif button == Button.DOWN and facing != FacingDirection.DOWN:
-            await self.emulator.press_overworld_button(Button.DOWN)
-        elif button == Button.LEFT and facing != FacingDirection.LEFT:
-            await self.emulator.press_overworld_button(Button.LEFT)
-        elif button == Button.RIGHT and facing != FacingDirection.RIGHT:
-            await self.emulator.press_overworld_button(Button.RIGHT)
+        if game_state.player.direction != _BUTTON_DIRECTIONS[button]:
+            result = await self.emulator.press_overworld_button(button)
+            if result.boundary != ControlBoundary.OVERWORLD_READY:
+                return "", result.boundary
 
         await self.emulator.pulse_button(Button.A)
         dialogs = [await self.emulator.advance_text_dialog()]

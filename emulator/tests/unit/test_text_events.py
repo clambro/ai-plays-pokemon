@@ -141,7 +141,7 @@ async def test_dialog_driver_hands_off_when_input_opens_a_custom_interface() -> 
     """Stop waiting for text events once the ROM exposes another ready interface."""
     emulator = MagicMock()
     emulator.wait_until_ready = AsyncMock(
-        return_value=ControlResult(boundary=ControlBoundary.RENDER_READY)
+        return_value=ControlResult(boundary=ControlBoundary.INTERACTIVE_READY)
     )
     emulator.drain_text_events.return_value = ()
     page = DialogPage(top_line="Take your time.", bottom_line="")

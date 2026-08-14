@@ -48,7 +48,7 @@ def _game_state(
         ),
         pytest.param(
             _game_state(is_battle=True, is_naming=True, has_text=True),
-            ControlBoundary.NAMING_READY,
+            ControlBoundary.INTERACTIVE_READY,
             app.run_text,
             id="post-catch-naming",
         ),
@@ -60,7 +60,7 @@ def _game_state(
         ),
         pytest.param(
             _game_state(),
-            ControlBoundary.RENDER_READY,
+            ControlBoundary.INTERACTIVE_READY,
             app.run_text,
             id="custom-interface",
         ),

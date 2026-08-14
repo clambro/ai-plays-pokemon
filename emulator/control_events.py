@@ -13,11 +13,9 @@ if TYPE_CHECKING:
 class ControlBoundary(StrEnum):
     """Decision-ready ROM boundaries used to complete a button operation."""
 
+    INTERACTIVE_READY = auto()
     OVERWORLD_READY = auto()
     MENU_READY = auto()
-    NAMING_READY = auto()
-    RENDER_READY = auto()
-    SPECIAL_INTERFACE_READY = auto()
     TEXT_INPUT_READY = auto()
 
 

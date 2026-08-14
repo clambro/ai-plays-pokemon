@@ -209,16 +209,22 @@ _ACCEPTED_INPUT_HOOKS = {
     ),
 }
 _READY_HOOKS = {
-    _HookName.QUANTITY_READY: (_ControlDomain.IMMEDIATE, ControlBoundary.RENDER_READY),
+    _HookName.QUANTITY_READY: (
+        _ControlDomain.IMMEDIATE,
+        ControlBoundary.INTERACTIVE_READY,
+    ),
     _HookName.BESPOKE_INTERFACE_READY: (
         _ControlDomain.IMMEDIATE,
-        ControlBoundary.RENDER_READY,
+        ControlBoundary.INTERACTIVE_READY,
     ),
     _HookName.MENU_READY: (_ControlDomain.MENU, ControlBoundary.MENU_READY),
-    _HookName.NAMING_READY: (_ControlDomain.NAMING, ControlBoundary.NAMING_READY),
+    _HookName.NAMING_READY: (
+        _ControlDomain.NAMING,
+        ControlBoundary.INTERACTIVE_READY,
+    ),
     _HookName.POKEDEX_PAGE_READY: (
         _ControlDomain.IMMEDIATE,
-        ControlBoundary.SPECIAL_INTERFACE_READY,
+        ControlBoundary.INTERACTIVE_READY,
     ),
 }
 
@@ -247,7 +253,9 @@ class RomControlHooks:
         return self._current_boundary
 
     def arm_button(self, button: Button) -> int:
-        """Arm input using the control domain most recently reached by the ROM."""
+        """Arm input at the rendered boundary in the ROM's current control domain."""
+        if self._current_boundary is None:
+            raise ControlHandoff
         return self._arm(button=button, input_domain=self._current_domain)
 
     def arm_overworld_button(
@@ -353,7 +361,7 @@ class RomControlHooks:
             self._observe_ready_boundary(ControlBoundary.TEXT_INPUT_READY)
         elif kind == TextEventKind.SPECIAL_INTERFACE_OPENED:
             self._current_domain = _ControlDomain.IMMEDIATE
-            self._observe_ready_boundary(ControlBoundary.SPECIAL_INTERFACE_READY)
+            self._observe_ready_boundary(ControlBoundary.INTERACTIVE_READY)
         elif kind == TextEventKind.MENU_CLOSED:
             pending = self._pending
             if (
@@ -383,7 +391,7 @@ class RomControlHooks:
         elif name == _HookName.SURF_GAME_OVER_READY:
             self._observe_ready(
                 _ControlDomain.IMMEDIATE,
-                ControlBoundary.SPECIAL_INTERFACE_READY,
+                ControlBoundary.INTERACTIVE_READY,
             )
         elif name == _HookName.OVERWORLD_INPUT:
             self._observe_overworld_input()
@@ -479,7 +487,7 @@ class RomControlHooks:
                 pending.render_ready_frame = frame + _RENDER_FENCE_FRAMES
             return
         if frame >= pending.render_ready_frame:
-            self._observe_ready_boundary(ControlBoundary.RENDER_READY)
+            self._observe_ready_boundary(ControlBoundary.INTERACTIVE_READY)
 
     def _observe_player_step_completed(self) -> None:
         pending = self._pending

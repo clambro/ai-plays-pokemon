@@ -202,15 +202,22 @@ class SokobanSolverService:
             game_state = await self.emulator.get_game_state()
             next_pos = game_state.player.coords + _BUTTON_TO_DIRECTION_MAP[button]
 
-            if not is_strength_active and next_pos in sokoban_map.boulders:
-                await self._face_next_pos(button, game_state)
+            activating_strength = not is_strength_active and next_pos in sokoban_map.boulders
+            yielding_to_pikachu = next_pos == game_state.pikachu.coords
+            if (activating_strength or yielding_to_pikachu) and not await self._face_next_pos(
+                button,
+                game_state,
+            ):
+                return _include_dialog(
+                    "I stopped the Sokoban solver because control left the overworld.",
+                    strength_dialog,
+                )
+
+            if activating_strength:
                 # Hand dialog progression to the ROM-event driver immediately after activation.
                 await self.emulator.pulse_button(Button.A)
                 strength_dialog = await self.emulator.advance_text_dialog_until_overworld_ready()
                 is_strength_active = True
-            elif next_pos == game_state.pikachu.coords:
-                # We have to face Pikachu before we can walk through it.
-                await self._face_next_pos(button, game_state)
 
             pushing_boulder = next_pos in sokoban_map.boulders
             game_state = await self.emulator.get_game_state()
@@ -290,15 +297,12 @@ class SokobanSolverService:
         self,
         button: Button,
         game_state: GameState,
-    ) -> None:
-        """Face the next position."""
-        if (
-            (button == Button.RIGHT and game_state.player.direction != FacingDirection.RIGHT)
-            or (button == Button.LEFT and game_state.player.direction != FacingDirection.LEFT)
-            or (button == Button.DOWN and game_state.player.direction != FacingDirection.DOWN)
-            or (button == Button.UP and game_state.player.direction != FacingDirection.UP)
-        ):
-            await self.emulator.press_overworld_button(button)
+    ) -> bool:
+        """Face the next position and report whether control remains in the overworld."""
+        if game_state.player.direction == _BUTTON_TO_FACING_DIRECTION[button]:
+            return True
+        result = await self.emulator.press_overworld_button(button)
+        return result.boundary == ControlBoundary.OVERWORLD_READY
 
 
 def _include_dialog(result: str, dialog: str) -> str:
