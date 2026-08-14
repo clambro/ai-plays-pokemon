@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from pyboy import PyBoy
 
     from common.enums import Button
+    from emulator.control_events import ControlResult
     from emulator.text_events import TextEvent
 
 
@@ -202,6 +203,11 @@ class Emulator(AbstractAsyncContextManager):
         await self._worker.execute(lambda pyboy: pyboy.button(button, hold_frames))
         if wait_for_animation:
             await self.wait_for_animation_to_finish()
+
+    async def press_overworld_button(self, button: Button) -> ControlResult:
+        """Prototype a correlated press that ends at rendered overworld or menu readiness."""
+        operation_id = await self._worker.start_overworld_button(button)
+        return await self._worker.wait_for_control_result(operation_id)
 
     async def wait_for_animation_to_finish(
         self,

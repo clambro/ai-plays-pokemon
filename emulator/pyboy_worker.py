@@ -12,11 +12,16 @@ from typing import TYPE_CHECKING
 
 from pyboy import PyBoy
 
+from emulator.control_events import ControlResultWaiter
+from emulator.parsers.rom_control import RomControlRecorder
 from emulator.parsers.rom_text import RomTextRecorder
 from emulator.text_events import TextEvent, TextEventJournal, TextEventKind
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from common.enums import Button
+    from emulator.control_events import ControlResult
 
 
 type _QueuedCommand = tuple[Callable[[PyBoy], None], Callable[[Exception], None]]
@@ -49,6 +54,8 @@ class PyBoyWorker:
         self._startup: Future[None] = Future()
         self._termination: Future[None] = Future()
         self._thread = Thread(target=self._run, name="pyboy-owner")
+        self._control_results = ControlResultWaiter()
+        self._control_recorder: RomControlRecorder | None = None
         self._text_events = TextEventJournal()
         self._text_recorder: RomTextRecorder | None = None
 
@@ -57,6 +64,7 @@ class PyBoyWorker:
         with self._state_lock:
             if self._started:
                 raise RuntimeError("Emulator has already been started.")
+            self._control_results.bind(asyncio.get_running_loop())
             self._text_events.bind(asyncio.get_running_loop())
             self._started = True
             self._accepting_commands = True
@@ -124,6 +132,24 @@ class PyBoyWorker:
         if self._failure is not None:
             raise self._failure
 
+    async def start_overworld_button(self, button: Button) -> int:
+        """Arm the control prototype and schedule its short button pulse atomically."""
+
+        def _start(pyboy: PyBoy) -> int:
+            if self._control_recorder is None:
+                raise RuntimeError("ROM control recorder is not installed.")
+            operation_id = self._control_recorder.arm(button)
+            # The overworld loop spans two rendered frames, so a three-frame pulse guarantees one
+            # poll while remaining short enough not to carry into the following interface.
+            pyboy.button(button, 3)
+            return operation_id
+
+        return await self.execute(_start)
+
+    async def wait_for_control_result(self, operation_id: int) -> ControlResult:
+        """Wait for the rendered decision boundary following an accepted input."""
+        return await self._control_results.wait(operation_id)
+
     def drain_text_events(self) -> tuple[TextEvent, ...]:
         """Claim every currently recorded text event exactly once."""
         return self._text_events.drain()
@@ -166,6 +192,8 @@ class PyBoyWorker:
                 if not pyboy.tick(1, render=True, sound=True):
                     failure = RuntimeError("Emulator stopped unexpectedly.")
                     break
+                if self._control_recorder is not None:
+                    self._control_recorder.publish_tick()
                 # PyBoy's SDL limiter skips its own sleep while refilling a low audio buffer.
                 # Without this minimum delay, the tight worker loop runs catch-up frames
                 # back-to-back, causing brief audio and visual speed-ups after scheduling jitter.
@@ -196,6 +224,8 @@ class PyBoyWorker:
         elif self._save_state_path:
             with self._save_state_path.open("rb") as file:
                 pyboy.load_state(file)
+        self._control_recorder = RomControlRecorder(pyboy, self._control_results)
+        self._control_recorder.install()
         self._text_recorder = RomTextRecorder(pyboy, self._text_events)
         self._text_recorder.install()
         return pyboy
@@ -215,6 +245,7 @@ class PyBoyWorker:
             execute(pyboy)
 
     def _finish(self, failure: Exception | None) -> None:
+        self._control_results.close()
         self._text_events.close()
         pending_failures: list[Callable[[Exception], None]] = []
         terminal_error = failure or RuntimeError("Emulator is stopped.")

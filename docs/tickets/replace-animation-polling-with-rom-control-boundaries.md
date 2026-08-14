@@ -5,9 +5,14 @@
 The existing ROM text-event system has established PyBoy execution hooks,
 instruction-signature validation, owner-thread callbacks, and asynchronous event
 delivery as coordination primitives for battle, overworld dialog, and transient
-item text. This ticket extends that approach to non-text control boundaries. If
-those primitives prove unreliable in further gameplay, reassess this ticket
-rather than expanding the hook system.
+item text. This ticket extends that approach to non-text control boundaries.
+
+The intended end state has no animation checker. Before migrating callers,
+however, a small prototype must prove that shared ROM boundaries cover the
+application's actual overworld, menu, naming, and bespoke-screen workflows. If
+that requires per-screen hooks or cannot distinguish requested input from idle
+polling, stop and reassess the design rather than expanding it into a model of
+the entire ROM.
 
 ## Outcome
 
@@ -48,8 +53,9 @@ continue after the ROM is ready for input.
 The ROM converges on a small number of engine-level boundaries used by the
 application's supported workflows:
 
-- the existing text-event driver reports standard
-  dialog input and completion boundaries;
+- the existing text-event system reports standard dialog input and lifecycle
+  transitions, although closure and battle-exit events are not necessarily
+  settled completion boundaries;
 - `HandleMenuInput` covers the standard start, bag, party, battle, list, and
   choice menus;
 - the overworld loop exposes when external control has returned after movement,
@@ -59,7 +65,8 @@ application's supported workflows:
 
 Naming is the only bespoke interface currently automated directly enough to
 justify a dedicated readiness boundary if the standard boundaries do not cover
-its completion.
+it. Other immediate bespoke interfaces may use a short, deterministic render
+fence only after the prototype proves that their operation is bounded.
 
 Do not hook move animations, field-move effects, battle transitions, or other
 individual visual routines. A battle action may execute several animations with
@@ -80,6 +87,12 @@ Several useful ROM events occur before the application may safely continue:
 
 These events may be retained as progress or domain-transition markers, but a
 button operation must continue until a real input or decision boundary follows.
+
+The current dialog drivers do not yet enforce that rule. Battle dialog stops on
+`BATTLE_ENDED`, and ordinary dialog stops on `INTERACTION_CLOSED`. The duplicate
+dispatcher waits currently mask those early returns. Both drivers must converge
+on the subsequent decision-ready boundary before the dispatcher waits can be
+removed.
 
 ### A universal joypad hook is the wrong abstraction
 
@@ -164,9 +177,10 @@ Animation settling is still used by:
 - text-menu button input and automated naming.
 
 Post-confirmation battle and standard-dialog resolution already use the ROM text
-driver. The remaining migration is therefore principally an emulator coordination
-change plus an audit of deterministic input callers. It is not a rewrite of
-battle, navigation, or the ROM text driver.
+driver. Their transcript behavior should remain intact, but their terminal
+policy must be tightened so transition markers do not expose an unfinished
+screen. The remaining work is principally emulator coordination plus an audit of
+deterministic input callers, not a rewrite of battle or navigation.
 
 ## Scope Constraint
 
@@ -185,8 +199,10 @@ accepted-input and ready locations. The expected total is approximately four to
 six new executable hooks, with six as the investigation's upper bound.
 
 Immediate bespoke interfaces that only need their completed WRAM-to-VRAM update
-use a short deterministic frame fence derived from the ROM's rendering cycle.
-They do not receive one hook per screen.
+may use a short deterministic frame fence derived from the ROM's rendering
+cycle. This policy must be selected from the current control domain rather than
+used as a timeout when no recognized event arrives. Bespoke screens do not
+receive one hook each.
 
 If implementation requires more than roughly six new hook addresses, begins
 naming individual animations or maps, or requires tool-specific knowledge in the
@@ -218,6 +234,12 @@ claims it.
 Add a separate transient control-boundary waiter, or an event hub with independent
 sequence cursors. Control events are coordination state only. Do not persist or
 log them.
+
+The high-level button operation owns semantic completion. The worker still needs
+a narrow raw button-pulse primitive for drivers such as standard-dialog
+advancement, where the driver itself consumes the resulting sequence of events.
+Removing the public `wait_for_animation` switch must not force those internal
+pulses through a second competing waiter.
 
 ### Correlate each input with its result
 
@@ -268,17 +290,34 @@ The intended terminal policy is:
 
 | Input context | Completion condition |
 | --- | --- |
-| Standard dialog | Existing text input, menu, closure, battle, or special-interface boundary |
+| Standard dialog | Next text-input decision, prepared menu, prepared special interface, battle decision, or restored overworld control; closure alone is only progress |
 | Ordinary movement or collision | Next external decision boundary after accepted input, normally overworld ready |
 | Warp, ledge, spinner, or scripted movement | Next external decision boundary after all forced input ends |
-| Standard menu | Prepared menu input, resulting text or special interface, battle transition, or overworld return |
-| Confirmed battle action | Existing battle/text driver reaches the next battle decision or completed post-battle boundary |
-| Immediate bespoke interface | Its completed operation plus the bounded render-frame fence |
+| Standard menu | Prepared menu input, resulting text decision, prepared special interface, battle decision, or restored overworld control |
+| Confirmed battle action | Next battle decision, post-catch naming decision, or restored overworld control; `BATTLE_ENDED` alone is only progress |
+| Immediate bespoke interface | Accepted input plus its proven bounded render-frame fence, or the next shared decision boundary |
 
 Do not expose this table as lists of hook names that every tool must understand.
 Ordinary callers should retain a simple button API whose emulator-level driver
 selects the policy from the current control domain. Spinner traversal is the one
 known caller that needs an explicit intermediate-observation option.
+
+### Establish the initial boundary once
+
+Correlation applies to a button operation because the waiter can be armed before
+the input is sent. The application's first dispatch has no preceding requested
+input: a fresh run follows the manual startup interval, while a restored backup
+may have been captured during error handling rather than at a clean boundary.
+
+Perform one explicit bootstrap wait after startup or state restoration that
+accepts the next recognized ready boundary without requiring input correlation.
+After that, every migrated handler and tool must return at a decision-ready
+boundary, so ordinary dispatcher iterations can classify the current state
+without waiting again.
+
+The bootstrap must use the same shared boundaries as normal coordination. It is
+not a one-off stability check, elapsed delay, or permission to add title-screen
+and transition-specific hooks.
 
 ### Preserve spinner observations
 
@@ -317,36 +356,75 @@ the prototype and integration scenarios below.
 
 ## Implementation Sequence
 
-Before Stage 1, implement a narrow disposable-or-retained prototype proving all
-of the following on the required ROM: a requested button is observed as
-accepted, an ordinary move reaches overworld readiness, a standard menu reaches
-its prepared input boundary, and the resulting screenshot is current. If this
-requires per-screen hooks or cannot avoid ambiguous idle events, stop the ticket
-before migrating callers.
+Each stage is one self-contained commit reviewed before proceeding. At the end
+of a stage, every migrated caller must use the complete new behavior for its
+domain; callers assigned to later stages remain entirely on the existing path.
 
 ### Stage 1: Replace overworld movement polling
 
-Add correlated control waiting with the overworld-ready and player-step events.
-Migrate navigation, ordinary overworld button input, ledges, HM use, scripted
-movement, and spinner observation. Preserve existing text capture and map-update
-behavior. Callers outside this stage continue using the existing behavior.
+First prove the core mechanism on the required ROM before changing callers:
+
+- arm a pending operation before injecting a short button pulse;
+- observe that the ROM accepted the requested button rather than an unrelated
+  idle-loop event;
+- reach genuine overworld readiness after a move or collision;
+- reach prepared standard-menu input after opening the start menu; and
+- capture a screenshot only after the containing rendered tick is complete.
+
+If the prototype succeeds, retain the minimal control coordinator, the validated
+overworld/player-step hooks, and the prepared-menu boundary needed when an
+overworld action opens the start menu. Overworld readiness must exclude walking,
+simulated input, ignored input, NPC movement, door movement, and other
+ROM-controlled player movement. Correlated input within an already-open menu
+remains Stage 2 work.
+
+Migrate ordinary navigation, overworld button input, rotation and collision,
+ledges, HM-related movement, Pikachu-facing adjustments, Sokoban movement, and
+spinner traversal. Spinner traversal receives ordered end-of-tick step
+observations while waiting for final overworld readiness. Preserve existing text
+capture and map-update behavior. Menu, naming, battle-menu, and generic text
+callers continue using the unchanged animation-settling path in this commit.
 
 ### Stage 2: Replace standard menu input polling
 
-Make standard-menu readiness safe for immediate subsequent input and migrate the
-battle, inventory, party, naming, and text-screen menu workflows. Use the bounded
-render fence for immediate bespoke interfaces rather than adding screen-specific
-hooks.
+Add correlated accepted-input and prepared-input behavior for
+`HandleMenuInput`. Prepared menu readiness must occur after cursor placement and
+`Delay3`, so a caller may immediately inspect the menu or send the next button.
+Keep the existing early `MENU_OPENED` event for text lifecycle detection, but do
+not use it as rendered menu readiness.
+
+Add naming readiness only if the prototype demonstrates that the standard
+boundaries cannot cover automated naming. Establish an explicit coordinator
+policy for immediate bespoke interfaces and verify the bounded render fence on
+the actual naming, town-map/status, and Pokédex-style screens used by the
+application. If one of those screens performs unbounded work without reaching a
+shared boundary, stop rather than silently treating the frame fence as a timeout.
+
+Migrate deterministic start-menu, bag, party, item-use, party-swapping, battle
+menu, naming, and generic text-screen button workflows. Make dialog handoff wait
+for prepared menu readiness rather than the earlier menu-entry hook. Keep raw
+button pulses internal to the dialog/control drivers; migrated callers use the
+semantic button operation.
 
 ### Stage 3: Remove the stability heuristic
 
-Replace the dispatcher's duplicate settling waits with the established gameplay
-boundary invariant. Remove `wait_for_animation_to_finish`, the
-`wait_for_animation` button argument, and all remaining callers.
+Finish the boundary invariant before deleting the old checker:
 
-Each stage is a self-contained commit. At the end of every stage, each caller
-must use either the complete new behavior for its domain or the unchanged prior
-behavior; do not leave a workflow split across both coordination systems.
+- make ordinary dialog continue beyond `INTERACTION_CLOSED` until the next real
+  decision-ready domain;
+- make battle completion continue beyond `BATTLE_ENDED` through palette, map,
+  and post-battle restoration to either naming, another decision, or overworld
+  readiness;
+- add the one-time startup/restoration bootstrap boundary wait;
+- audit every production button and dispatcher caller for a defined completion
+  policy; and
+- verify that post-boundary `GameState` and screenshots describe the same
+  rendered interface.
+
+Then remove both dispatcher settling calls,
+`wait_for_animation_to_finish`, the `wait_for_animation` argument, its polling
+constants, and any screen-comparison property made dead by the deletion. No
+production path may retain screen stability as a fallback.
 
 ## Out of Scope
 
@@ -359,9 +437,11 @@ behavior; do not leave a workflow split across both coordination systems.
 
 ## Validation
 
-Use focused unit coverage for the event-correlation state machine and bounded
-integration scenarios for the actual ROM boundaries. Automated tests must not
-read files under `resources/`.
+Use focused unit coverage for the substantive event-correlation rules and reuse
+or narrowly extend the repository's existing bounded integration scenarios for
+actual ROM behavior. Do not create a separate test that simply mirrors every
+hook or line in the policy table. Automated tests must not read files under
+`resources/`.
 
 Verify at least:
 
@@ -372,6 +452,8 @@ Verify at least:
 - a long spinner retains intermediate map observations and stops only when
   simulated movement releases control;
 - battle completion does not expose the whiteout or partially restored overworld;
+- initial dispatch after startup or state restoration waits for one real control
+  boundary without using screen stability;
 - ambient cursor, sprite, or tile animation cannot prevent progress;
 - text generated by an emulator action remains available to the text-event
   consumer exactly once; and
@@ -383,12 +465,16 @@ Verify at least:
 - [ ] `wait_for_animation_to_finish` and its polling constants are removed.
 - [ ] Dispatcher selection occurs at a semantic gameplay boundary without two
       arbitrary settling waits.
+- [ ] Startup and restored states establish that boundary once before the first
+      dispatch.
 - [ ] Button operations cannot complete on an unrelated idle-loop event or bleed
       a held input into the next interface.
 - [ ] Standard menus and ordinary movement complete materially faster than the
       former 750 ms minimum wait.
 - [ ] Long battle, warp, field-move, and scripted sequences do not return at an
       intermediate animation or transition marker.
+- [ ] `INTERACTION_CLOSED` and `BATTLE_ENDED` remain progress markers rather than
+      permission to capture an unfinished observation.
 - [ ] Spinner traversal preserves its intermediate observations and map updates.
 - [ ] Control waiting cannot consume or duplicate text events.
 - [ ] Hook addresses and memory interpretation remain confined to parsers and are
