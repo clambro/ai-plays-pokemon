@@ -14,8 +14,8 @@ from pyboy import PyBoy
 
 from emulator.control_events import ControlBoundary, ControlResultWaiter
 from emulator.game_state import GameState
-from emulator.parsers.rom_control import RomControlRecorder
-from emulator.parsers.rom_text import RomTextRecorder
+from emulator.rom_hooks.control import RomControlHooks
+from emulator.rom_hooks.text import RomTextHooks
 from emulator.text_events import TextEvent, TextEventJournal, TextEventKind
 
 if TYPE_CHECKING:
@@ -56,9 +56,9 @@ class PyBoyWorker:
         self._termination: Future[None] = Future()
         self._thread = Thread(target=self._run, name="pyboy-owner")
         self._control_results = ControlResultWaiter()
-        self._control_recorder: RomControlRecorder | None = None
+        self._control_hooks: RomControlHooks | None = None
         self._text_events = TextEventJournal()
-        self._text_recorder: RomTextRecorder | None = None
+        self._text_hooks: RomTextHooks | None = None
 
     async def start(self) -> None:
         """Start the owner thread and wait for PyBoy initialization."""
@@ -142,9 +142,9 @@ class PyBoyWorker:
         """Arm overworld coordination and schedule its short button pulse atomically."""
 
         def _start(pyboy: PyBoy) -> int:
-            if self._control_recorder is None:
-                raise RuntimeError("ROM control recorder is not installed.")
-            operation_id = self._control_recorder.arm_overworld_button(
+            if self._control_hooks is None:
+                raise RuntimeError("ROM control hooks are not installed.")
+            operation_id = self._control_hooks.arm_overworld_button(
                 button,
                 observe_steps=observe_steps,
             )
@@ -159,9 +159,9 @@ class PyBoyWorker:
         """Arm coordination in the active input domain and schedule a short pulse."""
 
         def _start(pyboy: PyBoy) -> int:
-            if self._control_recorder is None:
-                raise RuntimeError("ROM control recorder is not installed.")
-            operation_id = self._control_recorder.arm_button(button)
+            if self._control_hooks is None:
+                raise RuntimeError("ROM control hooks are not installed.")
+            operation_id = self._control_hooks.arm_button(button)
             pyboy.button(button, 3)
             return operation_id
 
@@ -171,9 +171,9 @@ class PyBoyWorker:
         """Schedule input whose subsequent completion is owned by a dialog driver."""
 
         def _pulse(pyboy: PyBoy) -> None:
-            if self._control_recorder is None:
-                raise RuntimeError("ROM control recorder is not installed.")
-            self._control_recorder.begin_raw_input()
+            if self._control_hooks is None:
+                raise RuntimeError("ROM control hooks are not installed.")
+            self._control_hooks.begin_raw_input()
             pyboy.button(button, 2)
 
         await self.execute(_pulse)
@@ -182,9 +182,9 @@ class PyBoyWorker:
         """Arm a wait for a requested or arbitrary ready ROM boundary."""
 
         def _start(_pyboy: PyBoy) -> int:
-            if self._control_recorder is None:
-                raise RuntimeError("ROM control recorder is not installed.")
-            return self._control_recorder.arm_boundary_wait(boundary)
+            if self._control_hooks is None:
+                raise RuntimeError("ROM control hooks are not installed.")
+            return self._control_hooks.arm_boundary_wait(boundary)
 
         return await self.execute(_start)
 
@@ -234,13 +234,13 @@ class PyBoyWorker:
                 if not pyboy.tick(1, render=True, sound=True):
                     failure = RuntimeError("Emulator stopped unexpectedly.")
                     break
-                if self._control_recorder is not None:
+                if self._control_hooks is not None:
                     step_observation = (
                         GameState.from_memory(pyboy.memory)
-                        if self._control_recorder.needs_step_observation
+                        if self._control_hooks.needs_step_observation
                         else None
                     )
-                    self._control_recorder.publish_tick(step_observation)
+                    self._control_hooks.publish_tick(step_observation)
                 # PyBoy's SDL limiter skips its own sleep while refilling a low audio buffer.
                 # Without this minimum delay, the tight worker loop runs catch-up frames
                 # back-to-back, causing brief audio and visual speed-ups after scheduling jitter.
@@ -271,14 +271,14 @@ class PyBoyWorker:
         elif self._save_state_path:
             with self._save_state_path.open("rb") as file:
                 pyboy.load_state(file)
-        self._control_recorder = RomControlRecorder(pyboy, self._control_results)
-        self._control_recorder.install()
-        self._text_recorder = RomTextRecorder(
+        self._control_hooks = RomControlHooks(pyboy, self._control_results)
+        self._control_hooks.install()
+        self._text_hooks = RomTextHooks(
             pyboy,
             self._text_events,
-            on_event=self._control_recorder.observe_text_event,
+            on_event=self._control_hooks.observe_text_event,
         )
-        self._text_recorder.install()
+        self._text_hooks.install()
         return pyboy
 
     def _process_commands(self, pyboy: PyBoy) -> bool:

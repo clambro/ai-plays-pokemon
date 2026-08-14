@@ -6,11 +6,10 @@ from typing import TYPE_CHECKING
 
 from common.enums import Button
 from emulator.control_events import ControlBoundary, ControlResult, ControlResultWaiter
+from emulator.rom_hooks.core import RomHook, install_hooks
 from emulator.text_events import TextEventKind
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from pyboy import PyBoy
 
     from emulator.game_state import GameState
@@ -36,16 +35,6 @@ class _ControlDomain(StrEnum):
     OVERWORLD = auto()
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
-class _Hook:
-    """One executable address and its required instruction signature."""
-
-    name: _HookName
-    bank: int
-    address: int
-    signature: bytes
-
-
 @dataclass(slots=True, kw_only=True)
 class _PendingOperation:
     """One control operation waiting for a rendered decision boundary."""
@@ -63,37 +52,37 @@ class _PendingOperation:
 
 # Addresses and signatures from the required Yellow Legacy ROM build.
 _HOOKS = (
-    _Hook(
+    RomHook(
         name=_HookName.OVERWORLD_INPUT,
         bank=0x00,
         address=0x0286,  # OverworldLoopLessDelay.notSimulating
         signature=bytes.fromhex("f0 b3 cb 5f 28 06"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.MENU_INPUT_ACCEPTED,
         bank=0x00,
         address=0x3AFE,  # HandleMenuInput_.keyPressed
         signature=bytes.fromhex("af ea 4b cc f0 b5"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.MENU_READY,
         bank=0x00,
         address=0x3ACD,  # HandleMenuInput_.loop2, after PlaceMenuCursor and Delay3
         signature=bytes.fromhex("e5 fa 9a d0 a7 28"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.NAMING_INPUT_ACCEPTED,
         bank=0x01,
         address=0x647F,  # DisplayNamingScreen.checkForPressedButton
         signature=bytes.fromhex("cb 27 38 06 23 23"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.NAMING_READY,
         bank=0x01,
         address=0x6466,  # DisplayNamingScreen.inputLoop
         signature=bytes.fromhex("fa 26 cc f5 06 1c"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.PLAYER_STEP_COMPLETED,
         bank=0x3C,
         address=0x412D,  # _AdvancePlayerSprite.afterUpdateMapCoords
@@ -131,8 +120,8 @@ _BOULDER_MOVING = 1 << 1
 _RENDER_FENCE_FRAMES = 3
 
 
-class RomControlRecorder:
-    """Correlate injected buttons with the ROM's next rendered decision boundary."""
+class RomControlHooks:
+    """Correlate injected buttons with hooked ROM decision boundaries."""
 
     def __init__(self, pyboy: PyBoy, results: ControlResultWaiter) -> None:
         """Keep the owner-thread emulator and asynchronous result handoff."""
@@ -147,19 +136,7 @@ class RomControlRecorder:
 
     def install(self) -> None:
         """Validate the required ROM layout and register the control hooks."""
-        mismatch = next((hook for hook in _HOOKS if not self._signature_matches(hook)), None)
-        if mismatch is not None:
-            raise RuntimeError(
-                f"Required ROM instruction signature does not match at {mismatch.name}."
-            )
-
-        for hook in _HOOKS:
-            self._pyboy.hook_register(
-                hook.bank,
-                hook.address,
-                self._build_callback(hook.name),
-                None,
-            )
+        install_hooks(self._pyboy, _HOOKS, self._handle_hook)
 
     def arm_button(self, button: Button) -> int:
         """Arm input using the control domain most recently reached by the ROM."""
@@ -283,32 +260,20 @@ class RomControlRecorder:
             self._current_domain = _ControlDomain.IMMEDIATE
             self._current_boundary = None
 
-    def _signature_matches(self, hook: _Hook) -> bool:
-        actual = bytes(
-            self._pyboy.memory[
-                hook.bank,
-                hook.address : hook.address + len(hook.signature),
-            ]
-        )
-        return actual == hook.signature
-
-    def _build_callback(self, name: _HookName) -> Callable[[None], None]:
-        def callback(_context: None) -> None:
-            match name:
-                case _HookName.OVERWORLD_INPUT:
-                    self._observe_overworld_input()
-                case _HookName.MENU_INPUT_ACCEPTED:
-                    self._observe_accepted_input(_ControlDomain.MENU, _MENU_INPUT_ADDRESS)
-                case _HookName.MENU_READY:
-                    self._observe_ready(_ControlDomain.MENU, ControlBoundary.MENU_READY)
-                case _HookName.NAMING_INPUT_ACCEPTED:
-                    self._observe_accepted_input(_ControlDomain.NAMING, _JOY_PRESSED_ADDRESS)
-                case _HookName.NAMING_READY:
-                    self._observe_ready(_ControlDomain.NAMING, ControlBoundary.NAMING_READY)
-                case _HookName.PLAYER_STEP_COMPLETED:
-                    self._observe_player_step_completed()
-
-        return callback
+    def _handle_hook(self, name: _HookName) -> None:
+        match name:
+            case _HookName.OVERWORLD_INPUT:
+                self._observe_overworld_input()
+            case _HookName.MENU_INPUT_ACCEPTED:
+                self._observe_accepted_input(_ControlDomain.MENU, _MENU_INPUT_ADDRESS)
+            case _HookName.MENU_READY:
+                self._observe_ready(_ControlDomain.MENU, ControlBoundary.MENU_READY)
+            case _HookName.NAMING_INPUT_ACCEPTED:
+                self._observe_accepted_input(_ControlDomain.NAMING, _JOY_PRESSED_ADDRESS)
+            case _HookName.NAMING_READY:
+                self._observe_ready(_ControlDomain.NAMING, ControlBoundary.NAMING_READY)
+            case _HookName.PLAYER_STEP_COMPLETED:
+                self._observe_player_step_completed()
 
     def _observe_overworld_input(self) -> None:
         overworld_ready = self._is_overworld_ready()
