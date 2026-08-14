@@ -197,16 +197,19 @@ class SokobanSolverService:
     async def _execute_solution(self, solution: list[Button], sokoban_map: SokobanMap) -> str:
         """Execute the solution by pressing buttons."""
         is_strength_active = False
+        strength_dialog = ""
         for button in solution:
             game_state = await self.emulator.get_game_state()
             next_pos = game_state.player.coords + _BUTTON_TO_DIRECTION_MAP[button]
 
             if not is_strength_active and next_pos in sokoban_map.boulders:
                 await self._face_next_pos(button, game_state)
-                await self.emulator.press_button(Button.A)  # Activate strength.
-                await self.emulator.press_button(Button.B)  # Dismiss the dialog box.
-                await self.emulator.press_button(Button.B)
-                await self.emulator.press_button(Button.B)
+                # Hand dialog progression to the ROM-event driver immediately after activation.
+                await self.emulator.press_button(
+                    Button.A,
+                    wait_for_animation=False,
+                )
+                strength_dialog = await self.emulator.advance_text_dialog()
                 is_strength_active = True
             elif next_pos == game_state.pikachu.coords:
                 # We have to face Pikachu before we can walk through it.
@@ -224,9 +227,12 @@ class SokobanSolverService:
                 next_game_state.player.coords == game_state.player.coords
                 and next_game_state.sprites == game_state.sprites
             ):
-                return "The Sokoban solver was interrupted because my movement was blocked."
+                return _include_dialog(
+                    "The Sokoban solver was interrupted because my movement was blocked.",
+                    strength_dialog,
+                )
 
-        return "I executed the Sokoban solution."
+        return _include_dialog("I executed the Sokoban solution.", strength_dialog)
 
     def _is_blocked(self, current: Coords, dy: int, dx: int) -> bool:
         """Check if the movement is blocked by a paired tile collision."""
@@ -258,6 +264,12 @@ class SokobanSolverService:
             # Skipping the wait here ensures that we pivot instead of walking.
             await self.emulator.press_button(button, wait_for_animation=False)
             await self.emulator.wait_for_animation_to_finish()
+
+
+def _include_dialog(result: str, dialog: str) -> str:
+    """Include captured field-move dialog in the first-person action result."""
+    sections = [f'I read: "{dialog}"'] if dialog else []
+    return "\n\n".join([*sections, result])
 
 
 _BUTTON_TO_DIRECTION_MAP = {

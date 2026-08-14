@@ -71,6 +71,7 @@ class NavigationService:
             )
 
         starting_map_id = self.current_map.id
+        dialogs: list[str] = []
         await self._handle_pikachu(path[0])
         for button in path:
             next_tile = self._get_next_tile(button, game_state)
@@ -85,9 +86,10 @@ class NavigationService:
             )
             if unresolved_spinner:
                 result = await self._explore_spinner(button, coords, game_state)
-                return self._record_result(result)
+                return self._record_result(result, dialogs=dialogs)
             if next_tile in hm_tiles:
-                await self._handle_hm_use(button, game_state)
+                if dialog := await self._handle_hm_use(button, game_state):
+                    dialogs.append(dialog)
             else:
                 await self.emulator.press_button(button)
 
@@ -99,14 +101,14 @@ class NavigationService:
                 starting_map_id,
                 coords,
             ):
-                return self._record_result(result)
+                return self._record_result(result, dialogs=dialogs)
             # Can't update the map until we validate above that we haven't switched maps.
             await update_overworld_map(
                 self.iteration,
                 game_state,
                 self.current_map,
             )
-        return self._record_result(f"I reached {coords}.")
+        return self._record_result(f"I reached {coords}.", dialogs=dialogs)
 
     async def _explore_spinner(
         self,
@@ -229,11 +231,11 @@ class NavigationService:
             return tile_arr[player_pos.row, player_pos.col - 1]
         return tile_arr[player_pos.row, player_pos.col + 1]
 
-    async def _handle_hm_use(self, button: Button, game_state: GameState) -> None:
-        """Handle using an HM to access a tile."""
+    async def _handle_hm_use(self, button: Button, game_state: GameState) -> str:
+        """Use a field move and return the dialog produced by the interaction."""
         if game_state.player.is_surfing:
             await self.emulator.press_button(button)
-            return  # Already surfing. Just continue normally.
+            return ""  # Already surfing. Just continue normally.
 
         facing = game_state.player.direction
 
@@ -247,14 +249,19 @@ class NavigationService:
         elif button == Button.RIGHT and facing != FacingDirection.RIGHT:
             await self.emulator.press_button(Button.RIGHT)
 
-        # Use the HM, which takes exactly four button presses for both cut and surf.
-        for _ in range(4):
-            await self.emulator.press_button(Button.A)
-        await self.emulator.wait_for_animation_to_finish()  # Extra time for the HM use animation.
+        await self.emulator.press_button(Button.A, wait_for_animation=False)
+        dialogs = [await self.emulator.advance_text_dialog()]
+
+        # A valid field move stops at a yes/no menu. A rejected Surf attempt closes the
+        # interaction directly, so only confirm when the menu is still on screen.
+        if (await self.emulator.get_game_state()).is_text_on_screen():
+            await self.emulator.press_button(Button.A, wait_for_animation=False)
+            dialogs.append(await self.emulator.advance_text_dialog())
 
         game_state = await self.emulator.get_game_state()
         if not game_state.player.is_surfing:  # Starting to surf moves the player automatically.
             await self.emulator.press_button(button)
+        return " ".join(dialog for dialog in dialogs if dialog)
 
     @staticmethod
     def _get_navigation_result(
@@ -273,10 +280,12 @@ class NavigationService:
             return "The map changed while I was navigating, so I stopped."
         return None
 
-    def _record_result(self, result: str) -> str:
+    def _record_result(self, result: str, *, dialogs: list[str] | None = None) -> str:
         """Record and return one coherent navigation result."""
-        self.rolling_memory.add_memory(result)
-        return result
+        dialog_results = [f'I read: "{dialog}"' for dialog in dialogs or []]
+        complete_result = "\n\n".join([*dialog_results, result])
+        self.rolling_memory.add_memory(complete_result)
+        return complete_result
 
 
 _BUTTON_OFFSETS = {

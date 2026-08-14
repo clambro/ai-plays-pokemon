@@ -18,7 +18,7 @@ from emulator.parsers.screen import Screen, parse_screen
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
 from emulator.parsers.warp import Warp, parse_warps
-from emulator.schemas import AsciiScreenTerrain, AsciiScreenWithEntities, DialogBox
+from emulator.schemas import AsciiScreenTerrain, AsciiScreenWithEntities
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
@@ -80,7 +80,7 @@ class GameState:
         """
         name_first_row = "A B C D E F G H I"
         onscreen_text = self.screen.text.replace("▶", "")  # Ignore the cursor.
-        return not self.get_dialog_box() and name_first_row in onscreen_text
+        return not self.screen.is_dialog_box_on_screen and name_first_row in onscreen_text
 
     def get_hm_tiles(self) -> list[AsciiTile]:
         """Get the tiles that are accessible using the player's current HMs and movepool."""
@@ -169,23 +169,6 @@ class GameState:
         if ignore_dialog_box:
             text = "\n".join(text.split("\n")[:13])
         return len(text.strip()) > 0
-
-    def get_dialog_box(self) -> DialogBox | None:
-        """Get the text in the dialog box. Return the top and bottom lines."""
-        if not self.screen.is_dialog_box_on_screen:
-            return None
-
-        top_line = "".join(self.screen.decoded_tiles[14][1:-1])
-        bottom_line = "".join(self.screen.decoded_tiles[16][1:-1])
-        has_cursor = bottom_line.endswith("▼")
-        if has_cursor:
-            bottom_line = bottom_line[:-1]
-
-        return DialogBox(
-            top_line=top_line.strip(),
-            bottom_line=bottom_line.strip(),
-            has_cursor=has_cursor,
-        )
 
     def _classify_background_block(self, block: np.ndarray) -> AsciiTile:
         """Classify a 2x2 block of background tiles."""

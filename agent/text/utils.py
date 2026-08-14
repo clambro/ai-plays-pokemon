@@ -1,15 +1,12 @@
 """Shared utilities for the text handler."""
 
-import asyncio
 from typing import TYPE_CHECKING
 
 from pydantic_ai import BinaryContent
 
 from agent.utils import (
-    DialogReader,
     build_screenshot_content,
     is_battle_handler_state,
-    is_text_handler_state,
 )
 from streaming.server import update_background_from_states
 
@@ -20,17 +17,12 @@ if TYPE_CHECKING:
 type TextToolResult = list[str | BinaryContent]
 
 
-def is_text_interaction_state(game_state: GameState) -> bool:
-    """Check whether the current state still belongs to the text handler."""
-    return is_text_handler_state(game_state)
-
-
 def is_plain_text_dialog(game_state: GameState) -> bool:
     """Check whether visible dialog can be advanced without a decision."""
     # Text outside the dialog box usually indicates a menu or yes/no question,
     # which must be left for the agent rather than advanced automatically.
     return (
-        game_state.get_dialog_box() is not None
+        game_state.screen.is_dialog_box_on_screen
         and not game_state.is_text_on_screen(ignore_dialog_box=True)
         and not is_battle_handler_state(game_state)
     )
@@ -45,6 +37,8 @@ async def complete_text_action(
     dialog = ""
     if is_plain_text_dialog(game_state):
         dialog = await handle_text_dialog(context)
+    else:
+        dialog = capture_pending_dialog(context, game_state)
     game_state, screenshot = await context.emulator.get_game_state_with_screenshot()
     return [
         build_screenshot_content(screenshot),
@@ -62,32 +56,43 @@ async def complete_text_action(
 
 async def handle_text_dialog(context: AgentContext) -> str:
     """Advance ordinary dialog and record the text that was read."""
-    dialog_reader = DialogReader(context.emulator)
-    game_state = await dialog_reader.observe_current_state()
+    game_state = await context.emulator.get_game_state()
     if not is_plain_text_dialog(game_state):
         return ""
 
-    is_blinking_cursor = True
-    is_text_outside_dialog_box = True
+    async def publish_before_input() -> None:
+        current_state = await context.emulator.get_game_state()
+        update_background_from_states(context.state, current_state)
 
-    # The blinking cursor means that the dialog box is still scrolling. If there is no cursor
-    # and no other text on screen, the dialog is done scrolling and we can press A one last time
-    # to close it.
-    while (
-        game_state.get_dialog_box()
-        and not is_battle_handler_state(game_state)
-        and (is_blinking_cursor or not is_text_outside_dialog_box)
-    ):
-        update_background_from_states(context.state, game_state)
-        await dialog_reader.advance()
-        await asyncio.sleep(0.5)  # Buffer to ensure that no new dialog boxes have opened.
-        game_state = await dialog_reader.observe_current_state()
-        is_blinking_cursor = await dialog_reader.is_cursor_blinking()
-        is_text_outside_dialog_box = game_state.is_text_on_screen(ignore_dialog_box=True)
+    dialog = await context.emulator.advance_text_dialog(before_input=publish_before_input)
+    final_state = await context.emulator.get_game_state()
+    return _record_dialog(
+        context,
+        dialog,
+        dialog_closed=not final_state.screen.is_dialog_box_on_screen,
+    )
 
-    dialog = dialog_reader.text
+
+def capture_pending_dialog(context: AgentContext, game_state: GameState) -> str:
+    """Record dialog whose interaction has already moved beyond standard text."""
+    if is_battle_handler_state(game_state):
+        return ""
+    return _record_dialog(
+        context,
+        context.emulator.consume_pending_dialog(),
+        dialog_closed=not game_state.screen.is_dialog_box_on_screen,
+    )
+
+
+def _record_dialog(
+    context: AgentContext,
+    dialog: str,
+    *,
+    dialog_closed: bool,
+) -> str:
+    """Append captured dialog to rolling memory and return it unchanged."""
     if dialog:
-        dialog_status = " The dialog box is now closed." if not game_state.get_dialog_box() else ""
+        dialog_status = " The dialog box is now closed." if dialog_closed else ""
         context.state.rolling_memory.add_memory(
             content=f'Onscreen text: "{dialog}"{dialog_status}',
         )

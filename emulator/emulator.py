@@ -13,14 +13,16 @@ from common.constants import DEFAULT_ROM_PATH
 from emulator.game_state import GameState
 from emulator.parsers.map_collision import read_map_collision_tiles
 from emulator.pyboy_worker import PyBoyWorker
+from emulator.text_events import TextEventKind, drive_standard_dialog, reduce_text_events
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Awaitable, Callable
     from pathlib import Path
 
     from pyboy import PyBoy
 
     from common.enums import Button
+    from emulator.text_events import TextEvent
 
 
 class Emulator(AbstractAsyncContextManager):
@@ -86,6 +88,62 @@ class Emulator(AbstractAsyncContextManager):
     async def get_game_state(self) -> GameState:
         """Get the current game state."""
         return await self._worker.execute(lambda pyboy: GameState.from_memory(pyboy.memory))
+
+    def drain_text_events(self) -> tuple[TextEvent, ...]:
+        """Claim every currently recorded text event exactly once."""
+        return self._worker.drain_text_events()
+
+    async def wait_for_text_events(
+        self,
+        max_wait_seconds: float | None = None,
+    ) -> tuple[TextEvent, ...]:
+        """Wait without blocking emulation, then claim the available event batch."""
+        return await self._worker.wait_for_text_events(max_wait_seconds)
+
+    async def advance_battle_dialog(self) -> str:
+        """Advance battle dialog until the next decision or battle exit."""
+        initial_events = await self._worker.drain_settled_text_events()
+        return await drive_standard_dialog(
+            self,
+            stop_on=frozenset(
+                {
+                    TextEventKind.MENU_OPENED,
+                    TextEventKind.SPECIAL_INTERFACE_OPENED,
+                    TextEventKind.BATTLE_ENDED,
+                }
+            ),
+            initial_events=initial_events,
+        )
+
+    async def advance_text_dialog(
+        self,
+        *,
+        before_input: Callable[[], Awaitable[None]] | None = None,
+    ) -> str:
+        """Advance ordinary dialog until the interaction changes domain or closes."""
+        initial_events = await self._worker.drain_settled_text_events()
+        return await drive_standard_dialog(
+            self,
+            stop_on=frozenset(
+                {
+                    TextEventKind.MENU_OPENED,
+                    TextEventKind.SPECIAL_INTERFACE_OPENED,
+                    TextEventKind.INTERACTION_CLOSED,
+                    TextEventKind.OVERWORLD_ENTERED,
+                    TextEventKind.BATTLE_ENDED,
+                }
+            ),
+            initial_events=initial_events,
+            before_input=before_input,
+        )
+
+    def consume_pending_dialog(self) -> str:
+        """Claim and reduce dialog already completed by the ROM."""
+        return reduce_text_events(self.drain_text_events())
+
+    def consume_completed_dialog(self) -> str:
+        """Claim dialog through the last closed ordinary text interaction."""
+        return reduce_text_events(self._worker.drain_completed_text_events())
 
     async def get_game_state_with_map_collision_tiles(
         self,

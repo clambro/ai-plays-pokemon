@@ -131,6 +131,8 @@ The create, update, and delete tools let the agent maintain one primary goal and
 
 The agent narrates its decision alongside each tool call. The tool then produces the actual outcome of the action. Action outcomes are appended to the current rolling-memory block and returned with a fresh screenshot to the local conversation, so the HTML activity log and the agent cannot disagree about what happened. Goal tools return their result directly and update authoritative goal state without copying the result into rolling memory.
 
+Dialog completed during an overworld tool is retained from the emulator's ROM text-event stream even if it has disappeared before the final observation. A still-open text interaction or battle remains queued for the applicable handler instead.
+
 If the action leaves the player in place and the game in the overworld, the agent can make another decision using that result. Once the player moves or the game enters a text interaction or battle, the runner returns to the dispatcher.
 
 ## The Battle Agent
@@ -229,9 +231,9 @@ flowchart LR
 
 ### Handle Dialog Box
 
-This is the most common path through the text handler, and it is deliberately handled before the agent is even constructed. Its job is to read through any dialog that appears on screen and append it directly to the current rolling-memory block. This saves us a ton of time and tokens by pulling the text straight from the game state instead of making the AI read it screenshot by screenshot.
+This is the most common path through the text handler, and it is deliberately handled before the agent is even constructed. The emulator records completed dialog directly from the ROM text engine, advances only explicit text waits, and appends the resulting transcript to the current rolling-memory block. This avoids paying the AI to read and dismiss ordinary speech while preserving text that scrolls, advances automatically, or disappears before another screen observation.
 
-The dialog reader exits if the box disappears, a battle begins, or text appears outside the dialog box. That last case usually means that a menu or yes/no question has opened and a real decision is finally required. If the dialog simply closes, the runner returns without making a model call at all. If it reveals a decision, the runner starts one text-agent conversation and keeps it alive until the interaction is over.
+Deterministic advancement stops when the interaction closes or reaches a menu, custom interface, or battle boundary. A remaining decision starts one text-agent conversation and keeps it alive until the interaction is over; an ordinary closed interaction returns without making a model call.
 
 ### Press Buttons
 

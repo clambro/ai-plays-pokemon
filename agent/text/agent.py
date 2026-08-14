@@ -11,11 +11,11 @@ from agent.context import AgentContext
 from agent.text.prompts import build_text_decision_prompt
 from agent.text.tools.registry import build_text_toolset
 from agent.text.utils import (
+    capture_pending_dialog,
     handle_text_dialog,
     is_plain_text_dialog,
-    is_text_interaction_state,
 )
-from agent.utils import AGENT_HOOKS, build_screenshot_content
+from agent.utils import AGENT_HOOKS, build_screenshot_content, is_text_handler_state
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 
@@ -58,7 +58,7 @@ async def run_text(context: AgentContext) -> None:
                     if isinstance(current_node, CallToolsNode):
                         await context.complete_iteration()
                         game_state = await context.emulator.get_game_state()
-                        if not is_text_interaction_state(game_state):
+                        if not is_text_handler_state(game_state):
                             break
         except AgentRunError as error:
             logger.opt(exception=error).warning(
@@ -74,10 +74,12 @@ async def _prepare_text_agent_input(
     game_state = await context.emulator.get_game_state()
     if is_plain_text_dialog(game_state):
         await handle_text_dialog(context)
+    else:
+        capture_pending_dialog(context, game_state)
     await context.complete_iteration()
 
     initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
-    if not is_text_interaction_state(initial_game_state):
+    if not is_text_handler_state(initial_game_state):
         return None
     return build_text_agent_input(
         context,
