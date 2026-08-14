@@ -67,7 +67,8 @@ async def main(
         stream_server.update_data(context.state, await emulator.get_game_state())
         if not emulator_state:
             await asyncio.sleep(30)  # Some time to manually get to the new game screen.
-        await emulator.wait_until_ready()
+        else:
+            await emulator.wait_until_ready()
         loop = asyncio.get_running_loop()
         next_backup_at = loop.time() + BACKUP_INTERVAL_SECONDS
         try:
