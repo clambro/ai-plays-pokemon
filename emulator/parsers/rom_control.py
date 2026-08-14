@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from common.enums import Button
 from emulator.control_events import ControlBoundary, ControlResult, ControlResultWaiter
+from emulator.text_events import TextEventKind
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class _HookName(StrEnum):
-    """Executable boundaries used by the control prototype."""
+    """Executable boundaries used by overworld control coordination."""
 
     OVERWORLD_INPUT = auto()
     MENU_READY = auto()
@@ -93,7 +94,7 @@ class RomControlRecorder:
         self._completed: ControlResult | None = None
 
     def install(self) -> None:
-        """Validate the required ROM layout and register the prototype hooks."""
+        """Validate the required ROM layout and register the control hooks."""
         mismatch = next((hook for hook in _HOOKS if not self._signature_matches(hook)), None)
         if mismatch is not None:
             raise RuntimeError(
@@ -128,6 +129,11 @@ class RomControlRecorder:
         self._results.publish(self._completed)
         self._completed = None
         self._pending = None
+
+    def observe_text_event(self, kind: TextEventKind) -> None:
+        """Complete accepted overworld input when standard text awaits input."""
+        if kind == TextEventKind.INPUT_REQUIRED:
+            self._complete(ControlBoundary.TEXT_INPUT_READY)
 
     def _signature_matches(self, hook: _Hook) -> bool:
         actual = bytes(

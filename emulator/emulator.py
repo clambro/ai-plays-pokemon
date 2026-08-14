@@ -205,7 +205,7 @@ class Emulator(AbstractAsyncContextManager):
             await self.wait_for_animation_to_finish()
 
     async def press_overworld_button(self, button: Button) -> ControlResult:
-        """Prototype a correlated press that ends at rendered overworld or menu readiness."""
+        """Press an overworld button and wait for its next rendered decision boundary."""
         operation_id = await self._worker.start_overworld_button(button)
         return await self._worker.wait_for_control_result(operation_id)
 

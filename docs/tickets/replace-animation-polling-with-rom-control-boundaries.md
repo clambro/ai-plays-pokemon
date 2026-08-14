@@ -356,9 +356,10 @@ the prototype and integration scenarios below.
 
 ## Implementation Sequence
 
-Each stage is one self-contained commit reviewed before proceeding. At the end
-of a stage, every migrated caller must use the complete new behavior for its
-domain; callers assigned to later stages remain entirely on the existing path.
+Each review slice is one self-contained commit reviewed before proceeding. At
+the end of a slice, every migrated caller must use the complete new behavior
+for its assigned scope; callers assigned to later slices remain entirely on the
+existing path.
 
 ### Stage 1: Replace overworld movement polling
 
@@ -371,19 +372,37 @@ First prove the core mechanism on the required ROM before changing callers:
 - reach prepared standard-menu input after opening the start menu; and
 - capture a screenshot only after the containing rendered tick is complete.
 
-If the prototype succeeds, retain the minimal control coordinator, the validated
-overworld/player-step hooks, and the prepared-menu boundary needed when an
+If the prototype succeeds, retain the minimal control coordinator, the
+validated overworld hook, and the prepared-menu boundary needed when an
 overworld action opens the start menu. Overworld readiness must exclude walking,
 simulated input, ignored input, NPC movement, door movement, and other
 ROM-controlled player movement. Correlated input within an already-open menu
 remains Stage 2 work.
 
-Migrate ordinary navigation, overworld button input, rotation and collision,
-ledges, HM-related movement, Pikachu-facing adjustments, Sokoban movement, and
-spinner traversal. Spinner traversal receives ordered end-of-tick step
-observations while waiting for final overworld readiness. Preserve existing text
-capture and map-update behavior. Menu, naming, battle-menu, and generic text
-callers continue using the unchanged animation-settling path in this commit.
+Complete the migration through the following self-contained review slices:
+
+1. **Basic overworld button input.** Migrate only the agent-facing overworld
+   button tool. Cover ordinary directional movement, collisions, short button
+   sequences, action-button dialog, random-battle handoff, and opening the start
+   menu. Stop a sequence when control leaves the overworld so remaining buttons
+   cannot bleed into text, battle, or menu input. Control coordination may
+   observe existing text events but must leave them available to the text-event
+   consumer exactly once.
+2. **Ordinary navigation.** Migrate routine path traversal, rotation, collision
+   handling, and Pikachu-facing adjustments. Leave HMs, forced movement,
+   spinners, and Sokoban on the existing animation-settling path.
+3. **Forced overworld transitions.** Migrate ledges, warps, Cut, Surf, and other
+   scripted movement. Coordinate through the final external decision boundary
+   rather than an intermediate coordinate update.
+4. **Spinner traversal.** Add the validated player-step progress hook and return
+   ordered end-of-tick step observations while waiting for final overworld
+   readiness. Preserve the existing spinner route and map-discovery updates.
+5. **Sokoban movement.** Migrate the solver after ordinary and forced movement
+   have established the complete overworld operation semantics.
+
+Preserve existing text capture and map-update behavior throughout these slices.
+Menu, naming, battle-menu, and generic text callers continue using the unchanged
+animation-settling path until Stage 2.
 
 ### Stage 2: Replace standard menu input polling
 

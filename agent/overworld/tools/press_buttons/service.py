@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 from common.enums import Button, FacingDirection, MapId
+from emulator.control_events import ControlBoundary
 
 if TYPE_CHECKING:
     from common.schemas import Coords
@@ -31,7 +32,7 @@ async def press_buttons(
     results = []
     for button in buttons:
         game_state = await emulator.get_game_state()
-        await emulator.press_button(button)
+        control_result = await emulator.press_overworld_button(button)
         collision_result = await _check_for_collision(
             button=button,
             prev_map_id=game_state.map.id,
@@ -44,8 +45,8 @@ async def press_buttons(
             results.append(collision_result)
         if action_result:
             results.append(action_result)
-        state_changed = await _check_for_state_change(emulator)
-        if collision_result or action_result or state_changed:
+        control_left_overworld = control_result.boundary != ControlBoundary.OVERWORLD_READY
+        if collision_result or action_result or control_left_overworld:
             break
 
     if not results:
@@ -101,9 +102,3 @@ def _check_for_action(button: Button) -> str | None:
     if button != Button.A:
         return None
     return "I pressed the action button."
-
-
-async def _check_for_state_change(emulator: Emulator) -> bool:
-    """Check if the movement triggered a state change to dialog or a battle."""
-    game_state = await emulator.get_game_state()
-    return game_state.is_text_on_screen() or game_state.battle.is_in_battle

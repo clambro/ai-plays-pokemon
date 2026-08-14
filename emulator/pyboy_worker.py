@@ -133,7 +133,7 @@ class PyBoyWorker:
             raise self._failure
 
     async def start_overworld_button(self, button: Button) -> int:
-        """Arm the control prototype and schedule its short button pulse atomically."""
+        """Arm overworld coordination and schedule its short button pulse atomically."""
 
         def _start(pyboy: PyBoy) -> int:
             if self._control_recorder is None:
@@ -226,7 +226,11 @@ class PyBoyWorker:
                 pyboy.load_state(file)
         self._control_recorder = RomControlRecorder(pyboy, self._control_results)
         self._control_recorder.install()
-        self._text_recorder = RomTextRecorder(pyboy, self._text_events)
+        self._text_recorder = RomTextRecorder(
+            pyboy,
+            self._text_events,
+            on_event=self._control_recorder.observe_text_event,
+        )
         self._text_recorder.install()
         return pyboy
 

@@ -15,6 +15,7 @@ class ControlBoundary(StrEnum):
 
     OVERWORLD_READY = auto()
     MENU_READY = auto()
+    TEXT_INPUT_READY = auto()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

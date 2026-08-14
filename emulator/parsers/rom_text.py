@@ -157,10 +157,16 @@ _CURSOR = 0xEE
 class RomTextRecorder:
     """Translate ROM text-engine execution into ordered semantic events."""
 
-    def __init__(self, pyboy: PyBoy, journal: TextEventJournal) -> None:
+    def __init__(
+        self,
+        pyboy: PyBoy,
+        journal: TextEventJournal,
+        on_event: Callable[[TextEventKind], None] | None = None,
+    ) -> None:
         """Keep the owner-thread emulator and its transient event journal."""
         self._pyboy = pyboy
         self._journal = journal
+        self._on_event = on_event
         self._text_processor_depth = 0
         self._inside_wait = False
 
@@ -273,11 +279,13 @@ class RomTextRecorder:
         return bool(self._pyboy.memory[_AUDIO_FADE_FLAGS_ADDRESS] & _REDUCED_VOLUME_INTERFACE_FLAG)
 
     def _record(self, kind: TextEventKind, *, page: DialogPage | None = None) -> None:
-        self._journal.append(
+        event = self._journal.append(
             frame=self._pyboy.frame_count,
             kind=kind,
             page=page,
         )
+        if event is not None and self._on_event is not None:
+            self._on_event(kind)
 
 
 def _decode_standard_dialog_page(mem: PyBoyMemoryView) -> DialogPage | None:
