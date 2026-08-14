@@ -127,6 +127,7 @@ class Emulator(AbstractAsyncContextManager):
                     TextEventKind.MENU_OPENED,
                     TextEventKind.SPECIAL_INTERFACE_OPENED,
                     TextEventKind.INTERACTION_CLOSED,
+                    TextEventKind.OVERWORLD_ENTERED,
                     TextEventKind.BATTLE_ENDED,
                 }
             ),

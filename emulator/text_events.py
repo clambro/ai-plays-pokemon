@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class TextEventKind(StrEnum):
-    """Semantic boundaries emitted by the supported ROM's text engine."""
+    """Semantic execution boundaries emitted by the supported ROM."""
 
     PAGE_COMPLETED = auto()
     AUTOMATIC_SCROLL = auto()
@@ -26,6 +26,7 @@ class TextEventKind(StrEnum):
     SPECIAL_INTERFACE_OPENED = auto()
     SPECIAL_INTERFACE_CLOSED = auto()
     INTERACTION_CLOSED = auto()
+    OVERWORLD_ENTERED = auto()
     BATTLE_ENDED = auto()
 
 
@@ -214,6 +215,7 @@ def reduce_text_events(events: tuple[TextEvent, ...] | list[TextEvent]) -> str:
                 TextEventKind.SPECIAL_INTERFACE_OPENED,
                 TextEventKind.SPECIAL_INTERFACE_CLOSED,
                 TextEventKind.INTERACTION_CLOSED,
+                TextEventKind.OVERWORLD_ENTERED,
                 TextEventKind.BATTLE_ENDED,
             }:
                 previous_page = None

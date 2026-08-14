@@ -28,6 +28,7 @@ class _HookName(StrEnum):
     SPECIAL_INTERFACE_WAIT = auto()
     SPECIAL_INTERFACE_EXIT = auto()
     TEXT_DISPLAY_CLOSED = auto()
+    OVERWORLD_ENTERED = auto()
     BATTLE_ENDED = auto()
 
 
@@ -109,6 +110,12 @@ _HOOKS = (
         bank=0x04,
         address=0x7CA1,  # EndOfBattle.resetVariables
         signature=bytes.fromhex("af ea 82 d0 ea 2a"),
+    ),
+    _Hook(
+        name=_HookName.OVERWORLD_ENTERED,
+        bank=0x00,
+        address=0x0238,  # EnterMap completed
+        signature=bytes.fromhex("af ea 6b cd cd 05"),
     ),
     _Hook(
         name=_HookName.SPECIAL_INTERFACE_WAIT,
@@ -210,6 +217,8 @@ class RomTextRecorder:
                 self._record_wait_exit()
             case _HookName.TEXT_DISPLAY_CLOSED:
                 self._record(TextEventKind.INTERACTION_CLOSED)
+            case _HookName.OVERWORLD_ENTERED:
+                self._record(TextEventKind.OVERWORLD_ENTERED)
             case _HookName.BATTLE_ENDED:
                 self._record(TextEventKind.BATTLE_ENDED)
 
