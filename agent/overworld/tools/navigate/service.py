@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     import numpy as np
 
     from common.schemas import Coords
+    from emulator.control_events import ControlResult
     from emulator.emulator import Emulator
     from emulator.game_state import GameState
     from memory.rolling_memory.schemas import RollingMemory
@@ -73,12 +74,7 @@ class NavigationService:
 
         starting_map_id = self.current_map.id
         dialogs: list[str] = []
-        use_rom_control = _is_ordinary_path(
-            game_state.player.coords,
-            path,
-            navigation_tiles,
-        )
-        if not await self._handle_pikachu(path[0], use_rom_control=use_rom_control):
+        if not await self._handle_pikachu(path[0]):
             game_state = await self.emulator.get_game_state()
             return self._record_result(
                 self._get_interrupted_result(game_state, coords),
@@ -100,13 +96,13 @@ class NavigationService:
                 return self._record_result(result, dialogs=dialogs)
             control_left_overworld = False
             if next_tile in hm_tiles:
-                if dialog := await self._handle_hm_use(button, game_state):
-                    dialogs.append(dialog)
-            elif use_rom_control:
-                boundary = await self._press_ordinary_step(button, game_state)
+                dialog, boundary = await self._handle_hm_use(button, game_state)
                 control_left_overworld = boundary != ControlBoundary.OVERWORLD_READY
+                if dialog:
+                    dialogs.append(dialog)
             else:
-                await self.emulator.press_button(button)
+                control_result = await self._press_navigation_step(button, game_state)
+                control_left_overworld = control_result.boundary != ControlBoundary.OVERWORLD_READY
 
             prev_pos = game_state.player.coords
             game_state = await self.emulator.get_game_state()
@@ -137,19 +133,15 @@ class NavigationService:
         game_state: GameState,
     ) -> str:
         """Traverse an unresolved spinner, record its path, and report its destination."""
-        if game_state.player.direction != _BUTTON_DIRECTIONS[button]:
-            await self.emulator.press_button(button, wait_for_animation=False)
-            game_state = await self.emulator.wait_for_animation_to_finish()
-
         spinner_start = game_state.player.coords
-        observations = []
-        await self.emulator.press_button(button, wait_for_animation=False)
-        game_state = await self.emulator.wait_for_animation_to_finish(
-            on_game_state=observations.append,
+        control_result = await self._press_navigation_step(
+            button,
+            game_state,
+            observe_steps=True,
         )
 
         previous_observation = None
-        for observation in observations:
+        for observation in control_result.step_observations:
             observation_key = (observation.map.id, observation.player.coords)
             if observation_key != previous_observation:
                 await update_overworld_map(
@@ -159,6 +151,7 @@ class NavigationService:
                 )
                 previous_observation = observation_key
 
+        game_state = await self.emulator.get_game_state()
         if game_state.player.coords == spinner_start:
             return f"My navigation to {target} was interrupted at {game_state.player.coords}."
         return (
@@ -201,7 +194,7 @@ class NavigationService:
             )
         return None
 
-    async def _handle_pikachu(self, button: Button, *, use_rom_control: bool) -> bool:
+    async def _handle_pikachu(self, button: Button) -> bool:
         """Check if Pikachu is in the way and face it if so.
 
         Pikachu can block your path on the very first step of navigation if you are not facing it
@@ -238,9 +231,6 @@ class NavigationService:
         )
         if not needs_pikachu_turn:
             return True
-        if not use_rom_control:
-            await self.emulator.press_button(button)
-            return True
         control_result = await self.emulator.press_overworld_button(button)
         return control_result.boundary == ControlBoundary.OVERWORLD_READY
 
@@ -256,15 +246,20 @@ class NavigationService:
             return tile_arr[player_pos.row, player_pos.col - 1]
         return tile_arr[player_pos.row, player_pos.col + 1]
 
-    async def _press_ordinary_step(
+    async def _press_navigation_step(
         self,
         button: Button,
         game_state: GameState,
-    ) -> ControlBoundary:
+        *,
+        observe_steps: bool = False,
+    ) -> ControlResult:
         """Complete one movement step, including a required turn or Pikachu yield."""
-        result = await self.emulator.press_overworld_button(button)
+        result = await self.emulator.press_overworld_button(
+            button,
+            observe_steps=observe_steps,
+        )
         if result.boundary != ControlBoundary.OVERWORLD_READY:
-            return result.boundary
+            return result
 
         desired_direction = _BUTTON_DIRECTIONS[button]
         pikachu_was_ahead = (
@@ -272,37 +267,44 @@ class NavigationService:
             and game_state.player.coords + _BUTTON_OFFSETS[button] == game_state.pikachu.coords
         )
         if game_state.player.direction == desired_direction and not pikachu_was_ahead:
-            return result.boundary
+            return result
 
         observed_state = await self.emulator.get_game_state()
         if observed_state.player.coords != game_state.player.coords:
-            return result.boundary
+            return result
 
         turned_without_moving = (
             game_state.player.direction != desired_direction
             and observed_state.player.direction == desired_direction
         )
         if turned_without_moving or pikachu_was_ahead:
-            result = await self.emulator.press_overworld_button(button)
-        return result.boundary
+            result = await self.emulator.press_overworld_button(
+                button,
+                observe_steps=observe_steps,
+            )
+        return result
 
-    async def _handle_hm_use(self, button: Button, game_state: GameState) -> str:
+    async def _handle_hm_use(
+        self,
+        button: Button,
+        game_state: GameState,
+    ) -> tuple[str, ControlBoundary]:
         """Use a field move and return the dialog produced by the interaction."""
         if game_state.player.is_surfing:
-            await self.emulator.press_button(button)
-            return ""  # Already surfing. Just continue normally.
+            result = await self._press_navigation_step(button, game_state)
+            return "", result.boundary
 
         facing = game_state.player.direction
 
         # Rotate to face the target.
         if button == Button.UP and facing != FacingDirection.UP:
-            await self.emulator.press_button(Button.UP)
+            await self.emulator.press_overworld_button(Button.UP)
         elif button == Button.DOWN and facing != FacingDirection.DOWN:
-            await self.emulator.press_button(Button.DOWN)
+            await self.emulator.press_overworld_button(Button.DOWN)
         elif button == Button.LEFT and facing != FacingDirection.LEFT:
-            await self.emulator.press_button(Button.LEFT)
+            await self.emulator.press_overworld_button(Button.LEFT)
         elif button == Button.RIGHT and facing != FacingDirection.RIGHT:
-            await self.emulator.press_button(Button.RIGHT)
+            await self.emulator.press_overworld_button(Button.RIGHT)
 
         await self.emulator.press_button(Button.A, wait_for_animation=False)
         dialogs = [await self.emulator.advance_text_dialog()]
@@ -311,12 +313,17 @@ class NavigationService:
         # interaction directly, so only confirm when the menu is still on screen.
         if (await self.emulator.get_game_state()).is_text_on_screen():
             await self.emulator.press_button(Button.A, wait_for_animation=False)
-            dialogs.append(await self.emulator.advance_text_dialog())
+            dialogs.append(await self.emulator.advance_text_dialog_until_overworld_ready())
+        else:
+            await self.emulator.wait_for_overworld_ready()
 
         game_state = await self.emulator.get_game_state()
         if not game_state.player.is_surfing:  # Starting to surf moves the player automatically.
-            await self.emulator.press_button(button)
-        return " ".join(dialog for dialog in dialogs if dialog)
+            result = await self._press_navigation_step(button, game_state)
+            boundary = result.boundary
+        else:
+            boundary = ControlBoundary.OVERWORLD_READY
+        return " ".join(dialog for dialog in dialogs if dialog), boundary
 
     @staticmethod
     def _get_navigation_result(
@@ -363,23 +370,3 @@ _BUTTON_DIRECTIONS = {
     Button.LEFT: FacingDirection.LEFT,
     Button.RIGHT: FacingDirection.RIGHT,
 }
-
-_ORDINARY_NAVIGATION_TILES = {
-    AsciiTile.FREE,
-    AsciiTile.GRASS,
-    AsciiTile.PIKACHU,
-}
-
-
-def _is_ordinary_path(
-    start: Coords,
-    path: list[Button],
-    navigation_tiles: np.ndarray,
-) -> bool:
-    """Return whether every requested step stays on ordinary overworld terrain."""
-    position = start
-    for button in path:
-        position += _BUTTON_OFFSETS[button]
-        if navigation_tiles[position.row, position.col] not in _ORDINARY_NAVIGATION_TILES:
-            return False
-    return True

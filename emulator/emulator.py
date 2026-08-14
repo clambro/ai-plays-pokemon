@@ -204,9 +204,28 @@ class Emulator(AbstractAsyncContextManager):
         if wait_for_animation:
             await self.wait_for_animation_to_finish()
 
-    async def press_overworld_button(self, button: Button) -> ControlResult:
+    async def press_overworld_button(
+        self,
+        button: Button,
+        *,
+        observe_steps: bool = False,
+    ) -> ControlResult:
         """Press an overworld button and wait for its next rendered decision boundary."""
-        operation_id = await self._worker.start_overworld_button(button)
+        operation_id = await self._worker.start_overworld_button(
+            button,
+            observe_steps=observe_steps,
+        )
+        return await self._worker.wait_for_control_result(operation_id)
+
+    async def advance_text_dialog_until_overworld_ready(self) -> str:
+        """Advance an active interaction through restored external overworld control."""
+        dialog = await self.advance_text_dialog()
+        await self.wait_for_overworld_ready()
+        return dialog
+
+    async def wait_for_overworld_ready(self) -> ControlResult:
+        """Wait for scripted activity to restore external overworld control."""
+        operation_id = await self._worker.start_overworld_resume()
         return await self._worker.wait_for_control_result(operation_id)
 
     async def wait_for_animation_to_finish(

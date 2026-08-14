@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from common.enums import Button
+    from emulator.game_state import GameState
 
 
 class ControlBoundary(StrEnum):
@@ -23,10 +24,11 @@ class ControlResult:
     """The accepted input and subsequent boundary for one button operation."""
 
     operation_id: int
-    button: Button
+    button: Button | None
     accepted_frame: int
     boundary_frame: int
     boundary: ControlBoundary
+    step_observations: tuple[GameState, ...] = ()
 
 
 class ControlResultWaiter:

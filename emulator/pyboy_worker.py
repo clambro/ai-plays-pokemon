@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 from pyboy import PyBoy
 
 from emulator.control_events import ControlResultWaiter
+from emulator.game_state import GameState
 from emulator.parsers.rom_control import RomControlRecorder
 from emulator.parsers.rom_text import RomTextRecorder
 from emulator.text_events import TextEvent, TextEventJournal, TextEventKind
@@ -132,17 +133,32 @@ class PyBoyWorker:
         if self._failure is not None:
             raise self._failure
 
-    async def start_overworld_button(self, button: Button) -> int:
+    async def start_overworld_button(
+        self,
+        button: Button,
+        *,
+        observe_steps: bool = False,
+    ) -> int:
         """Arm overworld coordination and schedule its short button pulse atomically."""
 
         def _start(pyboy: PyBoy) -> int:
             if self._control_recorder is None:
                 raise RuntimeError("ROM control recorder is not installed.")
-            operation_id = self._control_recorder.arm(button)
+            operation_id = self._control_recorder.arm(button, observe_steps=observe_steps)
             # The overworld loop spans two rendered frames, so a three-frame pulse guarantees one
             # poll while remaining short enough not to carry into the following interface.
             pyboy.button(button, 3)
             return operation_id
+
+        return await self.execute(_start)
+
+    async def start_overworld_resume(self) -> int:
+        """Arm a wait for external overworld control after scripted activity."""
+
+        def _start(_pyboy: PyBoy) -> int:
+            if self._control_recorder is None:
+                raise RuntimeError("ROM control recorder is not installed.")
+            return self._control_recorder.arm_overworld_resume()
 
         return await self.execute(_start)
 
@@ -193,7 +209,12 @@ class PyBoyWorker:
                     failure = RuntimeError("Emulator stopped unexpectedly.")
                     break
                 if self._control_recorder is not None:
-                    self._control_recorder.publish_tick()
+                    step_observation = (
+                        GameState.from_memory(pyboy.memory)
+                        if self._control_recorder.needs_step_observation
+                        else None
+                    )
+                    self._control_recorder.publish_tick(step_observation)
                 # PyBoy's SDL limiter skips its own sleep while refilling a low audio buffer.
                 # Without this minimum delay, the tight worker loop runs catch-up frames
                 # back-to-back, causing brief audio and visual speed-ups after scheduling jitter.

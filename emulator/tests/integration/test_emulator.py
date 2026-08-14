@@ -46,7 +46,10 @@ async def test_overworld_control_hands_dialog_to_text_consumer() -> None:
         headless=True,
     ) as emulator:
         emulator.drain_text_events()
+        starting_coords = (await emulator.get_game_state()).player.coords
         await asyncio.wait_for(emulator.press_overworld_button(Button.RIGHT), timeout=5)
+        if (await emulator.get_game_state()).player.coords == starting_coords:
+            await asyncio.wait_for(emulator.press_overworld_button(Button.RIGHT), timeout=5)
         await asyncio.wait_for(emulator.press_overworld_button(Button.UP), timeout=5)
         result = await asyncio.wait_for(emulator.press_overworld_button(Button.A), timeout=5)
 
