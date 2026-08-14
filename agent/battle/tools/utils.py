@@ -126,8 +126,20 @@ async def handle_battle_dialog(context: AgentContext) -> str:
         The captured dialog text.
     """
     dialog = await context.emulator.advance_battle_dialog()
+    _record_battle_dialog(context, dialog)
+    return dialog
+
+
+def capture_pending_battle_dialog(context: AgentContext) -> str:
+    """Record dialog whose button press already reached a battle menu."""
+    dialog = context.emulator.consume_pending_dialog()
+    _record_battle_dialog(context, dialog)
+    return dialog
+
+
+def _record_battle_dialog(context: AgentContext, dialog: str) -> None:
+    """Append captured battle dialog to rolling memory."""
     if dialog:
         context.state.rolling_memory.add_memory(
             content=f'Onscreen text: "{dialog}"',
         )
-    return dialog

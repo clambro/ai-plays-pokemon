@@ -28,7 +28,7 @@ def build_fight_tool(context: AgentContext) -> Tool[AgentContext]:
         slot 0 to make the Pokemon use STRUGGLE.
 
         Args:
-            move_slot: Zero-based slot of the move to use.
+            move_slot: Slot number shown beside the move in ``battle_info``.
 
         Returns:
             Fresh battle context after the attempted move.
