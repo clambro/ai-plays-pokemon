@@ -7,7 +7,6 @@ from pydantic_ai import BinaryContent
 from agent.utils import (
     build_screenshot_content,
     is_battle_handler_state,
-    is_text_handler_state,
 )
 from streaming.server import update_background_from_states
 
@@ -18,17 +17,12 @@ if TYPE_CHECKING:
 type TextToolResult = list[str | BinaryContent]
 
 
-def is_text_interaction_state(game_state: GameState) -> bool:
-    """Check whether the current state still belongs to the text handler."""
-    return is_text_handler_state(game_state)
-
-
 def is_plain_text_dialog(game_state: GameState) -> bool:
     """Check whether visible dialog can be advanced without a decision."""
     # Text outside the dialog box usually indicates a menu or yes/no question,
     # which must be left for the agent rather than advanced automatically.
     return (
-        game_state.get_dialog_box() is not None
+        game_state.screen.is_dialog_box_on_screen
         and not game_state.is_text_on_screen(ignore_dialog_box=True)
         and not is_battle_handler_state(game_state)
     )
@@ -75,7 +69,7 @@ async def handle_text_dialog(context: AgentContext) -> str:
     return _record_dialog(
         context,
         dialog,
-        dialog_closed=final_state.get_dialog_box() is None,
+        dialog_closed=not final_state.screen.is_dialog_box_on_screen,
     )
 
 
@@ -86,7 +80,7 @@ def capture_pending_dialog(context: AgentContext, game_state: GameState) -> str:
     return _record_dialog(
         context,
         context.emulator.consume_pending_dialog(),
-        dialog_closed=game_state.get_dialog_box() is None,
+        dialog_closed=not game_state.screen.is_dialog_box_on_screen,
     )
 
 

@@ -199,18 +199,14 @@ def decode_screen_tiles(
     Returns:
         A grid of decoded glyphs parallel to ``tiles``. Non-text tiles are spaces.
     """
-    try:
-        glyph_catalog = _get_glyph_catalog(mem)
-        lcdc = mem[_LCDC_ADDRESS]
-        decoded_by_tile_id: dict[int, str] = {}
-        for tile_id in {tile for row in tiles for tile in row} & glyph_catalog.keys():
-            address = _get_vram_tile_address(tile_id, lcdc)
-            pattern = bytes(mem[_VRAM_BANK, address : address + _VRAM_TILE_SIZE])
-            decoded_by_tile_id[tile_id] = glyph_catalog[tile_id].get(pattern, " ")
-        return [[decoded_by_tile_id.get(tile, " ") for tile in row] for row in tiles]
-    except Exception:  # noqa: BLE001
-        # Text recognition is auxiliary. An incompatible ROM must not prevent state parsing.
-        return [[" " for _ in row] for row in tiles]
+    glyph_catalog = _get_glyph_catalog(mem)
+    lcdc = mem[_LCDC_ADDRESS]
+    decoded_by_tile_id: dict[int, str] = {}
+    for tile_id in {tile for row in tiles for tile in row} & glyph_catalog.keys():
+        address = _get_vram_tile_address(tile_id, lcdc)
+        pattern = bytes(mem[_VRAM_BANK, address : address + _VRAM_TILE_SIZE])
+        decoded_by_tile_id[tile_id] = glyph_catalog[tile_id].get(pattern, " ")
+    return [[decoded_by_tile_id.get(tile, " ") for tile in row] for row in tiles]
 
 
 def _get_vram_tile_address(tile_id: int, lcdc: int) -> int:

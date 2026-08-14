@@ -14,15 +14,6 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class DialogBox:
-    """The state of the dialog box."""
-
-    top_line: str
-    bottom_line: str
-    has_cursor: bool
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
 class AsciiScreenTerrain:
     """An entity-free ASCII terrain observation for the visible screen."""
 
