@@ -324,7 +324,10 @@ class NavigationService:
         """Return the result when navigation should stop, if applicable."""
         new_pos = game_state.player.coords
         if game_state.map.id != starting_map_id:
-            return f"Map changed from {starting_map_id.name} to {game_state.map.id.name}."
+            return (
+                f"Map changed from {starting_map_id.name} {prev_pos}"
+                f" to {game_state.map.id.name} {new_pos}."
+            )
         if new_pos == target_pos:
             return f"I reached {target_pos}."
         if prev_pos == new_pos:

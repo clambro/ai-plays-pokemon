@@ -81,7 +81,10 @@ async def _check_for_collision(
 
     game_state = await emulator.get_game_state()
     if prev_map_id != game_state.map.id:
-        return f"Map changed from {prev_map_id.name} to {game_state.map.id.name}."
+        return (
+            f"Map changed from {prev_map_id.name} {prev_coords}"
+            f" to {game_state.map.id.name} {game_state.player.coords}."
+        )
     # Remaining stationary after changing direction is a successful turn, not a collision.
     if prev_coords == game_state.player.coords and prev_direction == game_state.player.direction:
         return (

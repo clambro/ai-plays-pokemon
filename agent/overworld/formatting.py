@@ -181,17 +181,22 @@ def format_sprite_notes(map_view: CurrentMapView, game_state: GameState) -> str:
     """Format known sprites in index order."""
     current_map = map_view.overworld_map
     output = ""
+    # Some sprites (e.g. Nurses) remain interactable across counters even though their tiles are
+    # outside the player's connected region.
     sprites = [
         game_state.sprites[entity_id]
         for entity_id in sorted(current_map.known_sprite_ids)
         if entity_id in game_state.sprites
-        and _is_relevant_coords(game_state.sprites[entity_id].coords, map_view, game_state)
+        and (
+            game_state.sprites[entity_id].coords in map_view.visible_coords
+            or game_state.screen.to_screen_coords(game_state.sprites[entity_id].coords) is not None
+        )
     ]
     pc_locations = np.argwhere(current_map.terrain_ndarray == AsciiTile.PC_TILE)
     if len(pc_locations) > 0:
         # This is a bit of a hack, but the model really struggles to find the PC otherwise.
         location = Coords(row=int(pc_locations[0][0]), col=int(pc_locations[0][1]))
-        if _is_relevant_coords(location, map_view, game_state):
+        if location in map_view.visible_coords:
             output += f"- There is a PC at {location}. It can only be interacted with from below.\n"
     if not output and not sprites:
         return "No sprites discovered."
@@ -208,7 +213,7 @@ def format_warp_notes(map_view: CurrentMapView, game_state: GameState) -> str:
         game_state.warps[entity_id]
         for entity_id in sorted(current_map.known_warp_ids)
         if entity_id in game_state.warps
-        and _is_relevant_coords(game_state.warps[entity_id].coords, map_view, game_state)
+        and game_state.warps[entity_id].coords in map_view.visible_coords
     ]
     if not warps:
         return "No warp tiles discovered."
@@ -231,7 +236,7 @@ def format_sign_notes(map_view: CurrentMapView, game_state: GameState) -> str:
         game_state.signs[entity_id]
         for entity_id in sorted(current_map.known_sign_ids)
         if entity_id in game_state.signs
-        and _is_relevant_coords(game_state.signs[entity_id].coords, map_view, game_state)
+        and game_state.signs[entity_id].coords in map_view.visible_coords
     ]
     if not signs:
         return "No signs discovered."
@@ -260,17 +265,6 @@ def format_connection_notes(map_view: CurrentMapView) -> str:
     return "\n".join(
         f"- The map to the {direction} is {connection.destination_map.name}."
         for direction, connection in reachable_connections
-    )
-
-
-def _is_relevant_coords(
-    coords: Coords,
-    map_view: CurrentMapView,
-    game_state: GameState,
-) -> bool:
-    """Return whether coordinates belong to the region or the current visible screen."""
-    return (
-        coords in map_view.visible_coords or game_state.screen.to_screen_coords(coords) is not None
     )
 
 

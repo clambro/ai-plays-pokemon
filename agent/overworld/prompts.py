@@ -59,17 +59,17 @@ The tile directly to the right of you is "{{tile_right}}"{{blocked_right}}.
 {{connections}}
 </map_connections>
 
-The following discovered sprites are in your current region or current screen:
+The following discovered sprites are in your current region:
 <known_sprites>
 {{known_sprites}}
 </known_sprites>
 
-The following discovered warp tiles are in your current region or current screen:
+The following discovered warp tiles are in your current region:
 <known_warps>
 {{known_warps}}
 </known_warps>
 
-The following discovered signs are in your current region or current screen:
+The following discovered signs are in your current region:
 <known_signs>
 {{known_signs}}
 </known_signs>
