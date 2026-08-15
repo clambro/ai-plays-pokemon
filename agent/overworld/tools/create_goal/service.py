@@ -4,11 +4,11 @@ from copy import deepcopy
 
 from memory.goals import Goal, Goals
 
-_MAX_OTHER_GOALS = 5
+_MAX_SECONDARY_GOALS = 3
 
 
-class OtherGoalLimitReachedError(ValueError):
-    """Raised when creation would add more than five other goals."""
+class SecondaryGoalLimitReachedError(ValueError):
+    """Raised when creation would add more than three secondary goals."""
 
 
 class PrimaryGoalAlreadyExistsError(ValueError):
@@ -20,6 +20,7 @@ def create_goal(
     goals: Goals,
     goal: str,
     is_primary: bool,
+    iteration: int,
 ) -> Goals:
     """Append one new goal through the existing goal behavior.
 
@@ -27,12 +28,13 @@ def create_goal(
         goals: Current live goal collection.
         goal: Text of the new goal.
         is_primary: Whether the new goal is the primary goal.
+        iteration: Current application iteration.
 
     Returns:
         A revised goal collection containing the new goal.
 
     Raises:
-        OtherGoalLimitReachedError: If five other goals already exist.
+        SecondaryGoalLimitReachedError: If three secondary goals already exist.
         PrimaryGoalAlreadyExistsError: If you try to create a second primary goal.
     """
     if is_primary and any(existing_goal.is_primary for existing_goal in goals.goals):
@@ -41,12 +43,19 @@ def create_goal(
         )
     if (
         not is_primary
-        and sum(not existing_goal.is_primary for existing_goal in goals.goals) >= _MAX_OTHER_GOALS
+        and sum(not existing_goal.is_primary for existing_goal in goals.goals)
+        >= _MAX_SECONDARY_GOALS
     ):
-        raise OtherGoalLimitReachedError(
-            "Five other goals already exist. Update or delete one before creating another.",
+        raise SecondaryGoalLimitReachedError(
+            "Three secondary goals already exist. Update or delete one before creating another.",
         )
 
     updated_goals = deepcopy(goals)
-    updated_goals.append(Goal(goal=goal, is_primary=is_primary))
+    updated_goals.append(
+        Goal(
+            goal=goal,
+            is_primary=is_primary,
+            updated_at_iteration=iteration,
+        ),
+    )
     return updated_goals

@@ -21,8 +21,10 @@ def format_goals(goals: Goals) -> str:
     out += (
         "Here are the goals that you have set for yourself. Your ultimate goal is, of course,"
         " to collect all eight badges and become the Elite Four Champion, but these goals here"
-        " are the next steps on your journey to that goal. The actions that you take and the"
-        " thoughts that you think should all be in service of these goals."
+        " are the next steps on your journey to that goal. Your primary goal is one major"
+        " outcome, while each secondary goal is one discrete step that directly supports it."
+        " The actions that you take and the thoughts that you think should all be in service"
+        " of these goals."
     )
     out += "\n<goals>\n"
     if goals.goals:
@@ -55,9 +57,9 @@ def format_rolling_memory(memory: RollingMemory) -> str:
 
 
 def _format_goal(goal: Goal) -> str:
-    """Format one goal with its role."""
-    role = "Primary goal" if goal.is_primary else "Other goal"
-    return f"{role}: {goal.goal}"
+    """Format one goal with its role and most recent revision iteration."""
+    role = "Primary goal" if goal.is_primary else "Secondary goal"
+    return f"{role} (last updated at iteration {goal.updated_at_iteration}): {goal.goal}"
 
 
 def _format_memory_entry(entry: _MemoryEntry) -> str:

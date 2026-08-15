@@ -14,6 +14,7 @@ def update_goal(
     goals: Goals,
     index: int,
     goal: str,
+    iteration: int,
 ) -> Goals:
     """Replace one existing goal through the existing goal behavior.
 
@@ -21,6 +22,7 @@ def update_goal(
         goals: Current live goal collection.
         index: Zero-based index of the goal to replace.
         goal: Complete revised goal text.
+        iteration: Current application iteration.
 
     Returns:
         A revised goal collection containing the replacement.
@@ -36,5 +38,11 @@ def update_goal(
     updated_goals = deepcopy(goals)
     is_primary = updated_goals.goals[index].is_primary
     updated_goals.remove(index)
-    updated_goals.append(Goal(goal=goal, is_primary=is_primary))
+    updated_goals.append(
+        Goal(
+            goal=goal,
+            is_primary=is_primary,
+            updated_at_iteration=iteration,
+        ),
+    )
     return updated_goals

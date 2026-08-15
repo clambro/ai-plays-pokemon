@@ -38,16 +38,21 @@ def build_update_goal_tool(context: AgentContext) -> Tool[AgentContext]:
 
         Do not use this tool for a goal that has been completed or that you no
         longer want to pursue; delete that goal instead. Update the primary
-        goal sparingly. You should maintain exactly one primary goal and may
-        have up to five other goals.
+        goal only when new information meaningfully changes its intended
+        outcome or success criterion. Do not update a goal merely to reword it,
+        record progress, append another task, or keep it recent. Keep the
+        primary goal stable while its outcome remains relevant; represent the
+        steps toward it with secondary goals. You should maintain exactly one
+        primary goal and may have up to three secondary goals.
 
         The revised goal must remain specific, measurable, achievable,
         relevant to becoming Champion, and time-bound when appropriate. It
-        must remain distinct from every other goal. Base the revision on your
-        experience recorded in memory or current player information, not
-        prior Pokemon knowledge, which is prone to error. Write the complete
-        replacement goal in the first person, just like your reasoning and
-        memories.
+        must describe one outcome and remain distinct from every other goal.
+        Strongly avoid the word "and" because it usually joins multiple goals
+        that should be separate. Base the revision on your experience recorded
+        in memory or current player information, not prior Pokemon knowledge,
+        which is prone to error. Write the complete replacement goal in the
+        first person, just like your reasoning and memories.
 
         Args:
             index: Zero-based index of the existing goal to revise.
@@ -62,6 +67,7 @@ def build_update_goal_tool(context: AgentContext) -> Tool[AgentContext]:
                 goals=context.state.goals,
                 index=index,
                 goal=goal,
+                iteration=context.state.iteration,
             )
         except GoalNotFoundError as error:
             result = str(error)

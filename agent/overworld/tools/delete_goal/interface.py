@@ -59,7 +59,7 @@ def build_delete_goal_tool(context: AgentContext) -> Tool[AgentContext]:
             result = str(error)
         else:
             context.state.goals = goals
-            role = "Primary goal" if deleted_goal.is_primary else "Other goal"
+            role = "Primary goal" if deleted_goal.is_primary else "Secondary goal"
             result = f"Deleted goal:\n{role}: {deleted_goal.goal}\n\n{format_goals(goals)}"
 
         return await complete_overworld_action(context, result)

@@ -9,6 +9,7 @@ class Goal:
 
     goal: str
     is_primary: bool
+    updated_at_iteration: int
 
 
 @dataclass(slots=True, kw_only=True)

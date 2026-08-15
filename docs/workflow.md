@@ -125,7 +125,7 @@ This was my least favourite tool to code because it is so complicated and we onl
 
 ### Create, Update, and Delete Goals
 
-The create, update, and delete tools let the agent maintain one primary goal and up to five other goals. Goal management is discretionary: when the current goals remain appropriate, the agent uses another tool instead.
+The create, update, and delete tools let the agent maintain one primary goal and up to three secondary goals. The primary goal is one major outcome, while each secondary goal is one discrete step toward it. Goal management is discretionary: when the current goals remain appropriate, the agent uses another tool instead.
 
 ### Memory and Display Updates
 
