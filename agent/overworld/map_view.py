@@ -7,11 +7,11 @@ import numpy as np
 
 from agent.overworld import navigation
 from common.enums import AsciiTile
+from common.schemas import Coords
 from overworld_map.views import get_current_map_tiles
 
 if TYPE_CHECKING:
     from common.enums import FacingDirection
-    from common.schemas import Coords
     from emulator.game_state import GameState
     from overworld_map.schemas import OverworldMap
 
@@ -24,6 +24,7 @@ class CurrentMapView:
     navigation_tiles: np.ndarray
     reachable_coords: frozenset[Coords]
     visible_coords: frozenset[Coords]
+    display_origin: Coords
     display_tiles: np.ndarray
     exploration_candidates: tuple[Coords, ...]
     boundary_tiles: dict[FacingDirection, tuple[Coords, ...]]
@@ -33,7 +34,7 @@ def build_current_map_view(
     overworld_map: OverworldMap,
     game_state: GameState,
 ) -> CurrentMapView:
-    """Build the current reachable region using the navigation service's movement rules."""
+    """Build the current reachable region using the shared overworld traversal rules."""
     navigation_tiles = get_current_map_tiles(overworld_map, game_state)
     reachable = navigation.get_accessible_coords(
         game_state.player.coords,
@@ -43,13 +44,24 @@ def build_current_map_view(
     )
     reachable_coords = frozenset(reachable)
     visible_coords = _get_visible_coords(reachable_coords, navigation_tiles)
-    display_tiles = np.full(
-        navigation_tiles.shape,
+    display_top = min(coords.row for coords in visible_coords)
+    display_bottom = max(coords.row for coords in visible_coords)
+    display_left = min(coords.col for coords in visible_coords)
+    display_right = max(coords.col for coords in visible_coords)
+    region_tiles = navigation_tiles[
+        display_top : display_bottom + 1,
+        display_left : display_right + 1,
+    ]
+    display_tiles = np.where(
+        region_tiles == AsciiTile.WALL,
+        region_tiles,
         AsciiTile.OUTSIDE_REGION,
-        dtype=navigation_tiles.dtype,
     )
     for coords in visible_coords:
-        display_tiles[coords.row, coords.col] = navigation_tiles[coords.row, coords.col]
+        display_tiles[coords.row - display_top, coords.col - display_left] = navigation_tiles[
+            coords.row,
+            coords.col,
+        ]
 
     boundary_tiles = {
         direction: tuple(coords)
@@ -63,6 +75,7 @@ def build_current_map_view(
         navigation_tiles=navigation_tiles,
         reachable_coords=reachable_coords,
         visible_coords=visible_coords,
+        display_origin=Coords(row=display_top, col=display_left),
         display_tiles=display_tiles,
         exploration_candidates=tuple(
             navigation.get_exploration_candidates(reachable, navigation_tiles),

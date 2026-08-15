@@ -15,11 +15,17 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.unit
-def test_current_map_view_masks_disconnected_terrain_without_mutating_map() -> None:
-    """Only the player's navigable region and its immediate boundary are exposed."""
+def test_current_map_view_crops_region_without_mutating_map() -> None:
+    """The display is a rectangular global-coordinate crop around the current region."""
     overworld_map = OverworldMap(
         id=MapId.ROUTE_2,
-        terrain=[list("∙∙▓∙∙"), list("∙∙▓∙∙")],
+        terrain=[
+            list("▓▓▓▓▓▓▓"),
+            list("▓∙▓▓▓▓▓"),
+            list("▓▓∙∙▓∙▓"),
+            list("▓▓∙∙▓∙▓"),
+            list("▓▓▓▓∙▓▓"),
+        ],
         blockages={},
         known_sprite_ids=set(),
         known_sign_ids=set(),
@@ -37,7 +43,7 @@ def test_current_map_view_masks_disconnected_terrain_without_mutating_map() -> N
             warps={},
             signs={},
             pikachu=SimpleNamespace(is_rendered=False),
-            player=SimpleNamespace(coords=Coords(row=0, col=0)),
+            player=SimpleNamespace(coords=Coords(row=2, col=2)),
             get_hm_tiles=list,
         ),
     )
@@ -46,26 +52,43 @@ def test_current_map_view_masks_disconnected_terrain_without_mutating_map() -> N
 
     assert map_view.display_tiles.tolist() == [
         [
+            AsciiTile.OUTSIDE_REGION,
+            AsciiTile.WALL,
+            AsciiTile.WALL,
+            AsciiTile.WALL,
+        ],
+        [
+            AsciiTile.WALL,
             AsciiTile.PLAYER,
             AsciiTile.FREE,
             AsciiTile.WALL,
-            AsciiTile.OUTSIDE_REGION,
-            AsciiTile.OUTSIDE_REGION,
         ],
         [
+            AsciiTile.WALL,
             AsciiTile.FREE,
             AsciiTile.FREE,
             AsciiTile.WALL,
-            AsciiTile.OUTSIDE_REGION,
+        ],
+        [
+            AsciiTile.WALL,
+            AsciiTile.WALL,
+            AsciiTile.WALL,
             AsciiTile.OUTSIDE_REGION,
         ],
     ]
+    assert map_view.display_origin == Coords(row=1, col=1)
     assert map_view.reachable_coords == frozenset(
         {
-            Coords(row=0, col=0),
-            Coords(row=0, col=1),
-            Coords(row=1, col=0),
-            Coords(row=1, col=1),
+            Coords(row=2, col=2),
+            Coords(row=2, col=3),
+            Coords(row=3, col=2),
+            Coords(row=3, col=3),
         },
     )
-    assert overworld_map.terrain == [list("∙∙▓∙∙"), list("∙∙▓∙∙")]
+    assert overworld_map.terrain == [
+        list("▓▓▓▓▓▓▓"),
+        list("▓∙▓▓▓▓▓"),
+        list("▓▓∙∙▓∙▓"),
+        list("▓▓∙∙▓∙▓"),
+        list("▓▓▓▓∙▓▓"),
+    ]

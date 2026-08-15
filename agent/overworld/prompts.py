@@ -19,16 +19,16 @@ Map name: {{map_name}}
 <ascii_screen>
 {{ascii_screen}}
 </ascii_screen>
-<current_map_region>
+<current_map_region top_row="{{region_top}}" left_column="{{region_left}}">
 {{ascii_map}}
 </current_map_region>
 <legend>
 {{legend}}
 </legend>
 
-The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map in row-column order is {{height}}x{{width}} blocks.
+The complete map's global coordinates in row-column order start at (0, 0) in its top left corner. Rows increase from top to bottom, and columns increase from left to right.
 
-The current map region above uses the permanent coordinates of the complete map. It shows only the region that is currently navigable from your position and the terrain immediately bordering that region. "{AsciiTile.OUTSIDE_REGION}" masks every other coordinate, which may be unexplored or may belong to another disconnected region of this larger map. Previously remembered coordinates remain valid, but coordinates masked with "{AsciiTile.OUTSIDE_REGION}" cannot be reached from your current region. Coordinates never change when regions expand, merge, or are entered from another location.
+The current map region is a rectangular crop enclosing the area currently navigable from your position and its bordering terrain. Its first displayed tile is global coordinate ({{region_top}}, {{region_left}}), as recorded in the tag above; displayed rows and columns continue from there without renumbering the underlying coordinates. Walls are shown throughout the rectangle so its physical shape remains clear. "{AsciiTile.OUTSIDE_REGION}" marks every other coordinate inside the rectangle that is outside your current navigable region. Do not target those coordinates directly. Previously remembered coordinates remain valid, and coordinates never change when regions expand, merge, or are entered from another location.
 
 <screen_position>
 The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size). This should help you navigate from one map to another.
@@ -88,7 +88,7 @@ The current ASCII screen is derived from current game memory, while the current 
 """.strip()
 
 LEGEND_MAP = {
-    AsciiTile.OUTSIDE_REGION: "A coordinate outside your current navigable region. It may be unexplored or reachable only from somewhere else, so do not target it directly.",
+    AsciiTile.OUTSIDE_REGION: "A non-wall coordinate outside your current navigable region. It may be unexplored or reachable only from somewhere else, so do not target it directly.",
     AsciiTile.UNSEEN: "Tiles that you have not yet explored. Move toward these tiles to reveal them.",
     AsciiTile.WALL: "A barrier (usually a wall or an object) that you cannot pass through.",
     AsciiTile.WATER: "Water.",
@@ -169,8 +169,8 @@ def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> st
         map_name=current_map.id.name,
         ascii_map="\n".join("".join(row) for row in map_view.display_tiles),
         legend=formatting.format_legend(map_view, LEGEND_MAP),
-        height=current_map.height,
-        width=current_map.width,
+        region_top=map_view.display_origin.row,
+        region_left=map_view.display_origin.col,
         known_sprites=formatting.format_sprite_notes(map_view, game_state),
         known_warps=formatting.format_warp_notes(map_view, game_state),
         known_signs=formatting.format_sign_notes(map_view, game_state),
