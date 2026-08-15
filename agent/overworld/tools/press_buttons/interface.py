@@ -41,6 +41,13 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         rotate in place. Do not use it for general movement when the navigation
         tool is available.
 
+        Directional buttons behave differently depending on the direction you
+        are currently facing. Pressing a different direction rotates you to
+        face that direction without moving. Pressing the direction you are
+        already facing attempts to move you one tile. For example, when facing
+        up, ``left, left`` rotates you left and then moves you left. When already
+        facing left, a single ``left`` attempts to move you left.
+
         The available buttons are:
 
         - ``a``: The action button. Used to interact with objects in the game.
@@ -50,10 +57,11 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
           this button.
         - ``start``: Used to open the main menu. You shouldn't need to do this,
           but it is included for completeness.
-        - ``up``: Used to move the player upwards.
-        - ``down``: Used to move the player downwards.
-        - ``left``: Used to move the player left.
-        - ``right``: Used to move the player right.
+        - ``up``: Turn up, or attempt to move up when already facing up.
+        - ``down``: Turn down, or attempt to move down when already facing down.
+        - ``left``: Turn left, or attempt to move left when already facing left.
+        - ``right``: Turn right, or attempt to move right when already facing
+          right.
 
         Follow the map's instructions for each warp tile: walk on or through
         the warp rather than pressing the action button.
@@ -84,7 +92,8 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         interact with an object.
 
         Args:
-            buttons: Buttons to press in order.
+            buttons: Buttons to press in order, accounting for the current
+                facing direction.
 
         Returns:
             Fresh screenshot and the actual button-sequence result.

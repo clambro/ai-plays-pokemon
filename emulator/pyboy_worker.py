@@ -161,9 +161,9 @@ class PyBoyWorker:
                 button,
                 observe_steps=observe_steps,
             )
-            # The overworld loop spans two rendered frames, so a three-frame pulse guarantees one
-            # poll while remaining short enough not to carry into the following interface.
-            pyboy.button(button, 3)
+            # The overworld loop polls once every two rendered frames, so a two-frame pulse reaches
+            # exactly one poll without carrying into the next one.
+            pyboy.button(button, 2)
             return operation_id
 
         return await self.execute(_start)
