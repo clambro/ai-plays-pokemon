@@ -157,7 +157,7 @@ class PyBoyWorker:
         *,
         observe_steps: bool = False,
     ) -> int:
-        """Arm overworld coordination and schedule its short button pulse atomically."""
+        """Arm overworld coordination and hold its button until the ROM accepts it."""
 
         def _start(pyboy: PyBoy) -> int:
             if self._control_hooks is None:
@@ -166,21 +166,19 @@ class PyBoyWorker:
                 button,
                 observe_steps=observe_steps,
             )
-            # The overworld loop polls once every two rendered frames, so a two-frame pulse reaches
-            # exactly one poll without carrying into the next one.
-            pyboy.button(button, 2)
+            pyboy.button_press(button)
             return operation_id
 
         return await self.execute(_start)
 
     async def start_control_button(self, button: Button) -> int:
-        """Arm coordination in the active input domain and schedule a short pulse."""
+        """Arm coordination and hold its button until the active input domain accepts it."""
 
         def _start(pyboy: PyBoy) -> int:
             if self._control_hooks is None:
                 raise RuntimeError("ROM control hooks are not installed.")
             operation_id = self._control_hooks.arm_button(button)
-            pyboy.button(button, 3)
+            pyboy.button_press(button)
             return operation_id
 
         return await self.execute(_start)

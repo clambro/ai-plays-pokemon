@@ -57,6 +57,7 @@ class _PendingOperation:
     required_boundary: ControlBoundary | None = None
     observe_steps: bool = False
     accepted: bool = False
+    release_scheduled: bool = False
     render_ready_frame: int | None = None
     step_observations: list[GameState] = field(default_factory=list)
 
@@ -335,6 +336,18 @@ class RomControlHooks:
 
         self._observe_immediate_input()
 
+        pending = self._pending
+        if (
+            pending is not None
+            and pending.button is not None
+            and pending.accepted
+            and not pending.release_scheduled
+        ):
+            # Hook callbacks run inside tick(), where an immediate PyBoy release would be discarded
+            # by that tick's event cleanup. Queue it here, between ticks, for the next frame.
+            self._pyboy.button_release(pending.button)
+            pending.release_scheduled = True
+
         if self._completed_boundary is None:
             return
         if pending is None or not pending.accepted:
@@ -420,8 +433,7 @@ class RomControlHooks:
 
         if not pending.accepted:
             if pending.input_domain == _ControlDomain.OVERWORLD and pressed & pending.button_mask:
-                pending.accepted = True
-                self._current_boundary = None
+                self._accept_button(pending)
             return
 
         if overworld_ready and not held & pending.button_mask:
@@ -436,7 +448,7 @@ class RomControlHooks:
         if pending is None or pending.input_domain != domain or pending.accepted:
             return
         if input_state & pending.button_mask:
-            pending.accepted = True
+            self._accept_button(pending)
 
     def _observe_ready(self, domain: _ControlDomain, boundary: ControlBoundary) -> None:
         """Track and, when applicable, complete a prepared input boundary."""
@@ -476,8 +488,7 @@ class RomControlHooks:
                 self._pyboy.memory[_JOY_PRESSED_ADDRESS] | self._pyboy.memory[_MENU_INPUT_ADDRESS]
             )
             if input_state & pending.button_mask:
-                pending.accepted = True
-                self._current_boundary = None
+                self._accept_button(pending)
             return
 
         input_released = not self._pyboy.memory[_JOY_HELD_ADDRESS] & pending.button_mask
@@ -498,6 +509,11 @@ class RomControlHooks:
             and self._pyboy.memory[_WALK_COUNTER_ADDRESS] == 0
         ):
             self._step_completed_this_tick = True
+
+    def _accept_button(self, pending: _PendingOperation) -> None:
+        """Record that the ROM consumed an injected button press."""
+        pending.accepted = True
+        self._current_boundary = None
 
     def _is_overworld_ready(self) -> bool:
         mem = self._pyboy.memory
