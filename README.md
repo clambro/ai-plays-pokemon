@@ -115,11 +115,11 @@ Longer answer based on recent runs:
 
 - The workflow completes roughly 370 iterations per hour.
 - Instructions, screenshots, game state, tool calls, results, and model output account for ~5,600 tokens per iteration.
-- Rolling memory grows logarithmically, contributing roughly `2,800 + 400 × log₂ N` tokens to iteration N.
+- Rolling memory grows logarithmically with iterations, contributing roughly `2,800 + 400 × log₂ N` tokens to iteration `N`.
 
-Together, that is around `8,400 + 400 × log₂ N` tokens per iteration. Applying Luna's current prices to that token mix at 370 iterations per hour gives hourly cost growth of:
+Together, that is around `8,400 + 400 × log₂ N` tokens per iteration. Since `N ≈ 370H` after `H` hours of play, applying Luna's current prices to that token mix and expressing the result in hours gives approximately:
 
-`hourly cost ≈ $0.47 + $0.026 × log₂ N`
+`hourly cost ≈ $0.69 + $0.026 × log₂ H`
 
 The $1 headline is a nice round number for a run that has been progressing for a while.
 
