@@ -70,7 +70,7 @@ The following discovered signs are in your current region or current screen:
 </known_signs>
 
 Navigation tips:
-- You should explore as much of the map as possible to reveal unexplored tiles, as they may be hiding important sprites or warp tiles. Tiles are considered explored once they are on screen, so move towards unseen territory when you are stuck or unsure how to proceed.
+- You should explore as much of the map as possible, as it may be hiding important sprites or warp tiles. Exploration is not only a matter of revealing tiles; interact with what you discover along the way. Tiles are considered explored once they are on screen, so move towards unseen territory when you are stuck or unsure how to proceed.
 - The orientation of the map and screen is always fixed, regardless of the direction that you are facing.
 - Do not use the action button on a warp.
 - To connect from one map to another, you must either use a warp tile, or, *in outdoor maps only*, walk off the edge of the map. In outdoor maps, you will never be able to walk through a wall or barrier for any reason. You have to find where the edge of the map connects to the next map by looking at the ASCII screen.
