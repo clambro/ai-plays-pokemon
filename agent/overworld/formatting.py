@@ -32,6 +32,41 @@ _ALWAYS_VISIBLE_TILES = {
     AsciiTile.SIGN,
 }
 
+# These buildings are visually identifiable from their exterior before the player enters them, so
+# revealing their destination does not give the agent information unavailable on the game screen.
+_VISIBLE_UNVISITED_DESTINATIONS = frozenset(
+    {
+        MapId.VIRIDIAN_POKECENTER,
+        MapId.PEWTER_POKECENTER,
+        MapId.CERULEAN_POKECENTER,
+        MapId.MT_MOON_POKECENTER,
+        MapId.ROCK_TUNNEL_POKECENTER,
+        MapId.VERMILION_POKECENTER,
+        MapId.CELADON_POKECENTER,
+        MapId.LAVENDER_POKECENTER,
+        MapId.FUCHSIA_POKECENTER,
+        MapId.CINNABAR_POKECENTER,
+        MapId.SAFFRON_POKECENTER,
+        MapId.VIRIDIAN_GYM,
+        MapId.PEWTER_GYM,
+        MapId.CERULEAN_GYM,
+        MapId.VERMILION_GYM,
+        MapId.CELADON_GYM,
+        MapId.FUCHSIA_GYM,
+        MapId.CINNABAR_GYM,
+        MapId.SAFFRON_GYM,
+        MapId.VIRIDIAN_MART,
+        MapId.PEWTER_MART,
+        MapId.CERULEAN_MART,
+        MapId.VERMILION_MART,
+        MapId.CELADON_MART_1F,
+        MapId.LAVENDER_MART,
+        MapId.FUCHSIA_MART,
+        MapId.CINNABAR_MART,
+        MapId.SAFFRON_MART,
+    }
+)
+
 
 def format_explored_percentage(current_map: OverworldMap) -> str:
     """Format the portion of the map that has been explored."""
@@ -65,7 +100,11 @@ def _format_overworld_warp(
     player_coords: Coords,
 ) -> str:
     """Format a known overworld warp for the agent."""
-    if warp.destination in known_map_ids or warp.destination in {MapId.OUTSIDE, MapId.UNKNOWN}:
+    if (
+        warp.destination in known_map_ids
+        or warp.destination in {MapId.OUTSIDE, MapId.UNKNOWN}
+        or warp.destination in _VISIBLE_UNVISITED_DESTINATIONS
+    ):
         destination = warp.destination.name
         if warp.destination_coords is not None:
             destination += f" at {warp.destination_coords}"
