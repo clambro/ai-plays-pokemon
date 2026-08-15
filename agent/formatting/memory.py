@@ -19,12 +19,12 @@ def format_goals(goals: Goals) -> str:
     """Format the agent's current goals for gameplay prompts."""
     out = "<goals_info>\n"
     out += (
-        "Here are the goals that you have set for yourself. Your ultimate goal is, of course,"
-        " to collect all eight badges and become the Elite Four Champion, but these goals here"
-        " are the next steps on your journey to that goal. Your primary goal is one major"
-        " outcome, while each secondary goal is one discrete step that directly supports it."
-        " The actions that you take and the thoughts that you think should all be in service"
-        " of these goals."
+        "Here are the goals that you have set for yourself. Your primary goal is one major"
+        " outcome established by your current context, while each secondary goal is one"
+        " discrete step that directly supports it. Goals must come from current structured"
+        " information, observed game text, or recorded memory, never from assumptions about"
+        " future game progression or general Pokemon knowledge. The actions that you take and"
+        " the thoughts that you think should all be in service of these goals."
     )
     out += "\n<goals>\n"
     if goals.goals:

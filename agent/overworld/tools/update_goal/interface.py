@@ -45,14 +45,16 @@ def build_update_goal_tool(context: AgentContext) -> Tool[AgentContext]:
         steps toward it with secondary goals. You should maintain exactly one
         primary goal and may have up to three secondary goals.
 
-        The revised goal must remain specific, measurable, achievable,
-        relevant to becoming Champion, and time-bound when appropriate. It
-        must describe one outcome and remain distinct from every other goal.
-        Strongly avoid the word "and" because it usually joins multiple goals
-        that should be separate. Base the revision on your experience recorded
-        in memory or current player information, not prior Pokemon knowledge,
-        which is prone to error. Write the complete replacement goal in the
-        first person, just like your reasoning and memories.
+        The revised goal must remain specific, measurable, achievable, and
+        relevant to your current progress. It must describe one outcome
+        and remain distinct from every other goal. Strongly avoid the word
+        "and" because it usually joins multiple goals that should be separate.
+
+        Base every revision only on current structured information, observed
+        game text, or recorded memory. Do not add a location, character, item,
+        or objective inferred from general Pokemon knowledge or anticipated
+        future progression. Write the complete replacement goal in the first
+        person, just like your reasoning and memories.
 
         Args:
             index: Zero-based index of the existing goal to revise.
