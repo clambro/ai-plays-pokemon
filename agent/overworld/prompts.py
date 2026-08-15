@@ -2,7 +2,12 @@
 
 from typing import TYPE_CHECKING
 
-from agent.formatting.game_state import format_party_info, format_pc_info, format_player_info
+from agent.formatting.game_state import (
+    format_inventory_info,
+    format_party_info,
+    format_pc_info,
+    format_player_info,
+)
 from agent.formatting.memory import format_goals, format_rolling_memory
 from agent.overworld import formatting
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
@@ -137,11 +142,6 @@ current region. Boundaries in other regions of the same larger map are omitted.
 {map_boundaries}
 </map_boundaries>
 
-Your current inventory is listed below:
-<inventory_indices>
-{inventory_indices}
-</inventory_indices>
-
 Use navigation for ordinary movement within the current map. Use press_buttons
 for direct interactions, changing direction, or sending the final directional
 input needed to cross a map boundary or warp. Prefer a specialized tool
@@ -226,16 +226,13 @@ def build_overworld_decision_prompt(
         )
         biking_warning = ""
 
-    inventory_indices = "\n".join(
-        f"[{index}] {item.name} (x{item.quantity})"
-        for index, item in enumerate(game_state.inventory.items)
-    )
     sections = (
         format_rolling_memory(context.state.rolling_memory),
         format_goals(context.state.goals),
         _format_overworld_map(map_view, game_state),
         format_player_info(game_state),
         format_party_info(game_state),
+        format_inventory_info(game_state),
         format_pc_info(game_state),
     )
     return OVERWORLD_DECISION_PROMPT.format(
@@ -243,5 +240,4 @@ def build_overworld_decision_prompt(
         exploration_candidates=exploration_candidates,
         map_boundaries=map_boundaries,
         biking_warning=biking_warning,
-        inventory_indices=inventory_indices,
     )

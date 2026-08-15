@@ -31,6 +31,8 @@ def format_goals(goals: Goals) -> str:
         out += "\n".join(
             f"[{index}] {_format_goal(goal)}" for index, goal in enumerate(goals.goals)
         )
+        if not any(not goal.is_primary for goal in goals.goals):
+            out += "\nYou have not set any secondary goals yet."
     else:
         out += "You have not set any goals yet."
     out += "\n</goals>\n"

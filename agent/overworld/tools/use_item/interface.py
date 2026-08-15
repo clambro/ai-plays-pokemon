@@ -33,7 +33,7 @@ def build_use_item_tool(context: AgentContext) -> Tool[AgentContext]:
 
         The item must be in your inventory for you to use it. If you don't have
         the item in your inventory, you cannot use it. The inventory slot is
-        the zero-based index shown in ``inventory_indices`` in the prompt.
+        the zero-based index shown in the ``inventory`` section of the prompt.
 
         If the item requires a target Pokemon (e.g. an evolution stone or a
         healing item), decide which Pokemon you want to use it on. The

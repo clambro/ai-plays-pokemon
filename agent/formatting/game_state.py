@@ -33,11 +33,12 @@ def format_party_info(game_state: GameState) -> str:
 
 def format_inventory_info(game_state: GameState) -> str:
     """Format the player's current inventory for agent prompts."""
-    if not game_state.inventory.items:
-        return ""
     out = "<inventory>\n"
-    for item in game_state.inventory.items:
-        out += f"- {item.name} (x{item.quantity})\n"
+    if game_state.inventory.items:
+        for index, item in enumerate(game_state.inventory.items):
+            out += f"[{index}] {item.name} (x{item.quantity})\n"
+    else:
+        out += "Your inventory is empty.\n"
     out += "</inventory>"
     return out
 

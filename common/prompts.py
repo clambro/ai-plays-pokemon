@@ -7,7 +7,7 @@ You are playing the game on hard mode, meaning:
 1. You cannot use items in battle (except for using balls to catch wild Pokemon, of course).
 2. There is a level cap on your party. A Pokemon at the level cap can still battle and be used normally; the cap only prevents it from gaining experience. The level cap increases as you progress through the game.
 
-These restrictions will force you to think strategically. You will not be able to beat the game with a single overleveled Pokemon. This is by no means a kaizo hack though, more of a fun challenge. If you build a solid, diverse team, you should be able to beat the game without too much trouble. You should thus start building your team as quickly as possible.
+These restrictions will force you to think strategically. You will not be able to make progress with only one strong Pokemon, but this is by no means a kaizo hack. If you build a solid, diverse team, you should be able to beat the game without too much trouble. Building and improving that team is thus an ongoing priority, starting as soon as you are able to catch Pokemon.
 
 Your hierarchy of knowledge sources is as follows:
 1. Structured information derived from the game's memory, as noted in the prompts. Current player information, the current ASCII screen, and current entity locations fall into this category and are your strongest sources for concrete state.
