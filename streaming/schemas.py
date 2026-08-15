@@ -99,9 +99,6 @@ class GameStateView(BaseModel):
             play_time_seconds=game_state.player.play_time_seconds,
             badges=[str(badge) for badge in game_state.player.badges],
             party=pokemon,
-            goals=[
-                f"{'Primary goal' if goal.is_primary else 'Other goal'}: {goal.goal}"
-                for goal in agent_state.goals.goals
-            ],
+            goals=[goal.goal for goal in agent_state.goals.goals],
             log=log,
         )

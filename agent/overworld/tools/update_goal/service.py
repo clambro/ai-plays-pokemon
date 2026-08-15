@@ -36,13 +36,8 @@ def update_goal(
         )
 
     updated_goals = deepcopy(goals)
-    is_primary = updated_goals.goals[index].is_primary
-    updated_goals.remove(index)
-    updated_goals.append(
-        Goal(
-            goal=goal,
-            is_primary=is_primary,
-            updated_at_iteration=iteration,
-        ),
+    updated_goals.goals[index] = Goal(
+        goal=goal.strip(),
+        updated_at_iteration=iteration,
     )
     return updated_goals

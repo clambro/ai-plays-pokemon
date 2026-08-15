@@ -33,13 +33,9 @@ def build_delete_goal_tool(context: AgentContext) -> Tool[AgentContext]:
         longer want to chase it. Use this tool only for one of those reasons.
         Goals are referred to by the indices in the current goal list.
 
-        Do not delete a goal merely to revise its text; update it instead. To
-        change whether a goal is primary, delete it and create its replacement
-        with the correct designation. Do not assume that you have accomplished
-        a goal until memory or current player information makes that certain.
-        You should normally maintain one primary goal. When replacing it,
-        delete the current primary goal first and create its replacement in a
-        subsequent tool call.
+        Do not delete a goal merely to revise its text; update it instead. Do
+        not assume that you have accomplished a goal until memory or current
+        player information makes that certain.
 
         Args:
             index: Zero-based index of the completed or abandoned goal to
@@ -59,8 +55,7 @@ def build_delete_goal_tool(context: AgentContext) -> Tool[AgentContext]:
             result = str(error)
         else:
             context.state.goals = goals
-            role = "Primary goal" if deleted_goal.is_primary else "Secondary goal"
-            result = f"Deleted goal:\n{role}: {deleted_goal.goal}\n\n{format_goals(goals)}"
+            result = f"Deleted goal:\n{deleted_goal.goal}\n\n{format_goals(goals)}"
 
         return await complete_overworld_action(context, result)
 

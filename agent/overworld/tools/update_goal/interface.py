@@ -32,18 +32,13 @@ def build_update_goal_tool(context: AgentContext) -> Tool[AgentContext]:
 
         Use this tool to replace a goal's text. Goals are referred to by the
         indices in the current goal list. Supply the complete replacement goal,
-        including all information that should remain after the update. Updating
-        a goal cannot change whether it is primary; delete it and create a
-        replacement to change that designation.
+        including all information that should remain after the update.
 
         Do not use this tool for a goal that has been completed or that you no
-        longer want to pursue; delete that goal instead. Update the primary
-        goal only when new information meaningfully changes its intended
-        outcome or success criterion. Do not update a goal merely to reword it,
-        record progress, append another task, or keep it recent. Keep the
-        primary goal stable while its outcome remains relevant; represent the
-        steps toward it with secondary goals. You should maintain exactly one
-        primary goal and may have up to three secondary goals.
+        longer want to pursue; delete that goal instead. Update a goal only when
+        new information meaningfully changes its intended outcome or success
+        criterion. Do not update a goal merely to reword it, record progress,
+        append another task, or keep it recent.
 
         The revised goal must remain specific, measurable, achievable, and
         relevant to your current progress. It must describe one outcome
