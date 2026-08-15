@@ -16,7 +16,12 @@ from emulator.control_events import ControlBoundary, ControlResultWaiter
 from emulator.game_state import GameState
 from emulator.rom_hooks.control import RomControlHooks
 from emulator.rom_hooks.text import RomTextHooks
-from emulator.text_events import TextEvent, TextEventJournal, TextEventKind
+from emulator.text_events import (
+    TextEvent,
+    TextEventJournal,
+    TextEventKind,
+    TextEventSnapshot,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -209,9 +214,20 @@ class PyBoyWorker:
         """Claim every currently recorded text event exactly once."""
         return self._text_events.drain()
 
-    async def drain_settled_text_events(self) -> tuple[TextEvent, ...]:
-        """Claim pending text events after the current emulated frame completes."""
-        return await self.execute(lambda _pyboy: self._text_events.drain())
+    async def drain_settled_text_events_with_control_boundary(
+        self,
+    ) -> TextEventSnapshot:
+        """Claim pending text events with their current rendered control boundary."""
+
+        def _drain(_pyboy: PyBoy) -> TextEventSnapshot:
+            if self._control_hooks is None:
+                raise RuntimeError("ROM control hooks are not installed.")
+            return TextEventSnapshot(
+                events=self._text_events.drain(),
+                boundary=self._control_hooks.current_boundary,
+            )
+
+        return await self.execute(_drain)
 
     def drain_completed_text_events(self) -> tuple[TextEvent, ...]:
         """Claim text events whose ordinary interaction has already closed."""

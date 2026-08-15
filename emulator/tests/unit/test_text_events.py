@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from common.enums import Button
 from emulator.control_events import ControlBoundary, ControlResult
 from emulator.text_events import (
     DialogPage,
@@ -12,6 +13,7 @@ from emulator.text_events import (
     TextEventJournal,
     TextEventKind,
     TextEventReducer,
+    TextEventSnapshot,
     drive_standard_dialog,
 )
 
@@ -110,7 +112,7 @@ async def test_dialog_driver_stops_when_an_initial_menu_is_replaced() -> None:
             emulator,
             reducer=TextEventReducer(),
             stop_on=frozenset({TextEventKind.MENU_OPENED}),
-            initial_events=events,
+            initial_snapshot=TextEventSnapshot(events=events),
         )
         == ""
     )
@@ -129,11 +131,37 @@ async def test_dialog_driver_waits_through_a_transition_marker() -> None:
             emulator,
             reducer=TextEventReducer(),
             stop_on=frozenset({TextEventKind.INTERACTION_CLOSED}),
-            initial_events=(_event(1, TextEventKind.INTERACTION_CLOSED),),
+            initial_snapshot=TextEventSnapshot(
+                events=(_event(1, TextEventKind.INTERACTION_CLOSED),)
+            ),
         )
         == ""
     )
     emulator.wait_until_ready.assert_awaited_once_with()
+
+
+@pytest.mark.unit
+async def test_dialog_driver_uses_live_boundary_after_input_event_was_claimed() -> None:
+    """Advance text when the preceding domain already claimed its input event."""
+    emulator = MagicMock()
+    emulator.wait_for_text_events = AsyncMock(
+        return_value=(_event(1, TextEventKind.INTERACTION_CLOSED),)
+    )
+    emulator.pulse_button = AsyncMock()
+    emulator.wait_until_ready = AsyncMock(
+        return_value=ControlResult(boundary=ControlBoundary.OVERWORLD_READY)
+    )
+
+    await drive_standard_dialog(
+        emulator,
+        reducer=TextEventReducer(),
+        stop_on=frozenset({TextEventKind.INTERACTION_CLOSED}),
+        initial_snapshot=TextEventSnapshot(
+            boundary=ControlBoundary.TEXT_INPUT_READY,
+        ),
+    )
+
+    emulator.pulse_button.assert_awaited_once_with(Button.A)
 
 
 @pytest.mark.unit
@@ -150,9 +178,11 @@ async def test_dialog_driver_hands_off_when_input_opens_a_custom_interface() -> 
         emulator,
         reducer=TextEventReducer(),
         stop_on=frozenset({TextEventKind.INTERACTION_CLOSED}),
-        initial_events=(
-            _event(1, TextEventKind.PAGE_COMPLETED, page),
-            _event(2, TextEventKind.INPUT_RESOLVED),
+        initial_snapshot=TextEventSnapshot(
+            events=(
+                _event(1, TextEventKind.PAGE_COMPLETED, page),
+                _event(2, TextEventKind.INPUT_RESOLVED),
+            ),
         ),
     )
 
