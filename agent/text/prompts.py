@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from emulator.game_state import GameState
 
 TEXT_DECISION_PROMPT = """
-There is actionable text on the screen. The screenshot provided above shows the screen at entry. After each tool call, its returned context is the freshest state and supersedes earlier observations. Briefly explain your reasoning in first person as ordinary response text, then use exactly one tool to take the next action. Every response must include one tool call; the agent loop ends automatically when the game exits text mode or enters a battle.
+The game is waiting for input in an interactive screen, usually a dialog or menu. The screenshot provided above shows the screen at entry. After each tool call, its returned context is the freshest state and supersedes earlier observations. Briefly explain your reasoning in first person as ordinary response text, then use exactly one tool to take the next action. Every response must include one tool call; the agent loop ends automatically when the game returns to the overworld or enters a battle.
 
 {state}
 

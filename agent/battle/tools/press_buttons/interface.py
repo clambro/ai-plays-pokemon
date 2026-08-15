@@ -10,10 +10,12 @@ from agent.battle.tools.press_buttons.service import (
 )
 from agent.battle.tools.utils import (
     BattleToolResult,
+    capture_pending_battle_dialog,
     complete_battle_action,
     refresh_battle_observation,
 )
 from common.enums import Button
+from emulator.control_events import ControlBoundary
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
@@ -59,12 +61,18 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         Returns:
             Fresh battle context after pressing the buttons.
         """
-        result = await press_buttons_service(
+        result, final_boundary = await press_buttons_service(
             context=context,
             buttons=buttons,
         )
         if buttons[-1] in {Button.UP, Button.DOWN, Button.LEFT, Button.RIGHT}:
             return await refresh_battle_observation(context, action_result=result)
+        if final_boundary == ControlBoundary.MENU_READY:
+            return await refresh_battle_observation(
+                context,
+                action_result=result,
+                dialog=capture_pending_battle_dialog(context),
+            )
         return await complete_battle_action(context, result)
 
     return Tool(press_buttons, require_parameter_descriptions=True)

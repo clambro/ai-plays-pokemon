@@ -12,11 +12,17 @@ from typing import TYPE_CHECKING
 
 from pyboy import PyBoy
 
-from emulator.parsers.rom_text import RomTextRecorder
+from emulator.control_events import ControlBoundary, ControlResultWaiter
+from emulator.game_state import GameState
+from emulator.rom_hooks.control import RomControlHooks
+from emulator.rom_hooks.text import RomTextHooks
 from emulator.text_events import TextEvent, TextEventJournal, TextEventKind
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from common.enums import Button
+    from emulator.control_events import ControlResult
 
 
 type _QueuedCommand = tuple[Callable[[PyBoy], None], Callable[[Exception], None]]
@@ -49,14 +55,17 @@ class PyBoyWorker:
         self._startup: Future[None] = Future()
         self._termination: Future[None] = Future()
         self._thread = Thread(target=self._run, name="pyboy-owner")
+        self._control_results = ControlResultWaiter()
+        self._control_hooks: RomControlHooks | None = None
         self._text_events = TextEventJournal()
-        self._text_recorder: RomTextRecorder | None = None
+        self._text_hooks: RomTextHooks | None = None
 
     async def start(self) -> None:
         """Start the owner thread and wait for PyBoy initialization."""
         with self._state_lock:
             if self._started:
                 raise RuntimeError("Emulator has already been started.")
+            self._control_results.bind(asyncio.get_running_loop())
             self._text_events.bind(asyncio.get_running_loop())
             self._started = True
             self._accepting_commands = True
@@ -109,6 +118,19 @@ class PyBoyWorker:
 
         return await asyncio.wrap_future(future)
 
+    async def execute_with_control_boundary[ResultT](
+        self,
+        operation: Callable[[PyBoy], ResultT],
+    ) -> tuple[ResultT, ControlBoundary | None]:
+        """Execute an operation and capture the active ROM boundary atomically."""
+
+        def _capture(pyboy: PyBoy) -> tuple[ResultT, ControlBoundary | None]:
+            if self._control_hooks is None:
+                raise RuntimeError("ROM control hooks are not installed.")
+            return operation(pyboy), self._control_hooks.current_boundary
+
+        return await self.execute(_capture)
+
     async def stop(self) -> None:
         """Stop PyBoy on its owner thread and wait for thread termination."""
         with self._state_lock:
@@ -123,6 +145,65 @@ class PyBoyWorker:
             raise cancellation
         if self._failure is not None:
             raise self._failure
+
+    async def start_overworld_button(
+        self,
+        button: Button,
+        *,
+        observe_steps: bool = False,
+    ) -> int:
+        """Arm overworld coordination and schedule its short button pulse atomically."""
+
+        def _start(pyboy: PyBoy) -> int:
+            if self._control_hooks is None:
+                raise RuntimeError("ROM control hooks are not installed.")
+            operation_id = self._control_hooks.arm_overworld_button(
+                button,
+                observe_steps=observe_steps,
+            )
+            # The overworld loop spans two rendered frames, so a three-frame pulse guarantees one
+            # poll while remaining short enough not to carry into the following interface.
+            pyboy.button(button, 3)
+            return operation_id
+
+        return await self.execute(_start)
+
+    async def start_control_button(self, button: Button) -> int:
+        """Arm coordination in the active input domain and schedule a short pulse."""
+
+        def _start(pyboy: PyBoy) -> int:
+            if self._control_hooks is None:
+                raise RuntimeError("ROM control hooks are not installed.")
+            operation_id = self._control_hooks.arm_button(button)
+            pyboy.button(button, 3)
+            return operation_id
+
+        return await self.execute(_start)
+
+    async def pulse_button(self, button: Button) -> None:
+        """Schedule input whose subsequent completion is owned by a dialog driver."""
+
+        def _pulse(pyboy: PyBoy) -> None:
+            if self._control_hooks is None:
+                raise RuntimeError("ROM control hooks are not installed.")
+            self._control_hooks.begin_raw_input()
+            pyboy.button(button, 2)
+
+        await self.execute(_pulse)
+
+    async def start_boundary_wait(self, boundary: ControlBoundary | None = None) -> int:
+        """Arm a wait for a requested or arbitrary ready ROM boundary."""
+
+        def _start(_pyboy: PyBoy) -> int:
+            if self._control_hooks is None:
+                raise RuntimeError("ROM control hooks are not installed.")
+            return self._control_hooks.arm_boundary_wait(boundary)
+
+        return await self.execute(_start)
+
+    async def wait_for_control_result(self, operation_id: int) -> ControlResult:
+        """Wait for the rendered decision boundary following an accepted input."""
+        return await self._control_results.wait(operation_id)
 
     def drain_text_events(self) -> tuple[TextEvent, ...]:
         """Claim every currently recorded text event exactly once."""
@@ -166,6 +247,13 @@ class PyBoyWorker:
                 if not pyboy.tick(1, render=True, sound=True):
                     failure = RuntimeError("Emulator stopped unexpectedly.")
                     break
+                if self._control_hooks is not None:
+                    step_observation = (
+                        GameState.from_memory(pyboy.memory)
+                        if self._control_hooks.needs_step_observation
+                        else None
+                    )
+                    self._control_hooks.publish_tick(step_observation)
                 # PyBoy's SDL limiter skips its own sleep while refilling a low audio buffer.
                 # Without this minimum delay, the tight worker loop runs catch-up frames
                 # back-to-back, causing brief audio and visual speed-ups after scheduling jitter.
@@ -196,8 +284,14 @@ class PyBoyWorker:
         elif self._save_state_path:
             with self._save_state_path.open("rb") as file:
                 pyboy.load_state(file)
-        self._text_recorder = RomTextRecorder(pyboy, self._text_events)
-        self._text_recorder.install()
+        self._control_hooks = RomControlHooks(pyboy, self._control_results)
+        self._control_hooks.install()
+        self._text_hooks = RomTextHooks(
+            pyboy,
+            self._text_events,
+            on_event=self._control_hooks.observe_text_event,
+        )
+        self._text_hooks.install()
         return pyboy
 
     def _process_commands(self, pyboy: PyBoy) -> bool:
@@ -215,6 +309,7 @@ class PyBoyWorker:
             execute(pyboy)
 
     def _finish(self, failure: Exception | None) -> None:
+        self._control_results.close()
         self._text_events.close()
         pending_failures: list[Callable[[Exception], None]] = []
         terminal_error = failure or RuntimeError("Emulator is stopped.")

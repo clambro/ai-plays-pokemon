@@ -81,7 +81,7 @@ async def _select_item(
     elif index_difference < 0:
         for _ in range(-index_difference):
             await emulator.press_button(Button.DOWN)
-    await emulator.press_button(Button.A, wait_for_animation=False)
+    await emulator.pulse_button(Button.A)
 
 
 def _get_item_menu_cursor_index(game_state: GameState) -> int | None:

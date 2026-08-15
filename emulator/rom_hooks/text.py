@@ -1,10 +1,10 @@
-"""Parse semantic text events from the required Yellow Legacy ROM."""
+"""Capture semantic text events from the required Yellow Legacy ROM."""
 
-from dataclasses import dataclass
 from enum import StrEnum, auto
 from typing import TYPE_CHECKING
 
 from emulator.parsers.screen_text import INT_TO_CHAR_MAP
+from emulator.rom_hooks.core import RomHook, install_hooks
 from emulator.text_events import DialogPage, TextEventJournal, TextEventKind
 
 if TYPE_CHECKING:
@@ -32,98 +32,88 @@ class _HookName(StrEnum):
     BATTLE_ENDED = auto()
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
-class _Hook:
-    """One executable address and its required instruction signature."""
-
-    name: _HookName
-    bank: int
-    address: int
-    signature: bytes
-
-
 # Addresses and signatures from the required Yellow Legacy ROM build. Validate every location
 # before installing any breakpoint because a hook at the wrong executable address corrupts play.
 _HOOKS = (
-    _Hook(
+    RomHook(
         name=_HookName.TEXT_PROCESSOR,
         bank=0x00,
         address=0x1925,  # TextCommandProcessor
         signature=bytes.fromhex("fa a5 d3 f5 cb cf"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.TEXT_COMMAND,
         bank=0x00,
         address=0x193A,  # NextTextCommand
         signature=bytes.fromhex("2a fe 50 20 05 f1"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.CONTINUE_WITHOUT_PAUSE,
         bank=0x00,
         address=0x18EF,  # _ContTextNoPause
         signature=bytes.fromhex("d5 cd fd 18 cd fd"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.AUTOMATIC_SCROLL,
         bank=0x00,
         address=0x19CC,  # TextCommand_SCROLL
         signature=bytes.fromhex("3e 7f ea f2 c4 cd"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.WAIT_LOOP,
         bank=0x00,
         address=0x386C,  # WaitForTextScrollButtonPress.loop
         signature=bytes.fromhex("e5 fa 9a d0 a7 28"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.WAIT_EXIT,
         bank=0x00,
         address=0x3898,  # WaitForTextScrollButtonPress return
         signature=bytes.fromhex("c9 fa 2a d1 fe 04"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.MENU_INPUT,
         bank=0x00,
         address=0x3AB6,  # HandleMenuInput_
         signature=bytes.fromhex("f0 8b f5 f0 8c f5"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.MENU_TIMEOUT,
         bank=0x00,
         address=0x3AF3,  # HandleMenuInput_.giveUpWaiting
         signature=bytes.fromhex("f1 e0 8c f1 e0 8b"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.MENU_EXIT,
         bank=0x00,
         address=0x3B5D,  # HandleMenuInput_.skipPlayingSound
         signature=bytes.fromhex("f1 e0 8c f1 e0 8b"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.TEXT_DISPLAY_CLOSED,
         bank=0x00,
         address=0x284F,  # Completed CloseTextDisplay path
         signature=bytes.fromhex("c3 b9 22 e5 21 75"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.BATTLE_ENDED,
         bank=0x04,
         address=0x7CA1,  # EndOfBattle.resetVariables
         signature=bytes.fromhex("af ea 82 d0 ea 2a"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.OVERWORLD_ENTERED,
         bank=0x00,
         address=0x0238,  # EnterMap completed
         signature=bytes.fromhex("af ea 6b cd cd 05"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.SPECIAL_INTERFACE_WAIT,
         bank=0x10,
         address=0x434A,  # ShowPokedexDataInternal.waitForButtonPress
         signature=bytes.fromhex("cd 2b 38 f0 b5 e6"),
     ),
-    _Hook(
+    RomHook(
         name=_HookName.SPECIAL_INTERFACE_EXIT,
         bank=0x10,
         address=0x4353,  # ShowPokedexDataInternal wait completed
@@ -154,46 +144,25 @@ _BOTTOM_RIGHT_BORDER = 0x7E
 _CURSOR = 0xEE
 
 
-class RomTextRecorder:
-    """Translate ROM text-engine execution into ordered semantic events."""
+class RomTextHooks:
+    """Translate hooked ROM text-engine execution into ordered semantic events."""
 
-    def __init__(self, pyboy: PyBoy, journal: TextEventJournal) -> None:
+    def __init__(
+        self,
+        pyboy: PyBoy,
+        journal: TextEventJournal,
+        on_event: Callable[[TextEventKind], None] | None = None,
+    ) -> None:
         """Keep the owner-thread emulator and its transient event journal."""
         self._pyboy = pyboy
         self._journal = journal
+        self._on_event = on_event
         self._text_processor_depth = 0
         self._inside_wait = False
 
     def install(self) -> None:
         """Validate the required ROM layout and register every text hook."""
-        mismatch = next((hook for hook in _HOOKS if not self._signature_matches(hook)), None)
-        if mismatch is not None:
-            raise RuntimeError(
-                f"Required ROM instruction signature does not match at {mismatch.name}."
-            )
-
-        for hook in _HOOKS:
-            self._pyboy.hook_register(
-                hook.bank,
-                hook.address,
-                self._build_callback(hook.name),
-                None,
-            )
-
-    def _signature_matches(self, hook: _Hook) -> bool:
-        actual = bytes(
-            self._pyboy.memory[
-                hook.bank,
-                hook.address : hook.address + len(hook.signature),
-            ]
-        )
-        return actual == hook.signature
-
-    def _build_callback(self, name: _HookName) -> Callable[[None], None]:
-        def callback(_context: None) -> None:
-            self._handle(name)
-
-        return callback
+        install_hooks(self._pyboy, _HOOKS, self._handle)
 
     def _handle(self, name: _HookName) -> None:
         if name in {_HookName.TEXT_PROCESSOR, _HookName.TEXT_COMMAND}:
@@ -273,11 +242,13 @@ class RomTextRecorder:
         return bool(self._pyboy.memory[_AUDIO_FADE_FLAGS_ADDRESS] & _REDUCED_VOLUME_INTERFACE_FLAG)
 
     def _record(self, kind: TextEventKind, *, page: DialogPage | None = None) -> None:
-        self._journal.append(
+        event = self._journal.append(
             frame=self._pyboy.frame_count,
             kind=kind,
             page=page,
         )
+        if event is not None and self._on_event is not None:
+            self._on_event(kind)
 
 
 def _decode_standard_dialog_page(mem: PyBoyMemoryView) -> DialogPage | None:

@@ -54,19 +54,6 @@ class Screen(BaseModel):
         """The rendered text recognized on screen."""
         return "\n".join("".join(row) for row in self.decoded_tiles)
 
-    @computed_field
-    @property
-    def tiles_without_cursor(self) -> list[list[int]]:
-        """The tiles on screen without the blinking cursor."""
-        blank = 0x7F
-        return [
-            [
-                blank if glyph == "▼" else tile
-                for tile, glyph in zip(tile_row, glyph_row, strict=True)
-            ]
-            for tile_row, glyph_row in zip(self.tiles, self.decoded_tiles, strict=True)
-        ]
-
     @property
     def naming_screen_name_limit(self) -> int:
         """Get the number of name slots displayed on the naming screen."""

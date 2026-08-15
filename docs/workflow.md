@@ -6,12 +6,12 @@ Note: Pretty much all the constants below are default values that can be edited 
 
 ## Top-Level Orchestration
 
-`main.py` creates one `AgentContext` containing the mutable `AgentState` and the running emulator. The same context instance survives every gameplay-domain transition. On each pass, the dispatcher waits for animations to settle, reads the current game state, and selects exactly one handler:
+`main.py` creates one `AgentContext` containing the mutable `AgentState` and the running emulator. The same context instance survives every gameplay-domain transition. Startup or restoration first waits until the game is ready for an external decision. Thereafter, tools and deterministic handlers return at that same boundary, so each dispatcher pass can read the current game state and select exactly one handler:
 
 ```mermaid
 flowchart TD
-    dispatch([Dispatch]) --> settle[Settle and observe game]
-    settle --> classify{Classify gameplay domain}
+    dispatch([Dispatch]) --> observe[Observe decision-ready game]
+    observe --> classify{Classify gameplay domain}
     classify -->|Overworld| overworld[Run overworld handler]
     classify -->|Battle| battle[Run battle handler]
     classify -->|Text or transition| text[Run text handler]
@@ -32,7 +32,7 @@ Handlers can complete several iterations while keeping one Pydantic AI conversat
 
 Pydantic AI hooks account for every model response, append ordinary-text reasoning to the active rolling-memory block, and publish the latest state to the HTML background immediately before a selected function tool executes. Tools return their real outcome and a fresh observation to the same conversation. Deterministic dialog handling publishes before advancing the emulator as well.
 
-The application loop owns emulator and streaming-server lifetimes. It captures the emulator state and creates a backup every 20 minutes and after an unexpected handler failure. The copied SQLite database contains finalized memory history, while serialized `AgentState` contains the remaining live application state and totals. Rolling memory is rebuilt from the copied database rather than serialized into `AgentState`.
+The application loop owns emulator and streaming-server lifetimes. It captures the emulator state and creates a backup every 10 minutes and after an unexpected handler failure. The copied SQLite database contains finalized memory history, while serialized `AgentState` contains the remaining live application state and totals. Rolling memory is rebuilt from the copied database rather than serialized into `AgentState`.
 
 ### Model Boundaries
 

@@ -31,7 +31,7 @@ async def test_use_move() -> None:
             emulator=emulator,
             move_slot=move_index,
         )
-        await emulator.wait_for_animation_to_finish()
+        await emulator.wait_until_ready()
 
         game_state = await emulator.get_game_state()
         assert game_state.battle.player_pokemon is not None

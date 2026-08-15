@@ -10,7 +10,11 @@ from pydantic_graph import End
 from agent.context import AgentContext
 from agent.overworld.prompts import build_overworld_decision_prompt
 from agent.overworld.tools.registry import build_overworld_toolset
-from agent.utils import AGENT_HOOKS, build_screenshot_content, is_battle_handler_state
+from agent.utils import (
+    AGENT_HOOKS,
+    build_screenshot_content,
+    is_overworld_handler_state,
+)
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 from overworld_map.service import prepare_overworld_map
@@ -18,6 +22,7 @@ from overworld_map.service import prepare_overworld_map
 if TYPE_CHECKING:
     from PIL import Image
 
+    from emulator.control_events import ControlBoundary
     from emulator.game_state import GameState
     from overworld_map.schemas import OverworldMap
 
@@ -55,7 +60,13 @@ async def run_overworld(
 ) -> None:
     """Run the overworld agent until the player moves or leaves the overworld."""
     await context.begin_iteration()
-    initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
+    (
+        initial_game_state,
+        initial_screenshot,
+        initial_boundary,
+    ) = await context.emulator.get_game_state_with_screenshot_and_control_boundary()
+    if not is_overworld_handler_state(initial_game_state, initial_boundary):
+        return
     current_map = await prepare_overworld_map(context.state.iteration, initial_game_state)
     agent = build_overworld_agent(
         context,
@@ -78,8 +89,15 @@ async def run_overworld(
                 node = await agent_run.next(node)
                 if isinstance(current_node, CallToolsNode):
                     await context.complete_iteration()
-                    game_state = await context.emulator.get_game_state()
-                    if _should_end_overworld_run(initial_game_state, game_state):
+                    (
+                        game_state,
+                        control_boundary,
+                    ) = await context.emulator.get_game_state_with_control_boundary()
+                    if _should_end_overworld_run(
+                        initial_game_state,
+                        game_state,
+                        control_boundary,
+                    ):
                         break
     except AgentRunError as error:
         logger.opt(exception=error).warning(
@@ -109,13 +127,11 @@ def build_overworld_agent_input(
 def _should_end_overworld_run(
     initial_game_state: GameState,
     game_state: GameState,
+    control_boundary: ControlBoundary | None,
 ) -> bool:
     """Check whether control should return to the dispatcher."""
     return (
         game_state.map.id != initial_game_state.map.id
         or game_state.player.coords != initial_game_state.player.coords
-        or is_battle_handler_state(game_state)
-        or game_state.is_text_on_screen()
-        or game_state.map.height == 0
-        or game_state.map.width == 0
+        or not is_overworld_handler_state(game_state, control_boundary)
     )

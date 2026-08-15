@@ -33,6 +33,6 @@ async def run(*, emulator: Emulator) -> str:
         await emulator.press_button(Button.RIGHT)
     if cursor_pos.row == 0:
         await emulator.press_button(Button.DOWN)
-    await emulator.press_button(Button.A, wait_for_animation=False)
+    await emulator.pulse_button(Button.A)
 
     return "Attempted to run away from the battle."

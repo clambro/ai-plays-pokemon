@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from agent.overworld.tools.navigate.service import NavigationService
-from common.enums import FacingDirection
+from common.enums import Button, FacingDirection
 from common.schemas import Coords
 from emulator.emulator import Emulator
 from memory.rolling_memory.schemas import RollingMemory
@@ -30,8 +30,26 @@ def _isolate_map_memory() -> Iterator[None]:
 
 
 @pytest.mark.integration
-async def test_navigate_through_pikachu() -> None:
-    """Test navigating through Pikachu."""
+async def test_navigate_after_turning() -> None:
+    """Complete the first movement step after changing direction."""
+    save_file = Path(__file__).parent / "saves" / "viridian.state"
+    async with Emulator(
+        save_state_path=save_file,
+        mute_sound=True,
+        headless=True,
+    ) as emulator:
+        service = await _get_nav_service(emulator)
+
+        await service.navigate(Coords(row=30, col=23))
+
+        game_state = await emulator.get_game_state()
+        assert game_state.player.coords == Coords(row=30, col=23)
+        assert game_state.player.direction == FacingDirection.DOWN
+
+
+@pytest.mark.integration
+async def test_navigate_through_pikachu_while_facing_it() -> None:
+    """Preserve the requested steps while Pikachu yields to the player."""
     save_file = Path(__file__).parent / "saves" / "viridian.state"
     async with Emulator(
         save_state_path=save_file,
@@ -42,6 +60,11 @@ async def test_navigate_through_pikachu() -> None:
         assert game_state.player.coords == Coords(row=28, col=23)
         assert game_state.pikachu.coords == Coords(row=28, col=22)
         assert game_state.player.direction == FacingDirection.RIGHT
+
+        await emulator.press_overworld_button(Button.LEFT)
+        game_state = await emulator.get_game_state()
+        assert game_state.player.coords == Coords(row=28, col=23)
+        assert game_state.player.direction == FacingDirection.LEFT
 
         service = await _get_nav_service(emulator)
 

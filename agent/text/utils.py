@@ -8,6 +8,7 @@ from agent.utils import (
     build_screenshot_content,
     is_battle_handler_state,
 )
+from emulator.control_events import ControlBoundary
 from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
@@ -33,9 +34,9 @@ async def complete_text_action(
     action_result: str,
 ) -> TextToolResult:
     """Advance ordinary dialog and return the resulting screen to the agent."""
-    game_state = await context.emulator.get_game_state()
+    game_state, control_boundary = await context.emulator.get_game_state_with_control_boundary()
     dialog = ""
-    if is_plain_text_dialog(game_state):
+    if control_boundary == ControlBoundary.TEXT_INPUT_READY and is_plain_text_dialog(game_state):
         dialog = await handle_text_dialog(context)
     else:
         dialog = capture_pending_dialog(context, game_state)
@@ -56,8 +57,8 @@ async def complete_text_action(
 
 async def handle_text_dialog(context: AgentContext) -> str:
     """Advance ordinary dialog and record the text that was read."""
-    game_state = await context.emulator.get_game_state()
-    if not is_plain_text_dialog(game_state):
+    game_state, control_boundary = await context.emulator.get_game_state_with_control_boundary()
+    if control_boundary != ControlBoundary.TEXT_INPUT_READY or not is_plain_text_dialog(game_state):
         return ""
 
     async def publish_before_input() -> None:

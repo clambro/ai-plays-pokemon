@@ -10,10 +10,11 @@ from typing import TYPE_CHECKING, Self
 from PIL import Image
 
 from common.constants import DEFAULT_ROM_PATH
+from emulator.control_events import ControlBoundary
 from emulator.game_state import GameState
 from emulator.parsers.map_collision import read_map_collision_tiles
 from emulator.pyboy_worker import PyBoyWorker
-from emulator.text_events import TextEventKind, drive_standard_dialog, reduce_text_events
+from emulator.text_events import TextEventKind, TextEventReducer, drive_standard_dialog
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -22,6 +23,7 @@ if TYPE_CHECKING:
     from pyboy import PyBoy
 
     from common.enums import Button
+    from emulator.control_events import ControlResult
     from emulator.text_events import TextEvent
 
 
@@ -62,6 +64,7 @@ class Emulator(AbstractAsyncContextManager):
             mute_sound=mute_sound,
             headless=headless,
         )
+        self._text_event_reducer = TextEventReducer()
 
     async def __aenter__(self) -> Self:
         """Start the PyBoy worker when entering the context."""
@@ -89,6 +92,14 @@ class Emulator(AbstractAsyncContextManager):
         """Get the current game state."""
         return await self._worker.execute(lambda pyboy: GameState.from_memory(pyboy.memory))
 
+    async def get_game_state_with_control_boundary(
+        self,
+    ) -> tuple[GameState, ControlBoundary | None]:
+        """Capture parsed game state and its rendered ROM decision boundary."""
+        return await self._worker.execute_with_control_boundary(
+            lambda pyboy: GameState.from_memory(pyboy.memory)
+        )
+
     def drain_text_events(self) -> tuple[TextEvent, ...]:
         """Claim every currently recorded text event exactly once."""
         return self._worker.drain_text_events()
@@ -105,6 +116,7 @@ class Emulator(AbstractAsyncContextManager):
         initial_events = await self._worker.drain_settled_text_events()
         return await drive_standard_dialog(
             self,
+            reducer=self._text_event_reducer,
             stop_on=frozenset(
                 {
                     TextEventKind.MENU_OPENED,
@@ -124,6 +136,7 @@ class Emulator(AbstractAsyncContextManager):
         initial_events = await self._worker.drain_settled_text_events()
         return await drive_standard_dialog(
             self,
+            reducer=self._text_event_reducer,
             stop_on=frozenset(
                 {
                     TextEventKind.MENU_OPENED,
@@ -139,11 +152,11 @@ class Emulator(AbstractAsyncContextManager):
 
     def consume_pending_dialog(self) -> str:
         """Claim and reduce dialog already completed by the ROM."""
-        return reduce_text_events(self.drain_text_events())
+        return self._text_event_reducer.reduce(self.drain_text_events())
 
     def consume_completed_dialog(self) -> str:
         """Claim dialog through the last closed ordinary text interaction."""
-        return reduce_text_events(self._worker.drain_completed_text_events())
+        return self._text_event_reducer.reduce(self._worker.drain_completed_text_events())
 
     async def get_game_state_with_map_collision_tiles(
         self,
@@ -180,67 +193,78 @@ class Emulator(AbstractAsyncContextManager):
 
         return await self._worker.execute(_capture_game_state_with_screenshot)
 
+    async def get_game_state_with_screenshot_and_control_boundary(
+        self,
+    ) -> tuple[GameState, Image.Image, ControlBoundary | None]:
+        """Capture game state, screenshot, and rendered ROM boundary together."""
+
+        def _capture(pyboy: PyBoy) -> tuple[GameState, Image.Image]:
+            game_state = GameState.from_memory(pyboy.memory)
+            screenshot = deepcopy(pyboy.screen.image)
+            if not isinstance(screenshot, Image.Image):
+                raise TypeError("No screenshot available")
+            return game_state, screenshot
+
+        (game_state, screenshot), boundary = await self._worker.execute_with_control_boundary(
+            _capture
+        )
+        return game_state, screenshot, boundary
+
     async def press_button(
         self,
         button: Button,
-        *,
-        wait_for_animation: bool = True,
-    ) -> None:
-        """Send a button press and optionally wait for animations to finish.
+    ) -> ControlResult:
+        """Send a button and wait for the active input domain's rendered boundary.
 
         Args:
             button: Game Boy button to press.
-            wait_for_animation: Whether to wait for the resulting screen animation. Disable this
-                only when the caller handles subsequent activity itself.
+
+        Returns:
+            The resulting control boundary.
 
         Raises:
             RuntimeError: The emulator has been stopped.
         """
-        # If we're deferring animation handling, we want to exit as quickly as possible. Two frames
-        # seems to be the minimum to guarantee that the button press is registered.
-        hold_frames = 10 if wait_for_animation else 2
-        await self._worker.execute(lambda pyboy: pyboy.button(button, hold_frames))
-        if wait_for_animation:
-            await self.wait_for_animation_to_finish()
+        operation_id = await self._worker.start_control_button(button)
+        return await self._worker.wait_for_control_result(operation_id)
 
-    async def wait_for_animation_to_finish(
+    async def pulse_button(self, button: Button) -> None:
+        """Send a short button pulse whose completion is owned by a dialog driver."""
+        await self._worker.pulse_button(button)
+
+    async def press_overworld_button(
         self,
-        on_game_state: Callable[[GameState], None] | None = None,
-    ) -> GameState:
-        """Wait until all ongoing animations have finished.
+        button: Button,
+        *,
+        observe_steps: bool = False,
+    ) -> ControlResult:
+        """Press an overworld button and wait for its next rendered decision boundary."""
+        operation_id = await self._worker.start_overworld_button(
+            button,
+            observe_steps=observe_steps,
+        )
+        return await self._worker.wait_for_control_result(operation_id)
 
-        The various hyperparameters here are a bit wishy-washy. I determined emperically that they
-        work pretty well, but they're probably not optimal, especially since different scenarios
-        have different animation speeds.
+    async def advance_text_dialog_until_overworld_ready(self) -> str:
+        """Advance an active interaction through restored external overworld control."""
+        dialog = await self.advance_text_dialog()
+        await self.wait_for_overworld_ready()
+        return dialog
 
-        Args:
-            on_game_state: Optional observer called for each state already read while waiting.
+    async def wait_for_overworld_ready(self) -> ControlResult:
+        """Wait for scripted activity to restore external overworld control."""
+        operation_id = await self._worker.start_boundary_wait(ControlBoundary.OVERWORLD_READY)
+        return await self._worker.wait_for_control_result(operation_id)
 
-        Returns:
-            The final observed game state.
-        """
-        successes = 0
-        required_successes = 5
-        game_state = await self.get_game_state()
-        if on_game_state:
-            on_game_state(game_state)
-        while successes < required_successes:
-            await asyncio.sleep(0.15)
-            new_game_state = await self.get_game_state()
-            if on_game_state:
-                on_game_state(new_game_state)
-            if (
-                # The blinking cursor should not block progress, so we ignore it.
-                game_state.screen.tiles_without_cursor == new_game_state.screen.tiles_without_cursor
-                and game_state.map.id == new_game_state.map.id
-                and game_state.player.coords == new_game_state.player.coords
-                and game_state.player.direction == new_game_state.player.direction
-            ):
-                successes += 1
-            else:
-                successes = 0
-            game_state = new_game_state
-        return game_state
+    async def wait_for_menu_ready(self) -> ControlResult:
+        """Wait until a standard menu has completed cursor placement and rendering."""
+        operation_id = await self._worker.start_boundary_wait(ControlBoundary.MENU_READY)
+        return await self._worker.wait_for_control_result(operation_id)
+
+    async def wait_until_ready(self) -> ControlResult:
+        """Wait until the ROM reaches any rendered external decision boundary."""
+        operation_id = await self._worker.start_boundary_wait()
+        return await self._worker.wait_for_control_result(operation_id)
 
     async def get_emulator_save_state(self) -> str:
         """Get the current save state as a Base64 encoded string."""

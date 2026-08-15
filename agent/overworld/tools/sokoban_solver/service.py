@@ -1,11 +1,11 @@
 """Business logic for the overworld Sokoban solver tool."""
 
-import asyncio
 from typing import TYPE_CHECKING
 
 from agent.overworld.tools.sokoban_solver.schemas import SokobanMap
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, SpriteLabel
 from common.schemas import Coords
+from emulator.control_events import ControlBoundary
 from overworld_map.views import get_navigation_tiles
 
 if TYPE_CHECKING:
@@ -202,37 +202,81 @@ class SokobanSolverService:
             game_state = await self.emulator.get_game_state()
             next_pos = game_state.player.coords + _BUTTON_TO_DIRECTION_MAP[button]
 
-            if not is_strength_active and next_pos in sokoban_map.boulders:
-                await self._face_next_pos(button, game_state)
-                # Hand dialog progression to the ROM-event driver immediately after activation.
-                await self.emulator.press_button(
-                    Button.A,
-                    wait_for_animation=False,
+            activating_strength = not is_strength_active and next_pos in sokoban_map.boulders
+            yielding_to_pikachu = next_pos == game_state.pikachu.coords
+            if (activating_strength or yielding_to_pikachu) and not await self._face_next_pos(
+                button,
+                game_state,
+            ):
+                return _include_dialog(
+                    "I stopped the Sokoban solver because control left the overworld.",
+                    strength_dialog,
                 )
-                strength_dialog = await self.emulator.advance_text_dialog()
+
+            if activating_strength:
+                # Hand dialog progression to the ROM-event driver immediately after activation.
+                await self.emulator.pulse_button(Button.A)
+                strength_dialog = await self.emulator.advance_text_dialog_until_overworld_ready()
                 is_strength_active = True
-            elif next_pos == game_state.pikachu.coords:
-                # We have to face Pikachu before we can walk through it.
-                await self._face_next_pos(button, game_state)
 
-            await self.emulator.press_button(button)
-            if next_pos in sokoban_map.boulders:
-                sokoban_map.boulders.remove(next_pos)
-                sokoban_map.boulders.add(next_pos + _BUTTON_TO_DIRECTION_MAP[button])
-                # The boulders have a slow, irregular animation, so we add an extra wait.
-                await asyncio.sleep(1)
-
-            next_game_state = await self.emulator.get_game_state()
-            if (
-                next_game_state.player.coords == game_state.player.coords
-                and next_game_state.sprites == game_state.sprites
+            pushing_boulder = next_pos in sokoban_map.boulders
+            game_state = await self.emulator.get_game_state()
+            if not await self._execute_step(
+                button,
+                game_state,
+                boulder_coords=next_pos if pushing_boulder else None,
             ):
                 return _include_dialog(
                     "The Sokoban solver was interrupted because my movement was blocked.",
                     strength_dialog,
                 )
 
+            if pushing_boulder:
+                sokoban_map.boulders.remove(next_pos)
+                sokoban_map.boulders.add(next_pos + _BUTTON_TO_DIRECTION_MAP[button])
+
         return _include_dialog("I executed the Sokoban solution.", strength_dialog)
+
+    async def _execute_step(
+        self,
+        button: Button,
+        game_state: GameState,
+        *,
+        boulder_coords: Coords | None,
+    ) -> bool:
+        """Execute one planned movement, including turning or the two-stage boulder push."""
+        starting_coords = game_state.player.coords
+        desired_direction = _BUTTON_TO_FACING_DIRECTION[button]
+        pikachu_ahead = (
+            game_state.pikachu.is_rendered
+            and starting_coords + _BUTTON_TO_DIRECTION_MAP[button] == game_state.pikachu.coords
+        )
+        max_attempts = 3 if boulder_coords is not None else 2
+
+        for attempt in range(max_attempts):
+            result = await self.emulator.press_overworld_button(button)
+            if result.boundary != ControlBoundary.OVERWORLD_READY:
+                return False
+
+            observed_state = await self.emulator.get_game_state()
+            if boulder_coords is not None:
+                boulder_still_present = any(
+                    sprite.label == SpriteLabel.BOULDER
+                    and sprite.coords == boulder_coords
+                    and sprite.is_rendered
+                    for sprite in observed_state.sprites.values()
+                )
+                if not boulder_still_present:
+                    return True
+            elif observed_state.player.coords != starting_coords:
+                return True
+
+            needs_retry = boulder_coords is not None or (
+                attempt == 0 and (game_state.player.direction != desired_direction or pikachu_ahead)
+            )
+            if not needs_retry:
+                return False
+        return False
 
     def _is_blocked(self, current: Coords, dy: int, dx: int) -> bool:
         """Check if the movement is blocked by a paired tile collision."""
@@ -253,17 +297,12 @@ class SokobanSolverService:
         self,
         button: Button,
         game_state: GameState,
-    ) -> None:
-        """Face the next position."""
-        if (
-            (button == Button.RIGHT and game_state.player.direction != FacingDirection.RIGHT)
-            or (button == Button.LEFT and game_state.player.direction != FacingDirection.LEFT)
-            or (button == Button.DOWN and game_state.player.direction != FacingDirection.DOWN)
-            or (button == Button.UP and game_state.player.direction != FacingDirection.UP)
-        ):
-            # Skipping the wait here ensures that we pivot instead of walking.
-            await self.emulator.press_button(button, wait_for_animation=False)
-            await self.emulator.wait_for_animation_to_finish()
+    ) -> bool:
+        """Face the next position and report whether control remains in the overworld."""
+        if game_state.player.direction == _BUTTON_TO_FACING_DIRECTION[button]:
+            return True
+        result = await self.emulator.press_overworld_button(button)
+        return result.boundary == ControlBoundary.OVERWORLD_READY
 
 
 def _include_dialog(result: str, dialog: str) -> str:
@@ -279,3 +318,9 @@ _BUTTON_TO_DIRECTION_MAP = {
     Button.UP: Coords(row=-1, col=0),
 }
 _DIRECTION_TO_BUTTON_MAP = {v: k for k, v in _BUTTON_TO_DIRECTION_MAP.items()}
+_BUTTON_TO_FACING_DIRECTION = {
+    Button.RIGHT: FacingDirection.RIGHT,
+    Button.LEFT: FacingDirection.LEFT,
+    Button.DOWN: FacingDirection.DOWN,
+    Button.UP: FacingDirection.UP,
+}

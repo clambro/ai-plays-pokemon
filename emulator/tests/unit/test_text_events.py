@@ -1,17 +1,18 @@
 """Unit tests for core text-event logic."""
 
 import asyncio
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from emulator.control_events import ControlBoundary, ControlResult
 from emulator.text_events import (
     DialogPage,
     TextEvent,
     TextEventJournal,
     TextEventKind,
+    TextEventReducer,
     drive_standard_dialog,
-    reduce_text_events,
 )
 
 
@@ -55,6 +56,7 @@ def test_journal_leaves_live_interaction_after_completed_dialog() -> None:
 @pytest.mark.unit
 def test_reduce_text_events_preserves_dialog_without_hook_duplicates() -> None:
     """Deduplicate semantic snapshots and scrolling only within one interaction."""
+    reducer = TextEventReducer()
     first_page = DialogPage(top_line="VOLTAIL used", bottom_line="THUNDERSHOCK!")
     scrolled_page = DialogPage(top_line="THUNDERSHOCK!", bottom_line="It's effective!")
     events = [
@@ -65,8 +67,30 @@ def test_reduce_text_events_preserves_dialog_without_hook_duplicates() -> None:
         _event(5, TextEventKind.PAGE_COMPLETED, scrolled_page),
     ]
 
-    assert reduce_text_events(events) == (
+    assert reducer.reduce(events) == (
         "VOLTAIL used THUNDERSHOCK! It's effective! THUNDERSHOCK! It's effective!"
+    )
+
+
+@pytest.mark.unit
+def test_reducer_preserves_scroll_context_across_event_batches() -> None:
+    """Remove cross-batch overlap without suppressing a later interaction."""
+    reducer = TextEventReducer()
+    first_page = DialogPage(top_line="OAK: Whew...", bottom_line="A POKéMON can appear")
+    scrolled_page = DialogPage(
+        top_line="A POKéMON can appear",
+        bottom_line="anytime in tall grass!",
+    )
+
+    assert reducer.reduce([_event(1, TextEventKind.INPUT_REQUIRED, first_page)]) == (
+        "OAK: Whew... A POKéMON can appear"
+    )
+    assert reducer.reduce([_event(2, TextEventKind.INPUT_REQUIRED, scrolled_page)]) == (
+        "anytime in tall grass!"
+    )
+    assert reducer.reduce([_event(3, TextEventKind.INTERACTION_CLOSED)]) == ""
+    assert reducer.reduce([_event(4, TextEventKind.INPUT_REQUIRED, scrolled_page)]) == (
+        "A POKéMON can appear anytime in tall grass!"
     )
 
 
@@ -74,6 +98,7 @@ def test_reduce_text_events_preserves_dialog_without_hook_duplicates() -> None:
 async def test_dialog_driver_stops_when_an_initial_menu_is_replaced() -> None:
     """Treat a menu opened after the initial menu closes as a new decision boundary."""
     emulator = MagicMock()
+    emulator.wait_for_menu_ready = AsyncMock()
     events = (
         _event(1, TextEventKind.MENU_OPENED),
         _event(2, TextEventKind.MENU_CLOSED),
@@ -83,11 +108,56 @@ async def test_dialog_driver_stops_when_an_initial_menu_is_replaced() -> None:
     assert (
         await drive_standard_dialog(
             emulator,
+            reducer=TextEventReducer(),
             stop_on=frozenset({TextEventKind.MENU_OPENED}),
             initial_events=events,
         )
         == ""
     )
+    emulator.wait_for_text_events.assert_not_called()
+    emulator.wait_for_menu_ready.assert_awaited_once_with()
+
+
+@pytest.mark.unit
+async def test_dialog_driver_waits_through_a_transition_marker() -> None:
+    """Do not expose a closed interaction before its next rendered decision."""
+    emulator = MagicMock()
+    emulator.wait_until_ready = AsyncMock()
+
+    assert (
+        await drive_standard_dialog(
+            emulator,
+            reducer=TextEventReducer(),
+            stop_on=frozenset({TextEventKind.INTERACTION_CLOSED}),
+            initial_events=(_event(1, TextEventKind.INTERACTION_CLOSED),),
+        )
+        == ""
+    )
+    emulator.wait_until_ready.assert_awaited_once_with()
+
+
+@pytest.mark.unit
+async def test_dialog_driver_hands_off_when_input_opens_a_custom_interface() -> None:
+    """Stop waiting for text events once the ROM exposes another ready interface."""
+    emulator = MagicMock()
+    emulator.wait_until_ready = AsyncMock(
+        return_value=ControlResult(boundary=ControlBoundary.INTERACTIVE_READY)
+    )
+    emulator.drain_text_events.return_value = ()
+    page = DialogPage(top_line="Take your time.", bottom_line="")
+
+    transcript = await drive_standard_dialog(
+        emulator,
+        reducer=TextEventReducer(),
+        stop_on=frozenset({TextEventKind.INTERACTION_CLOSED}),
+        initial_events=(
+            _event(1, TextEventKind.PAGE_COMPLETED, page),
+            _event(2, TextEventKind.INPUT_RESOLVED),
+        ),
+    )
+
+    assert transcript == "Take your time."
+    emulator.wait_until_ready.assert_awaited_once_with()
     emulator.wait_for_text_events.assert_not_called()
 
 

@@ -115,9 +115,9 @@ LEGEND_MAP = {
 
 OVERWORLD_DECISION_PROMPT = """
 You are navigating the overworld. At entry, you are standing still, there is no
-onscreen text, and all onscreen animations have concluded. The screenshot
-provided above shows the game screen at entry. After each tool call, its
-returned screenshot and result are the freshest state and supersede earlier
+onscreen text, and the game is ready for your next decision. The screenshot
+provided above shows the current rendered game screen. After each tool call,
+its returned screenshot and result are the freshest state and supersede earlier
 observations.
 
 {state}

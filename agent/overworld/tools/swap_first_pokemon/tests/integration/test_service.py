@@ -40,7 +40,7 @@ async def test_switch_to_pokemon() -> None:
             emulator=emulator,
         )
         await service.swap_first_pokemon(party_index)
-        await emulator.wait_for_animation_to_finish()
+        await emulator.wait_until_ready()
 
         game_state = await emulator.get_game_state()
         assert game_state.party[0] == index_pokemon

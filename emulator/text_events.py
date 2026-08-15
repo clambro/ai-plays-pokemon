@@ -7,6 +7,7 @@ from threading import Lock
 from typing import TYPE_CHECKING
 
 from common.enums import Button
+from emulator.control_events import ControlBoundary
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -46,6 +47,44 @@ class TextEvent:
     frame: int
     kind: TextEventKind
     page: DialogPage | None = None
+
+
+class TextEventReducer:
+    """Reduce ordered text events while retaining the active dialog page."""
+
+    def __init__(self) -> None:
+        """Start without a preceding dialog page."""
+        self._previous_page: DialogPage | None = None
+
+    def reduce(self, events: tuple[TextEvent, ...] | list[TextEvent]) -> str:
+        """Combine stable dialog pages without repeated snapshots or scrolled lines."""
+        transcript: list[str] = []
+        for event in events:
+            page = event.page
+            if page is None:
+                if event.kind in {
+                    TextEventKind.MENU_OPENED,
+                    TextEventKind.MENU_CLOSED,
+                    TextEventKind.SPECIAL_INTERFACE_OPENED,
+                    TextEventKind.SPECIAL_INTERFACE_CLOSED,
+                    TextEventKind.INTERACTION_CLOSED,
+                    TextEventKind.OVERWORLD_ENTERED,
+                    TextEventKind.BATTLE_ENDED,
+                }:
+                    self._previous_page = None
+                continue
+            if page == self._previous_page:
+                continue
+
+            top_line_scrolled = (
+                self._previous_page is not None and page.top_line == self._previous_page.bottom_line
+            )
+            if page.top_line and not top_line_scrolled:
+                transcript.append(page.top_line)
+            if page.bottom_line:
+                transcript.append(page.bottom_line)
+            self._previous_page = page
+        return " ".join(transcript).strip()
 
 
 @dataclass(slots=True)
@@ -201,39 +240,10 @@ class TextEventJournal:
             loop.call_soon_threadsafe(notification.set)
 
 
-def reduce_text_events(events: tuple[TextEvent, ...] | list[TextEvent]) -> str:
-    """Combine stable dialog pages without repeated snapshots or scrolled lines."""
-    transcript: list[str] = []
-    previous_page: DialogPage | None = None
-    for event in events:
-        page = event.page
-        if page is None:
-            if event.kind in {
-                TextEventKind.MENU_OPENED,
-                TextEventKind.MENU_CLOSED,
-                TextEventKind.SPECIAL_INTERFACE_OPENED,
-                TextEventKind.SPECIAL_INTERFACE_CLOSED,
-                TextEventKind.INTERACTION_CLOSED,
-                TextEventKind.OVERWORLD_ENTERED,
-                TextEventKind.BATTLE_ENDED,
-            }:
-                previous_page = None
-            continue
-        if page == previous_page:
-            continue
-
-        top_line_scrolled = previous_page is not None and page.top_line == previous_page.bottom_line
-        if page.top_line and not top_line_scrolled:
-            transcript.append(page.top_line)
-        if page.bottom_line:
-            transcript.append(page.bottom_line)
-        previous_page = page
-    return " ".join(transcript).strip()
-
-
 async def drive_standard_dialog(
     emulator: Emulator,
     *,
+    reducer: TextEventReducer,
     stop_on: frozenset[TextEventKind],
     initial_events: tuple[TextEvent, ...] = (),
     before_input: Callable[[], Awaitable[None]] | None = None,
@@ -259,11 +269,21 @@ async def drive_standard_dialog(
         initial_batch = False
 
         if reached_boundary:
-            return reduce_text_events(events)
+            if control.menu_open and TextEventKind.MENU_OPENED in stop_on:
+                await emulator.wait_for_menu_ready()
+            else:
+                await emulator.wait_until_ready()
+            return reducer.reduce(events)
+
+        if any(event.kind == TextEventKind.INPUT_RESOLVED for event in batch):
+            boundary = (await emulator.wait_until_ready()).boundary
+            if boundary != ControlBoundary.TEXT_INPUT_READY:
+                events.extend(emulator.drain_text_events())
+                return reducer.reduce(events)
 
         if control.input_required and not control.input_sent:
             if before_input is not None:
                 await before_input()
-            await emulator.press_button(Button.A, wait_for_animation=False)
+            await emulator.pulse_button(Button.A)
             control.input_sent = True
         batch = ()
