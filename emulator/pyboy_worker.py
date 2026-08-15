@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from pyboy import PyBoy
 
+from common.enums import Button
 from emulator.control_events import ControlBoundary, ControlResultWaiter
 from emulator.game_state import GameState
 from emulator.rom_hooks.control import RomControlHooks
@@ -26,7 +27,6 @@ from emulator.text_events import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from common.enums import Button
     from emulator.control_events import ControlResult
 
 
@@ -298,6 +298,11 @@ class PyBoyWorker:
         elif self._save_state_path:
             with self._save_state_path.open("rb") as file:
                 pyboy.load_state(file)
+        if self._save_state or self._save_state_path:
+            # Host input is not part of application state. A save captured during a failed control
+            # operation must not restore its orphaned held button into the new worker.
+            for button in Button:
+                pyboy.button_release(button)
         self._control_hooks = RomControlHooks(pyboy, self._control_results)
         self._control_hooks.install()
         self._text_hooks = RomTextHooks(
