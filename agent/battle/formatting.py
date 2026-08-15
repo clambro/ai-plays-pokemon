@@ -39,12 +39,7 @@ def format_battle_info(game_state: GameState) -> str:
         out += "</player_pokemon>\n"
 
     if battle.enemy_pokemon:
-        out += "<enemy_pokemon>\n"
-        out += f"Name: {battle.enemy_pokemon.name}\n"
-        out += f"Level: {battle.enemy_pokemon.level}\n"
-        out += f"HP Percentage: {battle.enemy_pokemon.hp_pct:.0f}%\n"
-        out += f"Status Ailment: {battle.enemy_pokemon.status}\n"
-        out += "</enemy_pokemon>\n"
+        out += _format_enemy_pokemon(game_state)
 
     if battle.num_enemy_pokemon:
         out += (
@@ -53,6 +48,27 @@ def format_battle_info(game_state: GameState) -> str:
         )
 
     out += "</battle_info>"
+    return out
+
+
+def _format_enemy_pokemon(game_state: GameState) -> str:
+    """Format the current opposing Pokemon."""
+    battle = game_state.battle
+    enemy_pokemon = battle.enemy_pokemon
+    if enemy_pokemon is None:
+        return ""
+
+    out = "<enemy_pokemon>\n"
+    out += f"Name: {enemy_pokemon.name}\n"
+    if (
+        battle.battle_type in {BattleType.WILD, BattleType.SAFARI_ZONE}
+        and enemy_pokemon.pokedex_number in game_state.player.pokedex_caught
+    ):
+        out += "Pokedex: This species is already registered as caught.\n"
+    out += f"Level: {enemy_pokemon.level}\n"
+    out += f"HP Percentage: {enemy_pokemon.hp_pct:.0f}%\n"
+    out += f"Status Ailment: {enemy_pokemon.status}\n"
+    out += "</enemy_pokemon>\n"
     return out
 
 

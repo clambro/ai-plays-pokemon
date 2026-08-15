@@ -93,7 +93,7 @@ class GameStateView(BaseModel):
             iteration=agent_state.iteration,
             money=game_state.player.money,
             pokedex_seen=game_state.player.pokedex_seen,
-            pokedex_caught=game_state.player.pokedex_caught,
+            pokedex_caught=len(game_state.player.pokedex_caught),
             total_tokens=agent_state.total_tokens,
             total_cost=agent_state.total_cost,
             play_time_seconds=game_state.player.play_time_seconds,

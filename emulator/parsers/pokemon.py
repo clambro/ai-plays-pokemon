@@ -11,6 +11,8 @@ if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
 
 _PP_MASK = 0x3F
+_POKEDEX_ORDER_ROM_BANK = 0x10
+_POKEDEX_ORDER_ROM_ADDRESS = 0x5279
 
 
 class PokemonMove(BaseModel):
@@ -55,6 +57,7 @@ class EnemyPokemon(BaseModel):
     """The state of an enemy pokemon in the battle."""
 
     name: str
+    pokedex_number: int
     level: int
     hp_pct: float
     status: str | None
@@ -137,6 +140,11 @@ def parse_enemy_battle_pokemon(mem: PyBoyMemoryView) -> EnemyPokemon | None:
 
     return EnemyPokemon(
         name=name,
+        # The ROM uses this table to translate its internal species ID to a Pokédex number.
+        pokedex_number=mem[
+            _POKEDEX_ORDER_ROM_BANK,
+            _POKEDEX_ORDER_ROM_ADDRESS + species_id - 1,
+        ],
         level=mem[0xCFF2],
         hp_pct=hp_pct,
         status=status,
