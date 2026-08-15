@@ -5,15 +5,13 @@ from typing import TYPE_CHECKING
 from agent.formatting.game_state import format_party_info, format_pc_info, format_player_info
 from agent.formatting.memory import format_goals, format_rolling_memory
 from agent.overworld import formatting
-from agent.overworld.tools.navigate import utils
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
 from common.enums import AsciiTile, BlockedDirection
-from overworld_map.views import get_current_map_tiles
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
+    from agent.overworld.map_view import CurrentMapView
     from emulator.game_state import GameState
-    from overworld_map.schemas import OverworldMap
 
 OVERWORLD_MAP_PROMPT = f"""
 <map_info>
@@ -21,15 +19,16 @@ Map name: {{map_name}}
 <ascii_screen>
 {{ascii_screen}}
 </ascii_screen>
-<whole_map>
+<current_map_region>
 {{ascii_map}}
-</whole_map>
-You have explored {{explored_percentage}} of this map.
+</current_map_region>
 <legend>
 {{legend}}
 </legend>
 
 The map coordinates in row-column order start at (0, 0) in the top left corner. The rows increase from top to bottom, and the columns increase from left to right. The full size of the current map in row-column order is {{height}}x{{width}} blocks.
+
+The current map region above uses the permanent coordinates of the complete map. It shows only the region that is currently navigable from your position and the terrain immediately bordering that region. "{AsciiTile.OUTSIDE_REGION}" masks every other coordinate, which may be unexplored or may belong to another disconnected region of this larger map. Previously remembered coordinates remain valid, but coordinates masked with "{AsciiTile.OUTSIDE_REGION}" cannot be reached from your current region. Coordinates never change when regions expand, merge, or are entered from another location.
 
 <screen_position>
 The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size). This should help you navigate from one map to another.
@@ -55,17 +54,17 @@ The tile directly to the right of you is "{{tile_right}}"{{blocked_right}}.
 {{connections}}
 </map_connections>
 
-You have discovered the following sprites on the portion of the map that you have revealed so far. Do not make any assumptions about who or what a sprite is before you have interacted with it.
+The following discovered sprites are in your current region or current screen:
 <known_sprites>
 {{known_sprites}}
 </known_sprites>
 
-You have discovered the following warp tiles on the portion of the map that you have revealed so far:
+The following discovered warp tiles are in your current region or current screen:
 <known_warps>
 {{known_warps}}
 </known_warps>
 
-You have discovered the following signs on the portion of the map that you have revealed so far:
+The following discovered signs are in your current region or current screen:
 <known_signs>
 {{known_signs}}
 </known_signs>
@@ -84,11 +83,12 @@ Navigation tips:
 - Pay attention to the "sprite is labeled" section in each sprite. This will tell you what the sprite is labeled as in the game's memory, and should help you determine what the sprite is.
 - Focus on the map when you are trying to navigate within a map. Focus on the screen when you are trying to navigate between maps.
 
-The current ASCII screen is derived from current game memory, while the whole map combines those observations over time. Prefer the ASCII information for tile and coordinate reasoning, and use the screenshot as supplemental visual context.
+The current ASCII screen is derived from current game memory, while the current map region combines those observations over time. Prefer the ASCII information for tile and coordinate reasoning, and use the screenshot as supplemental visual context.
 </map_info>
 """.strip()
 
 LEGEND_MAP = {
+    AsciiTile.OUTSIDE_REGION: "A coordinate outside your current navigable region. It may be unexplored or reachable only from somewhere else, so do not target it directly.",
     AsciiTile.UNSEEN: "Tiles that you have not yet explored. Move toward these tiles to reveal them.",
     AsciiTile.WALL: "A barrier (usually a wall or an object) that you cannot pass through.",
     AsciiTile.WATER: "Water.",
@@ -131,11 +131,8 @@ most efficient way to explore the map.
 {exploration_candidates}
 </exploration_candidates>
 
-If there are maps connected to the current map, the following section will
-guide you on how to navigate to the boundaries of the current map so that you
-can transition to the next map in the next iteration if you choose to do so.
-If this section is empty, it means that the current map is not connected to
-any other maps and has to be exited via warp tiles.
+The following section lists only connected-map boundaries reachable from your
+current region. Boundaries in other regions of the same larger map are omitted.
 <map_boundaries>
 {map_boundaries}
 </map_boundaries>
@@ -159,25 +156,24 @@ will be returned after each tool executes.
 """.strip()
 
 
-def _format_overworld_map(current_map: OverworldMap, game_state: GameState) -> str:
+def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> str:
     """Build the explored-map portion of the overworld prompt."""
+    current_map = map_view.overworld_map
     screen = game_state.get_ascii_screen()
     facing_tile, facing_tile_coords = formatting.get_facing_tile_notes(game_state)
     tile_above, blocked_above = formatting.get_tile_notes(BlockedDirection.UP, screen)
     tile_below, blocked_below = formatting.get_tile_notes(BlockedDirection.DOWN, screen)
     tile_left, blocked_left = formatting.get_tile_notes(BlockedDirection.LEFT, screen)
     tile_right, blocked_right = formatting.get_tile_notes(BlockedDirection.RIGHT, screen)
-    current_tiles = get_current_map_tiles(current_map, game_state)
     return OVERWORLD_MAP_PROMPT.format(
         map_name=current_map.id.name,
-        ascii_map="\n".join("".join(row) for row in current_tiles),
-        legend=formatting.format_legend(current_map, LEGEND_MAP),
+        ascii_map="\n".join("".join(row) for row in map_view.display_tiles),
+        legend=formatting.format_legend(map_view, LEGEND_MAP),
         height=current_map.height,
         width=current_map.width,
-        known_sprites=formatting.format_sprite_notes(current_map, game_state),
-        known_warps=formatting.format_warp_notes(current_map, game_state),
-        known_signs=formatting.format_sign_notes(current_map, game_state),
-        explored_percentage=formatting.format_explored_percentage(current_map),
+        known_sprites=formatting.format_sprite_notes(map_view, game_state),
+        known_warps=formatting.format_warp_notes(map_view, game_state),
+        known_signs=formatting.format_sign_notes(map_view, game_state),
         ascii_screen=screen,
         player_coords=game_state.player.coords,
         player_terrain=current_map.terrain[game_state.player.coords.row][
@@ -198,16 +194,17 @@ def _format_overworld_map(current_map: OverworldMap, game_state: GameState) -> s
         screen_left=game_state.screen.left,
         screen_bottom=game_state.screen.bottom,
         screen_right=game_state.screen.right,
-        connections=formatting.format_connection_notes(current_map),
+        connections=formatting.format_connection_notes(map_view),
     )
 
 
 def build_overworld_decision_prompt(
     context: AgentContext,
-    current_map: OverworldMap,
+    map_view: CurrentMapView,
     game_state: GameState,
 ) -> str:
     """Build the initial prompt for one overworld-agent run."""
+    current_map = map_view.overworld_map
     if game_state.player.is_biking:
         unavailable = "Navigation data is unavailable while riding a bike."
         exploration_candidates = unavailable
@@ -219,20 +216,14 @@ def build_overworld_decision_prompt(
             "button tool to move around the map."
         )
     else:
-        navigation_tiles = get_current_map_tiles(current_map, game_state)
-        accessible = utils.get_accessible_coords(
-            game_state.player.coords,
-            navigation_tiles,
-            current_map.blockages,
-            game_state.get_hm_tiles(),
-        )
-        exploration = utils.get_exploration_candidates(accessible, navigation_tiles)
-        boundaries = utils.get_map_boundary_tiles(accessible, current_map)
         exploration_candidates = formatting.format_exploration_candidates(
-            exploration,
+            map_view.exploration_candidates,
             current_map,
         )
-        map_boundaries = formatting.format_map_boundary_tiles(boundaries, current_map)
+        map_boundaries = formatting.format_map_boundary_tiles(
+            map_view.boundary_tiles,
+            current_map,
+        )
         biking_warning = ""
 
     inventory_indices = "\n".join(
@@ -242,7 +233,7 @@ def build_overworld_decision_prompt(
     sections = (
         format_rolling_memory(context.state.rolling_memory),
         format_goals(context.state.goals),
-        _format_overworld_map(current_map, game_state),
+        _format_overworld_map(map_view, game_state),
         format_player_info(game_state),
         format_party_info(game_state),
         format_pc_info(game_state),
