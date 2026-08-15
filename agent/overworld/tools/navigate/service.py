@@ -328,12 +328,12 @@ class NavigationService:
     ) -> str | None:
         """Return the result when navigation should stop, if applicable."""
         new_pos = game_state.player.coords
+        if game_state.map.id != starting_map_id:
+            return f"Map changed from {starting_map_id.name} to {game_state.map.id.name}."
         if new_pos == target_pos:
             return f"I reached {target_pos}."
         if prev_pos == new_pos:
             return f"My navigation to {target_pos} was interrupted at position {new_pos}."
-        if game_state.map.id != starting_map_id:
-            return "The map changed while I was navigating, so I stopped."
         return None
 
     @staticmethod
