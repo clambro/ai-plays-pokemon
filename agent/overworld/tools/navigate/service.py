@@ -176,18 +176,12 @@ class NavigationService:
             )
         if coords == game_state.player.coords:
             return f"Navigation skipped because I am already at {coords}."
-        if navigation_tiles[coords.row, coords.col] == AsciiTile.SPRITE:
-            return (
-                f"Navigation failed. The target coordinates {coords} are occupied by a sprite."
-                " If I want to interact with the sprite, I have to navigate to a tile adjacent"
-                " to it and then use the button tool to interact with it."
-            )
-        if coords not in accessible_coords:
-            return (
-                f"Navigation failed. The target coordinates {coords} cannot be reached from my"
-                " current position."
-            )
-        return None
+        return _get_map_target_error(
+            game_state,
+            coords,
+            accessible_coords,
+            navigation_tiles,
+        )
 
     async def _handle_pikachu(self, button: Button) -> bool:
         """Check if Pikachu is in the way and face it if so.
@@ -362,3 +356,40 @@ _BUTTON_DIRECTIONS = {
     Button.LEFT: FacingDirection.LEFT,
     Button.RIGHT: FacingDirection.RIGHT,
 }
+
+
+def _get_map_target_error(
+    game_state: GameState,
+    coords: Coords,
+    accessible_coords: frozenset[Coords],
+    navigation_tiles: np.ndarray,
+) -> str | None:
+    """Explain why an in-bounds map coordinate is not a valid local target."""
+    target_tile = navigation_tiles[coords.row, coords.col]
+    if target_tile == AsciiTile.SPRITE:
+        return (
+            f"Navigation failed. The target coordinates {coords} are occupied by a sprite."
+            " If I want to interact with the sprite, I have to navigate to a tile adjacent"
+            " to it and then use the button tool to interact with it."
+        )
+    if target_tile == AsciiTile.UNSEEN:
+        return (
+            f"Navigation failed. The target coordinates {coords} are still unexplored, so no"
+            " revealed route to them exists yet. I should navigate to a listed exploration"
+            " candidate to reveal more of the current map."
+        )
+    traversable_tiles = set(AsciiTile.get_walkable_tiles()) | set(game_state.get_hm_tiles())
+    if target_tile not in traversable_tiles:
+        return (
+            f"Navigation failed. The target coordinates {coords} are revealed but are not a"
+            " currently traversable tile. I should choose a reachable walkable coordinate."
+        )
+    if coords not in accessible_coords:
+        return (
+            f"Navigation failed. The revealed target coordinates {coords} are outside my"
+            " current reachable map region. The navigation tool only moves within this"
+            " region and is working as intended. Another area of the same map may require me"
+            " to leave through a reachable warp or map boundary and re-enter elsewhere. I"
+            " can also continue exploring if the revealed terrain may still connect."
+        )
+    return None

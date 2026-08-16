@@ -52,6 +52,11 @@ exactly because emulator changes can affect existing save states.
   coverage for component interactions and focused unit tests for substantive
   pure algorithms. Repository policy tests are appropriate when they
   deliberately enforce a project convention.
+- Do not add tests whose primary assertions inspect prompts, tool descriptions
+  or results, formatted model-facing prose, error-message wording, logs,
+  documentation text, or other copy. Review presentation-only changes directly.
+  Do not add a new test file unless the change introduces substantive
+  algorithmic behavior or a stable domain invariant.
 - Keep changes focused and preserve unrelated worktree changes.
 
 ## Logging and Telemetry

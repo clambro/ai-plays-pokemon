@@ -131,7 +131,11 @@ def _get_warp_description(warp: Warp, player_coords: Coords) -> str:
     """Format instructions for entering a warp."""
     if warp.activation == WarpActivation.STEP_ON:
         if player_coords == warp.coords:
-            return "Walk off this coordinate, then step back onto it to activate the warp."
+            return (
+                "You are currently standing on this warp, so it is inactive. It activates only"
+                " when entered from another tile. Re-enter it only when you intend to travel to"
+                " the destination described above."
+            )
         return "Step onto this coordinate to activate the warp."
     return (
         f"Stand on this coordinate and press {warp.activation.value} to activate the warp, even"
