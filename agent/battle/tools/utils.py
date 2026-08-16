@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING
 from pydantic_ai import BinaryContent
 
 from agent.battle.formatting import format_available_pokeballs, format_battle_info
+from agent.dialog import settle_dialog
 from agent.formatting.game_state import format_party_info
-from agent.utils import build_screenshot_content, is_battle_handler_state
+from agent.utils import build_screenshot_content
 from common.schemas import Coords
 
 if TYPE_CHECKING:
@@ -86,23 +87,21 @@ async def complete_battle_action(
     Returns:
         Fresh context for the agent's next decision.
     """
-    game_state = await context.emulator.get_game_state()
-    if not is_battle_handler_state(game_state):
-        return await refresh_battle_observation(context, action_result=action_result)
-
-    dialog = await handle_battle_dialog(context)
-    return await refresh_battle_observation(
-        context,
-        action_result=action_result,
-        dialog=dialog,
-    )
+    settlement = await settle_dialog(context)
+    return [
+        build_screenshot_content(settlement.screenshot),
+        build_battle_tool_result(
+            settlement.game_state,
+            action_result=action_result,
+            dialog=settlement.transcript,
+        ),
+    ]
 
 
 async def refresh_battle_observation(
     context: AgentContext,
     *,
     action_result: str,
-    dialog: str = "",
 ) -> BattleToolResult:
     """Capture and render a fresh battle observation for the agent."""
     game_state, screenshot = await context.emulator.get_game_state_with_screenshot()
@@ -111,35 +110,5 @@ async def refresh_battle_observation(
         build_battle_tool_result(
             game_state,
             action_result=action_result,
-            dialog=dialog,
         ),
     ]
-
-
-async def handle_battle_dialog(context: AgentContext) -> str:
-    """Advance battle dialog and record any text that was read.
-
-    Args:
-        context: Battle dependencies and rolling memory.
-
-    Returns:
-        The captured dialog text.
-    """
-    dialog = await context.emulator.advance_battle_dialog()
-    _record_battle_dialog(context, dialog)
-    return dialog
-
-
-def capture_pending_battle_dialog(context: AgentContext) -> str:
-    """Record dialog whose button press already reached a battle menu."""
-    dialog = context.emulator.consume_pending_dialog()
-    _record_battle_dialog(context, dialog)
-    return dialog
-
-
-def _record_battle_dialog(context: AgentContext, dialog: str) -> None:
-    """Append captured battle dialog to rolling memory."""
-    if dialog:
-        context.state.rolling_memory.add_memory(
-            content=f'Onscreen text: "{dialog}"',
-        )

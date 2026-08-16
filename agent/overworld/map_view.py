@@ -24,6 +24,7 @@ class CurrentMapView:
     navigation_tiles: np.ndarray
     reachable_coords: frozenset[Coords]
     visible_coords: frozenset[Coords]
+    counter_interactions: dict[int, tuple[Coords, ...]]
     display_origin: Coords
     display_tiles: np.ndarray
     exploration_candidates: tuple[Coords, ...]
@@ -43,7 +44,15 @@ def build_current_map_view(
         game_state.get_hm_tiles(),
     )
     reachable_coords = frozenset(reachable)
-    visible_coords = _get_visible_coords(reachable_coords, navigation_tiles)
+    counter_interactions = _get_counter_interactions(
+        reachable_coords,
+        navigation_tiles,
+        overworld_map,
+        game_state,
+    )
+    visible_coords = _get_visible_coords(reachable_coords, navigation_tiles) | frozenset(
+        game_state.sprites[entity_id].coords for entity_id in counter_interactions
+    )
     display_top = min(coords.row for coords in visible_coords)
     display_bottom = max(coords.row for coords in visible_coords)
     display_left = min(coords.col for coords in visible_coords)
@@ -75,6 +84,7 @@ def build_current_map_view(
         navigation_tiles=navigation_tiles,
         reachable_coords=reachable_coords,
         visible_coords=visible_coords,
+        counter_interactions=counter_interactions,
         display_origin=Coords(row=display_top, col=display_left),
         display_tiles=display_tiles,
         exploration_candidates=tuple(
@@ -82,6 +92,38 @@ def build_current_map_view(
         ),
         boundary_tiles=boundary_tiles,
     )
+
+
+def _get_counter_interactions(
+    reachable_coords: frozenset[Coords],
+    navigation_tiles: np.ndarray,
+    overworld_map: OverworldMap,
+    game_state: GameState,
+) -> dict[int, tuple[Coords, ...]]:
+    """Find reachable positions from which the ROM permits talking across a counter."""
+    interactions = {}
+    for entity_id in sorted(overworld_map.known_sprite_ids):
+        sprite = game_state.sprites.get(entity_id)
+        if sprite is None:
+            continue
+        positions = []
+        for row_offset, col_offset in ((-1, 0), (0, -1), (0, 1), (1, 0)):
+            counter = Coords(
+                row=sprite.coords.row + row_offset,
+                col=sprite.coords.col + col_offset,
+            )
+            standing = Coords(
+                row=sprite.coords.row + row_offset * 2,
+                col=sprite.coords.col + col_offset * 2,
+            )
+            if (
+                standing in reachable_coords
+                and navigation_tiles[counter.row, counter.col] == AsciiTile.COUNTER
+            ):
+                positions.append(standing)
+        if positions:
+            interactions[entity_id] = tuple(positions)
+    return interactions
 
 
 def _get_visible_coords(

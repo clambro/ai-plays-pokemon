@@ -30,7 +30,7 @@ Handlers can complete several iterations while keeping one Pydantic AI conversat
 
 ### Shared Agent Runtime
 
-Pydantic AI hooks account for every model response, append ordinary-text reasoning to the active rolling-memory block, and publish the latest state to the HTML background immediately before a selected function tool executes. Tools return their real outcome and a fresh observation to the same conversation. Deterministic dialog handling publishes before advancing the emulator as well.
+Pydantic AI hooks account for every model response, append ordinary-text reasoning to the active rolling-memory block, and publish completed decisions before their actions begin. After an action finishes, shared dialog settlement publishes its complete transcript and terminal game state. Tools return the same terminal observation to the local conversation.
 
 The application loop owns emulator and streaming-server lifetimes. It captures the emulator state and creates a backup every 10 minutes and after an unexpected handler failure. The copied SQLite database contains finalized memory history, while serialized `AgentState` contains the remaining live application state and totals. Rolling memory is rebuilt from the copied database rather than serialized into `AgentState`.
 
@@ -74,7 +74,7 @@ flowchart LR
     choice --> update_goal
     choice --> delete_goal
 
-    navigate --> observe["Return actual result<br/>and fresh screenshot"]
+    navigate --> observe["Settle routine dialog<br/>and return a fresh result"]
     buttons --> observe
     item --> observe
     swap --> observe
@@ -89,7 +89,7 @@ flowchart LR
 
 ### Prepare Context
 
-Before constructing the agent, deterministic preparation loads the current explored terrain from SQLite or creates it when entering a new map. The current visible screen reveals only entity-free terrain while separately synchronizing discovered sprite, sign, and warp identities. The prompt composes those discoveries with live emulator positions, including the player and Pikachu, without writing any overlays back into terrain. The prepared context, initial game state, and screenshot are then used to build one static prompt and tool registry for the run.
+Before constructing the agent, deterministic preparation loads the current explored terrain from SQLite or creates it when entering a new map. The current visible screen reveals only entity-free terrain while separately synchronizing discovered sprite, sign, and warp identities. The prompt composes those discoveries with live emulator positions, including the player and Pikachu, without writing any overlays back into terrain. It shows sprites in the current reachable region plus sprites the ROM permits the player to interact with across a counter, together with the reachable interaction position. The prepared context, initial game state, and screenshot are then used to build one static prompt and tool registry for the run.
 
 The prompt includes rolling memory, goals, player and party state, inventory indices, the explored map, exploration candidates, and accessible connected-map boundaries.
 
@@ -131,17 +131,17 @@ The create, update, and delete tools let the agent maintain current objectives w
 
 The agent narrates its decision alongside each tool call. The tool then produces the actual outcome of the action. Action outcomes are appended to the current rolling-memory block and returned with a fresh screenshot to the local conversation, so the HTML activity log and the agent cannot disagree about what happened. Goal tools return their result directly and update authoritative goal state without copying the result into rolling memory.
 
-Dialog completed during an overworld tool is retained from the emulator's ROM text-event stream even if it has disappeared before the final observation. A still-open text interaction or battle remains queued for the applicable handler instead.
+Routine dialog produced by an overworld tool is read, advanced, recorded, and returned with the tool's terminal observation. Consecutive ordinary interactions, including battle introductions, are settled as one result, and if the player remains in place, the same overworld conversation receives the transcript and chooses the next action. Menus and other decision screens remain untouched, while a ready battle menu returns control to the dispatcher.
 
 If the action leaves the player in place and the game in the overworld, the agent can make another decision using that result. Once the player moves or the game enters a text interaction or battle, the runner returns to the dispatcher.
 
 ## The Battle Agent
 
-The battle handler owns the complete battle lifecycle. It prepares a static initial observation and a battle-specific Pydantic AI toolset, then keeps one conversation alive until battle mode ends.
+The battle handler owns the complete battle lifecycle. It settles any routine text already in progress, prepares a static initial observation and a battle-specific Pydantic AI toolset, then keeps one conversation alive until battle mode ends.
 
 ```mermaid
 flowchart LR
-    dispatch["Typed dispatcher"] --> prepare["Prepare static<br/>initial observation"]
+    dispatch["Typed dispatcher"] --> prepare["Settle routine text and prepare<br/>static initial observation"]
     prepare --> agent["GPT-5.6 Luna<br/>battle agent"]
     agent --> choice{"Function tool call"}
 
@@ -206,7 +206,7 @@ Provides constrained directional, confirm, and cancel input for forced switches,
 
 ### Memory and Display Updates
 
-The agent emits a brief explanation alongside each tool call. That explanation and captured in-game dialog are appended to the current rolling-memory block and streamed to the HTML activity log. Detailed action results and refreshed observations stay inside the agent conversation, where they provide context for the next decision without flooding durable memory.
+The agent emits a brief explanation alongside each tool call. That explanation and captured in-game dialog are appended to the current rolling-memory block and streamed to the HTML activity log. Detailed action results and refreshed observations stay inside the agent conversation, where they provide context for the next decision without flooding durable memory. Opening battle text remains with the action that triggered the encounter, while final battle and capture text is settled before the terminal observation passes control to the overworld or naming handler.
 
 ## The Text Runner
 
@@ -233,7 +233,7 @@ flowchart LR
 
 This is the most common path through the text handler, and it is deliberately handled before the agent is even constructed. The emulator records completed dialog directly from the ROM text engine, advances only explicit text waits, and appends the resulting transcript to the current rolling-memory block. This avoids paying the AI to read and dismiss ordinary speech while preserving text that scrolls, advances automatically, or disappears before another screen observation.
 
-Deterministic advancement stops when the interaction closes or reaches a menu, custom interface, or battle boundary. A remaining decision starts one text-agent conversation and keeps it alive until the interaction is over; an ordinary closed interaction returns without making a model call.
+Deterministic advancement continues across consecutive ordinary interactions and stops at external overworld control, a menu, custom interface, or battle boundary. A remaining decision starts one text-agent conversation and keeps it alive until the interaction is over; a completed ordinary sequence returns without making a model call.
 
 ### Press Buttons
 

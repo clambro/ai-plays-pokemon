@@ -17,7 +17,6 @@ from emulator.pyboy_worker import PyBoyWorker
 from emulator.text_events import TextEventKind, TextEventReducer, drive_standard_dialog
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
     from pathlib import Path
 
     from pyboy import PyBoy
@@ -127,11 +126,7 @@ class Emulator(AbstractAsyncContextManager):
             initial_snapshot=initial_snapshot,
         )
 
-    async def advance_text_dialog(
-        self,
-        *,
-        before_input: Callable[[], Awaitable[None]] | None = None,
-    ) -> str:
+    async def advance_text_dialog(self) -> str:
         """Advance ordinary dialog until the interaction changes domain or closes."""
         initial_snapshot = await self._worker.drain_settled_text_events_with_control_boundary()
         return await drive_standard_dialog(
@@ -147,16 +142,11 @@ class Emulator(AbstractAsyncContextManager):
                 }
             ),
             initial_snapshot=initial_snapshot,
-            before_input=before_input,
         )
 
     def consume_pending_dialog(self) -> str:
-        """Claim and reduce dialog already completed by the ROM."""
+        """Claim and reduce currently pending dialog events."""
         return self._text_event_reducer.reduce(self.drain_text_events())
-
-    def consume_completed_dialog(self) -> str:
-        """Claim dialog through the last closed ordinary text interaction."""
-        return self._text_event_reducer.reduce(self._worker.drain_completed_text_events())
 
     async def get_game_state_with_map_collision_tiles(
         self,

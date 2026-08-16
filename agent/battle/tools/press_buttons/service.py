@@ -9,14 +9,13 @@ if TYPE_CHECKING:
 
     from agent.context import AgentContext
     from common.enums import Button
-    from emulator.control_events import ControlBoundary
 
 
 async def press_buttons(
     *,
     context: AgentContext,
     buttons: Sequence[Button],
-) -> tuple[str, ControlBoundary | None]:
+) -> str:
     """Press the selected buttons.
 
     Args:
@@ -24,13 +23,11 @@ async def press_buttons(
         buttons: Buttons to press in order.
 
     Returns:
-        Confirmation of the buttons pressed and the final ROM control boundary.
+        Confirmation of the buttons pressed.
     """
     pressed_buttons: list[str] = []
-    final_boundary = None
     for index, button in enumerate(buttons):
-        control_result = await context.emulator.press_button(button)
-        final_boundary = control_result.boundary
+        await context.emulator.press_button(button)
         pressed_buttons.append(button.value)
 
         if index < len(buttons) - 1:
@@ -38,4 +35,4 @@ async def press_buttons(
             if not is_battle_handler_state(game_state):
                 break
 
-    return f"Pressed the following buttons: {pressed_buttons}.", final_boundary
+    return f"Pressed the following buttons: {pressed_buttons}."

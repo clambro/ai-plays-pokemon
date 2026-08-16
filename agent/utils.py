@@ -65,6 +65,17 @@ def is_overworld_handler_state(
     )
 
 
+def require_tool_call(
+    ctx: RunContext[AgentContext],  # noqa: ARG001
+    request_context: ModelRequestContext,
+) -> ModelRequestContext:
+    """Require every gameplay-agent response to select an action tool."""
+    if request_context.model_settings is None:
+        request_context.model_settings = {}
+    request_context.model_settings["tool_choice"] = "required"
+    return request_context
+
+
 async def record_model_response(
     ctx: RunContext[AgentContext],
     *,
@@ -88,7 +99,7 @@ async def publish_before_tool(
     tool_def: ToolDefinition,  # noqa: ARG001
     args: dict[str, object],
 ) -> dict[str, object]:
-    """Publish shared state before an ordinary function tool executes."""
+    """Publish the completed decision immediately before its action begins."""
     game_state = await ctx.deps.emulator.get_game_state()
     update_background_from_states(ctx.deps.state, game_state)
     return args
@@ -111,6 +122,7 @@ async def handle_control_handoff(
 
 
 AGENT_HOOKS = Hooks[AgentContext](
+    before_model_request=require_tool_call,
     after_model_request=record_model_response,
     before_tool_execute=publish_before_tool,
     tool_execute=handle_control_handoff,

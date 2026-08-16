@@ -10,6 +10,7 @@ from pydantic_graph import End
 from agent.battle.prompts import build_battle_decision_prompt
 from agent.battle.tools.registry import build_battle_toolset
 from agent.context import AgentContext
+from agent.dialog import settle_dialog
 from agent.utils import AGENT_HOOKS, build_screenshot_content, is_battle_handler_state
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
@@ -44,19 +45,20 @@ def build_battle_agent(
 async def run_battle(context: AgentContext) -> None:
     """Run one agent conversation until the game exits battle mode."""
     await context.begin_iteration()
-    initial_game_state, initial_screenshot = await context.emulator.get_game_state_with_screenshot()
-    if not is_battle_handler_state(initial_game_state):
+    settlement = await settle_dialog(context)
+    await context.complete_iteration()
+    if not is_battle_handler_state(settlement.game_state):
         return
     agent = build_battle_agent(
         context,
-        initial_game_state.battle.battle_type,
+        settlement.game_state.battle.battle_type,
     )
     try:
         async with agent.iter(
             build_battle_agent_input(
                 context,
-                initial_game_state=initial_game_state,
-                initial_screenshot=initial_screenshot,
+                initial_game_state=settlement.game_state,
+                initial_screenshot=settlement.screenshot,
             ),
             deps=context,
         ) as agent_run:

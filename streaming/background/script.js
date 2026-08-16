@@ -59,6 +59,8 @@ const refs = {
     template: document.getElementById('pokemon-card-template'),
 };
 
+let renderedLog = null;
+
 /**
  * @param {z.infer<typeof GameStateSchema>} data
  */
@@ -131,16 +133,36 @@ function updateDisplay(data) {
     refs.goalsDiv.scrollTop = 0;  // Auto-scroll to the top.
 
     // --- Log ---
-    const logFrag = document.createDocumentFragment();
-    if (log && log.length) {
-        log.forEach((entry) => {
+    const unchangedEntries = renderedLog === null
+        ? 0
+        : log.findIndex((entry, index) => {
+            const renderedEntry = renderedLog[index];
+            return !renderedEntry
+                || entry.iteration !== renderedEntry.iteration
+                || entry.thought !== renderedEntry.thought;
+        });
+    const commonLength = unchangedEntries === -1
+        ? Math.min(log.length, renderedLog.length)
+        : unchangedEntries;
+    if (renderedLog === null || commonLength !== log.length || commonLength !== renderedLog.length) {
+        const initialRender = renderedLog === null;
+        while (refs.logDiv.children.length > commonLength) {
+            refs.logDiv.lastElementChild.remove();
+        }
+        const logFrag = document.createDocumentFragment();
+        for (const entry of log.slice(commonLength)) {
             const p = document.createElement('p');
             p.textContent = `[${entry.iteration}] ${entry.thought}`;
             logFrag.appendChild(p);
-        });
+        }
+        refs.logDiv.appendChild(logFrag);
+        renderedLog = log;
+        if (initialRender) {
+            refs.logDiv.scrollTop = refs.logDiv.scrollHeight;
+        } else {
+            refs.logDiv.scrollTo({ top: refs.logDiv.scrollHeight, behavior: 'smooth' });
+        }
     }
-    refs.logDiv.replaceChildren(logFrag);
-    refs.logDiv.scrollTop = refs.logDiv.scrollHeight;  // Auto-scroll to the bottom.
 
     // --- Party ---
     const partyFrag = document.createDocumentFragment();

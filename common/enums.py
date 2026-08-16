@@ -12,6 +12,7 @@ class AsciiTile(StrEnum):
     OUTSIDE_REGION = "▒"
     UNSEEN = "░"
     WALL = "▓"
+    COUNTER = "‡"
     WATER = "≈"
     GRASS = "※"
     LEDGE_DOWN = "▽"

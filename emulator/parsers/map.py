@@ -17,6 +17,9 @@ _SOUTH_CONNECTION_ADDRESS = 0xD3C9
 _WEST_CONNECTION_ADDRESS = 0xD3D4
 _EAST_CONNECTION_ADDRESS = 0xD3DF
 _NO_CONNECTION = 0xFF
+_NO_TALK_OVER_TILE = 0xFF
+_TALK_OVER_TILES_ADDRESS = 0xD57F
+_TALK_OVER_TILE_COUNT = 3
 _CONNECTION_STRIP_LENGTH_OFFSET = 5
 _CONNECTION_Y_ALIGNMENT_OFFSET = 7
 _CONNECTION_X_ALIGNMENT_OFFSET = 8
@@ -66,6 +69,7 @@ class Map(BaseModel):
     width: int
     grass_tile: int | None
     water_tiles: frozenset[int]
+    talk_over_tiles: frozenset[int]
     ledge_tiles_left: list[tuple[int, int]]
     ledge_tiles_right: list[tuple[int, int]]
     ledge_tiles_down: list[tuple[int, int]]
@@ -138,6 +142,11 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         cut_tree_tiles = None
 
     water_tiles = _get_water_tiles(tileset_id)
+    talk_over_tiles = frozenset(
+        tile
+        for tile in mem[_TALK_OVER_TILES_ADDRESS : _TALK_OVER_TILES_ADDRESS + _TALK_OVER_TILE_COUNT]
+        if tile != _NO_TALK_OVER_TILE
+    )
     grass_tile = _GRASS_TILE_MAP.get(tileset_id)
     cut_tree_tiles = _CUT_TREE_TILE_MAP.get(tileset_id)
     boulder_hole_tiles = (0x2F, 0x2F, 0x22, 0x22) if tileset_id == Tileset.CAVERN else None
@@ -166,6 +175,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         width=width,
         grass_tile=grass_tile,
         water_tiles=water_tiles,
+        talk_over_tiles=talk_over_tiles,
         ledge_tiles_left=ledge_tiles_left,
         ledge_tiles_right=ledge_tiles_right,
         ledge_tiles_down=ledge_tiles_down,
@@ -218,6 +228,7 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
         width=0,
         grass_tile=None,
         water_tiles=frozenset(),
+        talk_over_tiles=frozenset(),
         ledge_tiles_left=[],
         ledge_tiles_right=[],
         ledge_tiles_down=[],

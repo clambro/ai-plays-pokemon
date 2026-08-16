@@ -10,8 +10,6 @@ from common.enums import Button
 from emulator.control_events import ControlBoundary
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
-
     from emulator.emulator import Emulator
 
 
@@ -191,23 +189,6 @@ class TextEventJournal:
             self._events.clear()
         return events
 
-    def drain_through_last(self, kind: TextEventKind) -> tuple[TextEvent, ...]:
-        """Claim events through the last available boundary of the requested kind."""
-        with self._lock:
-            boundary = next(
-                (
-                    index
-                    for index in range(len(self._events) - 1, -1, -1)
-                    if self._events[index].kind == kind
-                ),
-                None,
-            )
-            if boundary is None:
-                return ()
-            events = tuple(self._events[: boundary + 1])
-            del self._events[: boundary + 1]
-        return events
-
     async def wait_and_drain(
         self,
         max_wait_seconds: float | None = None,
@@ -254,7 +235,6 @@ async def drive_standard_dialog(
     reducer: TextEventReducer,
     stop_on: frozenset[TextEventKind],
     initial_snapshot: TextEventSnapshot | None = None,
-    before_input: Callable[[], Awaitable[None]] | None = None,
 ) -> str:
     """Advance explicit dialog waits until the requested ROM boundary."""
     initial_snapshot = initial_snapshot or TextEventSnapshot()
@@ -284,6 +264,7 @@ async def drive_standard_dialog(
                     await emulator.wait_for_menu_ready()
                 else:
                     await emulator.wait_until_ready()
+                events.extend(emulator.drain_text_events())
                 return reducer.reduce(events)
 
             if any(event.kind == TextEventKind.INPUT_RESOLVED for event in batch):
@@ -293,8 +274,6 @@ async def drive_standard_dialog(
                     return reducer.reduce(events)
 
         if control.input_required and not control.input_sent:
-            if before_input is not None:
-                await before_input()
             await emulator.pulse_button(Button.A)
             control.input_sent = True
 
