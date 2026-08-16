@@ -6,8 +6,15 @@ Derive connected regions from revealed terrain, explain them compactly in map
 prompts, and build a deterministic global graph that can route between locally
 separate areas through other maps.
 
-Warp activation, normal destination coordinates, and bounded outdoor map
-connections are already available to the routing work.
+The current agent-facing map already derives and displays the region reachable
+from the player's position while retaining the complete revealed map in
+persistence. This ticket extends that foundation to other derived regions and
+cross-map routing; it does not replace the current map view or partition stored
+maps.
+
+Warp activation, rigid map-local warp IDs, normal destination coordinates,
+exact coordinates on observed map changes, and bounded outdoor map connections
+are already available to the routing work.
 
 **Depends on:**
 
@@ -21,6 +28,12 @@ or the player gains a traversal ability.
 
 Persist maps, coordinates, entities, and transition endpoints. Never persist a
 region label as durable identity.
+
+Every derived region must retain the map's existing coordinate system. A
+cropped or separately connected region may start at a nonzero row or column,
+but its coordinates must never be rebased or renumbered. Previously remembered
+coordinates must remain valid when regions expand, merge, or are approached
+through another map.
 
 ## Local Region Model
 
@@ -47,6 +60,12 @@ Build a derived graph whose nodes are current provisional regions and whose
 directed edges are known map transitions. Assign each transition endpoint to
 the region currently containing its coordinate.
 
+The graph is derived from authoritative explored-map state and persisted
+transition endpoints, not from rolling-memory prose or a reconstructed sequence
+of where the agent remembers walking. Include both warp transitions and bounded
+outdoor map connections. Region-limited prompt presentation must not remove
+known portals in other regions or maps from the planner's source data.
+
 This must be a graph rather than a tree. Maps can have multiple entrances,
 transitions can form cycles, and locally separate regions may reconnect through
 other maps.
@@ -65,8 +84,10 @@ The global planner should:
 - resolve the player's and target's current regions;
 - find a route through known directed portal edges;
 - return only the first portal/waypoint on the current map;
-- use the existing local pathfinder to reach it; and
-- re-read state and replan after every transition or interruption.
+- use the existing local pathfinder to reach it;
+- re-read state and replan after every transition or interruption; and
+- advance from the observed destination endpoint rather than selecting the
+  locally prominent arrival portal merely because the player is standing on it.
 
 The LLM chooses semantic intent—explore, reach a known landmark, revisit a map,
 or investigate a portal. Deterministic code chooses the portal sequence and
@@ -87,6 +108,22 @@ collapsed those coordinates into one place and traversed the B1F/B2F edge more
 than 180 times. Rolling memory then reinforced the invented topology. A route
 to 1F must select the B1F portal itself; arriving at the same coordinates on
 B2F must not satisfy or replace that waypoint.
+
+## Discarded Transition-History Approach
+
+Do not solve this by adding another prompt section that restates recent map
+visits, entered and exited warps, previous-map context, or traversal counts. A
+structured version of that information was explored and discarded: the same
+facts were already present in exact map-change results and rolling memory, and
+there was no indication that another presentation changed the agent's routing
+behavior.
+
+The failure is not primarily missing history. It is asking the model to infer
+and execute graph topology from locally presented observations. Persist the
+transition facts once, derive the graph deterministically, and expose a routing
+operation instead of another narrative history. A diagnostic graph view may
+show traversal history when investigating a failure, but history must not
+become the graph's source of truth or routine prompt payload.
 
 ## Prompt Design
 
@@ -109,6 +146,11 @@ Use explicit uncertainty language:
 
 Do not dump the complete world graph into every prompt.
 
+Do not duplicate rolling memory with a recent-transition ledger. Prompt context
+should describe the player's current provisional region and only the route or
+portals relevant to the current decision. The deterministic planner may use the
+complete known graph without exposing it wholesale to the model.
+
 When no route is known, return a useful reason and information-gaining options,
 such as exploring current/reachable frontiers, visiting an untraversed portal,
 or acquiring a required ability.
@@ -117,6 +159,9 @@ or acquiring a required ability.
 
 - Reading full ROM collision maps to determine regions.
 - Claiming apparent separation is permanent.
+- Replacing the persistent whole-map record with separately stored components.
+- Rebasing coordinates relative to a region crop.
+- Treating rolling memory or a traversal-history log as authoritative topology.
 - A predetermined walkthrough.
 - One uninterrupted multi-map action sequence.
 - Strongly connected subregions unless one-way puzzles later justify them.
@@ -132,6 +177,8 @@ Use synthetic maps and representative game fixtures to cover:
 - Cut/Surf changing region membership;
 - dynamic sprites not splitting topology;
 - unresolved and directed transition endpoints;
+- equal coordinates belonging to distinct map-qualified portal endpoints;
+- route progress after arriving while standing on a reciprocal return warp;
 - route selection and replanning; and
 - prompt wording that exposes no unseen terrain.
 
@@ -140,6 +187,8 @@ Use synthetic maps and representative game fixtures to cover:
 - [ ] All regions are derived solely from revealed terrain and current
       traversal rules.
 - [ ] Unknown tiles never become graph nodes or confirmed walls.
+- [ ] Derived regions preserve original map coordinates and never partition the
+      persistent whole-map record.
 - [ ] Broad regions use weak connectivity; execution retains directed edges.
 - [ ] Region membership updates automatically as knowledge and abilities
       change.
@@ -150,6 +199,8 @@ Use synthetic maps and representative game fixtures to cover:
       next local portal.
 - [ ] The routing tool accepts semantic intent and deterministically selects the
       next portal instead of asking the LLM to traverse a graph dump.
+- [ ] Rolling memory and recent transition history are not used as graph
+      authority or duplicated into routine prompt context.
 - [ ] The vertical-wall/two-ladder scenario routes through the basement.
 - [ ] The Mt. Moon B1F/B2F scenario routes to the correct B1F-to-1F warp without
       cycling through the identically positioned B2F return warp.
