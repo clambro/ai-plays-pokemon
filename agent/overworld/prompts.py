@@ -127,6 +127,9 @@ observations.
 
 {state}
 
+Regularly reflect on what you are trying to accomplish and use the goal tools
+to keep your goals useful and current.
+
 The following accessible coordinates are adjacent to unseen territory on the
 current map. They are therefore top candidates for exploration. If the section
 below is empty, then you have already explored all of the accessible tiles on

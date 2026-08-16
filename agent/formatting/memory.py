@@ -28,9 +28,7 @@ def format_goals(goals: Goals) -> str:
         " development, healing or resupplying, or investigating something you discovered. Do"
         " not use goals for individual button presses or routine movement. Goals must come from"
         " current structured information, observed game text, or recorded memory, never from"
-        " assumptions about future game progression or general Pokemon knowledge. Regularly"
-        " reflect on what you are trying to accomplish and use the goal tools to keep this list"
-        " useful and current."
+        " assumptions about future game progression or general Pokemon knowledge."
     )
     out += "\n<goals>\n"
     if goals.goals:

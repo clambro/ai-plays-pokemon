@@ -12,11 +12,12 @@ from pydantic_ai import (
 from pydantic_ai.capabilities.hooks import Hooks
 
 from agent.context import AgentContext
-from emulator.control_events import ControlBoundary
+from emulator.control_events import ControlBoundary, ControlHandoff
 from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
     from PIL import Image
+    from pydantic_ai.capabilities import ValidatedToolArgs, WrapToolExecuteHandler
     from pydantic_ai.messages import ToolCallPart
     from pydantic_ai.models import ModelRequestContext
 
@@ -93,7 +94,24 @@ async def publish_before_tool(
     return args
 
 
+async def handle_control_handoff(
+    ctx: RunContext[AgentContext],
+    *,
+    call: ToolCallPart,  # noqa: ARG001
+    tool_def: ToolDefinition,  # noqa: ARG001
+    args: ValidatedToolArgs,
+    handler: WrapToolExecuteHandler,
+) -> object:
+    """Turn an expected ROM-control handoff into normal tool completion."""
+    try:
+        return await handler(args)
+    except ControlHandoff:
+        ctx.deps.request_control_handoff()
+        return "Control passed to a different gameplay handler before this action was accepted."
+
+
 AGENT_HOOKS = Hooks[AgentContext](
     after_model_request=record_model_response,
     before_tool_execute=publish_before_tool,
+    tool_execute=handle_control_handoff,
 )
