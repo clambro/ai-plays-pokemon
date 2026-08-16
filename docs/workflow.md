@@ -131,7 +131,7 @@ The create, update, and delete tools let the agent maintain current objectives w
 
 The agent narrates its decision alongside each tool call. The tool then produces the actual outcome of the action. Action outcomes are appended to the current rolling-memory block and returned with a fresh screenshot to the local conversation, so the HTML activity log and the agent cannot disagree about what happened. Goal tools return their result directly and update authoritative goal state without copying the result into rolling memory.
 
-Routine dialog produced by an overworld tool is read, advanced, recorded, and returned with the tool's terminal observation. If ordinary dialog closes while the player remains in place, the same overworld conversation receives the transcript and chooses the next action. Menus and other decision screens remain untouched, while transitions into battle return control to the dispatcher.
+Routine dialog produced by an overworld tool is read, advanced, recorded, and returned with the tool's terminal observation. Consecutive ordinary interactions are settled as one result, and if the player remains in place, the same overworld conversation receives the transcript and chooses the next action. Menus and other decision screens remain untouched, while transitions into battle return control to the dispatcher.
 
 If the action leaves the player in place and the game in the overworld, the agent can make another decision using that result. Once the player moves or the game enters a text interaction or battle, the runner returns to the dispatcher.
 
@@ -233,7 +233,7 @@ flowchart LR
 
 This is the most common path through the text handler, and it is deliberately handled before the agent is even constructed. The emulator records completed dialog directly from the ROM text engine, advances only explicit text waits, and appends the resulting transcript to the current rolling-memory block. This avoids paying the AI to read and dismiss ordinary speech while preserving text that scrolls, advances automatically, or disappears before another screen observation.
 
-Deterministic advancement stops when the interaction closes or reaches a menu, custom interface, or battle boundary. A remaining decision starts one text-agent conversation and keeps it alive until the interaction is over; an ordinary closed interaction returns without making a model call.
+Deterministic advancement continues across consecutive ordinary interactions and stops at external overworld control, a menu, custom interface, or battle boundary. A remaining decision starts one text-agent conversation and keeps it alive until the interaction is over; a completed ordinary sequence returns without making a model call.
 
 ### Press Buttons
 

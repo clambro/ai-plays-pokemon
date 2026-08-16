@@ -40,8 +40,9 @@ async def settle_dialog(
 ) -> DialogSettlement:
     """Settle dialog owned by the originating action and capture its terminal observation.
 
-    Ordinary actions advance only plain text. Battle actions advance active
-    resolution text and otherwise claim pending events without sending input.
+    Ordinary actions advance consecutive plain-text interactions. Battle
+    actions advance active resolution text and otherwise claim pending events
+    without sending input.
 
     Args:
         context: Shared agent state and emulator access.
@@ -70,9 +71,22 @@ async def settle_dialog(
     elif in_battle:
         transcript = ""
     elif control_boundary == ControlBoundary.TEXT_INPUT_READY and _is_plain_text_dialog(game_state):
-        transcript = await context.emulator.advance_text_dialog(
-            before_input=publish_before_input,
-        )
+        chunks = []
+        while (
+            control_boundary == ControlBoundary.TEXT_INPUT_READY
+            and not is_battle_handler_state(game_state)
+            and _is_plain_text_dialog(game_state)
+        ):
+            chunk = await context.emulator.advance_text_dialog(
+                before_input=publish_before_input,
+            )
+            if chunk:
+                chunks.append(chunk)
+            (
+                game_state,
+                control_boundary,
+            ) = await context.emulator.get_game_state_with_control_boundary()
+        transcript = " ".join(chunks)
     else:
         transcript = context.emulator.consume_pending_dialog()
 
