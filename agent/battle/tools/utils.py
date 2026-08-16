@@ -87,7 +87,7 @@ async def complete_battle_action(
     Returns:
         Fresh context for the agent's next decision.
     """
-    settlement = await settle_dialog(context, battle=True)
+    settlement = await settle_dialog(context)
     return [
         build_screenshot_content(settlement.screenshot),
         build_battle_tool_result(

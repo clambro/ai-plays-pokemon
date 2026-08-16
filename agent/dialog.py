@@ -35,60 +35,51 @@ def _is_plain_text_dialog(game_state: GameState) -> bool:
 
 async def settle_dialog(
     context: AgentContext,
-    *,
-    battle: bool = False,
 ) -> DialogSettlement:
     """Settle dialog owned by the originating action and capture its terminal observation.
 
-    Ordinary actions advance consecutive plain-text interactions. Battle
-    actions advance active resolution text and otherwise claim pending events
-    without sending input.
+    Consecutive routine interactions remain owned by the action that caused
+    them, including transitions between overworld and battle text.
 
     Args:
         context: Shared agent state and emulator access.
-        battle: Whether battle resolution owns the pending dialog.
 
     Returns:
         The captured transcript and an atomic observation taken after settlement.
     """
     game_state, control_boundary = await context.emulator.get_game_state_with_control_boundary()
-    in_battle = is_battle_handler_state(game_state)
 
     async def publish_before_input() -> None:
         current_state = await context.emulator.get_game_state()
         update_background_from_states(context.state, current_state)
 
-    if battle:
-        if in_battle and control_boundary in {
+    chunks = []
+    advanced = False
+    while True:
+        if is_battle_handler_state(game_state) and control_boundary in {
             None,
             ControlBoundary.TEXT_INPUT_READY,
         }:
-            transcript = await context.emulator.advance_battle_dialog(
+            chunk = await context.emulator.advance_battle_dialog(
                 before_input=publish_before_input,
             )
-        else:
-            transcript = context.emulator.consume_pending_dialog()
-    elif in_battle:
-        transcript = ""
-    elif control_boundary == ControlBoundary.TEXT_INPUT_READY and _is_plain_text_dialog(game_state):
-        chunks = []
-        while (
-            control_boundary == ControlBoundary.TEXT_INPUT_READY
-            and not is_battle_handler_state(game_state)
-            and _is_plain_text_dialog(game_state)
+        elif control_boundary == ControlBoundary.TEXT_INPUT_READY and _is_plain_text_dialog(
+            game_state
         ):
             chunk = await context.emulator.advance_text_dialog(
                 before_input=publish_before_input,
             )
-            if chunk:
-                chunks.append(chunk)
-            (
-                game_state,
-                control_boundary,
-            ) = await context.emulator.get_game_state_with_control_boundary()
-        transcript = " ".join(chunks)
-    else:
-        transcript = context.emulator.consume_pending_dialog()
+        else:
+            break
+
+        advanced = True
+        if chunk:
+            chunks.append(chunk)
+        game_state, control_boundary = await context.emulator.get_game_state_with_control_boundary()
+
+    if not advanced and (pending := context.emulator.consume_pending_dialog()):
+        chunks.append(pending)
+    transcript = " ".join(chunks)
 
     (
         final_state,

@@ -131,17 +131,17 @@ The create, update, and delete tools let the agent maintain current objectives w
 
 The agent narrates its decision alongside each tool call. The tool then produces the actual outcome of the action. Action outcomes are appended to the current rolling-memory block and returned with a fresh screenshot to the local conversation, so the HTML activity log and the agent cannot disagree about what happened. Goal tools return their result directly and update authoritative goal state without copying the result into rolling memory.
 
-Routine dialog produced by an overworld tool is read, advanced, recorded, and returned with the tool's terminal observation. Consecutive ordinary interactions are settled as one result, and if the player remains in place, the same overworld conversation receives the transcript and chooses the next action. Menus and other decision screens remain untouched, while transitions into battle return control to the dispatcher.
+Routine dialog produced by an overworld tool is read, advanced, recorded, and returned with the tool's terminal observation. Consecutive ordinary interactions, including battle introductions, are settled as one result, and if the player remains in place, the same overworld conversation receives the transcript and chooses the next action. Menus and other decision screens remain untouched, while a ready battle menu returns control to the dispatcher.
 
 If the action leaves the player in place and the game in the overworld, the agent can make another decision using that result. Once the player moves or the game enters a text interaction or battle, the runner returns to the dispatcher.
 
 ## The Battle Agent
 
-The battle handler owns the complete battle lifecycle. It prepares a static initial observation and a battle-specific Pydantic AI toolset, then keeps one conversation alive until battle mode ends.
+The battle handler owns the complete battle lifecycle. It settles any routine text already in progress, prepares a static initial observation and a battle-specific Pydantic AI toolset, then keeps one conversation alive until battle mode ends.
 
 ```mermaid
 flowchart LR
-    dispatch["Typed dispatcher"] --> prepare["Prepare static<br/>initial observation"]
+    dispatch["Typed dispatcher"] --> prepare["Settle routine text and prepare<br/>static initial observation"]
     prepare --> agent["GPT-5.6 Luna<br/>battle agent"]
     agent --> choice{"Function tool call"}
 
@@ -206,7 +206,7 @@ Provides constrained directional, confirm, and cancel input for forced switches,
 
 ### Memory and Display Updates
 
-The agent emits a brief explanation alongside each tool call. That explanation and captured in-game dialog are appended to the current rolling-memory block and streamed to the HTML activity log. Detailed action results and refreshed observations stay inside the agent conversation, where they provide context for the next decision without flooding durable memory. Final battle and capture text is settled before the terminal observation passes control to the overworld or naming handler.
+The agent emits a brief explanation alongside each tool call. That explanation and captured in-game dialog are appended to the current rolling-memory block and streamed to the HTML activity log. Detailed action results and refreshed observations stay inside the agent conversation, where they provide context for the next decision without flooding durable memory. Opening battle text remains with the action that triggered the encounter, while final battle and capture text is settled before the terminal observation passes control to the overworld or naming handler.
 
 ## The Text Runner
 
