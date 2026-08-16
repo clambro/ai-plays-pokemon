@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from loguru import logger
 from sqlalchemy import and_, delete, or_, select
 
 from database.db_config import db_sessionmaker
@@ -9,6 +10,7 @@ from database.map_entity_memory.model import MapEntityMemoryDBModel
 from database.map_entity_memory.schemas import (
     MapEntityMemoryCreate,
     MapEntityMemoryDelete,
+    MapEntityMemoryInteractionUpdate,
     MapEntityMemoryRead,
 )
 
@@ -64,3 +66,32 @@ async def apply_map_entity_changes(
                     ),
                 ),
             )
+
+
+async def update_map_entity_interactions(
+    updates: Sequence[MapEntityMemoryInteractionUpdate],
+) -> None:
+    """Persist literal interactions for existing entities, skipping missing records."""
+    if not updates:
+        return
+
+    async with db_sessionmaker.begin() as session:
+        for interaction in updates:
+            query = select(MapEntityMemoryDBModel).where(
+                MapEntityMemoryDBModel.map_id == interaction.map_id,
+                MapEntityMemoryDBModel.entity_id == interaction.entity_id,
+                MapEntityMemoryDBModel.entity_type == interaction.entity_type,
+            )
+            result = await session.execute(query)
+            db_obj = result.scalar_one_or_none()
+            if db_obj is None:
+                logger.warning(
+                    "Skipped interaction for missing map entity memory: map_id={}, "
+                    "entity_type={}, entity_id={}.",
+                    interaction.map_id.name,
+                    interaction.entity_type.name,
+                    interaction.entity_id,
+                )
+                continue
+            db_obj.last_interaction = interaction.last_interaction
+            db_obj.last_interaction_iteration = interaction.last_interaction_iteration

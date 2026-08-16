@@ -5,10 +5,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from common.enums import Button
+from common.enums import Button, MapId
 from emulator.control_events import ControlBoundary, ControlResult
 from emulator.text_events import (
+    CompletedSpriteInteraction,
     DialogPage,
+    SpriteInteractionTarget,
     TextEvent,
     TextEventJournal,
     TextEventKind,
@@ -77,6 +79,47 @@ def test_reducer_preserves_scroll_context_across_event_batches() -> None:
     assert reducer.reduce([_event(4, TextEventKind.INPUT_REQUIRED, scrolled_page)]) == (
         "A POKéMON can appear anytime in tall grass!"
     )
+
+
+@pytest.mark.unit
+def test_reducer_attributes_complete_literal_dialog_to_its_map_sprite() -> None:
+    """Retain one sprite interaction across event batches until its ROM close boundary."""
+    reducer = TextEventReducer()
+    target = SpriteInteractionTarget(map_id=MapId.MT_MOON_B2F, sprite_id=7)
+    first_page = DialogPage(top_line="You want the", bottom_line="HELIX FOSSIL?")
+    second_page = DialogPage(top_line="HELIX FOSSIL?", bottom_line="Then this is mine!")
+
+    assert (
+        reducer.reduce(
+            [
+                _event(
+                    1,
+                    TextEventKind.SPRITE_INTERACTION_STARTED,
+                    sprite_target=target,
+                ),
+                _event(2, TextEventKind.INPUT_REQUIRED, first_page),
+            ]
+        )
+        == "You want the HELIX FOSSIL?"
+    )
+    assert reducer.drain_completed_sprite_interactions() == ()
+
+    assert (
+        reducer.reduce(
+            [
+                _event(3, TextEventKind.INPUT_REQUIRED, second_page),
+                _event(4, TextEventKind.INTERACTION_CLOSED),
+            ]
+        )
+        == "Then this is mine!"
+    )
+    assert reducer.drain_completed_sprite_interactions() == (
+        CompletedSpriteInteraction(
+            target=target,
+            text="You want the HELIX FOSSIL? Then this is mine!",
+        ),
+    )
+    assert reducer.drain_completed_sprite_interactions() == ()
 
 
 @pytest.mark.unit
@@ -178,5 +221,13 @@ def _event(
     sequence: int,
     kind: TextEventKind,
     page: DialogPage | None = None,
+    *,
+    sprite_target: SpriteInteractionTarget | None = None,
 ) -> TextEvent:
-    return TextEvent(sequence=sequence, frame=1, kind=kind, page=page)
+    return TextEvent(
+        sequence=sequence,
+        frame=1,
+        kind=kind,
+        page=page,
+        sprite_target=sprite_target,
+    )

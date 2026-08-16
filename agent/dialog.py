@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from agent.utils import is_battle_handler_state
 from emulator.control_events import ControlBoundary
+from overworld_map.service import record_sprite_interactions
 from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
@@ -72,6 +73,10 @@ async def settle_dialog(
     if not advanced and (pending := context.emulator.consume_pending_dialog()):
         chunks.append(pending)
     transcript = " ".join(chunks)
+    await record_sprite_interactions(
+        context.state.iteration,
+        context.emulator.consume_completed_sprite_interactions(),
+    )
 
     (
         final_state,

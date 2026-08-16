@@ -3,9 +3,15 @@
 from enum import StrEnum, auto
 from typing import TYPE_CHECKING
 
+from common.enums import MapId
 from emulator.parsers.screen_text import INT_TO_CHAR_MAP
 from emulator.rom_hooks.core import RomHook, install_hooks
-from emulator.text_events import DialogPage, TextEventJournal, TextEventKind
+from emulator.text_events import (
+    DialogPage,
+    SpriteInteractionTarget,
+    TextEventJournal,
+    TextEventKind,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -16,6 +22,7 @@ if TYPE_CHECKING:
 class _HookName(StrEnum):
     """Semantic execution points in the ROM text engine."""
 
+    DISPLAY_TEXT_ID = auto()
     TEXT_PROCESSOR = auto()
     TEXT_COMMAND = auto()
     CONTINUE_WITHOUT_PAUSE = auto()
@@ -35,6 +42,12 @@ class _HookName(StrEnum):
 # Addresses and signatures from the required Yellow Legacy ROM build. Validate every location
 # before installing any breakpoint because a hook at the wrong executable address corrupts play.
 _HOOKS = (
+    RomHook(
+        name=_HookName.DISPLAY_TEXT_ID,
+        bank=0x00,
+        address=0x275A,  # DisplayTextID
+        signature=bytes.fromhex("f0 b8 f5 06 01 21"),
+    ),
     RomHook(
         name=_HookName.TEXT_PROCESSOR,
         bank=0x00,
@@ -129,6 +142,9 @@ _WINDOW_Y_ADDRESS = 0xFF4A
 _SCREEN_HEIGHT_PIXELS = 144
 _AUDIO_FADE_FLAGS_ADDRESS = 0xD72B  # wd72c
 _REDUCED_VOLUME_INTERFACE_FLAG = 1 << 1
+_MAP_ID_ADDRESS = 0xD3AB  # wCurMap
+_SPRITE_COUNT_ADDRESS = 0xD52E  # wNumSprites
+_SPRITE_INDEX_OR_TEXT_ID_ADDRESS = 0xFF8C  # hSpriteIndexOrTextID
 
 _TOP_BORDER_ROW = 12
 _TOP_TEXT_ROW = 14
@@ -165,6 +181,9 @@ class RomTextHooks:
         install_hooks(self._pyboy, _HOOKS, self._handle)
 
     def _handle(self, name: _HookName) -> None:
+        if name == _HookName.DISPLAY_TEXT_ID:
+            self._record_sprite_interaction_start()
+            return
         if name in {_HookName.TEXT_PROCESSOR, _HookName.TEXT_COMMAND}:
             self._handle_text_processor(name)
             return
@@ -241,11 +260,33 @@ class RomTextHooks:
     def _is_reduced_volume_interface_open(self) -> bool:
         return bool(self._pyboy.memory[_AUDIO_FADE_FLAGS_ADDRESS] & _REDUCED_VOLUME_INTERFACE_FLAG)
 
-    def _record(self, kind: TextEventKind, *, page: DialogPage | None = None) -> None:
+    def _record_sprite_interaction_start(self) -> None:
+        """Record when DisplayTextID is resolving a map-local sprite index."""
+        sprite_id = self._pyboy.memory[_SPRITE_INDEX_OR_TEXT_ID_ADDRESS]
+        sprite_count = self._pyboy.memory[_SPRITE_COUNT_ADDRESS]
+        if not 1 <= sprite_id <= sprite_count:
+            return
+
+        map_id = MapId(self._pyboy.memory[_MAP_ID_ADDRESS])
+        if map_id in {MapId.UNKNOWN, MapId.OUTSIDE}:
+            return
+        self._record(
+            TextEventKind.SPRITE_INTERACTION_STARTED,
+            sprite_target=SpriteInteractionTarget(map_id=map_id, sprite_id=sprite_id),
+        )
+
+    def _record(
+        self,
+        kind: TextEventKind,
+        *,
+        page: DialogPage | None = None,
+        sprite_target: SpriteInteractionTarget | None = None,
+    ) -> None:
         event = self._journal.append(
             frame=self._pyboy.frame_count,
             kind=kind,
             page=page,
+            sprite_target=sprite_target,
         )
         if event is not None and self._on_event is not None:
             self._on_event(kind)

@@ -60,4 +60,11 @@ async def test_overworld_control_hands_dialog_to_text_consumer() -> None:
     assert result.boundary == ControlBoundary.TEXT_INPUT_READY
     assert game_state.is_text_on_screen()
     assert any(event.kind == TextEventKind.INPUT_REQUIRED for event in events)
+    interaction_starts = [
+        event for event in events if event.kind == TextEventKind.SPRITE_INTERACTION_STARTED
+    ]
+    assert len(interaction_starts) == 1
+    assert interaction_starts[0].sprite_target is not None
+    assert interaction_starts[0].sprite_target.map_id == game_state.map.id
+    assert interaction_starts[0].sprite_target.sprite_id in game_state.sprites
     assert remaining_events == ()

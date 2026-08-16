@@ -6,7 +6,7 @@ from enum import StrEnum, auto
 from threading import Lock
 from typing import TYPE_CHECKING
 
-from common.enums import Button
+from common.enums import Button, MapId
 from emulator.control_events import ControlBoundary
 
 if TYPE_CHECKING:
@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 class TextEventKind(StrEnum):
     """Semantic execution boundaries emitted by the supported ROM."""
 
+    SPRITE_INTERACTION_STARTED = auto()
     PAGE_COMPLETED = auto()
     AUTOMATIC_SCROLL = auto()
     INPUT_REQUIRED = auto()
@@ -38,6 +39,22 @@ class DialogPage:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class SpriteInteractionTarget:
+    """Map-qualified sprite that originated one text interaction."""
+
+    map_id: MapId
+    sprite_id: int
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CompletedSpriteInteraction:
+    """Literal dialog observed during one completed sprite interaction."""
+
+    target: SpriteInteractionTarget
+    text: str
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class TextEvent:
     """One ordered semantic event copied from emulator execution."""
 
@@ -45,6 +62,7 @@ class TextEvent:
     frame: int
     kind: TextEventKind
     page: DialogPage | None = None
+    sprite_target: SpriteInteractionTarget | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -61,11 +79,20 @@ class TextEventReducer:
     def __init__(self) -> None:
         """Start without a preceding dialog page."""
         self._previous_page: DialogPage | None = None
+        self._active_sprite_target: SpriteInteractionTarget | None = None
+        self._active_sprite_lines: list[str] = []
+        self._completed_sprite_interactions: list[CompletedSpriteInteraction] = []
 
     def reduce(self, events: tuple[TextEvent, ...] | list[TextEvent]) -> str:
         """Combine stable dialog pages without repeated snapshots or scrolled lines."""
         transcript: list[str] = []
         for event in events:
+            if event.kind == TextEventKind.SPRITE_INTERACTION_STARTED:
+                self._complete_sprite_interaction()
+                self._active_sprite_target = event.sprite_target
+                self._previous_page = None
+                continue
+
             page = event.page
             if page is None:
                 if event.kind in {
@@ -78,19 +105,47 @@ class TextEventReducer:
                     TextEventKind.BATTLE_ENDED,
                 }:
                     self._previous_page = None
+                if event.kind in {
+                    TextEventKind.INTERACTION_CLOSED,
+                    TextEventKind.OVERWORLD_ENTERED,
+                    TextEventKind.BATTLE_ENDED,
+                }:
+                    self._complete_sprite_interaction()
                 continue
             if page == self._previous_page:
                 continue
 
+            new_lines = []
             top_line_scrolled = (
                 self._previous_page is not None and page.top_line == self._previous_page.bottom_line
             )
             if page.top_line and not top_line_scrolled:
-                transcript.append(page.top_line)
+                new_lines.append(page.top_line)
             if page.bottom_line:
-                transcript.append(page.bottom_line)
+                new_lines.append(page.bottom_line)
+            transcript.extend(new_lines)
+            if self._active_sprite_target is not None:
+                self._active_sprite_lines.extend(new_lines)
             self._previous_page = page
         return " ".join(transcript).strip()
+
+    def drain_completed_sprite_interactions(self) -> tuple[CompletedSpriteInteraction, ...]:
+        """Claim completed map-sprite interactions exactly once."""
+        interactions = tuple(self._completed_sprite_interactions)
+        self._completed_sprite_interactions.clear()
+        return interactions
+
+    def _complete_sprite_interaction(self) -> None:
+        """Finish the active sprite observation at a semantic interaction boundary."""
+        if self._active_sprite_target is not None and self._active_sprite_lines:
+            self._completed_sprite_interactions.append(
+                CompletedSpriteInteraction(
+                    target=self._active_sprite_target,
+                    text=" ".join(self._active_sprite_lines).strip(),
+                )
+            )
+        self._active_sprite_target = None
+        self._active_sprite_lines.clear()
 
 
 @dataclass(slots=True)
@@ -162,6 +217,7 @@ class TextEventJournal:
         frame: int,
         kind: TextEventKind,
         page: DialogPage | None = None,
+        sprite_target: SpriteInteractionTarget | None = None,
     ) -> TextEvent | None:
         """Append an event from the PyBoy owner thread and wake async consumers."""
         with self._lock:
@@ -172,6 +228,7 @@ class TextEventJournal:
                 frame=frame,
                 kind=kind,
                 page=page,
+                sprite_target=sprite_target,
             )
             self._next_sequence += 1
             self._events.append(event)

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from emulator.parsers.sprite import Sprite
     from emulator.parsers.warp import Warp
     from emulator.schemas import AsciiScreenWithEntities
-    from overworld_map.schemas import OverworldMap
+    from overworld_map.schemas import OverworldMap, SpriteInteractionMemory
 
 _ALWAYS_VISIBLE_TILES = {
     AsciiTile.OUTSIDE_REGION,
@@ -74,12 +74,17 @@ def _format_overworld_sprite(
     sprite: Sprite,
     map_id: MapId,
     counter_positions: tuple[Coords, ...],
+    interaction: SpriteInteractionMemory | None,
 ) -> str:
     """Format a known overworld sprite for the agent."""
     output = (
         f"sprite_{map_id}_{sprite.index} at {sprite.coords}."
         f' This sprite is labeled "{sprite.label}".'
     )
+    if interaction is None:
+        output += " You have not interacted with this sprite yet."
+    else:
+        output += f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
     if counter_positions:
         positions = ", ".join(str(position) for position in counter_positions)
         output += (
@@ -215,6 +220,7 @@ def format_sprite_notes(map_view: CurrentMapView, game_state: GameState) -> str:
             sprite,
             current_map.id,
             map_view.counter_interactions.get(sprite.index, ()),
+            current_map.sprite_interactions.get(sprite.index),
         )
         for sprite in sprites
     )

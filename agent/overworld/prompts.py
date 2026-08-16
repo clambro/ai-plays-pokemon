@@ -82,15 +82,10 @@ Navigation tips:
 - You should explore as much of the map as possible, as it may be hiding important sprites or warp tiles. Exploration is not only a matter of revealing tiles; interact with what you discover along the way. Tiles are considered explored once they are on screen, so move towards unseen territory when you are stuck or unsure how to proceed.
 - The orientation of the map and screen is always fixed, regardless of the direction that you are facing.
 - Do not use the action button on a warp.
-- To connect from one map to another, you must either use a warp tile, or, *in outdoor maps only*, walk off the edge of the map. In outdoor maps, you will never be able to walk through a wall or barrier for any reason. You have to find where the edge of the map connects to the next map by looking at the ASCII screen.
-- If you are indoors, the edges of the map (indicated by a black void in the screenshot) are normally impassable. Move outward at an indoor edge only when a discovered warp's instruction explicitly requires it.
-- Pay attention to the "leading to" description in each warp tile. This comes straight from the game's memory and will tell you which map you will be warped to from that tile.
 - To interact with a sprite normally, move to an adjacent tile, face it, and press the action button. Do not attempt to move onto the sprite's tile. You cannot walk on or through sprites (except for Pikachu, as described above).
 - Some sprite notes provide an exact reachable position for interacting across a counter. In that case, navigate to that position instead of next to the sprite, face the sprite across the "{AsciiTile.COUNTER}" tile, and press the action button.
 - Note that some sprites move around, so their position may change between screenshots. Do not let this confuse you. The information that you have in the <known_sprites> section is the most accurate information available to you since it comes straight from the game's memory at this moment in time.
 - It is generally not worth interacting with sprites and signs more than once. They usually do not change between interactions.
-- Pay attention to the "sprite is labeled" section in each sprite. This will tell you what the sprite is labeled as in the game's memory, and should help you determine what the sprite is.
-- Focus on the map when you are trying to navigate within a map. Focus on the screen when you are trying to navigate between maps.
 
 The current ASCII screen is derived from current game memory, while the current map region combines those observations over time. Prefer the ASCII information for tile and coordinate reasoning, and use the screenshot as supplemental visual context.
 </map_info>

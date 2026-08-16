@@ -68,6 +68,7 @@ DUMMY_MAP = OverworldMap(
     terrain=[[]],
     blockages={},
     known_sprite_ids=set(),
+    sprite_interactions={},
     known_sign_ids=set(),
     known_warp_ids=set(),
     known_map_ids=frozenset(),
