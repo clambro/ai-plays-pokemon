@@ -115,7 +115,7 @@ async def test_get_ascii_screen_mt_moon_corners_2() -> None:
 async def test_get_ascii_screen_mt_moon_poke_center() -> None:
     """Test that the ASCII screen is correct for Mt. Moon Pokémon Center.
 
-    Specifically making sure that Pokemon center floor tiles are rendered as free tiles.
+    Specifically making sure that floor and talk-over counter tiles are distinguished.
     """
     await _helper_test_expected_screen(
         state_filename="mt_moon_poke_center.state",
@@ -123,8 +123,8 @@ async def test_get_ascii_screen_mt_moon_poke_center() -> None:
         expected_screen=[
             "▓▓▓▓▓▓▓▓▓▓",
             "▓▓▓▓◆◆▓▓▓∙",
-            "▓▓▓▓▓▓▓▓◆▓",
-            "▓▓∙∙∙◆∙∙◆∙",
+            "▓▓‡‡‡‡▓‡◆‡",
+            "▓‡∙∙∙◆∙∙◆∙",
             "▓▓∙∙☺∙∙∙∙∙",
             "▓▓∙∙♦∙∙∙∙∙",
             "▓▓▓∙∙∙∙▓▓∙",

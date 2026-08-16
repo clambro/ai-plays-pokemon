@@ -183,10 +183,10 @@ class GameState:
         flat_block = tuple(block.flatten().tolist())
         if special_type := self._get_special_background_block_type(flat_block):
             return special_type
-        if block[1, 0] in self.map.walkable_tiles:
-            # The engine uses the same bottom-left logic for ordinary walkable blocks.
-            return AsciiTile.FREE
-        return AsciiTile.WALL
+        if block[1, 0] in self.map.talk_over_tiles:
+            return AsciiTile.COUNTER
+        # The engine uses the same bottom-left logic for ordinary walkable blocks.
+        return AsciiTile.FREE if block[1, 0] in self.map.walkable_tiles else AsciiTile.WALL
 
     def _get_special_background_block_type(
         self,

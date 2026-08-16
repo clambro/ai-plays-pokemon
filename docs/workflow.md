@@ -89,7 +89,7 @@ flowchart LR
 
 ### Prepare Context
 
-Before constructing the agent, deterministic preparation loads the current explored terrain from SQLite or creates it when entering a new map. The current visible screen reveals only entity-free terrain while separately synchronizing discovered sprite, sign, and warp identities. The prompt composes those discoveries with live emulator positions, including the player and Pikachu, without writing any overlays back into terrain. The prepared context, initial game state, and screenshot are then used to build one static prompt and tool registry for the run.
+Before constructing the agent, deterministic preparation loads the current explored terrain from SQLite or creates it when entering a new map. The current visible screen reveals only entity-free terrain while separately synchronizing discovered sprite, sign, and warp identities. The prompt composes those discoveries with live emulator positions, including the player and Pikachu, without writing any overlays back into terrain. It shows sprites in the current reachable region plus sprites the ROM permits the player to interact with across a counter, together with the reachable interaction position. The prepared context, initial game state, and screenshot are then used to build one static prompt and tool registry for the run.
 
 The prompt includes rolling memory, goals, player and party state, inventory indices, the explored map, exploration candidates, and accessible connected-map boundaries.
 

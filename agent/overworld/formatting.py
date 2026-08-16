@@ -70,12 +70,22 @@ _VISIBLE_UNVISITED_DESTINATIONS = frozenset(
 )
 
 
-def _format_overworld_sprite(sprite: Sprite, map_id: MapId) -> str:
+def _format_overworld_sprite(
+    sprite: Sprite,
+    map_id: MapId,
+    counter_positions: tuple[Coords, ...],
+) -> str:
     """Format a known overworld sprite for the agent."""
     output = (
         f"sprite_{map_id}_{sprite.index} at {sprite.coords}."
         f' This sprite is labeled "{sprite.label}".'
     )
+    if counter_positions:
+        positions = ", ".join(str(position) for position in counter_positions)
+        output += (
+            f" It can be interacted with across a counter from {positions}; stand there,"
+            " face the sprite, and press the action button."
+        )
     if sprite.moves_randomly:
         output += (
             " Warning: This sprite wanders randomly around the map. Your reactions are too slow"
@@ -181,16 +191,11 @@ def format_sprite_notes(map_view: CurrentMapView, game_state: GameState) -> str:
     """Format known sprites in index order."""
     current_map = map_view.overworld_map
     output = ""
-    # Some sprites (e.g. Nurses) remain interactable across counters even though their tiles are
-    # outside the player's connected region.
     sprites = [
         game_state.sprites[entity_id]
         for entity_id in sorted(current_map.known_sprite_ids)
         if entity_id in game_state.sprites
-        and (
-            game_state.sprites[entity_id].coords in map_view.visible_coords
-            or game_state.screen.to_screen_coords(game_state.sprites[entity_id].coords) is not None
-        )
+        and game_state.sprites[entity_id].coords in map_view.visible_coords
     ]
     pc_locations = np.argwhere(current_map.terrain_ndarray == AsciiTile.PC_TILE)
     if len(pc_locations) > 0:
@@ -201,7 +206,13 @@ def format_sprite_notes(map_view: CurrentMapView, game_state: GameState) -> str:
     if not output and not sprites:
         return "No sprites discovered."
     output += "\n".join(
-        f"- {_format_overworld_sprite(sprite, current_map.id)}" for sprite in sprites
+        "- "
+        + _format_overworld_sprite(
+            sprite,
+            current_map.id,
+            map_view.counter_interactions.get(sprite.index, ()),
+        )
+        for sprite in sprites
     )
     return output.strip()
 

@@ -33,7 +33,7 @@ Map name: {{map_name}}
 
 The complete map's global coordinates in row-column order start at (0, 0) in its top left corner. Rows increase from top to bottom, and columns increase from left to right.
 
-The current map region is a rectangular crop enclosing the area currently navigable from your position and its bordering terrain. Its first displayed tile is global coordinate ({{region_top}}, {{region_left}}), as recorded in the tag above; displayed rows and columns continue from there without renumbering the underlying coordinates. Walls are shown throughout the rectangle so its physical shape remains clear. "{AsciiTile.OUTSIDE_REGION}" marks every other coordinate inside the rectangle that is outside your current navigable region. Do not target those coordinates directly. Previously remembered coordinates remain valid, and coordinates never change when regions expand, merge, or are entered from another location.
+The current map region is a rectangular crop enclosing the area currently navigable from your position, its bordering terrain, and any sprites the game permits you to interact with across a counter. Its first displayed tile is global coordinate ({{region_top}}, {{region_left}}), as recorded in the tag above; displayed rows and columns continue from there without renumbering the underlying coordinates. Walls are shown throughout the rectangle so its physical shape remains clear. "{AsciiTile.OUTSIDE_REGION}" marks every other coordinate inside the rectangle that is outside your current navigable region. Do not target those coordinates directly. Previously remembered coordinates remain valid, and coordinates never change when regions expand, merge, or are entered from another location.
 
 <screen_position>
 The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size). This should help you navigate from one map to another.
@@ -59,7 +59,7 @@ The tile directly to the right of you is "{{tile_right}}"{{blocked_right}}.
 {{connections}}
 </map_connections>
 
-The following discovered sprites are in your current region:
+The following discovered sprites are reachable from your current region, either directly or across a counter:
 <known_sprites>
 {{known_sprites}}
 </known_sprites>
@@ -81,8 +81,8 @@ Navigation tips:
 - To connect from one map to another, you must either use a warp tile, or, *in outdoor maps only*, walk off the edge of the map. In outdoor maps, you will never be able to walk through a wall or barrier for any reason. You have to find where the edge of the map connects to the next map by looking at the ASCII screen.
 - If you are indoors, the edges of the map (indicated by a black void in the screenshot) are normally impassable. Move outward at an indoor edge only when a discovered warp's instruction explicitly requires it.
 - Pay attention to the "leading to" description in each warp tile. This comes straight from the game's memory and will tell you which map you will be warped to from that tile.
-- To interact with a sprite, you need to be directly adjacent to it, face it, and press the action button. The only exception to the direct adjacency rule is in Poke Marts, Pokemon Centers, or gates where you interact with the clerk/nurse/guard respectively from across the counter. In these cases, you must stand two tiles away from the sprite (horizontally or vertically depending on the counter, but not diagonally), face it across the counter (an adjacent "{AsciiTile.WALL}" tile), and press the action button.
-- If you want to interact with a sprite, you should move to the tile adjacent to it. Do not attempt to move onto the sprite's tile. You cannot walk on or through sprites (except for Pikachu, as described above).
+- To interact with a sprite normally, move to an adjacent tile, face it, and press the action button. Do not attempt to move onto the sprite's tile. You cannot walk on or through sprites (except for Pikachu, as described above).
+- Some sprite notes provide an exact reachable position for interacting across a counter. In that case, navigate to that position instead of next to the sprite, face the sprite across the "{AsciiTile.COUNTER}" tile, and press the action button.
 - Note that some sprites move around, so their position may change between screenshots. Do not let this confuse you. The information that you have in the <known_sprites> section is the most accurate information available to you since it comes straight from the game's memory at this moment in time.
 - It is generally not worth interacting with sprites and signs more than once. They usually do not change between interactions.
 - Pay attention to the "sprite is labeled" section in each sprite. This will tell you what the sprite is labeled as in the game's memory, and should help you determine what the sprite is.
@@ -96,6 +96,7 @@ LEGEND_MAP = {
     AsciiTile.OUTSIDE_REGION: "A non-wall coordinate outside your current navigable region. It may be unexplored or reachable only from somewhere else, so do not target it directly.",
     AsciiTile.UNSEEN: "Tiles that you have not yet explored. Move toward these tiles to reveal them.",
     AsciiTile.WALL: "A barrier (usually a wall or an object) that you cannot pass through.",
+    AsciiTile.COUNTER: "A counter that you cannot cross. A listed sprite on its far side can be interacted with only from the exact reachable position stated in that sprite's note.",
     AsciiTile.WATER: "Water.",
     AsciiTile.GRASS: "Tall grass, where wild Pokemon can be found.",
     AsciiTile.LEDGE_DOWN: "A ledge that you can jump down from above. These tiles are only passable if you approach them from above and walk downwards.",
