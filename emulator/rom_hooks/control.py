@@ -57,6 +57,8 @@ class _PendingOperation:
     required_boundary: ControlBoundary | None = None
     observe_steps: bool = False
     accepted: bool = False
+    handoff_requested: bool = False
+    release_scheduled: bool = False
     render_ready_frame: int | None = None
     step_observations: list[GameState] = field(default_factory=list)
 
@@ -333,7 +335,31 @@ class RomControlHooks:
                 pending.step_observations.append(step_observation)
             self._step_completed_this_tick = False
 
+        self._request_handoff_if_overworld_control_lost()
         self._observe_immediate_input()
+
+        pending = self._pending
+        if (
+            pending is not None
+            and pending.button is not None
+            and (pending.accepted or pending.handoff_requested)
+            and not pending.release_scheduled
+        ):
+            # Hook callbacks run inside tick(), where an immediate PyBoy release would be discarded
+            # by that tick's event cleanup. Queue it here, between ticks, for the next frame.
+            self._pyboy.button_release(pending.button)
+            pending.release_scheduled = True
+
+        if pending is not None and pending.handoff_requested:
+            if (
+                pending.button is not None
+                and self._pyboy.memory[_JOY_HELD_ADDRESS] & pending.button_mask
+            ):
+                return
+            self._results.publish_handoff(pending.operation_id)
+            self._completed_boundary = None
+            self._pending = None
+            return
 
         if self._completed_boundary is None:
             return
@@ -356,6 +382,9 @@ class RomControlHooks:
 
     def observe_text_event(self, kind: TextEventKind) -> None:
         """Track text-driven control domains without consuming their event journal."""
+        if kind not in {TextEventKind.PAGE_COMPLETED, TextEventKind.AUTOMATIC_SCROLL}:
+            self._request_handoff_for_unaccepted_button()
+
         if kind == TextEventKind.INPUT_REQUIRED:
             self._current_domain = _ControlDomain.IMMEDIATE
             self._observe_ready_boundary(ControlBoundary.TEXT_INPUT_READY)
@@ -419,9 +448,7 @@ class RomControlHooks:
             return
 
         if not pending.accepted:
-            if pending.input_domain == _ControlDomain.OVERWORLD and pressed & pending.button_mask:
-                pending.accepted = True
-                self._current_boundary = None
+            self._observe_unaccepted_overworld_button(pending, pressed)
             return
 
         if overworld_ready and not held & pending.button_mask:
@@ -436,7 +463,7 @@ class RomControlHooks:
         if pending is None or pending.input_domain != domain or pending.accepted:
             return
         if input_state & pending.button_mask:
-            pending.accepted = True
+            self._accept_button(pending)
 
     def _observe_ready(self, domain: _ControlDomain, boundary: ControlBoundary) -> None:
         """Track and, when applicable, complete a prepared input boundary."""
@@ -448,6 +475,9 @@ class RomControlHooks:
             self._current_boundary = None
         pending = self._pending
         if pending is None:
+            return
+        if not pending.accepted and pending.button is not None and pending.input_domain != domain:
+            self._request_handoff_for_unaccepted_button()
             return
         if pending.button is None:
             if held == 0:
@@ -464,6 +494,7 @@ class RomControlHooks:
         pending = self._pending
         if (
             pending is None
+            or pending.handoff_requested
             or pending.required_boundary is not None
             or pending.input_domain != _ControlDomain.IMMEDIATE
             or self._completed_boundary is not None
@@ -476,8 +507,7 @@ class RomControlHooks:
                 self._pyboy.memory[_JOY_PRESSED_ADDRESS] | self._pyboy.memory[_MENU_INPUT_ADDRESS]
             )
             if input_state & pending.button_mask:
-                pending.accepted = True
-                self._current_boundary = None
+                self._accept_button(pending)
             return
 
         input_released = not self._pyboy.memory[_JOY_HELD_ADDRESS] & pending.button_mask
@@ -498,6 +528,39 @@ class RomControlHooks:
             and self._pyboy.memory[_WALK_COUNTER_ADDRESS] == 0
         ):
             self._step_completed_this_tick = True
+
+    def _accept_button(self, pending: _PendingOperation) -> None:
+        """Record that the ROM consumed an injected button press."""
+        pending.accepted = True
+        self._current_boundary = None
+
+    def _observe_unaccepted_overworld_button(
+        self,
+        pending: _PendingOperation,
+        pressed: int,
+    ) -> None:
+        """Accept overworld input or hand it off after another domain takes control."""
+        if pending.input_domain != _ControlDomain.OVERWORLD:
+            self._request_handoff_for_unaccepted_button()
+        elif pressed & pending.button_mask:
+            self._accept_button(pending)
+
+    def _request_handoff_for_unaccepted_button(self) -> None:
+        """Cancel a held button when the ROM changes domains before consuming it."""
+        pending = self._pending
+        if pending is not None and pending.button is not None and not pending.accepted:
+            pending.handoff_requested = True
+
+    def _request_handoff_if_overworld_control_lost(self) -> None:
+        """Cancel unaccepted overworld input as soon as scripted control takes over."""
+        pending = self._pending
+        if (
+            pending is not None
+            and pending.input_domain == _ControlDomain.OVERWORLD
+            and not pending.accepted
+            and not self._is_overworld_ready()
+        ):
+            pending.handoff_requested = True
 
     def _is_overworld_ready(self) -> bool:
         mem = self._pyboy.memory

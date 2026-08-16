@@ -25,6 +25,12 @@ class AgentContext:
         repr=False,
         compare=False,
     )
+    _control_handoff_requested: bool = field(
+        default=False,
+        init=False,
+        repr=False,
+        compare=False,
+    )
 
     async def add_llm_usage(self, tokens: int, cost: float) -> None:
         """Add one LLM response's usage to the shared state."""
@@ -34,9 +40,20 @@ class AgentContext:
 
     async def begin_iteration(self) -> None:
         """Prepare memory for one top-level handler activation."""
+        self._control_handoff_requested = False
         rolling_memory = await initialize_memory(self.state.rolling_memory.current_block)
         self.state.rolling_memory = rolling_memory
         self.state.iteration = rolling_memory.current_block.iteration
+
+    def request_control_handoff(self) -> None:
+        """Request a normal return to the gameplay dispatcher after tool execution."""
+        self._control_handoff_requested = True
+
+    def consume_control_handoff(self) -> bool:
+        """Consume and clear a pending request to return to the gameplay dispatcher."""
+        requested = self._control_handoff_requested
+        self._control_handoff_requested = False
+        return requested
 
     async def complete_iteration(self) -> None:
         """Finalize the current block and advance the live iteration state."""

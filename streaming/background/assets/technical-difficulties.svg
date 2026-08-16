@@ -44,10 +44,10 @@
 
   <!-- Main technical difficulties text -->
   <g transform="translate(960, 400)">
-    <text x="0" y="0" text-anchor="middle" font-family="Orbitron, monospace" font-size="72" font-weight="900" fill="#e6f1ff" filter="url(#glow)">
+    <text x="0" y="0" text-anchor="middle" font-family="Inter, sans-serif" font-size="72" font-weight="800" fill="#e6f1ff" filter="url(#glow)">
       TECHNICAL DIFFICULTIES
     </text>
-    <text x="0" y="80" text-anchor="middle" font-family="Roboto Mono, monospace" font-size="32" font-weight="400" fill="#00d4ff">
+    <text x="0" y="80" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="32" font-weight="400" fill="#00d4ff">
       We'll be right back...
     </text>
   </g>

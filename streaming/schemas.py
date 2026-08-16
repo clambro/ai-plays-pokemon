@@ -93,15 +93,12 @@ class GameStateView(BaseModel):
             iteration=agent_state.iteration,
             money=game_state.player.money,
             pokedex_seen=game_state.player.pokedex_seen,
-            pokedex_caught=game_state.player.pokedex_caught,
+            pokedex_caught=len(game_state.player.pokedex_caught),
             total_tokens=agent_state.total_tokens,
             total_cost=agent_state.total_cost,
             play_time_seconds=game_state.player.play_time_seconds,
             badges=[str(badge) for badge in game_state.player.badges],
             party=pokemon,
-            goals=[
-                f"{'Primary goal' if goal.is_primary else 'Other goal'}: {goal.goal}"
-                for goal in agent_state.goals.goals
-            ],
+            goals=[goal.goal for goal in agent_state.goals.goals],
             log=log,
         )

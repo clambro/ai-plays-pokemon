@@ -8,6 +8,7 @@ from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 from pydantic_graph import End
 
 from agent.context import AgentContext
+from agent.overworld.map_view import CurrentMapView, build_current_map_view
 from agent.overworld.prompts import build_overworld_decision_prompt
 from agent.overworld.tools.registry import build_overworld_toolset
 from agent.utils import (
@@ -30,6 +31,7 @@ if TYPE_CHECKING:
 def build_overworld_agent(
     context: AgentContext,
     current_map: OverworldMap,
+    map_view: CurrentMapView,
     game_state: GameState,
 ) -> Agent[AgentContext, str]:
     """Construct the Pydantic AI overworld agent."""
@@ -42,6 +44,7 @@ def build_overworld_agent(
             build_overworld_toolset(
                 context,
                 current_map,
+                map_view,
                 game_state,
             ),
         ],
@@ -68,16 +71,18 @@ async def run_overworld(
     if not is_overworld_handler_state(initial_game_state, initial_boundary):
         return
     current_map = await prepare_overworld_map(context.state.iteration, initial_game_state)
+    map_view = build_current_map_view(current_map, initial_game_state)
     agent = build_overworld_agent(
         context,
         current_map,
+        map_view,
         initial_game_state,
     )
     try:
         async with agent.iter(
             build_overworld_agent_input(
                 context,
-                current_map,
+                map_view,
                 initial_game_state=initial_game_state,
                 initial_screenshot=initial_screenshot,
             ),
@@ -88,6 +93,8 @@ async def run_overworld(
                 current_node = node
                 node = await agent_run.next(node)
                 if isinstance(current_node, CallToolsNode):
+                    if context.consume_control_handoff():
+                        break
                     await context.complete_iteration()
                     (
                         game_state,
@@ -108,7 +115,7 @@ async def run_overworld(
 
 def build_overworld_agent_input(
     context: AgentContext,
-    current_map: OverworldMap,
+    map_view: CurrentMapView,
     *,
     initial_game_state: GameState,
     initial_screenshot: Image.Image,
@@ -118,7 +125,7 @@ def build_overworld_agent_input(
         build_screenshot_content(initial_screenshot),
         build_overworld_decision_prompt(
             context,
-            current_map,
+            map_view,
             initial_game_state,
         ),
     ]

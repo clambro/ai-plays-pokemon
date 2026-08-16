@@ -1,11 +1,14 @@
 :root {
     --main-bg-color: #0f1923;
     --panel-bg-color: rgba(10, 25, 47, 0.7);
-    --border-color: #00d4ff;
+    --accent-color: #00d4ff;
+    --border-color: #0c89a1;
+    --empty-border-color: #126276;
     --text-color: #e6f1ff;
     --highlight-color: #ffd700;
-    --font-body: 'Roboto Mono', monospace;
-    --font-title: 'Orbitron', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-title: 'Inter', sans-serif;
 }
 
 * {
@@ -53,7 +56,7 @@ body {
 .title-bar {
     grid-area: header;
     text-align: center;
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--accent-color);
     padding: 8px 0;
     margin-bottom: 0;
     display: flex;
@@ -65,10 +68,10 @@ body {
 .title-bar h1 {
     font-family: var(--font-title);
     font-size: 42px;
-    font-weight: 900;
+    font-weight: 800;
     letter-spacing: 3px;
     color: var(--text-color);
-    text-shadow: 0 0 15px var(--border-color);
+    text-shadow: 0 0 8px rgba(0, 212, 255, 0.55);
     margin: 0;
     line-height: 1;
 }
@@ -104,13 +107,13 @@ body {
 
 .info-item .label {
     font-size: 15px;
-    color: var(--border-color);
+    color: var(--accent-color);
     letter-spacing: 1px;
     margin-bottom: 3px;
 }
 
 .info-item .value {
-    font-family: var(--font-title);
+    font-family: var(--font-mono);
     font-size: 24px;
     font-weight: 700;
 }
@@ -144,7 +147,7 @@ body {
 .log-panel h2 {
     text-align: center;
     padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--accent-color);
     flex-shrink: 0;
 }
 
@@ -157,6 +160,7 @@ body {
     flex-grow: 1;
     overflow-y: auto;
     padding-top: 10px;
+    font-family: var(--font-mono);
     font-size: 18px;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -180,13 +184,14 @@ body {
 .goals-panel h2 {
     text-align: center;
     padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--accent-color);
     flex-shrink: 0;
 }
 
 #goals {
     flex-grow: 1;
     padding-top: 10px;
+    font-family: var(--font-mono);
     list-style-type: none;
     padding-left: 0;
     overflow-y: auto;
@@ -218,14 +223,14 @@ body {
 .game-window-placeholder {
     width: 580px;
     aspect-ratio: 10/9;
-    border: 2px dashed var(--border-color);
+    border: 2px dashed var(--accent-color);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    color: var(--border-color);
+    color: var(--accent-color);
     opacity: 0.6;
-    box-shadow: 0 0 8px var(--border-color), 0 0 16px var(--border-color);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.45);
     border-radius: 4px;
 }
 
@@ -274,7 +279,7 @@ body {
 
 .pokemon-card.empty {
     background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
-    border: 1px dashed var(--border-color);
+    border: 1px dashed var(--empty-border-color);
     opacity: 0.7;
 }
 
@@ -324,11 +329,11 @@ body {
 
 .pokemon-species {
     font-size: 14px;
-    color: var(--border-color);
+    color: var(--accent-color);
 }
 
 .pokemon-level {
-    color: var(--border-color);
+    color: var(--accent-color);
     font-size: 14px;
 }
 

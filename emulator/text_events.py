@@ -49,6 +49,14 @@ class TextEvent:
     page: DialogPage | None = None
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TextEventSnapshot:
+    """Unread text events and the rendered control boundary observed with them."""
+
+    events: tuple[TextEvent, ...] = ()
+    boundary: ControlBoundary | None = None
+
+
 class TextEventReducer:
     """Reduce ordered text events while retaining the active dialog page."""
 
@@ -245,45 +253,51 @@ async def drive_standard_dialog(
     *,
     reducer: TextEventReducer,
     stop_on: frozenset[TextEventKind],
-    initial_events: tuple[TextEvent, ...] = (),
+    initial_snapshot: TextEventSnapshot | None = None,
     before_input: Callable[[], Awaitable[None]] | None = None,
 ) -> str:
     """Advance explicit dialog waits until the requested ROM boundary."""
+    initial_snapshot = initial_snapshot or TextEventSnapshot()
     events: list[TextEvent] = []
-    batch = initial_events
+    batch = initial_snapshot.events
     initial_batch = bool(batch)
-    control = _DialogControlState(waiting_for_initial_menu_exit=initial_batch)
+    control = _DialogControlState(
+        input_required=(
+            not batch and initial_snapshot.boundary == ControlBoundary.TEXT_INPUT_READY
+        ),
+        waiting_for_initial_menu_exit=initial_batch,
+    )
 
     while True:
-        if not batch:
-            batch = await emulator.wait_for_text_events()
-        if not batch:
-            raise RuntimeError("Emulator stopped before dialog reached a semantic boundary.")
-        events.extend(batch)
+        if batch:
+            events.extend(batch)
 
-        reached_boundary = control.apply(
-            batch,
-            initial_batch=initial_batch,
-            stop_on=stop_on,
-        )
-        initial_batch = False
+            reached_boundary = control.apply(
+                batch,
+                initial_batch=initial_batch,
+                stop_on=stop_on,
+            )
+            initial_batch = False
 
-        if reached_boundary:
-            if control.menu_open and TextEventKind.MENU_OPENED in stop_on:
-                await emulator.wait_for_menu_ready()
-            else:
-                await emulator.wait_until_ready()
-            return reducer.reduce(events)
-
-        if any(event.kind == TextEventKind.INPUT_RESOLVED for event in batch):
-            boundary = (await emulator.wait_until_ready()).boundary
-            if boundary != ControlBoundary.TEXT_INPUT_READY:
-                events.extend(emulator.drain_text_events())
+            if reached_boundary:
+                if control.menu_open and TextEventKind.MENU_OPENED in stop_on:
+                    await emulator.wait_for_menu_ready()
+                else:
+                    await emulator.wait_until_ready()
                 return reducer.reduce(events)
+
+            if any(event.kind == TextEventKind.INPUT_RESOLVED for event in batch):
+                boundary = (await emulator.wait_until_ready()).boundary
+                if boundary != ControlBoundary.TEXT_INPUT_READY:
+                    events.extend(emulator.drain_text_events())
+                    return reducer.reduce(events)
 
         if control.input_required and not control.input_sent:
             if before_input is not None:
                 await before_input()
             await emulator.pulse_button(Button.A)
             control.input_sent = True
-        batch = ()
+
+        batch = await emulator.wait_for_text_events()
+        if not batch:
+            raise RuntimeError("Emulator stopped before dialog reached a semantic boundary.")

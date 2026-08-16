@@ -178,7 +178,7 @@ _ID_TO_SPRITE_LABEL = {
     0x66: "SLOWPOKE",
     0x67: "DODUO",
     0x68: "VAPOREON",
-    0x69: "POKE BALL",
+    0x69: "ITEM BALL",
     0x6A: "FOSSIL",
     0x6B: SpriteLabel.BOULDER,
     0x6C: "PAPER",

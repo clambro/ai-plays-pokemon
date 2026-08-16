@@ -2,13 +2,15 @@
 
 from dataclasses import dataclass, field
 
+MAX_GOALS = 4
+
 
 @dataclass(slots=True, kw_only=True)
 class Goal:
     """A goal for the agent."""
 
     goal: str
-    is_primary: bool
+    updated_at_iteration: int
 
 
 @dataclass(slots=True, kw_only=True)
@@ -22,7 +24,6 @@ class Goals:
         for goal in goals:
             goal.goal = goal.goal.strip()
             self.goals.append(goal)
-        self.goals = sorted(self.goals, key=lambda g: not g.is_primary)
 
     def remove(self, *indices: int) -> None:
         """Remove goals from the list."""

@@ -14,7 +14,12 @@ from memory.rolling_memory.schemas import RollingMemory
 from overworld_map.service import prepare_overworld_map
 
 if TYPE_CHECKING:
+    from pyboy import PyBoy
+
     from emulator.game_state import GameState
+
+_NO_RANDOM_BATTLE_STEPS_ADDRESS = 0xD13B
+_MAX_BYTE = 0xFF
 
 
 @pytest.mark.integration
@@ -54,6 +59,9 @@ async def test_solve_sokoban_puzzle_seafoam_islands() -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
+        # Seafoam permits encounters on every indoor tile, and even turning can start one. Prevent
+        # an unrelated wild battle from interrupting this deterministic Sokoban integration test.
+        await emulator._worker.execute(_suppress_random_encounters)
         game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=15, col=6)
 
@@ -78,6 +86,11 @@ async def test_solve_sokoban_puzzle_seafoam_islands() -> None:
         assert len(boulders) == expected_num_boulders_after
         assert Coords(row=14, col=2) in boulders
         assert Coords(row=12, col=9) in boulders
+
+
+def _suppress_random_encounters(pyboy: PyBoy) -> None:
+    """Give the test enough encounter-free steps to finish both solutions."""
+    pyboy.memory[_NO_RANDOM_BATTLE_STEPS_ADDRESS] = _MAX_BYTE
 
 
 async def _get_sokoban_service(emulator: Emulator) -> SokobanSolverService:

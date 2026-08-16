@@ -9,7 +9,7 @@ from copy import deepcopy
 
 import pytest
 
-from agent.overworld.tools.navigate import utils
+from agent.overworld import navigation
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, MapId
 from common.schemas import Coords
 from emulator.parsers.map import MapConnection
@@ -220,7 +220,7 @@ def test_get_map_boundary_tiles_plateau() -> None:
     )
 
     accessible_coords = _get_accessible_coords(PLATEAU_CENTER, map_data, [])
-    boundary_tiles = utils.get_map_boundary_tiles(accessible_coords, map_data)
+    boundary_tiles = navigation.get_map_boundary_tiles(accessible_coords, map_data)
 
     # There is no right boundary tile because the map is not connected to the right.
     assert boundary_tiles == {
@@ -246,7 +246,7 @@ def test_get_map_boundary_tiles_collision_pairs() -> None:
     map_data.west_connection = map_data.east_connection
 
     accessible_coords = _get_accessible_coords(Coords(row=0, col=0), map_data, [])
-    boundary_tiles = utils.get_map_boundary_tiles(accessible_coords, map_data)
+    boundary_tiles = navigation.get_map_boundary_tiles(accessible_coords, map_data)
 
     assert boundary_tiles[FacingDirection.DOWN] == []
     assert set(boundary_tiles[FacingDirection.LEFT]) == {Coords(row=0, col=0), Coords(row=2, col=0)}
@@ -443,7 +443,7 @@ def _get_accessible_coords(
     map_data: OverworldMap,
     hm_tiles: list[AsciiTile],
 ) -> list[Coords]:
-    return utils.get_accessible_coords(
+    return navigation.get_accessible_coords(
         start_pos,
         map_data.terrain_ndarray,
         map_data.blockages,
@@ -455,7 +455,7 @@ def _get_exploration_candidates(
     accessible_coords: list[Coords],
     map_data: OverworldMap,
 ) -> list[Coords]:
-    return utils.get_exploration_candidates(accessible_coords, map_data.terrain_ndarray)
+    return navigation.get_exploration_candidates(accessible_coords, map_data.terrain_ndarray)
 
 
 def _calculate_path_to_target(
@@ -464,7 +464,7 @@ def _calculate_path_to_target(
     map_data: OverworldMap,
     hm_tiles: list[AsciiTile],
 ) -> list[Button] | None:
-    return utils.calculate_path_to_target(
+    return navigation.calculate_path_to_target(
         start_pos,
         target_pos,
         map_data.terrain_ndarray,

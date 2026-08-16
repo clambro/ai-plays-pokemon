@@ -13,6 +13,10 @@ if TYPE_CHECKING:
 
 _BIKING_STATE = 1
 _SURFING_STATE = 2
+_POKEDEX_OWNED_ADDRESS = 0xD2F6
+_POKEDEX_SEEN_ADDRESS = 0xD309
+_POKEDEX_END_ADDRESS = 0xD31C
+_NUM_POKEMON = 151
 
 
 class Player(BaseModel):
@@ -27,7 +31,7 @@ class Player(BaseModel):
     badges: list[Badge]
     level_cap: int
     has_pokedex: bool
-    pokedex_caught: int
+    pokedex_caught: frozenset[int]
     pokedex_seen: int
     play_time_seconds: int
 
@@ -58,9 +62,10 @@ def parse_player(mem: PyBoyMemoryView) -> Player:
     play_time_seconds = mem[0xDA43]
     play_time_seconds += (play_time_hours * 3600) + (play_time_minutes * 60)
 
-    # Pokemon seen and caught are represented as one bit each in the following bytes.
-    pokedex_caught = sum(mem[i].bit_count() for i in range(0xD2F6, 0xD309))
-    pokedex_seen = sum(mem[i].bit_count() for i in range(0xD309, 0xD31C))
+    pokedex_caught = _read_caught_pokemon(mem)
+    pokedex_seen = sum(
+        mem[i].bit_count() for i in range(_POKEDEX_SEEN_ADDRESS, _POKEDEX_END_ADDRESS)
+    )
 
     return Player(
         name=name,
@@ -75,6 +80,16 @@ def parse_player(mem: PyBoyMemoryView) -> Player:
         pokedex_caught=pokedex_caught,
         pokedex_seen=pokedex_seen,
         play_time_seconds=play_time_seconds,
+    )
+
+
+def _read_caught_pokemon(mem: PyBoyMemoryView) -> frozenset[int]:
+    """Read the Pokédex numbers registered as caught."""
+    return frozenset(
+        pokedex_number
+        for pokedex_number in range(1, _NUM_POKEMON + 1)
+        if mem[_POKEDEX_OWNED_ADDRESS + (pokedex_number - 1) // 8]
+        & (1 << ((pokedex_number - 1) % 8))
     )
 
 

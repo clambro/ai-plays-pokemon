@@ -9,6 +9,7 @@ class AsciiTile(StrEnum):
     These HAVE to be one token each or the LLM will hallucinate. There's a test to validate this.
     """
 
+    OUTSIDE_REGION = "▒"
     UNSEEN = "░"
     WALL = "▓"
     WATER = "≈"

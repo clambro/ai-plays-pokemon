@@ -10,8 +10,9 @@ from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, Wa
 from common.schemas import Coords
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Mapping, Sequence
 
+    from agent.overworld.map_view import CurrentMapView
     from emulator.game_state import GameState
     from emulator.parsers.sign import Sign
     from emulator.parsers.sprite import Sprite
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
     from overworld_map.schemas import OverworldMap
 
 _ALWAYS_VISIBLE_TILES = {
+    AsciiTile.OUTSIDE_REGION,
     AsciiTile.UNSEEN,
     AsciiTile.WALL,
     AsciiTile.WATER,
@@ -32,11 +34,40 @@ _ALWAYS_VISIBLE_TILES = {
     AsciiTile.SIGN,
 }
 
-
-def format_explored_percentage(current_map: OverworldMap) -> str:
-    """Format the portion of the map that has been explored."""
-    explored = np.mean(current_map.terrain_ndarray != AsciiTile.UNSEEN)
-    return f"{explored:.0%}"
+# These buildings are visually identifiable from their exterior before the player enters them, so
+# revealing their destination does not give the agent information unavailable on the game screen.
+_VISIBLE_UNVISITED_DESTINATIONS = frozenset(
+    {
+        MapId.VIRIDIAN_POKECENTER,
+        MapId.PEWTER_POKECENTER,
+        MapId.CERULEAN_POKECENTER,
+        MapId.MT_MOON_POKECENTER,
+        MapId.ROCK_TUNNEL_POKECENTER,
+        MapId.VERMILION_POKECENTER,
+        MapId.CELADON_POKECENTER,
+        MapId.LAVENDER_POKECENTER,
+        MapId.FUCHSIA_POKECENTER,
+        MapId.CINNABAR_POKECENTER,
+        MapId.SAFFRON_POKECENTER,
+        MapId.VIRIDIAN_GYM,
+        MapId.PEWTER_GYM,
+        MapId.CERULEAN_GYM,
+        MapId.VERMILION_GYM,
+        MapId.CELADON_GYM,
+        MapId.FUCHSIA_GYM,
+        MapId.CINNABAR_GYM,
+        MapId.SAFFRON_GYM,
+        MapId.VIRIDIAN_MART,
+        MapId.PEWTER_MART,
+        MapId.CERULEAN_MART,
+        MapId.VERMILION_MART,
+        MapId.CELADON_MART_1F,
+        MapId.LAVENDER_MART,
+        MapId.FUCHSIA_MART,
+        MapId.CINNABAR_MART,
+        MapId.SAFFRON_MART,
+    }
+)
 
 
 def _format_overworld_sprite(sprite: Sprite, map_id: MapId) -> str:
@@ -65,7 +96,11 @@ def _format_overworld_warp(
     player_coords: Coords,
 ) -> str:
     """Format a known overworld warp for the agent."""
-    if warp.destination in known_map_ids or warp.destination in {MapId.OUTSIDE, MapId.UNKNOWN}:
+    if (
+        warp.destination in known_map_ids
+        or warp.destination in {MapId.OUTSIDE, MapId.UNKNOWN}
+        or warp.destination in _VISIBLE_UNVISITED_DESTINATIONS
+    ):
         destination = warp.destination.name
         if warp.destination_coords is not None:
             destination += f" at {warp.destination_coords}"
@@ -95,11 +130,13 @@ def _get_warp_description(warp: Warp, player_coords: Coords) -> str:
 
 
 def format_legend(
-    current_map: OverworldMap,
+    map_view: CurrentMapView,
     legend: Mapping[AsciiTile, str],
 ) -> str:
     """Format the legend for the tile types present on the map."""
-    tiles = {AsciiTile(tile) for row in current_map.terrain for tile in row} | _ALWAYS_VISIBLE_TILES
+    tiles = {
+        AsciiTile(tile) for row in map_view.display_tiles for tile in row
+    } | _ALWAYS_VISIBLE_TILES
     return "\n".join(f'- "{tile}": {legend[tile]}' for tile in AsciiTile if tile in tiles)
 
 
@@ -140,22 +177,28 @@ def get_tile_notes(
     return tile, blocked_text
 
 
-def format_sprite_notes(current_map: OverworldMap, game_state: GameState) -> str:
+def format_sprite_notes(map_view: CurrentMapView, game_state: GameState) -> str:
     """Format known sprites in index order."""
+    current_map = map_view.overworld_map
     output = ""
+    # Some sprites (e.g. Nurses) remain interactable across counters even though their tiles are
+    # outside the player's connected region.
     sprites = [
         game_state.sprites[entity_id]
         for entity_id in sorted(current_map.known_sprite_ids)
         if entity_id in game_state.sprites
-    ]
-    if np.isin(AsciiTile.PC_TILE, current_map.terrain_ndarray):
-        # This is a bit of a hack, but the model really struggles to find the PC otherwise.
-        location = np.argwhere(current_map.terrain_ndarray == AsciiTile.PC_TILE)[0]
-        output += (
-            f"- There is a PC at {Coords(row=int(location[0]), col=int(location[1]))}. It can only"
-            " be interacted with from below.\n"
+        and (
+            game_state.sprites[entity_id].coords in map_view.visible_coords
+            or game_state.screen.to_screen_coords(game_state.sprites[entity_id].coords) is not None
         )
-    elif not sprites:
+    ]
+    pc_locations = np.argwhere(current_map.terrain_ndarray == AsciiTile.PC_TILE)
+    if len(pc_locations) > 0:
+        # This is a bit of a hack, but the model really struggles to find the PC otherwise.
+        location = Coords(row=int(pc_locations[0][0]), col=int(pc_locations[0][1]))
+        if location in map_view.visible_coords:
+            output += f"- There is a PC at {location}. It can only be interacted with from below.\n"
+    if not output and not sprites:
         return "No sprites discovered."
     output += "\n".join(
         f"- {_format_overworld_sprite(sprite, current_map.id)}" for sprite in sprites
@@ -163,12 +206,14 @@ def format_sprite_notes(current_map: OverworldMap, game_state: GameState) -> str
     return output.strip()
 
 
-def format_warp_notes(current_map: OverworldMap, game_state: GameState) -> str:
+def format_warp_notes(map_view: CurrentMapView, game_state: GameState) -> str:
     """Format known warps in index order."""
+    current_map = map_view.overworld_map
     warps = [
         game_state.warps[entity_id]
         for entity_id in sorted(current_map.known_warp_ids)
         if entity_id in game_state.warps
+        and game_state.warps[entity_id].coords in map_view.visible_coords
     ]
     if not warps:
         return "No warp tiles discovered."
@@ -184,53 +229,49 @@ def format_warp_notes(current_map: OverworldMap, game_state: GameState) -> str:
     )
 
 
-def format_sign_notes(current_map: OverworldMap, game_state: GameState) -> str:
+def format_sign_notes(map_view: CurrentMapView, game_state: GameState) -> str:
     """Format known signs in index order."""
+    current_map = map_view.overworld_map
     signs = [
         game_state.signs[entity_id]
         for entity_id in sorted(current_map.known_sign_ids)
         if entity_id in game_state.signs
+        and game_state.signs[entity_id].coords in map_view.visible_coords
     ]
     if not signs:
         return "No signs discovered."
     return "\n".join(f"- {_format_overworld_sign(sign, current_map.id)}" for sign in signs)
 
 
-def format_connection_notes(current_map: OverworldMap) -> str:
-    """Format direct map connections and navigation guidance."""
-    if (
-        not current_map.north_connection
-        and not current_map.south_connection
-        and not current_map.east_connection
-        and not current_map.west_connection
-    ):
+def format_connection_notes(map_view: CurrentMapView) -> str:
+    """Format direct map connections reachable from the current region."""
+    current_map = map_view.overworld_map
+    connections = [
+        ("NORTH", FacingDirection.UP, current_map.north_connection),
+        ("SOUTH", FacingDirection.DOWN, current_map.south_connection),
+        ("EAST", FacingDirection.RIGHT, current_map.east_connection),
+        ("WEST", FacingDirection.LEFT, current_map.west_connection),
+    ]
+    reachable_connections = [
+        (direction, connection)
+        for direction, facing, connection in connections
+        if connection is not None and map_view.boundary_tiles[facing]
+    ]
+    if not reachable_connections:
         return (
-            "There are no direct connections to other maps on this map. The only way to leave"
-            " this map is via warp tiles."
+            "There are no direct connections to other maps reachable from your current region."
+            " Leave it through a reachable warp or expand it by exploring unseen terrain."
         )
-    output = ""
-    for direction, connection in [
-        ("NORTH", current_map.north_connection),
-        ("SOUTH", current_map.south_connection),
-        ("EAST", current_map.east_connection),
-        ("WEST", current_map.west_connection),
-    ]:
-        if connection is not None:
-            output += f"- The map to the {direction} is {connection.destination_map.name}.\n"
-        else:
-            output += f"- There is no map connection to the {direction}.\n"
-    output += (
-        "Important: The fact that you are aware of a map connection does not necessarily mean"
-        " that you can access it. If the navigation tool is unable to find a valid path to a"
-        " given map connection, it means that you cannot access it from your current position."
-        " You either need to explore more of the current map to find it, or you must get to"
-        " another part of the current map to access it via an intermediate map (e.g. through"
-        " a building or cave)."
+    return "\n".join(
+        f"- The map to the {direction} is {connection.destination_map.name}."
+        for direction, connection in reachable_connections
     )
-    return output.strip()
 
 
-def format_coordinates_grid(coordinates: list[Coords], map_data: OverworldMap) -> str:
+def format_coordinates_grid(
+    coordinates: Sequence[Coords],
+    map_data: OverworldMap,
+) -> str:
     """Format coordinates and their tile types as a grid."""
     if not coordinates:
         return ""
@@ -247,7 +288,7 @@ def format_coordinates_grid(coordinates: list[Coords], map_data: OverworldMap) -
 
 
 def format_exploration_candidates(
-    candidates: list[Coords],
+    candidates: Sequence[Coords],
     map_data: OverworldMap,
 ) -> str:
     """Format exploration candidates for the overworld agent."""
@@ -257,7 +298,7 @@ def format_exploration_candidates(
 
 
 def format_map_boundary_tiles(
-    boundary_tiles: dict[FacingDirection, list[Coords]],
+    boundary_tiles: Mapping[FacingDirection, Sequence[Coords]],
     map_data: OverworldMap,
 ) -> str:
     """Format accessible map boundaries for the overworld agent."""
@@ -276,13 +317,4 @@ def format_map_boundary_tiles(
                 f"The {connection.destination_map.name} map boundary at the far {cardinal_dir}"
                 f" of the current map is accessible from {coord_str}.",
             )
-        elif connection is not None:
-            output.append(
-                "You have not yet discovered a valid path to the"
-                f" {connection.destination_map.name} map boundary at the far {cardinal_dir} of the"
-                f" current map. You can likely find it either by visiting more exploration"
-                f" candidates, or perhaps by getting to a new part of the current map via an"
-                f" intermediate map (e.g. through a building or cave).",
-            )
-
-    return "\n".join(output)
+    return "\n".join(output) or "No connected-map boundary is reachable from this region."

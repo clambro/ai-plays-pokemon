@@ -47,6 +47,16 @@ Build a derived graph whose nodes are current provisional regions and whose
 directed edges are known map transitions. Assign each transition endpoint to
 the region currently containing its coordinate.
 
+This must be a graph rather than a tree. Maps can have multiple entrances,
+transitions can form cycles, and locally separate regions may reconnect through
+other maps.
+
+Treat every portal endpoint as map-qualified. Coordinates are only meaningful
+within their map and must never identify a portal globally. In particular, two
+warps at the same coordinates on different maps are distinct endpoints with
+different destinations. Retain the rigid map-local warp ID alongside the source
+map, source coordinates, destination map, and destination coordinates.
+
 If a destination coordinate is known but surrounding terrain has not been
 revealed, retain it as an unresolved endpoint rather than inventing a region.
 
@@ -61,6 +71,22 @@ The global planner should:
 The LLM chooses semantic intent—explore, reach a known landmark, revisit a map,
 or investigate a portal. Deterministic code chooses the portal sequence and
 local waypoint.
+
+Expose that division through a goal-oriented routing tool rather than a tool
+that merely dumps the known warp graph. The model should select a known map,
+landmark, region, or unexplored portal as its destination. The tool should
+derive the route, select the next map-qualified portal on the current map, and
+hand that coordinate to the existing local navigator. A graph inspection view
+may be useful for diagnosis, but it is not a substitute for deterministic route
+selection.
+
+The Mt. Moon B1F/B2F loop is the representative failure case. B1F has one warp
+at `(9, 25)` leading to 1F, while B2F has a different warp at `(9, 25)` leading
+back to B1F. Despite receiving the correct map-qualified warp records, the LLM
+collapsed those coordinates into one place and traversed the B1F/B2F edge more
+than 180 times. Rolling memory then reinforced the invented topology. A route
+to 1F must select the B1F portal itself; arriving at the same coordinates on
+B2F must not satisfy or replace that waypoint.
 
 ## Prompt Design
 
@@ -118,9 +144,15 @@ Use synthetic maps and representative game fixtures to cover:
 - [ ] Region membership updates automatically as knowledge and abilities
       change.
 - [ ] Dynamic occupancy does not create durable regions.
+- [ ] Portal identity is map-qualified; equal coordinates on different maps
+      cannot be conflated.
 - [ ] Global routing uses coordinate-based directed transitions and returns the
       next local portal.
+- [ ] The routing tool accepts semantic intent and deterministically selects the
+      next portal instead of asking the LLM to traverse a graph dump.
 - [ ] The vertical-wall/two-ladder scenario routes through the basement.
+- [ ] The Mt. Moon B1F/B2F scenario routes to the correct B1F-to-1F warp without
+      cycling through the identically positioned B2F return warp.
 - [ ] Prompts provide compact provisional-region and relevant-route context
       without changing the ASCII grid.
 - [ ] Persistent state contains no region IDs.

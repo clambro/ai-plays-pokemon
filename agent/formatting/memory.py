@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from memory.goals import MAX_GOALS
 from memory.rolling_memory.schemas import (
     CurrentMemoryBlock,
     MemorySummary,
@@ -10,7 +11,7 @@ from memory.rolling_memory.schemas import (
 )
 
 if TYPE_CHECKING:
-    from memory.goals import Goal, Goals
+    from memory.goals import Goals
 
 type _MemoryEntry = CurrentMemoryBlock | RawMemoryBlock | MemorySummary
 
@@ -19,18 +20,24 @@ def format_goals(goals: Goals) -> str:
     """Format the agent's current goals for gameplay prompts."""
     out = "<goals_info>\n"
     out += (
-        "Here are the goals that you have set for yourself. Your ultimate goal is, of course,"
-        " to collect all eight badges and become the Elite Four Champion, but these goals here"
-        " are the next steps on your journey to that goal. The actions that you take and the"
-        " thoughts that you think should all be in service of these goals."
+        f"Here are the goals that you have set for yourself. You can keep up to {MAX_GOALS} goals"
+        " at once. Goals are current objectives or concerns that should influence your decisions"
+        " until they are resolved. A goal can be short-term or long-term; what matters is that"
+        " forgetting it could lead to worse decisions. When several priorities are active,"
+        " record each separately. Goals can concern progression through the current area, team"
+        " development, healing or resupplying, or investigating something you discovered. Do"
+        " not use goals for individual button presses or routine movement. Goals must come from"
+        " current structured information, observed game text, or recorded memory, never from"
+        " assumptions about future game progression or general Pokemon knowledge."
     )
     out += "\n<goals>\n"
     if goals.goals:
         out += "\n".join(
-            f"[{index}] {_format_goal(goal)}" for index, goal in enumerate(goals.goals)
+            f"[{i}] {g.goal} (last updated at iteration {g.updated_at_iteration})"
+            for i, g in enumerate(goals.goals)
         )
     else:
-        out += "You have not set any goals yet."
+        out += "You don't have any active goals. You should have at least one."
     out += "\n</goals>\n"
     out += "</goals_info>"
     return out
@@ -52,12 +59,6 @@ def format_rolling_memory(memory: RollingMemory) -> str:
         "each iteration takes a couple of seconds.\n"
         "<memory>\n" + "\n".join(_format_memory_entry(entry) for entry in entries) + "\n</memory>"
     )
-
-
-def _format_goal(goal: Goal) -> str:
-    """Format one goal with its role."""
-    role = "Primary goal" if goal.is_primary else "Other goal"
-    return f"{role}: {goal.goal}"
 
 
 def _format_memory_entry(entry: _MemoryEntry) -> str:

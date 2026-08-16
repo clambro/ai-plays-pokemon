@@ -12,16 +12,21 @@ from typing import TYPE_CHECKING
 
 from pyboy import PyBoy
 
+from common.enums import Button
 from emulator.control_events import ControlBoundary, ControlResultWaiter
 from emulator.game_state import GameState
 from emulator.rom_hooks.control import RomControlHooks
 from emulator.rom_hooks.text import RomTextHooks
-from emulator.text_events import TextEvent, TextEventJournal, TextEventKind
+from emulator.text_events import (
+    TextEvent,
+    TextEventJournal,
+    TextEventKind,
+    TextEventSnapshot,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from common.enums import Button
     from emulator.control_events import ControlResult
 
 
@@ -152,7 +157,7 @@ class PyBoyWorker:
         *,
         observe_steps: bool = False,
     ) -> int:
-        """Arm overworld coordination and schedule its short button pulse atomically."""
+        """Arm overworld coordination and hold its button until the ROM accepts it."""
 
         def _start(pyboy: PyBoy) -> int:
             if self._control_hooks is None:
@@ -161,21 +166,19 @@ class PyBoyWorker:
                 button,
                 observe_steps=observe_steps,
             )
-            # The overworld loop spans two rendered frames, so a three-frame pulse guarantees one
-            # poll while remaining short enough not to carry into the following interface.
-            pyboy.button(button, 3)
+            pyboy.button_press(button)
             return operation_id
 
         return await self.execute(_start)
 
     async def start_control_button(self, button: Button) -> int:
-        """Arm coordination in the active input domain and schedule a short pulse."""
+        """Arm coordination and hold its button until the active input domain accepts it."""
 
         def _start(pyboy: PyBoy) -> int:
             if self._control_hooks is None:
                 raise RuntimeError("ROM control hooks are not installed.")
             operation_id = self._control_hooks.arm_button(button)
-            pyboy.button(button, 3)
+            pyboy.button_press(button)
             return operation_id
 
         return await self.execute(_start)
@@ -209,9 +212,20 @@ class PyBoyWorker:
         """Claim every currently recorded text event exactly once."""
         return self._text_events.drain()
 
-    async def drain_settled_text_events(self) -> tuple[TextEvent, ...]:
-        """Claim pending text events after the current emulated frame completes."""
-        return await self.execute(lambda _pyboy: self._text_events.drain())
+    async def drain_settled_text_events_with_control_boundary(
+        self,
+    ) -> TextEventSnapshot:
+        """Claim pending text events with their current rendered control boundary."""
+
+        def _drain(_pyboy: PyBoy) -> TextEventSnapshot:
+            if self._control_hooks is None:
+                raise RuntimeError("ROM control hooks are not installed.")
+            return TextEventSnapshot(
+                events=self._text_events.drain(),
+                boundary=self._control_hooks.current_boundary,
+            )
+
+        return await self.execute(_drain)
 
     def drain_completed_text_events(self) -> tuple[TextEvent, ...]:
         """Claim text events whose ordinary interaction has already closed."""
@@ -284,6 +298,11 @@ class PyBoyWorker:
         elif self._save_state_path:
             with self._save_state_path.open("rb") as file:
                 pyboy.load_state(file)
+        if self._save_state or self._save_state_path:
+            # Host input is not part of application state. A save captured during a failed control
+            # operation must not restore its orphaned held button into the new worker.
+            for button in Button:
+                pyboy.button_release(button)
         self._control_hooks = RomControlHooks(pyboy, self._control_results)
         self._control_hooks.install()
         self._text_hooks = RomTextHooks(

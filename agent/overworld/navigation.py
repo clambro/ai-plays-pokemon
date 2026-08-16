@@ -1,7 +1,7 @@
-"""Pure algorithmic logic for navigation operations.
+"""Pure algorithms shared by overworld navigation and map-region views.
 
-This module contains the core algorithmic functions for navigation, separate from any formatting
-concerns to make them easier to test.
+This module contains traversal, pathfinding, exploration, and map-boundary calculations without
+depending on agent presentation or tool services.
 """
 
 from typing import TYPE_CHECKING
@@ -270,6 +270,13 @@ def _is_blocked(
 
 def get_spinner_destination(pos: Coords, tiles: np.ndarray) -> Coords | None:
     """Get a spinner's known destination, if its full path has been revealed."""
+    path = get_spinner_path(pos, tiles)
+    return path[-1] if path is not None else None
+
+
+def get_spinner_path(pos: Coords, tiles: np.ndarray) -> tuple[Coords, ...] | None:
+    """Get every coordinate traversed from a spinner to its revealed destination."""
+    path = [pos]
     tile = tiles[pos.row, pos.col]
     direction = _SPINNER_DIRECTION_MAP[tile]
 
@@ -278,8 +285,9 @@ def get_spinner_destination(pos: Coords, tiles: np.ndarray) -> Coords | None:
         new_tile = tiles[new_pos.row, new_pos.col]
         if new_tile == AsciiTile.UNSEEN:
             return None
+        path.append(new_pos)
         if new_tile == AsciiTile.SPINNER_STOP:
-            return new_pos
+            return tuple(path)
         if new_tile in AsciiTile.get_spinner_tiles():
             direction = _SPINNER_DIRECTION_MAP[new_tile]
         pos = new_pos

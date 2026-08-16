@@ -2,11 +2,11 @@
 
 from typing import TYPE_CHECKING
 
-from agent.overworld.tools.navigate import utils
+from agent.overworld import navigation
+from agent.overworld.map_view import build_current_map_view
 from common.enums import AsciiTile, Button, FacingDirection, MapId
 from emulator.control_events import ControlBoundary
 from overworld_map.service import update_overworld_map
-from overworld_map.views import get_current_map_tiles
 
 if TYPE_CHECKING:
     import numpy as np
@@ -43,22 +43,17 @@ class NavigationService:
         """Navigate to the requested target coordinates."""
         game_state = await self.emulator.get_game_state()
         hm_tiles = game_state.get_hm_tiles()
-        navigation_tiles = get_current_map_tiles(self.current_map, game_state)
-        accessible_coords = utils.get_accessible_coords(
-            game_state.player.coords,
-            navigation_tiles,
-            self.current_map.blockages,
-            hm_tiles,
-        )
+        map_view = build_current_map_view(self.current_map, game_state)
+        navigation_tiles = map_view.navigation_tiles
         if error := self._get_target_error(
             game_state,
             coords,
-            accessible_coords,
+            map_view.reachable_coords,
             navigation_tiles,
         ):
             return self._record_result(error)
 
-        path = utils.calculate_path_to_target(
+        path = navigation.calculate_path_to_target(
             game_state.player.coords,
             coords,
             navigation_tiles,
@@ -85,7 +80,7 @@ class NavigationService:
             next_coords = game_state.player.coords + _BUTTON_OFFSETS[button]
             unresolved_spinner = (
                 next_tile in AsciiTile.get_spinner_tiles()
-                and utils.get_spinner_destination(
+                and navigation.get_spinner_destination(
                     next_coords,
                     navigation_tiles,
                 )
@@ -163,7 +158,7 @@ class NavigationService:
         self,
         game_state: GameState,
         coords: Coords,
-        accessible_coords: list[Coords],
+        accessible_coords: frozenset[Coords],
         navigation_tiles: np.ndarray,
     ) -> str | None:
         """Return why the target coordinates are invalid, if applicable."""
@@ -328,12 +323,15 @@ class NavigationService:
     ) -> str | None:
         """Return the result when navigation should stop, if applicable."""
         new_pos = game_state.player.coords
+        if game_state.map.id != starting_map_id:
+            return (
+                f"Map changed from {starting_map_id.name} {prev_pos}"
+                f" to {game_state.map.id.name} {new_pos}."
+            )
         if new_pos == target_pos:
             return f"I reached {target_pos}."
         if prev_pos == new_pos:
             return f"My navigation to {target_pos} was interrupted at position {new_pos}."
-        if game_state.map.id != starting_map_id:
-            return "The map changed while I was navigating, so I stopped."
         return None
 
     @staticmethod

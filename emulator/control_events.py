@@ -31,13 +31,16 @@ class ControlResult:
     step_observations: tuple[GameState, ...] = ()
 
 
+type _ControlOutcome = ControlResult | ControlHandoff
+
+
 class ControlResultWaiter:
     """Hand completed control operations from the owner thread to async callers."""
 
     def __init__(self) -> None:
         """Create an unbound waiter with no completed operations."""
         self._lock = Lock()
-        self._results: dict[int, ControlResult] = {}
+        self._results: dict[int, _ControlOutcome] = {}
         self._loop: asyncio.AbstractEventLoop | None = None
         self._notification: asyncio.Event | None = None
         self._closed = False
@@ -52,10 +55,18 @@ class ControlResultWaiter:
 
     def publish(self, operation_id: int, result: ControlResult) -> None:
         """Publish a result after the tick containing its boundary has rendered."""
+        self._publish(operation_id, result)
+
+    def publish_handoff(self, operation_id: int) -> None:
+        """Wake an operation whose input domain changed before accepting its button."""
+        self._publish(operation_id, ControlHandoff())
+
+    def _publish(self, operation_id: int, outcome: _ControlOutcome) -> None:
+        """Publish one terminal operation outcome and wake its async consumer."""
         with self._lock:
             if self._closed:
                 return
-            self._results[operation_id] = result
+            self._results[operation_id] = outcome
             loop = self._loop
             notification = self._notification
 
@@ -70,8 +81,10 @@ class ControlResultWaiter:
 
         while True:
             with self._lock:
-                if result := self._results.pop(operation_id, None):
-                    return result
+                if outcome := self._results.pop(operation_id, None):
+                    if isinstance(outcome, ControlHandoff):
+                        raise outcome
+                    return outcome
                 if self._closed:
                     raise RuntimeError("Emulator stopped before reaching a control boundary.")
                 notification.clear()
