@@ -156,7 +156,7 @@ class Emulator(AbstractAsyncContextManager):
         )
 
     def consume_pending_dialog(self) -> str:
-        """Claim and reduce dialog already completed by the ROM."""
+        """Claim and reduce currently pending dialog events."""
         return self._text_event_reducer.reduce(self.drain_text_events())
 
     async def get_game_state_with_map_collision_tiles(

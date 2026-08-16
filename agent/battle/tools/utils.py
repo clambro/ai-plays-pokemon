@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pydantic_ai import BinaryContent
 
 from agent.battle.formatting import format_available_pokeballs, format_battle_info
-from agent.dialog import settle_routine_dialog
+from agent.dialog import settle_dialog
 from agent.formatting.game_state import format_party_info
 from agent.utils import build_screenshot_content
 from common.schemas import Coords
@@ -87,7 +87,7 @@ async def complete_battle_action(
     Returns:
         Fresh context for the agent's next decision.
     """
-    settlement = await settle_routine_dialog(context, battle=True)
+    settlement = await settle_dialog(context, battle=True)
     return [
         build_screenshot_content(settlement.screenshot),
         build_battle_tool_result(
@@ -102,7 +102,6 @@ async def refresh_battle_observation(
     context: AgentContext,
     *,
     action_result: str,
-    dialog: str = "",
 ) -> BattleToolResult:
     """Capture and render a fresh battle observation for the agent."""
     game_state, screenshot = await context.emulator.get_game_state_with_screenshot()
@@ -111,6 +110,5 @@ async def refresh_battle_observation(
         build_battle_tool_result(
             game_state,
             action_result=action_result,
-            dialog=dialog,
         ),
     ]

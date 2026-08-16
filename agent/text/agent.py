@@ -8,7 +8,7 @@ from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 from pydantic_graph import End
 
 from agent.context import AgentContext
-from agent.dialog import settle_routine_dialog
+from agent.dialog import settle_dialog
 from agent.text.prompts import build_text_decision_prompt
 from agent.text.tools.registry import build_text_toolset
 from agent.utils import AGENT_HOOKS, build_screenshot_content, is_text_handler_state
@@ -72,7 +72,7 @@ async def _prepare_text_agent_input(
     context: AgentContext,
 ) -> list[str | BinaryContent] | None:
     """Drain ordinary dialog and prepare input if a decision remains."""
-    settlement = await settle_routine_dialog(context)
+    settlement = await settle_dialog(context)
     await context.complete_iteration()
 
     if not is_text_handler_state(settlement.game_state, settlement.control_boundary):

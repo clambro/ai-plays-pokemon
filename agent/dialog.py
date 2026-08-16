@@ -28,24 +28,20 @@ def _is_plain_text_dialog(game_state: GameState) -> bool:
     """Check whether visible dialog can be advanced without a decision."""
     # Text outside the dialog box usually indicates a menu or yes/no question,
     # which must be left for the agent rather than advanced automatically.
-    return (
-        game_state.screen.is_dialog_box_on_screen
-        and not game_state.is_text_on_screen(ignore_dialog_box=True)
-        and not is_battle_handler_state(game_state)
+    return game_state.screen.is_dialog_box_on_screen and not game_state.is_text_on_screen(
+        ignore_dialog_box=True
     )
 
 
-async def settle_routine_dialog(
+async def settle_dialog(
     context: AgentContext,
     *,
     battle: bool = False,
 ) -> DialogSettlement:
-    """Settle safe ordinary text and capture its terminal observation.
+    """Settle dialog owned by the originating action and capture its terminal observation.
 
-    Routine text at an explicit input boundary is advanced through the emulator's
-    ROM-event driver. Dialog that has already reached another non-battle boundary
-    is claimed without sending input. Decision screens and battle-owned events
-    remain untouched.
+    Ordinary actions advance only plain text. Battle actions advance active
+    resolution text and otherwise claim pending events without sending input.
 
     Args:
         context: Shared agent state and emulator access.
@@ -55,31 +51,28 @@ async def settle_routine_dialog(
         The captured transcript and an atomic observation taken after settlement.
     """
     game_state, control_boundary = await context.emulator.get_game_state_with_control_boundary()
+    in_battle = is_battle_handler_state(game_state)
 
     async def publish_before_input() -> None:
         current_state = await context.emulator.get_game_state()
         update_background_from_states(context.state, current_state)
 
-    if (
-        battle
-        and is_battle_handler_state(game_state)
-        and control_boundary
-        in {
+    if battle:
+        if in_battle and control_boundary in {
             None,
             ControlBoundary.TEXT_INPUT_READY,
-        }
-    ):
-        transcript = await context.emulator.advance_battle_dialog(
-            before_input=publish_before_input,
-        )
-    elif battle:
-        transcript = context.emulator.consume_pending_dialog()
+        }:
+            transcript = await context.emulator.advance_battle_dialog(
+                before_input=publish_before_input,
+            )
+        else:
+            transcript = context.emulator.consume_pending_dialog()
+    elif in_battle:
+        transcript = ""
     elif control_boundary == ControlBoundary.TEXT_INPUT_READY and _is_plain_text_dialog(game_state):
         transcript = await context.emulator.advance_text_dialog(
             before_input=publish_before_input,
         )
-    elif is_battle_handler_state(game_state):
-        transcript = ""
     else:
         transcript = context.emulator.consume_pending_dialog()
 
