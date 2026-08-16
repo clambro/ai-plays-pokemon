@@ -21,7 +21,7 @@ async def complete_overworld_action(
     dialog = context.emulator.consume_completed_dialog()
     if dialog:
         context.state.rolling_memory.add_memory(
-            content=f'Onscreen text: "{dialog}" The dialog box is now closed.',
+            content=f'Onscreen text: "{dialog}"',
         )
     return [
         build_screenshot_content(screenshot),

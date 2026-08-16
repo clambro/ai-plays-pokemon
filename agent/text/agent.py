@@ -8,16 +8,11 @@ from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 from pydantic_graph import End
 
 from agent.context import AgentContext
+from agent.dialog import settle_routine_dialog
 from agent.text.prompts import build_text_decision_prompt
 from agent.text.tools.registry import build_text_toolset
-from agent.text.utils import (
-    capture_pending_dialog,
-    handle_text_dialog,
-    is_plain_text_dialog,
-)
 from agent.utils import AGENT_HOOKS, build_screenshot_content, is_text_handler_state
 from common.prompts import SYSTEM_PROMPT
-from emulator.control_events import ControlBoundary
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 
 if TYPE_CHECKING:
@@ -77,24 +72,15 @@ async def _prepare_text_agent_input(
     context: AgentContext,
 ) -> list[str | BinaryContent] | None:
     """Drain ordinary dialog and prepare input if a decision remains."""
-    game_state, control_boundary = await context.emulator.get_game_state_with_control_boundary()
-    if control_boundary == ControlBoundary.TEXT_INPUT_READY and is_plain_text_dialog(game_state):
-        await handle_text_dialog(context)
-    else:
-        capture_pending_dialog(context, game_state)
+    settlement = await settle_routine_dialog(context)
     await context.complete_iteration()
 
-    (
-        initial_game_state,
-        initial_screenshot,
-        control_boundary,
-    ) = await context.emulator.get_game_state_with_screenshot_and_control_boundary()
-    if not is_text_handler_state(initial_game_state, control_boundary):
+    if not is_text_handler_state(settlement.game_state, settlement.control_boundary):
         return None
     return build_text_agent_input(
         context,
-        initial_game_state=initial_game_state,
-        initial_screenshot=initial_screenshot,
+        initial_game_state=settlement.game_state,
+        initial_screenshot=settlement.screenshot,
     )
 
 
