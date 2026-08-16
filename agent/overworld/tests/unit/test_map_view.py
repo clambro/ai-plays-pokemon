@@ -44,7 +44,8 @@ def test_current_map_view_crops_region_without_mutating_map() -> None:
             warps={},
             signs={},
             pikachu=SimpleNamespace(is_rendered=False),
-            player=SimpleNamespace(coords=Coords(row=2, col=2)),
+            player=SimpleNamespace(coords=Coords(row=2, col=2), is_surfing=False),
+            map=SimpleNamespace(),
             get_hm_tiles=list,
         ),
     )
@@ -139,7 +140,8 @@ def test_sprite_notes_include_only_reachable_and_counter_interactable_sprites() 
             signs={},
             screen=SimpleNamespace(to_screen_coords=lambda _coords: Coords(row=0, col=0)),
             pikachu=SimpleNamespace(is_rendered=False),
-            player=SimpleNamespace(coords=Coords(row=2, col=1)),
+            player=SimpleNamespace(coords=Coords(row=2, col=1), is_surfing=False),
+            map=SimpleNamespace(),
             get_hm_tiles=list,
         ),
     )

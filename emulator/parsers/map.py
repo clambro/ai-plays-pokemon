@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict
 
 from common.enums import FacingDirection, MapId, Tileset
 from common.schemas import Coords
+from emulator.parsers.map_collision import read_map_collision_tile
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
@@ -32,10 +33,12 @@ _BYTE_VALUE_COUNT = 0x100
 class MapConnection:
     """A bounded walk-off-map connection and its destination alignment."""
 
+    direction: FacingDirection
     destination_map: MapId
     source_coordinate_start: int
     source_coordinate_end: int
     destination_offset: Coords
+    collision_tile_pairs: tuple[tuple[int | None, int | None], ...]
 
     @property
     def source_coordinates(self) -> range:
@@ -45,6 +48,17 @@ class MapConnection:
     def get_destination(self, source: Coords) -> Coords:
         """Map a valid source boundary coordinate to the connected map."""
         return source + self.destination_offset
+
+    def get_collision_tile_pair(self, source: Coords) -> tuple[int | None, int | None] | None:
+        """Return the standing/front collision tiles for one source coordinate."""
+        source_coordinate = (
+            source.col
+            if self.direction in (FacingDirection.UP, FacingDirection.DOWN)
+            else source.row
+        )
+        if source_coordinate not in self.source_coordinates:
+            return None
+        return self.collision_tile_pairs[source_coordinate - self.source_coordinate_start]
 
 
 class SpinnerTileIds(BaseModel):
@@ -87,6 +101,48 @@ class Map(BaseModel):
     west_connection: MapConnection | None
 
     model_config = ConfigDict(frozen=True)
+
+    def is_connection_crossable(
+        self,
+        connection: MapConnection,
+        source: Coords,
+        *,
+        can_surf: bool,
+    ) -> bool:
+        """Check whether terrain permits moving outward through a map connection.
+
+        The game loads collision tiles from connected maps into a border around the current map.
+        Those tiles are available for the entire connection strip regardless of the viewport.
+
+        Args:
+            connection: Current-map connection being evaluated.
+            source: Reachable coordinate on the current map's edge.
+            can_surf: Whether the player can traverse water.
+
+        Returns:
+            Whether movement from ``source`` into the connected map is permitted by the loaded
+            terrain and collision rules.
+        """
+        collision_tiles = connection.get_collision_tile_pair(source)
+        if collision_tiles is None or None in collision_tiles:
+            return False
+        source_tile, destination_tile = collision_tiles
+        if source_tile is None or destination_tile is None:
+            return False
+
+        ledge_tiles = {
+            FacingDirection.DOWN: self.ledge_tiles_down,
+            FacingDirection.LEFT: self.ledge_tiles_left,
+            FacingDirection.RIGHT: self.ledge_tiles_right,
+            FacingDirection.UP: [],
+        }
+        if (source_tile, destination_tile) in ledge_tiles[connection.direction]:
+            return True
+        if frozenset((source_tile, destination_tile)) in self.collision_pairs:
+            return False
+        if destination_tile in self.water_tiles:
+            return can_surf
+        return destination_tile in self.walkable_tiles
 
     def is_boulder_push_terrain_legal(
         self,
@@ -281,11 +337,50 @@ def _parse_map_connection(
         mem[address + _CONNECTION_STRIP_LENGTH_OFFSET],
     )
     return MapConnection(
+        direction=direction,
         destination_map=MapId(mem[address]),
         source_coordinate_start=source_start,
         source_coordinate_end=source_end,
         destination_offset=destination_offset,
+        collision_tile_pairs=tuple(
+            _get_connection_collision_tile_pair(
+                mem,
+                direction,
+                source_coordinate,
+                map_height,
+                map_width,
+            )
+            for source_coordinate in range(source_start, source_end)
+        ),
     )
+
+
+def _get_connection_collision_tile_pair(
+    mem: PyBoyMemoryView,
+    direction: FacingDirection,
+    source_coordinate: int,
+    map_height: int,
+    map_width: int,
+) -> tuple[int | None, int | None]:
+    """Read the standing/front collision tiles for one connected-map boundary position."""
+    if direction in (FacingDirection.UP, FacingDirection.DOWN):
+        source = Coords(
+            row=0 if direction == FacingDirection.UP else map_height - 1,
+            col=source_coordinate,
+        )
+    else:
+        source = Coords(
+            row=source_coordinate,
+            col=0 if direction == FacingDirection.LEFT else map_width - 1,
+        )
+    direction_offset = {
+        FacingDirection.UP: (-1, 0),
+        FacingDirection.DOWN: (1, 0),
+        FacingDirection.LEFT: (0, -1),
+        FacingDirection.RIGHT: (0, 1),
+    }
+    destination = source + direction_offset[direction]
+    return read_map_collision_tile(mem, source), read_map_collision_tile(mem, destination)
 
 
 def _get_connection_source_bounds(

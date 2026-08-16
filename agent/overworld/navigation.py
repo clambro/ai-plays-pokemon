@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
     import numpy as np
 
+    from emulator.parsers.map import Map
     from overworld_map.schemas import OverworldMap
 
 
@@ -46,12 +47,17 @@ def get_exploration_candidates(
 def get_map_boundary_tiles(
     accessible_coords: list[Coords],
     map_data: OverworldMap,
+    map_state: Map,
+    *,
+    can_surf: bool,
 ) -> dict[FacingDirection, list[Coords]]:
     """Get all accessible coordinates on connected map boundaries.
 
     Args:
         accessible_coords: Coordinates the player can currently reach.
         map_data: Explored map and its cardinal connections.
+        map_state: Current map traversal metadata and connected-map collision strips.
+        can_surf: Whether the player can traverse water.
 
     Returns:
         Accessible boundary coordinates grouped by their cardinal direction.
@@ -70,24 +76,44 @@ def get_map_boundary_tiles(
             c.row == 0
             and map_data.north_connection is not None
             and c.col in map_data.north_connection.source_coordinates
+            and map_state.is_connection_crossable(
+                map_data.north_connection,
+                c,
+                can_surf=can_surf,
+            )
         ):
             boundary_tiles[FacingDirection.UP].append(c)
         elif (
             c.row == height - 1
             and map_data.south_connection is not None
             and c.col in map_data.south_connection.source_coordinates
+            and map_state.is_connection_crossable(
+                map_data.south_connection,
+                c,
+                can_surf=can_surf,
+            )
         ):
             boundary_tiles[FacingDirection.DOWN].append(c)
         elif (
             c.col == 0
             and map_data.west_connection is not None
             and c.row in map_data.west_connection.source_coordinates
+            and map_state.is_connection_crossable(
+                map_data.west_connection,
+                c,
+                can_surf=can_surf,
+            )
         ):
             boundary_tiles[FacingDirection.LEFT].append(c)
         elif (
             c.col == width - 1
             and map_data.east_connection is not None
             and c.row in map_data.east_connection.source_coordinates
+            and map_state.is_connection_crossable(
+                map_data.east_connection,
+                c,
+                can_surf=can_surf,
+            )
         ):
             boundary_tiles[FacingDirection.RIGHT].append(c)
 
