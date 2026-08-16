@@ -49,10 +49,6 @@ async def settle_dialog(
     """
     game_state, control_boundary = await context.emulator.get_game_state_with_control_boundary()
 
-    async def publish_before_input() -> None:
-        current_state = await context.emulator.get_game_state()
-        update_background_from_states(context.state, current_state)
-
     chunks = []
     advanced = False
     while True:
@@ -60,15 +56,11 @@ async def settle_dialog(
             None,
             ControlBoundary.TEXT_INPUT_READY,
         }:
-            chunk = await context.emulator.advance_battle_dialog(
-                before_input=publish_before_input,
-            )
+            chunk = await context.emulator.advance_battle_dialog()
         elif control_boundary == ControlBoundary.TEXT_INPUT_READY and _is_plain_text_dialog(
             game_state
         ):
-            chunk = await context.emulator.advance_text_dialog(
-                before_input=publish_before_input,
-            )
+            chunk = await context.emulator.advance_text_dialog()
         else:
             break
 
@@ -90,6 +82,7 @@ async def settle_dialog(
         context.state.rolling_memory.add_memory(
             content=f'Onscreen text: "{transcript}"',
         )
+    update_background_from_states(context.state, final_state)
     return DialogSettlement(
         transcript=transcript,
         game_state=final_state,

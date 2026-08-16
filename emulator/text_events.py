@@ -10,8 +10,6 @@ from common.enums import Button
 from emulator.control_events import ControlBoundary
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
-
     from emulator.emulator import Emulator
 
 
@@ -237,7 +235,6 @@ async def drive_standard_dialog(
     reducer: TextEventReducer,
     stop_on: frozenset[TextEventKind],
     initial_snapshot: TextEventSnapshot | None = None,
-    before_input: Callable[[], Awaitable[None]] | None = None,
 ) -> str:
     """Advance explicit dialog waits until the requested ROM boundary."""
     initial_snapshot = initial_snapshot or TextEventSnapshot()
@@ -267,6 +264,7 @@ async def drive_standard_dialog(
                     await emulator.wait_for_menu_ready()
                 else:
                     await emulator.wait_until_ready()
+                events.extend(emulator.drain_text_events())
                 return reducer.reduce(events)
 
             if any(event.kind == TextEventKind.INPUT_RESOLVED for event in batch):
@@ -276,8 +274,6 @@ async def drive_standard_dialog(
                     return reducer.reduce(events)
 
         if control.input_required and not control.input_sent:
-            if before_input is not None:
-                await before_input()
             await emulator.pulse_button(Button.A)
             control.input_sent = True
 

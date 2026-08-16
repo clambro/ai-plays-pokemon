@@ -17,7 +17,6 @@ from emulator.pyboy_worker import PyBoyWorker
 from emulator.text_events import TextEventKind, TextEventReducer, drive_standard_dialog
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
     from pathlib import Path
 
     from pyboy import PyBoy
@@ -111,11 +110,7 @@ class Emulator(AbstractAsyncContextManager):
         """Wait without blocking emulation, then claim the available event batch."""
         return await self._worker.wait_for_text_events(max_wait_seconds)
 
-    async def advance_battle_dialog(
-        self,
-        *,
-        before_input: Callable[[], Awaitable[None]] | None = None,
-    ) -> str:
+    async def advance_battle_dialog(self) -> str:
         """Advance battle dialog until the next decision or battle exit."""
         initial_snapshot = await self._worker.drain_settled_text_events_with_control_boundary()
         return await drive_standard_dialog(
@@ -129,14 +124,9 @@ class Emulator(AbstractAsyncContextManager):
                 }
             ),
             initial_snapshot=initial_snapshot,
-            before_input=before_input,
         )
 
-    async def advance_text_dialog(
-        self,
-        *,
-        before_input: Callable[[], Awaitable[None]] | None = None,
-    ) -> str:
+    async def advance_text_dialog(self) -> str:
         """Advance ordinary dialog until the interaction changes domain or closes."""
         initial_snapshot = await self._worker.drain_settled_text_events_with_control_boundary()
         return await drive_standard_dialog(
@@ -152,7 +142,6 @@ class Emulator(AbstractAsyncContextManager):
                 }
             ),
             initial_snapshot=initial_snapshot,
-            before_input=before_input,
         )
 
     def consume_pending_dialog(self) -> str:

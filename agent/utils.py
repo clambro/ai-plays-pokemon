@@ -88,7 +88,7 @@ async def publish_before_tool(
     tool_def: ToolDefinition,  # noqa: ARG001
     args: dict[str, object],
 ) -> dict[str, object]:
-    """Publish shared state before an ordinary function tool executes."""
+    """Publish the completed decision immediately before its action begins."""
     game_state = await ctx.deps.emulator.get_game_state()
     update_background_from_states(ctx.deps.state, game_state)
     return args
