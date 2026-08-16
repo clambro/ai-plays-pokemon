@@ -20,11 +20,11 @@ from database.map_memory.repository import (
     update_map_terrain,
 )
 from database.map_memory.schemas import MapMemoryCreateUpdate
-from overworld_map.schemas import OverworldMap, SpriteInteractionMemory
+from overworld_map.schemas import MapEntityInteractionMemory, OverworldMap
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
-    from emulator.text_events import CompletedSpriteInteraction
+    from emulator.text_events import CompletedMapEntityInteraction
 
 
 async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldMap:
@@ -58,7 +58,7 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
             if memory.entity_type == MapEntityType.SPRITE
         },
         sprite_interactions={
-            memory.entity_id: SpriteInteractionMemory(
+            memory.entity_id: MapEntityInteractionMemory(
                 text=memory.last_interaction,
                 iteration=memory.last_interaction_iteration,
             )
@@ -76,6 +76,16 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
             memory.entity_id
             for memory in map_entity_memories
             if memory.entity_type == MapEntityType.SIGN
+        },
+        sign_interactions={
+            memory.entity_id: MapEntityInteractionMemory(
+                text=memory.last_interaction,
+                iteration=memory.last_interaction_iteration,
+            )
+            for memory in map_entity_memories
+            if memory.entity_type == MapEntityType.SIGN
+            and memory.last_interaction is not None
+            and memory.last_interaction_iteration is not None
         },
         known_map_ids=known_map_ids,
         north_connection=game_state.map.north_connection,
@@ -263,6 +273,7 @@ async def _create_overworld_map_from_game_state(
         sprite_interactions={},
         known_warp_ids=set(),
         known_sign_ids=set(),
+        sign_interactions={},
         known_map_ids=known_map_ids,
         north_connection=game_state.map.north_connection,
         south_connection=game_state.map.south_connection,
@@ -280,18 +291,18 @@ async def _create_overworld_map_from_game_state(
     return overworld_map
 
 
-async def record_sprite_interactions(
+async def record_map_entity_interactions(
     iteration: int,
-    interactions: tuple[CompletedSpriteInteraction, ...],
+    interactions: tuple[CompletedMapEntityInteraction, ...],
 ) -> None:
-    """Persist the latest completed ROM-text interaction for each map sprite."""
+    """Persist the latest completed ROM-text interaction for each map entity."""
     latest_by_target = {interaction.target: interaction for interaction in interactions}
     await update_map_entity_interactions(
         [
             MapEntityMemoryInteractionUpdate(
                 map_id=interaction.target.map_id,
-                entity_id=interaction.target.sprite_id,
-                entity_type=MapEntityType.SPRITE,
+                entity_id=interaction.target.entity_id,
+                entity_type=interaction.target.entity_type,
                 last_interaction=interaction.text,
                 last_interaction_iteration=iteration,
             )

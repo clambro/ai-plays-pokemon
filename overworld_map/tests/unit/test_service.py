@@ -36,10 +36,14 @@ async def test_load_preserves_discovered_ids_without_live_records() -> None:
             entity_id=entity_id,
             entity_type=entity_type,
             last_interaction=(
-                "Previously observed text." if entity_type == MapEntityType.SPRITE else None
+                "Previously observed text."
+                if entity_type in {MapEntityType.SPRITE, MapEntityType.SIGN}
+                else None
             ),
             last_interaction_iteration=(
-                interaction_iteration if entity_type == MapEntityType.SPRITE else None
+                interaction_iteration
+                if entity_type in {MapEntityType.SPRITE, MapEntityType.SIGN}
+                else None
             ),
         )
         for entity_id, entity_type in enumerate(MapEntityType, start=1)
@@ -65,6 +69,8 @@ async def test_load_preserves_discovered_ids_without_live_records() -> None:
     assert current_map.known_sign_ids == {3}
     assert current_map.sprite_interactions[2].text == "Previously observed text."
     assert current_map.sprite_interactions[2].iteration == interaction_iteration
+    assert current_map.sign_interactions[3].text == "Previously observed text."
+    assert current_map.sign_interactions[3].iteration == interaction_iteration
 
 
 @pytest.mark.unit
@@ -130,6 +136,7 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
         known_sprite_ids={1},
         sprite_interactions={},
         known_sign_ids=set(),
+        sign_interactions={},
         known_warp_ids=set(),
         known_map_ids=frozenset(),
         north_connection=None,

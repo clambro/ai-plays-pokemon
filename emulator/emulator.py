@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
     from common.enums import Button
     from emulator.control_events import ControlResult
-    from emulator.text_events import CompletedSpriteInteraction, TextEvent
+    from emulator.text_events import CompletedMapEntityInteraction, TextEvent
 
 
 class Emulator(AbstractAsyncContextManager):
@@ -148,9 +148,11 @@ class Emulator(AbstractAsyncContextManager):
         """Claim and reduce currently pending dialog events."""
         return self._text_event_reducer.reduce(self.drain_text_events())
 
-    def consume_completed_sprite_interactions(self) -> tuple[CompletedSpriteInteraction, ...]:
-        """Claim completed sprite interactions reduced from literal ROM text events."""
-        return self._text_event_reducer.drain_completed_sprite_interactions()
+    def consume_completed_map_entity_interactions(
+        self,
+    ) -> tuple[CompletedMapEntityInteraction, ...]:
+        """Claim completed map-entity interactions reduced from literal ROM text events."""
+        return self._text_event_reducer.drain_completed_map_entity_interactions()
 
     async def get_game_state_with_map_collision_tiles(
         self,

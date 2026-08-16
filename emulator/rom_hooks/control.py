@@ -383,7 +383,7 @@ class RomControlHooks:
     def observe_text_event(self, kind: TextEventKind) -> None:
         """Track text-driven control domains without consuming their event journal."""
         if kind not in {
-            TextEventKind.SPRITE_INTERACTION_STARTED,
+            TextEventKind.MAP_ENTITY_INTERACTION_STARTED,
             TextEventKind.PAGE_COMPLETED,
             TextEventKind.AUTOMATIC_SCROLL,
         }:

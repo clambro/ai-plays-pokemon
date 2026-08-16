@@ -3,12 +3,12 @@
 from enum import StrEnum, auto
 from typing import TYPE_CHECKING
 
-from common.enums import MapId
+from common.enums import MapEntityType, MapId
 from emulator.parsers.screen_text import INT_TO_CHAR_MAP
 from emulator.rom_hooks.core import RomHook, install_hooks
 from emulator.text_events import (
     DialogPage,
-    SpriteInteractionTarget,
+    MapEntityInteractionTarget,
     TextEventJournal,
     TextEventKind,
 )
@@ -23,6 +23,7 @@ class _HookName(StrEnum):
     """Semantic execution points in the ROM text engine."""
 
     DISPLAY_TEXT_ID = auto()
+    SIGN_INTERACTION = auto()
     TEXT_PROCESSOR = auto()
     TEXT_COMMAND = auto()
     CONTINUE_WITHOUT_PAUSE = auto()
@@ -47,6 +48,12 @@ _HOOKS = (
         bank=0x00,
         address=0x275A,  # DisplayTextID
         signature=bytes.fromhex("f0 b8 f5 06 01 21"),
+    ),
+    RomHook(
+        name=_HookName.SIGN_INTERACTION,
+        bank=0x00,
+        address=0x0A3A,  # SignLoop after matching a sign and storing its text ID
+        signature=bytes.fromhex("c1 e1 37 c9 05 20"),
     ),
     RomHook(
         name=_HookName.TEXT_PROCESSOR,
@@ -181,8 +188,11 @@ class RomTextHooks:
         install_hooks(self._pyboy, _HOOKS, self._handle)
 
     def _handle(self, name: _HookName) -> None:
-        if name == _HookName.DISPLAY_TEXT_ID:
-            self._record_sprite_interaction_start()
+        if name in {_HookName.DISPLAY_TEXT_ID, _HookName.SIGN_INTERACTION}:
+            {
+                _HookName.DISPLAY_TEXT_ID: self._record_sprite_interaction_start,
+                _HookName.SIGN_INTERACTION: self._record_sign_interaction_start,
+            }[name]()
             return
         if name in {_HookName.TEXT_PROCESSOR, _HookName.TEXT_COMMAND}:
             self._handle_text_processor(name)
@@ -271,8 +281,26 @@ class RomTextHooks:
         if map_id in {MapId.UNKNOWN, MapId.OUTSIDE}:
             return
         self._record(
-            TextEventKind.SPRITE_INTERACTION_STARTED,
-            sprite_target=SpriteInteractionTarget(map_id=map_id, sprite_id=sprite_id),
+            TextEventKind.MAP_ENTITY_INTERACTION_STARTED,
+            interaction_target=MapEntityInteractionTarget(
+                map_id=map_id,
+                entity_type=MapEntityType.SPRITE,
+                entity_id=sprite_id,
+            ),
+        )
+
+    def _record_sign_interaction_start(self) -> None:
+        """Record the zero-based map-local sign index selected by SignLoop."""
+        map_id = MapId(self._pyboy.memory[_MAP_ID_ADDRESS])
+        if map_id in {MapId.UNKNOWN, MapId.OUTSIDE}:
+            return
+        self._record(
+            TextEventKind.MAP_ENTITY_INTERACTION_STARTED,
+            interaction_target=MapEntityInteractionTarget(
+                map_id=map_id,
+                entity_type=MapEntityType.SIGN,
+                entity_id=self._pyboy.register_file.C,
+            ),
         )
 
     def _record(
@@ -280,13 +308,13 @@ class RomTextHooks:
         kind: TextEventKind,
         *,
         page: DialogPage | None = None,
-        sprite_target: SpriteInteractionTarget | None = None,
+        interaction_target: MapEntityInteractionTarget | None = None,
     ) -> None:
         event = self._journal.append(
             frame=self._pyboy.frame_count,
             kind=kind,
             page=page,
-            sprite_target=sprite_target,
+            interaction_target=interaction_target,
         )
         if event is not None and self._on_event is not None:
             self._on_event(kind)

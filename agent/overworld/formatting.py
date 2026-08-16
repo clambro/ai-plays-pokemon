@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from emulator.parsers.sprite import Sprite
     from emulator.parsers.warp import Warp
     from emulator.schemas import AsciiScreenWithEntities
-    from overworld_map.schemas import OverworldMap, SpriteInteractionMemory
+    from overworld_map.schemas import MapEntityInteractionMemory, OverworldMap
 
 _ALWAYS_VISIBLE_TILES = {
     AsciiTile.OUTSIDE_REGION,
@@ -74,7 +74,7 @@ def _format_overworld_sprite(
     sprite: Sprite,
     map_id: MapId,
     counter_positions: tuple[Coords, ...],
-    interaction: SpriteInteractionMemory | None,
+    interaction: MapEntityInteractionMemory | None,
 ) -> str:
     """Format a known overworld sprite for the agent."""
     output = (
@@ -99,9 +99,16 @@ def _format_overworld_sprite(
     return output
 
 
-def _format_overworld_sign(sign: Sign, map_id: MapId) -> str:
+def _format_overworld_sign(
+    sign: Sign,
+    map_id: MapId,
+    interaction: MapEntityInteractionMemory | None,
+) -> str:
     """Format a known overworld sign for the agent."""
-    return f"sign_{map_id}_{sign.index} at {sign.coords}."
+    output = f"sign_{map_id}_{sign.index} at {sign.coords}."
+    if interaction is None:
+        return output + " You have not interacted with this sign yet."
+    return output + f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
 
 
 def _format_overworld_warp(
@@ -261,7 +268,15 @@ def format_sign_notes(map_view: CurrentMapView, game_state: GameState) -> str:
     ]
     if not signs:
         return "No signs discovered."
-    return "\n".join(f"- {_format_overworld_sign(sign, current_map.id)}" for sign in signs)
+    return "\n".join(
+        "- "
+        + _format_overworld_sign(
+            sign,
+            current_map.id,
+            current_map.sign_interactions.get(sign.index),
+        )
+        for sign in signs
+    )
 
 
 def format_connection_notes(map_view: CurrentMapView) -> str:

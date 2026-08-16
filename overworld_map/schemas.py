@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class SpriteInteractionMemory:
-    """Last literal interaction observed for one sprite."""
+class MapEntityInteractionMemory:
+    """Last literal interaction observed for one map entity."""
 
     text: str
     iteration: int
@@ -27,8 +27,9 @@ class OverworldMap:
     terrain: list[list[str]]
     blockages: dict[Coords, BlockedDirection]
     known_sprite_ids: set[int]
-    sprite_interactions: dict[int, SpriteInteractionMemory]
+    sprite_interactions: dict[int, MapEntityInteractionMemory]
     known_sign_ids: set[int]
+    sign_interactions: dict[int, MapEntityInteractionMemory]
     known_warp_ids: set[int]
     known_map_ids: frozenset[MapId]
     north_connection: MapConnection | None
