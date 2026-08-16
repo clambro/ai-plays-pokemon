@@ -60,11 +60,11 @@ def _format_enemy_pokemon(game_state: GameState) -> str:
 
     out = "<enemy_pokemon>\n"
     out += f"Name: {enemy_pokemon.name}\n"
-    if (
-        battle.battle_type in {BattleType.WILD, BattleType.SAFARI_ZONE}
-        and enemy_pokemon.pokedex_number in game_state.player.pokedex_caught
-    ):
-        out += "Pokedex: This species is already registered as caught.\n"
+    if battle.battle_type in {BattleType.WILD, BattleType.SAFARI_ZONE}:
+        if enemy_pokemon.pokedex_number in game_state.player.pokedex_caught:
+            out += "Pokedex: This species is already registered as caught.\n"
+        else:
+            out += "Pokedex: This species has not been caught.\n"
     out += f"Level: {enemy_pokemon.level}\n"
     out += f"HP Percentage: {enemy_pokemon.hp_pct:.0f}%\n"
     out += f"Status Ailment: {enemy_pokemon.status}\n"
