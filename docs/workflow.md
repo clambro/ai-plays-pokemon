@@ -74,7 +74,7 @@ flowchart LR
     choice --> update_goal
     choice --> delete_goal
 
-    navigate --> observe["Return actual result<br/>and fresh screenshot"]
+    navigate --> observe["Settle routine dialog<br/>and return a fresh result"]
     buttons --> observe
     item --> observe
     swap --> observe
@@ -131,7 +131,7 @@ The create, update, and delete tools let the agent maintain current objectives w
 
 The agent narrates its decision alongside each tool call. The tool then produces the actual outcome of the action. Action outcomes are appended to the current rolling-memory block and returned with a fresh screenshot to the local conversation, so the HTML activity log and the agent cannot disagree about what happened. Goal tools return their result directly and update authoritative goal state without copying the result into rolling memory.
 
-Dialog completed during an overworld tool is retained from the emulator's ROM text-event stream even if it has disappeared before the final observation. A still-open text interaction or battle remains queued for the applicable handler instead.
+Routine dialog produced by an overworld tool is read, advanced, recorded, and returned with the tool's terminal observation. If ordinary dialog closes while the player remains in place, the same overworld conversation receives the transcript and chooses the next action. Menus and other decision screens remain untouched, while transitions into battle return control to the dispatcher.
 
 If the action leaves the player in place and the game in the overworld, the agent can make another decision using that result. Once the player moves or the game enters a text interaction or battle, the runner returns to the dispatcher.
 

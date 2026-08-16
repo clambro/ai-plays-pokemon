@@ -191,23 +191,6 @@ class TextEventJournal:
             self._events.clear()
         return events
 
-    def drain_through_last(self, kind: TextEventKind) -> tuple[TextEvent, ...]:
-        """Claim events through the last available boundary of the requested kind."""
-        with self._lock:
-            boundary = next(
-                (
-                    index
-                    for index in range(len(self._events) - 1, -1, -1)
-                    if self._events[index].kind == kind
-                ),
-                None,
-            )
-            if boundary is None:
-                return ()
-            events = tuple(self._events[: boundary + 1])
-            del self._events[: boundary + 1]
-        return events
-
     async def wait_and_drain(
         self,
         max_wait_seconds: float | None = None,

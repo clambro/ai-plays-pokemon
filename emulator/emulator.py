@@ -154,10 +154,6 @@ class Emulator(AbstractAsyncContextManager):
         """Claim and reduce dialog already completed by the ROM."""
         return self._text_event_reducer.reduce(self.drain_text_events())
 
-    def consume_completed_dialog(self) -> str:
-        """Claim dialog through the last closed ordinary text interaction."""
-        return self._text_event_reducer.reduce(self._worker.drain_completed_text_events())
-
     async def get_game_state_with_map_collision_tiles(
         self,
     ) -> tuple[GameState, list[list[int]]]:

@@ -39,23 +39,6 @@ async def test_journal_hands_off_one_ordered_batch() -> None:
 
 
 @pytest.mark.unit
-def test_journal_leaves_live_interaction_after_completed_dialog() -> None:
-    """Claim closed ephemeral text without taking the next handler's live events."""
-    journal = TextEventJournal()
-    journal.append(frame=1, kind=TextEventKind.PAGE_COMPLETED)
-    journal.append(frame=2, kind=TextEventKind.INTERACTION_CLOSED)
-    journal.append(frame=3, kind=TextEventKind.INPUT_REQUIRED)
-
-    completed = journal.drain_through_last(TextEventKind.INTERACTION_CLOSED)
-
-    assert [event.kind for event in completed] == [
-        TextEventKind.PAGE_COMPLETED,
-        TextEventKind.INTERACTION_CLOSED,
-    ]
-    assert [event.kind for event in journal.drain()] == [TextEventKind.INPUT_REQUIRED]
-
-
-@pytest.mark.unit
 def test_reduce_text_events_preserves_dialog_without_hook_duplicates() -> None:
     """Deduplicate semantic snapshots and scrolling only within one interaction."""
     reducer = TextEventReducer()

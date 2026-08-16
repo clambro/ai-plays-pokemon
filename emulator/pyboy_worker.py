@@ -20,7 +20,6 @@ from emulator.rom_hooks.text import RomTextHooks
 from emulator.text_events import (
     TextEvent,
     TextEventJournal,
-    TextEventKind,
     TextEventSnapshot,
 )
 
@@ -226,10 +225,6 @@ class PyBoyWorker:
             )
 
         return await self.execute(_drain)
-
-    def drain_completed_text_events(self) -> tuple[TextEvent, ...]:
-        """Claim text events whose ordinary interaction has already closed."""
-        return self._text_events.drain_through_last(TextEventKind.INTERACTION_CLOSED)
 
     async def wait_for_text_events(
         self,
