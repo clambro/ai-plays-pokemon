@@ -206,7 +206,7 @@ Provides constrained directional, confirm, and cancel input for forced switches,
 
 ### Memory and Display Updates
 
-The agent emits a brief explanation alongside each tool call. That explanation and captured in-game dialog are appended to the current rolling-memory block and streamed to the HTML activity log. Detailed action results and refreshed observations stay inside the agent conversation, where they provide context for the next decision without flooding durable memory.
+The agent emits a brief explanation alongside each tool call. That explanation and captured in-game dialog are appended to the current rolling-memory block and streamed to the HTML activity log. Detailed action results and refreshed observations stay inside the agent conversation, where they provide context for the next decision without flooding durable memory. Final battle and capture text is settled before the terminal observation passes control to the overworld or naming handler.
 
 ## The Text Runner
 

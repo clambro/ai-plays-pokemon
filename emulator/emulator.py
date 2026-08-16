@@ -111,7 +111,11 @@ class Emulator(AbstractAsyncContextManager):
         """Wait without blocking emulation, then claim the available event batch."""
         return await self._worker.wait_for_text_events(max_wait_seconds)
 
-    async def advance_battle_dialog(self) -> str:
+    async def advance_battle_dialog(
+        self,
+        *,
+        before_input: Callable[[], Awaitable[None]] | None = None,
+    ) -> str:
         """Advance battle dialog until the next decision or battle exit."""
         initial_snapshot = await self._worker.drain_settled_text_events_with_control_boundary()
         return await drive_standard_dialog(
@@ -125,6 +129,7 @@ class Emulator(AbstractAsyncContextManager):
                 }
             ),
             initial_snapshot=initial_snapshot,
+            before_input=before_input,
         )
 
     async def advance_text_dialog(

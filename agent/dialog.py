@@ -35,7 +35,11 @@ def _is_plain_text_dialog(game_state: GameState) -> bool:
     )
 
 
-async def settle_routine_dialog(context: AgentContext) -> DialogSettlement:
+async def settle_routine_dialog(
+    context: AgentContext,
+    *,
+    battle: bool = False,
+) -> DialogSettlement:
     """Settle safe ordinary text and capture its terminal observation.
 
     Routine text at an explicit input boundary is advanced through the emulator's
@@ -45,17 +49,32 @@ async def settle_routine_dialog(context: AgentContext) -> DialogSettlement:
 
     Args:
         context: Shared agent state and emulator access.
+        battle: Whether battle resolution owns the pending dialog.
 
     Returns:
         The captured transcript and an atomic observation taken after settlement.
     """
     game_state, control_boundary = await context.emulator.get_game_state_with_control_boundary()
-    if control_boundary == ControlBoundary.TEXT_INPUT_READY and _is_plain_text_dialog(game_state):
 
-        async def publish_before_input() -> None:
-            current_state = await context.emulator.get_game_state()
-            update_background_from_states(context.state, current_state)
+    async def publish_before_input() -> None:
+        current_state = await context.emulator.get_game_state()
+        update_background_from_states(context.state, current_state)
 
+    if (
+        battle
+        and is_battle_handler_state(game_state)
+        and control_boundary
+        in {
+            None,
+            ControlBoundary.TEXT_INPUT_READY,
+        }
+    ):
+        transcript = await context.emulator.advance_battle_dialog(
+            before_input=publish_before_input,
+        )
+    elif battle:
+        transcript = context.emulator.consume_pending_dialog()
+    elif control_boundary == ControlBoundary.TEXT_INPUT_READY and _is_plain_text_dialog(game_state):
         transcript = await context.emulator.advance_text_dialog(
             before_input=publish_before_input,
         )
