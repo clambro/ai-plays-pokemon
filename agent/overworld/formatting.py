@@ -116,6 +116,7 @@ def _format_overworld_warp(
     map_id: MapId,
     known_map_ids: frozenset[MapId],
     player_coords: Coords,
+    last_interaction_iteration: int | None,
 ) -> str:
     """Format a known overworld warp for the agent."""
     if (
@@ -133,9 +134,49 @@ def _format_overworld_warp(
             " building/floor/location to your memory. It might be a good candidate for"
             " exploration if it is accessible."
         )
-    return (
+    output = (
         f"warp_{map_id}_{warp.index} at {warp.coords}. {destination_text}"
         f" {_get_warp_description(warp, player_coords)}"
+    )
+    if last_interaction_iteration is not None:
+        output += f" Last used at iteration {last_interaction_iteration}."
+    else:
+        output += " No recorded use."
+    return output
+
+
+def _get_warp_group_last_used_iteration(
+    warp: Warp,
+    warps: Sequence[Warp],
+    usage_iterations: Mapping[int, int],
+) -> int | None:
+    """Get the newest usage timestamp for one contiguous multi-tile warp."""
+    matching_warps = [
+        candidate
+        for candidate in warps
+        if candidate.destination == warp.destination
+        and candidate.destination_warp_index == warp.destination_warp_index
+        and candidate.destination_coords == warp.destination_coords
+        and candidate.activation == warp.activation
+    ]
+    group_ids = {warp.index}
+    pending = [warp]
+    while pending:
+        current = pending.pop()
+        for candidate in matching_warps:
+            if candidate.index in group_ids:
+                continue
+            distance = abs(candidate.coords.row - current.coords.row) + abs(
+                candidate.coords.col - current.coords.col
+            )
+            if distance != 1:
+                continue
+            group_ids.add(candidate.index)
+            pending.append(candidate)
+
+    return max(
+        (usage_iterations[index] for index in group_ids if index in usage_iterations),
+        default=None,
     )
 
 
@@ -234,15 +275,18 @@ def format_sprite_notes(map_view: CurrentMapView, game_state: GameState) -> str:
     return output.strip()
 
 
-def format_warp_notes(map_view: CurrentMapView, game_state: GameState) -> str:
+def format_warp_notes(
+    map_view: CurrentMapView,
+    game_state: GameState,
+) -> str:
     """Format known warps in index order."""
     current_map = map_view.overworld_map
-    warps = [
+    known_warps = [
         game_state.warps[entity_id]
         for entity_id in sorted(current_map.known_warp_ids)
         if entity_id in game_state.warps
-        and game_state.warps[entity_id].coords in map_view.visible_coords
     ]
+    warps = [warp for warp in known_warps if warp.coords in map_view.visible_coords]
     if not warps:
         return "No warp tiles discovered."
     return "\n".join(
@@ -252,6 +296,11 @@ def format_warp_notes(map_view: CurrentMapView, game_state: GameState) -> str:
             current_map.id,
             current_map.known_map_ids,
             game_state.player.coords,
+            _get_warp_group_last_used_iteration(
+                warp,
+                known_warps,
+                current_map.warp_usage_iterations,
+            ),
         )
         for warp in warps
     )

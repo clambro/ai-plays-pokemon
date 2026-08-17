@@ -1,5 +1,6 @@
 """Parser for warp data in Pokémon Yellow memory."""
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
@@ -18,6 +19,10 @@ _MAP_WIDTH_ADDRESS = 0xD572
 _WARP_COUNT_ADDRESS = 0xD3FB
 _WARP_ENTRIES_ADDRESS = 0xD3FC
 _WARP_RECORD_SIZE = 4
+_DESTINATION_WARP_INDEX_ADDRESS = 0xD47C
+_WARPED_FROM_WARP_INDEX_ADDRESS = 0xD73A
+_WARPED_FROM_MAP_ID_ADDRESS = 0xD73B
+_NO_ORDINARY_WARP = 0xFF
 
 _MAP_HEADER_TABLE_BANK = 0x3F
 _MAP_HEADER_POINTERS_ADDRESS = 0x41F2
@@ -40,6 +45,29 @@ class Warp(BaseModel):
     activation: WarpActivation
 
     model_config = ConfigDict(frozen=True)
+
+
+@dataclass(frozen=True, slots=True)
+class WarpTransitionMemory:
+    """ROM-maintained identity of the most recently selected ordinary warp."""
+
+    source_map_id: MapId
+    source_warp_index: int
+    destination_warp_index: int
+
+    @property
+    def is_ordinary_warp(self) -> bool:
+        """Return whether the ROM selected an ordinary map warp."""
+        return self.destination_warp_index != _NO_ORDINARY_WARP
+
+
+def parse_warp_transition_memory(mem: PyBoyMemoryView) -> WarpTransitionMemory:
+    """Read the ROM's most recent ordinary-warp identity fields."""
+    return WarpTransitionMemory(
+        source_map_id=MapId(mem[_WARPED_FROM_MAP_ID_ADDRESS]),
+        source_warp_index=mem[_WARPED_FROM_WARP_INDEX_ADDRESS],
+        destination_warp_index=mem[_DESTINATION_WARP_INDEX_ADDRESS],
+    )
 
 
 def parse_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:

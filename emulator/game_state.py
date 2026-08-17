@@ -17,7 +17,12 @@ from emulator.parsers.pokemon import BoxPokemon, Pokemon, parse_party_pokemon, p
 from emulator.parsers.screen import Screen, parse_screen
 from emulator.parsers.sign import Sign, parse_signs
 from emulator.parsers.sprite import Sprite, parse_pikachu_sprite, parse_sprites
-from emulator.parsers.warp import Warp, parse_warps
+from emulator.parsers.warp import (
+    Warp,
+    WarpTransitionMemory,
+    parse_warp_transition_memory,
+    parse_warps,
+)
 from emulator.schemas import AsciiScreenTerrain, AsciiScreenWithEntities
 
 if TYPE_CHECKING:
@@ -36,6 +41,7 @@ class GameState:
     sprites: dict[int, Sprite]
     pikachu: Sprite
     warps: dict[int, Warp]
+    warp_transition: WarpTransitionMemory
     signs: dict[int, Sign]
     screen: Screen
     battle: Battle
@@ -59,6 +65,7 @@ class GameState:
             sprites=parse_sprites(mem),
             pikachu=parse_pikachu_sprite(mem),
             warps=parse_warps(mem),
+            warp_transition=parse_warp_transition_memory(mem),
             signs=parse_signs(mem),
             screen=parse_screen(mem),
             battle=parse_battle_state(mem),

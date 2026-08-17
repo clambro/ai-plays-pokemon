@@ -40,11 +40,7 @@ async def test_load_preserves_discovered_ids_without_live_records() -> None:
                 if entity_type in {MapEntityType.SPRITE, MapEntityType.SIGN}
                 else None
             ),
-            last_interaction_iteration=(
-                interaction_iteration
-                if entity_type in {MapEntityType.SPRITE, MapEntityType.SIGN}
-                else None
-            ),
+            last_interaction_iteration=interaction_iteration,
         )
         for entity_id, entity_type in enumerate(MapEntityType, start=1)
     ]
@@ -65,6 +61,7 @@ async def test_load_preserves_discovered_ids_without_live_records() -> None:
         current_map = await get_overworld_map(1, game_state)
 
     assert current_map.known_warp_ids == {1}
+    assert current_map.warp_usage_iterations == {1: interaction_iteration}
     assert current_map.known_sprite_ids == {2}
     assert current_map.known_sign_ids == {3}
     assert current_map.sprite_interactions[2].text == "Previously observed text."
@@ -138,6 +135,7 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
         known_sign_ids=set(),
         sign_interactions={},
         known_warp_ids=set(),
+        warp_usage_iterations={},
         known_map_ids=frozenset(),
         north_connection=None,
         south_connection=None,

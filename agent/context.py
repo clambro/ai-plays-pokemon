@@ -7,10 +7,13 @@ from typing import TYPE_CHECKING
 from loguru import logger
 
 from memory.rolling_memory.service import finalize_iteration, initialize_memory
+from overworld_map.service import record_warp_usage
 
 if TYPE_CHECKING:
     from agent.state import AgentState
+    from common.enums import MapId
     from emulator.emulator import Emulator
+    from emulator.game_state import GameState
 
 
 @dataclass(slots=True, kw_only=True)
@@ -27,6 +30,18 @@ class AgentContext:
     )
     _control_handoff_requested: bool = field(
         default=False,
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    _last_observed_map_id: MapId | None = field(
+        default=None,
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    _last_observed_iteration: int | None = field(
+        default=None,
         init=False,
         repr=False,
         compare=False,
@@ -54,6 +69,35 @@ class AgentContext:
         requested = self._control_handoff_requested
         self._control_handoff_requested = False
         return requested
+
+    async def observe_game_state(self, game_state: GameState) -> None:
+        """Persist ordinary warp usage identified between dispatcher states."""
+        previous_map_id = self._last_observed_map_id
+        previous_iteration = self._last_observed_iteration
+        self._last_observed_map_id = game_state.map.id
+        self._last_observed_iteration = self.state.iteration
+        if (
+            previous_map_id is None
+            or previous_iteration is None
+            or previous_map_id == game_state.map.id
+        ):
+            return
+
+        transition = game_state.warp_transition
+        if (
+            not transition.is_ordinary_warp
+            or transition.source_map_id != previous_map_id
+            or transition.destination_warp_index not in game_state.warps
+        ):
+            return
+
+        await record_warp_usage(
+            iteration=previous_iteration,
+            source_map_id=transition.source_map_id,
+            source_warp_index=transition.source_warp_index,
+            destination_map_id=game_state.map.id,
+            destination_warp_index=transition.destination_warp_index,
+        )
 
     async def complete_iteration(self) -> None:
         """Finalize the current block and advance the live iteration state."""

@@ -2,11 +2,14 @@
 
 from typing import TYPE_CHECKING
 
-from common.enums import AsciiTile, MapEntityType
+from loguru import logger
+
+from common.enums import AsciiTile, MapEntityType, MapId
 from database.map_entity_memory.repository import (
     apply_map_entity_changes,
     get_map_entity_memories_for_map,
     update_map_entity_interactions,
+    update_warp_usage,
 )
 from database.map_entity_memory.schemas import (
     MapEntityMemoryCreate,
@@ -71,6 +74,12 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
             memory.entity_id
             for memory in map_entity_memories
             if memory.entity_type == MapEntityType.WARP
+        },
+        warp_usage_iterations={
+            memory.entity_id: memory.last_interaction_iteration
+            for memory in map_entity_memories
+            if memory.entity_type == MapEntityType.WARP
+            and memory.last_interaction_iteration is not None
         },
         known_sign_ids={
             memory.entity_id
@@ -265,13 +274,24 @@ async def _create_overworld_map_from_game_state(
         [AsciiTile.UNSEEN.value] * game_state.map.width for _ in range(game_state.map.height)
     ]
     known_map_ids = frozenset(await get_visited_maps()) | {game_state.map.id}
+    map_entity_memories = await get_map_entity_memories_for_map(game_state.map.id)
     overworld_map = OverworldMap(
         id=game_state.map.id,
         terrain=terrain,
         blockages={},
         known_sprite_ids=set(),
         sprite_interactions={},
-        known_warp_ids=set(),
+        known_warp_ids={
+            memory.entity_id
+            for memory in map_entity_memories
+            if memory.entity_type == MapEntityType.WARP
+        },
+        warp_usage_iterations={
+            memory.entity_id: memory.last_interaction_iteration
+            for memory in map_entity_memories
+            if memory.entity_type == MapEntityType.WARP
+            and memory.last_interaction_iteration is not None
+        },
         known_sign_ids=set(),
         sign_interactions={},
         known_map_ids=known_map_ids,
@@ -309,3 +329,26 @@ async def record_map_entity_interactions(
             for interaction in latest_by_target.values()
         ]
     )
+
+
+async def record_warp_usage(
+    *,
+    iteration: int,
+    source_map_id: MapId,
+    source_warp_index: int,
+    destination_map_id: MapId,
+    destination_warp_index: int,
+) -> None:
+    """Persist one ordinary warp transition on both endpoint records."""
+    try:
+        await update_warp_usage(
+            iteration,
+            (
+                (source_map_id, source_warp_index),
+                (destination_map_id, destination_warp_index),
+            ),
+        )
+    except Exception as error:  # noqa: BLE001
+        logger.opt(exception=error).warning(
+            "Warp usage persistence failed; continuing without the latest timestamps."
+        )

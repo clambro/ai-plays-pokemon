@@ -32,6 +32,7 @@ def select_agent_handler(
 async def dispatch_agent(context: AgentContext) -> None:
     """Run the handler for the current decision-ready gameplay domain."""
     game_state, control_boundary = await context.emulator.get_game_state_with_control_boundary()
+    await context.observe_game_state(game_state)
     handler = select_agent_handler(game_state, control_boundary)
     with bind_llm_usage_updater(context.add_llm_usage):
         try:

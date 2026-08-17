@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from loguru import logger
 from sqlalchemy import and_, delete, or_, select
 
+from common.enums import MapEntityType
 from database.db_config import db_sessionmaker
 from database.map_entity_memory.model import MapEntityMemoryDBModel
 from database.map_entity_memory.schemas import (
@@ -95,3 +96,30 @@ async def update_map_entity_interactions(
                 continue
             db_obj.last_interaction = interaction.last_interaction
             db_obj.last_interaction_iteration = interaction.last_interaction_iteration
+
+
+async def update_warp_usage(
+    iteration: int,
+    endpoints: Sequence[tuple[MapId, int]],
+) -> None:
+    """Create or timestamp the interacted-with warp endpoints."""
+    if not endpoints:
+        return
+
+    async with db_sessionmaker.begin() as session:
+        for map_id, entity_id in endpoints:
+            db_obj = await session.get(
+                MapEntityMemoryDBModel,
+                (map_id, entity_id, MapEntityType.WARP),
+            )
+            if db_obj is None:
+                session.add(
+                    MapEntityMemoryDBModel(
+                        map_id=map_id,
+                        entity_id=entity_id,
+                        entity_type=MapEntityType.WARP,
+                        last_interaction_iteration=iteration,
+                    )
+                )
+            else:
+                db_obj.last_interaction_iteration = iteration
