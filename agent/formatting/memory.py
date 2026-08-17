@@ -21,12 +21,12 @@ def format_goals(goals: Goals) -> str:
     out = "<goals_info>\n"
     out += (
         f"Here are the goals that you have set for yourself. You can keep up to {MAX_GOALS} goals"
-        " at once. Goals are current objectives or concerns that should influence your decisions"
-        " until they are resolved. A goal can be short-term or long-term; what matters is that"
-        " forgetting it could lead to worse decisions. When several priorities are active,"
-        " record each separately. Goals can concern progression through the current area, team"
-        " development, healing or resupplying, or investigating something you discovered. Do"
-        " not use goals for individual button presses or routine movement. Goals must come from"
+        " at once. Goals are longer-term objectives or concerns that are relevant to your progress"
+        " and worth remembering. Keep them in mind and generally work toward them as opportunities"
+        " arise. When several distinct priorities are worth remembering, record each separately."
+        " Goals can concern progression through the current area, team development, healing or"
+        " resupplying, or investigating something you discovered. Do not use goals for individual"
+        " button presses, routine movement, or other short-lived tasks. Goals must come from"
         " current structured information, observed game text, or recorded memory, never from"
         " assumptions about future game progression or general Pokemon knowledge."
     )

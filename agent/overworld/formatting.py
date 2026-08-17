@@ -82,7 +82,7 @@ def _format_overworld_sprite(
         f' This sprite is labeled "{sprite.label}".'
     )
     if interaction is None:
-        output += " You have not interacted with this sprite yet."
+        output += " You have not interacted with this sprite yet; it may be worth trying."
     else:
         output += f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
     if counter_positions:
@@ -107,7 +107,7 @@ def _format_overworld_sign(
     """Format a known overworld sign for the agent."""
     output = f"sign_{map_id}_{sign.index} at {sign.coords}."
     if interaction is None:
-        return output + " You have not interacted with this sign yet."
+        return output + " You have not interacted with this sign yet; it may be worth reading."
     return output + f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
 
 
