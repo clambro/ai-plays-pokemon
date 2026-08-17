@@ -378,7 +378,7 @@ def format_exploration_candidates(
 ) -> str:
     """Format exploration candidates for the overworld agent."""
     if not candidates:
-        return "No exploration candidates found."
+        return "No unexplored terrain candidates found."
     return format_coordinates_grid(candidates, map_data)
 
 

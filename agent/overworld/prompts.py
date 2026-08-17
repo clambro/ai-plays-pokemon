@@ -40,7 +40,7 @@ A single map ID may contain multiple disconnected areas. The displayed current m
 Coordinates are scoped to their map ID. Identical coordinates on different maps or floors are different locations.
 
 <screen_position>
-The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size). This should help you navigate from one map to another.
+The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size).
 
 The top of the screen is currently at row {{screen_top}} in map coordinates.
 The bottom of the screen is currently at row {{screen_bottom}} in map coordinates.
@@ -130,11 +130,8 @@ observations.
 Regularly reflect on what you are trying to accomplish and use the goal tools
 to keep your goals useful and current.
 
-The following accessible coordinates are adjacent to unseen territory on the
-current map. They are therefore top candidates for exploration. If the section
-below is empty, then you have already explored all of the accessible tiles on
-the current map. Navigating towards any of these exploration candidates is the
-most efficient way to explore the map.
+The following accessible coordinates are adjacent to unseen terrain on the
+current map. They may be useful places to continue exploring the terrain.
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>
