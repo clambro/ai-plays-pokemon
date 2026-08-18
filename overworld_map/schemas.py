@@ -11,6 +11,14 @@ if TYPE_CHECKING:
     from emulator.parsers.map import MapConnection
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MapEntityInteractionMemory:
+    """Last literal interaction observed for one map entity."""
+
+    text: str
+    iteration: int
+
+
 @dataclass(slots=True, kw_only=True)
 class OverworldMap:
     """Persistent explored terrain and discoveries for one overworld map."""
@@ -19,8 +27,11 @@ class OverworldMap:
     terrain: list[list[str]]
     blockages: dict[Coords, BlockedDirection]
     known_sprite_ids: set[int]
+    sprite_interactions: dict[int, MapEntityInteractionMemory]
     known_sign_ids: set[int]
+    sign_interactions: dict[int, MapEntityInteractionMemory]
     known_warp_ids: set[int]
+    warp_usage_iterations: dict[int, int]
     known_map_ids: frozenset[MapId]
     north_connection: MapConnection | None
     south_connection: MapConnection | None

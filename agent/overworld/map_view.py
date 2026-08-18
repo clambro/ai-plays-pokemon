@@ -37,11 +37,12 @@ def build_current_map_view(
 ) -> CurrentMapView:
     """Build the current reachable region using the shared overworld traversal rules."""
     navigation_tiles = get_current_map_tiles(overworld_map, game_state)
+    hm_tiles = game_state.get_hm_tiles()
     reachable = navigation.get_accessible_coords(
         game_state.player.coords,
         navigation_tiles,
         overworld_map.blockages,
-        game_state.get_hm_tiles(),
+        hm_tiles,
     )
     reachable_coords = frozenset(reachable)
     counter_interactions = _get_counter_interactions(
@@ -77,6 +78,8 @@ def build_current_map_view(
         for direction, coords in navigation.get_map_boundary_tiles(
             reachable,
             overworld_map,
+            game_state.map,
+            can_surf=AsciiTile.WATER in hm_tiles or game_state.player.is_surfing,
         ).items()
     }
     return CurrentMapView(

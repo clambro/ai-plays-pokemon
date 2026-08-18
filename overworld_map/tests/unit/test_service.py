@@ -29,11 +29,18 @@ _MAP_STATE = SimpleNamespace(
 @pytest.mark.unit
 async def test_load_preserves_discovered_ids_without_live_records() -> None:
     """Persisted discoveries do not depend on records in one emulator snapshot."""
+    interaction_iteration = 7
     memories = [
         MapEntityMemoryRead(
             map_id=MapId.PALLET_TOWN,
             entity_id=entity_id,
             entity_type=entity_type,
+            last_interaction=(
+                "Previously observed text."
+                if entity_type in {MapEntityType.SPRITE, MapEntityType.SIGN}
+                else None
+            ),
+            last_interaction_iteration=interaction_iteration,
         )
         for entity_id, entity_type in enumerate(MapEntityType, start=1)
     ]
@@ -54,8 +61,13 @@ async def test_load_preserves_discovered_ids_without_live_records() -> None:
         current_map = await get_overworld_map(1, game_state)
 
     assert current_map.known_warp_ids == {1}
+    assert current_map.warp_usage_iterations == {1: interaction_iteration}
     assert current_map.known_sprite_ids == {2}
     assert current_map.known_sign_ids == {3}
+    assert current_map.sprite_interactions[2].text == "Previously observed text."
+    assert current_map.sprite_interactions[2].iteration == interaction_iteration
+    assert current_map.sign_interactions[3].text == "Previously observed text."
+    assert current_map.sign_interactions[3].iteration == interaction_iteration
 
 
 @pytest.mark.unit
@@ -77,6 +89,7 @@ async def test_update_persists_discovery_and_derendering() -> None:
         SimpleNamespace(
             id=MapId.PALLET_TOWN,
             known_sprite_ids={1, 2},
+            sprite_interactions={2: SimpleNamespace()},
             known_warp_ids=set(),
             known_sign_ids=set(),
         ),
@@ -95,6 +108,7 @@ async def test_update_persists_discovery_and_derendering() -> None:
         await update_overworld_map(1, cast("GameState", game_state), current_map)
 
     assert current_map.known_sprite_ids == {1, 3}
+    assert current_map.sprite_interactions == {}
     assert current_map.known_warp_ids == {4}
     assert current_map.known_sign_ids == {5}
     assert apply_changes.await_args is not None
@@ -117,8 +131,11 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
         terrain=[list("∙∙∙")],
         blockages={},
         known_sprite_ids={1},
+        sprite_interactions={},
         known_sign_ids=set(),
+        sign_interactions={},
         known_warp_ids=set(),
+        warp_usage_iterations={},
         known_map_ids=frozenset(),
         north_connection=None,
         south_connection=None,

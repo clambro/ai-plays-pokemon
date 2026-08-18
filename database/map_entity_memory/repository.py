@@ -4,11 +4,13 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import and_, delete, or_, select
 
+from common.enums import MapEntityType
 from database.db_config import db_sessionmaker
 from database.map_entity_memory.model import MapEntityMemoryDBModel
 from database.map_entity_memory.schemas import (
     MapEntityMemoryCreate,
     MapEntityMemoryDelete,
+    MapEntityMemoryInteractionUpdate,
     MapEntityMemoryRead,
 )
 
@@ -64,3 +66,58 @@ async def apply_map_entity_changes(
                     ),
                 ),
             )
+
+
+async def update_map_entity_interactions(
+    updates: Sequence[MapEntityMemoryInteractionUpdate],
+) -> None:
+    """Create or update entities with their latest literal interactions."""
+    if not updates:
+        return
+
+    async with db_sessionmaker.begin() as session:
+        for interaction in updates:
+            db_obj = await session.get(
+                MapEntityMemoryDBModel,
+                (interaction.map_id, interaction.entity_id, interaction.entity_type),
+            )
+            if db_obj is None:
+                session.add(
+                    MapEntityMemoryDBModel(
+                        map_id=interaction.map_id,
+                        entity_id=interaction.entity_id,
+                        entity_type=interaction.entity_type,
+                        last_interaction=interaction.last_interaction,
+                        last_interaction_iteration=interaction.last_interaction_iteration,
+                    )
+                )
+                continue
+            db_obj.last_interaction = interaction.last_interaction
+            db_obj.last_interaction_iteration = interaction.last_interaction_iteration
+
+
+async def update_warp_usage(
+    iteration: int,
+    endpoints: Sequence[tuple[MapId, int]],
+) -> None:
+    """Create or timestamp the interacted-with warp endpoints."""
+    if not endpoints:
+        return
+
+    async with db_sessionmaker.begin() as session:
+        for map_id, entity_id in endpoints:
+            db_obj = await session.get(
+                MapEntityMemoryDBModel,
+                (map_id, entity_id, MapEntityType.WARP),
+            )
+            if db_obj is None:
+                session.add(
+                    MapEntityMemoryDBModel(
+                        map_id=map_id,
+                        entity_id=entity_id,
+                        entity_type=MapEntityType.WARP,
+                        last_interaction_iteration=iteration,
+                    )
+                )
+            else:
+                db_obj.last_interaction_iteration = iteration

@@ -27,7 +27,7 @@ def build_create_goal_tool(context: AgentContext) -> Tool[AgentContext]:
     async def create_goal(
         goal: Annotated[str, Field(min_length=1)],
     ) -> OverworldToolResult:
-        """Create one goal worth keeping in mind.
+        """Create one longer-term goal worth keeping in mind.
 
         The goal list has a fixed capacity. If the list is full, update or
         delete an existing goal before creating another.
@@ -42,8 +42,8 @@ def build_create_goal_tool(context: AgentContext) -> Tool[AgentContext]:
         Strongly avoid the word "and" in goal text because it usually joins
         multiple goals that should be split. This is guidance, not an absolute
         prohibition when "and" is genuinely part of one indivisible outcome.
-        A good goal is specific, achievable, and relevant to your current
-        progress.
+        A good goal is specific, achievable, relevant to your current
+        progress, and important enough to remember across many decisions.
 
         New goals must be distinct from existing goals. Do not create a goal
         that is essentially the same as another goal.

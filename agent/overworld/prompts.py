@@ -35,8 +35,12 @@ The complete map's global coordinates in row-column order start at (0, 0) in its
 
 The current map region is a rectangular crop enclosing the area currently navigable from your position, its bordering terrain, and any sprites the game permits you to interact with across a counter. Its first displayed tile is global coordinate ({{region_top}}, {{region_left}}), as recorded in the tag above; displayed rows and columns continue from there without renumbering the underlying coordinates. Walls are shown throughout the rectangle so its physical shape remains clear. "{AsciiTile.OUTSIDE_REGION}" marks every other coordinate inside the rectangle that is outside your current navigable region. Do not target those coordinates directly. Previously remembered coordinates remain valid, and coordinates never change when regions expand, merge, or are entered from another location.
 
+A single map ID may contain multiple disconnected areas. The displayed current map region is only the area currently reachable from your position without changing maps, based on the terrain revealed so far. Reaching another area with the same map ID may require leaving through a warp or map boundary and re-entering that map elsewhere.
+
+Coordinates are scoped to their map ID. Identical coordinates on different maps or floors are different locations.
+
 <screen_position>
-The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size). This should help you navigate from one map to another.
+The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size).
 
 The top of the screen is currently at row {{screen_top}} in map coordinates.
 The bottom of the screen is currently at row {{screen_bottom}} in map coordinates.
@@ -78,15 +82,10 @@ Navigation tips:
 - You should explore as much of the map as possible, as it may be hiding important sprites or warp tiles. Exploration is not only a matter of revealing tiles; interact with what you discover along the way. Tiles are considered explored once they are on screen, so move towards unseen territory when you are stuck or unsure how to proceed.
 - The orientation of the map and screen is always fixed, regardless of the direction that you are facing.
 - Do not use the action button on a warp.
-- To connect from one map to another, you must either use a warp tile, or, *in outdoor maps only*, walk off the edge of the map. In outdoor maps, you will never be able to walk through a wall or barrier for any reason. You have to find where the edge of the map connects to the next map by looking at the ASCII screen.
-- If you are indoors, the edges of the map (indicated by a black void in the screenshot) are normally impassable. Move outward at an indoor edge only when a discovered warp's instruction explicitly requires it.
-- Pay attention to the "leading to" description in each warp tile. This comes straight from the game's memory and will tell you which map you will be warped to from that tile.
 - To interact with a sprite normally, move to an adjacent tile, face it, and press the action button. Do not attempt to move onto the sprite's tile. You cannot walk on or through sprites (except for Pikachu, as described above).
 - Some sprite notes provide an exact reachable position for interacting across a counter. In that case, navigate to that position instead of next to the sprite, face the sprite across the "{AsciiTile.COUNTER}" tile, and press the action button.
 - Note that some sprites move around, so their position may change between screenshots. Do not let this confuse you. The information that you have in the <known_sprites> section is the most accurate information available to you since it comes straight from the game's memory at this moment in time.
 - It is generally not worth interacting with sprites and signs more than once. They usually do not change between interactions.
-- Pay attention to the "sprite is labeled" section in each sprite. This will tell you what the sprite is labeled as in the game's memory, and should help you determine what the sprite is.
-- Focus on the map when you are trying to navigate within a map. Focus on the screen when you are trying to navigate between maps.
 
 The current ASCII screen is derived from current game memory, while the current map region combines those observations over time. Prefer the ASCII information for tile and coordinate reasoning, and use the screenshot as supplemental visual context.
 </map_info>
@@ -131,11 +130,8 @@ observations.
 Regularly reflect on what you are trying to accomplish and use the goal tools
 to keep your goals useful and current.
 
-The following accessible coordinates are adjacent to unseen territory on the
-current map. They are therefore top candidates for exploration. If the section
-below is empty, then you have already explored all of the accessible tiles on
-the current map. Navigating towards any of these exploration candidates is the
-most efficient way to explore the map.
+The following accessible coordinates are adjacent to unseen terrain on the
+current map. They may be useful places to continue exploring the terrain.
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>

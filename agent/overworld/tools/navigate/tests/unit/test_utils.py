@@ -12,7 +12,7 @@ import pytest
 from agent.overworld import navigation
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, MapId
 from common.schemas import Coords
-from emulator.parsers.map import MapConnection
+from emulator.parsers.map import Map, MapConnection
 from overworld_map.schemas import OverworldMap
 
 PLATEAU_MAP = [
@@ -68,9 +68,36 @@ DUMMY_MAP = OverworldMap(
     terrain=[[]],
     blockages={},
     known_sprite_ids=set(),
+    sprite_interactions={},
     known_sign_ids=set(),
+    sign_interactions={},
     known_warp_ids=set(),
+    warp_usage_iterations={},
     known_map_ids=frozenset(),
+    north_connection=None,
+    south_connection=None,
+    east_connection=None,
+    west_connection=None,
+)
+
+DUMMY_MAP_STATE = Map(
+    id=MapId.PALLET_TOWN,
+    height=1,
+    width=1,
+    grass_tile=None,
+    water_tiles=frozenset({3}),
+    talk_over_tiles=frozenset(),
+    ledge_tiles_left=[],
+    ledge_tiles_right=[],
+    ledge_tiles_down=[],
+    spinner_tiles=None,
+    cut_tree_tiles=None,
+    boulder_hole_tiles=None,
+    pressure_plate_tiles=None,
+    pc_tiles=None,
+    walkable_tiles=[1, 4],
+    collision_pairs=[],
+    boulder_blocked_tiles=frozenset(),
     north_connection=None,
     south_connection=None,
     east_connection=None,
@@ -213,14 +240,16 @@ def test_get_map_boundary_tiles_plateau() -> None:
     map_data = deepcopy(DUMMY_MAP)
     map_data.terrain = PLATEAU_MAP
     map_data.south_connection = MapConnection(
+        direction=FacingDirection.DOWN,
         destination_map=MapId.ROUTE_1,
         source_coordinate_start=0,
         source_coordinate_end=len(PLATEAU_MAP[0]),
         destination_offset=Coords(row=0, col=0),
+        collision_tile_pairs=((1, 1),) * len(PLATEAU_MAP[0]),
     )
 
     accessible_coords = _get_accessible_coords(PLATEAU_CENTER, map_data, [])
-    boundary_tiles = navigation.get_map_boundary_tiles(accessible_coords, map_data)
+    boundary_tiles = _get_map_boundary_tiles(accessible_coords, map_data)
 
     # There is no right boundary tile because the map is not connected to the right.
     assert boundary_tiles == {
@@ -238,15 +267,24 @@ def test_get_map_boundary_tiles_collision_pairs() -> None:
     map_data.terrain = COLLISION_PAIRS_MAP
     map_data.blockages = COLLISION_PAIRS_BLOCKAGES
     map_data.east_connection = MapConnection(
+        direction=FacingDirection.RIGHT,
         destination_map=MapId.ROUTE_1,
         source_coordinate_start=0,
         source_coordinate_end=len(COLLISION_PAIRS_MAP),
         destination_offset=Coords(row=0, col=0),
+        collision_tile_pairs=((1, 1),) * len(COLLISION_PAIRS_MAP),
     )
-    map_data.west_connection = map_data.east_connection
+    map_data.west_connection = MapConnection(
+        direction=FacingDirection.LEFT,
+        destination_map=MapId.ROUTE_1,
+        source_coordinate_start=0,
+        source_coordinate_end=len(COLLISION_PAIRS_MAP),
+        destination_offset=Coords(row=0, col=0),
+        collision_tile_pairs=((1, 1),) * len(COLLISION_PAIRS_MAP),
+    )
 
     accessible_coords = _get_accessible_coords(Coords(row=0, col=0), map_data, [])
-    boundary_tiles = navigation.get_map_boundary_tiles(accessible_coords, map_data)
+    boundary_tiles = _get_map_boundary_tiles(accessible_coords, map_data)
 
     assert boundary_tiles[FacingDirection.DOWN] == []
     assert set(boundary_tiles[FacingDirection.LEFT]) == {Coords(row=0, col=0), Coords(row=2, col=0)}
@@ -255,6 +293,61 @@ def test_get_map_boundary_tiles_collision_pairs() -> None:
         Coords(row=2, col=2),
     }
     assert boundary_tiles[FacingDirection.UP] == []
+
+
+@pytest.mark.unit
+def test_get_map_boundary_tiles_checks_connected_map_collision_strip() -> None:
+    """Expose only outward tiles that are traversable, even when they are outside the viewport."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.terrain = [list("∙∙∙")]
+    map_data.south_connection = MapConnection(
+        direction=FacingDirection.DOWN,
+        destination_map=MapId.ROUTE_1,
+        source_coordinate_start=0,
+        source_coordinate_end=3,
+        destination_offset=Coords(row=0, col=0),
+        collision_tile_pairs=(
+            (1, 2),  # The connected-map tile is a wall.
+            (1, 1),  # The connected-map tile is ordinary walkable terrain.
+            (1, 3),  # The connected-map tile is water.
+        ),
+    )
+    accessible_coords = _get_accessible_coords(Coords(row=0, col=0), map_data, [])
+
+    without_surf = _get_map_boundary_tiles(accessible_coords, map_data)
+    with_surf = _get_map_boundary_tiles(accessible_coords, map_data, can_surf=True)
+
+    assert without_surf[FacingDirection.DOWN] == [Coords(row=0, col=1)]
+    assert with_surf[FacingDirection.DOWN] == [
+        Coords(row=0, col=1),
+        Coords(row=0, col=2),
+    ]
+
+
+@pytest.mark.unit
+def test_get_map_boundary_tiles_checks_cross_boundary_collision_pair() -> None:
+    """Reject an otherwise walkable connected-map tile across an elevation boundary."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.terrain = [list("∙")]
+    map_data.south_connection = MapConnection(
+        direction=FacingDirection.DOWN,
+        destination_map=MapId.ROUTE_1,
+        source_coordinate_start=0,
+        source_coordinate_end=1,
+        destination_offset=Coords(row=0, col=0),
+        collision_tile_pairs=((1, 4),),
+    )
+    map_state = DUMMY_MAP_STATE.model_copy(
+        update={"collision_pairs": [frozenset((1, 4))]},
+    )
+
+    boundary_tiles = _get_map_boundary_tiles(
+        [Coords(row=0, col=0)],
+        map_data,
+        map_state=map_state,
+    )
+
+    assert boundary_tiles[FacingDirection.DOWN] == []
 
 
 @pytest.mark.unit
@@ -456,6 +549,21 @@ def _get_exploration_candidates(
     map_data: OverworldMap,
 ) -> list[Coords]:
     return navigation.get_exploration_candidates(accessible_coords, map_data.terrain_ndarray)
+
+
+def _get_map_boundary_tiles(
+    accessible_coords: list[Coords],
+    map_data: OverworldMap,
+    *,
+    map_state: Map = DUMMY_MAP_STATE,
+    can_surf: bool = False,
+) -> dict[FacingDirection, list[Coords]]:
+    return navigation.get_map_boundary_tiles(
+        accessible_coords,
+        map_data,
+        map_state,
+        can_surf=can_surf,
+    )
 
 
 def _calculate_path_to_target(

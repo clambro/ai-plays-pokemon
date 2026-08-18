@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from emulator.parsers.sprite import Sprite
     from emulator.parsers.warp import Warp
     from emulator.schemas import AsciiScreenWithEntities
-    from overworld_map.schemas import OverworldMap
+    from overworld_map.schemas import MapEntityInteractionMemory, OverworldMap
 
 _ALWAYS_VISIBLE_TILES = {
     AsciiTile.OUTSIDE_REGION,
@@ -74,12 +74,17 @@ def _format_overworld_sprite(
     sprite: Sprite,
     map_id: MapId,
     counter_positions: tuple[Coords, ...],
+    interaction: MapEntityInteractionMemory | None,
 ) -> str:
     """Format a known overworld sprite for the agent."""
     output = (
         f"sprite_{map_id}_{sprite.index} at {sprite.coords}."
         f' This sprite is labeled "{sprite.label}".'
     )
+    if interaction is None:
+        output += " You have not interacted with this sprite yet; it may be worth trying."
+    else:
+        output += f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
     if counter_positions:
         positions = ", ".join(str(position) for position in counter_positions)
         output += (
@@ -94,9 +99,16 @@ def _format_overworld_sprite(
     return output
 
 
-def _format_overworld_sign(sign: Sign, map_id: MapId) -> str:
+def _format_overworld_sign(
+    sign: Sign,
+    map_id: MapId,
+    interaction: MapEntityInteractionMemory | None,
+) -> str:
     """Format a known overworld sign for the agent."""
-    return f"sign_{map_id}_{sign.index} at {sign.coords}."
+    output = f"sign_{map_id}_{sign.index} at {sign.coords}."
+    if interaction is None:
+        return output + " You have not interacted with this sign yet; it may be worth reading."
+    return output + f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
 
 
 def _format_overworld_warp(
@@ -104,6 +116,7 @@ def _format_overworld_warp(
     map_id: MapId,
     known_map_ids: frozenset[MapId],
     player_coords: Coords,
+    last_interaction_iteration: int | None,
 ) -> str:
     """Format a known overworld warp for the agent."""
     if (
@@ -121,9 +134,49 @@ def _format_overworld_warp(
             " building/floor/location to your memory. It might be a good candidate for"
             " exploration if it is accessible."
         )
-    return (
+    output = (
         f"warp_{map_id}_{warp.index} at {warp.coords}. {destination_text}"
         f" {_get_warp_description(warp, player_coords)}"
+    )
+    if last_interaction_iteration is not None:
+        output += f" Last used at iteration {last_interaction_iteration}."
+    else:
+        output += " No recorded use."
+    return output
+
+
+def _get_warp_group_last_used_iteration(
+    warp: Warp,
+    warps: Sequence[Warp],
+    usage_iterations: Mapping[int, int],
+) -> int | None:
+    """Get the newest usage timestamp for one contiguous multi-tile warp."""
+    matching_warps = [
+        candidate
+        for candidate in warps
+        if candidate.destination == warp.destination
+        and candidate.destination_warp_index == warp.destination_warp_index
+        and candidate.destination_coords == warp.destination_coords
+        and candidate.activation == warp.activation
+    ]
+    group_ids = {warp.index}
+    pending = [warp]
+    while pending:
+        current = pending.pop()
+        for candidate in matching_warps:
+            if candidate.index in group_ids:
+                continue
+            distance = abs(candidate.coords.row - current.coords.row) + abs(
+                candidate.coords.col - current.coords.col
+            )
+            if distance != 1:
+                continue
+            group_ids.add(candidate.index)
+            pending.append(candidate)
+
+    return max(
+        (usage_iterations[index] for index in group_ids if index in usage_iterations),
+        default=None,
     )
 
 
@@ -131,7 +184,11 @@ def _get_warp_description(warp: Warp, player_coords: Coords) -> str:
     """Format instructions for entering a warp."""
     if warp.activation == WarpActivation.STEP_ON:
         if player_coords == warp.coords:
-            return "Walk off this coordinate, then step back onto it to activate the warp."
+            return (
+                "You are currently standing on this warp, so it is inactive. It activates only"
+                " when entered from another tile. Re-enter it only when you intend to travel to"
+                " the destination described above."
+            )
         return "Step onto this coordinate to activate the warp."
     return (
         f"Stand on this coordinate and press {warp.activation.value} to activate the warp, even"
@@ -211,21 +268,25 @@ def format_sprite_notes(map_view: CurrentMapView, game_state: GameState) -> str:
             sprite,
             current_map.id,
             map_view.counter_interactions.get(sprite.index, ()),
+            current_map.sprite_interactions.get(sprite.index),
         )
         for sprite in sprites
     )
     return output.strip()
 
 
-def format_warp_notes(map_view: CurrentMapView, game_state: GameState) -> str:
+def format_warp_notes(
+    map_view: CurrentMapView,
+    game_state: GameState,
+) -> str:
     """Format known warps in index order."""
     current_map = map_view.overworld_map
-    warps = [
+    known_warps = [
         game_state.warps[entity_id]
         for entity_id in sorted(current_map.known_warp_ids)
         if entity_id in game_state.warps
-        and game_state.warps[entity_id].coords in map_view.visible_coords
     ]
+    warps = [warp for warp in known_warps if warp.coords in map_view.visible_coords]
     if not warps:
         return "No warp tiles discovered."
     return "\n".join(
@@ -235,6 +296,11 @@ def format_warp_notes(map_view: CurrentMapView, game_state: GameState) -> str:
             current_map.id,
             current_map.known_map_ids,
             game_state.player.coords,
+            _get_warp_group_last_used_iteration(
+                warp,
+                known_warps,
+                current_map.warp_usage_iterations,
+            ),
         )
         for warp in warps
     )
@@ -251,7 +317,15 @@ def format_sign_notes(map_view: CurrentMapView, game_state: GameState) -> str:
     ]
     if not signs:
         return "No signs discovered."
-    return "\n".join(f"- {_format_overworld_sign(sign, current_map.id)}" for sign in signs)
+    return "\n".join(
+        "- "
+        + _format_overworld_sign(
+            sign,
+            current_map.id,
+            current_map.sign_interactions.get(sign.index),
+        )
+        for sign in signs
+    )
 
 
 def format_connection_notes(map_view: CurrentMapView) -> str:
@@ -304,7 +378,7 @@ def format_exploration_candidates(
 ) -> str:
     """Format exploration candidates for the overworld agent."""
     if not candidates:
-        return "No exploration candidates found."
+        return "No unexplored terrain candidates found."
     return format_coordinates_grid(candidates, map_data)
 
 

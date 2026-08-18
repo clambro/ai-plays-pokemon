@@ -74,10 +74,13 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         ``(r, c - 1)``, then you must face right to interact with it. If you are
         at ``(r + 1, c)``, then you must face up to interact with it.
 
-        To rotate in place repeatedly in tall grass, use ``up, left, down,
-        right, up, left, down, right``. If this fails to find wild Pokemon, you
-        may not be standing in an encounter area; having at least two adjacent
-        grass tiles is a useful indication.
+        When deliberately looking for wild Pokemon while standing in tall
+        grass, rotate in place instead of walking back and forth one tile at a
+        time. Send ``up, left, down, right, up, left, down, right, up, left,
+        down, right, up, left, down, right`` in one tool call. This is an
+        exception to the usual preference for pressing a single button at a
+        time. If this fails to find wild Pokemon, you may not be standing in an
+        encounter area.
 
         If you see specific button presses in your rolling memory, do not treat
         them as mandatory. You have more information available to you in the

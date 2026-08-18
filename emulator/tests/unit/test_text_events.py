@@ -5,10 +5,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from common.enums import Button
+from common.enums import Button, MapEntityType, MapId
 from emulator.control_events import ControlBoundary, ControlResult
 from emulator.text_events import (
+    CompletedMapEntityInteraction,
     DialogPage,
+    MapEntityInteractionTarget,
     TextEvent,
     TextEventJournal,
     TextEventKind,
@@ -77,6 +79,54 @@ def test_reducer_preserves_scroll_context_across_event_batches() -> None:
     assert reducer.reduce([_event(4, TextEventKind.INPUT_REQUIRED, scrolled_page)]) == (
         "A POKéMON can appear anytime in tall grass!"
     )
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("entity_type", [MapEntityType.SPRITE, MapEntityType.SIGN])
+def test_reducer_attributes_complete_literal_dialog_to_its_map_entity(
+    entity_type: MapEntityType,
+) -> None:
+    """Retain one entity interaction across event batches until its ROM close boundary."""
+    reducer = TextEventReducer()
+    target = MapEntityInteractionTarget(
+        map_id=MapId.MT_MOON_B2F,
+        entity_type=entity_type,
+        entity_id=7,
+    )
+    first_page = DialogPage(top_line="You want the", bottom_line="HELIX FOSSIL?")
+    second_page = DialogPage(top_line="HELIX FOSSIL?", bottom_line="Then this is mine!")
+
+    assert (
+        reducer.reduce(
+            [
+                _event(
+                    1,
+                    TextEventKind.MAP_ENTITY_INTERACTION_STARTED,
+                    interaction_target=target,
+                ),
+                _event(2, TextEventKind.INPUT_REQUIRED, first_page),
+            ]
+        )
+        == "You want the HELIX FOSSIL?"
+    )
+    assert reducer.drain_completed_map_entity_interactions() == ()
+
+    assert (
+        reducer.reduce(
+            [
+                _event(3, TextEventKind.INPUT_REQUIRED, second_page),
+                _event(4, TextEventKind.INTERACTION_CLOSED),
+            ]
+        )
+        == "Then this is mine!"
+    )
+    assert reducer.drain_completed_map_entity_interactions() == (
+        CompletedMapEntityInteraction(
+            target=target,
+            text="You want the HELIX FOSSIL? Then this is mine!",
+        ),
+    )
+    assert reducer.drain_completed_map_entity_interactions() == ()
 
 
 @pytest.mark.unit
@@ -178,5 +228,13 @@ def _event(
     sequence: int,
     kind: TextEventKind,
     page: DialogPage | None = None,
+    *,
+    interaction_target: MapEntityInteractionTarget | None = None,
 ) -> TextEvent:
-    return TextEvent(sequence=sequence, frame=1, kind=kind, page=page)
+    return TextEvent(
+        sequence=sequence,
+        frame=1,
+        kind=kind,
+        page=page,
+        interaction_target=interaction_target,
+    )
