@@ -4,17 +4,13 @@
 
 This is a fully autonomous AI workflow designed to play [Pokémon Yellow Legacy](https://github.com/cRz-Shadows/Pokémon_Yellow_Legacy) on Hard Mode. Pokémon Yellow Legacy is a ROM hack of Pokémon Yellow that includes a ton of balance changes, quality of life improvements, and bug fixes, while maintaining the feel of the first generation of Pokémon. Hard mode adds level caps and blocks item use in battle, forcing the AI to strategize instead of winning by overlevelling a single Pokémon.
 
-The AI workflow is written in Python and combines [Pydantic AI](https://ai.pydantic.dev/) agents with deterministic gameplay tools organized around the three major parts of the game: exploring the overworld, handling text and menus, and battling. The application operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms and LLM-powered decision making. It features hierarchical rolling memory and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs.
+The AI workflow is written in Python and combines [Pydantic AI](https://ai.pydantic.dev/) agents with deterministic gameplay tools organized around the three major parts of the game: exploring the overworld, handling text and menus, and battling. The application operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms and LLM-powered decision making. It features hierarchical rolling memory and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs. The goal was to have the AI make the decisions, while keeping the gameplay as close to human speed as possible.
 
-Data from the AI workflow and the game's memory is piped into an HTML page for visualization, and the whole project was [streaming live on Twitch](https://www.twitch.tv/clambr0). The stream has been paused while I work on some improvements to the model's high-level navigation planning (and give my wallet some time to recover). Give me a follow on Twitch if you want to know when the stream is back!
+Data from the AI workflow and the game's memory is piped into an HTML page for visualization, and the whole project [streams live on Twitch](https://www.twitch.tv/clambr0).
 
 If you want to learn more about how this all works, check out:
 - [A deeper look into the philosophy and design of the project](docs/philosophy.md)
 - [A description of the AI architecture and its tools](docs/workflow.md)
-
-If you want to buy me a coffee to help cover the streaming costs, you can do so using the button below.
-
-<a href='https://ko-fi.com/H2H21JQ2I7' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi5.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
 
 ![A screenshot of the stream](docs/images/stream_view.jpg)
 
@@ -75,7 +71,7 @@ The system automatically creates backups every 10 minutes in the `outputs/` fold
 
 ### Why Yellow Legacy?
 
-Partly nostalgia since Pokémon Yellow was the first video game I ever played, but largely because its hard mode prevents the AI from winning by grinding a single Pokémon to level 100. I also think that the team behind Yellow Legacy basically perfected the Gen 1 experience and I wanted to highlight their excellent work.
+Partly nostalgia since Pokémon Yellow was the first video game I ever played, but largely because its hard mode prevents the AI from winning by grinding a single Pokémon to level 100. I also think that the team behind Yellow Legacy did a great job with this hack and I wanted to highlight their excellent work.
 
 ### Didn't Gemini Plays Pokémon already do this?
 
@@ -91,7 +87,7 @@ The model should make decisions, not laboriously reproduce mechanics that ordina
 
 ### Why GPT-5.6 Luna?
 
-It was the cheapest, fastest frontier model at the time of writing. My only regret is that they didn't offer an even cheaper option. There is more discussion in [the philosophy article](docs/philosophy.md), but a big part of this project is the idea that a smaller model, properly orchestrated to do specific tasks, can outperform a larger model. Smaller models also have lower latency, making for a more enjoyable viewing experience.
+It was the cheapest, fastest frontier model at the time of writing. There is more discussion in [the philosophy article](docs/philosophy.md), but a big part of this project is the idea that a smaller model, properly orchestrated to do specific tasks, can outperform a larger model. Smaller models also have lower latency, making for a more enjoyable viewing experience.
 
 ### Can it play other Pokémon games?
 
@@ -99,31 +95,21 @@ Not natively. You could adapt this code to another Gen 1 or Gen 2 game, but you 
 
 ### Do you intend to keep working on this?
 
-I'd like to see it beat the game, and I'll try to support it so that it does (assuming the cost doesn't become excessive), but aside from that I think I'm done for now. I've been wanting to do some kind of "AI plays Pokémon" project for years, and I've had a ton of fun working on this, but I'd like to move on to some other projects.
+I'd like to see it beat the game, and I'll try to support it so that it does, but aside from that I think I'm done for now. I've been wanting to do some kind of "AI plays Pokémon" project for years, and I've had a ton of fun working on this, but I'd like to move on to some other projects.
 
 ### How long did it take to build this?
 
-[The first complete version](https://github.com/clambro/ai-plays-pokemon/tree/v1.0.0) took a good chunk of my free time for 2-3 months. The current version benefited from advances in vibe coding and was built on top of the first in about a week.
+[The first complete version](https://github.com/clambro/ai-plays-pokemon/tree/v1.0.0) took a good chunk of my free time for 2-3 months. The current version benefited from advances in vibe coding and was built on top of the first in a couple weeks of my spare time.
 
 ### How much does it cost to run?
 
-Short answer: Roughly $1 USD per hour for the GPT-5.6 Luna API calls.
+Short answer: Roughly $0.60 USD per hour for the GPT-5.6 Luna API calls based on initial testing.
 
-Longer answer based on recent runs:
-
-- The workflow completes roughly 370 iterations per hour.
-- Instructions, screenshots, game state, tool calls, results, and model output account for ~5,600 tokens per iteration.
-- Rolling memory grows logarithmically with iterations, contributing roughly `2,800 + 400 × log₂ N` tokens to iteration `N`.
-
-Together, that is around `8,400 + 400 × log₂ N` tokens per iteration. Since `N ≈ 370H` after `H` hours of play, applying Luna's current prices to that token mix and expressing the result in hours gives approximately:
-
-`hourly cost ≈ $0.69 + $0.026 × log₂ H`
-
-The $1 headline is a nice round number for a run that has been progressing for a while.
+Longer answer: The rolling memory grows logarithmically over time, meaning the hourly rate should technically be more like `0.6 + ε log t`, but this logarithmic contribution proved too small to measure even after several hours of play.
 
 ### How fast does it play?
 
-In my testing, it managed to beat Brock in just under five hours. This will fluctuate depending on the decisions it makes in the early game, however.
+I put a lot of effort into making its reactions as close to human speed as I could. It usually gets the Pokedex in around 20 mins, and it usually gets to Brock in around 90 mins, but this fluctuates depending on how it decides to explore in the early game.
 
 ## Licence & Affiliation Notice
 
