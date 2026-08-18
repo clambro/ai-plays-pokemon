@@ -124,38 +124,25 @@ LEGEND_MAP = {
 }
 
 OVERWORLD_DECISION_PROMPT = """
-You are navigating the overworld. At entry, you are standing still, there is no
-onscreen text, and the game is ready for your next decision. The screenshot
-provided above shows the current rendered game screen. After each tool call,
-its returned screenshot and result are the freshest state and supersede earlier
-observations.
+You are navigating the overworld. At entry, you are standing still, there is no onscreen text, and the game is ready for your next decision. The screenshot provided above shows the current rendered game screen. After each tool call, its returned screenshot and result are the freshest state and supersede earlier observations.
 
 {state}
 
-Regularly reflect on what you are trying to accomplish and use the goal tools
-to keep your goals useful and current.
+Regularly reflect on what you are trying to accomplish and use the goal tools to keep your goals useful and current.
 
-The following accessible coordinates are adjacent to unseen terrain on the
-current map. They may be useful places to continue exploring the terrain.
+The following accessible coordinates are adjacent to unseen terrain on the current map. They may be useful places to continue exploring the terrain.
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>
 
-The following section lists only connected-map boundaries reachable from your
-current region. Boundaries in other regions of the same larger map are omitted.
+The following section lists only connected-map boundaries reachable from your current region. Boundaries in other regions of the same larger map are omitted.
 <map_boundaries>
 {map_boundaries}
 </map_boundaries>
 
-Use navigation for ordinary movement within the current map. Use press_buttons
-for direct interactions, changing direction, or sending the final directional
-input needed to cross a map boundary or warp. Prefer a specialized tool
-whenever it directly matches the action you want to take.
+Use navigation for ordinary movement within the current map. Use press_buttons for direct interactions, changing direction, or sending the final directional input needed to cross a map boundary or warp. Prefer a specialized tool whenever it directly matches the action you want to take.
 
-Briefly explain your reasoning in first person as ordinary response text, then
-use exactly one available tool to act. Be sure to consider all the tools at
-your disposal. Every response must include one tool call. A fresh observation
-will be returned after each tool executes.
+Briefly explain your reasoning in first person as ordinary response text, then use exactly one available tool to act. Be sure to consider all the tools at your disposal. Every response must include one tool call. A fresh observation will be returned after each tool executes.
 
 {biking_warning}
 """.strip()
@@ -215,12 +202,7 @@ def build_overworld_decision_prompt(
         unavailable = "Navigation data is unavailable while riding a bike."
         exploration_candidates = unavailable
         map_boundaries = unavailable
-        biking_warning = (
-            "You have lost access to the navigation tool because you are riding a bike. If you "
-            "would like to use the navigation tool, you must first dismount your bike. If you are "
-            "unable to dismount your bike because you are on Cycling Road, then you must use the "
-            "button tool to move around the map."
-        )
+        biking_warning = "You have lost access to the navigation tool because you are riding a bike. If you would like to use the navigation tool, you must first dismount your bike. If you are unable to dismount your bike because you are on Cycling Road, then you must use the button tool to move around the map."
     else:
         exploration_candidates = formatting.format_exploration_candidates(
             map_view.exploration_candidates,

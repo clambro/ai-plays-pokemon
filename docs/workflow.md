@@ -36,13 +36,7 @@ The application loop owns emulator and streaming-server lifetimes. It captures t
 
 ### Model Boundaries
 
-Pydantic models represent values that cross validation or serialization
-boundaries. This includes raw-ROM parser outputs, coordinates, live
-`AgentState`, database DTOs, Pydantic AI tool inputs, streaming responses, and
-settings. Standard-library dataclasses represent trusted internal aggregates
-such as `GameState`, rolling memory, goals, explored
-maps, and solver state. Loading a backup validates `AgentState` directly, then
-the next handler reconstructs rolling memory from SQLite.
+Pydantic models represent values that cross validation or serialization boundaries. This includes raw-ROM parser outputs, coordinates, live `AgentState`, database DTOs, Pydantic AI tool inputs, streaming responses, and settings. Standard-library dataclasses represent trusted internal aggregates such as `GameState`, rolling memory, goals, explored maps, and solver state. Loading a backup validates `AgentState` directly, then the next handler reconstructs rolling memory from SQLite.
 
 ## The Overworld Agent
 

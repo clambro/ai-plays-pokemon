@@ -37,9 +37,7 @@ If you want to buy me a coffee to help cover the streaming costs, you can do so 
 
 4. Put a compatible ROM at `resources/ylegacy.gbc`. If you build from the Yellow Legacy decomp, you can optionally apply [`pokeyellow.patch`](pokeyellow.patch) for two minor bug fixes.
 
-5. (Strongly recommended) Add a [Logfire](https://logfire.pydantic.dev/) write
-   token as `LOGFIRE_TOKEN`. Without telemetry, you will have very little
-   visibility into what the agent is doing behind the scenes.
+5. (Strongly recommended) Add a [Logfire](https://logfire.pydantic.dev/) write token as `LOGFIRE_TOKEN`. Without telemetry, you will have very little visibility into what the agent is doing behind the scenes.
 
 **Note:** If you try to run the integration tests, many of them will fail because they depend on save states that I am not licensed to distribute. Similarly, if you try to run the game state visualization server, you'll get an error that the sprites are unavailable for the same reason.
 
