@@ -97,7 +97,7 @@ function updateDisplay(data) {
 
     // --- Info Bar ---
     refs.money.textContent = `¥${money.toLocaleString()}`;
-    refs.iteration.textContent = iteration.toString();
+    refs.iteration.textContent = iteration.toLocaleString();
     refs.caughtSeen.textContent = `${pokedex_caught}/${pokedex_seen}`;
     refs.totalTokens.textContent = formatTokenCount(total_tokens);
     refs.totalCost.textContent = `$${total_cost.toFixed(2)}`;
