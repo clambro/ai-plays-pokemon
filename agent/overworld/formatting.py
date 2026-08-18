@@ -3,8 +3,6 @@
 from itertools import groupby
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpActivation
 from common.schemas import Coords
@@ -12,10 +10,11 @@ from common.schemas import Coords
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from agent.overworld.map_view import CurrentMapView
+    from agent.overworld.map_view import CurrentMapView, ObjectInteractionPosition
     from emulator.game_state import GameState
     from emulator.parsers.sign import Sign
     from emulator.parsers.sprite import Sprite
+    from emulator.parsers.static_object import StaticObject
     from emulator.parsers.warp import Warp
     from emulator.schemas import AsciiScreenWithEntities
     from overworld_map.schemas import MapEntityInteractionMemory, OverworldMap
@@ -32,6 +31,7 @@ _ALWAYS_VISIBLE_TILES = {
     AsciiTile.WARP,
     AsciiTile.PIKACHU,
     AsciiTile.SIGN,
+    AsciiTile.OBJECT,
 }
 
 # These buildings are visually identifiable from their exterior before the player enters them, so
@@ -108,6 +108,33 @@ def _format_overworld_sign(
     output = f"sign_{map_id}_{sign.index} at {sign.coords}."
     if interaction is None:
         return output + " You have not interacted with this sign yet; it may be worth reading."
+    return output + f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
+
+
+def _format_overworld_object(
+    obj: StaticObject,
+    map_id: MapId,
+    positions: Sequence[ObjectInteractionPosition],
+    interaction: MapEntityInteractionMemory | None,
+) -> str:
+    """Format a known stationary object for the agent."""
+    output = f"object_{map_id}_{obj.index} at {obj.coords}."
+    if len(positions) == 1:
+        position = positions[0]
+        output += (
+            f" To interact with it, stand at {position.coords}, face"
+            f" {position.direction.value}, and press the action button."
+        )
+    else:
+        choices = "; ".join(
+            f"{position.coords} facing {position.direction.value}" for position in positions
+        )
+        output += (
+            f" To interact with it, use one of these positions: {choices}; then press the action"
+            " button."
+        )
+    if interaction is None:
+        return output + " You have not interacted with this object yet; it may be worth trying."
     return output + f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
 
 
@@ -247,22 +274,15 @@ def get_tile_notes(
 def format_sprite_notes(map_view: CurrentMapView, game_state: GameState) -> str:
     """Format known sprites in index order."""
     current_map = map_view.overworld_map
-    output = ""
     sprites = [
         game_state.sprites[entity_id]
         for entity_id in sorted(current_map.known_sprite_ids)
         if entity_id in game_state.sprites
         and game_state.sprites[entity_id].coords in map_view.visible_coords
     ]
-    pc_locations = np.argwhere(current_map.terrain_ndarray == AsciiTile.PC_TILE)
-    if len(pc_locations) > 0:
-        # This is a bit of a hack, but the model really struggles to find the PC otherwise.
-        location = Coords(row=int(pc_locations[0][0]), col=int(pc_locations[0][1]))
-        if location in map_view.visible_coords:
-            output += f"- There is a PC at {location}. It can only be interacted with from below.\n"
-    if not output and not sprites:
+    if not sprites:
         return "No sprites discovered."
-    output += "\n".join(
+    return "\n".join(
         "- "
         + _format_overworld_sprite(
             sprite,
@@ -272,7 +292,6 @@ def format_sprite_notes(map_view: CurrentMapView, game_state: GameState) -> str:
         )
         for sprite in sprites
     )
-    return output.strip()
 
 
 def format_warp_notes(
@@ -325,6 +344,30 @@ def format_sign_notes(map_view: CurrentMapView, game_state: GameState) -> str:
             current_map.sign_interactions.get(sign.index),
         )
         for sign in signs
+    )
+
+
+def format_object_notes(map_view: CurrentMapView, game_state: GameState) -> str:
+    """Format known stationary objects in index order."""
+    current_map = map_view.overworld_map
+    objects = [
+        game_state.objects[entity_id]
+        for entity_id in sorted(current_map.known_object_ids)
+        if entity_id in game_state.objects
+        and game_state.objects[entity_id].coords in map_view.visible_coords
+        and entity_id in map_view.object_interaction_positions
+    ]
+    if not objects:
+        return "No objects discovered."
+    return "\n".join(
+        "- "
+        + _format_overworld_object(
+            obj,
+            current_map.id,
+            map_view.object_interaction_positions[obj.index],
+            current_map.object_interactions.get(obj.index),
+        )
+        for obj in objects
     )
 
 

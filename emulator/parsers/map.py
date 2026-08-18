@@ -91,7 +91,6 @@ class Map(BaseModel):
     cut_tree_tiles: tuple[int, int, int, int] | None
     boulder_hole_tiles: tuple[int, int, int, int] | None
     pressure_plate_tiles: tuple[int, int, int, int] | None
-    pc_tiles: tuple[int, int, int, int] | None
     walkable_tiles: list[int]
     collision_pairs: list[frozenset[int]]
     boulder_blocked_tiles: frozenset[int]
@@ -207,7 +206,6 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     cut_tree_tiles = _CUT_TREE_TILE_MAP.get(tileset_id)
     boulder_hole_tiles = (0x2F, 0x2F, 0x22, 0x22) if tileset_id == Tileset.CAVERN else None
     pressure_plate_tiles = (0x2B, 0x2C, 0x2D, 0x2E) if tileset_id == Tileset.CAVERN else None
-    pc_tiles = (0x42, 0x46, 0x52, 0x56) if tileset_id == Tileset.POKECENTER else None
 
     walkable_tile_ptr = mem[0xD57D] | (mem[0xD57E] << 8)
     tile_bank, tile_offset = divmod(walkable_tile_ptr, 0x4000)
@@ -238,7 +236,6 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         cut_tree_tiles=cut_tree_tiles,
         boulder_hole_tiles=boulder_hole_tiles,
         pressure_plate_tiles=pressure_plate_tiles,
-        pc_tiles=pc_tiles,
         walkable_tiles=walkable_tiles,
         collision_pairs=collision_pairs,
         boulder_blocked_tiles=(
@@ -292,7 +289,6 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
         cut_tree_tiles=None,
         boulder_hole_tiles=None,
         pressure_plate_tiles=None,
-        pc_tiles=None,
         walkable_tiles=[],
         collision_pairs=[],
         boulder_blocked_tiles=frozenset(),

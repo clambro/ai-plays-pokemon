@@ -130,7 +130,8 @@ class GameState:
     def get_ascii_screen(self) -> AsciiScreenWithEntities:
         """Get an ASCII representation of the current screen.
 
-        The returned screen includes visible sprites, signs, warps, Pikachu, and the player.
+        The returned screen includes visible sprites, signs, objects, warps, Pikachu, and the
+        player.
 
         Returns:
             The classified visible screen, its elevation blockages, and rendered entities.
@@ -159,6 +160,12 @@ class GameState:
                 blocks[sc.row, sc.col] = AsciiTile.SIGN
                 on_screen_signs.append(s)
 
+        on_screen_objects = []
+        for obj in self.objects.values():
+            if sc := self.screen.to_screen_coords(obj.coords):
+                blocks[sc.row, sc.col] = AsciiTile.OBJECT
+                on_screen_objects.append(obj)
+
         # The player and Pikachu must be drawn last so they're on top of everything else.
         pikachu = self.pikachu
         if pikachu.is_rendered and (sc := self.screen.to_screen_coords(pikachu.coords)):
@@ -172,6 +179,7 @@ class GameState:
             sprites=on_screen_sprites,
             warps=on_screen_warps,
             signs=on_screen_signs,
+            objects=on_screen_objects,
         )
 
     def is_text_on_screen(self, *, ignore_dialog_box: bool = False) -> bool:
@@ -208,7 +216,6 @@ class GameState:
             (self.map.cut_tree_tiles, AsciiTile.CUT_TREE),
             (self.map.boulder_hole_tiles, AsciiTile.BOULDER_HOLE),
             (self.map.pressure_plate_tiles, AsciiTile.PRESSURE_PLATE),
-            (self.map.pc_tiles, AsciiTile.PC_TILE),
         )
         for tile_pattern, tile_type in special_blocks:
             if tile_pattern and flat_block == tile_pattern:

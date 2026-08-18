@@ -25,7 +25,7 @@ class AsciiTile(StrEnum):
     CUT_TREE = "†"
     BOULDER_HOLE = "○"
     PRESSURE_PLATE = "◇"
-    PC_TILE = "¤"
+    OBJECT = "¤"
     PIKACHU = "♦"
     SIGN = "‼"
     SPINNER_UP = "Λ"
@@ -64,6 +64,7 @@ class MapEntityType(Enum):
     WARP = auto()
     SPRITE = auto()
     SIGN = auto()
+    OBJECT = auto()
 
 
 class WarpActivation(StrEnum):

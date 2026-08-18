@@ -357,4 +357,5 @@ async def _helper_test_expected_screen(
         AsciiTile.SPRITE,
         AsciiTile.WARP,
         AsciiTile.SIGN,
+        AsciiTile.OBJECT,
     } & {tile for row in terrain.screen for tile in row}
