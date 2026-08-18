@@ -316,19 +316,26 @@ async def record_map_entity_interactions(
     interactions: tuple[CompletedMapEntityInteraction, ...],
 ) -> None:
     """Persist the latest completed ROM-text interaction for each map entity."""
-    latest_by_target = {interaction.target: interaction for interaction in interactions}
-    await update_map_entity_interactions(
-        [
-            MapEntityMemoryInteractionUpdate(
-                map_id=interaction.target.map_id,
-                entity_id=interaction.target.entity_id,
-                entity_type=interaction.target.entity_type,
-                last_interaction=interaction.text,
-                last_interaction_iteration=iteration,
-            )
-            for interaction in latest_by_target.values()
-        ]
-    )
+    if not interactions:
+        return
+    try:
+        latest_by_target = {interaction.target: interaction for interaction in interactions}
+        await update_map_entity_interactions(
+            [
+                MapEntityMemoryInteractionUpdate(
+                    map_id=interaction.target.map_id,
+                    entity_id=interaction.target.entity_id,
+                    entity_type=interaction.target.entity_type,
+                    last_interaction=interaction.text,
+                    last_interaction_iteration=iteration,
+                )
+                for interaction in latest_by_target.values()
+            ]
+        )
+    except Exception as error:  # noqa: BLE001
+        logger.opt(exception=error).warning(
+            "Map-entity interaction persistence failed; continuing without the latest text."
+        )
 
 
 async def record_warp_usage(

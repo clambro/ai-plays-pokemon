@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from common.enums import MapId
     from emulator.emulator import Emulator
     from emulator.game_state import GameState
+    from emulator.parsers.warp import WarpTransitionMemory
 
 
 @dataclass(slots=True, kw_only=True)
@@ -41,6 +42,12 @@ class AgentContext:
         compare=False,
     )
     _last_observed_iteration: int | None = field(
+        default=None,
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    _last_observed_warp_transition: WarpTransitionMemory | None = field(
         default=None,
         init=False,
         repr=False,
@@ -74,21 +81,30 @@ class AgentContext:
         """Persist ordinary warp usage identified between dispatcher states."""
         previous_map_id = self._last_observed_map_id
         previous_iteration = self._last_observed_iteration
+        previous_transition = self._last_observed_warp_transition
         self._last_observed_map_id = game_state.map.id
         self._last_observed_iteration = self.state.iteration
-        if (
-            previous_map_id is None
-            or previous_iteration is None
-            or previous_map_id == game_state.map.id
-        ):
+        self._last_observed_warp_transition = game_state.warp_transition
+        if previous_map_id is None or previous_iteration is None:
             return
 
         transition = game_state.warp_transition
+        destination_warp = game_state.warps.get(transition.destination_warp_index)
         if (
             not transition.is_ordinary_warp
             or transition.source_map_id != previous_map_id
-            or transition.destination_warp_index not in game_state.warps
+            or destination_warp is None
         ):
+            return
+
+        map_changed = previous_map_id != game_state.map.id
+        same_map_arrival = (
+            not map_changed
+            and previous_transition is not None
+            and transition != previous_transition
+            and destination_warp.coords == game_state.player.coords
+        )
+        if not map_changed and not same_map_arrival:
             return
 
         await record_warp_usage(

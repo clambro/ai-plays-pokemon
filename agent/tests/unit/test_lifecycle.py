@@ -9,6 +9,7 @@ from agent import context as context_module
 from agent.context import AgentContext
 from agent.state import AgentState
 from common.enums import MapId
+from common.schemas import Coords
 from database.rolling_memory.schemas import RawMemoryBlockRead
 from emulator.parsers.warp import WarpTransitionMemory
 from memory.rolling_memory import service as rolling_memory_service
@@ -139,6 +140,59 @@ async def test_game_state_observation_records_rom_identified_ordinary_warp(
         destination_map_id=MapId.MT_MOON_1F,
         destination_warp_index=destination_warp_index,
     )
+
+
+@pytest.mark.unit
+async def test_game_state_observation_records_same_map_warp_arrival(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Record a new ROM warp identity that arrives elsewhere on the same map."""
+    iteration = 42
+    destination_warp_index = 22
+    previous_transition = WarpTransitionMemory(
+        source_map_id=MapId.SAFFRON_GYM,
+        source_warp_index=4,
+        destination_warp_index=15,
+    )
+    current_transition = WarpTransitionMemory(
+        source_map_id=MapId.SAFFRON_GYM,
+        source_warp_index=2,
+        destination_warp_index=destination_warp_index,
+    )
+    previous_state = _transition_state(MapId.SAFFRON_GYM, previous_transition)
+    current_state = _transition_state(
+        MapId.SAFFRON_GYM,
+        current_transition,
+        frozenset({destination_warp_index}),
+    )
+    destination_coords = Coords(row=3, col=1)
+    current_state.warps[destination_warp_index].coords = destination_coords
+    current_state.player.coords = destination_coords
+    context = AgentContext(
+        state=AgentState(folder=tmp_path, iteration=iteration),
+        emulator=MagicMock(),
+    )
+    record_warp_usage = AsyncMock()
+    monkeypatch.setattr(context_module, "record_warp_usage", record_warp_usage)
+
+    await context.observe_game_state(previous_state)
+    context.state.iteration += 1
+    await context.observe_game_state(current_state)
+
+    record_warp_usage.assert_awaited_once_with(
+        iteration=iteration,
+        source_map_id=MapId.SAFFRON_GYM,
+        source_warp_index=2,
+        destination_map_id=MapId.SAFFRON_GYM,
+        destination_warp_index=destination_warp_index,
+    )
+    record_warp_usage.reset_mock()
+
+    context.state.iteration += 1
+    await context.observe_game_state(current_state)
+
+    record_warp_usage.assert_not_awaited()
 
 
 @pytest.mark.unit

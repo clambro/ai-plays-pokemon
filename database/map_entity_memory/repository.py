@@ -2,7 +2,6 @@
 
 from typing import TYPE_CHECKING
 
-from loguru import logger
 from sqlalchemy import and_, delete, or_, select
 
 from common.enums import MapEntityType
@@ -72,26 +71,25 @@ async def apply_map_entity_changes(
 async def update_map_entity_interactions(
     updates: Sequence[MapEntityMemoryInteractionUpdate],
 ) -> None:
-    """Persist literal interactions for existing entities, skipping missing records."""
+    """Create or update entities with their latest literal interactions."""
     if not updates:
         return
 
     async with db_sessionmaker.begin() as session:
         for interaction in updates:
-            query = select(MapEntityMemoryDBModel).where(
-                MapEntityMemoryDBModel.map_id == interaction.map_id,
-                MapEntityMemoryDBModel.entity_id == interaction.entity_id,
-                MapEntityMemoryDBModel.entity_type == interaction.entity_type,
+            db_obj = await session.get(
+                MapEntityMemoryDBModel,
+                (interaction.map_id, interaction.entity_id, interaction.entity_type),
             )
-            result = await session.execute(query)
-            db_obj = result.scalar_one_or_none()
             if db_obj is None:
-                logger.warning(
-                    "Skipped interaction for missing map entity memory: map_id={}, "
-                    "entity_type={}, entity_id={}.",
-                    interaction.map_id.name,
-                    interaction.entity_type.name,
-                    interaction.entity_id,
+                session.add(
+                    MapEntityMemoryDBModel(
+                        map_id=interaction.map_id,
+                        entity_id=interaction.entity_id,
+                        entity_type=interaction.entity_type,
+                        last_interaction=interaction.last_interaction,
+                        last_interaction_iteration=interaction.last_interaction_iteration,
+                    )
                 )
                 continue
             db_obj.last_interaction = interaction.last_interaction
