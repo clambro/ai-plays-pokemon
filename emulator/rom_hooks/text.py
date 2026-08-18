@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from common.enums import MapEntityType, MapId
 from emulator.parsers.screen_text import INT_TO_CHAR_MAP
+from emulator.parsers.static_object import parse_static_objects
 from emulator.rom_hooks.core import RomHook, install_hooks
 from emulator.text_events import (
     DialogPage,
@@ -24,6 +25,8 @@ class _HookName(StrEnum):
 
     DISPLAY_TEXT_ID = auto()
     SIGN_INTERACTION = auto()
+    OBJECT_INTERACTION = auto()
+    OBJECT_INTERACTION_ENDED = auto()
     TEXT_PROCESSOR = auto()
     TEXT_COMMAND = auto()
     CONTINUE_WITHOUT_PAUSE = auto()
@@ -54,6 +57,18 @@ _HOOKS = (
         bank=0x00,
         address=0x0A3A,  # SignLoop after matching a sign and storing its text ID
         signature=bytes.fromhex("c1 e1 37 c9 05 20"),
+    ),
+    RomHook(
+        name=_HookName.OBJECT_INTERACTION,
+        bank=0x00,
+        address=0x3F10,  # Hidden object lookup succeeded, before its handler runs
+        signature=bytes.fromhex("af e0 eb fa 3e cd"),
+    ),
+    RomHook(
+        name=_HookName.OBJECT_INTERACTION_ENDED,
+        bank=0x00,
+        address=0x3F1C,  # Returned from the matched hidden object's handler
+        signature=bytes.fromhex("f0 eb 18 12 3e 35"),
     ),
     RomHook(
         name=_HookName.TEXT_PROCESSOR,
@@ -152,6 +167,7 @@ _REDUCED_VOLUME_INTERFACE_FLAG = 1 << 1
 _MAP_ID_ADDRESS = 0xD3AB  # wCurMap
 _SPRITE_COUNT_ADDRESS = 0xD52E  # wNumSprites
 _SPRITE_INDEX_OR_TEXT_ID_ADDRESS = 0xFF8C  # hSpriteIndexOrTextID
+_OBJECT_INDEX_ADDRESS = 0xCD3F  # wHiddenObjectIndex
 
 _TOP_BORDER_ROW = 12
 _TOP_TEXT_ROW = 14
@@ -182,17 +198,21 @@ class RomTextHooks:
         self._on_event = on_event
         self._text_processor_depth = 0
         self._inside_wait = False
+        self._object_interaction_started = False
 
     def install(self) -> None:
         """Validate the required ROM layout and register every text hook."""
         install_hooks(self._pyboy, _HOOKS, self._handle)
 
     def _handle(self, name: _HookName) -> None:
-        if name in {_HookName.DISPLAY_TEXT_ID, _HookName.SIGN_INTERACTION}:
-            {
-                _HookName.DISPLAY_TEXT_ID: self._record_sprite_interaction_start,
-                _HookName.SIGN_INTERACTION: self._record_sign_interaction_start,
-            }[name]()
+        interaction_handler = {
+            _HookName.DISPLAY_TEXT_ID: self._record_sprite_interaction_start,
+            _HookName.SIGN_INTERACTION: self._record_sign_interaction_start,
+            _HookName.OBJECT_INTERACTION: self._record_object_interaction_start,
+            _HookName.OBJECT_INTERACTION_ENDED: self._record_object_interaction_end,
+        }.get(name)
+        if interaction_handler is not None:
+            interaction_handler()
             return
         if name in {_HookName.TEXT_PROCESSOR, _HookName.TEXT_COMMAND}:
             self._handle_text_processor(name)
@@ -302,6 +322,34 @@ class RomTextHooks:
                 entity_id=self._pyboy.register_file.C,
             ),
         )
+
+    def _record_object_interaction_start(self) -> None:
+        """Record a supported coordinate-bound object selected by the ROM."""
+        self._object_interaction_started = False
+        map_id = MapId(self._pyboy.memory[_MAP_ID_ADDRESS])
+        if map_id in {MapId.UNKNOWN, MapId.OUTSIDE}:
+            return
+
+        entity_id = self._pyboy.memory[_OBJECT_INDEX_ADDRESS]
+        if entity_id not in parse_static_objects(self._pyboy.memory, map_id):
+            return
+
+        self._object_interaction_started = True
+        self._record(
+            TextEventKind.MAP_ENTITY_INTERACTION_STARTED,
+            interaction_target=MapEntityInteractionTarget(
+                map_id=map_id,
+                entity_type=MapEntityType.OBJECT,
+                entity_id=entity_id,
+            ),
+        )
+
+    def _record_object_interaction_end(self) -> None:
+        """End a supported object attempt, including one that produced no text."""
+        if not self._object_interaction_started:
+            return
+        self._object_interaction_started = False
+        self._record(TextEventKind.MAP_ENTITY_INTERACTION_ENDED)
 
     def _record(
         self,

@@ -384,6 +384,7 @@ class RomControlHooks:
         """Track text-driven control domains without consuming their event journal."""
         if kind not in {
             TextEventKind.MAP_ENTITY_INTERACTION_STARTED,
+            TextEventKind.MAP_ENTITY_INTERACTION_ENDED,
             TextEventKind.PAGE_COMPLETED,
             TextEventKind.AUTOMATIC_SCROLL,
         }:

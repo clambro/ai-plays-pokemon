@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from common.schemas import Coords
     from emulator.parsers.sign import Sign
     from emulator.parsers.sprite import Sprite
+    from emulator.parsers.static_object import StaticObject
     from emulator.parsers.warp import Warp
 
 
@@ -37,3 +38,4 @@ class AsciiScreenWithEntities(AsciiScreenTerrain):
     sprites: list[Sprite]
     warps: list[Warp]
     signs: list[Sign]
+    objects: list[StaticObject]

@@ -107,3 +107,32 @@ async def test_sign_dialog_is_attributed_to_its_map_sign() -> None:
     assert target.entity_type == MapEntityType.SIGN
     assert target.entity_id == expected_sign_id
     assert target.entity_id in game_state.signs
+
+
+@pytest.mark.integration
+async def test_static_object_dialog_is_attributed_to_its_map_object() -> None:
+    """Identify the exact supported object selected by the ROM's lookup."""
+    save_file = Path(__file__).parent / "saves" / "mt_moon_poke_center.state"
+    async with Emulator(
+        save_state_path=save_file,
+        mute_sound=True,
+        headless=True,
+    ) as emulator:
+        emulator.drain_text_events()
+        for button in (Button.RIGHT,) * 12 + (Button.UP, Button.A):
+            result = await asyncio.wait_for(emulator.press_overworld_button(button), timeout=5)
+
+        game_state = await emulator.get_game_state()
+        events = emulator.drain_text_events()
+
+    assert result.boundary == ControlBoundary.TEXT_INPUT_READY
+    interaction_starts = [
+        event for event in events if event.kind == TextEventKind.MAP_ENTITY_INTERACTION_STARTED
+    ]
+    assert len(interaction_starts) == 1
+    target = interaction_starts[0].interaction_target
+    assert target is not None
+    assert target.map_id == game_state.map.id
+    assert target.entity_type == MapEntityType.OBJECT
+    assert target.entity_id == 1
+    assert target.entity_id in game_state.objects

@@ -30,6 +30,8 @@ class OverworldMap:
     sprite_interactions: dict[int, MapEntityInteractionMemory]
     known_sign_ids: set[int]
     sign_interactions: dict[int, MapEntityInteractionMemory]
+    known_object_ids: set[int]
+    object_interactions: dict[int, MapEntityInteractionMemory]
     known_warp_ids: set[int]
     warp_usage_iterations: dict[int, int]
     known_map_ids: frozenset[MapId]

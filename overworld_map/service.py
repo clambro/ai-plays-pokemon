@@ -96,6 +96,21 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
             and memory.last_interaction is not None
             and memory.last_interaction_iteration is not None
         },
+        known_object_ids={
+            memory.entity_id
+            for memory in map_entity_memories
+            if memory.entity_type == MapEntityType.OBJECT
+        },
+        object_interactions={
+            memory.entity_id: MapEntityInteractionMemory(
+                text=memory.last_interaction,
+                iteration=memory.last_interaction_iteration,
+            )
+            for memory in map_entity_memories
+            if memory.entity_type == MapEntityType.OBJECT
+            and memory.last_interaction is not None
+            and memory.last_interaction_iteration is not None
+        },
         known_map_ids=known_map_ids,
         north_connection=game_state.map.north_connection,
         south_connection=game_state.map.south_connection,
@@ -163,6 +178,9 @@ async def _add_remove_map_entities(
     new_sign_ids = {
         sign.index for sign in ascii_screen.signs if sign.index not in overworld_map.known_sign_ids
     }
+    new_object_ids = {
+        obj.index for obj in ascii_screen.objects if obj.index not in overworld_map.known_object_ids
+    }
     removed_sprite_ids = {
         entity_id
         for entity_id in overworld_map.known_sprite_ids
@@ -194,6 +212,14 @@ async def _add_remove_map_entities(
         )
         for entity_id in sorted(new_sign_ids)
     )
+    creates.extend(
+        MapEntityMemoryCreate(
+            map_id=overworld_map.id,
+            entity_id=entity_id,
+            entity_type=MapEntityType.OBJECT,
+        )
+        for entity_id in sorted(new_object_ids)
+    )
     # Previously seen sprite has been de-rendered. Likely an item that has been picked up, or a
     # scripted character that has walked off the screen. Sprites are the only entity types that can
     # be de-rendered.
@@ -212,6 +238,7 @@ async def _add_remove_map_entities(
     for entity_id in removed_sprite_ids:
         overworld_map.sprite_interactions.pop(entity_id, None)
     overworld_map.known_sign_ids.update(new_sign_ids)
+    overworld_map.known_object_ids.update(new_object_ids)
     overworld_map.known_warp_ids.update(new_warp_ids)
 
 
@@ -294,6 +321,8 @@ async def _create_overworld_map_from_game_state(
         },
         known_sign_ids=set(),
         sign_interactions={},
+        known_object_ids=set(),
+        object_interactions={},
         known_map_ids=known_map_ids,
         north_connection=game_state.map.north_connection,
         south_connection=game_state.map.south_connection,

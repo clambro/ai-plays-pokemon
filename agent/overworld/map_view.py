@@ -6,14 +6,21 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from agent.overworld import navigation
-from common.enums import AsciiTile
+from common.enums import AsciiTile, FacingDirection
 from common.schemas import Coords
 from overworld_map.views import get_current_map_tiles
 
 if TYPE_CHECKING:
-    from common.enums import FacingDirection
     from emulator.game_state import GameState
     from overworld_map.schemas import OverworldMap
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class ObjectInteractionPosition:
+    """A reachable position and facing direction for using one object."""
+
+    coords: Coords
+    direction: FacingDirection
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -25,6 +32,7 @@ class CurrentMapView:
     reachable_coords: frozenset[Coords]
     visible_coords: frozenset[Coords]
     counter_interactions: dict[int, tuple[Coords, ...]]
+    object_interaction_positions: dict[int, tuple[ObjectInteractionPosition, ...]]
     display_origin: Coords
     display_tiles: np.ndarray
     exploration_candidates: tuple[Coords, ...]
@@ -48,6 +56,11 @@ def build_current_map_view(
     counter_interactions = _get_counter_interactions(
         reachable_coords,
         navigation_tiles,
+        overworld_map,
+        game_state,
+    )
+    object_interaction_positions = _get_object_interaction_positions(
+        reachable_coords,
         overworld_map,
         game_state,
     )
@@ -88,6 +101,7 @@ def build_current_map_view(
         reachable_coords=reachable_coords,
         visible_coords=visible_coords,
         counter_interactions=counter_interactions,
+        object_interaction_positions=object_interaction_positions,
         display_origin=Coords(row=display_top, col=display_left),
         display_tiles=display_tiles,
         exploration_candidates=tuple(
@@ -126,6 +140,36 @@ def _get_counter_interactions(
                 positions.append(standing)
         if positions:
             interactions[entity_id] = tuple(positions)
+    return interactions
+
+
+def _get_object_interaction_positions(
+    reachable_coords: frozenset[Coords],
+    overworld_map: OverworldMap,
+    game_state: GameState,
+) -> dict[int, tuple[ObjectInteractionPosition, ...]]:
+    """Find reachable adjacent positions from which each known object can be used."""
+    interactions = {}
+    offsets = (
+        ((1, 0), FacingDirection.UP),
+        ((-1, 0), FacingDirection.DOWN),
+        ((0, -1), FacingDirection.RIGHT),
+        ((0, 1), FacingDirection.LEFT),
+    )
+    for entity_id in sorted(overworld_map.known_object_ids):
+        obj = game_state.objects.get(entity_id)
+        if obj is None:
+            continue
+        positions = tuple(
+            ObjectInteractionPosition(
+                coords=obj.coords + offset,
+                direction=direction,
+            )
+            for offset, direction in offsets
+            if obj.coords + offset in reachable_coords
+        )
+        if positions:
+            interactions[entity_id] = positions
     return interactions
 
 

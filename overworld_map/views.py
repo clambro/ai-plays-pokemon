@@ -35,6 +35,11 @@ def get_navigation_tiles(current_map: OverworldMap, game_state: GameState) -> np
         if sign is not None and _contains(tiles, sign.coords):
             tiles[sign.coords.row, sign.coords.col] = AsciiTile.SIGN
 
+    for entity_id in current_map.known_object_ids:
+        obj = game_state.objects.get(entity_id)
+        if obj is not None and _contains(tiles, obj.coords):
+            tiles[obj.coords.row, obj.coords.col] = AsciiTile.OBJECT
+
     return tiles
 
 
