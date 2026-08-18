@@ -12,6 +12,74 @@ can puzzle, Pokemon Mansion switches, and Cinnabar Gym quiz machines. It also
 replaces the special-case Pokemon Center PC presentation with the same coherent
 object model.
 
+## Implementation Plan
+
+Implement this ticket in three independently reviewable and committable stages,
+followed by a runtime acceptance gate. Keep this ticket in place until the
+completed behavior has been demonstrated in gameplay.
+
+### Stage 1: Parse Supported Objects
+
+- Parse the ROM's coordinate-bound handler table and preserve each entry's
+  original zero-based table index as its map-local identity. Excluded entries
+  leave gaps; do not renumber supported objects.
+- Allowlist the supported handler families by their ROM bank and address.
+- Return only the object index and coordinate to the rest of the application.
+  Handler addresses, arguments, and classifications remain internal.
+- Add parsed objects to the current game-state snapshot without yet revealing,
+  persisting, or presenting them to the agent.
+- Fail closed for unknown maps, handlers, and unsupported entries.
+- Validate the parser against the actual ROM data, including stable identities,
+  all supported families, and the exclusion policy.
+
+### Stage 2: Discover and Present Objects
+
+- Add `OBJECT` as a distinct map-entity type with its own single-token map
+  glyph.
+- Reuse the existing map-entity memory table for object discovery and nullable
+  interaction memory; do not add a separate persistence system.
+- Discover an object only after its coordinate appears on the visible screen.
+- Compose discovered object overlays dynamically over entity-free terrain and
+  show them only in the current connected region.
+- Derive concrete interaction positions and facing directions from genuinely
+  reachable adjacent terrain. The ROM record's handler argument is not a
+  facing restriction and must not be treated as one.
+- Present objects generically by map-qualified ID, coordinate, interaction
+  position, facing direction, and latest interaction when present. Do not
+  expose handler names or inferred classifications.
+- Remove tileset-derived PC recognition and its special prompt note in the same
+  stage so PCs have exactly one source of truth.
+- Validate discovery locality, connected-region filtering, structured
+  interaction positions, dynamic overlays, and the absence of duplicate PCs.
+  Review model-facing prose directly rather than asserting it in tests.
+
+### Stage 3: Record Object Interactions
+
+- Hook the ROM after a coordinate-bound object lookup succeeds and before its
+  handler runs.
+- Read the current map and original object index, then cross-check that target
+  against the supported-object parser before emitting an interaction event.
+- Pass supported objects through the existing completed-dialog and map-entity
+  memory workflow.
+- Preserve the rule that only completed interactions containing literal text
+  are stored. An unsuccessful attempt or text-free interface produces no empty
+  interaction.
+- Persist the latest text and iteration through the existing repository and
+  recover from persistence failure with a warning.
+- Validate supported and unsupported attribution, text-free attempts, durable
+  interaction history, distinct Vermilion Gym can histories, and unchanged
+  sprite and sign attribution.
+- Update the workflow documentation after the behavior is complete.
+
+### Acceptance Gate
+
+- Run formatting, linting, type checking, and the complete test suite.
+- Perform bounded emulator checks for an ordinary PC and a progression object.
+- Inspect the resulting database and rendered prompt, then verify discovery and
+  interaction behavior in a gameplay run.
+- Do not remove this ticket or mark it complete until the runtime behavior has
+  been reviewed and accepted.
+
 ## Current Failure
 
 The overworld currently understands three persistent map-entity categories:
