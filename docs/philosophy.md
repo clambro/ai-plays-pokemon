@@ -98,9 +98,10 @@ Legend:
 ◆ Sprite
 ∞ Warp
 ‼ Sign
+¤ Object
 ```
 
-This map (plus a plethora of additional notes in the [overworld map prompt](/agent/overworld/prompts.py)) helps the AI understand its surroundings far better than by simply looking at the game screen. It also comes with an index of all the sprites, signs, and warp tiles that the player has currently seen on it.
+This map (plus a plethora of additional notes in the [overworld map prompt](/agent/overworld/prompts.py)) helps the AI understand its surroundings far better than by simply looking at the game screen. It also comes with an index of all the sprites, signs, objects, and warp tiles that the player has currently seen on it.
 
 You will notice that the tile characters chosen above are unusual Unicode characters, and there is a reason for this: Each tile must be exactly one token that doesn't combine with any of its neighbours. LLMs read tokens, not individual characters. If I were to use "w" to represent water, then three water tiles "www" would get consolidated into a single token, different from the original "w" token. This completely breaks the model's ability to count tiles, so we have to ensure that the tiles don't combine. [There is a test](/common/tests/integration/test_enums.py) that validates this for us.
 

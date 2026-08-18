@@ -82,7 +82,10 @@ def test_reducer_preserves_scroll_context_across_event_batches() -> None:
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("entity_type", [MapEntityType.SPRITE, MapEntityType.SIGN])
+@pytest.mark.parametrize(
+    "entity_type",
+    [MapEntityType.SPRITE, MapEntityType.SIGN, MapEntityType.OBJECT],
+)
 def test_reducer_attributes_complete_literal_dialog_to_its_map_entity(
     entity_type: MapEntityType,
 ) -> None:
@@ -125,6 +128,38 @@ def test_reducer_attributes_complete_literal_dialog_to_its_map_entity(
             target=target,
             text="You want the HELIX FOSSIL? Then this is mine!",
         ),
+    )
+    assert reducer.drain_completed_map_entity_interactions() == ()
+
+
+@pytest.mark.unit
+def test_text_free_entity_attempt_does_not_claim_later_dialog() -> None:
+    """Discard a text-free interaction target at its ROM handler boundary."""
+    reducer = TextEventReducer()
+    target = MapEntityInteractionTarget(
+        map_id=MapId.MT_MOON_POKECENTER,
+        entity_type=MapEntityType.OBJECT,
+        entity_id=1,
+    )
+
+    assert (
+        reducer.reduce(
+            [
+                _event(
+                    1,
+                    TextEventKind.MAP_ENTITY_INTERACTION_STARTED,
+                    interaction_target=target,
+                ),
+                _event(2, TextEventKind.MAP_ENTITY_INTERACTION_ENDED),
+                _event(
+                    3,
+                    TextEventKind.INPUT_REQUIRED,
+                    DialogPage(top_line="Later dialog.", bottom_line=""),
+                ),
+                _event(4, TextEventKind.INTERACTION_CLOSED),
+            ]
+        )
+        == "Later dialog."
     )
     assert reducer.drain_completed_map_entity_interactions() == ()
 

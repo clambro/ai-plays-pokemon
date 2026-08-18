@@ -17,6 +17,7 @@ class TextEventKind(StrEnum):
     """Semantic execution boundaries emitted by the supported ROM."""
 
     MAP_ENTITY_INTERACTION_STARTED = auto()
+    MAP_ENTITY_INTERACTION_ENDED = auto()
     PAGE_COMPLETED = auto()
     AUTOMATIC_SCROLL = auto()
     INPUT_REQUIRED = auto()
@@ -88,10 +89,7 @@ class TextEventReducer:
         """Combine stable dialog pages without repeated snapshots or scrolled lines."""
         transcript: list[str] = []
         for event in events:
-            if event.kind == TextEventKind.MAP_ENTITY_INTERACTION_STARTED:
-                self._complete_map_entity_interaction()
-                self._active_interaction_target = event.interaction_target
-                self._previous_page = None
+            if self._apply_map_entity_boundary(event):
                 continue
 
             page = event.page
@@ -129,6 +127,18 @@ class TextEventReducer:
                 self._active_interaction_lines.extend(new_lines)
             self._previous_page = page
         return " ".join(transcript).strip()
+
+    def _apply_map_entity_boundary(self, event: TextEvent) -> bool:
+        """Apply an entity interaction start or end event when present."""
+        if event.kind == TextEventKind.MAP_ENTITY_INTERACTION_STARTED:
+            self._complete_map_entity_interaction()
+            self._active_interaction_target = event.interaction_target
+        elif event.kind == TextEventKind.MAP_ENTITY_INTERACTION_ENDED:
+            self._complete_map_entity_interaction()
+        else:
+            return False
+        self._previous_page = None
+        return True
 
     def drain_completed_map_entity_interactions(
         self,
