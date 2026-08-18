@@ -108,7 +108,7 @@ LEGEND_MAP = {
     AsciiTile.LEDGE_RIGHT: "A ledge that you can jump over from left to right. These tiles are only passable if you approach them from the left and walk rightwards.",
     AsciiTile.FREE: "A walkable tile with nothing noteworthy in it.",
     AsciiTile.PLAYER: "Your current location.",
-    AsciiTile.SPRITE: "A sprite that you can interact with from an adjacent tile. This could be an NPC, an item you can pick up, or some other interactable entity. You cannot walk through sprites, nor can you stand on top of them.",
+    AsciiTile.SPRITE: "A sprite. Normally, you interact with it from an adjacent tile; if its note gives an exact interaction position, use that instead. This could be an NPC, an item you can pick up, or some other interactable entity. You cannot walk through sprites, nor can you stand on top of them.",
     AsciiTile.WARP: "A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.",
     AsciiTile.CUT_TREE: "A tree that can be cut down.",
     AsciiTile.BOULDER_HOLE: "A hole in the ground that you can fall through by standing on it. You can also push boulders into these holes to drop them to the floor below.",
@@ -124,7 +124,7 @@ LEGEND_MAP = {
 }
 
 OVERWORLD_DECISION_PROMPT = """
-You are navigating the overworld. At entry, you are standing still, there is no onscreen text, and the game is ready for your next decision. The screenshot provided above shows the current rendered game screen. After each tool call, its returned screenshot and result are the freshest state and supersede earlier observations.
+You are navigating the overworld. You are standing still. There is no onscreen text; any dialog from any previous action has already been completed. The screenshot provided above shows the current rendered game screen. After each tool call, its returned screenshot and result are the freshest state and supersede earlier observations.
 
 {state}
 
