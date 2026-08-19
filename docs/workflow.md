@@ -54,9 +54,7 @@ flowchart LR
         item["use_item"]
         swap["swap_first_pokemon"]
         sokoban["sokoban_solver"]
-        create_goal["create_goal"]
-        update_goal["update_goal"]
-        delete_goal["delete_goal"]
+        set_goal["set_goal"]
     end
 
     choice --> navigate
@@ -64,18 +62,14 @@ flowchart LR
     choice --> item
     choice --> swap
     choice --> sokoban
-    choice --> create_goal
-    choice --> update_goal
-    choice --> delete_goal
+    choice --> set_goal
 
     navigate --> observe["Settle routine dialog<br/>and return a fresh result"]
     buttons --> observe
     item --> observe
     swap --> observe
     sokoban --> observe
-    create_goal --> observe
-    update_goal --> observe
-    delete_goal --> observe
+    set_goal --> observe
 
     observe -->|"Still in place and in the overworld"| agent
     observe -->|"Player moved or gameplay domain changed"| finish["Return to dispatcher"]
@@ -89,7 +83,7 @@ The prompt includes rolling memory, goals, player and party state, inventory ind
 
 Tool availability is derived once from the prepared state:
 
-- `press_buttons` and the three goal lifecycle tools are always available;
+- `press_buttons` and `set_goal` are always available;
 - `navigation` is unavailable while biking;
 - `swap_first_pokemon` requires more than one party member;
 - `use_item` requires a non-empty inventory;
@@ -117,13 +111,13 @@ This lets the model swap its first Pokémon with another Pokémon in the party. 
 
 This was my least favourite tool to code because it is so complicated and we only need it in two areas, one of which is optional. "Sokoban" puzzles, named for the classic Japanese video game that popularized them, are the style of puzzles that appear in Pokémon as the boulder pushing puzzles in Victory Road and the Seafoam Islands. There is no way that the AI is solving these on its own, so we need an algorithm to do it. This category of problems is technically NP-hard, but thankfully the ones found in-game are simple enough to be solved quickly with a bounded search.
 
-### Create, Update, and Delete Goals
+### Set Goal
 
-The create, update, and delete tools let the agent maintain current objectives worth remembering across iterations. Goal management is discretionary: when the current list remains useful, the agent uses another tool instead.
+The `set_goal` tool lets the agent replace or remove an existing goal by index, or append a goal at the next unused index. Removing a goal compacts the ordered list so it never contains gaps. Goal management is discretionary: when the current list remains useful, the agent uses another tool instead.
 
 ### Memory and Display Updates
 
-The agent narrates its decision alongside each tool call. The tool then produces the actual outcome of the action. Action outcomes are appended to the current rolling-memory block and returned with a fresh screenshot to the local conversation, so the HTML activity log and the agent cannot disagree about what happened. Goal tools return their result directly and update authoritative goal state without copying the result into rolling memory.
+The agent narrates its decision alongside each tool call. The tool then produces the actual outcome of the action. Action outcomes are appended to the current rolling-memory block and returned with a fresh screenshot to the local conversation, so the HTML activity log and the agent cannot disagree about what happened. `set_goal` returns its result directly and updates authoritative goal state without copying the result into rolling memory.
 
 Routine dialog produced by an overworld tool is read, advanced, recorded, and returned with the tool's terminal observation. When it came from a sprite, sign, or object, the latest completed dialog is retained with that entity. Consecutive ordinary interactions, including battle introductions, are settled as one result, and if the player remains in place, the same overworld conversation receives the transcript and chooses the next action. Menus and other decision screens remain untouched, while a ready battle menu returns control to the dispatcher.
 
