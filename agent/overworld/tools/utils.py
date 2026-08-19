@@ -19,7 +19,10 @@ async def complete_overworld_action(
 ) -> OverworldToolResult:
     """Settle routine dialog and render a fresh overworld observation."""
     settlement = await settle_dialog(context)
+    dialog_result = settlement.transcript
+    if dialog_result and not settlement.game_state.screen.is_dialog_box_on_screen:
+        dialog_result += " The dialog box is now closed."
     return [
         build_screenshot_content(settlement.screenshot),
-        "\n\n".join(text for text in (action_result, settlement.transcript) if text),
+        "\n\n".join(text for text in (action_result, dialog_result) if text),
     ]
