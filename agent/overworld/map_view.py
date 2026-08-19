@@ -167,6 +167,7 @@ def _get_object_interaction_positions(
             )
             for offset, direction in offsets
             if obj.coords + offset in reachable_coords
+            and (obj.interaction_direction is None or obj.interaction_direction == direction)
         )
         if positions:
             interactions[entity_id] = positions

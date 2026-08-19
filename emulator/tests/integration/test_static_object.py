@@ -6,7 +6,7 @@ import pytest
 from pyboy import PyBoy
 
 from common.constants import DEFAULT_ROM_PATH
-from common.enums import MapId
+from common.enums import FacingDirection, MapId
 from common.schemas import Coords
 from emulator.parsers.static_object import parse_static_objects
 
@@ -33,6 +33,7 @@ def test_parse_bills_computer(rom_memory: PyBoyMemoryView) -> None:
 
     assert set(objects) == {0}
     assert objects[0].coords == Coords(row=4, col=1)
+    assert objects[0].interaction_direction == FacingDirection.UP
 
 
 @pytest.mark.integration
@@ -45,6 +46,7 @@ def test_parse_all_vermilion_gym_puzzle_cans(
 
     assert set(objects) == expected_indices
     assert len({entity.coords for entity in objects.values()}) == len(expected_indices)
+    assert all(entity.interaction_direction is None for entity in objects.values())
 
 
 @pytest.mark.integration

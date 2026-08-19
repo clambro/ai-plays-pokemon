@@ -109,7 +109,7 @@ def test_object_overlay_provides_reachable_interaction_position() -> None:
         id=MapId.BILLS_HOUSE,
         terrain=[
             list("▓▓▓▓▓"),
-            list("▓▓▓▓▓"),
+            list("▓∙∙∙▓"),
             list("▓∙∙∙▓"),
             list("▓∙∙∙▓"),
             list("▓▓▓▓▓"),
@@ -135,7 +135,13 @@ def test_object_overlay_provides_reachable_interaction_position() -> None:
             sprites={},
             warps={},
             signs={},
-            objects={0: SimpleNamespace(index=0, coords=Coords(row=1, col=2))},
+            objects={
+                0: SimpleNamespace(
+                    index=0,
+                    coords=Coords(row=1, col=2),
+                    interaction_direction=FacingDirection.UP,
+                )
+            },
             pikachu=SimpleNamespace(is_rendered=False),
             player=SimpleNamespace(coords=Coords(row=2, col=2), is_surfing=False),
             map=SimpleNamespace(),
@@ -146,9 +152,10 @@ def test_object_overlay_provides_reachable_interaction_position() -> None:
     map_view = build_current_map_view(overworld_map, game_state)
 
     assert map_view.navigation_tiles[1, 2] == AsciiTile.OBJECT
+    assert len(map_view.object_interaction_positions[0]) == 1
     assert map_view.object_interaction_positions[0][0].coords == Coords(row=2, col=2)
     assert map_view.object_interaction_positions[0][0].direction == FacingDirection.UP
-    assert overworld_map.terrain[1][2] == AsciiTile.WALL
+    assert overworld_map.terrain[1][2] == AsciiTile.FREE
 
 
 @pytest.mark.unit
