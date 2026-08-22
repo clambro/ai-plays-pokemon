@@ -6,14 +6,14 @@ This page walks through the entire AI workflow, one part at a time. You might wa
 
 ```mermaid
 flowchart TD
-    dispatch([Dispatch]) --> observe[Observe decision-ready game]
-    observe --> classify{Classify gameplay domain}
+    observe[Observe decision-ready game] --> classify{Classify gameplay domain}
     classify -->|Overworld| overworld[Run overworld handler]
     classify -->|Battle| battle[Run battle handler]
     classify -->|Text or transition| text[Run text handler]
-    overworld --> return([Return to application loop])
-    battle --> return
-    text --> return
+    overworld --> settle[Wait for game state to settle]
+    battle --> settle
+    text --> settle
+    settle --> observe
 ```
 
 ### Select Handler
@@ -34,8 +34,7 @@ The Overworld Handler is responsible for exploring maps, interacting with the wo
 
 ```mermaid
 flowchart LR
-    dispatch["Typed dispatcher"] --> prepare["Load and update map<br/>Capture initial state and screenshot"]
-    prepare --> agent["GPT-5.6 Luna<br/>overworld agent"]
+    dispatch["Dispatcher"] --> agent["GPT-5.6 Luna<br/>overworld agent"]
     agent --> choice{"Function tool call"}
 
     subgraph toolset["Stable toolset for this overworld run"]
@@ -54,20 +53,21 @@ flowchart LR
     choice --> sokoban
     choice --> set_goal
 
-    navigate --> observe["Settle routine dialog<br/>and return a fresh result"]
-    buttons --> observe
-    item --> observe
-    swap --> observe
-    sokoban --> observe
-    set_goal --> observe
+    navigate --> settle["Settle routine dialog<br/>and return a fresh result"]
+    buttons --> settle
+    item --> settle
+    swap --> settle
+    sokoban --> settle
+    set_goal --> settle
 
-    observe -->|"Still in place and in the overworld"| agent
-    observe -->|"Player moved or gameplay domain changed"| finish["Return to dispatcher"]
+    settle --> continue{"Handle result"}
+    continue -->|"Still in place and in the overworld"| agent
+    continue -->|"Player moved or gameplay domain changed"| finish(["Return to dispatcher"])
 ```
 
 ### Prepare Map
 
-This is the entrypoint for the Overworld Handler. It loads the current map from the database, or creates it if the agent has just entered the map, and updates it with everything visible on the current screen. The map given to the agent contains the terrain it has discovered, together with known sprites, signs, objects, and warps. To avoid confusing separate parts of the same map, it shows only the connected region the player currently occupies. It also shows reachable boundaries leading to neighboring maps, so the agent can still plan beyond the current region without being handed a giant world map. Sprites, signs, and other objects include the most recent dialog the agent received from them. If the agent has never interacted with one, the map says so, encouraging exploration.
+This is the entrypoint for the Overworld Handler. It loads the current map from the database, or creates it if the agent has just entered the map, and updates it with everything visible on the current screen. The map given to the agent contains the terrain it has discovered, together with known sprites, signs, objects, and warps. To avoid confusing separate parts of the same map, it shows only the connected region the player currently occupies. It also shows reachable boundaries leading to neighboring maps, so the agent can still plan beyond the current region without being handed a giant world map.
 
 ### Overworld Tools
 
@@ -75,7 +75,7 @@ Once the map and game state are prepared, the overworld agent chooses from the s
 
 #### Press Buttons
 
-This is the simplest of all the overworld tools, and it does exactly what it says: It allows the AI to enter one or more button presses directly into the emulator. Its main use case is interacting with something using the A button, but it can also rotate the player in place, open the start menu, or walk a few steps. The AI is strongly discouraged from using this tool for ordinary navigation, partly because it wastes tokens but largely because its spatial reasoning is terrible.
+This allows the AI to enter one or more button presses directly into the emulator. Its main use case is interacting with something using the A button, but it can also rotate the player in place, open the start menu, or walk a few steps. The AI is strongly discouraged from using this tool for ordinary navigation, partly because it wastes tokens but largely because its spatial reasoning is terrible.
 
 #### Navigation
 
@@ -83,7 +83,7 @@ This is the main tool used for navigating the overworld. The AI chooses a destin
 
 #### Use Item
 
-Allows the AI to select an item from its bag and attempt to use it.
+This allows the AI to select an item from its bag and attempt to use it.
 
 #### Swap First Pokémon
 
@@ -95,7 +95,7 @@ This was my least favourite tool to code because it is so complicated and we onl
 
 #### Set Goal
 
-This tool lets the agent add, replace, or remove one of its longer-term goals. Goals are ordered and automatically compacted when one is removed, so the list never contains empty gaps. The agent is free to leave the list alone when its existing goals are still useful.
+This tool lets the agent add, replace, or remove one of its longer-term goals. The agent is free to leave the list alone when its existing goals are still useful.
 
 ### Handle Result
 
@@ -107,7 +107,7 @@ The Battle Handler takes over for an entire battle. It gives the agent the curre
 
 ```mermaid
 flowchart LR
-    dispatch["Typed dispatcher"] --> prepare["Settle routine text and prepare<br/>static initial observation"]
+    dispatch["Dispatcher"] --> prepare["Settle routine text and prepare<br/>static initial observation"]
     prepare --> agent["GPT-5.6 Luna<br/>battle agent"]
     agent --> choice{"Function tool call"}
 
@@ -125,15 +125,14 @@ flowchart LR
     choice --> run
     choice --> buttons
 
-    fight --> service["Deterministic<br/>battle service"]
-    switch --> service
-    ball --> service
-    run --> service
-    buttons --> service
-
-    service --> observe["Advance dialog and refresh<br/>screenshot, battle, party, and screen state"]
-    observe -->|"Tool result"| agent
-    agent -->|"Battle mode exits"| finish["Return to dispatcher"]
+    fight --> observe["Advance dialog and refresh<br/>screenshot, battle, party, and screen state"]
+    switch --> observe
+    ball --> observe
+    run --> observe
+    buttons --> observe
+    observe --> handle{"Handle result"}
+    handle -->|"Battle continues"| agent
+    handle -->|"Battle mode exits"| finish(["Return to dispatcher"])
 ```
 
 The available tools depend on the type of battle:
@@ -178,19 +177,16 @@ The Text Handler is responsible for dialog, menus, naming screens, and other int
 
 ```mermaid
 flowchart LR
-    dispatch["Typed dispatcher"] --> inspect["Inspect current screen"]
-    inspect -->|"Plain dialog"| dialog["Read and advance dialog<br/>deterministically"]
-    dialog --> inspect
-    inspect -->|"Decision required"| agent["GPT-5.6 Luna<br/>text agent"]
-    inspect -->|"Text ends or battle begins"| finish["Return to dispatcher"]
+    dispatch["Dispatcher"] --> settle["Settle routine dialog<br/>and return a fresh result"]
+    settle --> handle{"Handle result"}
+    handle -->|"Decision required"| agent["GPT-5.6 Luna<br/>text agent"]
+    handle -->|"Text ends or battle begins"| finish(["Return to dispatcher"])
 
     agent --> choice{"Function tool call"}
     choice --> buttons["press_buttons"]
     choice --> name["assign_name"]
-    buttons --> observe["Read resulting dialog and return<br/>fresh text and screenshot"]
-    name --> observe
-    observe -->|"Text interaction continues"| agent
-    observe -->|"Text ends or battle begins"| finish
+    buttons --> settle
+    name --> settle
 ```
 
 ### Handle Dialog Box
