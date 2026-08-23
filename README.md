@@ -2,9 +2,9 @@
 
 ## Project Overview
 
-This is a fully autonomous AI workflow designed to play [Pokémon Yellow Legacy](https://github.com/cRz-Shadows/Pokémon_Yellow_Legacy) on Hard Mode. Pokémon Yellow Legacy is a ROM hack of Pokémon Yellow that includes a ton of balance changes, quality of life improvements, and bug fixes, while maintaining the feel of the first generation of Pokémon. Hard mode adds level caps and blocks item use in battle, forcing the AI to strategize instead of winning by overlevelling a single Pokémon.
+This is a fully autonomous AI workflow designed to play [Pokémon Yellow Legacy](https://github.com/cRz-Shadows/Pokémon_Yellow_Legacy) on Hard Mode. Pokémon Yellow Legacy is a ROM hack of Pokémon Yellow that includes a balance changes, quality of life improvements, and bug fixes, while maintaining the feel of the first generation of Pokémon. Hard mode adds level caps and blocks item use in battle, forcing the AI to strategize instead of winning by overlevelling a single Pokémon.
 
-The AI workflow is written in Python and combines [Pydantic AI](https://ai.pydantic.dev/) agents with deterministic gameplay tools organized around the three major parts of the game: exploring the overworld, handling text/menus, and battling. The application operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms and LLM-powered decision making. It features hierarchical rolling memory and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs. The goal was to have the AI make the decisions, while keeping the gameplay as close to human speed as possible.
+The AI workflow is written in Python and combines [Pydantic AI](https://ai.pydantic.dev/) agents with deterministic gameplay tools organized around the three major parts of the game: exploring the overworld, handling text, and battling. The application operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms and LLM-powered decision making. It features hierarchical rolling memory and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs. The goal was to have the AI make the decisions, while keeping the gameplay as close to human speed as possible.
 
 Data from the AI workflow and the game's memory is piped into an HTML page for visualization, and the whole project [streams live on Twitch](https://www.twitch.tv/clambr0).
 
@@ -91,14 +91,6 @@ It was the cheapest, fastest frontier model at the time of writing. A big part o
 
 Not natively. You could adapt this code to another Gen 1 or Gen 2 game, but you would have to create new parsers for the memory locations in the new ROM, and probably tweak some of the timing and navigation logic. PyBoy, unfortunately, only runs GameBoy and GameBoy Color games, so you would need to find another emulator to go beyond Gen 2.
 
-### Do you intend to keep working on this?
-
-I'd like to see it beat the game, and I'll try to support it so that it does. After that, I'm unsure. I've always wanted to build something like this, but I also have other project ideas that I'd like to work on.
-
-### How long did it take to build this?
-
-[The first complete version](https://github.com/clambro/ai-plays-pokemon/tree/v1.0.0) took a good chunk of my free time for 2-3 months. The current version benefited from advances in vibe coding and was built on top of the first in a few weeks of my spare time.
-
 ### How much does it cost to run?
 
 Short answer: Roughly $0.60 USD per hour for the GPT-5.6 Luna API calls based on initial testing.
@@ -108,6 +100,14 @@ Longer answer: The rolling memory grows logarithmically over time, meaning the h
 ### How fast does it play?
 
 I put a lot of effort into making its reactions as close to human speed as I could. It usually gets the Pokedex in around 20 mins, and it usually gets to Brock in around 90 mins, but this fluctuates depending on how it decides to explore in the early game.
+
+### Do you intend to keep working on this?
+
+I'd like to see it beat the game, and I'll try to support it so that it does. After that, I'm unsure. I've always wanted to build something like this, but I also have other project ideas that I'd like to work on.
+
+### How long did it take to build this?
+
+[The first complete version](https://github.com/clambro/ai-plays-pokemon/tree/v1.0.0) took a good chunk of my free time for 2-3 months. The current version benefited from advances in vibe coding and was built on top of the first in a few weeks.
 
 ## Licence & Affiliation Notice
 

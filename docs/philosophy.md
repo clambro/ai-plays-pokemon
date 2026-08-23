@@ -14,7 +14,7 @@ At the high end of the autonomy spectrum sits the holy grail: An agent that inte
 
 ### My Approach
 
-My approach to solving Pokémon Yellow Legacy combines freedom with constraint, sitting firmly in the middle of the autonomy spectrum. I want the LLM to make all the high-level decisions, but I don't need it to determine every individual button press. The flow of the game remains unpredictable, but the AI is tightly bound in a workflow to keep it focused and safe. The idea here is that of a production application. LLMs are expensive and a source of uncertainty. You only want to use them when you have to, and in a way where their output space is bounded and can be validated.
+My approach to solving Pokémon Yellow Legacy combines freedom with constraint, sitting firmly in the middle of the autonomy spectrum. I want the LLM to make all the high-level decisions, but I don't need it to determine every individual button press. The flow of the game remains unpredictable, but the AI is tightly bound in a workflow to keep it focused and safe. The idea here is that of a production application. LLMs are expensive and a source of uncertainty. You only want to use them when you have to, and in a way in which their output space is bounded and can be validated.
 
 An example will make this more clear: The first decision you make in Pokémon is what to name your character. Entering even a short name requires dozens of button presses. Asking a vision model to handle the entire sequence would require repeated screenshots and button selections, with each step creating another opportunity for a mistake.
 
@@ -26,7 +26,7 @@ Fundamentally the approach here is to let the agent do the thinking and offload 
 
 ## Core Design Concerns
 
-Given that the core philosophy here is "freedom within constraint," we need an orchestration system to control the state of our AI agent. This orchestration system needs to meet the following criteria:
+Given that the core philosophy here is "freedom within constraints," we need an orchestration system to control the state of our AI agent. This orchestration system needs to meet the following criteria:
 
 - It must run asynchronously so slow model calls, navigation, database access, and other application work do not interrupt emulation. PyBoy is not natively async, so a dedicated worker thread owns the emulator and exposes a small asynchronous controller to the rest of the application.
 - Interfaces between the various layers of the application need to be validated and type-safe or the application will fall into chaos. These interfaces include:
@@ -43,11 +43,11 @@ An agent may use several tools within its domain before returning control to the
 
 ## Overcoming the LLM's Flaws
 
-LLMs have various shortcomings that prevent them from reaching the holy grail of perfect autonomy described above. The two biggest issues we have to deal with are a limited context window and a lack of spatial reasoning ability. We must therefore create some structures to overcome these deficiencies.
+LLMs have various shortcomings that prevent them from reaching the holy grail of perfect autonomy described above. The two biggest issues are a limited context window and a lack of spatial reasoning ability. We must therefore create some structures to overcome these deficiencies.
 
 ### Rolling Memory
 
-The first issue we will tackle is the LLM's finite context window. The agent produces a new memory every iteration, but we cannot keep feeding the entire playthrough back to it forever: the prompt would grow linearly, and so would the cost of every new decision. We also cannot simply delete old memories, because something learned hundreds of iterations ago may still be relevant. The solution is a hierarchical rolling memory that keeps the recent past intact and compresses older history more aggressively as it recedes. If the agent failed to cross a warp thirty seconds ago, it needs the exact details so it doesn't immediately repeat the same mistake. If it crossed Viridian Forest several hours ago, it probably only needs to remember that it reached Pewter City. Older memories can therefore become less detailed without becoming useless.
+The agent produces a new memory every iteration, but we cannot keep feeding the entire playthrough back to it forever: The prompt would grow linearly, as would the cost of every new decision, and eventually we would run out of space in the context window. We also cannot simply delete old memories, because something learned hundreds of iterations ago may still be relevant. The solution is a hierarchical rolling memory that keeps the recent past intact and compresses older history more aggressively as it recedes. If the agent failed to cross a warp thirty seconds ago, it needs the exact details so it doesn't immediately repeat the same mistake. If it crossed Viridian Forest several hours ago, it probably only needs to remember that it reached Pewter City. Older memories can therefore become less detailed without becoming useless.
 
 Each iteration produces a short record of what the model intended to do and what actually happened. The most recent hundred or so records are included in the prompt verbatim. Once this exact tail gets too long, the oldest twenty records are compressed into a single summary. Two twenty-iteration summaries are later compressed into one forty-iteration summary, two forty-iteration summaries become one eighty-iteration summary, and so on.
 
@@ -108,4 +108,4 @@ Attentive readers will note that I have not said anything about editing the emul
 
 ## Conclusion
 
-This project uses Pokémon to illustrate the difference between intelligence and execution. The relevant question is not whether an agent has a harness, but what decisions that harness takes away. A predefined route produces reliable gameplay precisely by eliminating meaningful choice, whereas our agent is free to decide its own route, relying on the rest of the application only to carry out those decisions correctly. Asking a model to perform every low-level action does not make it more autonomous; it only makes the system slower, more expensive, and less reliable. The real work is finding the correct boundary between what the model should decide and what ordinary software should execute. Finding that boundary was extremely fun, leading me into the deepest levels of one of my favourite games and exposing me to all of its insane idiosyncrasies first-hand. That process pushed the limits of my own understanding, and I am tremendously proud of the result.
+This project uses Pokémon to illustrate the difference between intelligence and execution. The question is not whether an agent has a harness, but what decisions that harness takes away. A predefined route produces reliable gameplay by eliminating meaningful choice; whereas our agent is free to decide its own route, relying on the rest of the application only to carry out those decisions correctly. Asking a model to perform every low-level action does not make it more autonomous; it only makes the system slower, more expensive, and less reliable. The true work is finding the correct boundary between what the model should decide and what ordinary software should execute. Finding that boundary was extremely fun, leading me into the deepest depths of one of my favourite games and exposing me to all of its insane idiosyncrasies. That process pushed the limits of my own understanding, and I am tremendously proud of the result.
