@@ -1,300 +1,61 @@
+"""Data models for the explored overworld map."""
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 import numpy as np
-from pydantic import BaseModel
 
-from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
-from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpType
-from common.schemas import Coords
-from emulator.game_state import YellowLegacyGameState
-from emulator.schemas import AsciiScreenWithEntities, Sign, Sprite, Warp
-from overworld_map.prompts import LEGEND_MAP, OVERWORLD_MAP_STR_FORMAT
-
-DEFAULT_ENTITY_DESCRIPTION = (
-    "No description added yet. Approach and interact with this entity to add a description."
-)
-_ALWAYS_VISIBLE_TILES = {
-    AsciiTile.UNSEEN,
-    AsciiTile.WALL,
-    AsciiTile.WATER,
-    AsciiTile.GRASS,
-    AsciiTile.FREE,
-    AsciiTile.PLAYER,
-    AsciiTile.SPRITE,
-    AsciiTile.WARP,
-    AsciiTile.PIKACHU,
-    AsciiTile.SIGN,
-}
+if TYPE_CHECKING:
+    from common.enums import BlockedDirection, MapId
+    from common.schemas import Coords
+    from emulator.parsers.map import MapConnection
 
 
-class OverworldSprite(Sprite):
-    """A sprite on the overworld map, known to the player."""
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MapEntityInteractionMemory:
+    """Last literal interaction observed for one map entity."""
 
-    description: str | None
-
-    @classmethod
-    def from_sprite(cls, sprite: Sprite, description: str | None) -> "OverworldSprite":
-        """Create an overworld sprite from a sprite and a description."""
-        return cls(**sprite.model_dump(), description=description)
-
-    def to_string(self, map_id: MapId) -> str:
-        """Get a string representation of the sprite."""
-        out = (
-            f'sprite_{map_id}_{self.index} at {self.coords}. This sprite is labeled "{self.label}".'
-        )
-        if self.moves_randomly:
-            out += (
-                " Warning: This sprite wanders randomly around the map. Your reactions are too slow"
-                " to catch it. Sprites like this are not worth interacting with."
-            )
-        out += f" Your description is: {self.description or DEFAULT_ENTITY_DESCRIPTION}"
-        return out
+    text: str
+    iteration: int
 
 
-class OverworldSign(Sign):
-    """A sign on the overworld map, known to the player."""
-
-    description: str | None
-
-    @classmethod
-    def from_sign(cls, sign: Sign, description: str | None) -> "OverworldSign":
-        """Create an overworld sign from a sign and a description."""
-        return cls(**sign.model_dump(), description=description)
-
-    def to_string(self, map_id: MapId) -> str:
-        """Get a string representation of the sign."""
-        description = self.description or DEFAULT_ENTITY_DESCRIPTION
-        return f"sign_{map_id}_{self.index} at {self.coords}. Your description is: {description}"
-
-
-class OverworldWarp(Warp):
-    """
-    A warp on the overworld map, known to the player.
-
-    Unlike signs and sprites, warps do not have an editable description.
-    """
-
-    visited: bool
-
-    @property
-    def description(self) -> str:
-        """Get a description of the warp."""
-        if self.warp_type == WarpType.SINGLE:
-            return "This is a single warp tile. Stand on it to warp."
-        if self.warp_type == WarpType.DOUBLE_VERTICAL and self.coords.col == 0:
-            return (
-                "This is a vertical double warp tile. Stand on either tile and walk LEFT to warp."
-            )
-        if self.warp_type == WarpType.DOUBLE_VERTICAL:
-            return (
-                "This is a vertical double warp tile. Stand on either tile and walk RIGHT to warp."
-            )
-        if self.warp_type == WarpType.DOUBLE_HORIZONTAL and self.coords.row == 0:
-            return (
-                "This is a horizontal double warp tile. Stand on either tile and walk UP to warp."
-            )
-        if self.warp_type == WarpType.DOUBLE_HORIZONTAL:
-            return (
-                "This is a horizontal double warp tile. Stand on either tile and walk DOWN to warp."
-            )
-        raise ValueError(f"Unknown warp type: {self.warp_type}")
-
-    @classmethod
-    def from_warp(cls, warp: Warp, visited_maps: list[MapId]) -> "OverworldWarp":
-        """Create an overworld warp from a warp."""
-        # The OUTSIDE placeholder map is not in the DB, so we assume it's always visited.
-        visited = warp.destination in visited_maps or warp.destination == MapId.OUTSIDE
-        return cls(**warp.model_dump(), visited=visited)
-
-    def to_string(self, map_id: MapId) -> str:
-        """Get a string representation of the warp."""
-        if self.visited or self.destination in [MapId.OUTSIDE, MapId.UNKNOWN]:
-            visited_text = f"This warp leads to {self.destination.name}."
-        else:
-            visited_text = (
-                "You have not been to this warp's destination yet. Visiting it will add a new "
-                " building/floor/location to your memory. It might be a good candidate for"
-                " exploration if it is accessible."
-            )
-        return f"warp_{map_id}_{self.index} at {self.coords}. {visited_text} {self.description}"
-
-
-class OverworldMap(BaseModel):
-    """A map of a particular region of the overworld."""
+@dataclass(slots=True, kw_only=True)
+class OverworldMap:
+    """Persistent explored terrain and discoveries for one overworld map."""
 
     id: MapId
-    ascii_tiles: list[list[str]]
+    terrain: list[list[str]]
     blockages: dict[Coords, BlockedDirection]
-    known_sprites: dict[int, OverworldSprite]
-    known_signs: dict[int, OverworldSign]
-    known_warps: dict[int, OverworldWarp]
-    north_connection: MapId | None
-    south_connection: MapId | None
-    east_connection: MapId | None
-    west_connection: MapId | None
+    known_sprite_ids: set[int]
+    sprite_interactions: dict[int, MapEntityInteractionMemory]
+    known_sign_ids: set[int]
+    sign_interactions: dict[int, MapEntityInteractionMemory]
+    known_object_ids: set[int]
+    object_interactions: dict[int, MapEntityInteractionMemory]
+    known_warp_ids: set[int]
+    warp_usage_iterations: dict[int, int]
+    known_map_ids: frozenset[MapId]
+    north_connection: MapConnection | None
+    south_connection: MapConnection | None
+    east_connection: MapConnection | None
+    west_connection: MapConnection | None
 
     @property
     def height(self) -> int:
         """The height of the map."""
-        return len(self.ascii_tiles)
+        return len(self.terrain)
 
     @property
     def width(self) -> int:
         """The width of the map."""
-        return len(self.ascii_tiles[0])
+        return len(self.terrain[0])
 
     @property
-    def ascii_tiles_ndarray(self) -> np.ndarray:
-        """The ascii tiles as a numpy array."""
-        return np.array(self.ascii_tiles)
+    def terrain_ndarray(self) -> np.ndarray:
+        """Return the terrain as a NumPy array."""
+        return np.asarray(self.terrain)
 
     @property
-    def ascii_tiles_str(self) -> str:
-        """The ascii tiles as a string."""
-        return "\n".join("".join(row) for row in self.ascii_tiles)
-
-    def to_string(self, game_state: YellowLegacyGameState) -> str:
-        """Return a string representation of the map."""
-        tiles = self.ascii_tiles_str
-        legend = self._get_legend()
-        screen = game_state.get_ascii_screen()
-        facing_tile, facing_tile_coords = self._get_facing_tile_notes(game_state)
-        explored_percentage = np.mean(self.ascii_tiles_ndarray != AsciiTile.UNSEEN)
-        tile_above, blocked_above = self._get_tile_notes(BlockedDirection.UP, screen)
-        tile_below, blocked_below = self._get_tile_notes(BlockedDirection.DOWN, screen)
-        tile_left, blocked_left = self._get_tile_notes(BlockedDirection.LEFT, screen)
-        tile_right, blocked_right = self._get_tile_notes(BlockedDirection.RIGHT, screen)
-        return OVERWORLD_MAP_STR_FORMAT.format(
-            map_name=self.id.name,
-            ascii_map=tiles,
-            legend=legend,
-            height=self.height,
-            width=self.width,
-            known_sprites=self._get_sprite_notes(),
-            known_warps=self._get_warp_notes(),
-            known_signs=self._get_sign_notes(),
-            explored_percentage=f"{explored_percentage:.0%}",
-            ascii_screen=screen,
-            player_coords=game_state.player.coords,
-            player_direction=game_state.player.direction,
-            facing_tile=facing_tile,
-            facing_tile_coords=facing_tile_coords,
-            tile_above=tile_above,
-            blocked_above=blocked_above,
-            tile_below=tile_below,
-            blocked_below=blocked_below,
-            tile_left=tile_left,
-            blocked_left=blocked_left,
-            tile_right=tile_right,
-            blocked_right=blocked_right,
-            screen_top=game_state.screen.top,
-            screen_left=game_state.screen.left,
-            screen_bottom=game_state.screen.bottom,
-            screen_right=game_state.screen.right,
-            connections=self._get_connection_notes(),
-        )
-
-    def _get_legend(self) -> str:
-        """Get a string representation of the legend based on the tiles on the map."""
-        tiles = {AsciiTile(t) for row in self.ascii_tiles for t in row} | _ALWAYS_VISIBLE_TILES
-        return "\n".join(f'- "{t}": {LEGEND_MAP[t]}' for t in tiles)
-
-    def _get_facing_tile_notes(self, game_state: YellowLegacyGameState) -> tuple[str, Coords]:
-        """Get tile and coords of the tile the player is facing."""
-        offset_map = {
-            FacingDirection.UP: Coords(row=-1, col=0),
-            FacingDirection.DOWN: Coords(row=1, col=0),
-            FacingDirection.LEFT: Coords(row=0, col=-1),
-            FacingDirection.RIGHT: Coords(row=0, col=1),
-        }
-        offset = offset_map[game_state.player.direction]
-        screen_coords = Coords(row=PLAYER_OFFSET_Y, col=PLAYER_OFFSET_X) + offset
-        map_coords = game_state.player.coords + offset
-        # We need to check the screen for adjacency because the tile may be on the next map.
-        tile = game_state.get_ascii_screen().screen[screen_coords.row][screen_coords.col]
-        return tile, map_coords
-
-    def _get_tile_notes(
-        self,
-        direction: BlockedDirection,
-        screen: AsciiScreenWithEntities,
-    ) -> tuple[str, str]:
-        """
-        Get the adjacent tile and blocking notes for the player's current position in the given
-        direction.
-
-        :param blocked: The blocked direction.
-        :param screen: The ASCII screen with entities.
-        :return: A tuple of the adjacent tile and blocking notes.
-        """
-        text = ", but your movement in this direction is blocked by an elevation difference."
-        row_col_map = {
-            BlockedDirection.UP: (PLAYER_OFFSET_Y - 1, PLAYER_OFFSET_X),
-            BlockedDirection.DOWN: (PLAYER_OFFSET_Y + 1, PLAYER_OFFSET_X),
-            BlockedDirection.LEFT: (PLAYER_OFFSET_Y, PLAYER_OFFSET_X - 1),
-            BlockedDirection.RIGHT: (PLAYER_OFFSET_Y, PLAYER_OFFSET_X + 1),
-        }
-        row, col = row_col_map[direction]
-
-        tile = screen.screen[row][col]
-        blockage = screen.blockages.get(Coords(row=row, col=col))
-        blocked_text = text if blockage and blockage & direction else ""
-        return tile, blocked_text
-
-    def _get_sprite_notes(self) -> str:
-        """Get the notes for the sprites on the map, sorted by index."""
-        out = ""
-        if np.isin(AsciiTile.PC_TILE, self.ascii_tiles_ndarray):
-            # This is a bit of a hack, but the model really struggles to find the PC otherwise.
-            loc = np.argwhere(self.ascii_tiles_ndarray == AsciiTile.PC_TILE)[0]
-            out += (
-                f"- There is a PC at {Coords(row=loc[0], col=loc[1])}. It can only be interacted"
-                f" with from below.\n"
-            )
-        elif not self.known_sprites:
-            return "No sprites discovered."
-        out += "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_sprites.items()))
-        return out.strip()
-
-    def _get_warp_notes(self) -> str:
-        """Get the notes for the warps on the map, sorted by index."""
-        if not self.known_warps:
-            return "No warp tiles discovered."
-        return "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_warps.items()))
-
-    def _get_sign_notes(self) -> str:
-        """Get the notes for the signs on the map, sorted by index."""
-        if not self.known_signs:
-            return "No signs discovered."
-        return "\n".join(f"- {v.to_string(self.id)}" for _, v in sorted(self.known_signs.items()))
-
-    def _get_connection_notes(self) -> str:
-        """Get a string representation of the map connections."""
-        if (
-            not self.north_connection
-            and not self.south_connection
-            and not self.east_connection
-            and not self.west_connection
-        ):
-            return (
-                "There are no direct connections to other maps on this map. The only way to leave"
-                " this map is via warp tiles."
-            )
-        out = ""
-        for direction, connection in [
-            ("NORTH", self.north_connection),
-            ("SOUTH", self.south_connection),
-            ("EAST", self.east_connection),
-            ("WEST", self.west_connection),
-        ]:
-            if connection is not None:
-                out += f"- The map to the {direction} is {connection.name}.\n"
-            else:
-                out += f"- There is no map connection to the {direction}.\n"
-        out += (
-            "Important: The fact that you are aware of a map connection does not necessarily mean"
-            " that you can access it. If the navigation tool is unable to find a valid path to a"
-            " given map connection, it means that you cannot access it from your current position."
-            " You either need to explore more of the current map to find it, or you must get to"
-            " another part of the current map to access it via an intermediate map (e.g. through"
-            " a building or cave)."
-        )
-        return out.strip()
+    def terrain_str(self) -> str:
+        """Return the serialized terrain."""
+        return "\n".join("".join(row) for row in self.terrain)

@@ -1,5 +1,4 @@
-"""
-Tests for the streaming background HTML page.
+"""Tests for the streaming background HTML page.
 
 These tests validate that the HTML page renders correctly without console errors
 and that all JavaScript functionality works as expected.
@@ -12,6 +11,7 @@ import pytest
 from aiohttp import ClientSession
 from aiohttp.web import HTTPOk
 
+import streaming.server as server_module
 from streaming.schemas import GameStateView, LogEntryView, PartyPokemonView
 from streaming.server import BackgroundStreamServer
 
@@ -20,6 +20,7 @@ MOCK_DATA = GameStateView(
     money=18143,
     pokedex_seen=45,
     pokedex_caught=21,
+    total_tokens=12_345_678,
     total_cost=23.51,
     play_time_seconds=596153,  # about 165 hours
     badges=["BOULDERBADGE", "CASCADEBADGE", "THUNDERBADGE"],
@@ -134,7 +135,7 @@ async def test_html_page_handles_empty_data() -> None:
 
 
 @pytest.mark.integration
-async def test_html_page_assets_exist() -> None:
+def test_html_page_assets_exist() -> None:
     """Test that all required asset files exist and are accessible."""
     background_dir = Path("streaming/background")
 
@@ -150,16 +151,14 @@ async def test_html_page_assets_exist() -> None:
 
     expected_badges = ["boulderbadge.png", "cascadebadge.png", "thunderbadge.png"]
     for badge in expected_badges:
-        if not (badges_dir / badge).exists():
-            pytest.fail(f"Badge asset {badge} not found.")
+        assert (badges_dir / badge).exists(), f"Badge asset {badge} not found."
 
     pokemon_dir = assets_dir / "pokemon"
     assert pokemon_dir.exists()
 
     expected_pokemon = ["pikachu.png", "golbat.png", "geodude.png"]
     for pokemon in expected_pokemon:
-        if not (pokemon_dir / pokemon).exists():
-            pytest.fail(f"Pokemon asset {pokemon} not found.")
+        assert (pokemon_dir / pokemon).exists(), f"Pokemon asset {pokemon} not found."
 
 
 @pytest.mark.integration
@@ -175,9 +174,34 @@ async def test_html_page_data_updates() -> None:
             assert content == ""
 
         server._current_data = MOCK_DATA
-        await asyncio.sleep(0.2)  # Wait for the data to be updated.
 
         async with session.get("http://localhost:8083/api/state.json") as response:
             assert response.status == HTTPOk.status_code
             json_content = await response.json()
             assert json_content == MOCK_DATA.model_dump()
+
+
+@pytest.mark.integration
+async def test_server_cleans_up_if_startup_is_cancelled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Clean up the partially initialized runner when server startup is cancelled."""
+    startup_started = asyncio.Event()
+    keep_starting = asyncio.Event()
+
+    async def wait_to_start(_site: server_module.web.TCPSite) -> None:
+        startup_started.set()
+        await keep_starting.wait()
+
+    monkeypatch.setattr(server_module.web.TCPSite, "start", wait_to_start)
+    server = BackgroundStreamServer(host="localhost", port=8084)
+    startup = asyncio.create_task(server.__aenter__())
+    await startup_started.wait()
+
+    startup.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await startup
+    assert server.runner is None
+    assert server.site is None
+    assert BackgroundStreamServer.get_instance() is None

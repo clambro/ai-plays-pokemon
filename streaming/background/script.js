@@ -35,6 +35,7 @@ const GameStateSchema = z.object({
     money: z.number().int().min(0),
     pokedex_seen: z.number().int().min(0),
     pokedex_caught: z.number().int().min(0),
+    total_tokens: z.number().int().min(0),
     total_cost: z.number().min(0),
     play_time_seconds: z.number().int().min(0),
     badges: z.array(z.string()),
@@ -48,6 +49,7 @@ const refs = {
     money: document.getElementById('money'),
     iteration: document.getElementById('iteration'),
     caughtSeen: document.getElementById('caught-seen'),
+    totalTokens: document.getElementById('total-tokens'),
     totalCost: document.getElementById('total-cost'),
     playTime: document.getElementById('play-time'),
     badgesContainer: document.getElementById('badges-container'),
@@ -56,6 +58,8 @@ const refs = {
     partyDiv: document.getElementById('party'),
     template: document.getElementById('pokemon-card-template'),
 };
+
+let renderedLog = null;
 
 /**
  * @param {z.infer<typeof GameStateSchema>} data
@@ -66,6 +70,7 @@ function updateDisplay(data) {
         iteration,
         pokedex_seen,
         pokedex_caught,
+        total_tokens,
         total_cost,
         play_time_seconds,
         badges,
@@ -78,6 +83,7 @@ function updateDisplay(data) {
         !refs.money
         || !refs.iteration
         || !refs.caughtSeen
+        || !refs.totalTokens
         || !refs.totalCost
         || !refs.playTime
         || !refs.badgesContainer
@@ -91,8 +97,9 @@ function updateDisplay(data) {
 
     // --- Info Bar ---
     refs.money.textContent = `¥${money.toLocaleString()}`;
-    refs.iteration.textContent = iteration.toString();
+    refs.iteration.textContent = iteration.toLocaleString();
     refs.caughtSeen.textContent = `${pokedex_caught}/${pokedex_seen}`;
+    refs.totalTokens.textContent = formatTokenCount(total_tokens);
     refs.totalCost.textContent = `$${total_cost.toFixed(2)}`;
     const hours = Math.floor(play_time_seconds / 3600);
     const minutes = Math.floor((play_time_seconds % 3600) / 60);
@@ -126,16 +133,36 @@ function updateDisplay(data) {
     refs.goalsDiv.scrollTop = 0;  // Auto-scroll to the top.
 
     // --- Log ---
-    const logFrag = document.createDocumentFragment();
-    if (log && log.length) {
-        log.forEach((entry) => {
+    const unchangedEntries = renderedLog === null
+        ? 0
+        : log.findIndex((entry, index) => {
+            const renderedEntry = renderedLog[index];
+            return !renderedEntry
+                || entry.iteration !== renderedEntry.iteration
+                || entry.thought !== renderedEntry.thought;
+        });
+    const commonLength = unchangedEntries === -1
+        ? Math.min(log.length, renderedLog.length)
+        : unchangedEntries;
+    if (renderedLog === null || commonLength !== log.length || commonLength !== renderedLog.length) {
+        const initialRender = renderedLog === null;
+        while (refs.logDiv.children.length > commonLength) {
+            refs.logDiv.lastElementChild.remove();
+        }
+        const logFrag = document.createDocumentFragment();
+        for (const entry of log.slice(commonLength)) {
             const p = document.createElement('p');
             p.textContent = `[${entry.iteration}] ${entry.thought}`;
             logFrag.appendChild(p);
-        });
+        }
+        refs.logDiv.appendChild(logFrag);
+        renderedLog = log;
+        if (initialRender) {
+            refs.logDiv.scrollTop = refs.logDiv.scrollHeight;
+        } else {
+            refs.logDiv.scrollTo({ top: refs.logDiv.scrollHeight, behavior: 'smooth' });
+        }
     }
-    refs.logDiv.replaceChildren(logFrag);
-    refs.logDiv.scrollTop = refs.logDiv.scrollHeight;  // Auto-scroll to the bottom.
 
     // --- Party ---
     const partyFrag = document.createDocumentFragment();
@@ -149,6 +176,17 @@ function updateDisplay(data) {
         }
     }
     refs.partyDiv.replaceChildren(partyFrag);
+}
+
+/**
+ * @param {number} count
+ * @returns {string}
+ */
+function formatTokenCount(count) {
+    if (count < 1_000) return count.toLocaleString();
+    if (count < 1_000_000) return `${(count / 1_000).toFixed(2)}k`;
+    if (count < 1_000_000_000) return `${(count / 1_000_000).toFixed(2)}M`;
+    return `${(count / 1_000_000_000).toFixed(2)}B`;
 }
 
 /**

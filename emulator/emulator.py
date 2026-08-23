@@ -1,23 +1,46 @@
+"""PyBoy integration for controlling Pokémon Yellow."""
+
 import asyncio
 import base64
 import io
-from contextlib import AbstractAsyncContextManager, suppress
+from contextlib import AbstractAsyncContextManager
 from copy import deepcopy
-from pathlib import Path
+from typing import TYPE_CHECKING, Self
 
-from loguru import logger
 from PIL import Image
-from pyboy import PyBoy
 
 from common.constants import DEFAULT_ROM_PATH
-from common.enums import Button
-from emulator.game_state import YellowLegacyGameState
+from emulator.control_events import ControlBoundary
+from emulator.game_state import GameState
+from emulator.parsers.map_collision import read_map_collision_tiles
+from emulator.pyboy_worker import PyBoyWorker
+from emulator.text_events import TextEventKind, TextEventReducer, drive_standard_dialog
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from pyboy import PyBoy
+
+    from common.enums import Button
+    from emulator.control_events import ControlResult
+    from emulator.text_events import CompletedMapEntityInteraction, TextEvent
 
 
-class YellowLegacyEmulator(AbstractAsyncContextManager):
-    """
-    Wrapper for accessing the game state of Pokemon Yellow Legacy. Encapsulates the PyBoy API so
-    that the rest of the codebase doesn't need to worry about emulation or memory addresses.
+class Emulator(AbstractAsyncContextManager):
+    """Control Pokémon Yellow Legacy through a thread-owned PyBoy instance.
+
+    The public API owns Pokémon-specific behavior. A private worker owns PyBoy and executes each
+    requested operation on its dedicated thread.
+
+    Args:
+        rom_path: Path to the ROM to load.
+        save_state: Base64-encoded state to restore.
+        save_state_path: File containing a state to restore.
+        mute_sound: Whether to initialize PyBoy with zero volume.
+        headless: Whether to use PyBoy's null window instead of SDL.
+
+    Raises:
+        ValueError: Both ``save_state`` and ``save_state_path`` are provided.
     """
 
     def __init__(
@@ -33,132 +56,218 @@ class YellowLegacyEmulator(AbstractAsyncContextManager):
         if save_state and save_state_path:
             raise ValueError("Cannot specify both save_state and save_state_path.")
 
-        volume = 0 if mute_sound else 100
-        window = "null" if headless else "SDL2"
-        self._pyboy = PyBoy(rom_path, sound_volume=volume, window=window)
+        self._worker = PyBoyWorker(
+            rom_path,
+            save_state,
+            save_state_path,
+            mute_sound=mute_sound,
+            headless=headless,
+        )
+        self._text_event_reducer = TextEventReducer()
 
-        # This load_state piece is technically blocking, but it's only done once at initialization,
-        # so there's nothing for it to block.
-        if save_state:
-            buffer = io.BytesIO(base64.b64decode(save_state))
-            buffer.seek(0)  # Pyboy requires this.
-            self._pyboy.load_state(buffer)
-        elif save_state_path:
-            with save_state_path.open("rb") as f:
-                self._pyboy.load_state(f)
-
-        self._is_stopped = True
-        self._tick_task: asyncio.Task | None = None
-        self._button_lock = asyncio.Lock()
-
-    async def __aenter__(self) -> "YellowLegacyEmulator":
-        """Start the emulator's tick task when entering the context."""
-        self._is_stopped = False
-        self._tick_task = asyncio.create_task(self.async_tick_indefinitely())
-        await asyncio.sleep(1)  # Give the emulator time to load before continuing.
+    async def __aenter__(self) -> Self:
+        """Start the PyBoy worker when entering the context."""
+        await self._worker.start()
+        try:
+            await asyncio.sleep(1)  # Give the emulator time to load before continuing.
+        except asyncio.CancelledError:
+            await self._worker.stop()
+            raise
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
-        """Stop the emulator and cancel the tick task when exiting the context."""
-        self.stop()
-        if self._tick_task:
-            self._tick_task.cancel()
-            with suppress(asyncio.CancelledError):
-                await self._tick_task
+        """Stop the PyBoy worker when exiting the context."""
+        shutdown_error: Exception | None = None
+        try:
+            await self._worker.stop()
+        except Exception as exc:  # noqa: BLE001
+            # Preserve worker failures without masking an exception from the context body.
+            shutdown_error = exc
 
-    def get_game_state(self) -> YellowLegacyGameState:
+        if exc_type is None and shutdown_error is not None:
+            raise shutdown_error
+
+    async def get_game_state(self) -> GameState:
         """Get the current game state."""
-        self._check_stopped()
-        return YellowLegacyGameState.from_memory(self._pyboy.memory)
+        return await self._worker.execute(lambda pyboy: GameState.from_memory(pyboy.memory))
 
-    async def async_tick_indefinitely(self) -> None:
-        """Tick the emulator indefinitely. Should be run on its own thread."""
-        while True:
-            self._check_stopped()
-            async with self._button_lock:
-                if not self._tick():
-                    self.stop()
-                    break
-            # Pass control back to the event loop. Making this time too large will cause audio to
-            # stutter, but making it too small can corrupt save states by not giving the emulator
-            # enough time to save the state. This value seems to work well.
-            await asyncio.sleep(0.002)
+    async def get_game_state_with_control_boundary(
+        self,
+    ) -> tuple[GameState, ControlBoundary | None]:
+        """Capture parsed game state and its rendered ROM decision boundary."""
+        return await self._worker.execute_with_control_boundary(
+            lambda pyboy: GameState.from_memory(pyboy.memory)
+        )
 
-    def stop(self) -> None:
-        """Stop the emulator."""
-        self._is_stopped = True
-        self._pyboy.stop()
+    def drain_text_events(self) -> tuple[TextEvent, ...]:
+        """Claim every currently recorded text event exactly once."""
+        return self._worker.drain_text_events()
 
-    def get_screenshot(self) -> Image.Image:
-        """Get a screenshot of the current game screen."""
-        self._check_stopped()
-        img = deepcopy(self._pyboy.screen.image)
-        if not isinstance(img, Image.Image):
-            raise TypeError("No screenshot available")
-        return img
+    async def wait_for_text_events(
+        self,
+        max_wait_seconds: float | None = None,
+    ) -> tuple[TextEvent, ...]:
+        """Wait without blocking emulation, then claim the available event batch."""
+        return await self._worker.wait_for_text_events(max_wait_seconds)
+
+    async def advance_battle_dialog(self) -> str:
+        """Advance battle dialog until the next decision or battle exit."""
+        initial_snapshot = await self._worker.drain_settled_text_events_with_control_boundary()
+        return await drive_standard_dialog(
+            self,
+            reducer=self._text_event_reducer,
+            stop_on=frozenset(
+                {
+                    TextEventKind.MENU_OPENED,
+                    TextEventKind.SPECIAL_INTERFACE_OPENED,
+                    TextEventKind.BATTLE_ENDED,
+                }
+            ),
+            initial_snapshot=initial_snapshot,
+        )
+
+    async def advance_text_dialog(self) -> str:
+        """Advance ordinary dialog until the interaction changes domain or closes."""
+        initial_snapshot = await self._worker.drain_settled_text_events_with_control_boundary()
+        return await drive_standard_dialog(
+            self,
+            reducer=self._text_event_reducer,
+            stop_on=frozenset(
+                {
+                    TextEventKind.MENU_OPENED,
+                    TextEventKind.SPECIAL_INTERFACE_OPENED,
+                    TextEventKind.INTERACTION_CLOSED,
+                    TextEventKind.OVERWORLD_ENTERED,
+                    TextEventKind.BATTLE_ENDED,
+                }
+            ),
+            initial_snapshot=initial_snapshot,
+        )
+
+    def consume_pending_dialog(self) -> str:
+        """Claim and reduce currently pending dialog events."""
+        return self._text_event_reducer.reduce(self.drain_text_events())
+
+    def consume_completed_map_entity_interactions(
+        self,
+    ) -> tuple[CompletedMapEntityInteraction, ...]:
+        """Claim completed map-entity interactions reduced from literal ROM text events."""
+        return self._text_event_reducer.drain_completed_map_entity_interactions()
+
+    async def get_game_state_with_map_collision_tiles(
+        self,
+    ) -> tuple[GameState, list[list[int]]]:
+        """Get the current game state and its full map collision grid on demand."""
+
+        def _capture(pyboy: PyBoy) -> tuple[GameState, list[list[int]]]:
+            return GameState.from_memory(pyboy.memory), read_map_collision_tiles(pyboy.memory)
+
+        return await self._worker.execute(_capture)
+
+    async def get_game_state_with_screenshot(
+        self,
+    ) -> tuple[GameState, Image.Image]:
+        """Capture the current game state and screen image together.
+
+        Returns:
+            The current game state and a copied screen image captured without allowing the emulator
+            to tick between them.
+
+        Raises:
+            RuntimeError: The emulator has been stopped.
+            TypeError: PyBoy exposes no valid screenshot.
+        """
+
+        def _capture_game_state_with_screenshot(
+            pyboy: PyBoy,
+        ) -> tuple[GameState, Image.Image]:
+            game_state = GameState.from_memory(pyboy.memory)
+            screenshot = deepcopy(pyboy.screen.image)
+            if not isinstance(screenshot, Image.Image):
+                raise TypeError("No screenshot available")
+            return game_state, screenshot
+
+        return await self._worker.execute(_capture_game_state_with_screenshot)
+
+    async def get_game_state_with_screenshot_and_control_boundary(
+        self,
+    ) -> tuple[GameState, Image.Image, ControlBoundary | None]:
+        """Capture game state, screenshot, and rendered ROM boundary together."""
+
+        def _capture(pyboy: PyBoy) -> tuple[GameState, Image.Image]:
+            game_state = GameState.from_memory(pyboy.memory)
+            screenshot = deepcopy(pyboy.screen.image)
+            if not isinstance(screenshot, Image.Image):
+                raise TypeError("No screenshot available")
+            return game_state, screenshot
+
+        (game_state, screenshot), boundary = await self._worker.execute_with_control_boundary(
+            _capture
+        )
+        return game_state, screenshot, boundary
 
     async def press_button(
         self,
         button: Button,
+    ) -> ControlResult:
+        """Send a button and wait for the active input domain's rendered boundary.
+
+        Args:
+            button: Game Boy button to press.
+
+        Returns:
+            The resulting control boundary.
+
+        Raises:
+            RuntimeError: The emulator has been stopped.
+        """
+        operation_id = await self._worker.start_control_button(button)
+        return await self._worker.wait_for_control_result(operation_id)
+
+    async def pulse_button(self, button: Button) -> None:
+        """Send a short button pulse whose completion is owned by a dialog driver."""
+        await self._worker.pulse_button(button)
+
+    async def press_overworld_button(
+        self,
+        button: Button,
         *,
-        wait_for_animation: bool = True,
-    ) -> None:
-        """
-        Send a button press to the emulator and wait for any animations to finish.
+        observe_steps: bool = False,
+    ) -> ControlResult:
+        """Press an overworld button and wait for its next rendered decision boundary."""
+        operation_id = await self._worker.start_overworld_button(
+            button,
+            observe_steps=observe_steps,
+        )
+        return await self._worker.wait_for_control_result(operation_id)
 
-        :param button: The button to press.
-        :param hold_frames: The number of frames to hold each button.
-        :param wait_for_animation: Whether to wait for animations to finish. You usually want this,
-            but you can skip it if you have bespoke handling for subsequent activity.
-        """
-        self._check_stopped()
-        # If we're deferring animation handling, we want to exit as quickly as possible. Two frames
-        # seems to be the minimum to guarantee that the button press is registered.
-        hold_frames = 10 if wait_for_animation else 2
-        async with self._button_lock:
-            self._pyboy.button(button, hold_frames)
-        if wait_for_animation:
-            await self.wait_for_animation_to_finish()
+    async def advance_text_dialog_until_overworld_ready(self) -> str:
+        """Advance an active interaction through restored external overworld control."""
+        dialog = await self.advance_text_dialog()
+        await self.wait_for_overworld_ready()
+        return dialog
 
-    async def wait_for_animation_to_finish(self) -> None:
-        """
-        Wait until all ongoing animations have finished.
+    async def wait_for_overworld_ready(self) -> ControlResult:
+        """Wait for scripted activity to restore external overworld control."""
+        operation_id = await self._worker.start_boundary_wait(ControlBoundary.OVERWORLD_READY)
+        return await self._worker.wait_for_control_result(operation_id)
 
-        The various hyperparameters here are a bit wishy-washy. I determined emperically that they
-        work pretty well, but they're probably not optimal, especially since different scenarios
-        have different animation speeds.
-        """
-        logger.info("Checking for animations and waiting for them to finish.")
-        self._check_stopped()
-        successes = 0
-        required_successes = 5
-        while successes < required_successes:
-            game_state = self.get_game_state()
-            await asyncio.sleep(0.15)
-            new_game_state = self.get_game_state()
-            # The blinking cursor should not block progress, so we ignore it.
-            if game_state.screen.tiles_without_cursor == new_game_state.screen.tiles_without_cursor:
-                successes += 1
-            else:
-                successes = 0
+    async def wait_for_menu_ready(self) -> ControlResult:
+        """Wait until a standard menu has completed cursor placement and rendering."""
+        operation_id = await self._worker.start_boundary_wait(ControlBoundary.MENU_READY)
+        return await self._worker.wait_for_control_result(operation_id)
+
+    async def wait_until_ready(self) -> ControlResult:
+        """Wait until the ROM reaches any rendered external decision boundary."""
+        operation_id = await self._worker.start_boundary_wait()
+        return await self._worker.wait_for_control_result(operation_id)
 
     async def get_emulator_save_state(self) -> str:
         """Get the current save state as a Base64 encoded string."""
-        self._check_stopped()
-        with io.BytesIO() as f:
-            await asyncio.to_thread(self._pyboy.save_state, f)
-            return base64.b64encode(f.getvalue()).decode("utf-8")
 
-    def _check_stopped(self) -> None:
-        if self._is_stopped:
-            raise RuntimeError("Emulator is stopped.")
+        def _capture_save_state(pyboy: PyBoy) -> str:
+            with io.BytesIO() as file:
+                pyboy.save_state(file)
+                return base64.b64encode(file.getvalue()).decode("utf-8")
 
-    def _tick(self, count: int = 1) -> bool:
-        """
-        Tick the emulator forward by `count` frames.
-
-        :param count: Number of frames to tick forward.
-        :return: Whether the game is still running.
-        """
-        self._check_stopped()
-        return self._pyboy.tick(count, render=True, sound=True)
+        return await self._worker.execute(_capture_save_state)

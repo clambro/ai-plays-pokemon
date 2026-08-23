@@ -1,61 +1,31 @@
-from enum import StrEnum
+"""Mutable goal memory for gameplay agents."""
 
-from loguru import logger
-from pydantic import BaseModel, Field
+from dataclasses import dataclass, field
 
-
-class GoalPriority(StrEnum):
-    """The priority of a goal. Alphabetical order is thankfully the same as numerical order."""
-
-    PRIMARY = "Primary"
-    SECONDARY = "Secondary"
-    TERTIARY = "Tertiary"
+MAX_GOALS = 4
 
 
-class Goal(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class Goal:
     """A goal for the agent."""
 
     goal: str
-    priority: GoalPriority
-
-    def __str__(self) -> str:
-        """Return a string representation of the goal."""
-        return f"{self.priority}: {self.goal}"
+    updated_at_iteration: int
 
 
-class Goals(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class Goals:
     """The goals for the agent."""
 
-    goals: list[Goal] = Field(default_factory=list)
-
-    def __str__(self) -> str:
-        """Return a string representation of the goals."""
-        out = "<goals_info>\n"
-        out += (
-            "Here are the goals that you have set for yourself. Your ultimate goal is, of course,"
-            " to collect all eight badges and become the Elite Four Champion, but these goals here"
-            " are the next steps on your journey to that goal. The actions that you take and the"
-            " thoughts that you think should all be in service of these goals."
-        )
-        out += "\n<goals>\n"
-        if self.goals:
-            out += "\n".join(f"[{i}] {g}" for i, g in enumerate(self.goals))
-        else:
-            out += "You have not set any goals yet."
-        out += "\n</goals>\n"
-        out += "</goals_info>"
-        return out
+    goals: list[Goal] = field(default_factory=list)
 
     def append(self, *goals: Goal) -> None:
         """Append new goals to the list."""
         for goal in goals:
-            logger.info(f'Adding new goal: "{goal.goal}"')
             goal.goal = goal.goal.strip()
             self.goals.append(goal)
-        self.goals = sorted(self.goals, key=lambda g: g.priority.value)
 
     def remove(self, *indices: int) -> None:
         """Remove goals from the list."""
         for index in sorted(indices, reverse=True):  # Last-to-first to avoid index shifting.
-            logger.info(f'Removing goal: "{self.goals[index]}"')
             del self.goals[index]

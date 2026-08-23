@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 </head>
 
@@ -19,33 +19,41 @@
             <p>Pokemon Yellow Legacy: HARD MODE!</p>
         </header>
 
-        <section class="info-bar panel" role="region" aria-label="Session stats">
-            <dl class="info-item">
-                <dt class="label">ITERATION</dt>
-                <dd class="value" id="iteration">0</dd>
-            </dl>
-            <dl class="info-item">
-                <dt class="label">PLAY TIME</dt>
-                <dd class="value" id="play-time">0h 0m</dd>
-            </dl>
-            <dl class="info-item">
-                <dt class="label">LLM COST</dt>
-                <dd class="value" id="total-cost">$0.00</dd>
-            </dl>
-            <dl class="info-item">
-                <dt class="label">MONEY</dt>
-                <dd class="value" id="money">¥0</dd>
-            </dl>
-            <dl class="info-item">
-                <dt class="label">BADGES</dt>
-                <ul class="value" id="badges-container" role="list">
-                    <!-- Badge icons will be injected here -->
-                </ul>
-            </dl>
-            <dl class="info-item">
-                <dt class="label">CAUGHT/SEEN</dt>
-                <dd class="value" id="caught-seen">0/0</dd>
-            </dl>
+        <section class="info-bar" role="region" aria-label="Session stats">
+            <section class="info-group panel" aria-label="AI stats">
+                <dl class="info-item">
+                    <dt class="label">ITERATION</dt>
+                    <dd class="value" id="iteration">0</dd>
+                </dl>
+                <dl class="info-item">
+                    <dt class="label">TOKENS</dt>
+                    <dd class="value" id="total-tokens">0</dd>
+                </dl>
+                <dl class="info-item">
+                    <dt class="label">LLM COST</dt>
+                    <dd class="value" id="total-cost">$0.00</dd>
+                </dl>
+            </section>
+            <section class="info-group panel" aria-label="Game stats">
+                <dl class="info-item">
+                    <dt class="label">PLAY TIME</dt>
+                    <dd class="value" id="play-time">0h 0m</dd>
+                </dl>
+                <dl class="info-item">
+                    <dt class="label">MONEY</dt>
+                    <dd class="value" id="money">¥0</dd>
+                </dl>
+                <dl class="info-item">
+                    <dt class="label">BADGES</dt>
+                    <ul class="value" id="badges-container" role="list">
+                        <!-- Badge icons will be injected here -->
+                    </ul>
+                </dl>
+                <dl class="info-item">
+                    <dt class="label">CAUGHT/SEEN</dt>
+                    <dd class="value" id="caught-seen">0/0</dd>
+                </dl>
+            </section>
         </section>
 
         <main class="log-panel panel">

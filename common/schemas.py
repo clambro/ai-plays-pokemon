@@ -1,3 +1,5 @@
+"""Data models shared throughout the application."""
+
 from typing import Any
 
 from pydantic import BaseModel, model_serializer, model_validator
@@ -30,9 +32,11 @@ class Coords(BaseModel):
         return abs(self.row) + abs(self.col)
 
     def __str__(self) -> str:
+        """Return a human-readable representation."""
         return f"({self.row}, {self.col})"
 
     def __repr__(self) -> str:
+        """Return a developer-readable representation."""
         return self.__str__()
 
     def __eq__(self, other: object) -> bool:
@@ -45,13 +49,13 @@ class Coords(BaseModel):
         """Hash the coordinate pair."""
         return hash((self.row, self.col))
 
-    def __add__(self, other: "Coords | tuple[int, int]") -> "Coords":
+    def __add__(self, other: Coords | tuple[int, int]) -> Coords:
         """Add two coordinates together."""
         if isinstance(other, Coords):
             return Coords(row=self.row + other.row, col=self.col + other.col)
         return Coords(row=self.row + other[0], col=self.col + other[1])
 
-    def __sub__(self, other: "Coords | tuple[int, int]") -> "Coords":
+    def __sub__(self, other: Coords | tuple[int, int]) -> Coords:
         """Subtract two coordinates."""
         if isinstance(other, Coords):
             return Coords(row=self.row - other.row, col=self.col - other.col)

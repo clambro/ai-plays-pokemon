@@ -1,11 +1,11 @@
 """Meta-test file to ensure that all tests have the correct markers and are in the right folders."""
 
 import ast
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, TypeGuard
 
 import pytest
-from pydantic import BaseModel
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -42,11 +42,11 @@ def test_all_tests_have_marker(valid_markers: set[str]) -> None:
                     f" folder: ({marker} != {func.parent_folder})",
                 )
                 continue
-    if errors:
-        pytest.fail("Errors found in the marker meta-test:\n" + "\n".join(errors))
+    assert not errors, "Errors found in the marker meta-test:\n" + "\n".join(errors)
 
 
-class _TestFunctionParams(BaseModel):
+@dataclass(slots=True, kw_only=True)
+class _TestFunctionParams:
     """Parameters for a test function."""
 
     name: str

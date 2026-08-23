@@ -1,0 +1,35 @@
+ROM patches for the Pokemon Yellow Legacy decomp (resources/pokeyellow/).
+Apply with: cd resources/pokeyellow && git apply ../../pokeyellow.patch && make
+
+1. Fix badge boost branch condition for Pikachu.
+   The ROM has a bug where `jr nz` is used instead of `jr z`, causing
+   non-Pikachu Pokemon to get the 25% boost intended for Pikachu, and
+   Pikachu to get the 12.5% boost intended for everyone else.
+
+2. Fix AI neutral type effectiveness constant.
+   Yellow Legacy's Layer 3 trainer AI compares against `EFFECTIVE`, but
+   `AIGetTypeEffectiveness` still initialized neutral matchups with `$10`
+   (hex 16). That caused neutral damaging moves to be encouraged like
+   super-effective ones. Initialize neutral to `EFFECTIVE` instead.
+
+diff --git a/engine/battle/core.asm b/engine/battle/core.asm
+--- a/engine/battle/core.asm
++++ b/engine/battle/core.asm
+@@ -5553,7 +5553,7 @@ AIGetTypeEffectiveness:
+ 	ld b, [hl]                 ; b = type 1 of player's pokemon
+ 	inc hl
+ 	ld c, [hl]                 ; c = type 2 of player's pokemon
+ 	; initialize to neutral effectiveness
+-	ld a, $10 ; bug: should be EFFECTIVE (10)
++	ld a, EFFECTIVE
+ 	ld [wTypeEffectiveness], a
+ 	ld hl, TypeEffects
+@@ -6883,7 +6883,7 @@ ApplyBadgeStatBoosts:
+ 	rr e
+     ld a, [wBattleMonSpecies] ; Check if the species is Pikachu
+     cp PIKACHU
+-    jr nz, .continue ; times by 1.25 if its Pikachu
++    jr z, .continue ; Pikachu gets 1.25x, others get 1.125x
+ 	srl d
+ 	rr e
+ .continue

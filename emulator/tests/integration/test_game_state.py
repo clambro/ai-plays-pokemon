@@ -1,5 +1,4 @@
-"""
-Tests for the game state.
+"""Tests for the game state.
 
 For the ASCII screen tests, it's a bit of an antipattern to use strings instead of the enum values
 because if we ever need to change the characters used, we'll have to update the tests, but this is
@@ -10,15 +9,14 @@ from pathlib import Path
 
 import pytest
 
-from common.enums import BlockedDirection
+from common.enums import AsciiTile, BlockedDirection
 from common.schemas import Coords
-from emulator.emulator import YellowLegacyEmulator
+from emulator.emulator import Emulator
 
 
 @pytest.mark.integration
 async def test_get_ascii_screen_viridian_flowers() -> None:
-    """
-    Test that the ASCII screen is correct for Viridian City near the flowers.
+    """Test that the ASCII screen is correct for Viridian City near the flowers.
 
     Specifically making sure that the flowers don't break the free tile rendering.
     """
@@ -26,15 +24,15 @@ async def test_get_ascii_screen_viridian_flowers() -> None:
         state_filename="viridian_flowers.state",
         expected_blockages={},
         expected_screen=[
-            "∙∙∙▉▉▉▉∙∙∙",
-            "∙∙∙▉⇆‼▉∙∙∙",
+            "∙∙∙▓▓▓▓∙∙∙",
+            "∙∙∙▓∞‼▓∙∙∙",
             "∙∙∙∙∙∙∙∙∙∙",
-            "∙⌄⌄⌄⌄⌄⌄⌄⌄⌄",
-            "∙∙∙◈☻∙∙∙∙∙",
+            "∙▽▽▽▽▽▽▽▽▽",
+            "∙∙∙♦☺∙∙∙∙∙",
             "∙∙‼∙∙∙∙∙∙∙",
             "∙∙∙∙∙∙∙∙∙∙",
-            "▉∙∙▉▉▉▉▉▉▉",
-            "▉∙∙▉∙∙∙∙∙▉",
+            "▓∙∙▓▓▓▓▓▓▓",
+            "▓∙∙▓∙∙∙∙∙▓",
         ],
     )
 
@@ -77,25 +75,22 @@ async def test_get_ascii_screen_mt_moon_corners() -> None:
             Coords(row=7, col=6): BlockedDirection.DOWN,
         },
         expected_screen=[
-            "∙∙∙▉∙∙∙▉∙∙",
-            "∙∙∙▉∙∙∙▉▉∙",
-            "∙∙∙▉∙∙∙▉∙∙",
-            "▉▉▉▉▉∙∙▉∙∙",
-            "∙∙∙∙☻◈∙▉∙∙",
-            "‼◆∙∙∙∙∙▉▉∙",
-            "∙∙∙∙∙∙∙▉∙∙",
-            "∙∙∙∙∙∙∙▉▉∙",
-            "∙▉∙∙▉▉∙∙∙∙",
+            "∙∙∙▓∙∙∙▓∙∙",
+            "∙∙∙▓∙∙∙▓▓∙",
+            "∙∙∙▓∙∙∙▓∙∙",
+            "▓▓▓▓▓∙∙▓∙∙",
+            "∙∙∙∙☺♦∙▓∙∙",
+            "‼◆∙∙∙∙∙▓▓∙",
+            "∙∙∙∙∙∙∙▓∙∙",
+            "∙∙∙∙∙∙∙▓▓∙",
+            "∙▓∙∙▓▓∙∙∙∙",
         ],
     )
 
 
 @pytest.mark.integration
 async def test_get_ascii_screen_mt_moon_corners_2() -> None:
-    """
-    Test that the ASCII screen is correct for all the weird blocking corners in Mt Moon in a
-    different part of the map.
-    """
+    """Test another set of unusual blocking corners in Mt Moon."""
     await _helper_test_expected_screen(
         state_filename="mt_moon_corners_2.state",
         expected_blockages={
@@ -103,47 +98,45 @@ async def test_get_ascii_screen_mt_moon_corners_2() -> None:
             **{Coords(row=r, col=4): BlockedDirection.LEFT for r in range(3, 9)},
         },
         expected_screen=[
-            "▉▉▉▉▉▉▉▉▉▉",
-            "▉▉▉∙▉∙∙∙∙∙",
-            "▉▉▉∙▉▉▉▉▉▉",
-            "▉▉▉∙◆∙∙∙∙∙",
-            "▉▉▉∙☻∙∙∙∙∙",
-            "▉▉▉∙◈∙∙∙∙∙",
-            "▉▉▉∙∙∙∙⇆∙∙",
-            "▉▉▉∙∙∙∙◆∙∙",
-            "▉▉▉∙∙∙∙∙∙∙",
+            "▓▓▓▓▓▓▓▓▓▓",
+            "▓▓▓∙▓∙∙∙∙∙",
+            "▓▓▓∙▓▓▓▓▓▓",
+            "▓▓▓∙◆∙∙∙∙∙",
+            "▓▓▓∙☺∙∙∙∙∙",
+            "▓▓▓∙♦∙∙∙∙∙",
+            "▓▓▓∙∙∙∙∞∙∙",
+            "▓▓▓∙∙∙∙◆∙∙",
+            "▓▓▓∙∙∙∙∙∙∙",
         ],
     )
 
 
 @pytest.mark.integration
 async def test_get_ascii_screen_mt_moon_poke_center() -> None:
-    """
-    Test that the ASCII screen is correct for Mt. Moon Pokémon Center.
+    """Test that the ASCII screen is correct for Mt. Moon Pokémon Center.
 
-    Specifically making sure that Pokemon center floor tiles are rendered as free tiles.
+    Specifically making sure that floor and talk-over counter tiles are distinguished.
     """
     await _helper_test_expected_screen(
         state_filename="mt_moon_poke_center.state",
         expected_blockages={},
         expected_screen=[
-            "▉▉▉▉▉▉▉▉▉▉",
-            "▉▉▉▉◆◆▉▉▉∙",
-            "▉▉▉▉▉▉▉▉◆▉",
-            "▉▉∙∙∙◆∙∙◆∙",
-            "▉▉∙∙☻∙∙∙∙∙",
-            "▉▉∙∙◈∙∙∙∙∙",
-            "▉▉▉∙∙∙∙▉▉∙",
-            "▉▉▉∙⇆⇆∙▉▉∙",
-            "▉▉▉▉▉▉▉▉▉▉",
+            "▓▓▓▓▓▓▓▓▓▓",
+            "▓▓▓▓◆◆▓▓▓∙",
+            "▓▓‡‡‡‡▓‡◆‡",
+            "▓‡∙∙∙◆∙∙◆∙",
+            "▓▓∙∙☺∙∙∙∙∙",
+            "▓▓∙∙♦∙∙∙∙∙",
+            "▓▓▓∙∙∙∙▓▓∙",
+            "▓▓▓∙∞∞∙▓▓∙",
+            "▓▓▓▓▓▓▓▓▓▓",
         ],
     )
 
 
 @pytest.mark.integration
 async def test_get_ascii_screen_viridian_water() -> None:
-    """
-    Test that the ASCII screen is correct for Viridian City near the water.
+    """Test that the ASCII screen is correct for Viridian City near the water.
 
     Specifically making sure that the boundaries around water are rendered correctly, as well as
     the cut tree.
@@ -153,22 +146,21 @@ async def test_get_ascii_screen_viridian_water() -> None:
         expected_blockages={},
         expected_screen=[
             "∙∙∙∙∙∙∙∙∙∙",
-            "∙∙∙∙∙∙∙◆∙∙",
-            "▉▉∙∙∙∙∙∙∙∙",
-            "∙∙┬∙∙∙∙∙∙∙",
-            "◆∙▉▉☻◈∙∙∙∙",
-            "∙∙≋≋≋≋≋≋∙∙",
-            "∙∙≋≋≋≋≋≋∙∙",
-            "∙∙≋≋≋≋≋≋∙∙",
-            "⌄⌄≋≋≋≋≋≋⌄∙",
+            "∙∙∙∙∙∙∙∙∙∙",
+            "▓▓∙∙∙∙◆∙∙∙",
+            "∙∙†∙∙∙∙∙∙∙",
+            "◆∙▓▓☺♦∙∙∙∙",
+            "∙∙≈≈≈≈≈≈∙∙",
+            "∙∙≈≈≈≈≈≈∙∙",
+            "∙∙≈≈≈≈≈≈∙∙",
+            "▽▽≈≈≈≈≈≈▽∙",
         ],
     )
 
 
 @pytest.mark.integration
 async def test_get_ascii_screen_viridian_forest() -> None:
-    """
-    Test that the ASCII screen is correct for Viridian Forest.
+    """Test that the ASCII screen is correct for Viridian Forest.
 
     Checking the unique tilemap used here.
     """
@@ -176,15 +168,15 @@ async def test_get_ascii_screen_viridian_forest() -> None:
         state_filename="viridian_forest.state",
         expected_blockages={},
         expected_screen=[
-            "❀∙∙❀▉▉▉▉▉▉",
-            "❀∙∙❀▉▉▉▉▉▉",
-            "❀∙∙❀❀❀❀❀❀‼",
-            "❀▉▉❀❀❀❀❀❀❀",
-            "∙▉▉∙☻∙∙∙∙∙",
-            "∙◆∙∙◈∙∙∙∙∙",
-            "∙∙∙∙▉▉▉▉▉▉",
-            "∙∙∙‼▉▉▉▉▉▉",
-            "∙∙∙∙▉▉▉▉▉▉",
+            "※∙∙※▓▓▓▓▓▓",
+            "※∙∙※▓▓▓▓▓▓",
+            "※∙∙※※※※※※‼",
+            "※▓▓※※※※※※※",
+            "∙▓▓∙☺∙∙∙∙∙",
+            "∙◆∙∙♦∙∙∙∙∙",
+            "∙∙∙∙▓▓▓▓▓▓",
+            "∙∙∙‼▓▓▓▓▓▓",
+            "∙∙∙∙▓▓▓▓▓▓",
         ],
     )
 
@@ -196,15 +188,15 @@ async def test_get_ascii_screen_three_ledges() -> None:
         state_filename="three_ledges.state",
         expected_blockages={},
         expected_screen=[
-            "▉▉▉▉▉▉▉▉▉▉",
-            "▉▉▉▉▉▉▉▉▉▉",
-            "∙∙⌊∙∙∙∙⌋∙⌋",
-            "∙∙⌊∙∙∙∙⌋∙⌋",
-            "∙∙⌊∙☻∙∙⌋∙⌋",
-            "∙∙⌄⌄⌄∙⌄⌋∙⌋",
-            "∙∙∙∙∙∙∙∙∙⌋",
-            "∙∙∙∙∙∙∙∙∙⌋",
-            "∙∙∙∙∙∙∙∙∙⌋",
+            "▓▓▓▓▓▓▓▓▓▓",
+            "▓▓▓▓▓▓▓▓▓▓",
+            "∙∙≤∙∙∙∙≥∙≥",
+            "∙∙≤∙∙∙∙≥∙≥",
+            "∙∙≤∙☺∙∙≥∙≥",
+            "∙∙▽▽▽∙▽≥∙≥",
+            "∙∙∙∙∙∙∙∙∙≥",
+            "∙∙∙∙∙∙∙∙∙≥",
+            "∙∙∙∙∙∙∙∙∙≥",
         ],
     )
 
@@ -216,15 +208,15 @@ async def test_get_ascii_screen_rocket_spinners() -> None:
         state_filename="rocket_spinners.state",
         expected_blockages={},
         expected_screen=[
-            "▉∙⊙∙←∙∙∙←∙",
-            "▉▉▉∙∙▉▉▉▉▉",
-            "▉◆▉∙→∙∙∙⊙∙",
-            "▉∙▉∙▉▉◆▉⇧▉",
-            "▉∙∙∙☻▉▉▉∙▉",
-            "▉▉▉▉∙→∙∙∙⇩",
-            "▉∙∙∙→∙∙∙⇧∙",
-            "▉∙▉▉⇧▉▉▉∙⊙",
-            "▉∙∙∙∙▉▉▉▉▉",
+            "▓∙●∙\u2039∙∙∙\u2039∙",
+            "▓▓▓∙∙▓▓▓▓▓",
+            "▓◆▓∙\u203a∙∙∙●∙",
+            "▓∙▓∙▓▓◆▓Λ▓",
+            "▓∙∙∙☺▓▓▓∙▓",
+            "▓▓▓▓∙\u203a∙∙∙\u2228",
+            "▓∙∙∙\u203a∙∙∙Λ∙",
+            "▓∙▓▓Λ▓▓▓∙●",
+            "▓∙∙∙∙▓▓▓▓▓",
         ],
     )
 
@@ -236,15 +228,15 @@ async def test_get_ascii_screen_gym4_tree() -> None:
         state_filename="gym4_tree.state",
         expected_blockages={},
         expected_screen=[
-            "∙◆▉∙∙∙∙┬∙◆",
-            "∙∙▉∙∙∙∙▉∙∙",
-            "∙∙▉▉▉┬▉▉∙∙",
-            "∙∙▉▉∙∙▉▉∙∙",
-            "∙∙▉▉☻∙▉▉∙∙",
-            "∙∙∙∙◈∙∙◆∙▉",
-            "▉∙◆∙∙∙∙∙∙∙",
-            "∙∙▉▉∙∙▉▉∙∙",
-            "∙∙▉▉∙∙▉▉∙∙",
+            "∙◆▓∙∙∙∙†∙◆",
+            "∙∙▓∙∙∙∙▓∙∙",
+            "∙∙▓▓▓†▓▓∙∙",
+            "∙∙▓▓∙∙▓▓∙∙",
+            "∙∙▓▓☺∙▓▓∙∙",
+            "∙∙∙∙♦∙∙◆∙▓",
+            "▓∙◆∙∙∙∙∙∙∙",
+            "∙∙▓▓∙∙▓▓∙∙",
+            "∙∙▓▓∙∙▓▓∙∙",
         ],
     )
 
@@ -259,15 +251,15 @@ async def test_get_ascii_screen_seafoam_collisions() -> None:
             **{Coords(row=2, col=c): BlockedDirection.UP for c in range(2, 9)},
         },
         expected_screen=[
-            "≋≋≋≋≋≋≋≋≋▉",
-            "≋≋≋≋≋≋≋≋≋▉",
-            "≋▉∙∙∙∙∙∙∙∙",
-            "≋▉∙∙∙∙⇆∙∙∙",
-            "≋▉∙◈☻∙∙∙∙∙",
-            "≋▉∙∙∙∙∙∙∙∙",
-            "≋▉∙∙∙∙∙∙∙∙",
-            "≋▉∙▉▉▉▉▉∙∙",
-            "≋≋≋≋≋≋≋▉∙∙",
+            "≈≈≈≈≈≈≈≈≈▓",
+            "≈≈≈≈≈≈≈≈≈▓",
+            "≈▓∙∙∙∙∙∙∙∙",
+            "≈▓∙∙∙∙∞∙∙∙",
+            "≈▓∙♦☺∙∙∙∙∙",
+            "≈▓∙∙∙∙∙∙∙∙",
+            "≈▓∙∙∙∙∙∙∙∙",
+            "≈▓∙▓▓▓▓▓∙∙",
+            "≈≈≈≈≈≈≈▓∙∙",
         ],
     )
 
@@ -279,15 +271,15 @@ async def test_get_ascii_screen_seafoam_boulder_holes() -> None:
         state_filename="seafoam_boulder_holes.state",
         expected_blockages={},
         expected_screen=[
-            "▉▉∙∙∙∙∙∙∙∙",
-            "▉▉∙∙∙∙∙∙∙∙",
-            "▉▉∙∙∙∙∙∙∙∙",
-            "▉▉∙∙∙∙∙∙▉▉",
-            "▉▉∙∙☻◈⇆∙▉∙",
-            "▉▉▉▉▉▉▉▉▉∙",
-            "▉∙∙∙∙∙◆∙▉◆",
-            "▉∙∙∙◆▉∙∙∙∙",
-            "▉∙∙∙◌▉∙◌∙∙",
+            "▓▓∙∙∙∙∙∙∙∙",
+            "▓▓∙∙∙∙∙∙∙∙",
+            "▓▓∙∙∙∙∙∙∙∙",
+            "▓▓∙∙∙∙∙∙▓▓",
+            "▓▓∙∙☺♦∞∙▓∙",
+            "▓▓▓▓▓▓▓▓▓∙",
+            "▓∙∙∙∙∙◆∙▓◆",
+            "▓∙∙∙◆▓∙∙∙∙",
+            "▓∙∙∙○▓∙○∙∙",
         ],
     )
 
@@ -299,15 +291,15 @@ async def test_get_ascii_screen_gym8_spinners() -> None:
         state_filename="gym8_spinners.state",
         expected_blockages={},
         expected_screen=[
-            "∙∙∙∙∙▉◆▉∙∙",
-            "∙∙∙∙∙▉⇩▉∙∙",
-            "∙◆∙∙∙▉∙▉⊙⇧",
-            "▉▉▉▉◈∙⊙∙∙∙",
-            "∙∙∙⊙☻∙∙∙∙∙",
-            "∙∙∙⊙∙▉∙∙▉∙",
-            "▉▉▉▉∙▉◆∙▉∙",
-            "∙∙∙←∙∙∙∙∙∙",
-            "∙∙∙←∙∙⇆⇆∙∙",
+            "∙∙∙∙∙▓◆▓∙∙",
+            "∙∙∙∙∙▓\u2228▓∙∙",
+            "∙◆∙∙∙▓∙▓●Λ",
+            "▓▓▓▓♦∙●∙∙∙",
+            "∙∙∙●☺∙∙∙∙∙",
+            "∙∙∙●∙▓∙∙▓∙",
+            "▓▓▓▓∙▓◆∙▓∙",
+            "∙∙∙\u2039∙∙∙∙∙∙",
+            "∙∙∙\u2039∙∙∞∞∙∙",
         ],
     )
 
@@ -319,15 +311,15 @@ async def test_get_ascii_screen_victory_road_pressure_plate() -> None:
         state_filename="victory_road_plate.state",
         expected_blockages={},
         expected_screen=[
-            "▉∙∙▉▉▉▉▉▉▉",
-            "▉∙∙▉▉∙∙∙▉▉",
-            "∙∙◆▉∙∙∙∙▉▉",
-            "▉▉▉▉∙▉∙□▉▉",
-            "∙∙∙◈☻∙∙▉▉▉",
-            "▉▉∙∙∙∙∙▉▉▉",
-            "▉▉∙∙▉▉▉▉▉▉",
-            "▉▉▉▉▉▉▉▉▉▉",
-            "▉▉▉▉▉▉▉▉▉▉",
+            "▓∙∙▓▓▓▓▓▓▓",
+            "▓∙∙▓▓∙∙∙▓▓",
+            "∙∙◆▓∙∙∙∙▓▓",
+            "▓▓▓▓∙▓∙◇▓▓",
+            "∙∙∙♦☺∙∙▓▓▓",
+            "▓▓∙∙∙∙∙▓▓▓",
+            "▓▓∙∙▓▓▓▓▓▓",
+            "▓▓▓▓▓▓▓▓▓▓",
+            "▓▓▓▓▓▓▓▓▓▓",
         ],
     )
 
@@ -338,22 +330,32 @@ async def _helper_test_expected_screen(
     expected_blockages: dict[Coords, BlockedDirection],
     expected_screen: list[str],
 ) -> None:
-    """
-    Helper function to test the ASCII screen for a given state file.
+    """Check the parsed ASCII screen and blockages for a saved state.
 
-    :param state_filename: The name of the state file to load.
-    :param expected_blockages: The expected blockages in the screen.
-    :param expected_screen: The expected screen as a list of strings.
+    Args:
+        state_filename: Save-state fixture to load.
+        expected_blockages: Expected paired-tile movement restrictions.
+        expected_screen: Expected rows of classified ASCII tiles.
     """
     save_file = Path(__file__).parent / "saves" / state_filename
-    async with YellowLegacyEmulator(
+    async with Emulator(
         save_state_path=save_file,
         mute_sound=True,
         headless=True,
     ) as emulator:
-        game_state = emulator.get_game_state()
+        game_state = await emulator.get_game_state()
 
+    terrain = game_state.get_ascii_screen_terrain()
     screen = game_state.get_ascii_screen()
 
     assert str(screen).split("\n") == expected_screen
     assert screen.blockages == expected_blockages
+    assert terrain.blockages == expected_blockages
+    assert not {
+        AsciiTile.PLAYER,
+        AsciiTile.PIKACHU,
+        AsciiTile.SPRITE,
+        AsciiTile.WARP,
+        AsciiTile.SIGN,
+        AsciiTile.OBJECT,
+    } & {tile for row in terrain.screen for tile in row}

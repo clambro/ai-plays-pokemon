@@ -1,150 +1,202 @@
-# AI Workflow: Node-by-Node Analysis
+# AI Workflow
 
-This page walks through the entire Junjo workflow, one node at a time. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving into this, as some of that terminology will be used here. At a high level, we have an entrypoint for the agent that handles memory updates and retrieval, setting goals, and routing the flow to one of three dedicated subflows, each of which handles a major aspect of playing Pokémon. The three subflows are the Overworld Handler, the Battle Handler, and the Text Handler, and each one has its own suite of tools to operate in its domain.
+This page walks through the entire AI workflow, one part at a time. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology will be used here. At a high level, we have an entrypoint that looks at the current game state and routes control to one of three dedicated handlers: the Overworld Handler, the Battle Handler, or the Text Handler. Each handler has its own agent and its own suite of tools for operating in that part of the game.
 
-Note: Pretty much all the constants below are default values that can be edited in [`common/constants.py`](/common/constants.py).
+## The Main Agent Loop
 
-## The Main Agent Graph
+```mermaid
+flowchart TD
+    observe[Observe decision-ready game] --> classify{Classify gameplay domain}
+    classify -->|Overworld| overworld[Run overworld handler]
+    classify -->|Battle| battle[Run battle handler]
+    classify -->|Text or transition| text[Run text handler]
+    overworld --> settle[Wait for game state to settle]
+    battle --> settle
+    text --> settle
+    settle --> observe
+```
 
-![The Main Agent Graph](../visualization/agent_graph/Graph.svg)
+### Select Handler
 
-### Prepare Agent Store
+This is the entrypoint for the workflow. It waits until the game is ready for input, reads the current game state, and decides which handler should take over. Battles go to the Battle Handler; dialog and menus go to the Text Handler, and everything else goes to the Overworld Handler. The same shared agent state is maintained in every trip through this loop. This is where we keep the rolling memory, goals, iteration count, token usage, and other information that needs to flow from one handler to the next.
 
-This is the entrypoint for the entire AI workflow. It is responsible for taking the previous agent state and preparing for the next iteration of the loop. It increments certain counters, waits for any in-game animations to finish, and determines which subflow the workflow will route to depending on whether the current game state is in a battle, free to move in the overworld, or reading dialog/menu text.
+### Iterations and Memory
 
-### Create/Update Long-Term Memory
+An iteration is one meaningful decision or recorded outcome. The model explains what it intends to do, the selected tool carries out the action, and the result is added to the rolling memory. Decisions and results are sent to the streaming background as they happen, so the public log follows the same sequence the agent sees. Each handler can make several related decisions while keeping the same conversation alive (e.g. multiple turns in a battle). This lets the agent react to the result of an action without rebuilding its entire context every time. Once the current handler concludes, control returns to the main loop, the game state is checked again, and the loop repeats.
 
-These are two nodes that run in parallel if the Prepare Agent Store node determines that a refresh of the long-term memory is required. They do exactly what their names suggest: One creates new long-term memory objects in the database, and the other updates and edits the ones that are currently in memory.
+### Backups
 
-### Retrieve Long-Term Memory
+The application saves a backup every 10 minutes. Each backup contains the emulator state, the live agent state, and a copy of the database, which together are enough to resume the run. If the workflow fails unexpectedly, it attempts to create one final backup before shutting down.
 
-This is the node that pulls long-term memories from the database. It first constructs a query based on the current game state, embeds the query, and compares it via cosine similarity to the memories in the database. The top few memories are then re-ranked by a combination of cosine similarity to the query, recency, and importance. The top 10 by that combined score then get added to the agent state until the next retrieval iteration.
+## The Overworld Handler
 
-### Should Critique
+The Overworld Handler is responsible for exploring maps, interacting with the world, managing the party outside battle, and deciding where to go next.
 
-This node determines if we need to invoke the critic model by checking for loops in the raw memory every few iterations. If the model is saying or doing the same thing over and over again, this node will trigger a critique.
+```mermaid
+flowchart LR
+    dispatch["Dispatcher"] --> agent["GPT-5.6 Luna<br/>overworld agent"]
+    agent --> choice{"Function tool call"}
 
-### Critique
+    subgraph toolset["Stable toolset for this overworld run"]
+        navigate["navigation"]
+        buttons["press_buttons"]
+        item["use_item"]
+        swap["swap_first_pokemon"]
+        sokoban["sokoban_solver"]
+        set_goal["set_goal"]
+    end
 
-The two critique nodes (here and in the Overworld Handler) are the only instances in the entire workflow where Gemini Pro is used. If the AI feels completely stuck, it can (at most once every 20 iterations) invoke Gemini Pro to get some advice on how to get unstuck. This is helpful for breaking the model out of weird loops, though we do have to be careful: Sometimes the critic's advice is wrong!
+    choice --> navigate
+    choice --> buttons
+    choice --> item
+    choice --> swap
+    choice --> sokoban
+    choice --> set_goal
 
-The key distinction between this node and the one in the Overworld Handler is that this one is triggered automatically by loops in the raw memory, whereas the other one has to be triggered by explicit tool use from the model and is specifically tailored to solving problems in the overworld. This one is particularly useful for catching issues in the Text and Battle Handlers, which otherwise have no way to ask for help from the critic if they get stuck.
+    navigate --> settle["Settle routine dialog<br/>and return a fresh result"]
+    buttons --> settle
+    item --> settle
+    swap --> settle
+    sokoban --> settle
+    set_goal --> settle
 
-### Dummy Node
+    settle --> continue{"Handle result"}
+    continue -->|"Still in place and in the overworld"| agent
+    continue -->|"Player moved or gameplay domain changed"| finish(["Return to dispatcher"])
+```
 
-This is purely topological to simplify the flow of the graph. It does nothing.
+### Prepare Map
 
-### The Three Subflows
+This is the entrypoint for the Overworld Handler. It loads the current map from the database, or creates it if the agent has just entered the map, and updates it with everything visible on the current screen. The map given to the agent contains the terrain it has discovered, together with known sprites, signs, objects, and warps. To avoid confusing separate parts of the same map, it shows only the connected region the player currently occupies. It also shows reachable boundaries leading to neighboring maps, so the agent can still plan beyond the current region without being handed a giant world map.
 
-At this point, the flow is diverted into one of the three subflows. Each of these is treated fully below.
+### Overworld Tools
 
-### Do Updates
+Once the map and game state are prepared, the overworld agent chooses from the six tools described below. The available tools depend on the current game state: For example, there is no reason to offer the item tool when the bag is empty, or the Sokoban solver when there is no boulder puzzle in sight. If the action leaves the player in the same place and still in the overworld, the result goes back to the same conversation so the agent can try something else. If the player moves or the game enters another part of the workflow, control returns to the main loop.
 
-This is another collection of parallel nodes, each of which runs every few iterations. They're all pretty self-explanatory:
-- Update Goals: Optionally sets/edits/completes the AI's goals
-- Update Summary Memory: Optionally adds new memories to the summary memory, and thus bumps off old, irrelevant ones
-- Update Background Stream: Updates the live background for streaming at `localhost:8080` with the latest information from the workflow and game states
+#### Press Buttons
 
-### Save Game State
+This allows the AI to enter one or more button presses directly into the emulator. Its main use case is interacting with something using the A button, but it can also rotate the player in place, open the start menu, or walk a few steps. The AI is strongly discouraged from using this tool for ordinary navigation, partly because it wastes tokens but largely because its spatial reasoning is terrible.
 
-The final state in the workflow. Its only job is to capture the save state of the emulator and add it to the agent workflow state so that we can use it for testing, backups, and disaster recovery. After this node is run, the whole workflow starts over again.
+#### Navigation
 
-## The Overworld Handler Subflow
+This is the main tool used for navigating the overworld. The AI chooses a destination from the explored map, and the tool checks whether that destination is actually reachable. An A* search algorithm then finds the shortest path and starts walking there. Every step, it checks for interruptions and updates the map with anything newly discovered. The navigation algorithm is sophisticated enough to handle ledges, surfing, cut trees, Team Rocket spinner tiles, and elevation changes in caverns.
 
-![The Overworld Handler Subflow](../visualization/agent_graph/subflow_QIkEPkcV0JILIFlaS7gHv.svg)
+#### Use Item
 
-### Load Map
+This allows the AI to select an item from its bag and attempt to use it.
 
-This is the entrypoint for the overworld handler. It loads the current map from the database into the agent state, or creates a new one if we've just entered a new map.
+#### Swap First Pokémon
 
-### Update Map
+This lets the model swap its first Pokémon with another Pokémon in the party. It is useful for training specific Pokémon or leading with a particular Pokémon before a major battle.
 
-This uses the current visible screen information to update the map memory in the database. It updates the tiles, revealing any formerly unseen tiles that are now visible, and adds on-screen sprites/signs/warps to the map entity database table.
+#### Sokoban Solver
 
-### Select Tool
+This was my least favourite tool to code because it is so complicated and we only need it in two areas, one of which is optional. "Sokoban" puzzles, named for the classic Japanese video game that popularized them, are the proper name for the boulder-pushing puzzles in Victory Road and the Seafoam Islands. Watching the AI struggle through them itself would be a nightmare, so we solve them automatically with a bounded search. This problem is NP-hard in general, but the puzzles found in-game are simple enough for us to brute force quickly.
 
-This is the main decision maker in the overworld subflow. It looks at the game state and the various memory objects and selects which tool the AI should use for this iteration. The tools are all described in detail below. The raw memory "thought" that the AI creates in this node is continued by whichever tool is selected.
+#### Set Goal
+
+This tool lets the agent add, replace, or remove one of its longer-term goals. The agent is free to leave the list alone when its existing goals are still useful.
+
+### Handle Result
+
+After the tool finishes, its result is added to the rolling memory and returned to the agent with a fresh screenshot. Any ordinary dialog caused by the action is read and advanced automatically. The complete dialog is returned to the agent and, when possible, attached to the sprite, sign, or object that produced it. If the player is still standing in the same place after all of that, the same agent can choose another tool. Menus and other decision screens are left alone for the appropriate handler.
+
+## The Battle Handler
+
+The Battle Handler takes over for an entire battle. It gives the agent the current battle state and a set of tools appropriate to the type of battle, then keeps the same conversation alive until the battle ends.
+
+```mermaid
+flowchart LR
+    dispatch["Dispatcher"] --> prepare["Settle routine text and prepare<br/>static initial observation"]
+    prepare --> agent["GPT-5.6 Luna<br/>battle agent"]
+    agent --> choice{"Function tool call"}
+
+    subgraph toolset["Stable toolset for this battle"]
+        fight["fight"]
+        switch["switch_pokemon"]
+        ball["throw_ball"]
+        run["run"]
+        buttons["press_buttons"]
+    end
+
+    choice --> fight
+    choice --> switch
+    choice --> ball
+    choice --> run
+    choice --> buttons
+
+    fight --> observe["Advance dialog and refresh<br/>screenshot, battle, party, and screen state"]
+    switch --> observe
+    ball --> observe
+    run --> observe
+    buttons --> observe
+    observe --> handle{"Handle result"}
+    handle -->|"Battle continues"| agent
+    handle -->|"Battle mode exits"| finish(["Return to dispatcher"])
+```
+
+The available tools depend on the type of battle:
+
+| Tool | Trainer battle | Wild battle | Other battle (e.g. Safari)     |
+|---|:---:|:---:|:---:|
+| `fight` | ✓ | ✓ | — |
+| `switch_pokemon` | ✓ | ✓ | — |
+| `throw_ball` | — | ✓ | — |
+| `run` | — | ✓ | — |
+| `press_buttons` | ✓ | ✓ | ✓ |
+
+Each tool checks the current game state before acting. If a move has no PP, a party member has fainted, or the requested ball is no longer in the bag, the tool rejects the request and lets the agent choose something else.
+
+### Fight
+
+Uses one of the current Pokémon's available moves. The tool enters the necessary button presses, reads the resulting dialog, and waits until the next battle decision.
+
+### Switch Pokémon
+
+Switches to another living Pokémon in the party. The tool checks that the requested Pokémon can actually be used before navigating the party menu.
+
+### Throw Ball
+
+Throws one of the available Poké Balls during a wild battle. If the Pokémon is caught, the Battle Handler exits so the Text Handler can deal with the naming screen.
+
+### Run
+
+Attempts to escape from a wild battle. If the attempt fails, the opponent's response and the new battle state go back to the same agent so it can make another decision.
 
 ### Press Buttons
 
-This is the simplest of all the overworld tools, and it does exactly what it says: It allows the AI to enter one or more button presses directly into the emulator. Its main use case is for interacting with an adjacent entity using the A button, but it can also be used to rotate the player in place, open the start menu, or walk a few steps, though the AI is strongly discouraged from using this tool to navigate around the map. This is partly because it's a waste of tokens to move this way when the navigation tool is available, but largely because it has awful spatial reasoning and cannot be trusted to move around effectively on its own.
-
-### Navigation
-
-This is the main tool used for navigating the overworld, and also the most complex node in the entire workflow. The AI is given a list of accessible tiles, as well as some good candidates for further exploring the map, and it tells the tool where it wants to go. The destination is checked to make sure it's legal, and an A* algorithm then finds the shortest path and starts walking there. Every step, it checks for interruptions and updates the map. The navigation algorithm is sophisticated enough to handle ledges, surfing, cut trees, Team Rocket spinner tiles, and elevation changes in caverns.
-
-### Critique
-
-Very similar to the generic critique node in the top level agent graph, but triggered by the Select Tool node, and has a prompt that is specifically tailored to resolving errors that occur in the overworld. Like the other critique node, this can be triggered at most once every 20 iterations.
-
-### Use Item
-
-Allows the AI to select an item from its bag and attempt to use it.
-
-### Swap First Pokémon
-
-This lets the model swap its first Pokémon with another Pokémon in the party. It is useful for training specific Pokémon, or for leading with certain Pokémon before major battles.
-
-### Sokoban Solver
-
-This was my least favourite node to code because it is so complicated and we only need it in two areas, one of which is optional. "Sokoban" puzzles, named for the classic Japanese video game that popularized them, are the style of puzzles that appear in Pokémon as the boulder pushing puzzles in Victory Road and the Seafoam Islands. There is no way that the AI is solving these on its own, so we need an algorithm to do it. This category of problems is technically NP-hard, but thankfully the ones found in-game are simple enough to be solved quickly with A* search.
-
-### Dummy Node
-
-Purely topological, as are all dummy nodes in the workflow. This is the sink node the signals the end of the overworld subflow.
-
-## The Battle Handler Subflow
-
-![The Battle Handler Subflow](../visualization/agent_graph/subflow_8FrRI8S0ibkT8Vb9m2MzO.svg)
-
-### Determine Handler
-
-This is the entrypoint for the battle handler subflow. Its job is to determine which tool to route the flow to. It first checks for anything unusual. If we're in an irregular battle type (tutorial or safari zone), or the Fight/Item/PKMN/Run menu isn't open, it will immediately route to the generic "make decision" node. Otherwise, it will determine the legal decisons available based on the game state and ask the AI to select one of them.
-
-### Make Decision
-
-This is the generic handler for all unusual situations. It is very similar to the "press buttons" tool in the overworld. If we're in any battle that is not a standard wild Pokémon or trainer battle, or if the fight menu didn't open properly (e.g. because our Pokémon fainted), this tool will select one or more buttons to enter directly into the emulator.
-
-### Fight Tool
-
-Enters deterministic button presses to use one of the current Pokémon's available moves.
-
-### Switch Pokémon Tool
-
-Only available if the player has more than one Pokémon with non-zero HP. Enters deterministic button presses to switch to another Pokémon in the party.
-
-### Throw Ball Tool
-
-Only available in wild battles if the player has balls in their inventory. Enters deterministic button presses to throw one of the balls.
-
-### Run Tool
-
-Only available in wild battles. Runs from the battle.
+This is the generic tool for battle screens that do not fit one of the options above. It handles forced switches, unusual battle types, and any other situation where the agent needs to operate the menu directly.
 
 ### Handle Subsequent Text
 
-The final node in the battle handler. It may surprise you that we do this here instead of in the text handler, but it's because the logic for reading text in a battle is slightly different from doing so in the overworld. Additionally, the text starts streaming the moment an action is taken, so we don't have time to wait for the next iteration to start. This node captures any text that streams and adds it to the raw memory.
+After every action, the resulting battle text and updated game state are returned to the agent so it can decide what to do next. This stays inside the Battle Handler because the text begins as soon as the action is taken, and because the next decision usually depends on what just happened. Once the battle ends, control returns to the main loop.
 
-## The Text Handler Subflow
+## The Text Handler
 
-![The Text Handler Subflow](../visualization/agent_graph/subflow_IM2bYZ8Egf0jU6WaHJeVQ.svg)
+The Text Handler is responsible for dialog, menus, naming screens, and other interactions that take control away from the overworld. The important distinction here is that most text in Pokémon does not require any actual decision-making. We should not pay an AI to mash A through a speech bubble when we can read the text directly from the game and advance it ourselves.
 
-### Determine Handler
+```mermaid
+flowchart LR
+    dispatch["Dispatcher"] --> settle["Settle routine dialog<br/>and return a fresh result"]
+    settle --> handle{"Handle result"}
+    handle -->|"Decision required"| agent["GPT-5.6 Luna<br/>text agent"]
+    handle -->|"Text ends or battle begins"| finish(["Return to dispatcher"])
 
-This is the entrypoint of the text handler subflow, and its job is to determine which of the available tools is most appropriate for handling the current game state. This subflow, unlike the others, has the option to bail immediately if it detects that there is no text on the screen. This is because some dialog boxes in the game close themselves, and they may do so between the handler being set and the subflow starting.
+    agent --> choice{"Function tool call"}
+    choice --> buttons["press_buttons"]
+    choice --> name["assign_name"]
+    buttons --> settle
+    name --> settle
+```
 
 ### Handle Dialog Box
 
-This is the most common tool in the text handler subflow. Its job is to read through any dialog that appears on screen and log it directly to the AI's raw memory. This saves us a ton of time and tokens by pulling the text straight from the game state instead of making the AI read it screenshot by screenshot. This node exits if either the dialog box disappears, or if text appears outside the dialog box indicating that a menu has opened up.
+This is the most common path through the Text Handler. It reads completed dialog directly from the game, advances the text, and adds the transcript to the rolling memory. It continues until the dialog ends or the game reaches a screen where the agent has to make a real decision. If the entire interaction is ordinary dialog, the handler returns to the main loop without calling the model at all. If a menu, question, or other decision remains, it starts the text agent and gives it the current text and screenshot.
+
+### Press Buttons
+
+This is the generic decision-making tool for the Text Handler. It is used for menu navigation, yes/no questions, the title screen, and any other non-trivial text interaction. After the buttons are pressed, any resulting dialog is read automatically and returned to the same conversation. The agent can therefore make several related decisions without starting over each time.
 
 ### Assign Name
 
-A niche tool, but a very useful one. This enters a name into the game when the player is asked for their name at the start of the game or captures a new Pokémon and gives it a nickname. Like the dialog box handler, this saves us a ton of time and tokens by asking the AI for a name and deterministically entering the button presses required to submit that name, rather than getting the AI to do it one button at a time. The AI is also really bad at entering names manually, so this saves us from watching it play with a team full of Pokémon named "AAAAAAAAAA".
-
-### Make Decision
-
-The generic decision maker node for the text handler. Like the node of the same name from the battle handler, this one is effectively a "push buttons" tool. It is used to handle menu navigation, yes/no questions, and any other non-trivial text interactions.
-
-### Dummy Node
-
-Purely topological sink node for the subflow.
+A niche tool, but a very useful one. This enters a name when the player or rival needs one at the start of the game, or when a newly caught Pokémon needs a nickname. It saves time and tokens by asking the AI for a name and entering it deterministically, rather than getting the AI to move around the keyboard one button at a time. The AI is also terrible at entering names manually, so this saves us from watching it play with a team full of Pokémon named "AAAAAAAAAA".

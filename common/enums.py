@@ -1,38 +1,41 @@
+"""Enumerations shared throughout the application."""
+
 from enum import Enum, IntEnum, IntFlag, StrEnum, auto
 
 
 class AsciiTile(StrEnum):
-    """
-    An enum for the ASCII representations of overworld map tiles.
+    """An enum for the ASCII representations of overworld map tiles.
 
     These HAVE to be one token each or the LLM will hallucinate. There's a test to validate this.
     """
 
+    OUTSIDE_REGION = "▒"
     UNSEEN = "░"
-    WALL = "▉"
-    WATER = "≋"
-    GRASS = "❀"
-    LEDGE_DOWN = "⌄"
-    LEDGE_LEFT = "⌊"
-    LEDGE_RIGHT = "⌋"
+    WALL = "▓"
+    COUNTER = "‡"
+    WATER = "≈"
+    GRASS = "※"
+    LEDGE_DOWN = "▽"
+    LEDGE_LEFT = "≤"
+    LEDGE_RIGHT = "≥"
     FREE = "∙"
-    PLAYER = "☻"
+    PLAYER = "☺"
     SPRITE = "◆"
-    WARP = "⇆"
-    CUT_TREE = "┬"
-    BOULDER_HOLE = "◌"
-    PRESSURE_PLATE = "□"
-    PC_TILE = "▦"
-    PIKACHU = "◈"
+    WARP = "∞"
+    CUT_TREE = "†"
+    BOULDER_HOLE = "○"
+    PRESSURE_PLATE = "◇"
+    OBJECT = "¤"
+    PIKACHU = "♦"
     SIGN = "‼"
-    SPINNER_UP = "⇧"
-    SPINNER_DOWN = "⇩"
-    SPINNER_LEFT = "←"
-    SPINNER_RIGHT = "→"
-    SPINNER_STOP = "⊙"
+    SPINNER_UP = "Λ"
+    SPINNER_DOWN = "\u2228"
+    SPINNER_LEFT = "\u2039"
+    SPINNER_RIGHT = "\u203a"
+    SPINNER_STOP = "●"
 
     @classmethod
-    def get_walkable_tiles(cls) -> list["AsciiTile"]:
+    def get_walkable_tiles(cls) -> list[AsciiTile]:
         """Get the walkable tiles."""
         return [
             cls.FREE,
@@ -50,7 +53,7 @@ class AsciiTile(StrEnum):
         ]
 
     @classmethod
-    def get_spinner_tiles(cls) -> list["AsciiTile"]:
+    def get_spinner_tiles(cls) -> list[AsciiTile]:
         """Get the spinner tiles."""
         return [cls.SPINNER_UP, cls.SPINNER_DOWN, cls.SPINNER_LEFT, cls.SPINNER_RIGHT]
 
@@ -61,14 +64,48 @@ class MapEntityType(Enum):
     WARP = auto()
     SPRITE = auto()
     SIGN = auto()
+    OBJECT = auto()
 
 
-class WarpType(Enum):
-    """An enum for the different types of warp tiles."""
+class WarpActivation(StrEnum):
+    """A working input for activating a normal warp."""
 
-    SINGLE = auto()
-    DOUBLE_VERTICAL = auto()
-    DOUBLE_HORIZONTAL = auto()
+    STEP_ON = "STEP_ON"
+    UP = "UP"
+    DOWN = "DOWN"
+    LEFT = "LEFT"
+    RIGHT = "RIGHT"
+
+
+class Tileset(IntEnum):
+    """The tileset of the current map."""
+
+    OVERWORLD = 0
+    REDS_HOUSE_1 = 1
+    MART = 2
+    FOREST = 3
+    REDS_HOUSE_2 = 4
+    DOJO = 5
+    POKECENTER = 6
+    GYM = 7
+    HOUSE = 8
+    FOREST_GATE = 9
+    MUSEUM = 10
+    UNDERGROUND = 11
+    GATE = 12
+    SHIP = 13
+    SHIP_PORT = 14
+    CEMETERY = 15
+    INTERIOR = 16
+    CAVERN = 17
+    LOBBY = 18
+    MANSION = 19
+    LAB = 20
+    CLUB = 21
+    FACILITY = 22
+    PLATEAU = 23
+    BEACH_HOUSE = 24
+    PLACEHOLDER = 128  # Used briefly while loading some save states.
 
 
 class FacingDirection(StrEnum):
@@ -81,10 +118,10 @@ class FacingDirection(StrEnum):
 
 
 class BlockedDirection(IntFlag):
-    """
-    Represents blocked movement between otherwise walkable tiles. This is usually due to an
-    elevation difference making it impossible to move from one to the other, even though both are
-    walkable and adjacent to one another.
+    """Represent blocked movement between otherwise walkable tiles.
+
+    This usually denotes an elevation difference that prevents movement between adjacent walkable
+    tiles.
     """
 
     UP = 1 << 0
@@ -144,8 +181,7 @@ class Badge(StrEnum):
 
 
 class MapId(IntEnum):
-    """
-    Enum for mapping location IDs to their names.
+    """Enum for mapping location IDs to their names.
 
     There are several IDs in the list below that are listed as "unused" in the game, but sometimes
     they appear as targets for warp tiles in elevators, or if you try to access the map ID mid-warp
@@ -381,6 +417,6 @@ class MapId(IntEnum):
     UNKNOWN = -1  # Used to catch all unused values.
 
     @classmethod
-    def _missing_(cls, _: int) -> "MapId":
+    def _missing_(cls, value: object) -> MapId:  # noqa: ARG003
         """Handle unknown map IDs by returning UNKNOWN."""
         return cls.UNKNOWN

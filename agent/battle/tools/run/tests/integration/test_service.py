@@ -1,0 +1,27 @@
+"""Tests for the run tool service."""
+
+from pathlib import Path
+
+import pytest
+
+from agent.battle.tools.errors import BattleActionUnavailableError
+from agent.battle.tools.run.service import run
+from emulator.emulator import Emulator
+
+
+@pytest.mark.integration
+async def test_cannot_run_from_trainer_battle() -> None:
+    """Test rejecting a run attempt during a trainer battle."""
+    save_file = Path(__file__).parent / "saves" / "save.state"
+    async with Emulator(
+        save_state_path=save_file,
+        mute_sound=True,
+        headless=True,
+    ) as emulator:
+        game_state = await emulator.get_game_state()
+
+        # Verify that the initial state is as expected.
+        assert game_state.battle.is_in_battle
+
+        with pytest.raises(BattleActionUnavailableError, match="wild battle"):
+            await run(emulator=emulator)

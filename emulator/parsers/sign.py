@@ -1,7 +1,13 @@
-from pyboy import PyBoyMemoryView
+"""Parser for sign data in Pokémon Yellow memory."""
+
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict
 
 from common.schemas import Coords
+
+if TYPE_CHECKING:
+    from pyboy import PyBoyMemoryView
 
 
 class Sign(BaseModel):
@@ -14,11 +20,13 @@ class Sign(BaseModel):
 
 
 def parse_signs(mem: PyBoyMemoryView) -> dict[int, Sign]:
-    """
-    Parse the list of signs on the current map from a snapshot of the memory.
+    """Parse signs on the current map from emulator memory.
 
-    :param mem: The PyBoyMemoryView instance to create the signs from.
-    :return: A dictionary of signs, keyed by index.
+    Args:
+        mem: Current PyBoy memory view.
+
+    Returns:
+        Signs keyed by their map index.
     """
     num_signs = mem[0xD4FD]
     signs = {}

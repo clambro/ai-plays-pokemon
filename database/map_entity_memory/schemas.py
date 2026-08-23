@@ -1,4 +1,8 @@
-from pydantic import BaseModel, ConfigDict, field_validator
+"""Data-transfer models for map entity memory."""
+
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from common.enums import MapEntityType, MapId
 
@@ -9,17 +13,6 @@ class MapEntityMemoryCreate(BaseModel):
     map_id: MapId
     entity_id: int
     entity_type: MapEntityType
-    iteration: int
-
-
-class MapEntityMemoryUpdate(BaseModel):
-    """Update model for a map entity memory."""
-
-    map_id: MapId
-    entity_id: int
-    entity_type: MapEntityType
-    description: str
-    iteration: int
 
 
 class MapEntityMemoryRead(BaseModel):
@@ -28,9 +21,20 @@ class MapEntityMemoryRead(BaseModel):
     map_id: MapId
     entity_id: int
     entity_type: MapEntityType
-    description: str | None
+    last_interaction: Annotated[str, Field(min_length=1)] | None
+    last_interaction_iteration: int | None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MapEntityMemoryInteractionUpdate(BaseModel):
+    """A literal interaction observation for one persisted map entity."""
+
+    map_id: MapId
+    entity_id: int
+    entity_type: MapEntityType
+    last_interaction: Annotated[str, Field(min_length=1)]
+    last_interaction_iteration: int
 
 
 class MapEntityMemoryDelete(BaseModel):

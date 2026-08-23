@@ -1,12 +1,22 @@
-from pyboy import PyBoyMemoryView
+"""Parser for player data in Pokémon Yellow memory."""
+
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict
 
 from common.enums import Badge, FacingDirection
 from common.schemas import Coords
-from emulator.parsers.utils import get_text_from_byte_array
+from emulator.parsers.screen_text import get_text_from_byte_array
+
+if TYPE_CHECKING:
+    from pyboy import PyBoyMemoryView
 
 _BIKING_STATE = 1
 _SURFING_STATE = 2
+_POKEDEX_OWNED_ADDRESS = 0xD2F6
+_POKEDEX_SEEN_ADDRESS = 0xD309
+_POKEDEX_END_ADDRESS = 0xD31C
+_NUM_POKEMON = 151
 
 
 class Player(BaseModel):
@@ -20,7 +30,8 @@ class Player(BaseModel):
     money: int
     badges: list[Badge]
     level_cap: int
-    pokedex_caught: int
+    has_pokedex: bool
+    pokedex_caught: frozenset[int]
     pokedex_seen: int
     play_time_seconds: int
 
@@ -28,11 +39,13 @@ class Player(BaseModel):
 
 
 def parse_player(mem: PyBoyMemoryView) -> Player:
-    """
-    Create a new player state from a snapshot of the memory.
+    """Parse the player state from emulator memory.
 
-    :param mem: The PyBoyMemoryView instance to create the player state from.
-    :return: A new player state.
+    Args:
+        mem: Current PyBoy memory view.
+
+    Returns:
+        An immutable snapshot of the player and progression state.
     """
     name = get_text_from_byte_array(mem[0xD157 : 0xD157 + 0xB])
     if name == "NINTEN":
@@ -49,9 +62,10 @@ def parse_player(mem: PyBoyMemoryView) -> Player:
     play_time_seconds = mem[0xDA43]
     play_time_seconds += (play_time_hours * 3600) + (play_time_minutes * 60)
 
-    # Pokemon seen and caught are represented as one bit each in the following bytes.
-    pokedex_caught = sum(mem[i].bit_count() for i in range(0xD2F6, 0xD309))
-    pokedex_seen = sum(mem[i].bit_count() for i in range(0xD309, 0xD31C))
+    pokedex_caught = _read_caught_pokemon(mem)
+    pokedex_seen = sum(
+        mem[i].bit_count() for i in range(_POKEDEX_SEEN_ADDRESS, _POKEDEX_END_ADDRESS)
+    )
 
     return Player(
         name=name,
@@ -62,18 +76,31 @@ def parse_player(mem: PyBoyMemoryView) -> Player:
         money=_read_money(mem),
         badges=badges,
         level_cap=_read_level_cap(mem, len(badges)),
+        has_pokedex=bool(mem[0xD74A] & 0x20),  # EVENT_GOT_POKEDEX
         pokedex_caught=pokedex_caught,
         pokedex_seen=pokedex_seen,
         play_time_seconds=play_time_seconds,
     )
 
 
-def _read_money(mem: PyBoyMemoryView) -> int:
-    """
-    Read the player's money from the binary coded decimal format.
+def _read_caught_pokemon(mem: PyBoyMemoryView) -> frozenset[int]:
+    """Read the Pokédex numbers registered as caught."""
+    return frozenset(
+        pokedex_number
+        for pokedex_number in range(1, _NUM_POKEMON + 1)
+        if mem[_POKEDEX_OWNED_ADDRESS + (pokedex_number - 1) // 8]
+        & (1 << ((pokedex_number - 1) % 8))
+    )
 
-    :param mem: The PyBoyMemoryView instance to read the money from.
-    :return: The player's money.
+
+def _read_money(mem: PyBoyMemoryView) -> int:
+    """Read the player's money from its binary-coded decimal representation.
+
+    Args:
+        mem: Current PyBoy memory view.
+
+    Returns:
+        The player's money as an integer.
     """
     m1 = mem[0xD394]
     m2 = mem[0xD395]

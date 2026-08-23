@@ -130,6 +130,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.logfire/
 env/
 venv/
 ENV/
@@ -180,6 +181,3 @@ streaming/**/assets/**/*.png
 
 # Don't commit save states.
 **.state
-
-# Junjo Server
-.dbdata/

@@ -1,8 +1,14 @@
-from pyboy import PyBoyMemoryView
+"""Parser for sprite data in Pokémon Yellow memory."""
+
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict
 
 from common.enums import SpriteLabel
 from common.schemas import Coords
+
+if TYPE_CHECKING:
+    from pyboy import PyBoyMemoryView
 
 _RANDOM_MOVEMENT = 0xFE
 _NOT_RENDERED = 0xFF
@@ -21,11 +27,13 @@ class Sprite(BaseModel):
 
 
 def parse_sprites(mem: PyBoyMemoryView) -> dict[int, Sprite]:
-    """
-    Parse the list of sprites on the current map from a snapshot of the memory.
+    """Parse ordinary sprites on the current map from emulator memory.
 
-    :param mem: The PyBoyMemoryView instance to create the sprites from.
-    :return: A dictionary of normal sprites, keyed by index.
+    Args:
+        mem: Current PyBoy memory view.
+
+    Returns:
+        Non-player sprites keyed by their map index.
     """
     sprites = {}
     for i in range(0x10, 0xF0, 0x10):  # First sprite is the player.
@@ -45,18 +53,21 @@ def parse_sprites(mem: PyBoyMemoryView) -> dict[int, Sprite]:
 
 
 def parse_pikachu_sprite(mem: PyBoyMemoryView) -> Sprite:
-    """
-    Parse the pikachu sprite from a snapshot of the memory.
+    """Parse Pikachu's follower sprite from emulator memory.
 
-    :param mem: The PyBoyMemoryView instance to create the pikachu sprite from.
-    :return: The pikachu sprite.
+    Args:
+        mem: Current PyBoy memory view.
+
+    Returns:
+        Pikachu's follower sprite state.
     """
+    picture_id = mem[0xC1F0]
     return Sprite(
         index=15,
         label="PIKACHU",
         # Sprite coordinates start counting from 4 for some reason.
         coords=Coords(row=mem[0xC2F4] - 4, col=mem[0xC2F5] - 4),
-        is_rendered=mem[0xC1F2] != _NOT_RENDERED,
+        is_rendered=picture_id != 0 and mem[0xC1F2] != _NOT_RENDERED,
         moves_randomly=False,
     )
 
@@ -167,7 +178,7 @@ _ID_TO_SPRITE_LABEL = {
     0x66: "SLOWPOKE",
     0x67: "DODUO",
     0x68: "VAPOREON",
-    0x69: "POKE BALL",
+    0x69: "ITEM BALL",
     0x6A: "FOSSIL",
     0x6B: SpriteLabel.BOULDER,
     0x6C: "PAPER",

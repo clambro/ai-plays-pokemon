@@ -1,9 +1,13 @@
+"""Messages exchanged with the background streaming client."""
+
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel
 
-from agent.state import AgentState
-from database.llm_messages.repository import get_total_llm_cost
-from emulator.game_state import YellowLegacyGameState
-from memory.raw_memory import RawMemory
+if TYPE_CHECKING:
+    from agent.state import AgentState
+    from emulator.game_state import GameState
+    from memory.rolling_memory.schemas import RollingMemory
 
 
 class PartyPokemonView(BaseModel):
@@ -20,7 +24,7 @@ class PartyPokemonView(BaseModel):
     moves: list[str]
 
     @classmethod
-    def from_game_state(cls, game_state: YellowLegacyGameState) -> list["PartyPokemonView"]:
+    def from_game_state(cls, game_state: GameState) -> list[PartyPokemonView]:
         """Create a view of the Pokemon from the game state."""
         return [
             cls(
@@ -45,20 +49,20 @@ class LogEntryView(BaseModel):
     thought: str
 
     @classmethod
-    def from_memory(cls, memory: RawMemory) -> list["LogEntryView"]:
+    def from_memory(cls, memory: RollingMemory) -> list[LogEntryView]:
         """Create a view of the log entry from the memory."""
         return [
             cls(
-                iteration=piece.iteration,
-                thought=piece.content,
+                iteration=block.iteration,
+                thought=block.content,
             )
-            for piece in memory.pieces.values()
+            for block in memory.raw_blocks
         ]
 
     @classmethod
-    def from_agent_state(cls, state: AgentState) -> list["LogEntryView"]:
+    def from_agent_state(cls, state: AgentState) -> list[LogEntryView]:
         """Create a view of the log entry from the agent state."""
-        return cls.from_memory(state.raw_memory)
+        return cls.from_memory(state.rolling_memory)
 
 
 class GameStateView(BaseModel):
@@ -68,6 +72,7 @@ class GameStateView(BaseModel):
     money: int
     pokedex_seen: int
     pokedex_caught: int
+    total_tokens: int
     total_cost: float
     play_time_seconds: int
     badges: list[str]
@@ -76,24 +81,24 @@ class GameStateView(BaseModel):
     log: list[LogEntryView]
 
     @classmethod
-    async def from_states(
+    def from_states(
         cls,
         agent_state: AgentState,
-        game_state: YellowLegacyGameState,
-    ) -> "GameStateView":
+        game_state: GameState,
+    ) -> GameStateView:
         """Create a view of the game state from the agent and game states."""
         pokemon = PartyPokemonView.from_game_state(game_state)
         log = LogEntryView.from_agent_state(agent_state)
-        cost = await get_total_llm_cost()
         return cls(
             iteration=agent_state.iteration,
             money=game_state.player.money,
             pokedex_seen=game_state.player.pokedex_seen,
-            pokedex_caught=game_state.player.pokedex_caught,
-            total_cost=cost,
+            pokedex_caught=len(game_state.player.pokedex_caught),
+            total_tokens=agent_state.total_tokens,
+            total_cost=agent_state.total_cost,
             play_time_seconds=game_state.player.play_time_seconds,
             badges=[str(badge) for badge in game_state.player.badges],
             party=pokemon,
-            goals=[str(goal) for goal in agent_state.goals.goals],
+            goals=[goal.goal for goal in agent_state.goals.goals],
             log=log,
         )
