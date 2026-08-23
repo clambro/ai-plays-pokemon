@@ -1,57 +1,40 @@
-# AI Workflow Architecture
+# AI Workflow
 
-This page describes the current gameplay-agent workflow. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology is used here. One shared application context connects a typed dispatcher to the overworld, battle, and text handlers. Each handler owns its Pydantic AI conversation and rolling-memory lifecycle.
+This page walks through the entire AI workflow, one part at a time. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology will be used here. At a high level, we have an entrypoint that looks at the current game state and routes control to one of three dedicated handlers: the Overworld Handler, the Battle Handler, or the Text Handler. Each handler has its own agent and its own suite of tools for operating in that part of the game.
 
-Note: Pretty much all the constants below are default values that can be edited in [`common/constants.py`](/common/constants.py).
-
-## Top-Level Orchestration
-
-`main.py` creates one `AgentContext` containing the mutable `AgentState` and the running emulator. The same context instance survives every gameplay-domain transition. Startup or restoration first waits until the game is ready for an external decision. Thereafter, tools and deterministic handlers return at that same boundary, so each dispatcher pass can read the current game state and select exactly one handler:
+## The Main Agent Loop
 
 ```mermaid
 flowchart TD
-    dispatch([Dispatch]) --> observe[Observe decision-ready game]
-    observe --> classify{Classify gameplay domain}
+    observe[Observe decision-ready game] --> classify{Classify gameplay domain}
     classify -->|Overworld| overworld[Run overworld handler]
     classify -->|Battle| battle[Run battle handler]
     classify -->|Text or transition| text[Run text handler]
-    overworld --> return([Return to application loop])
-    battle --> return
-    text --> return
+    overworld --> settle[Wait for game state to settle]
+    battle --> settle
+    text --> settle
+    settle --> observe
 ```
 
-Battle takes precedence except on the post-catch naming screen, which belongs to the text handler. Visible text and zero-sized transition maps also route to text; all other states route to overworld. The dispatcher does not construct agents, manage memory, publish the background, or interpret tool calls.
+### Select Handler
 
-### Iterations
+This is the entrypoint for the workflow. It waits until the game is ready for input, reads the current game state, and decides which handler should take over. Battles go to the Battle Handler; dialog and menus go to the Text Handler, and everything else goes to the Overworld Handler. The same shared agent state is maintained in every trip through this loop. This is where we keep the rolling memory, goals, iteration count, token usage, and other information that needs to flow from one handler to the next.
 
-An iteration represents one gameplay decision attempt and any durable outcome. Deterministic work can also produce an iteration when it records meaningful activity.
+### Iterations and Memory
 
-Handlers can complete several iterations while keeping one Pydantic AI conversation alive, preserving context across related decisions.
+An iteration is one meaningful decision or recorded outcome. The model explains what it intends to do, the selected tool carries out the action, and the result is added to the rolling memory. Decisions and results are sent to the streaming background as they happen, so the public log follows the same sequence the agent sees. Each handler can make several related decisions while keeping the same conversation alive (e.g. multiple turns in a battle). This lets the agent react to the result of an action without rebuilding its entire context every time. Once the current handler concludes, control returns to the main loop, the game state is checked again, and the loop repeats.
 
-### Shared Agent Runtime
+### Backups
 
-Pydantic AI hooks account for every model response, append ordinary-text reasoning to the active rolling-memory block, and publish completed decisions before their actions begin. After an action finishes, shared dialog settlement publishes its complete transcript and terminal game state. Tools return the same terminal observation to the local conversation.
+The application saves a backup every 10 minutes. Each backup contains the emulator state, the live agent state, and a copy of the database, which together are enough to resume the run. If the workflow fails unexpectedly, it attempts to create one final backup before shutting down.
 
-The application loop owns emulator and streaming-server lifetimes. It captures the emulator state and creates a backup every 10 minutes and after an unexpected handler failure. The copied SQLite database contains finalized memory history, while serialized `AgentState` contains the remaining live application state and totals. Rolling memory is rebuilt from the copied database rather than serialized into `AgentState`.
+## The Overworld Handler
 
-### Model Boundaries
-
-Pydantic models represent values that cross validation or serialization
-boundaries. This includes raw-ROM parser outputs, coordinates, live
-`AgentState`, database DTOs, Pydantic AI tool inputs, streaming responses, and
-settings. Standard-library dataclasses represent trusted internal aggregates
-such as `GameState`, rolling memory, goals, explored
-maps, and solver state. Loading a backup validates `AgentState` directly, then
-the next handler reconstructs rolling memory from SQLite.
-
-## The Overworld Agent
-
-The overworld handler prepares the explored map and then gives one Pydantic AI agent the local navigation loop. The runner returns to the dispatcher as soon as a tool moves the player or the game enters another gameplay domain.
+The Overworld Handler is responsible for exploring maps, interacting with the world, managing the party outside battle, and deciding where to go next.
 
 ```mermaid
 flowchart LR
-    dispatch["Typed dispatcher"] --> prepare["Load and update map<br/>Capture initial state and screenshot"]
-    prepare --> agent["GPT-5.6 Luna<br/>overworld agent"]
+    dispatch["Dispatcher"] --> agent["GPT-5.6 Luna<br/>overworld agent"]
     agent --> choice{"Function tool call"}
 
     subgraph toolset["Stable toolset for this overworld run"]
@@ -60,9 +43,7 @@ flowchart LR
         item["use_item"]
         swap["swap_first_pokemon"]
         sokoban["sokoban_solver"]
-        create_goal["create_goal"]
-        update_goal["update_goal"]
-        delete_goal["delete_goal"]
+        set_goal["set_goal"]
     end
 
     choice --> navigate
@@ -70,78 +51,63 @@ flowchart LR
     choice --> item
     choice --> swap
     choice --> sokoban
-    choice --> create_goal
-    choice --> update_goal
-    choice --> delete_goal
+    choice --> set_goal
 
-    navigate --> observe["Settle routine dialog<br/>and return a fresh result"]
-    buttons --> observe
-    item --> observe
-    swap --> observe
-    sokoban --> observe
-    create_goal --> observe
-    update_goal --> observe
-    delete_goal --> observe
+    navigate --> settle["Settle routine dialog<br/>and return a fresh result"]
+    buttons --> settle
+    item --> settle
+    swap --> settle
+    sokoban --> settle
+    set_goal --> settle
 
-    observe -->|"Still in place and in the overworld"| agent
-    observe -->|"Player moved or gameplay domain changed"| finish["Return to dispatcher"]
+    settle --> continue{"Handle result"}
+    continue -->|"Still in place and in the overworld"| agent
+    continue -->|"Player moved or gameplay domain changed"| finish(["Return to dispatcher"])
 ```
 
-### Prepare Context
+### Prepare Map
 
-Before constructing the agent, deterministic preparation loads the current explored terrain from SQLite or creates it when entering a new map. The current visible screen reveals only entity-free terrain while separately synchronizing discovered sprite, sign, object, and warp identities. The prompt composes those discoveries with live emulator positions, including the player and Pikachu, without writing any overlays back into terrain. It shows entities in the current reachable region together with any special reachable interaction positions. Sprites, signs, and objects include their most recently observed dialog and its iteration, or indicate that they have not yet been interacted with. The prepared context, initial game state, and screenshot are then used to build one static prompt and tool registry for the run.
+This is the entrypoint for the Overworld Handler. It loads the current map from the database, or creates it if the agent has just entered the map, and updates it with everything visible on the current screen. The map given to the agent contains the terrain it has discovered, together with known sprites, signs, objects, and warps. To avoid confusing separate parts of the same map, it shows only the connected region the player currently occupies. It also shows reachable boundaries leading to neighboring maps, so the agent can still plan beyond the current region without being handed a giant world map.
 
-The prompt includes rolling memory, goals, player and party state, inventory indices, the explored map, exploration candidates, and accessible connected-map boundaries.
+### Overworld Tools
 
-Tool availability is derived once from the prepared state:
+Once the map and game state are prepared, the overworld agent chooses from the six tools described below. The available tools depend on the current game state: For example, there is no reason to offer the item tool when the bag is empty, or the Sokoban solver when there is no boulder puzzle in sight. If the action leaves the player in the same place and still in the overworld, the result goes back to the same conversation so the agent can try something else. If the player moves or the game enters another part of the workflow, control returns to the main loop.
 
-- `press_buttons` and the three goal lifecycle tools are always available;
-- `navigation` is unavailable while biking;
-- `swap_first_pokemon` requires more than one party member;
-- `use_item` requires a non-empty inventory;
-- `sokoban_solver` requires a visible boulder and goal plus access to Strength.
+#### Press Buttons
 
-Keeping the registry fixed preserves prompt caching. Actions that depend on changing game state validate what they need immediately before acting rather than rebuilding the tool definitions during the run.
+This allows the AI to enter one or more button presses directly into the emulator. Its main use case is interacting with something using the A button, but it can also rotate the player in place, open the start menu, or walk a few steps. The AI is strongly discouraged from using this tool for ordinary navigation, partly because it wastes tokens but largely because its spatial reasoning is terrible.
 
-### Press Buttons
+#### Navigation
 
-This is the simplest of all the overworld tools, and it does exactly what it says: It allows the AI to enter one or more button presses directly into the emulator. Its main use case is for interacting with an adjacent entity using the A button, but it can also be used to rotate the player in place, open the start menu, or walk a few steps, though the AI is strongly discouraged from using this tool to navigate around the map. This is partly because it's a waste of tokens to move this way when the navigation tool is available, but largely because it has awful spatial reasoning and cannot be trusted to move around effectively on its own.
+This is the main tool used for navigating the overworld. The AI chooses a destination from the explored map, and the tool checks whether that destination is actually reachable. An A* search algorithm then finds the shortest path and starts walking there. Every step, it checks for interruptions and updates the map with anything newly discovered. The navigation algorithm is sophisticated enough to handle ledges, surfing, cut trees, Team Rocket spinner tiles, and elevation changes in caverns.
 
-### Navigation
+#### Use Item
 
-This is the main tool used for navigating the overworld, and also the most complex deterministic service in the workflow. The AI chooses a revealed destination from the explored map, aided by exploration candidates and accessible connected-map boundaries. Each route is derived from stable terrain plus discovered structural tiles and currently rendered blocking sprites, so old sprite positions cannot become permanent obstacles. The tool rejects inaccessible destinations, and an A* algorithm finds the shortest path and starts walking there. Every step, it checks for interruptions and updates the terrain and discoveries. The navigation algorithm is sophisticated enough to handle ledges, surfing, cut trees, Team Rocket spinner tiles, and elevation changes in caverns.
+This allows the AI to select an item from its bag and attempt to use it.
 
-### Use Item
+#### Swap First Pokémon
 
-Allows the AI to select an item from its bag and attempt to use it.
+This lets the model swap its first Pokémon with another Pokémon in the party. It is useful for training specific Pokémon or leading with a particular Pokémon before a major battle.
 
-### Swap First Pokémon
+#### Sokoban Solver
 
-This lets the model swap its first Pokémon with another Pokémon in the party. It is useful for training specific Pokémon, or for leading with certain Pokémon before major battles.
+This was my least favourite tool to code because it is so complicated and we only need it in two areas, one of which is optional. "Sokoban" puzzles, named for the classic Japanese video game that popularized them, are the proper name for the boulder-pushing puzzles in Victory Road and the Seafoam Islands. Watching the AI struggle through them itself would be a nightmare, so we solve them automatically with a bounded search. This problem is NP-hard in general, but the puzzles found in-game are simple enough for us to brute force quickly.
 
-### Sokoban Solver
+#### Set Goal
 
-This was my least favourite tool to code because it is so complicated and we only need it in two areas, one of which is optional. "Sokoban" puzzles, named for the classic Japanese video game that popularized them, are the style of puzzles that appear in Pokémon as the boulder pushing puzzles in Victory Road and the Seafoam Islands. There is no way that the AI is solving these on its own, so we need an algorithm to do it. This category of problems is technically NP-hard, but thankfully the ones found in-game are simple enough to be solved quickly with a bounded search.
+This tool lets the agent add, replace, or remove one of its longer-term goals. The agent is free to leave the list alone when its existing goals are still useful.
 
-### Create, Update, and Delete Goals
+### Handle Result
 
-The create, update, and delete tools let the agent maintain current objectives worth remembering across iterations. Goal management is discretionary: when the current list remains useful, the agent uses another tool instead.
+After the tool finishes, its result is added to the rolling memory and returned to the agent with a fresh screenshot. Any ordinary dialog caused by the action is read and advanced automatically. The complete dialog is returned to the agent and, when possible, attached to the sprite, sign, or object that produced it. If the player is still standing in the same place after all of that, the same agent can choose another tool. Menus and other decision screens are left alone for the appropriate handler.
 
-### Memory and Display Updates
+## The Battle Handler
 
-The agent narrates its decision alongside each tool call. The tool then produces the actual outcome of the action. Action outcomes are appended to the current rolling-memory block and returned with a fresh screenshot to the local conversation, so the HTML activity log and the agent cannot disagree about what happened. Goal tools return their result directly and update authoritative goal state without copying the result into rolling memory.
-
-Routine dialog produced by an overworld tool is read, advanced, recorded, and returned with the tool's terminal observation. When it came from a sprite, sign, or object, the latest completed dialog is retained with that entity. Consecutive ordinary interactions, including battle introductions, are settled as one result, and if the player remains in place, the same overworld conversation receives the transcript and chooses the next action. Menus and other decision screens remain untouched, while a ready battle menu returns control to the dispatcher.
-
-If the action leaves the player in place and the game in the overworld, the agent can make another decision using that result. Once the player moves or the game enters a text interaction or battle, the runner returns to the dispatcher.
-
-## The Battle Agent
-
-The battle handler owns the complete battle lifecycle. It settles any routine text already in progress, prepares a static initial observation and a battle-specific Pydantic AI toolset, then keeps one conversation alive until battle mode ends.
+The Battle Handler takes over for an entire battle. It gives the agent the current battle state and a set of tools appropriate to the type of battle, then keeps the same conversation alive until the battle ends.
 
 ```mermaid
 flowchart LR
-    dispatch["Typed dispatcher"] --> prepare["Settle routine text and prepare<br/>static initial observation"]
+    dispatch["Dispatcher"] --> prepare["Settle routine text and prepare<br/>static initial observation"]
     prepare --> agent["GPT-5.6 Luna<br/>battle agent"]
     agent --> choice{"Function tool call"}
 
@@ -159,22 +125,19 @@ flowchart LR
     choice --> run
     choice --> buttons
 
-    fight --> service["Deterministic<br/>battle service"]
-    switch --> service
-    ball --> service
-    run --> service
-    buttons --> service
-
-    service --> observe["Advance dialog and refresh<br/>screenshot, battle, party, and screen state"]
-    observe -->|"Tool result"| agent
-    agent -->|"Battle mode exits"| finish["Return to dispatcher"]
+    fight --> observe["Advance dialog and refresh<br/>screenshot, battle, party, and screen state"]
+    switch --> observe
+    ball --> observe
+    run --> observe
+    buttons --> observe
+    observe --> handle{"Handle result"}
+    handle -->|"Battle continues"| agent
+    handle -->|"Battle mode exits"| finish(["Return to dispatcher"])
 ```
 
-The initial prompt, memory, goals, and tool definitions are prepared once. After every action, the tool returns a fresh screenshot and parsed observation to the same conversation. The agent can therefore react to damage, fainted Pokémon, failed escape attempts, new opponents, forced switches, and irregular battle screens without returning to the dispatcher or rebuilding its toolset.
+The available tools depend on the type of battle:
 
-The registry is fixed for the battle type so the model-visible prompt remains stable and cache-friendly:
-
-| Tool | Trainer battle | Wild battle | Other battle |
+| Tool | Trainer battle | Wild battle | Other battle (e.g. Safari)     |
 |---|:---:|:---:|:---:|
 | `fight` | ✓ | ✓ | — |
 | `switch_pokemon` | ✓ | ✓ | — |
@@ -182,71 +145,58 @@ The registry is fixed for the battle type so the model-visible prompt remains st
 | `run` | — | ✓ | — |
 | `press_buttons` | ✓ | ✓ | ✓ |
 
-Temporary legality is deliberately not encoded by rebuilding the registry. Each tool reads fresh emulator state immediately before acting. If a move has no PP, a party member has fainted, or a requested ball is no longer in the bag, the tool rejects the request and gives the agent the updated observation so it can try something else.
+Each tool checks the current game state before acting. If a move has no PP, a party member has fainted, or the requested ball is no longer in the bag, the tool rejects the request and lets the agent choose something else.
 
 ### Fight
 
-Selects a move by its zero-based slot. The deterministic service navigates the battle menu, uses the move, captures every page of the resulting dialog, and waits for the next decision point.
+Uses one of the current Pokémon's available moves. The tool enters the necessary button presses, reads the resulting dialog, and waits until the next battle decision.
 
 ### Switch Pokémon
 
-Selects a party member by its zero-based slot. The tool validates that the Pokémon is alive and not already active before deterministically navigating the party menu.
+Switches to another living Pokémon in the party. The tool checks that the requested Pokémon can actually be used before navigating the party menu.
 
 ### Throw Ball
 
-Selects a Poké Ball by type during a wild battle. The tool checks the current inventory, throws the requested ball, and returns the resulting dialog and screen state. A successful catch exits the battle loop so the dispatcher can route the naming screen to the text handler.
+Throws one of the available Poké Balls during a wild battle. If the Pokémon is caught, the Battle Handler exits so the Text Handler can deal with the naming screen.
 
 ### Run
 
-Attempts to escape from a wild battle. A failed escape returns the opponent's response and refreshed battle state to the agent so it can make another decision.
+Attempts to escape from a wild battle. If the attempt fails, the opponent's response and the new battle state go back to the same agent so it can make another decision.
 
 ### Press Buttons
 
-Provides constrained directional, confirm, and cancel input for forced switches, dialog, special battle types, and other screens that do not fit one of the semantic tools. It remains available during ordinary battles because those irregular screens can appear at any time.
+This is the generic tool for battle screens that do not fit one of the options above. It handles forced switches, unusual battle types, and any other situation where the agent needs to operate the menu directly.
 
-### Memory and Display Updates
+### Handle Subsequent Text
 
-The agent emits a brief explanation alongside each tool call. That explanation and captured in-game dialog are appended to the current rolling-memory block and streamed to the HTML activity log. Detailed action results and refreshed observations stay inside the agent conversation, where they provide context for the next decision without flooding durable memory. Opening battle text remains with the action that triggered the encounter, while final battle and capture text is settled before the terminal observation passes control to the overworld or naming handler.
+After every action, the resulting battle text and updated game state are returned to the agent so it can decide what to do next. This stays inside the Battle Handler because the text begins as soon as the action is taken, and because the next decision usually depends on what just happened. Once the battle ends, control returns to the main loop.
 
-## The Text Runner
+## The Text Handler
 
-The text handler owns an entire interaction inside one local runner. The important distinction here is that most text in Pokémon does not require any actual decision-making. We should not pay an AI to mash A through a speech bubble when we can read the text directly from memory and advance it ourselves.
+The Text Handler is responsible for dialog, menus, naming screens, and other interactions that take control away from the overworld. The important distinction here is that most text in Pokémon does not require any actual decision-making. We should not pay an AI to mash A through a speech bubble when we can read the text directly from the game and advance it ourselves.
 
 ```mermaid
 flowchart LR
-    dispatch["Typed dispatcher"] --> inspect["Inspect current screen"]
-    inspect -->|"Plain dialog"| dialog["Read and advance dialog<br/>deterministically"]
-    dialog --> inspect
-    inspect -->|"Decision required"| agent["GPT-5.6 Luna<br/>text agent"]
-    inspect -->|"Text ends or battle begins"| finish["Return to dispatcher"]
+    dispatch["Dispatcher"] --> settle["Settle routine dialog<br/>and return a fresh result"]
+    settle --> handle{"Handle result"}
+    handle -->|"Decision required"| agent["GPT-5.6 Luna<br/>text agent"]
+    handle -->|"Text ends or battle begins"| finish(["Return to dispatcher"])
 
     agent --> choice{"Function tool call"}
     choice --> buttons["press_buttons"]
     choice --> name["assign_name"]
-    buttons --> observe["Read resulting dialog and return<br/>fresh text and screenshot"]
-    name --> observe
-    observe -->|"Text interaction continues"| agent
-    observe -->|"Text ends or battle begins"| finish
+    buttons --> settle
+    name --> settle
 ```
 
 ### Handle Dialog Box
 
-This is the most common path through the text handler, and it is deliberately handled before the agent is even constructed. The emulator records completed dialog directly from the ROM text engine, advances only explicit text waits, and appends the resulting transcript to the current rolling-memory block. This avoids paying the AI to read and dismiss ordinary speech while preserving text that scrolls, advances automatically, or disappears before another screen observation.
-
-Deterministic advancement continues across consecutive ordinary interactions and stops at external overworld control, a menu, custom interface, or battle boundary. A remaining decision starts one text-agent conversation and keeps it alive until the interaction is over; a completed ordinary sequence returns without making a model call.
+This is the most common path through the Text Handler. It reads completed dialog directly from the game, advances the text, and adds the transcript to the rolling memory. It continues until the dialog ends or the game reaches a screen where the agent has to make a real decision. If the entire interaction is ordinary dialog, the handler returns to the main loop without calling the model at all. If a menu, question, or other decision remains, it starts the text agent and gives it the current text and screenshot.
 
 ### Press Buttons
 
-This is the generic decision maker for the text handler. It is effectively a constrained "push buttons" tool used for menu navigation, yes/no questions, the title screen, and any other non-trivial text interaction.
-
-After the buttons are pressed, deterministic code reads and advances any resulting dialog. The tool then returns the captured text, current onscreen text, and a fresh screenshot to the same agent conversation. This lets the model make several related decisions without repeatedly returning to the dispatcher.
+This is the generic decision-making tool for the Text Handler. It is used for menu navigation, yes/no questions, the title screen, and any other non-trivial text interaction. After the buttons are pressed, any resulting dialog is read automatically and returned to the same conversation. The agent can therefore make several related decisions without starting over each time.
 
 ### Assign Name
 
-A niche tool, but a very useful one. This enters a name into the game when the player is asked for their name at the start of the game, when the rival needs a name, or when a newly caught Pokémon needs a nickname. It saves time and tokens by asking the AI for a name and deterministically entering the button presses required to submit it, rather than getting the AI to do it one button at a time.
-
-The tool checks that the naming screen is actually open before doing anything. If it is not, the request is rejected and the current text and screenshot are returned so the agent can recover.
-
-### Memory and Display Updates
-
-The agent narrates each decision alongside its tool call. That explanation and any dialog read after the action are appended to the current rolling-memory block and streamed to the HTML activity log. The more mechanical tool results stay inside the local conversation, where they are useful for the next decision without cluttering long-term history.
+A niche tool, but a very useful one. This enters a name when the player or rival needs one at the start of the game, or when a newly caught Pokémon needs a nickname. It saves time and tokens by asking the AI for a name and entering it deterministically, rather than getting the AI to move around the keyboard one button at a time. The AI is also terrible at entering names manually, so this saves us from watching it play with a team full of Pokémon named "AAAAAAAAAA".

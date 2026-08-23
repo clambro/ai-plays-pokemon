@@ -4,24 +4,16 @@ from typing import TYPE_CHECKING
 
 from pydantic_ai import FunctionToolset
 
-from agent.overworld.tools.create_goal.interface import (
-    build_create_goal_tool,
-)
-from agent.overworld.tools.delete_goal.interface import (
-    build_delete_goal_tool,
-)
 from agent.overworld.tools.navigate.interface import build_navigation_tool
 from agent.overworld.tools.press_buttons.interface import (
     build_press_buttons_tool,
 )
+from agent.overworld.tools.set_goal.interface import build_set_goal_tool
 from agent.overworld.tools.sokoban_solver.interface import (
     build_sokoban_solver_tool,
 )
 from agent.overworld.tools.swap_first_pokemon.interface import (
     build_swap_first_pokemon_tool,
-)
-from agent.overworld.tools.update_goal.interface import (
-    build_update_goal_tool,
 )
 from agent.overworld.tools.use_item.interface import build_use_item_tool
 from common.enums import AsciiTile, SpriteLabel
@@ -44,9 +36,7 @@ def build_overworld_toolset(
     """Build the fixed toolset available for the current overworld state."""
     tools: list[Tool[AgentContext]] = [
         build_press_buttons_tool(context),
-        build_create_goal_tool(context),
-        build_update_goal_tool(context),
-        build_delete_goal_tool(context),
+        build_set_goal_tool(context),
     ]
     if not game_state.player.is_biking:
         tools.append(build_navigation_tool(context, current_map))

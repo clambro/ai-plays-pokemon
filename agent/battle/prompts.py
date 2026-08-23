@@ -32,17 +32,9 @@ def _format_battle_guidance(game_state: GameState) -> str:
     if battle_type not in {BattleType.TRAINER, BattleType.WILD}:
         return ""
 
-    guidance = (
-        "Using a move or voluntarily switching Pokemon consumes the turn. Switching gives the "
-        "opponent an opportunity to attack the Pokemon switched in. Experience is granted only "
-        "to Pokemon used in the battle, provided they have not fainted and are not at the level "
-        "cap."
-    )
+    guidance = "Using a move or voluntarily switching Pokemon consumes the turn. Switching gives the opponent an opportunity to attack the Pokemon switched in. Experience is granted only to Pokemon used in the battle, provided they have not fainted and are not at the level cap."
     if battle_type == BattleType.WILD:
-        guidance += (
-            " An unsuccessful capture attempt or failed escape also gives the opponent an "
-            "opportunity to attack."
-        )
+        guidance += " An unsuccessful capture attempt or failed escape also gives the opponent an opportunity to attack."
     return guidance
 
 

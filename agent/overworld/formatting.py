@@ -218,8 +218,9 @@ def _get_warp_description(warp: Warp, player_coords: Coords) -> str:
             )
         return "Step onto this coordinate to activate the warp."
     return (
-        f"Stand on this coordinate and press {warp.activation.value} to activate the warp, even"
-        " if that direction appears blocked."
+        f"Stand on this coordinate and press {warp.activation.value} twice to activate the warp,"
+        " even if that direction appears blocked. The first press turns you if necessary; the"
+        " second moves you through the warp."
     )
 
 

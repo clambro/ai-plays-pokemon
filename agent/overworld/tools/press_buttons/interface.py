@@ -66,13 +66,10 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         Follow the map's instructions for each warp tile: walk on or through
         the warp rather than pressing the action button.
 
-        You can interact with sprites or signs using the action button, but you
-        must be facing the entity you wish to interact with before doing so. If
-        the sprite's position is ``(r, c)`` and you are at ``(r, c + 1)``, then
-        you must face left to interact with it. If you are at ``(r - 1, c)``,
-        then you must face down to interact with it. If you are at
-        ``(r, c - 1)``, then you must face right to interact with it. If you are
-        at ``(r + 1, c)``, then you must face up to interact with it.
+        Use the action button while facing the entity you want to interact
+        with. Normally, stand on an adjacent tile. If the map note gives an
+        exact interaction position, such as for a sprite across a counter,
+        stand there instead and face the entity.
 
         When deliberately looking for wild Pokemon while standing in tall
         grass, rotate in place instead of walking back and forth one tile at a

@@ -145,6 +145,14 @@ class GameState:
                 on_screen_sprites.append(s)
                 blocks[sc.row, sc.col] = AsciiTile.SPRITE
 
+        on_screen_signs = []
+        for s in self.signs.values():
+            if sc := self.screen.to_screen_coords(s.coords):
+                blocks[sc.row, sc.col] = AsciiTile.SIGN
+                on_screen_signs.append(s)
+
+        # A Cerulean Trashed House exit is both a sign and a warp; keep the warp visible
+        # for routing.
         on_screen_warps = []
         for w in self.warps.values():
             sc = self.screen.to_screen_coords(w.coords)
@@ -153,12 +161,6 @@ class GameState:
             if sc and blocks[sc.row, sc.col] != AsciiTile.WALL:
                 blocks[sc.row, sc.col] = AsciiTile.WARP
                 on_screen_warps.append(w)
-
-        on_screen_signs = []
-        for s in self.signs.values():
-            if sc := self.screen.to_screen_coords(s.coords):
-                blocks[sc.row, sc.col] = AsciiTile.SIGN
-                on_screen_signs.append(s)
 
         on_screen_objects = []
         for obj in self.objects.values():

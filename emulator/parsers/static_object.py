@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from common.enums import MapId
+from common.enums import FacingDirection, MapId
 from common.schemas import Coords
 
 if TYPE_CHECKING:
@@ -18,21 +18,19 @@ _TERMINATOR = 0xFF
 _MAX_MAP_RECORDS = 0x100
 _MAX_OBJECT_RECORDS = 0x100
 
-# Bank and address pairs from the required Yellow Legacy ROM. The parser uses
-# these only to decide which coordinate records are safe and useful to expose.
-_SUPPORTED_HANDLERS = frozenset(
-    {
-        (0x07, 0x6547),  # PrintCinnabarQuiz
-        (0x07, 0x66DF),  # BillsHousePC
-        (0x11, 0x4629),  # Mansion1Script_Switches
-        (0x14, 0x605C),  # Mansion2Script_Switches
-        (0x14, 0x63F7),  # Mansion3Script_Switches
-        (0x14, 0x659D),  # Mansion4Script_Switches
-        (0x17, 0x5E43),  # OpenRedsPC
-        (0x17, 0x60F3),  # GymTrashScript
-        (0x18, 0x672D),  # OpenPokemonCenterPC
-    }
-)
+# Bank and address pairs from the required Yellow Legacy ROM. Values give the reliable interaction
+# direction for each handler, or ``None`` when it accepts interaction from any adjacent side.
+_SUPPORTED_HANDLERS = {
+    (0x07, 0x6547): FacingDirection.UP,  # PrintCinnabarQuiz
+    (0x07, 0x66DF): FacingDirection.UP,  # BillsHousePC
+    (0x11, 0x4629): FacingDirection.UP,  # Mansion1Script_Switches
+    (0x14, 0x605C): FacingDirection.UP,  # Mansion2Script_Switches
+    (0x14, 0x63F7): FacingDirection.UP,  # Mansion3Script_Switches
+    (0x14, 0x659D): FacingDirection.UP,  # Mansion4Script_Switches
+    (0x17, 0x5E43): FacingDirection.UP,  # OpenRedsPC
+    (0x17, 0x60F3): None,  # GymTrashScript
+    (0x18, 0x672D): FacingDirection.UP,  # OpenPokemonCenterPC
+}
 
 
 class StaticObject(BaseModel):
@@ -40,6 +38,7 @@ class StaticObject(BaseModel):
 
     index: int
     coords: Coords
+    interaction_direction: FacingDirection | None
 
     model_config = ConfigDict(frozen=True)
 
@@ -82,6 +81,7 @@ def parse_static_objects(
                     row=row,
                     col=mem[_OBJECT_TABLE_BANK, address + 1],
                 ),
+                interaction_direction=_SUPPORTED_HANDLERS[handler],
             )
     return objects
 

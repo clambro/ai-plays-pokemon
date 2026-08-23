@@ -2,8 +2,7 @@
 
 ## Environment and Commands
 
-This project uses Python 3.14 and `uv` for dependency management. Run project
-tools through the locked environment:
+This project uses Python 3.14 and `uv` for dependency management. Run project tools through the locked environment:
 
 ```bash
 uv sync --all-groups
@@ -15,69 +14,33 @@ uv run python -m pytest path/to/test_file.py
 uv run pre-commit run --all-files
 ```
 
-Run the application with `uv run python -m main`, following the options
-documented in the README. Do not start it as a validation step: it launches the
-indefinite gameplay loop and may make billable model calls. Emulator smoke tests
-must be explicitly bounded.
+Run the application with `uv run python -m main`, following the options documented in the README. Do not start it as a validation step: it launches the indefinite gameplay loop and may make billable model calls. Emulator smoke tests must be explicitly bounded.
 
-The project targets standard GIL-enabled Python `>=3.14,<3.15`. PyBoy is pinned
-exactly because emulator changes can affect existing save states.
+The project targets standard GIL-enabled Python `>=3.14,<3.15`. PyBoy is pinned exactly because emulator changes can affect existing save states.
 
 ## Quality Rules
 
-- Fix lint and type errors at their source. Add narrow suppressions only for
-  unavoidable third-party issues, with a nearby explanation.
-- Prefer module-level functions for stateless operations. Do not use classes
-  solely to copy one call's arguments onto `self`, expose one public method, or
-  namespace static helpers. Keep per-call inputs explicit in function
-  signatures, but preserve existing shared service clients at module scope
-  instead of threading them through unrelated callers.
-- Use classes when state, identity, lifecycle, invariants, polymorphism, or a
-  framework contract makes them useful. Test classes may also group a large
-  test module when that grouping materially improves comprehension.
-- Use Google-style docstrings. Document caller-relevant semantics, mutation,
-  side effects, returns, and failures; keep obvious operations concise. Do not
-  use Sphinx directives.
-- Use Pydantic models at I/O and validation boundaries. Prefer standard-library
-  dataclasses for internal structured data.
-- Establish the source of truth, ownership, and lifecycle before adding state
-  or abstractions. Do not duplicate authoritative data for a view, put loading
-  or presentation policy in domain records, or let cached state become another
-  authority; keep persistence and workflow transitions in the coordinating
-  service.
-- Tests must protect externally observable behavior or stable domain rules and
-  survive internal refactors that preserve that behavior. Do not add tests that
-  merely mirror implementation details such as private helpers, internal call
-  sequences, exact wiring, or timing constants. Prefer real integration
-  coverage for component interactions and focused unit tests for substantive
-  pure algorithms. Repository policy tests are appropriate when they
-  deliberately enforce a project convention.
-- Do not add tests whose primary assertions inspect prompts, tool descriptions
-  or results, formatted model-facing prose, error-message wording, logs,
-  documentation text, or other copy. Review presentation-only changes directly.
-  Do not add a new test file unless the change introduces substantive
-  algorithmic behavior or a stable domain invariant.
+- Never hard-wrap prose in gameplay prompt files, Markdown documents, or this file; keep each paragraph and list item on one physical line. In all other Python files, including formatting modules and memory or compaction code, follow the normal formatter and line-length rules.
+- Fix lint and type errors at their source. Add narrow suppressions only for unavoidable third-party issues, with a nearby explanation.
+- Prefer module-level functions for stateless operations. Do not use classes solely to copy one call's arguments onto `self`, expose one public method, or namespace static helpers. Keep per-call inputs explicit in function signatures, but preserve existing shared service clients at module scope instead of threading them through unrelated callers.
+- Use classes when state, identity, lifecycle, invariants, polymorphism, or a framework contract makes them useful. Test classes may also group a large test module when that grouping materially improves comprehension.
+- Use Google-style docstrings. Document caller-relevant semantics, mutation, side effects, returns, and failures; keep obvious operations concise. Do not use Sphinx directives.
+- Use Pydantic models at I/O and validation boundaries. Prefer standard-library dataclasses for internal structured data.
+- Establish the source of truth, ownership, and lifecycle before adding state or abstractions. Do not duplicate authoritative data for a view, put loading or presentation policy in domain records, or let cached state become another authority; keep persistence and workflow transitions in the coordinating service.
+- Tests must protect externally observable behavior or stable domain rules and survive internal refactors that preserve that behavior. Do not add tests that merely mirror implementation details such as private helpers, internal call sequences, exact wiring, or timing constants. Prefer real integration coverage for component interactions and focused unit tests for substantive pure algorithms. Repository policy tests are appropriate when they deliberately enforce a project convention.
+- Do not add tests whose primary assertions inspect prompts, tool descriptions or results, formatted model-facing prose, error-message wording, logs, documentation text, or other copy. Review presentation-only changes directly. Do not add a new test file unless the change introduces substantive algorithmic behavior or a stable domain invariant.
 - Keep changes focused and preserve unrelated worktree changes.
 
 ## Logging and Telemetry
 
-- Use logs for local operational health, Logfire for telemetry, and application
-  state or persistence for gameplay history. Do not use logs as another record
-  of agent reasoning, goals, prompts, dialog, tool results, or other domain
-  state.
-- Keep `INFO` logs to rare lifecycle milestones such as a service starting or a
-  backup completing. Expected validation failures, ordinary control flow, and
-  recoverable gameplay outcomes should not be logged.
-- Use `WARNING` for unexpected degradation from which the application recovers,
-  and `ERROR` or `EXCEPTION` for failed operations and workflow faults. Log an
-  exception once, at the boundary that handles it, and retain its traceback.
-- Keep log context compact and metadata-oriented. Never log secrets, full
-  prompts, model-generated reasoning, or other potentially sensitive content.
+- Use logs for local operational health, Logfire for telemetry, and application state or persistence for gameplay history. Do not use logs as another record of agent reasoning, goals, prompts, dialog, tool results, or other domain state.
+- Keep `INFO` logs to rare lifecycle milestones such as a service starting or a backup completing. Expected validation failures, ordinary control flow, and recoverable gameplay outcomes should not be logged.
+- Use `WARNING` for unexpected degradation from which the application recovers, and `ERROR` or `EXCEPTION` for failed operations and workflow faults. Log an exception once, at the boundary that handles it, and retain its traceback.
+- Keep log context compact and metadata-oriented. Never log secrets, full prompts, model-generated reasoning, or other potentially sensitive content.
 
 ## Repository Layout
 
-- `agent/`: shared orchestration plus the overworld, battle, and text Pydantic
-  AI agents and tools.
+- `agent/`: shared orchestration plus the overworld, battle, and text Pydantic AI agents and tools.
 - `emulator/`: PyBoy lifecycle, game-state snapshots, and ROM-memory parsers.
 - `overworld_map/`: explored-map state and persistence integration.
 - `memory/`: goals and rolling-memory compaction behavior.
@@ -89,27 +52,14 @@ exactly because emulator changes can affect existing save states.
 
 ## ROMs, Fixtures, and External Effects
 
-ROMs are proprietary local inputs and must never be committed. The default ROM
-is expected at `resources/ylegacy.gbc`; distributable repository changes use a
-patch plus hashes and application instructions, not a ROM image.
+ROMs are proprietary local inputs and must never be committed. The default ROM is expected at `resources/ylegacy.gbc`; distributable repository changes use a patch plus hashes and application instructions, not a ROM image.
 
-Save states, RAM saves, backups, databases, output folders, generated game
-assets, `.env` files, and credentials are also local artifacts. Do not add them
-to Git, copy them into tracked paths, or overwrite them casually. Some
-integration tests depend on ignored emulator fixtures that are not present in a
-fresh clone.
+Save states, RAM saves, backups, databases, output folders, generated game assets, `.env` files, and credentials are also local artifacts. Do not add them to Git, copy them into tracked paths, or overwrite them casually. Some integration tests depend on ignored emulator fixtures that are not present in a fresh clone.
 
-Do not make live model calls, send telemetry, access paid services, or contact
-other external systems during validation unless the task explicitly requires
-it. Never expose API keys or runtime data in logs, patches, or tool output.
+Do not make live model calls, send telemetry, access paid services, or contact other external systems during validation unless the task explicitly requires it. Never expose API keys or runtime data in logs, patches, or tool output.
 
 ## Workflow
 
-Read the relevant implementation, tests, documentation, and ticket before
-editing. Use the smallest meaningful validation for the change, then run the
-full static and test suite when the task reaches that stage. The complete suite
-must avoid live model calls and the indefinite gameplay loop.
+Read the relevant implementation, tests, documentation, and ticket before editing. Use the smallest meaningful validation for the change, then run the full static and test suite when the task reaches that stage. The complete suite must avoid live model calls and the indefinite gameplay loop.
 
-Do not commit, push, create pull requests, or alter branches unless the user
-explicitly asks. Before any requested commit, inspect the staged diff and keep
-unrelated user changes out of it.
+Do not commit, push, create pull requests, or alter branches unless the user explicitly asks. Before any requested commit, inspect the staged diff and keep unrelated user changes out of it.

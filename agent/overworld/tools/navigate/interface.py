@@ -37,7 +37,8 @@ def build_navigation_tool(
         navigation ends after the transition.
 
         This tool cannot interact with entities. To interact with a sprite,
-        sign, or object, navigate to an accessible adjacent coordinate.
+        sign, or object, navigate next to it, or use the exact interaction
+        position in its map note when one is provided.
 
         Navigation intentionally avoids random encounters where possible. When
         deliberately seeking wild Pokemon, choose suitable grass, cave, or

@@ -18,6 +18,8 @@ if TYPE_CHECKING:
     from agent.overworld.map_view import CurrentMapView
     from emulator.game_state import GameState
 
+_STALE_GOAL_ITERATIONS = 100
+
 OVERWORLD_MAP_PROMPT = f"""
 <map_info>
 Map name: {{map_name}}
@@ -108,7 +110,7 @@ LEGEND_MAP = {
     AsciiTile.LEDGE_RIGHT: "A ledge that you can jump over from left to right. These tiles are only passable if you approach them from the left and walk rightwards.",
     AsciiTile.FREE: "A walkable tile with nothing noteworthy in it.",
     AsciiTile.PLAYER: "Your current location.",
-    AsciiTile.SPRITE: "A sprite that you can interact with from an adjacent tile. This could be an NPC, an item you can pick up, or some other interactable entity. You cannot walk through sprites, nor can you stand on top of them.",
+    AsciiTile.SPRITE: "A sprite. Normally, you interact with it from an adjacent tile; if its note gives an exact interaction position, use that instead. This could be an NPC, an item you can pick up, or some other interactable entity. You cannot walk through sprites, nor can you stand on top of them.",
     AsciiTile.WARP: "A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.",
     AsciiTile.CUT_TREE: "A tree that can be cut down.",
     AsciiTile.BOULDER_HOLE: "A hole in the ground that you can fall through by standing on it. You can also push boulders into these holes to drop them to the floor below.",
@@ -124,38 +126,26 @@ LEGEND_MAP = {
 }
 
 OVERWORLD_DECISION_PROMPT = """
-You are navigating the overworld. At entry, you are standing still, there is no
-onscreen text, and the game is ready for your next decision. The screenshot
-provided above shows the current rendered game screen. After each tool call,
-its returned screenshot and result are the freshest state and supersede earlier
-observations.
+You are navigating the overworld. You are standing still. There is no onscreen text; any dialog from any previous action has already been completed. The screenshot provided above shows the current rendered game screen. After each tool call, its returned screenshot and result are the freshest state and supersede earlier observations.
 
 {state}
 
-Regularly reflect on what you are trying to accomplish and use the goal tools
-to keep your goals useful and current.
+Regularly reflect on what you are trying to accomplish and use set_goal to keep your goals useful and current.
+{goal_warning}
 
-The following accessible coordinates are adjacent to unseen terrain on the
-current map. They may be useful places to continue exploring the terrain.
+The following accessible coordinates are adjacent to unseen terrain on the current map. They may be useful places to continue exploring the terrain.
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>
 
-The following section lists only connected-map boundaries reachable from your
-current region. Boundaries in other regions of the same larger map are omitted.
+The following section lists only connected-map boundaries reachable from your current region. Boundaries in other regions of the same larger map are omitted.
 <map_boundaries>
 {map_boundaries}
 </map_boundaries>
 
-Use navigation for ordinary movement within the current map. Use press_buttons
-for direct interactions, changing direction, or sending the final directional
-input needed to cross a map boundary or warp. Prefer a specialized tool
-whenever it directly matches the action you want to take.
+Use navigation for ordinary movement within the current map. Use press_buttons for direct interactions, changing direction, or sending the final directional input needed to cross a map boundary or warp. Prefer a specialized tool whenever it directly matches the action you want to take.
 
-Briefly explain your reasoning in first person as ordinary response text, then
-use exactly one available tool to act. Be sure to consider all the tools at
-your disposal. Every response must include one tool call. A fresh observation
-will be returned after each tool executes.
+Briefly explain your reasoning in first person as ordinary response text, then use exactly one available tool to act. Be sure to consider all the tools at your disposal. Every response must include one tool call. A fresh observation will be returned after each tool executes.
 
 {biking_warning}
 """.strip()
@@ -215,12 +205,7 @@ def build_overworld_decision_prompt(
         unavailable = "Navigation data is unavailable while riding a bike."
         exploration_candidates = unavailable
         map_boundaries = unavailable
-        biking_warning = (
-            "You have lost access to the navigation tool because you are riding a bike. If you "
-            "would like to use the navigation tool, you must first dismount your bike. If you are "
-            "unable to dismount your bike because you are on Cycling Road, then you must use the "
-            "button tool to move around the map."
-        )
+        biking_warning = "You have lost access to the navigation tool because you are riding a bike. If you would like to use the navigation tool, you must first dismount your bike. If you are unable to dismount your bike because you are on Cycling Road, then you must use the button tool to move around the map."
     else:
         exploration_candidates = formatting.format_exploration_candidates(
             map_view.exploration_candidates,
@@ -241,9 +226,18 @@ def build_overworld_decision_prompt(
         format_inventory_info(game_state),
         format_pc_info(game_state),
     )
+    goal_warning = ""
+    if context.state.goals.goals and all(
+        context.state.iteration - goal.updated_at_iteration > _STALE_GOAL_ITERATIONS
+        for goal in context.state.goals.goals
+    ):
+        goal_warning = (
+            "Your goals have not been updated in over 100 iterations. You may want to review them."
+        )
     return OVERWORLD_DECISION_PROMPT.format(
         state="\n\n".join(section for section in sections if section),
         exploration_candidates=exploration_candidates,
         map_boundaries=map_boundaries,
         biking_warning=biking_warning,
+        goal_warning=goal_warning,
     )
