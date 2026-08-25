@@ -167,8 +167,8 @@ def _record_scripted_displacement(
     if matching_observations < _SCRIPTED_DISPLACEMENT_REPETITION_THRESHOLD:
         return None
     return (
-        "I have been moved back to the same location by a scripted event repeatedly and in quick"
-        " succession. This means I am likely pursuing the wrong path. I should try something"
-        " different. There is no way to sneak or force my way past a scripted event. It usually"
-        " requires some other kind of in game progress."
+        "SCRIPTED LOOP DETECTED: I have been moved back to the same location by a scripted event"
+        " repeatedly and in quick succession. This means I am likely pursuing the wrong path."
+        " I should try something different. There is no way to sneak or force my way past a"
+        " scripted event. It usually requires some other kind of in game progress."
     )
