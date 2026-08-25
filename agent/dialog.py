@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from agent.schemas import ScriptedDisplacementObservation
 from agent.utils import is_battle_handler_state
-from common.constants import CAPTURED_DIALOG_MARKER, SCRIPTED_LOOP_MARKER
+from common.constants import GAME_DIALOG_LABEL, SCRIPTED_LOOP_LABEL
 from common.enums import MapId
 from emulator.control_events import ControlBoundary
 from overworld_map.service import record_map_entity_interactions
@@ -100,7 +100,7 @@ async def settle_dialog(
     ) = await context.emulator.get_game_state_with_screenshot_and_control_boundary()
     if transcript:
         context.state.rolling_memory.add_memory(
-            content=f'{CAPTURED_DIALOG_MARKER} "{transcript}"',
+            content=f'{GAME_DIALOG_LABEL} "{transcript}"',
         )
     scripted_displacement_warning = ""
     if (
@@ -121,6 +121,10 @@ async def settle_dialog(
         )
         if scripted_displacement_warning:
             context.state.rolling_memory.add_memory(scripted_displacement_warning)
+            context.state.public_log.add(
+                context.state.iteration,
+                scripted_displacement_warning,
+            )
     update_background_from_states(context.state, final_state)
     return DialogSettlement(
         transcript=transcript,
@@ -168,7 +172,7 @@ def _record_scripted_displacement(
     if matching_observations < _SCRIPTED_DISPLACEMENT_REPETITION_THRESHOLD:
         return None
     return (
-        f"{SCRIPTED_LOOP_MARKER} I have been moved back to the same location by a scripted event"
+        f"{SCRIPTED_LOOP_LABEL} I have been moved back to the same location by a scripted event"
         " repeatedly and in quick succession. This means I am likely pursuing the wrong path."
         " I should try something different. There is no way to sneak or force my way past a"
         " scripted event. It usually requires some other kind of in game progress."

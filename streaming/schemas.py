@@ -4,12 +4,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from common.constants import CAPTURED_DIALOG_MARKER
-
 if TYPE_CHECKING:
+    from agent.schemas import PublicLog
     from agent.state import AgentState
     from emulator.game_state import GameState
-    from memory.rolling_memory.schemas import RollingMemory
 
 
 class PartyPokemonView(BaseModel):
@@ -51,28 +49,11 @@ class LogEntryView(BaseModel):
     thought: str
 
     @classmethod
-    def from_memory(cls, memory: RollingMemory) -> list[LogEntryView]:
-        """Create stream log entries without repeating captured game dialog."""
-        entries = []
-        for block in memory.raw_blocks:
-            sections = [
-                section
-                for section in block.content.split("\n\n")
-                if not section.startswith(CAPTURED_DIALOG_MARKER)
-            ]
-            if sections:
-                entries.append(
-                    cls(
-                        iteration=block.iteration,
-                        thought="\n\n".join(sections),
-                    )
-                )
-        return entries
-
-    @classmethod
-    def from_agent_state(cls, state: AgentState) -> list[LogEntryView]:
-        """Create a view of the log entry from the agent state."""
-        return cls.from_memory(state.rolling_memory)
+    def from_public_log(cls, public_log: PublicLog) -> list[LogEntryView]:
+        """Create stream log entries from the dedicated public log."""
+        return [
+            cls(iteration=entry.iteration, thought=entry.content) for entry in public_log.entries
+        ]
 
 
 class GameStateView(BaseModel):
@@ -98,7 +79,7 @@ class GameStateView(BaseModel):
     ) -> GameStateView:
         """Create a view of the game state from the agent and game states."""
         pokemon = PartyPokemonView.from_game_state(game_state)
-        log = LogEntryView.from_agent_state(agent_state)
+        log = LogEntryView.from_public_log(agent_state.public_log)
         return cls(
             iteration=agent_state.iteration,
             money=game_state.player.money,

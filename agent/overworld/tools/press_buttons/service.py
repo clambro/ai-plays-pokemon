@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from common.constants import ACTION_RESULT_LABEL
 from common.enums import Button, FacingDirection, MapId
 from emulator.control_events import ControlBoundary
 
@@ -51,7 +52,7 @@ async def press_buttons(
 
     if not results:
         results.append("Button sequence completed.")
-    result = "\n\n".join(results)
+    result = "\n\n".join(f"{ACTION_RESULT_LABEL} {entry}" for entry in results)
     rolling_memory.add_memory(result)
     return result
 
