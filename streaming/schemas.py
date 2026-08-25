@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
+from common.constants import CAPTURED_DIALOG_MARKER
+
 if TYPE_CHECKING:
     from agent.state import AgentState
     from emulator.game_state import GameState
@@ -50,14 +52,22 @@ class LogEntryView(BaseModel):
 
     @classmethod
     def from_memory(cls, memory: RollingMemory) -> list[LogEntryView]:
-        """Create a view of the log entry from the memory."""
-        return [
-            cls(
-                iteration=block.iteration,
-                thought=block.content,
-            )
-            for block in memory.raw_blocks
-        ]
+        """Create stream log entries without repeating captured game dialog."""
+        entries = []
+        for block in memory.raw_blocks:
+            sections = [
+                section
+                for section in block.content.split("\n\n")
+                if not section.startswith(CAPTURED_DIALOG_MARKER)
+            ]
+            if sections:
+                entries.append(
+                    cls(
+                        iteration=block.iteration,
+                        thought="\n\n".join(sections),
+                    )
+                )
+        return entries
 
     @classmethod
     def from_agent_state(cls, state: AgentState) -> list[LogEntryView]:

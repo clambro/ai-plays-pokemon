@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 from agent.overworld.tools.sokoban_solver.schemas import SokobanMap
+from common.constants import CAPTURED_DIALOG_MARKER
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, SpriteLabel
 from common.schemas import Coords
 from emulator.control_events import ControlBoundary
@@ -306,7 +307,7 @@ class SokobanSolverService:
 
 def _include_dialog(result: str, dialog: str) -> str:
     """Include captured field-move dialog in the first-person action result."""
-    sections = [f'I read: "{dialog}"'] if dialog else []
+    sections = [f'{CAPTURED_DIALOG_MARKER} "{dialog}"'] if dialog else []
     return "\n\n".join([*sections, result])
 
 
