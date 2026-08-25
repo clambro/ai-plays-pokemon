@@ -27,6 +27,7 @@ async def complete_text_action(
                 action_result,
                 settlement.transcript,
                 settlement.game_state.screen.text,
+                settlement.scripted_displacement_warning,
             )
             if text
         ),

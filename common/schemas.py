@@ -18,11 +18,11 @@ class Coords(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _from_tuple(cls, data: Any) -> Any:  # noqa: ANN401
-        """Validate the coordinate pair from a tuple."""
+    def _from_sequence(cls, data: Any) -> Any:  # noqa: ANN401
+        """Validate the coordinate pair from a tuple or its JSON list form."""
         if isinstance(data, str):
             data = tuple(int(x) for x in data.strip("()").split(","))
-        if isinstance(data, tuple) and len(data) == 2:  # noqa: PLR2004
+        if isinstance(data, tuple | list) and len(data) == 2:  # noqa: PLR2004
             return {"row": data[0], "col": data[1]}
         return data
 

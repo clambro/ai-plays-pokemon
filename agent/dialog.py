@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from agent.scripted_displacement import record_scripted_displacement
 from agent.utils import is_battle_handler_state
+from common.enums import MapId
 from emulator.control_events import ControlBoundary
 from overworld_map.service import record_map_entity_interactions
 from streaming.server import update_background_from_states
@@ -23,6 +25,7 @@ class DialogSettlement:
     game_state: GameState
     screenshot: Image.Image
     control_boundary: ControlBoundary | None
+    scripted_displacement_warning: str = ""
 
 
 def _is_plain_text_dialog(game_state: GameState) -> bool:
@@ -49,6 +52,12 @@ async def settle_dialog(
         The captured transcript and an atomic observation taken after settlement.
     """
     game_state, control_boundary = await context.emulator.get_game_state_with_control_boundary()
+    initial_state = game_state
+    started_in_plain_dialog = (
+        control_boundary == ControlBoundary.TEXT_INPUT_READY
+        and not is_battle_handler_state(game_state)
+        and _is_plain_text_dialog(game_state)
+    )
 
     chunks = []
     advanced = False
@@ -87,10 +96,30 @@ async def settle_dialog(
         context.state.rolling_memory.add_memory(
             content=f'Onscreen text: "{transcript}"',
         )
+    scripted_displacement_warning = ""
+    if (
+        advanced
+        and started_in_plain_dialog
+        and final_boundary == ControlBoundary.OVERWORLD_READY
+        and initial_state.map.id == final_state.map.id
+        and final_state.map.id not in {MapId.OUTSIDE, MapId.UNKNOWN}
+        and initial_state.player.coords != final_state.player.coords
+    ):
+        scripted_displacement_warning = (
+            record_scripted_displacement(
+                context.state,
+                map_id=final_state.map.id,
+                destination=final_state.player.coords,
+            )
+            or ""
+        )
+        if scripted_displacement_warning:
+            context.state.rolling_memory.add_memory(scripted_displacement_warning)
     update_background_from_states(context.state, final_state)
     return DialogSettlement(
         transcript=transcript,
         game_state=final_state,
         screenshot=screenshot,
         control_boundary=final_boundary,
+        scripted_displacement_warning=scripted_displacement_warning,
     )

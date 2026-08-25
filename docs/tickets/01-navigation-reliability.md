@@ -16,7 +16,7 @@ Finally, indoor exit records use the ROM sentinel `OUTSIDE`, and that literal na
 
 Make navigation validate what actually happened rather than assuming that the expected interaction or movement occurred. After attempting an HM action, confirm that the ROM entered the expected interaction state before handing control to dialogue processing. If it did not, refresh the current terrain and return a recoverable navigation result. No missing interaction should be able to leave the service waiting forever.
 
-For scripted barriers, first determine how the current control boundaries and observations represent the full interruption. The simplest useful result would identify that an attempted route was rejected by a script, especially when the player is displaced or returned, and preserve enough short-lived state for equivalent approaches to count as the same failed route rather than unrelated failed tiles. This must not permanently close the route: it needs to become eligible for reconsideration after meaningful game progress or other evidence that the blocking condition may have changed.
+For scripted barriers, use routine dialog settlement as the observation boundary: the application controls only the A button during that interval, so a same-map coordinate change before overworld control returns is ROM-controlled displacement. Retain a small rolling history of map-qualified destinations and warn the agent when the same destination repeats. This is intentionally a heuristic advisory, not a permanent route closure or a model of individual game scripts.
 
 Do not hardcode Brock, the Saffron guards, or individual coordinates unless investigation proves there is no general signal available. The desired behavior is generic recognition of repeated scripted rejection.
 
@@ -51,8 +51,8 @@ Persist the actual endpoint of an indoor exit after the agent traverses it. Form
 
 - A stale Cut-tree marker cannot hang navigation or crash the application.
 - A missing HM interaction produces a bounded, useful result and refreshes the state used for subsequent movement.
-- After a scripted route rejects the player, the agent does not immediately test every equivalent approach or repeat the same plan for many iterations.
-- Routes blocked by game progression remain available for later reconsideration.
+- When scripted dialog returns the player to the same map-qualified destination three times within 20 iterations, the agent receives an actionable warning to try another route.
+- Scripted displacement observations do not modify terrain or make routes unavailable.
 - A previously used indoor exit displays its actual learned destination rather than `OUTSIDE`.
 - Different exits from the same building remain distinguishable after they have been traversed.
 - The solution remains generic and does not encode a walkthrough for specific barriers.
@@ -95,28 +95,22 @@ This plan is intentionally a starting sequence rather than a complete up-front d
 
 **Documentation included in the commit:** Record that live ROM state, not application persistence, owns dynamic exit resolution. No public workflow documentation change is needed.
 
-### Commit 3: Recognize, remember, and temporarily avoid scripted route rejection
+### Commit 3: Warn about repeated scripted displacement
 
-**Outcome:** Navigation recognizes a generic scripted displacement, stops using the obsolete remainder of its path, records the rejected transition as short-lived workflow state, and avoids immediately planning another target through the same transition. The transition becomes eligible again after relevant progress or bounded expiry.
-
-**Investigation checkpoint:** First reproduce at least one real Route 3 or Saffron rejection and verify whether `ControlResult.step_observations` captures the complete movement imposed between the accepted directional input and the restored `OVERWORLD_READY` boundary. Also verify normal turns, collisions, ledges, spinners, warps, and HM movement so the rejection rule is based on positive evidence. If the current observations cannot distinguish scripted rejection, add the smallest generic control metadata needed to expose that fact; do not infer it from a final coordinate alone and do not add map IDs, coordinates, NPC names, or walkthrough conditions.
+**Outcome:** When routine dialog repeatedly returns the player to the same location, the agent receives a concise warning that the route is probably blocked by a scripted event and should try something else.
 
 **Implementation:**
 
-- Request step observations for ordinary directional movement in navigation and direct overworld button sequences, then reduce the observed trajectory into a movement outcome shared by both services.
-- Compare the actual trajectory and terminal boundary with the movement the accepted input was expected to perform. Report and stop on autonomous displacement or a return path that is inconsistent with an ordinary step, while preserving the established special cases for turning, Pikachu yielding, ledges, spinners, warps, encounters, and HM movement.
-- Define rejection identity around the attempted transition rather than the requested target coordinate. Start with a map-qualified directed entry edge, and use a proven generic script identity or equivalent observed trajectory to group multiple entry tiles only if the real fixtures show that an edge alone is insufficient. If no generic observation can support the required grouping, revise this stage instead of hardcoding a barrier.
-- Add a small route-rejection model owned by `AgentState` and the coordinating context, with a backwards-compatible empty default for old backups. Keep this state separate from persisted terrain and map-entity memory so a scripted condition never becomes a permanent physical wall; rolling memory may describe the failure but is not its source of truth.
-- Overlay active rejected transitions only when building the current reachable view and calculating paths. Targets whose routes require the same rejected transition should be rejected before another emulator input, while unrelated targets and routes remain available. Show a concise temporary-blockage note in the overworld decision context so the model understands why the region changed.
-- Give every rejection explicit reconsideration rules based on player-visible progress available in the current `GameState`, initially including badge changes, inventory item identity changes, and HM capability changes, plus a conservative maximum age as a fallback. A later successful traversal removes the rejection immediately. Do not read hidden story flags solely to decide whether a route should reopen.
+- Observe the player before routine dialog is advanced and after overworld control returns. Treat a same-map coordinate change during that interval as ROM-controlled displacement; ignore ordinary text without movement, map transitions, battles, and interactions that have not returned control.
+- Retain at most 20 map-qualified destinations from the last 20 application iterations in agent state. On the third arrival at the same destination, include an actionable warning in the immediate result and rolling memory.
+- Keep this deliberately heuristic. A repeated destination is not a unique script identity, and the warning does not alter terrain, block routes, catalogue events, or attempt to model the underlying game condition.
 
 **Tests included in the commit:**
 
-- Add behavior tests showing that a multi-step scripted displacement or out-and-back trajectory is classified as rejection, while a turn, collision, ordinary step, ledge, spinner, warp, encounter handoff, and successful HM action are not.
-- Add a navigation-level test in which one observed rejection prevents two different targets from immediately reusing the equivalent transition but does not block an unrelated path.
-- Add lifecycle tests showing that the rejection survives ordinary iterations and a backup round trip, then becomes eligible after the chosen progress signals, successful traversal, or maximum age. Use a real emulator save for at least one scripted barrier when a reproducible local fixture is available.
+- Verify that the third matching destination in the 20-iteration window is flagged, while the same coordinates on another map do not match, expired observations do not count, and retained history never exceeds 20 entries.
+- Verify that the bounded history survives an agent-state round trip and that backups without it retain a backwards-compatible empty default.
 
-**Documentation included in the commit:** Record the proven emulator signal, equivalence rule, and reconsideration lifecycle in this technical ticket so later work does not have to rediscover them. No public workflow documentation change is needed.
+**Documentation included in the commit:** Record the deliberately narrow signal and its limitations in this technical ticket. No public workflow documentation change is needed.
 
 ### Validation and review cadence
 
