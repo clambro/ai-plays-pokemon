@@ -58,7 +58,7 @@ async def switch_pokemon(
         raise BattleActionUnavailableError("The switch menu did not open.")
 
     await _move_cursor(emulator, cursor_index, 0)
-    await emulator.pulse_button(Button.A)
+    await emulator.press_button(Button.A)
 
     return f"Attempted to switch to {target.name} ({target.species})."
 

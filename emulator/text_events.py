@@ -344,7 +344,7 @@ async def drive_standard_dialog(
                     return reducer.reduce(events)
 
         if control.input_required and not control.input_sent:
-            await emulator.pulse_button(Button.A)
+            await emulator.press_button(Button.A)
             control.input_sent = True
 
         batch = await emulator.wait_for_text_events()

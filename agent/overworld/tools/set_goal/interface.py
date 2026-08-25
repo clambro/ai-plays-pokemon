@@ -14,7 +14,11 @@ if TYPE_CHECKING:
     from agent.context import AgentContext
 
 
-def build_set_goal_tool(context: AgentContext) -> Tool[AgentContext]:
+def build_set_goal_tool(
+    context: AgentContext,
+    *,
+    end_turn_on_success: bool = False,
+) -> Tool[AgentContext]:
     """Build the indexed goal-setting tool."""
 
     async def set_goal(
@@ -39,10 +43,12 @@ def build_set_goal_tool(context: AgentContext) -> Tool[AgentContext]:
         progression.
 
         Use this tool when an important priority is missing or when an existing
-        goal has changed, been completed, or become irrelevant. Replace an
-        outdated goal directly when another priority should take its place; use
-        null when it should simply be removed. Goals guide future decisions but
-        do not need to determine your next action.
+        goal has changed, been completed, or become irrelevant. You may replace
+        a goal with the exact same text when a required review confirms that it
+        remains appropriate. Replace an outdated goal directly when another
+        priority should take its place; use null when it should simply be
+        removed. Goals guide future decisions but do not need to determine your
+        next action.
 
         Args:
             index: Existing goal index, or the next unused index when appending.
@@ -62,6 +68,8 @@ def build_set_goal_tool(context: AgentContext) -> Tool[AgentContext]:
             result = str(error)
         else:
             context.state.goals = goals
+            if end_turn_on_success:
+                context.request_control_handoff()
             result = f"Goals updated.\n\n{format_goals(goals)}"
         return await complete_overworld_action(context, result)
 

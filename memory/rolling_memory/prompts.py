@@ -10,29 +10,54 @@ if TYPE_CHECKING:
 type _CompactionSourceEntry = RawMemoryBlock | MemorySummary
 
 SYSTEM_PROMPT = """
-You maintain a compact, faithful history for an AI playing Pokémon Yellow Legacy.
-Summarize only the supplied memory. Never invent events, outcomes, or explanations.
+You compress chronological gameplay records for an AI playing Pokémon Yellow Legacy. Write a faithful historical record, not advice to the future agent.
+
+The source may combine agent reasoning, intentions, hypotheses, tool results, and observed game text. Treat plans, predictions, assumptions, and statements of intent as unconfirmed. Confirmed outcomes and explicit observations take precedence over agent reasoning.
+
+Never invent events, outcomes, explanations, or certainty that the source does not establish.
 """.strip()
 
 COMPACTION_PROMPT = """
-Compress the memories below into durable first-person notes covering iterations
-{start_iteration} through {end_iteration}.
+Compress the memories below into a concise first-person, past-tense historical record covering iterations {start_iteration} through {end_iteration}.
 
-Preserve:
-- lasting outcomes and progress;
-- unresolved goals, obstacles, and commitments;
-- failed approaches when they should not be repeated;
-- later corrections to earlier beliefs; and
-- locations, characters, items, Pokémon, and game state that remain useful.
+Retain only information likely to remain useful well after this period:
+- confirmed, durable progress such as major victories, key items, permanent unlocks, important discoveries, and lasting consequences;
+- observed corrections to earlier beliefs;
+- material obstacles or clues that were still unresolved at the end of the period;
+- failed approaches only when they establish a durable factual constraint that prevents meaningfully equivalent attempts; and
+- exact coordinates only when they identify a durable, non-obvious route, warp, ladder, or interaction that would otherwise need to be rediscovered.
 
-Remove repetition, transient mechanics, routine movement, and self-talk. Resolve
-contradictions in favor of the later source, but do not infer anything that the
-source does not establish. The summary must stand on its own and must not exceed
-{max_characters} characters. Do not reference the iteration numbers at all. They
-will be appended automatically after you're done.
+Use evidence carefully:
+- Tool outcomes, map transitions, acquired items, battle results, and observed game text are evidence.
+- Agent plans, predictions, interpretations, and intended actions are not evidence that something happened.
+- Later material supersedes earlier material only when it reports an observed change or correction. A later unsupported belief must not erase an earlier confirmed outcome.
+- If the evidence genuinely conflicts and does not establish a resolution, state the uncertainty briefly or omit the disputed claim.
+
+Describe unresolved conditions as historical facts about the end of this period. Never turn them into commands, recommendations, goals, or instructions for what the agent should do next.
+
+Remove:
+- plans, intentions, self-talk, speculation, recommendations, and imperatives;
+- exact button sequences, routine paths, incidental coordinates and waypoints, routine movement, collisions, and pathfinding failures;
+- temporary snapshots such as current location, party order, HP, PP, status conditions, and short-lived inventory state;
+- routine battle turns, move-by-move tactics, ordinary type-matchup advice, and inconsequential encounters;
+- flavor text, incidental NPC dialogue, prices, exhibits, and minor items unless they caused lasting progress; and
+- repetition, resolved obstacles, and details made obsolete by later observed events.
+
+Write only the compressed history. Do not mention iteration numbers; they are attached separately. Use as few characters as the durable facts require. Return no more than {max_characters} characters, including spaces and line breaks; omit lower-priority details rather than exceeding the limit.
 
 Memory:
 {source}
+""".strip()
+
+COMPACTION_REVISION_PROMPT = """
+The historical summary below is {actual_characters} characters long and exceeds the limit. Return a shorter version of no more than {max_characters} characters, including spaces and line breaks.
+
+Preserve the most important confirmed, durable facts. Remove instructions, plans, repetition, temporary state, routine navigation and battle details, and incidental coordinates. Retain an exact coordinate only when it is necessary to preserve a durable, non-obvious route, warp, ladder, or interaction. Do not add any fact that is not already present.
+
+Return only the shortened summary. Omit lower-priority details rather than exceeding {max_characters} characters.
+
+Summary:
+{summary}
 """.strip()
 
 

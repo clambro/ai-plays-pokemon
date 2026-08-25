@@ -214,8 +214,7 @@ class SokobanSolverService:
                 )
 
             if activating_strength:
-                # Hand dialog progression to the ROM-event driver immediately after activation.
-                await self.emulator.pulse_button(Button.A)
+                await self.emulator.press_button(Button.A)
                 strength_dialog = await self.emulator.advance_text_dialog_until_overworld_ready()
                 is_strength_active = True
 

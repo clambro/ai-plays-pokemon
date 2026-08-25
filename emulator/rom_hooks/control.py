@@ -275,12 +275,6 @@ class RomControlHooks:
             observe_steps=observe_steps,
         )
 
-    def begin_raw_input(self) -> None:
-        """Invalidate readiness before a dialog driver schedules its own input."""
-        if self._pending is not None:
-            raise RuntimeError("A control operation is already pending.")
-        self._current_boundary = None
-
     def _arm(
         self,
         *,

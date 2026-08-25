@@ -26,6 +26,8 @@ if TYPE_CHECKING:
     from emulator.game_state import GameState
     from overworld_map.schemas import OverworldMap
 
+_FORCED_GOAL_UPDATE_INTERVAL = 300
+
 
 def build_overworld_toolset(
     context: AgentContext,
@@ -34,6 +36,13 @@ def build_overworld_toolset(
     game_state: GameState,
 ) -> FunctionToolset[AgentContext]:
     """Build the fixed toolset available for the current overworld state."""
+    latest_goal_update = max(
+        (goal.updated_at_iteration for goal in context.state.goals.goals),
+        default=0,
+    )
+    if context.state.iteration - latest_goal_update >= _FORCED_GOAL_UPDATE_INTERVAL:
+        return FunctionToolset(tools=[build_set_goal_tool(context, end_turn_on_success=True)])
+
     tools: list[Tool[AgentContext]] = [
         build_press_buttons_tool(context),
         build_set_goal_tool(context),
