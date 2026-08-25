@@ -158,9 +158,7 @@ def _record_scripted_displacement(
         map_id=map_id,
         destination=destination,
     )
-    state.scripted_displacements = [*recent_observations, observation][
-        -_SCRIPTED_DISPLACEMENT_WINDOW_ITERATIONS:
-    ]
+    state.scripted_displacements = [*recent_observations, observation]
 
     matching_observations = sum(
         previous.map_id == map_id and previous.destination == destination

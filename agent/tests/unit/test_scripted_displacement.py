@@ -13,8 +13,6 @@ from common.schemas import Coords
 if TYPE_CHECKING:
     from pathlib import Path
 
-EXPECTED_HISTORY_LIMIT = 20
-
 
 def _record(
     state: AgentState,
@@ -55,18 +53,23 @@ def test_destination_observations_expire_after_twenty_iterations(tmp_path: Path)
 
 
 @pytest.mark.unit
-def test_displacement_history_never_exceeds_twenty_observations(tmp_path: Path) -> None:
-    """Bound retained history even if several arrivals share one iteration."""
+def test_displacement_history_retains_only_the_twenty_iteration_window(tmp_path: Path) -> None:
+    """Retain every recent arrival while pruning observations by iteration age."""
     state = AgentState(folder=tmp_path)
+    observation_count = 25
 
-    for row in range(25):
+    for row in range(observation_count):
         _record(
             state,
             iteration=1,
             destination=Coords(row=row, col=0),
         )
 
-    assert len(state.scripted_displacements) == EXPECTED_HISTORY_LIMIT
+    assert len(state.scripted_displacements) == observation_count
+
+    _record(state, iteration=21, destination=Coords(row=observation_count, col=0))
+
+    assert [observation.iteration for observation in state.scripted_displacements] == [21]
 
 
 @pytest.mark.unit
