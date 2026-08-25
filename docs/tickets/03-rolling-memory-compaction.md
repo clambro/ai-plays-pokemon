@@ -105,22 +105,19 @@ This plan is intentionally a starting sequence rather than a complete up-front d
 
 ### Commit 3: Force periodic collection-level goal review
 
-**Outcome:** The overworld agent cannot ignore goal maintenance indefinitely. After 300 iterations without a successful review, its next overworld turn permits only goal review; one successful review ends the maintenance turn, and normal gameplay tools return on the next turn.
+**Outcome:** The overworld agent cannot ignore goal maintenance indefinitely. After 300 iterations without any goal being updated, its next overworld turn permits only `set_goal`; replacing a goal with the exact same text counts, and normal gameplay tools return after that one successful call.
 
 **Implementation:**
 
-- Make one persisted collection-level review iteration the source of truth for staleness, including when the goal list is empty. Restore older backups with a safe default derived from the state they already contain rather than requiring a migration or failing to load.
-- Let one goal action submit the reviewed collection coherently, with zero to four distinct goals. An unchanged or empty collection may be an intentional successful review, while invalid input remains a recoverable tool result and does not clear the maintenance requirement.
-- Use the same successful collection update during ordinary play to refresh the review iteration. When maintenance is due, expose only that action, then return control to the dispatcher after success so the next overworld activation rebuilds the normal toolset.
-- Keep goals optional and do not reward placeholder entries. The maintenance mechanism enforces review of the collection, not a required number of goals or a walkthrough-derived objective.
+- Use the newest individual goal update iteration as the existing source of truth for staleness, with no additional persisted state.
+- When maintenance is due, expose only the existing indexed `set_goal` action. A successful replacement refreshes that goal's existing timestamp and returns control to the dispatcher, while invalid input remains recoverable and leaves maintenance active.
+- Explicitly allow the agent to replace a goal with identical text when it remains appropriate; the forced action requires an update, not a new objective.
 
 **Tests included in the commit:**
 
-- Add goal-domain tests for coherent zero-to-four-goal replacement, rejection without partial mutation, intentional identical and empty reviews, collection-level staleness, backup round trips, and backwards-compatible loading.
-- Add overworld behavior coverage showing that normal tools remain available before the threshold, only goal review is available when due, an invalid review keeps maintenance active, and a successful review restores the normal toolset on the next turn.
-- Test tool availability and state transitions without asserting prompt prose, tool-description wording, or making live model calls.
+- Add one overworld behavior test showing that a stale goal leaves only `set_goal`, an identical replacement succeeds once, control returns to the dispatcher, and normal tools are then available again.
 
-**Documentation included in the commit:** Record the collection-level staleness contract, empty-list behavior, and maintenance-turn lifecycle in this technical ticket. Keep the threshold and persistence mechanics out of the public workflow document.
+**Documentation included in the commit:** Record the staleness rule, identical-replacement behavior, and maintenance-turn lifecycle in this technical ticket. Keep the threshold and persistence mechanics out of the public workflow document.
 
 ### Validation and review cadence
 
