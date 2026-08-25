@@ -182,17 +182,6 @@ class PyBoyWorker:
 
         return await self.execute(_start)
 
-    async def pulse_button(self, button: Button) -> None:
-        """Schedule input whose subsequent completion is owned by a dialog driver."""
-
-        def _pulse(pyboy: PyBoy) -> None:
-            if self._control_hooks is None:
-                raise RuntimeError("ROM control hooks are not installed.")
-            self._control_hooks.begin_raw_input()
-            pyboy.button(button, 2)
-
-        await self.execute(_pulse)
-
     async def start_boundary_wait(self, boundary: ControlBoundary | None = None) -> int:
         """Arm a wait for a requested or arbitrary ready ROM boundary."""
 

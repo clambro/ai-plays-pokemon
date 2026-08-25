@@ -215,7 +215,9 @@ async def test_dialog_driver_uses_live_boundary_after_input_event_was_claimed() 
     emulator.wait_for_text_events = AsyncMock(
         return_value=(_event(1, TextEventKind.INTERACTION_CLOSED),)
     )
-    emulator.pulse_button = AsyncMock()
+    emulator.press_button = AsyncMock(
+        return_value=ControlResult(boundary=ControlBoundary.OVERWORLD_READY)
+    )
     emulator.wait_until_ready = AsyncMock(
         return_value=ControlResult(boundary=ControlBoundary.OVERWORLD_READY)
     )
@@ -229,7 +231,7 @@ async def test_dialog_driver_uses_live_boundary_after_input_event_was_claimed() 
         ),
     )
 
-    emulator.pulse_button.assert_awaited_once_with(Button.A)
+    emulator.press_button.assert_awaited_once_with(Button.A)
 
 
 @pytest.mark.unit

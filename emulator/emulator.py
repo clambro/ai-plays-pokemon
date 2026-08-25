@@ -224,10 +224,6 @@ class Emulator(AbstractAsyncContextManager):
         operation_id = await self._worker.start_control_button(button)
         return await self._worker.wait_for_control_result(operation_id)
 
-    async def pulse_button(self, button: Button) -> None:
-        """Send a short button pulse whose completion is owned by a dialog driver."""
-        await self._worker.pulse_button(button)
-
     async def press_overworld_button(
         self,
         button: Button,

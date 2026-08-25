@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from agent.battle.tools.fight.service import fight
+from emulator.control_events import ControlBoundary
 from emulator.emulator import Emulator
 
 
@@ -31,8 +32,10 @@ async def test_use_move() -> None:
             emulator=emulator,
             move_slot=move_index,
         )
-        await emulator.wait_until_ready()
+        dialog = await emulator.advance_battle_dialog()
 
-        game_state = await emulator.get_game_state()
+        game_state, boundary = await emulator.get_game_state_with_control_boundary()
+        assert dialog
+        assert boundary == ControlBoundary.MENU_READY
         assert game_state.battle.player_pokemon is not None
         assert game_state.battle.player_pokemon.moves[move_index].pp == initial_pp - 1

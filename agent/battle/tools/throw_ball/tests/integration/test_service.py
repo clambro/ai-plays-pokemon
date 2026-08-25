@@ -1,12 +1,12 @@
 """Tests for the throw ball tool service."""
 
-import asyncio
 from pathlib import Path
 
 import pytest
 
 from agent.battle.tools.throw_ball.service import throw_ball
 from common.enums import PokeballItem
+from emulator.control_events import ControlBoundary
 from emulator.emulator import Emulator
 
 
@@ -24,7 +24,6 @@ async def test_throw_pokeball() -> None:
         # Verify that the initial state is as expected.
         assert game_state.battle.is_in_battle
 
-        # Find the Poke Ball in the inventory.
         assert any(item.name == PokeballItem.POKE_BALL for item in game_state.inventory.items), (
             "Poke Ball not found in inventory"
         )
@@ -33,7 +32,7 @@ async def test_throw_pokeball() -> None:
             emulator=emulator,
             ball_type=PokeballItem.POKE_BALL,
         )
-        await asyncio.sleep(0.1)  # Enough time to change frames, but not to catch the pokemon.
 
-        game_state = await emulator.get_game_state()
-        assert "POKé BALL!" in game_state.screen.text  # Used Poke Ball text.
+        game_state, boundary = await emulator.get_game_state_with_control_boundary()
+        assert game_state.battle.is_in_battle
+        assert boundary == ControlBoundary.TEXT_INPUT_READY
