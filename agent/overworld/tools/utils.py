@@ -24,5 +24,13 @@ async def complete_overworld_action(
         dialog_result += " The dialog box is now closed."
     return [
         build_screenshot_content(settlement.screenshot),
-        "\n\n".join(text for text in (action_result, dialog_result) if text),
+        "\n\n".join(
+            text
+            for text in (
+                action_result,
+                dialog_result,
+                settlement.scripted_displacement_warning,
+            )
+            if text
+        ),
     ]

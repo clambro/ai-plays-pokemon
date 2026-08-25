@@ -1,8 +1,10 @@
 """Parser for warp data in Pokémon Yellow memory."""
 
 from dataclasses import dataclass
+from functools import cache
 from typing import TYPE_CHECKING
 
+from loguru import logger
 from pydantic import BaseModel, ConfigDict
 
 from common.enums import MapId, Tileset, WarpActivation
@@ -16,6 +18,7 @@ _MAP_ID_ADDRESS = 0xD3AB
 _TILESET_ID_ADDRESS = 0xD3B4
 _MAP_HEIGHT_ADDRESS = 0xD571
 _MAP_WIDTH_ADDRESS = 0xD572
+_LAST_MAP_ID_ADDRESS = 0xD3B2
 _WARP_COUNT_ADDRESS = 0xD3FB
 _WARP_ENTRIES_ADDRESS = 0xD3FC
 _WARP_RECORD_SIZE = 4
@@ -100,7 +103,12 @@ def parse_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
         if activation is None:
             continue
         destination_warp_index = mem[base + 2]
-        destination = MapId(mem[base + 3])
+        destination = _resolve_destination_map(
+            mem,
+            mem[base + 3],
+            source_map_id=map_id,
+            source_warp_index=index,
+        )
         warps[index] = Warp(
             index=index,
             coords=coords,
@@ -114,6 +122,54 @@ def parse_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
             activation=activation,
         )
     return warps
+
+
+def _resolve_destination_map(
+    mem: PyBoyMemoryView,
+    raw_destination: int,
+    *,
+    source_map_id: MapId,
+    source_warp_index: int,
+) -> MapId:
+    """Resolve the ROM's dynamic last-map destination without interrupting gameplay.
+
+    Indoor exit records store ``LAST_MAP`` as ``$FF`` rather than a concrete destination. The ROM
+    resolves that sentinel through ``wLastMap`` when the player activates the exit, so parsing the
+    same value here exposes the map the game would currently use. Invalid or incomplete state is
+    retained as ``UNKNOWN`` after a warning because map parsing must never stop the gameplay loop.
+    """
+    destination = MapId(raw_destination)
+    last_map_id: int | None = None
+    if destination == MapId.OUTSIDE:
+        last_map_id = mem[_LAST_MAP_ID_ADDRESS]
+        destination = MapId(last_map_id)
+
+    if destination not in {MapId.OUTSIDE, MapId.UNKNOWN}:
+        return destination
+
+    _warn_unresolved_destination(
+        source_map_id,
+        source_warp_index,
+        raw_destination,
+        last_map_id,
+    )
+    return MapId.UNKNOWN
+
+
+@cache
+def _warn_unresolved_destination(
+    source_map_id: MapId,
+    source_warp_index: int,
+    raw_destination: int,
+    last_map_id: int | None,
+) -> None:
+    """Warn once for each unresolved warp identity while allowing play to continue."""
+    logger.bind(
+        map_id=source_map_id.name,
+        warp_index=source_warp_index,
+        raw_destination=raw_destination,
+        last_map_id=last_map_id,
+    ).warning("Warp destination could not be resolved from ROM state; continuing with UNKNOWN.")
 
 
 def _resolve_destination_coords(

@@ -146,11 +146,9 @@ def _format_overworld_warp(
     last_interaction_iteration: int | None,
 ) -> str:
     """Format a known overworld warp for the agent."""
-    if (
-        warp.destination in known_map_ids
-        or warp.destination in {MapId.OUTSIDE, MapId.UNKNOWN}
-        or warp.destination in _VISIBLE_UNVISITED_DESTINATIONS
-    ):
+    if warp.destination in {MapId.OUTSIDE, MapId.UNKNOWN}:
+        destination_text = "This warp's destination is unresolved."
+    elif warp.destination in known_map_ids or warp.destination in _VISIBLE_UNVISITED_DESTINATIONS:
         destination = warp.destination.name
         if warp.destination_coords is not None:
             destination += f" at {warp.destination_coords}"
