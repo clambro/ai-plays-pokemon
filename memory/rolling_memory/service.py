@@ -23,6 +23,7 @@ from database.rolling_memory.schemas import (
 from llm.service import OpenAILLMService
 from memory.rolling_memory.prompts import (
     COMPACTION_PROMPT,
+    COMPACTION_REVISION_PROMPT,
     SYSTEM_PROMPT,
     format_compaction_source,
 )
@@ -149,7 +150,27 @@ async def _summarize(
         max_characters=ROLLING_MEMORY_SUMMARY_MAX_CHARACTERS,
         source=source,
     )
-    summary = await llm_service.get_llm_response(prompt, system_prompt=SYSTEM_PROMPT)
+    summary = (await llm_service.get_llm_response(prompt, system_prompt=SYSTEM_PROMPT)).strip()
+    if len(summary) > ROLLING_MEMORY_SUMMARY_MAX_CHARACTERS:
+        revision_prompt = COMPACTION_REVISION_PROMPT.format(
+            actual_characters=len(summary),
+            max_characters=ROLLING_MEMORY_SUMMARY_MAX_CHARACTERS,
+            summary=summary,
+        )
+        summary = (
+            await llm_service.get_llm_response(
+                revision_prompt,
+                system_prompt=SYSTEM_PROMPT,
+            )
+        ).strip()
+        if len(summary) > ROLLING_MEMORY_SUMMARY_MAX_CHARACTERS:
+            logger.warning(
+                "Rolling-memory summary for iterations {} through {} still exceeded the "
+                "{}-character limit after one revision; storing the best-effort result.",
+                start_iteration,
+                end_iteration,
+                ROLLING_MEMORY_SUMMARY_MAX_CHARACTERS,
+            )
     return await store_memory_summary(
         MemorySummaryCreate(
             start_iteration=start_iteration,

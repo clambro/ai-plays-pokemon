@@ -62,3 +62,65 @@ Track staleness for the goal collection as a whole rather than forcing every ind
 - A forced review interrupts normal play for no more than the necessary maintenance turn or turns.
 - Goals remain optional in number and meaningful in content; empty padding is not rewarded.
 - Algorithmic tests cover scheduling and frontier invariants where useful; do not add tests that assert prompt wording or formatted model-facing prose.
+
+## Staged implementation plan
+
+This plan is intentionally a starting sequence rather than a complete up-front design. Each stage is one independently shippable commit: it delivers a coherent behavior change, includes its own tests and documentation, leaves the repository passing, and can be reviewed and merged before the next stage is designed in detail. Later stages should be revised when earlier implementation or runtime evidence changes the assumptions below; no commit should land speculative scaffolding for a later stage.
+
+### Commit 1: Keep compacted memory factual and durable
+
+**Outcome:** Rolling-memory summaries preserve durable history without turning prior reasoning into instructions for the future agent. Routine movement, incidental coordinates, exact action sequences, transient tactics, and self-talk disappear unless they produced a lasting consequence.
+
+**Implementation:**
+
+- Tighten the compaction guidance around neutral factual records: confirmed lasting outcomes, observed corrections, unresolved obstacles, and failed approaches whose result still matters. Treat plans and interpretations as unconfirmed, and explicitly exclude commands, recommendations, transient state, and routine tactical details.
+- Remove incidental coordinates while retaining exact coordinates that identify a durable, non-obvious route, warp, ladder, or interaction that would otherwise need to be rediscovered.
+- Set one 2,000-character limit. Give an overlong response one explicit shortening request; if that rewrite also exceeds the limit, emit a warning and store the best-effort result so length compliance never blocks compaction.
+- Preserve the existing logarithmic hierarchy and model-facing memory format. This stage changes what a summary retains and makes length compliance best effort, not when otherwise eligible compaction runs.
+
+**Tests included in the commit:** Retain and run the rolling-memory schema, formatting, and lifecycle tests as regressions. Review the prompt and best-effort length behavior directly; do not add tests that merely restate thin request orchestration or assert prompt wording and generated prose.
+
+**Investigation evidence:** The 4,660-iteration run in `outputs/database/memory.db` contains 450 summaries across eight levels. Nine exceed the configured 3,000-character limit, including the 4,115-character summary covering iterations 1–2560. Older summaries retain obsolete current-party snapshots, combat tactics, incidental coordinates, flavor text, and imperative language. Confirmed raw transitions show that Vermilion was reached at iteration 1915 and the S.S. Anne was boarded at iteration 1951, yet later merges describe Vermilion as both reached and still being pursued before eventually claiming it had not been reached. This demonstrates that later agent reasoning is overriding earlier observed outcomes.
+
+**Documentation included in the commit:** Record the factual-history policy, coordinate exception, best-effort length-revision behavior, and demonstrated live-run failures in this technical ticket. No public workflow documentation change is needed.
+
+### Commit 2: Bound rolling-memory maintenance per iteration
+
+**Outcome:** Finalizing one gameplay iteration selects at most one eligible range for compaction, so a large frontier cannot pause gameplay for a burst of simultaneous maintenance. That range uses one initial LLM request and, only when necessary, the single length-revision request introduced in commit 1. Continued successful iterations still compact the raw tail and every eligible parent merge while preserving the same logarithmic memory structure.
+
+**Implementation:**
+
+- Replace the current submit-everything behavior with a deterministic one-range budget. Prefer an eligible raw leaf when the raw tail reaches its limit; otherwise process one eligible adjacent same-level summary pair, allowing parent work to advance between leaf creations.
+- Keep the database as the source of truth and reconstruct the frontier after successful maintenance. Preserve the existing recoverable-warning behavior when selection, summarization, storage, or reload fails; gameplay must continue from the finalized raw iteration.
+- Do not add background tasks, queues, database migrations, or a second in-memory authority for pending work. Eligibility remains derivable from the persisted summaries and raw blocks already loaded for the current iteration.
+
+**Tests included in the commit:**
+
+- Add service-level behavior tests showing that one call selects no more than one eligible range, chooses raw work when the tail requires it, otherwise advances an eligible parent merge, and performs no request when nothing is eligible.
+- Exercise many synthetic iterations through the public maintenance behavior and assert that raw leaves and higher-level merges both make progress, the raw tail stays bounded after successful maintenance, and the reconstructed frontier remains chronological and non-overlapping.
+- Retain the lifecycle regression proving that a compaction failure advances the persisted iteration without crashing gameplay.
+
+**Documentation included in the commit:** Record the selected budget, scheduling rule, demonstrated bounds, and failure behavior in this technical ticket. No public workflow documentation change is needed.
+
+### Commit 3: Force periodic collection-level goal review
+
+**Outcome:** The overworld agent cannot ignore goal maintenance indefinitely. After 300 iterations without a successful review, its next overworld turn permits only goal review; one successful review ends the maintenance turn, and normal gameplay tools return on the next turn.
+
+**Implementation:**
+
+- Make one persisted collection-level review iteration the source of truth for staleness, including when the goal list is empty. Restore older backups with a safe default derived from the state they already contain rather than requiring a migration or failing to load.
+- Let one goal action submit the reviewed collection coherently, with zero to four distinct goals. An unchanged or empty collection may be an intentional successful review, while invalid input remains a recoverable tool result and does not clear the maintenance requirement.
+- Use the same successful collection update during ordinary play to refresh the review iteration. When maintenance is due, expose only that action, then return control to the dispatcher after success so the next overworld activation rebuilds the normal toolset.
+- Keep goals optional and do not reward placeholder entries. The maintenance mechanism enforces review of the collection, not a required number of goals or a walkthrough-derived objective.
+
+**Tests included in the commit:**
+
+- Add goal-domain tests for coherent zero-to-four-goal replacement, rejection without partial mutation, intentional identical and empty reviews, collection-level staleness, backup round trips, and backwards-compatible loading.
+- Add overworld behavior coverage showing that normal tools remain available before the threshold, only goal review is available when due, an invalid review keeps maintenance active, and a successful review restores the normal toolset on the next turn.
+- Test tool availability and state transitions without asserting prompt prose, tool-description wording, or making live model calls.
+
+**Documentation included in the commit:** Record the collection-level staleness contract, empty-list behavior, and maintenance-turn lifecycle in this technical ticket. Keep the threshold and persistence mechanics out of the public workflow document.
+
+### Validation and review cadence
+
+For each commit, run its focused tests while iterating, then run `uv run ruff check .`, `uv run ruff format --check .`, `uv run ty check`, `uv run python -m pytest`, and `git diff --check` before presenting it for review. Do not start the application, make live model calls, or use an unbounded emulator smoke test. Work in the numbered order and pause for review after each commit-sized stage.
