@@ -53,3 +53,50 @@ Revisit the README cost estimate using the longer run. Reconstruct cumulative co
 - Non-dialogue reasoning and action results remain unchanged in the stream.
 - The README cost statement is checked against the full livestream data and reports either a defensible logarithmic coefficient or the continued inability to estimate it.
 - Prompt and presentation changes are reviewed directly rather than protected by tests that assert exact model-facing or displayed prose.
+
+## Staged implementation plan
+
+This is a starting sequence, not a complete up-front design. Each stage is one independently shippable commit with the documentation and meaningful behavioral coverage appropriate to that change, and each stage should be reviewed and merged before work begins on the next. Later stages may change when implementation or runtime evidence invalidates an assumption below; no stage should add speculative machinery for work that belongs to a later commit.
+
+### Commit 1: Recalculate the hourly API cost
+
+**Outcome:** The README reports an hourly cost estimate supported by the completed livestream rather than the shorter initial sample, including a logarithmic contribution only if the available observations distinguish one credibly.
+
+**Scope:**
+
+- Reconstruct elapsed wall-clock time and cumulative cost from the timestamped backups, treating counter resets as separate runs and continuous counters across restarted output folders as continuations rather than pooling every file into one artificial series.
+- Compare the current constant-rate approximation with the cumulative curve implied by an hourly rate of the form `a + ε log t`, and check whether the fitted logarithmic term is stable across the useful run segments rather than merely improving one noisy fit.
+- Update only the public cost explanation in the README with the clearest defensible result and its practical interpretation. If the coefficient remains too sensitive to run speed, pauses, or segment selection, retain a simple observed hourly estimate and state that the logarithmic term still cannot be isolated.
+- Keep this as a documentation-and-analysis commit. Do not add a permanent fitting framework or tests unless the investigation exposes reusable application behavior rather than a one-time calculation.
+
+**Review and validation:** Preserve the backup data as ignored local evidence, review the calculation and README wording directly, and run `git diff --check`. No live model calls or gameplay run are needed.
+
+### Commit 2: Make neglected gameplay choices salient
+
+**Outcome:** The overworld agent is more likely to rotate an overused lead, establish a newly reached town's Pokémon Center as a recovery point, and investigate visible untried stationary entities, without turning any of those defaults into rigid rules.
+
+**Scope:**
+
+- Put the essential lead-experience fact and the option to change the lead in the ordinary decision context, where the agent can consider them alongside the current party, instead of relying on the swap tool description to introduce the idea after tool selection.
+- Reconcile the existing anti-backtracking healing guidance with the distinct value of using a visible Pokémon Center in a newly reached town: it heals the party and establishes a safer recovery point, but does not require healing after every battle or entering unrelated buildings.
+- Strengthen curiosity toward visible sprites and stationary objects with no recorded interaction, while continuing to discourage repeated interactions and attempts to catch randomly wandering sprites. Use the entity and interaction information already presented to the agent; do not add hidden classifications, new persistent state, or a policy subsystem.
+- Keep the guidance concise and contextual. Do not require equal party levels, fixed rotation intervals, exhaustive collection, or a walkthrough-derived order of play.
+
+**Tests and documentation:** Review the model-facing guidance directly and rely on the existing prompt-construction and tool regressions; do not add tests that assert prompt wording. The prompt is the behavior documentation for this stage, so no unrelated public workflow documentation is needed.
+
+### Commit 3: Remove captured dialogue from the stream log
+
+**Outcome:** Viewers no longer see recorder-owned onscreen dialogue repeated in the agent-log panel, while the agent's reasoning, action outcomes, persisted raw memory, compaction input, and telemetry remain unchanged.
+
+**Scope:**
+
+- Filter at the streaming view boundary only. Leave dialogue capture and rolling-memory storage untouched so the agent retains the same history and model context.
+- Identify the exact recorder-owned dialogue paragraphs currently added to raw memory, remove only those paragraphs from the displayed copy of each block, and preserve the block's iteration plus every remaining reasoning or action paragraph in order. Omit a stream entry only when dialogue removal leaves it empty.
+- Treat similar natural-language reasoning as ordinary memory unless it matches a producer-owned dialogue form at a paragraph boundary. Do not broaden the filter to generic quotations, tool feedback, or arbitrary text that happens to discuss dialogue.
+- Keep the browser rendering contract unchanged; the server should continue sending the same log-entry schema with a quieter `thought` value.
+
+**Tests and documentation:** Extend the existing streaming-schema behavior test, rather than creating a new test suite, to prove that mixed blocks retain their non-dialogue content and dialogue-only blocks do not become empty log entries. Avoid assertions about browser copy or exact dialogue wording. No public documentation change is needed unless implementation reveals that the stream log is documented elsewhere.
+
+### Validation and review cadence
+
+For each commit, run the smallest relevant checks while iterating and then the repository's static checks and test suite in proportion to the change before presenting it for review. Do not start the indefinite application or make live model calls as validation. Work in the numbered order and pause for review after each commit-sized stage.
