@@ -13,7 +13,14 @@ if TYPE_CHECKING:
 
 
 _WINDOW_Y_ADDRESS = 0xFF4A
+_SCROLL_Y_ADDRESS = 0xFF42
+_SCROLL_X_ADDRESS = 0xFF43
 _SCREEN_HEIGHT_PIXELS = 144
+_BACKGROUND_MAP_START = 0x9800
+_BACKGROUND_MAP_WIDTH = 32
+_VRAM_BANK = 0
+_TILE_SIZE_PIXELS = 8
+_CUT_TREE_COLLISION_TILE = 0x3D
 
 
 class Screen(BaseModel):
@@ -111,7 +118,7 @@ def parse_screen(mem: PyBoyMemoryView) -> Screen:
     bottom = top + SCREEN_HEIGHT
     right = left + SCREEN_WIDTH
 
-    flat_tiles = mem[0xC3A0:0xC508]
+    flat_tiles = _resolve_cut_tree_tiles_from_vram(mem, mem[0xC3A0:0xC508])
     w = SCREEN_WIDTH * 2  # Convert blocks to 2x2 tiles.
     h = SCREEN_HEIGHT * 2
     tiles = [[flat_tiles[i * w + j] for j in range(w)] for i in range(h)]
@@ -128,3 +135,35 @@ def parse_screen(mem: PyBoyMemoryView) -> Screen:
         menu_item_index=mem[0xCC26],
         list_scroll_offset=mem[0xCC36],
     )
+
+
+def _resolve_cut_tree_tiles_from_vram(
+    mem: PyBoyMemoryView,
+    flat_tiles: list[int],
+) -> list[int]:
+    """Resolve Cut-tree collision tiles using the rendered background map.
+
+    A seamless connected-map transition rebuilds ``wOverworldMap`` from the base map. A later
+    map-view update can consequently restore a recently cut tree to ``wTileMap`` while scrolling
+    redraws only newly exposed VRAM rows or columns, leaving the passable replacement visible when
+    the tree never left the viewport. The ROM handles this exact discrepancy in
+    ``GetTileAndCoordsInFrontOfPlayer`` by rereading any ``$3D`` collision tile from VRAM before
+    checking movement or Cut. Mirroring that exception keeps parsed terrain consistent with the
+    game's own collision decision.
+    """
+    resolved_tiles = flat_tiles.copy()
+    screen_tile_width = SCREEN_WIDTH * 2
+    scroll_row = mem[_SCROLL_Y_ADDRESS] // _TILE_SIZE_PIXELS
+    scroll_col = mem[_SCROLL_X_ADDRESS] // _TILE_SIZE_PIXELS
+
+    for index, tile in enumerate(flat_tiles):
+        if tile != _CUT_TREE_COLLISION_TILE:
+            continue
+
+        screen_row, screen_col = divmod(index, screen_tile_width)
+        vram_row = (scroll_row + screen_row) % _BACKGROUND_MAP_WIDTH
+        vram_col = (scroll_col + screen_col) % _BACKGROUND_MAP_WIDTH
+        vram_address = _BACKGROUND_MAP_START + vram_row * _BACKGROUND_MAP_WIDTH + vram_col
+        resolved_tiles[index] = mem[_VRAM_BANK, vram_address]
+
+    return resolved_tiles
