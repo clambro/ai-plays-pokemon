@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from agent.overworld.tools.navigate.service import NavigationService
-from common.enums import Button, FacingDirection
+from common.enums import AsciiTile, Button, FacingDirection
 from common.schemas import Coords
 from emulator.emulator import Emulator
 from memory.rolling_memory.schemas import RollingMemory
@@ -95,6 +95,29 @@ async def test_navigate_through_cut_tree() -> None:
 
         game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=20, col=15)
+
+
+@pytest.mark.integration
+async def test_navigate_to_cut_tree_refreshes_removed_terrain() -> None:
+    """Refresh the map when Cut reaches the target on the field-move step."""
+    save_file = Path(__file__).parent / "saves" / "cut_tree.state"
+    async with Emulator(
+        save_state_path=save_file,
+        mute_sound=True,
+        headless=True,
+    ) as emulator:
+        game_state = await emulator.get_game_state()
+        assert game_state.player.coords == Coords(row=17, col=17)
+
+        service = await _get_nav_service(emulator)
+        target = Coords(row=18, col=15)
+        assert service.current_map.terrain[target.row][target.col] == AsciiTile.CUT_TREE
+
+        await service.navigate(target)
+
+        game_state = await emulator.get_game_state()
+        assert game_state.player.coords == target
+        assert service.current_map.terrain[target.row][target.col] == AsciiTile.FREE
 
 
 @pytest.mark.integration

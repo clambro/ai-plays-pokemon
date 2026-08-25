@@ -111,14 +111,15 @@ class NavigationService:
                     coords,
                 )
             )
+            # Can't update the map until we validate above that we haven't switched maps.
+            if not control_left_overworld and game_state.map.id == starting_map_id:
+                await update_overworld_map(
+                    self.iteration,
+                    game_state,
+                    self.current_map,
+                )
             if result:
                 return self._record_result(result, dialogs=dialogs)
-            # Can't update the map until we validate above that we haven't switched maps.
-            await update_overworld_map(
-                self.iteration,
-                game_state,
-                self.current_map,
-            )
         return self._record_result(f"I reached {coords}.", dialogs=dialogs)
 
     async def _explore_spinner(
