@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from agent.scripted_displacement import record_scripted_displacement
+from agent.schemas import ScriptedDisplacementObservation
 from agent.utils import is_battle_handler_state
 from common.enums import MapId
 from emulator.control_events import ControlBoundary
@@ -14,7 +14,12 @@ if TYPE_CHECKING:
     from PIL import Image
 
     from agent.context import AgentContext
+    from agent.state import AgentState
+    from common.schemas import Coords
     from emulator.game_state import GameState
+
+_SCRIPTED_DISPLACEMENT_WINDOW_ITERATIONS = 20
+_SCRIPTED_DISPLACEMENT_REPETITION_THRESHOLD = 3
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -106,7 +111,7 @@ async def settle_dialog(
         and initial_state.player.coords != final_state.player.coords
     ):
         scripted_displacement_warning = (
-            record_scripted_displacement(
+            _record_scripted_displacement(
                 context.state,
                 map_id=final_state.map.id,
                 destination=final_state.player.coords,
@@ -122,4 +127,50 @@ async def settle_dialog(
         screenshot=screenshot,
         control_boundary=final_boundary,
         scripted_displacement_warning=scripted_displacement_warning,
+    )
+
+
+def _record_scripted_displacement(
+    state: AgentState,
+    *,
+    map_id: MapId,
+    destination: Coords,
+) -> str | None:
+    """Record a dialog-owned displacement and flag a repeated destination.
+
+    Args:
+        state: Mutable gameplay state that owns the observation history.
+        map_id: Map on which the displacement began and ended.
+        destination: Player location after overworld control returned.
+
+    Returns:
+        A gameplay advisory once the destination has occurred at least three
+        times in the rolling iteration window, otherwise ``None``.
+    """
+    earliest_iteration = state.iteration - _SCRIPTED_DISPLACEMENT_WINDOW_ITERATIONS + 1
+    recent_observations = [
+        observation
+        for observation in state.scripted_displacements
+        if earliest_iteration <= observation.iteration <= state.iteration
+    ]
+    observation = ScriptedDisplacementObservation(
+        iteration=state.iteration,
+        map_id=map_id,
+        destination=destination,
+    )
+    state.scripted_displacements = [*recent_observations, observation][
+        -_SCRIPTED_DISPLACEMENT_WINDOW_ITERATIONS:
+    ]
+
+    matching_observations = sum(
+        previous.map_id == map_id and previous.destination == destination
+        for previous in state.scripted_displacements
+    )
+    if matching_observations < _SCRIPTED_DISPLACEMENT_REPETITION_THRESHOLD:
+        return None
+    return (
+        "I have been moved back to the same location by a scripted event repeatedly and in quick"
+        " succession. This means I am likely pursuing the wrong path. I should try something"
+        " different. There is no way to sneak or force my way past a scripted event. It usually"
+        " requires some other kind of in game progress."
     )

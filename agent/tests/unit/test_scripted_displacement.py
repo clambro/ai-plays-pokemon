@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from agent.scripted_displacement import record_scripted_displacement
+from agent.dialog import _record_scripted_displacement
 from agent.state import AgentState
 from common.enums import MapId
 from common.schemas import Coords
@@ -25,7 +25,7 @@ def _record(
 ) -> str | None:
     """Record one observation at a chosen application iteration."""
     state.iteration = iteration
-    return record_scripted_displacement(
+    return _record_scripted_displacement(
         state,
         map_id=map_id,
         destination=destination or Coords(row=3, col=4),
