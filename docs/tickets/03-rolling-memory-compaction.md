@@ -86,21 +86,22 @@ This plan is intentionally a starting sequence rather than a complete up-front d
 
 ### Commit 2: Bound rolling-memory maintenance per iteration
 
-**Outcome:** Finalizing one gameplay iteration selects at most one eligible range for compaction, so a large frontier cannot pause gameplay for a burst of simultaneous maintenance. That range uses one initial LLM request and, only when necessary, the single length-revision request introduced in commit 1. Continued successful iterations still compact the raw tail and every eligible parent merge while preserving the same logarithmic memory structure.
+**Outcome:** Finalizing one gameplay iteration selects at most three eligible ranges for compaction, so maintenance can reduce a backlog without submitting the entire frontier at once. Each range uses one initial LLM request and, only when necessary, the single length-revision request introduced in commit 1, for an absolute bound of six requests. Continued successful iterations still compact the raw tail and every eligible parent merge while preserving the same logarithmic memory structure.
 
 **Implementation:**
 
-- Replace the current submit-everything behavior with a deterministic one-range budget. Prefer an eligible raw leaf when the raw tail reaches its limit; otherwise process one eligible adjacent same-level summary pair, allowing parent work to advance between leaf creations.
+- Replace the current submit-everything behavior with a deterministic three-range budget. Give an eligible raw leaf the first slot when the raw tail reaches its limit, then fill the remaining slots with eligible adjacent same-level summary pairs so parent work advances concurrently.
 - Keep the database as the source of truth and reconstruct the frontier after successful maintenance. Preserve the existing recoverable-warning behavior when selection, summarization, storage, or reload fails; gameplay must continue from the finalized raw iteration.
 - Do not add background tasks, queues, database migrations, or a second in-memory authority for pending work. Eligibility remains derivable from the persisted summaries and raw blocks already loaded for the current iteration.
 
 **Tests included in the commit:**
 
-- Add service-level behavior tests showing that one call selects no more than one eligible range, chooses raw work when the tail requires it, otherwise advances an eligible parent merge, and performs no request when nothing is eligible.
-- Exercise many synthetic iterations through the public maintenance behavior and assert that raw leaves and higher-level merges both make progress, the raw tail stays bounded after successful maintenance, and the reconstructed frontier remains chronological and non-overlapping.
+- Add service-level behavior tests showing that one call selects no more than three eligible ranges, gives raw work the first slot when the tail requires it, otherwise uses the batch for parent merges, and performs no request when nothing is eligible.
 - Retain the lifecycle regression proving that a compaction failure advances the persisted iteration without crashing gameplay.
 
-**Documentation included in the commit:** Record the selected budget, scheduling rule, demonstrated bounds, and failure behavior in this technical ticket. No public workflow documentation change is needed.
+**Scheduling bound:** With successful maintenance, raw work becomes eligible at 120 loaded blocks, takes the first batch slot, compacts the oldest 20, and reloads a tail of 100. Another raw leaf cannot become due for 20 iterations. The other two slots on a raw-work iteration and all three slots on intervening successful iterations remain available for parent merges. A newly created leaf induces fewer than one parent merge per leaf on average in the binary hierarchy, so both forms of work make progress without adding a pending-work queue.
+
+**Documentation included in the commit:** Record the three-range budget, scheduling rule, demonstrated raw-tail bound, and failure behavior in this technical ticket. No public workflow documentation change is needed.
 
 ### Commit 3: Force periodic collection-level goal review
 

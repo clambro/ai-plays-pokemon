@@ -5,6 +5,7 @@ import asyncio
 from loguru import logger
 
 from common.constants import (
+    ROLLING_MEMORY_COMPACTION_RANGE_LIMIT,
     ROLLING_MEMORY_LEAF_SIZE,
     ROLLING_MEMORY_RAW_BLOCK_SOFT_LIMIT,
     ROLLING_MEMORY_SUMMARY_MAX_CHARACTERS,
@@ -106,7 +107,7 @@ async def finalize_iteration(memory: RollingMemory) -> RollingMemory:
 
 
 async def compact_memory(memory: RollingMemory) -> list[MemorySummaryRead]:
-    """Compact every range eligible in the current rolling-memory view."""
+    """Compact a bounded batch of ranges eligible in the current memory view."""
     requests = []
     if len(memory.loaded_raw_blocks) >= (
         ROLLING_MEMORY_RAW_BLOCK_SOFT_LIMIT + ROLLING_MEMORY_LEAF_SIZE
@@ -121,6 +122,8 @@ async def compact_memory(memory: RollingMemory) -> list[MemorySummaryRead]:
             ),
         )
 
+    parent_pairs = _find_parent_pairs(memory.summary_frontier)
+    remaining_capacity = ROLLING_MEMORY_COMPACTION_RANGE_LIMIT - len(requests)
     requests.extend(
         _summarize(
             start_iteration=left.start_iteration,
@@ -128,11 +131,10 @@ async def compact_memory(memory: RollingMemory) -> list[MemorySummaryRead]:
             level=left.level + 1,
             source=format_compaction_source((left, right)),
         )
-        for left, right in _find_parent_pairs(memory.summary_frontier)
+        for left, right in parent_pairs[:remaining_capacity]
     )
     if not requests:
         return []
-
     return list(await asyncio.gather(*requests))
 
 
