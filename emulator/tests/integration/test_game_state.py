@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from common.enums import AsciiTile, BlockedDirection
+from common.enums import AsciiTile, BlockedDirection, MapId
 from common.schemas import Coords
 from emulator.emulator import Emulator
 
@@ -132,6 +132,42 @@ async def test_get_ascii_screen_mt_moon_poke_center() -> None:
             "▓▓▓▓▓▓▓▓▓▓",
         ],
     )
+
+
+@pytest.mark.integration
+async def test_resolve_last_map_warp_destination() -> None:
+    """Resolve an indoor exit from the return map retained by the ROM."""
+    save_file = Path(__file__).parent / "saves" / "mt_moon_poke_center.state"
+    async with Emulator(
+        save_state_path=save_file,
+        mute_sound=True,
+        headless=True,
+    ) as emulator:
+        game_state = await emulator.get_game_state()
+
+    assert game_state.map.id == MapId.MT_MOON_POKECENTER
+    assert {
+        (warp.destination, warp.destination_warp_index, warp.destination_coords)
+        for warp in game_state.warps.values()
+    } == {(MapId.ROUTE_4, 0, Coords(row=5, col=11))}
+
+
+@pytest.mark.integration
+async def test_unresolved_last_map_warp_falls_back_to_unknown() -> None:
+    """Keep parsing an invalid last-map destination without stopping the application."""
+    save_file = Path(__file__).parent / "saves" / "mt_moon_poke_center.state"
+    async with Emulator(
+        save_state_path=save_file,
+        mute_sound=True,
+        headless=True,
+    ) as emulator:
+        await emulator._worker.execute(
+            lambda pyboy: pyboy.memory.__setitem__(0xD3B2, int(MapId.OUTSIDE))
+        )
+        game_state = await emulator.get_game_state()
+
+    assert {warp.destination for warp in game_state.warps.values()} == {MapId.UNKNOWN}
+    assert all(warp.destination_coords is None for warp in game_state.warps.values())
 
 
 @pytest.mark.integration
