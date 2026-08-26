@@ -3,7 +3,7 @@
 from sqlalchemy import Enum, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
-from common.enums import Button, MapId
+from common.enums import Button, MapId, WarpActivation
 from database.base import SQLAlchemyBase
 
 
@@ -16,6 +16,7 @@ class RouteTransitionDBModel(SQLAlchemyBase):
     source_row: Mapped[int] = mapped_column(Integer, primary_key=True)
     source_col: Mapped[int] = mapped_column(Integer, primary_key=True)
     button: Mapped[Button] = mapped_column(Enum(Button), primary_key=True)
+    warp_activation: Mapped[WarpActivation | None] = mapped_column(Enum(WarpActivation))
     destination_map_id: Mapped[MapId] = mapped_column(Integer, primary_key=True)
     destination_row: Mapped[int] = mapped_column(Integer, primary_key=True)
     destination_col: Mapped[int] = mapped_column(Integer, primary_key=True)

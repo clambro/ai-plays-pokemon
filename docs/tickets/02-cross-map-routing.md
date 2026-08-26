@@ -96,3 +96,10 @@ For each commit, run focused lifecycle, persistence, routing, and tool tests whi
 - The manual-button and local-navigation services already own direct overworld input, so they record a transition after the accepted operation returns. Ordinary warps must match the ROM's source and destination records; cardinal crossings must match the loaded connection and coordinate transform. No reverse edge is inferred.
 - Intra-map connectivity will be derived on demand in commit 2 from existing explored-map data and traversal rules. Repeated observations are idempotent.
 - Route persistence is recoverable state: a failed write emits a warning and gameplay continues. No route is exposed to the agent until commit 2.
+
+## Commit 2 implementation notes
+
+- The route tool accepts a map name as text and resolves it only against the maps already present in explored-map memory. Its schema does not enumerate map IDs, and an unvisited destination reveals no new world information.
+- Each request derives local connectivity from the current reachable region plus remembered terrain and blockages, using the player's current field-move capabilities. The search keeps each map-qualified arrival coordinate distinct and follows only observed directed transitions, so disconnected parts of one map remain separate unless the remembered terrain is currently traversable between them.
+- A breadth-first search returns the first deterministic route with the fewest observed transitions to any known entry into the requested map. The result is informational and does not move the player. It distinguishes step-on warps such as doors and ladders, directional warps, and cardinal map boundaries so each step names the correct coordinate and execution method.
+- Missing routes and route-memory read failures return recoverable action results. A read failure emits a warning and gameplay continues.

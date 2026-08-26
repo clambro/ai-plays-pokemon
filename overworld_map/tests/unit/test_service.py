@@ -241,6 +241,7 @@ async def test_records_only_a_directly_activated_ordinary_warp() -> None:
                 source_map_id=MapId.VIRIDIAN_CITY,
                 source_coords=source_coords,
                 button=Button.UP,
+                warp_activation=WarpActivation.STEP_ON,
                 destination_map_id=MapId.VIRIDIAN_POKECENTER,
                 destination_coords=destination_coords,
             ),

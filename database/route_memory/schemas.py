@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel
 
-from common.enums import Button, MapId
+from common.enums import Button, MapId, WarpActivation
 from common.schemas import Coords
 
 
@@ -12,6 +12,7 @@ class RouteTransitionCreate(BaseModel):
     source_map_id: MapId
     source_coords: Coords
     button: Button
+    warp_activation: WarpActivation | None
     destination_map_id: MapId
     destination_coords: Coords
 

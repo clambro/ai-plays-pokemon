@@ -30,6 +30,7 @@ async def create_route_transition(
                     source_row=transition.source_coords.row,
                     source_col=transition.source_coords.col,
                     button=transition.button,
+                    warp_activation=transition.warp_activation,
                     destination_map_id=transition.destination_map_id,
                     destination_row=transition.destination_coords.row,
                     destination_col=transition.destination_coords.col,
@@ -58,6 +59,7 @@ async def get_route_transitions() -> list[RouteTransitionRead]:
             source_map_id=transition.source_map_id,
             source_coords=Coords(row=transition.source_row, col=transition.source_col),
             button=transition.button,
+            warp_activation=transition.warp_activation,
             destination_map_id=transition.destination_map_id,
             destination_coords=Coords(
                 row=transition.destination_row,

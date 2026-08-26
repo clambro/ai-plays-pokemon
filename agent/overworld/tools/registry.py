@@ -8,6 +8,7 @@ from agent.overworld.tools.navigate.interface import build_navigation_tool
 from agent.overworld.tools.press_buttons.interface import (
     build_press_buttons_tool,
 )
+from agent.overworld.tools.recall_route.interface import build_recall_route_tool
 from agent.overworld.tools.set_goal.interface import build_set_goal_tool
 from agent.overworld.tools.sokoban_solver.interface import (
     build_sokoban_solver_tool,
@@ -45,6 +46,7 @@ def build_overworld_toolset(
 
     tools: list[Tool[AgentContext]] = [
         build_press_buttons_tool(context),
+        build_recall_route_tool(context, map_view, game_state),
         build_set_goal_tool(context),
     ]
     if not game_state.player.is_biking:

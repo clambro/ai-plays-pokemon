@@ -40,6 +40,7 @@ flowchart LR
     subgraph toolset["Stable toolset for this overworld run"]
         navigate["navigation"]
         buttons["press_buttons"]
+        route["recall_route"]
         item["use_item"]
         swap["swap_first_pokemon"]
         sokoban["sokoban_solver"]
@@ -48,6 +49,7 @@ flowchart LR
 
     choice --> navigate
     choice --> buttons
+    choice --> route
     choice --> item
     choice --> swap
     choice --> sokoban
@@ -55,6 +57,7 @@ flowchart LR
 
     navigate --> settle["Settle routine dialog<br/>and return a fresh result"]
     buttons --> settle
+    route --> settle
     item --> settle
     swap --> settle
     sokoban --> settle
@@ -71,7 +74,7 @@ This is the entrypoint for the Overworld Handler. It loads the current map from 
 
 ### Overworld Tools
 
-Once the map and game state are prepared, the overworld agent chooses from the six tools described below. The available tools depend on the current game state: For example, there is no reason to offer the item tool when the bag is empty, or the Sokoban solver when there is no boulder puzzle in sight. If the action leaves the player in the same place and still in the overworld, the result goes back to the same conversation so the agent can try something else. If the player moves or the game enters another part of the workflow, control returns to the main loop.
+Once the map and game state are prepared, the overworld agent chooses from the seven tools described below. The available tools depend on the current game state: For example, there is no reason to offer the item tool when the bag is empty, or the Sokoban solver when there is no boulder puzzle in sight. If the action leaves the player in the same place and still in the overworld, the result goes back to the same conversation so the agent can try something else. If the player moves or the game enters another part of the workflow, control returns to the main loop.
 
 #### Press Buttons
 
@@ -80,6 +83,10 @@ This allows the AI to enter one or more button presses directly into the emulato
 #### Navigation
 
 This is the main tool used for navigating the overworld. The AI chooses a destination from the explored map, and the tool checks whether that destination is actually reachable. An A* search algorithm then finds the shortest path and starts walking there. Every step, it checks for interruptions and updates the map with anything newly discovered. The navigation algorithm is sophisticated enough to handle ledges, surfing, cut trees, Team Rocket spinner tiles, and elevation changes in caverns.
+
+#### Recall Route
+
+This lets the AI ask how to return to a map it has already visited. It receives concise directions through places and transitions it has previously discovered, without moving the player or revealing unvisited parts of the world.
 
 #### Use Item
 
