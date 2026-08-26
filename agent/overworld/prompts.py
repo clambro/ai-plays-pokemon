@@ -65,7 +65,7 @@ The tile directly to the right of you is "{{tile_right}}"{{blocked_right}}.
 {{connections}}
 </map_connections>
 
-The following discovered sprites are reachable from your current region, either directly or across a counter. Interacting with newly discovered stationary sprites is part of fully exploring a map, so interact with every reachable stationary sprite that has no recorded interaction as you explore. Once an interaction has been recorded, do not repeat it without a specific reason.
+The following discovered sprites are reachable from your current region, either directly or across a counter. Interacting with newly reachable stationary sprites that have no recorded interaction should be a high priority during exploration. Strongly prefer interacting with them before continuing to explore, unless you have a specific reason to pursue another objective. Once an interaction has been recorded, do not repeat it without a specific reason.
 <known_sprites>
 {{known_sprites}}
 </known_sprites>
@@ -129,12 +129,12 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 
 {state}
 
-The first Pokemon in the party is the lead and will usually receive more battle experience than the rest. If one or two party members are pulling far ahead, consider changing the lead to develop the rest of the team. This does not mean every party member needs to be the same level.
+The first Pokemon in the party is the lead and will usually receive more battle experience than the rest. If one or two party members are pulling ahead, consider changing the lead to develop the rest of the team. This does not mean every party member needs to be the same level.
 
 Regularly reflect on what you are trying to accomplish and use set_goal to keep your goals useful and current.
 {goal_warning}
 
-The following accessible coordinates are adjacent to unseen terrain on the current map. If this list is not empty, then fully revealing the current map is a top priority. Continue exploring these candidates before leaving the map, backtracking, or pursuing objectives elsewhere (unless you need to heal, of course).
+The following accessible coordinates are adjacent to unseen terrain on the current map. Fully revealing the current map is a high priority. In general, handle newly reachable unvisited stationary sprites before continuing to reveal unseen terrain, but use judgment when a specific objective should take precedence. Exploring these candidates should generally be prioritized before leaving the map, backtracking, or pursuing objectives elsewhere (unless you have a specific other goal in mind or need to heal, of course).
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>

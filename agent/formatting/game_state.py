@@ -74,8 +74,8 @@ def _format_pokemon_list(pokemon_list: list[Pokemon], level_cap: int) -> str:
         out += f"Level: {pokemon.level}"
         if pokemon.level >= level_cap:
             out += (
-                " (AT LEVEL CAP: Can be used, but will not gain experience, even if battle dialogue"
-                " says otherwise)"
+                " (AT LEVEL CAP: Can be used, but any experience it gains is wasted and will not"
+                " be applied.)"
             )
         out += "\n"
         out += f"HP: {pokemon.hp} / {pokemon.max_hp}\n"
