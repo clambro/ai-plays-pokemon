@@ -22,7 +22,7 @@ This is the entrypoint for the workflow. It waits until the game is ready for in
 
 ### Iterations and Memory
 
-An iteration is one meaningful decision or recorded outcome. The model explains what it intends to do, the selected tool carries out the action, and the result is added to the rolling memory. Decisions and results are sent to the streaming background as they happen, so the public log follows the same sequence the agent sees. Each handler can make several related decisions while keeping the same conversation alive (e.g. multiple turns in a battle). This lets the agent react to the result of an action without rebuilding its entire context every time. Once the current handler concludes, control returns to the main loop, the game state is checked again, and the loop repeats.
+An iteration is one meaningful decision or recorded outcome. The model explains what it intends to do, the selected tool carries out the action, and the result is added to the rolling memory. The model's decisions are also sent to the public log, while routine action results and dialogue remain only in its memory. Each handler can make several related decisions while keeping the same conversation alive (e.g. multiple turns in a battle). This lets the agent react to the result of an action without rebuilding its entire context every time. Once the current handler concludes, control returns to the main loop, the game state is checked again, and the loop repeats.
 
 ### Backups
 

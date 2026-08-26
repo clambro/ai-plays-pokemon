@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 from agent.overworld.tools.sokoban_solver.schemas import SokobanMap
+from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, SpriteLabel
 from common.schemas import Coords
 from emulator.control_events import ControlBoundary
@@ -39,7 +40,10 @@ class SokobanSolverService:
         sokoban_map = self._get_simplified_map(game_state)
 
         if not sokoban_map.boulders or not sokoban_map.goals:
-            result = "I couldn't run the Sokoban solver because there were no boulders or goals."
+            result = (
+                f"{ACTION_RESULT_LABEL} I couldn't run the Sokoban solver because there were no"
+                " boulders or goals."
+            )
             self.rolling_memory.add_memory(result)
             return result
 
@@ -48,7 +52,8 @@ class SokobanSolverService:
 
         if solution is None:
             result = (
-                "The Sokoban solver was unable to find a solution. This is likely because I"
+                f"{ACTION_RESULT_LABEL} The Sokoban solver was unable to find a solution. This is"
+                " likely because I"
                 " haven't explored enough of the map yet, or I need to get boulders from"
                 " other locations first, or because I already solved the puzzle previously."
             )
@@ -306,8 +311,8 @@ class SokobanSolverService:
 
 def _include_dialog(result: str, dialog: str) -> str:
     """Include captured field-move dialog in the first-person action result."""
-    sections = [f'I read: "{dialog}"'] if dialog else []
-    return "\n\n".join([*sections, result])
+    sections = [f'{GAME_DIALOG_LABEL} "{dialog}"'] if dialog else []
+    return "\n\n".join([*sections, f"{ACTION_RESULT_LABEL} {result}"])
 
 
 _BUTTON_TO_DIRECTION_MAP = {

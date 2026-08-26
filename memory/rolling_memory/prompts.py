@@ -36,6 +36,7 @@ Use evidence carefully:
 Describe unresolved conditions as historical facts about the end of this period. Never turn them into commands, recommendations, goals, or instructions for what the agent should do next.
 
 Remove:
+- the all-caps source labels that prefix game dialogue, action results, and scripted-loop notices; use their content as evidence without repeating the labels;
 - plans, intentions, self-talk, speculation, recommendations, and imperatives;
 - exact button sequences, routine paths, incidental coordinates and waypoints, routine movement, collisions, and pathfinding failures;
 - temporary snapshots such as current location, party order, HP, PP, status conditions, and short-lived inventory state;
@@ -52,7 +53,7 @@ Memory:
 COMPACTION_REVISION_PROMPT = """
 The historical summary below is {actual_characters} characters long and exceeds the limit. Return a shorter version of no more than {max_characters} characters, including spaces and line breaks.
 
-Preserve the most important confirmed, durable facts. Remove instructions, plans, repetition, temporary state, routine navigation and battle details, and incidental coordinates. Retain an exact coordinate only when it is necessary to preserve a durable, non-obvious route, warp, ladder, or interaction. Do not add any fact that is not already present.
+Preserve the most important confirmed, durable facts. Remove source labels, instructions, plans, repetition, temporary state, routine navigation and battle details, and incidental coordinates. Retain an exact coordinate only when it is necessary to preserve a durable, non-obvious route, warp, ladder, or interaction. Do not add any fact that is not already present.
 
 Return only the shortened summary. Omit lower-priority details rather than exceeding {max_characters} characters.
 

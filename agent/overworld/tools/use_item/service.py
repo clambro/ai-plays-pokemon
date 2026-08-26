@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from common.constants import ACTION_RESULT_LABEL
 from common.enums import Button
 
 if TYPE_CHECKING:
@@ -36,6 +37,7 @@ class UseItemService:
             if not isinstance(error, UseItemError):
                 logger.exception("Unexpected error while using an inventory item.")
             result = f"I failed to use an item from my inventory. {error}"
+        result = f"{ACTION_RESULT_LABEL} {result}"
         self.rolling_memory.add_memory(result)
         return result
 

@@ -89,6 +89,7 @@ async def record_model_response(
     )
     if reasoning := response.text:
         ctx.deps.state.rolling_memory.add_memory(reasoning)
+        ctx.deps.state.public_log.add(ctx.deps.state.iteration, reasoning)
     return response
 
 

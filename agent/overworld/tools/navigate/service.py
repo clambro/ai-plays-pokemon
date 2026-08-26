@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from agent.overworld import navigation
 from agent.overworld.map_view import build_current_map_view
+from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
 from common.enums import AsciiTile, Button, FacingDirection, MapId
 from emulator.control_events import ControlBoundary
 from overworld_map.service import update_overworld_map
@@ -338,8 +339,9 @@ class NavigationService:
 
     def _record_result(self, result: str, *, dialogs: list[str] | None = None) -> str:
         """Record and return one coherent navigation result."""
-        dialog_results = [f'I read: "{dialog}"' for dialog in dialogs or []]
-        complete_result = "\n\n".join([*dialog_results, result])
+        dialog_results = [f'{GAME_DIALOG_LABEL} "{dialog}"' for dialog in dialogs or []]
+        action_result = f"{ACTION_RESULT_LABEL} {result}"
+        complete_result = "\n\n".join([*dialog_results, action_result])
         self.rolling_memory.add_memory(complete_result)
         return complete_result
 

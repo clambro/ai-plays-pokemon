@@ -93,9 +93,9 @@ Not natively. You could adapt this code to another Gen 1 or Gen 2 game, but you 
 
 ### How much does it cost to run?
 
-Short answer: Roughly $0.60 USD per hour for the GPT-5.6 Luna API calls based on initial testing.
+Short answer: Less than $1 USD/hour for the GPT-5.6 Luna API calls.
 
-Longer answer: The rolling memory grows logarithmically over time, meaning the hourly rate should technically be more like `0.6 + ε log t`, but this logarithmic contribution proved too small to measure even after several hours of play.
+Longer answer: Rolling memory grows logarithmically, and the cost grows with it. Based on some initial tests, it's around `$0.63 + $0.18 log t` per hour, where `t` is elapsed time in hours and `log` is the natural logarithm.
 
 ### How fast does it play?
 

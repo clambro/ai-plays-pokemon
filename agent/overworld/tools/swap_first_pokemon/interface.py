@@ -27,22 +27,9 @@ def build_swap_first_pokemon_tool(
     ) -> OverworldToolResult:
         """Put another party Pokemon in the first position.
 
-        This will make that Pokemon your lead Pokemon in battle (assuming it
-        has not fainted).
-
-        This tool is useful for:
-
-        - Leading with an advantageous Pokemon before a major battle.
-        - Training a specific Pokemon by having it come out first in battle. If
-          you want to train a specific Pokemon, use this tool to put it in the
-          first position before starting your training session.
-        - Keeping your party members at roughly the same level as one-another
-          by changing which Pokemon is the first to see action in battle.
-
-        Remember that Pokemon only gain experience when they are used in
-        battle. Putting a Pokemon in the first position is a good way to
-        guarantee that it will gain experience (assuming it has not fainted and
-        is not at the level cap).
+        This will make that Pokemon your lead Pokemon in battle, assuming it
+        has not fainted. Use it to prepare a favorable matchup or give a party
+        member more opportunities to gain experience.
 
         The current party order is shown in the ``party`` section of the
         prompt. If you are happy with the order of your party, don't use this

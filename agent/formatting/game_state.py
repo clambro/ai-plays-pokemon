@@ -26,7 +26,7 @@ def format_party_info(game_state: GameState) -> str:
         return ""
     out = "<party>\n"
     out += "These are the Pokemon in your party, in their current order.\n"
-    out += _format_pokemon_list(game_state.party)
+    out += _format_pokemon_list(game_state.party, game_state.player.level_cap)
     out += "</party>"
     return out
 
@@ -60,7 +60,7 @@ def format_pc_info(game_state: GameState) -> str:
     return out
 
 
-def _format_pokemon_list(pokemon_list: list[Pokemon]) -> str:
+def _format_pokemon_list(pokemon_list: list[Pokemon], level_cap: int) -> str:
     """Format party Pokemon in their current order."""
     out = ""
     for index, pokemon in enumerate(pokemon_list):
@@ -71,7 +71,13 @@ def _format_pokemon_list(pokemon_list: list[Pokemon]) -> str:
             out += f"Type: {pokemon.type1} / {pokemon.type2}\n"
         else:
             out += f"Type: {pokemon.type1}\n"
-        out += f"Level: {pokemon.level}\n"
+        out += f"Level: {pokemon.level}"
+        if pokemon.level >= level_cap:
+            out += (
+                " (AT LEVEL CAP: Can be used, but will not gain experience, even if battle dialogue"
+                " says otherwise)"
+            )
+        out += "\n"
         out += f"HP: {pokemon.hp} / {pokemon.max_hp}\n"
         out += f"Status Ailment: {pokemon.status}\n"
         out += "<moves>\n"

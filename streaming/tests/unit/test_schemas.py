@@ -1,37 +1,25 @@
 """Tests for streaming view schemas."""
 
+from typing import TYPE_CHECKING
+
 import pytest
 
-from memory.rolling_memory.schemas import (
-    CurrentMemoryBlock,
-    MemorySummary,
-    RawMemoryBlock,
-    RollingMemory,
-)
+from agent.state import AgentState
 from streaming.schemas import LogEntryView
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.mark.unit
-def test_activity_log_contains_only_exact_raw_memory() -> None:
-    """Keep summaries out of the live activity log."""
-    memory = RollingMemory(
-        current_block=CurrentMemoryBlock(iteration=43, content="Current action."),
-        summary_frontier=(
-            MemorySummary(
-                start_iteration=1,
-                end_iteration=40,
-                level=2,
-                content="Older summarized history.",
-            ),
-        ),
-        loaded_raw_blocks=(
-            RawMemoryBlock(iteration=41, content="First recent action."),
-            RawMemoryBlock(iteration=42, content="Second recent action."),
-        ),
-    )
+def test_activity_log_uses_only_the_public_log(tmp_path: Path) -> None:
+    """Keep private rolling memory out of the public activity log."""
+    state = AgentState(folder=tmp_path, iteration=43)
+    state.rolling_memory.add_memory("Private rolling memory.")
+    state.public_log.add(41, "First public entry.")
+    state.public_log.add(43, "Second public entry.")
 
-    assert LogEntryView.from_memory(memory) == [
-        LogEntryView(iteration=41, thought="First recent action."),
-        LogEntryView(iteration=42, thought="Second recent action."),
-        LogEntryView(iteration=43, thought="Current action."),
+    assert LogEntryView.from_public_log(state.public_log) == [
+        LogEntryView(iteration=41, thought="First public entry."),
+        LogEntryView(iteration=43, thought="Second public entry."),
     ]

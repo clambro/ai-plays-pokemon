@@ -73,6 +73,7 @@ async def test_hooks_publish_accounted_reasoning_before_tool_execution(
         assert observed_state is game_state
         assert state.total_tokens == first_usage.total_tokens
         assert state.rolling_memory.current_block.content == reasoning
+        assert [entry.content for entry in state.public_log.entries] == [reasoning]
         events.append("publish")
 
     monkeypatch.setattr(utils, "update_background_from_states", publish)

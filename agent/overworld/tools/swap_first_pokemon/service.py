@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from common.constants import ACTION_RESULT_LABEL
 from common.enums import Button
 
 if TYPE_CHECKING:
@@ -44,6 +45,7 @@ class SwapFirstPokemonService:
                 f"An error occurred while swapping the first Pokemon in my party: {error} "
                 f"The current party order is {[p.name for p in game_state.party]}."
             )
+        result = f"{ACTION_RESULT_LABEL} {result}"
         self.rolling_memory.add_memory(result)
         return result
 

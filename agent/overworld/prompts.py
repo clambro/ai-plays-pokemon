@@ -92,7 +92,7 @@ Navigation tips:
 - To interact with a sprite normally, move to an adjacent tile, face it, and press the action button. Do not attempt to move onto the sprite's tile. You cannot walk on or through sprites (except for Pikachu, as described above).
 - Some sprite notes provide an exact reachable position for interacting across a counter. In that case, navigate to that position instead of next to the sprite, face the sprite across the "{AsciiTile.COUNTER}" tile, and press the action button.
 - Note that some sprites move around, so their position may change between screenshots. Do not let this confuse you. The information that you have in the <known_sprites> section is the most accurate information available to you since it comes straight from the game's memory at this moment in time.
-- It is generally not worth interacting with sprites and signs more than once. They usually do not change between interactions.
+- Stationary sprites, signs, and objects with no recorded interaction are usually worth investigating, especially sprites that look like item balls. You should try to interact with everything and everyone. Once an interaction has been recorded, however, it is generally not worth repeating without a specific reason.
 
 The current ASCII screen is derived from current game memory, while the current map region combines those observations over time. Prefer the ASCII information for tile and coordinate reasoning, and use the screenshot as supplemental visual context.
 </map_info>
@@ -129,6 +129,8 @@ OVERWORLD_DECISION_PROMPT = """
 You are navigating the overworld. You are standing still. There is no onscreen text; any dialog from any previous action has already been completed. The screenshot provided above shows the current rendered game screen. After each tool call, its returned screenshot and result are the freshest state and supersede earlier observations.
 
 {state}
+
+The first Pokemon in the party is the lead and will usually receive more battle experience than the rest. If one or two party members are pulling far ahead, consider changing the lead to develop the rest of the team. This does not mean every party member needs to be the same level.
 
 Regularly reflect on what you are trying to accomplish and use set_goal to keep your goals useful and current.
 {goal_warning}
