@@ -121,10 +121,6 @@ async def settle_dialog(
         )
         if scripted_displacement_warning:
             context.state.rolling_memory.add_memory(scripted_displacement_warning)
-            context.state.public_log.add(
-                context.state.iteration,
-                scripted_displacement_warning,
-            )
     update_background_from_states(context.state, final_state)
     return DialogSettlement(
         transcript=transcript,

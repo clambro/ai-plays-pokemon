@@ -65,7 +65,7 @@ The tile directly to the right of you is "{{tile_right}}"{{blocked_right}}.
 {{connections}}
 </map_connections>
 
-The following discovered sprites are reachable from your current region, either directly or across a counter:
+The following discovered sprites are reachable from your current region, either directly or across a counter. Interacting with newly discovered stationary sprites is part of fully exploring a map, so interact with every reachable stationary sprite that has no recorded interaction as you explore. Once an interaction has been recorded, do not repeat it without a specific reason.
 <known_sprites>
 {{known_sprites}}
 </known_sprites>
@@ -75,12 +75,12 @@ The following discovered warp tiles are in your current region:
 {{known_warps}}
 </known_warps>
 
-The following discovered signs are in your current region:
+The following discovered signs are in your current region. These often only provide flavour text, but could give a useful tip.
 <known_signs>
 {{known_signs}}
 </known_signs>
 
-The following discovered objects are in your current region:
+The following discovered objects are in your current region. These are usually PCs, but can be buttons or switches.
 <known_objects>
 {{known_objects}}
 </known_objects>
@@ -92,7 +92,6 @@ Navigation tips:
 - To interact with a sprite normally, move to an adjacent tile, face it, and press the action button. Do not attempt to move onto the sprite's tile. You cannot walk on or through sprites (except for Pikachu, as described above).
 - Some sprite notes provide an exact reachable position for interacting across a counter. In that case, navigate to that position instead of next to the sprite, face the sprite across the "{AsciiTile.COUNTER}" tile, and press the action button.
 - Note that some sprites move around, so their position may change between screenshots. Do not let this confuse you. The information that you have in the <known_sprites> section is the most accurate information available to you since it comes straight from the game's memory at this moment in time.
-- Stationary sprites, signs, and objects with no recorded interaction are usually worth investigating, especially sprites that look like item balls. You should try to interact with everything and everyone. Once an interaction has been recorded, however, it is generally not worth repeating without a specific reason.
 
 The current ASCII screen is derived from current game memory, while the current map region combines those observations over time. Prefer the ASCII information for tile and coordinate reasoning, and use the screenshot as supplemental visual context.
 </map_info>
@@ -135,7 +134,7 @@ The first Pokemon in the party is the lead and will usually receive more battle 
 Regularly reflect on what you are trying to accomplish and use set_goal to keep your goals useful and current.
 {goal_warning}
 
-The following accessible coordinates are adjacent to unseen terrain on the current map. They may be useful places to continue exploring the terrain.
+The following accessible coordinates are adjacent to unseen terrain on the current map. If this list is not empty, then fully revealing the current map is a top priority. Continue exploring these candidates before leaving the map, backtracking, or pursuing objectives elsewhere (unless you need to heal, of course).
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>
