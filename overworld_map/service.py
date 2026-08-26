@@ -408,11 +408,11 @@ async def record_observed_route_transition(
         or result.boundary != ControlBoundary.OVERWORLD_READY
         or MapId.UNKNOWN in (previous.map.id, current.map.id)
         or (previous.map.id, previous.player.coords) == (current.map.id, current.player.coords)
+        or not (
+            _is_ordinary_warp_transition(button, previous, current)
+            or _is_cardinal_transition(button, previous, current)
+        )
     ):
-        return
-
-    warp_activation = _get_ordinary_warp_activation(button, previous, current)
-    if warp_activation is None and not _is_cardinal_transition(button, previous, current):
         return
 
     try:
@@ -422,7 +422,6 @@ async def record_observed_route_transition(
                 source_map_id=previous.map.id,
                 source_coords=previous.player.coords,
                 button=button,
-                warp_activation=warp_activation,
                 destination_map_id=current.map.id,
                 destination_coords=current.player.coords,
             ),
@@ -433,12 +432,12 @@ async def record_observed_route_transition(
         )
 
 
-def _get_ordinary_warp_activation(
+def _is_ordinary_warp_transition(
     button: Button,
     previous: GameState,
     current: GameState,
-) -> WarpActivation | None:
-    """Return how the input activated the ROM-identified ordinary warp, if it did."""
+) -> bool:
+    """Return whether the input activated the ROM-identified ordinary warp."""
     transition = current.warp_transition
     source_warp = previous.warps.get(transition.source_warp_index)
     destination_warp = current.warps.get(transition.destination_warp_index)
@@ -451,19 +450,13 @@ def _get_ordinary_warp_activation(
         or source_warp.destination_warp_index != transition.destination_warp_index
         or destination_warp.coords != current.player.coords
     ):
-        return None
+        return False
     if source_warp.activation == WarpActivation.STEP_ON:
-        return (
-            WarpActivation.STEP_ON
-            if source_warp.coords == previous.player.coords + _BUTTON_OFFSETS[button]
-            else None
-        )
-    if (
+        return source_warp.coords == previous.player.coords + _BUTTON_OFFSETS.get(button, (0, 0))
+    return (
         source_warp.coords == previous.player.coords
         and _WARP_ACTIVATION_BUTTONS.get(source_warp.activation) == button
-    ):
-        return source_warp.activation
-    return None
+    )
 
 
 def _is_cardinal_transition(button: Button, previous: GameState, current: GameState) -> bool:
