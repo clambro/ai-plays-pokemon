@@ -35,6 +35,7 @@ async def init_fresh_db() -> None:
         MemorySummaryDBModel,
         RawMemoryBlockDBModel,
     )
+    from database.route_memory.model import RouteTransitionDBModel  # noqa: F401, PLC0415
 
     async with _engine.begin() as conn:
         await conn.run_sync(SQLAlchemyBase.metadata.create_all)
