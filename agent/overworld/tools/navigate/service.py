@@ -7,7 +7,7 @@ from agent.overworld.map_view import build_current_map_view
 from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
 from common.enums import AsciiTile, Button, FacingDirection, MapId
 from emulator.control_events import ControlBoundary
-from overworld_map.service import record_observed_route_transition, update_overworld_map
+from overworld_map.service import update_overworld_map
 
 if TYPE_CHECKING:
     import numpy as np
@@ -222,7 +222,7 @@ class NavigationService:
         )
         if not needs_pikachu_turn:
             return True
-        control_result, _ = await self._press_and_record_transition(button, game_state)
+        control_result = await self.emulator.press_overworld_button(button)
         return control_result.boundary == ControlBoundary.OVERWORLD_READY
 
     def _get_next_tile(self, button: Button, game_state: GameState) -> AsciiTile:
@@ -245,9 +245,8 @@ class NavigationService:
         observe_steps: bool = False,
     ) -> ControlResult:
         """Complete one movement step, including a required turn or Pikachu yield."""
-        result, observed_state = await self._press_and_record_transition(
+        result = await self.emulator.press_overworld_button(
             button,
-            game_state,
             observe_steps=observe_steps,
         )
         if result.boundary != ControlBoundary.OVERWORLD_READY:
@@ -261,6 +260,7 @@ class NavigationService:
         if game_state.player.direction == desired_direction and not pikachu_was_ahead:
             return result
 
+        observed_state = await self.emulator.get_game_state()
         if observed_state.player.coords != game_state.player.coords:
             return result
 
@@ -269,9 +269,8 @@ class NavigationService:
             and observed_state.player.direction == desired_direction
         )
         if turned_without_moving or pikachu_was_ahead:
-            result, _ = await self._press_and_record_transition(
+            result = await self.emulator.press_overworld_button(
                 button,
-                observed_state,
                 observe_steps=observe_steps,
             )
         return result
@@ -288,7 +287,7 @@ class NavigationService:
 
         # Rotate to face the target.
         if game_state.player.direction != _BUTTON_DIRECTIONS[button]:
-            result, _ = await self._press_and_record_transition(button, game_state)
+            result = await self.emulator.press_overworld_button(button)
             if result.boundary != ControlBoundary.OVERWORLD_READY:
                 return "", result.boundary
 
@@ -310,28 +309,6 @@ class NavigationService:
         else:
             boundary = ControlBoundary.OVERWORLD_READY
         return " ".join(dialog for dialog in dialogs if dialog), boundary
-
-    async def _press_and_record_transition(
-        self,
-        button: Button,
-        previous: GameState,
-        *,
-        observe_steps: bool = False,
-    ) -> tuple[ControlResult, GameState]:
-        """Press from external overworld control and retain any resulting direct transition."""
-        result = await self.emulator.press_overworld_button(
-            button,
-            observe_steps=observe_steps,
-        )
-        current = await self.emulator.get_game_state()
-        await record_observed_route_transition(
-            iteration=self.iteration,
-            button=button,
-            previous=previous,
-            result=result,
-            current=current,
-        )
-        return result, current
 
     @staticmethod
     def _get_navigation_result(

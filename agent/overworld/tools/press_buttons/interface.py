@@ -99,7 +99,6 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
             Fresh screenshot and the actual button-sequence result.
         """
         result = await press_buttons_service(
-            iteration=context.state.iteration,
             rolling_memory=context.state.rolling_memory,
             emulator=context.emulator,
             buttons=list(buttons),

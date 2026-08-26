@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from common.enums import AsciiTile, Button, MapEntityType, MapId, WarpActivation
+from common.enums import AsciiTile, MapEntityType, MapId
 from database.map_entity_memory.repository import (
     apply_map_entity_changes,
     get_map_entity_memories_for_map,
@@ -23,13 +23,9 @@ from database.map_memory.repository import (
     update_map_terrain,
 )
 from database.map_memory.schemas import MapMemoryCreateUpdate
-from database.route_memory.repository import create_route_transition
-from database.route_memory.schemas import RouteTransitionCreate
-from emulator.control_events import ControlBoundary
 from overworld_map.schemas import MapEntityInteractionMemory, OverworldMap
 
 if TYPE_CHECKING:
-    from emulator.control_events import ControlResult
     from emulator.game_state import GameState
     from emulator.text_events import CompletedMapEntityInteraction
 
@@ -392,109 +388,3 @@ async def record_warp_usage(
         logger.opt(exception=error).warning(
             "Warp usage persistence failed; continuing without the latest timestamps."
         )
-
-
-async def record_observed_route_transition(
-    *,
-    iteration: int,
-    button: Button,
-    previous: GameState,
-    result: ControlResult,
-    current: GameState,
-) -> None:
-    """Persist a transition only when one external movement input directly caused it."""
-    if (
-        button not in _BUTTON_OFFSETS
-        or result.boundary != ControlBoundary.OVERWORLD_READY
-        or MapId.UNKNOWN in (previous.map.id, current.map.id)
-        or (previous.map.id, previous.player.coords) == (current.map.id, current.player.coords)
-        or not (
-            _is_ordinary_warp_transition(button, previous, current)
-            or _is_cardinal_transition(button, previous, current)
-        )
-    ):
-        return
-
-    try:
-        await create_route_transition(
-            iteration,
-            RouteTransitionCreate(
-                source_map_id=previous.map.id,
-                source_coords=previous.player.coords,
-                button=button,
-                destination_map_id=current.map.id,
-                destination_coords=current.player.coords,
-            ),
-        )
-    except Exception as error:  # noqa: BLE001
-        logger.opt(exception=error).warning(
-            "Route-memory persistence failed; continuing without the latest observed route."
-        )
-
-
-def _is_ordinary_warp_transition(
-    button: Button,
-    previous: GameState,
-    current: GameState,
-) -> bool:
-    """Return whether the input activated the ROM-identified ordinary warp."""
-    transition = current.warp_transition
-    source_warp = previous.warps.get(transition.source_warp_index)
-    destination_warp = current.warps.get(transition.destination_warp_index)
-    if (
-        not transition.is_ordinary_warp
-        or transition.source_map_id != previous.map.id
-        or source_warp is None
-        or destination_warp is None
-        or source_warp.destination != current.map.id
-        or source_warp.destination_warp_index != transition.destination_warp_index
-        or destination_warp.coords != current.player.coords
-    ):
-        return False
-    if source_warp.activation == WarpActivation.STEP_ON:
-        return source_warp.coords == previous.player.coords + _BUTTON_OFFSETS.get(button, (0, 0))
-    return (
-        source_warp.coords == previous.player.coords
-        and _WARP_ACTIVATION_BUTTONS.get(source_warp.activation) == button
-    )
-
-
-def _is_cardinal_transition(button: Button, previous: GameState, current: GameState) -> bool:
-    """Return whether the input crossed the matching loaded map connection."""
-    connection = {
-        Button.UP: previous.map.north_connection,
-        Button.DOWN: previous.map.south_connection,
-        Button.LEFT: previous.map.west_connection,
-        Button.RIGHT: previous.map.east_connection,
-    }.get(button)
-    if connection is None or connection.destination_map != current.map.id:
-        return False
-
-    source = previous.player.coords
-    source_coordinate = source.col if button in {Button.UP, Button.DOWN} else source.row
-    on_boundary = {
-        Button.UP: source.row == 0,
-        Button.DOWN: source.row == previous.map.height - 1,
-        Button.LEFT: source.col == 0,
-        Button.RIGHT: source.col == previous.map.width - 1,
-    }[button]
-    return (
-        on_boundary
-        and source_coordinate in connection.source_coordinates
-        and connection.get_destination(source) == current.player.coords
-    )
-
-
-_BUTTON_OFFSETS = {
-    Button.UP: (-1, 0),
-    Button.DOWN: (1, 0),
-    Button.LEFT: (0, -1),
-    Button.RIGHT: (0, 1),
-}
-
-_WARP_ACTIVATION_BUTTONS = {
-    WarpActivation.UP: Button.UP,
-    WarpActivation.DOWN: Button.DOWN,
-    WarpActivation.LEFT: Button.LEFT,
-    WarpActivation.RIGHT: Button.RIGHT,
-}

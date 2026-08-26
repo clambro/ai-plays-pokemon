@@ -6,20 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from common.enums import AsciiTile, Button, FacingDirection, MapEntityType, MapId, WarpActivation
+from common.enums import AsciiTile, MapEntityType, MapId
 from common.schemas import Coords
 from database.map_entity_memory.schemas import MapEntityMemoryRead
 from database.map_memory.schemas import MapMemoryRead
-from database.route_memory.schemas import RouteTransitionCreate
-from emulator.control_events import ControlBoundary, ControlResult
-from emulator.parsers.map import MapConnection
-from emulator.parsers.warp import WarpTransitionMemory
 from overworld_map.schemas import OverworldMap
-from overworld_map.service import (
-    get_overworld_map,
-    record_observed_route_transition,
-    update_overworld_map,
-)
+from overworld_map.service import get_overworld_map, update_overworld_map
 from overworld_map.views import get_current_map_tiles, get_navigation_tiles
 
 if TYPE_CHECKING:
@@ -194,112 +186,3 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
     current_map.known_sprite_ids.remove(1)
     assert get_navigation_tiles(current_map, game_state).tolist() == [list("∙∙∙")]
     assert current_map.terrain == [list("∙∙∙")]
-
-
-@pytest.mark.unit
-async def test_records_only_a_directly_activated_ordinary_warp() -> None:
-    """Reject a handoff or unrelated relocation while retaining a completed warp."""
-    transition = WarpTransitionMemory(
-        source_map_id=MapId.VIRIDIAN_CITY,
-        source_warp_index=0,
-        destination_warp_index=0,
-    )
-    source_coords = Coords(row=26, col=23)
-    destination_coords = Coords(row=7, col=3)
-    previous = MagicMock()
-    previous.map.id = MapId.VIRIDIAN_CITY
-    previous.player.coords = source_coords
-    previous.warps = {
-        0: SimpleNamespace(
-            coords=Coords(row=25, col=23),
-            activation=WarpActivation.STEP_ON,
-            destination=MapId.VIRIDIAN_POKECENTER,
-            destination_warp_index=0,
-        )
-    }
-    current = MagicMock()
-    current.map.id = MapId.VIRIDIAN_POKECENTER
-    current.player.coords = destination_coords
-    current.warp_transition = transition
-    current.warps = {0: SimpleNamespace(coords=destination_coords)}
-    create_transition = AsyncMock()
-
-    with patch(
-        "overworld_map.service.create_route_transition",
-        new=create_transition,
-    ):
-        await record_observed_route_transition(
-            iteration=7,
-            button=Button.UP,
-            previous=previous,
-            result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),
-            current=current,
-        )
-        create_transition.assert_awaited_once_with(
-            7,
-            RouteTransitionCreate(
-                source_map_id=MapId.VIRIDIAN_CITY,
-                source_coords=source_coords,
-                button=Button.UP,
-                destination_map_id=MapId.VIRIDIAN_POKECENTER,
-                destination_coords=destination_coords,
-            ),
-        )
-
-        create_transition.reset_mock()
-        await record_observed_route_transition(
-            iteration=8,
-            button=Button.UP,
-            previous=previous,
-            result=ControlResult(boundary=ControlBoundary.TEXT_INPUT_READY),
-            current=current,
-        )
-        previous.warps = {}
-        await record_observed_route_transition(
-            iteration=8,
-            button=Button.UP,
-            previous=previous,
-            result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),
-            current=current,
-        )
-        create_transition.assert_not_awaited()
-
-
-@pytest.mark.unit
-async def test_cardinal_transition_persistence_failure_does_not_interrupt_gameplay() -> None:
-    """Recognize a direct boundary crossing while treating route memory as recoverable."""
-    source_coords = Coords(row=19, col=6)
-    destination_coords = Coords(row=0, col=6)
-    connection = MapConnection(
-        direction=FacingDirection.DOWN,
-        destination_map=MapId.ROUTE_4,
-        source_coordinate_start=0,
-        source_coordinate_end=20,
-        destination_offset=Coords(row=-19, col=0),
-        collision_tile_pairs=tuple((0, 0) for _ in range(20)),
-    )
-    previous = MagicMock()
-    previous.map.id = MapId.ROUTE_3
-    previous.map.height = 20
-    previous.map.south_connection = connection
-    previous.player.coords = source_coords
-    previous.warps = {}
-    current = MagicMock()
-    current.map.id = MapId.ROUTE_4
-    current.player.coords = destination_coords
-    current.warps = {}
-    create_transition = AsyncMock(side_effect=RuntimeError("database unavailable"))
-
-    with patch(
-        "overworld_map.service.create_route_transition",
-        new=create_transition,
-    ):
-        await record_observed_route_transition(
-            iteration=7,
-            button=Button.DOWN,
-            previous=previous,
-            result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),
-            current=current,
-        )
-
-    assert create_transition.await_count == 1
