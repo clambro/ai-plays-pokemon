@@ -12,6 +12,7 @@ from aiohttp import ClientSession
 from aiohttp.web import HTTPOk
 
 import streaming.server as server_module
+from emulator.parsers.pokemon import _INT_TO_SPECIES_MAP
 from streaming.schemas import GameStateView, LogEntryView, PartyPokemonView
 from streaming.server import BackgroundStreamServer
 
@@ -156,9 +157,13 @@ def test_html_page_assets_exist() -> None:
     pokemon_dir = assets_dir / "pokemon"
     assert pokemon_dir.exists()
 
-    expected_pokemon = ["pikachu.png", "golbat.png", "geodude.png"]
-    for pokemon in expected_pokemon:
-        assert (pokemon_dir / pokemon).exists(), f"Pokemon asset {pokemon} not found."
+    expected_pokemon = {
+        f"{species.lower().replace(' ', '').replace('♀', 'f').replace('♂', 'm')}.png"
+        for species in _INT_TO_SPECIES_MAP.values()
+        if species != "GHOST"
+    }
+    installed_pokemon = {path.name for path in pokemon_dir.glob("*.png")}
+    assert installed_pokemon == expected_pokemon
 
 
 @pytest.mark.integration
