@@ -138,14 +138,15 @@ def _format_overworld_object(
     return output + f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
 
 
-def _format_overworld_warp(
-    warp: Warp,
+def _format_overworld_warp_group(
+    warps: Sequence[Warp],
     map_id: MapId,
     known_map_ids: frozenset[MapId],
     player_coords: Coords,
     last_interaction_iteration: int | None,
 ) -> str:
-    """Format a known overworld warp for the agent."""
+    """Format one contiguous group of equivalent overworld warp tiles."""
+    warp = warps[0]
     if warp.destination in {MapId.OUTSIDE, MapId.UNKNOWN}:
         destination_text = "This warp's destination is unresolved."
     elif warp.destination in known_map_ids or warp.destination in _VISIBLE_UNVISITED_DESTINATIONS:
@@ -159,9 +160,15 @@ def _format_overworld_warp(
             " building/floor/location to your memory. It might be a good candidate for"
             " exploration if it is accessible."
         )
+    locations = " or ".join(str(candidate.coords) for candidate in warps)
+    if len(warps) == 1:
+        identity = f"warp_{map_id}_{warp.index} at {locations}"
+    else:
+        indices = ",".join(str(candidate.index) for candidate in warps)
+        identity = f"warp_{map_id}_{{{indices}}} at coordinates {locations}"
     output = (
-        f"warp_{map_id}_{warp.index} at {warp.coords}. {destination_text}"
-        f" {_get_warp_description(warp, player_coords)}"
+        f"{identity}. {destination_text}"
+        f" {_get_warp_description(warp, player_coords, is_multi_tile=len(warps) > 1)}"
     )
     if last_interaction_iteration is not None:
         output += f" Last used at iteration {last_interaction_iteration}."
@@ -170,42 +177,12 @@ def _format_overworld_warp(
     return output
 
 
-def _get_warp_group_last_used_iteration(
+def _get_warp_description(
     warp: Warp,
-    warps: Sequence[Warp],
-    usage_iterations: Mapping[int, int],
-) -> int | None:
-    """Get the newest usage timestamp for one contiguous multi-tile warp."""
-    matching_warps = [
-        candidate
-        for candidate in warps
-        if candidate.destination == warp.destination
-        and candidate.destination_warp_index == warp.destination_warp_index
-        and candidate.destination_coords == warp.destination_coords
-        and candidate.activation == warp.activation
-    ]
-    group_ids = {warp.index}
-    pending = [warp]
-    while pending:
-        current = pending.pop()
-        for candidate in matching_warps:
-            if candidate.index in group_ids:
-                continue
-            distance = abs(candidate.coords.row - current.coords.row) + abs(
-                candidate.coords.col - current.coords.col
-            )
-            if distance != 1:
-                continue
-            group_ids.add(candidate.index)
-            pending.append(candidate)
-
-    return max(
-        (usage_iterations[index] for index in group_ids if index in usage_iterations),
-        default=None,
-    )
-
-
-def _get_warp_description(warp: Warp, player_coords: Coords) -> str:
+    player_coords: Coords,
+    *,
+    is_multi_tile: bool,
+) -> str:
     """Format instructions for entering a warp."""
     if warp.activation == WarpActivation.STEP_ON:
         if player_coords == warp.coords:
@@ -215,11 +192,46 @@ def _get_warp_description(warp: Warp, player_coords: Coords) -> str:
                 " the destination described above."
             )
         return "Step onto this coordinate to activate the warp."
+    coordinate_text = "one of these coordinates" if is_multi_tile else "this coordinate"
     return (
-        f"Stand on this coordinate and press {warp.activation.value} twice to activate the warp,"
+        f"Stand on {coordinate_text} and press {warp.activation.value} twice to activate the warp,"
         " even if that direction appears blocked. The first press turns you if necessary; the"
         " second moves you through the warp."
     )
+
+
+def _group_contiguous_warps(warps: Sequence[Warp]) -> tuple[tuple[Warp, ...], ...]:
+    """Combine adjacent warp tiles that activate the same destination."""
+    groups = []
+    grouped_ids = set()
+    for warp in warps:
+        if warp.index in grouped_ids:
+            continue
+        matching_warps = [
+            candidate
+            for candidate in warps
+            if candidate.destination == warp.destination
+            and candidate.destination_warp_index == warp.destination_warp_index
+            and candidate.destination_coords == warp.destination_coords
+            and candidate.activation == warp.activation
+        ]
+        group = [warp]
+        grouped_ids.add(warp.index)
+        pending = [warp]
+        while pending:
+            current = pending.pop()
+            for candidate in matching_warps:
+                if candidate.index in grouped_ids:
+                    continue
+                distance = abs(candidate.coords.row - current.coords.row) + abs(
+                    candidate.coords.col - current.coords.col
+                )
+                if distance == 1:
+                    group.append(candidate)
+                    grouped_ids.add(candidate.index)
+                    pending.append(candidate)
+        groups.append(tuple(sorted(group, key=lambda candidate: candidate.index)))
+    return tuple(groups)
 
 
 def format_legend(
@@ -293,34 +305,45 @@ def format_sprite_notes(map_view: CurrentMapView, game_state: GameState) -> str:
     )
 
 
-def format_warp_notes(
+def format_warp_sections(
     map_view: CurrentMapView,
     game_state: GameState,
-) -> str:
-    """Format known warps in index order."""
+) -> tuple[str, str]:
+    """Format discovered warp groups inside and outside the current region."""
     current_map = map_view.overworld_map
     known_warps = [
         game_state.warps[entity_id]
         for entity_id in sorted(current_map.known_warp_ids)
         if entity_id in game_state.warps
     ]
-    warps = [warp for warp in known_warps if warp.coords in map_view.visible_coords]
-    if not warps:
-        return "No warp tiles discovered."
-    return "\n".join(
-        "- "
-        + _format_overworld_warp(
-            warp,
+    groups = _group_contiguous_warps(known_warps)
+    current_lines = []
+    other_lines = []
+    for group in groups:
+        last_used_iteration = max(
+            (
+                current_map.warp_usage_iterations[warp.index]
+                for warp in group
+                if warp.index in current_map.warp_usage_iterations
+            ),
+            default=None,
+        )
+        is_in_current_region = any(warp.coords in map_view.visible_coords for warp in group)
+        if not is_in_current_region and last_used_iteration is None:
+            continue
+        line = "- " + _format_overworld_warp_group(
+            group,
             current_map.id,
             current_map.known_map_ids,
             game_state.player.coords,
-            _get_warp_group_last_used_iteration(
-                warp,
-                known_warps,
-                current_map.warp_usage_iterations,
-            ),
+            last_used_iteration,
         )
-        for warp in warps
+        lines = current_lines if is_in_current_region else other_lines
+        lines.append(line)
+
+    return (
+        "\n".join(current_lines) or "No discovered warp tiles are in the current region.",
+        "\n".join(other_lines) or "No previously used warp tiles are known elsewhere on this map.",
     )
 
 

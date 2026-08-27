@@ -75,6 +75,11 @@ The following discovered warp tiles are in your current region:
 {{known_warps}}
 </known_warps>
 
+The following previously used warp tiles are elsewhere on the same map ID, outside your current region. You cannot navigate directly to them from here, but they record connections you have already traversed that may be reachable via another map (e.g. through a cave or building).
+<known_warps_outside_current_region>
+{{known_warps_outside_current_region}}
+</known_warps_outside_current_region>
+
 The following discovered signs are in your current region. These often only provide flavour text, but could give a useful tip.
 <known_signs>
 {{known_signs}}
@@ -156,6 +161,10 @@ def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> st
     """Build the explored-map portion of the overworld prompt."""
     current_map = map_view.overworld_map
     screen = game_state.get_ascii_screen()
+    known_warps, known_warps_outside_current_region = formatting.format_warp_sections(
+        map_view,
+        game_state,
+    )
     facing_tile, facing_tile_coords = formatting.get_facing_tile_notes(game_state)
     tile_above, blocked_above = formatting.get_tile_notes(BlockedDirection.UP, screen)
     tile_below, blocked_below = formatting.get_tile_notes(BlockedDirection.DOWN, screen)
@@ -168,7 +177,8 @@ def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> st
         region_top=map_view.display_origin.row,
         region_left=map_view.display_origin.col,
         known_sprites=formatting.format_sprite_notes(map_view, game_state),
-        known_warps=formatting.format_warp_notes(map_view, game_state),
+        known_warps=known_warps,
+        known_warps_outside_current_region=known_warps_outside_current_region,
         known_signs=formatting.format_sign_notes(map_view, game_state),
         known_objects=formatting.format_object_notes(map_view, game_state),
         ascii_screen=screen,
