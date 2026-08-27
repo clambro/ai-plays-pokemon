@@ -6,10 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from common.enums import AsciiTile, MapEntityType, MapId
+from common.enums import AsciiTile, MapEntityType, MapId, WarpActivation
 from common.schemas import Coords
 from database.map_entity_memory.schemas import MapEntityMemoryRead
 from database.map_memory.schemas import MapMemoryRead
+from database.warp_memory.schemas import WarpMemoryRead
 from overworld_map.schemas import OverworldMap
 from overworld_map.service import get_overworld_map, update_overworld_map
 from overworld_map.views import get_current_map_tiles, get_navigation_tiles
@@ -35,15 +36,25 @@ async def test_load_preserves_discovered_ids_without_live_records() -> None:
             map_id=MapId.PALLET_TOWN,
             entity_id=entity_id,
             entity_type=entity_type,
-            last_interaction=(
-                "Previously observed text."
-                if entity_type in {MapEntityType.SPRITE, MapEntityType.SIGN, MapEntityType.OBJECT}
-                else None
-            ),
+            last_interaction="Previously observed text.",
             last_interaction_iteration=interaction_iteration,
         )
-        for entity_id, entity_type in enumerate(MapEntityType, start=1)
+        for entity_id, entity_type in (
+            (2, MapEntityType.SPRITE),
+            (3, MapEntityType.SIGN),
+            (4, MapEntityType.OBJECT),
+        )
     ]
+    warp_memory = WarpMemoryRead(
+        map_id=MapId.PALLET_TOWN,
+        warp_id=1,
+        row=6,
+        col=5,
+        destination_map_id=MapId.MY_HOUSE_1F,
+        destination_warp_id=0,
+        activation=WarpActivation.UP,
+        last_used_iteration=interaction_iteration,
+    )
     game_state = cast("GameState", SimpleNamespace(map=_MAP_STATE))
 
     with patch.multiple(
@@ -56,6 +67,7 @@ async def test_load_preserves_discovered_ids_without_live_records() -> None:
             ),
         ),
         get_map_entity_memories_for_map=AsyncMock(return_value=memories),
+        get_warp_memories_for_map=AsyncMock(return_value=[warp_memory]),
         get_visited_maps=AsyncMock(return_value=[MapId.PALLET_TOWN]),
     ):
         current_map = await get_overworld_map(1, game_state)
@@ -76,9 +88,16 @@ async def test_load_preserves_discovered_ids_without_live_records() -> None:
 @pytest.mark.unit
 async def test_update_persists_discovery_and_derendering() -> None:
     """Visible discoveries are added and a de-rendered known sprite is removed."""
+    warp = SimpleNamespace(
+        index=4,
+        coords=Coords(row=2, col=3),
+        destination=MapId.MY_HOUSE_1F,
+        destination_warp_index=0,
+        activation=WarpActivation.UP,
+    )
     visible = SimpleNamespace(
         sprites=[SimpleNamespace(index=3, is_rendered=True)],
-        warps=[SimpleNamespace(index=4)],
+        warps=[warp],
         signs=[SimpleNamespace(index=5)],
         objects=[SimpleNamespace(index=6)],
     )
@@ -109,6 +128,10 @@ async def test_update_persists_discovery_and_derendering() -> None:
             "overworld_map.service._update_overworld_map_terrain",
             new_callable=AsyncMock,
         ),
+        patch(
+            "overworld_map.service.remember_warps",
+            new_callable=AsyncMock,
+        ),
     ):
         await update_overworld_map(1, cast("GameState", game_state), current_map)
 
@@ -121,7 +144,6 @@ async def test_update_persists_discovery_and_derendering() -> None:
     changes = apply_changes.await_args.kwargs
     assert {(change.entity_type, change.entity_id) for change in changes["creates"]} == {
         (MapEntityType.SPRITE, 3),
-        (MapEntityType.WARP, 4),
         (MapEntityType.SIGN, 5),
         (MapEntityType.OBJECT, 6),
     }

@@ -110,9 +110,9 @@ class AgentContext:
         await record_warp_usage(
             iteration=previous_iteration,
             source_map_id=transition.source_map_id,
-            source_warp_index=transition.source_warp_index,
+            source_warp_id=transition.source_warp_index,
             destination_map_id=game_state.map.id,
-            destination_warp_index=transition.destination_warp_index,
+            destination_warp=destination_warp,
         )
 
     async def complete_iteration(self) -> None:

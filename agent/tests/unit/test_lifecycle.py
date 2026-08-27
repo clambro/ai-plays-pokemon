@@ -122,6 +122,7 @@ async def test_game_state_observation_records_rom_identified_ordinary_warp(
         transition,
         frozenset({destination_warp_index}),
     )
+    destination_warp = current_state.warps[destination_warp_index]
     context = AgentContext(
         state=AgentState(folder=tmp_path, iteration=iteration),
         emulator=MagicMock(),
@@ -136,9 +137,9 @@ async def test_game_state_observation_records_rom_identified_ordinary_warp(
     record_warp_usage.assert_awaited_once_with(
         iteration=iteration,
         source_map_id=MapId.ROUTE_3,
-        source_warp_index=source_warp_index,
+        source_warp_id=source_warp_index,
         destination_map_id=MapId.MT_MOON_1F,
-        destination_warp_index=destination_warp_index,
+        destination_warp=destination_warp,
     )
 
 
@@ -167,7 +168,8 @@ async def test_game_state_observation_records_same_map_warp_arrival(
         frozenset({destination_warp_index}),
     )
     destination_coords = Coords(row=3, col=1)
-    current_state.warps[destination_warp_index].coords = destination_coords
+    destination_warp = current_state.warps[destination_warp_index]
+    destination_warp.coords = destination_coords
     current_state.player.coords = destination_coords
     context = AgentContext(
         state=AgentState(folder=tmp_path, iteration=iteration),
@@ -183,9 +185,9 @@ async def test_game_state_observation_records_same_map_warp_arrival(
     record_warp_usage.assert_awaited_once_with(
         iteration=iteration,
         source_map_id=MapId.SAFFRON_GYM,
-        source_warp_index=2,
+        source_warp_id=2,
         destination_map_id=MapId.SAFFRON_GYM,
-        destination_warp_index=destination_warp_index,
+        destination_warp=destination_warp,
     )
     record_warp_usage.reset_mock()
 

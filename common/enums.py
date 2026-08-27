@@ -61,7 +61,6 @@ class AsciiTile(StrEnum):
 class MapEntityType(Enum):
     """An enum for the different types of map entities."""
 
-    WARP = auto()
     SPRITE = auto()
     SIGN = auto()
     OBJECT = auto()
