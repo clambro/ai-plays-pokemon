@@ -423,6 +423,12 @@ def _boundary_coords(boundary: MapBoundaryMemoryRead) -> Coords:
 
 def _format_coords(coordinates: Sequence[Coords]) -> str:
     """Format one or more coordinates without inventing a connection identifier."""
+    if len(coordinates) > 1 and len({coords.col for coords in coordinates}) == 1:
+        rows = ", ".join(str(row) for row in sorted({coords.row for coords in coordinates}))
+        return f"({{{rows}}}, {coordinates[0].col})"
+    if len(coordinates) > 1 and len({coords.row for coords in coordinates}) == 1:
+        cols = ", ".join(str(col) for col in sorted({coords.col for coords in coordinates}))
+        return f"({coordinates[0].row}, {{{cols}}})"
     return " or ".join(str(coords) for coords in coordinates)
 
 
