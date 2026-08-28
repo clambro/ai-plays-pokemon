@@ -6,6 +6,12 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from agent.schemas import ConnectionTraversalObservation
+from common.constants import (
+    CONNECTION_LOOP_LABEL,
+    LOOP_DETECTION_REPETITION_THRESHOLD,
+    LOOP_DETECTION_WINDOW_ITERATIONS,
+)
 from memory.rolling_memory.service import finalize_iteration, initialize_memory
 from overworld_map.service import record_warp_usage
 
@@ -114,6 +120,16 @@ class AgentContext:
             destination_map_id=game_state.map.id,
             destination_warp=destination_warp,
         )
+        observation = ConnectionTraversalObservation(
+            iteration=previous_iteration,
+            source_map_id=transition.source_map_id,
+            source_warp_id=transition.source_warp_index,
+            destination_map_id=game_state.map.id,
+            destination_warp_id=transition.destination_warp_index,
+        )
+        warning = _record_connection_traversal(self.state, observation)
+        if warning:
+            self.state.rolling_memory.add_memory(warning)
 
     async def complete_iteration(self) -> None:
         """Finalize the current block and advance the live iteration state."""
@@ -126,3 +142,49 @@ class AgentContext:
             return
         self.state.rolling_memory = rolling_memory
         self.state.iteration = rolling_memory.current_block.iteration
+
+
+def _record_connection_traversal(
+    state: AgentState,
+    observation: ConnectionTraversalObservation,
+) -> str | None:
+    """Record an ordinary warp traversal and flag rapid backtracking."""
+    earliest_iteration = observation.iteration - LOOP_DETECTION_WINDOW_ITERATIONS + 1
+    recent_observations = [
+        previous
+        for previous in state.connection_traversals
+        if earliest_iteration <= previous.iteration <= observation.iteration
+    ]
+    state.connection_traversals = [*recent_observations, observation]
+
+    connection = _connection_endpoints(observation)
+    matching_observations = [
+        previous
+        for previous in state.connection_traversals
+        if _connection_endpoints(previous) == connection
+    ]
+    if len(matching_observations) != LOOP_DETECTION_REPETITION_THRESHOLD or all(
+        (previous.source_map_id, previous.source_warp_id)
+        == (observation.source_map_id, observation.source_warp_id)
+        for previous in matching_observations
+    ):
+        return None
+    return (
+        f"{CONNECTION_LOOP_LABEL} I have repeatedly crossed the same connection in both"
+        " directions without making progress. I should use check_connection to reconstruct the"
+        " surrounding connections, determine which side contains the route I need, and then move"
+        " away from this connection. If I must cross it once more, I should not immediately reverse"
+        " direction again."
+    )
+
+
+def _connection_endpoints(
+    observation: ConnectionTraversalObservation,
+) -> frozenset[tuple[MapId, int]]:
+    """Return a direction-independent identity for a traversed connection."""
+    return frozenset(
+        {
+            (observation.source_map_id, observation.source_warp_id),
+            (observation.destination_map_id, observation.destination_warp_id),
+        }
+    )

@@ -36,3 +36,14 @@ class ScriptedDisplacementObservation:
     iteration: int
     map_id: MapId
     destination: Coords
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ConnectionTraversalObservation:
+    """An ordinary warp traversal between two identified endpoints."""
+
+    iteration: int
+    source_map_id: MapId
+    source_warp_id: int
+    destination_map_id: MapId
+    destination_warp_id: int

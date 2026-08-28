@@ -31,7 +31,7 @@ def _record(
 
 
 @pytest.mark.unit
-def test_third_matching_destination_in_twenty_iterations_is_flagged(tmp_path: Path) -> None:
+def test_third_matching_destination_in_ten_iterations_is_flagged(tmp_path: Path) -> None:
     """Require three arrivals at the same map-qualified tile."""
     state = AgentState(folder=tmp_path)
 
@@ -39,21 +39,21 @@ def test_third_matching_destination_in_twenty_iterations_is_flagged(tmp_path: Pa
     assert _record(state, iteration=2) is None
     assert _record(state, iteration=3, map_id=MapId.ROUTE_2) is None
     assert _record(state, iteration=4, destination=Coords(row=4, col=3)) is None
-    assert _record(state, iteration=20) is not None
+    assert _record(state, iteration=10) is not None
 
 
 @pytest.mark.unit
-def test_destination_observations_expire_after_twenty_iterations(tmp_path: Path) -> None:
+def test_destination_observations_expire_after_ten_iterations(tmp_path: Path) -> None:
     """Do not flag repetition based on destinations outside the rolling window."""
     state = AgentState(folder=tmp_path)
 
     assert _record(state, iteration=1) is None
     assert _record(state, iteration=2) is None
-    assert _record(state, iteration=21) is None
+    assert _record(state, iteration=12) is None
 
 
 @pytest.mark.unit
-def test_displacement_history_retains_only_the_twenty_iteration_window(tmp_path: Path) -> None:
+def test_displacement_history_retains_only_the_ten_iteration_window(tmp_path: Path) -> None:
     """Retain every recent arrival while pruning observations by iteration age."""
     state = AgentState(folder=tmp_path)
     observation_count = 25
@@ -67,9 +67,9 @@ def test_displacement_history_retains_only_the_twenty_iteration_window(tmp_path:
 
     assert len(state.scripted_displacements) == observation_count
 
-    _record(state, iteration=21, destination=Coords(row=observation_count, col=0))
+    _record(state, iteration=11, destination=Coords(row=observation_count, col=0))
 
-    assert [observation.iteration for observation in state.scripted_displacements] == [21]
+    assert [observation.iteration for observation in state.scripted_displacements] == [11]
 
 
 @pytest.mark.unit

@@ -4,7 +4,11 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from agent.schemas import PublicLog, ScriptedDisplacementObservation
+from agent.schemas import (
+    ConnectionTraversalObservation,
+    PublicLog,
+    ScriptedDisplacementObservation,
+)
 from memory.goals import Goals
 from memory.rolling_memory.schemas import RollingMemory
 
@@ -18,6 +22,7 @@ class AgentState(BaseModel):
     public_log: PublicLog = Field(default_factory=PublicLog)
     goals: Goals = Field(default_factory=Goals)
     scripted_displacements: list[ScriptedDisplacementObservation] = Field(default_factory=list)
+    connection_traversals: list[ConnectionTraversalObservation] = Field(default_factory=list)
     emulator_save_state: str | None = None
     total_tokens: int = 0
     total_cost: float = 0.0

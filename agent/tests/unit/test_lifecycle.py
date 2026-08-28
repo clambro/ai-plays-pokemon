@@ -144,6 +144,58 @@ async def test_game_state_observation_records_rom_identified_ordinary_warp(
 
 
 @pytest.mark.unit
+async def test_game_state_observation_warns_after_rapid_connection_backtracking(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Flag repeated travel through both directions of one ordinary connection."""
+    route_warp_index = 2
+    cave_warp_index = 0
+    route_to_cave = WarpTransitionMemory(
+        source_map_id=MapId.ROUTE_3,
+        source_warp_index=route_warp_index,
+        destination_warp_index=cave_warp_index,
+    )
+    cave_to_route = WarpTransitionMemory(
+        source_map_id=MapId.MT_MOON_1F,
+        source_warp_index=cave_warp_index,
+        destination_warp_index=route_warp_index,
+    )
+    route_state = _transition_state(
+        MapId.ROUTE_3,
+        cave_to_route,
+        frozenset({route_warp_index}),
+    )
+    cave_state = _transition_state(
+        MapId.MT_MOON_1F,
+        route_to_cave,
+        frozenset({cave_warp_index}),
+    )
+    context = AgentContext(
+        state=AgentState(folder=tmp_path, iteration=1),
+        emulator=MagicMock(),
+    )
+    monkeypatch.setattr(context_module, "record_warp_usage", AsyncMock())
+
+    await context.observe_game_state(route_state)
+    for iteration, game_state in enumerate(
+        (cave_state, route_state, cave_state),
+        start=2,
+    ):
+        context.state.iteration = iteration
+        await context.observe_game_state(game_state)
+
+    warning = context.state.rolling_memory.current_block.content
+    assert warning
+    assert context.state.public_log.entries == []
+
+    context.state.iteration += 1
+    await context.observe_game_state(route_state)
+
+    assert context.state.rolling_memory.current_block.content == warning
+
+
+@pytest.mark.unit
 async def test_game_state_observation_records_same_map_warp_arrival(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
