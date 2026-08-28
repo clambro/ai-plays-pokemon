@@ -92,9 +92,12 @@ async def _check_warp(
     source_group = next(
         group for group in _group_contiguous_warps(source_warps) if source_warp in group
     )
+    usage = _format_warp_usage(source_group)
     destination_map = await get_map_memory(source_warp.destination_map_id)
     if destination_map is None:
-        return f"{CONNECTION_CHECK_LABEL} This connection's destination has not been visited."
+        return (
+            f"{CONNECTION_CHECK_LABEL} This connection's destination has not been visited. {usage}"
+        )
 
     destination_warps = await get_warp_memories_for_map(source_warp.destination_map_id)
     arrival_warp = next(
@@ -102,7 +105,10 @@ async def _check_warp(
         None,
     )
     if arrival_warp is None:
-        return f"{CONNECTION_CHECK_LABEL} This connection's destination has not been discovered."
+        return (
+            f"{CONNECTION_CHECK_LABEL} This connection's destination has not been discovered. "
+            f"{usage}"
+        )
     arrival_group = next(
         group for group in _group_contiguous_warps(destination_warps) if arrival_warp in group
     )
@@ -127,7 +133,7 @@ async def _check_warp(
         destination_coords=tuple(_coords(warp) for warp in arrival_group),
     )
     return await _format_check_result(
-        header=header,
+        header=f"{header} {usage}",
         warp_groups=warp_groups,
         boundary_groups=boundary_groups,
         has_unexplored_terrain=has_unexplored_terrain,
@@ -215,13 +221,15 @@ async def _format_check_result(
 async def _describe_warp_group(group: tuple[WarpMemoryRead, ...]) -> str:
     """Describe all source and destination coordinates of one remembered warp."""
     warp = group[0]
+    usage = _format_warp_usage(group)
     if await get_map_memory(warp.destination_map_id) is None:
-        return formatting.format_connection(
+        connection = formatting.format_connection(
             source_map_id=warp.map_id,
             source_coords=tuple(_coords(candidate) for candidate in group),
             destination_map_id=None,
             destination_coords=(),
         )
+        return f"{connection} {usage}"
 
     destination_warps = await get_warp_memories_for_map(warp.destination_map_id)
     destination_group = next(
@@ -232,12 +240,13 @@ async def _describe_warp_group(group: tuple[WarpMemoryRead, ...]) -> str:
         ),
         (),
     )
-    return formatting.format_connection(
+    connection = formatting.format_connection(
         source_map_id=warp.map_id,
         source_coords=tuple(_coords(candidate) for candidate in group),
         destination_map_id=warp.destination_map_id,
         destination_coords=tuple(_coords(candidate) for candidate in destination_group),
     )
+    return f"{connection} {usage}"
 
 
 def _describe_boundary_group(group: tuple[MapBoundaryMemoryRead, ...]) -> str:
@@ -370,3 +379,14 @@ def _group_boundaries(
 def _coords(connection: WarpMemoryRead | MapBoundaryMemoryRead) -> Coords:
     """Construct coordinates from scalar database fields."""
     return Coords(row=connection.row, col=connection.col)
+
+
+def _format_warp_usage(warps: Sequence[WarpMemoryRead]) -> str:
+    """Format the most recent recorded use across equivalent warp tiles."""
+    iteration = max(
+        (warp.last_used_iteration for warp in warps if warp.last_used_iteration is not None),
+        default=None,
+    )
+    if iteration is None:
+        return "No recorded use."
+    return f"Last used at iteration {iteration}."

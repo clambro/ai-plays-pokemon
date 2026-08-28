@@ -239,13 +239,15 @@ def format_connection(
     destination_coords: Sequence[Coords],
 ) -> str:
     """Format one map connection using its complete known coordinate sets."""
-    destination = destination_map_id.name if destination_map_id is not None else "an unvisited map"
-    if destination_map_id is not None and destination_coords:
-        destination += f" at {_format_coords(destination_coords)}"
-    return (
-        f"Connection on {source_map_id.name} at {_format_coords(source_coords)} "
-        f"leads to {destination}."
-    )
+    source = f"Connection on {source_map_id.name} at {_format_coords(source_coords)}"
+    if destination_map_id is None:
+        return f"{source} leads to an unvisited map."
+    if not destination_coords:
+        return (
+            f"{source} leads somewhere on {destination_map_id.name}, but its arrival point has "
+            "not been discovered."
+        )
+    return f"{source} leads to {destination_map_id.name} at {_format_coords(destination_coords)}."
 
 
 def format_legend(
@@ -370,6 +372,7 @@ def format_connection_sections(
                     destination_map_id=group[0].destination,
                     destination_coords=destination_coords,
                 )
+                + f" Last used at iteration {last_used_iteration}."
             )
 
     for group in _group_map_boundaries(current_map.known_map_boundaries):

@@ -60,7 +60,7 @@ def format_rolling_memory(memory: RollingMemory) -> str:
         "confirmation. The current iteration is "
         f"{memory.current_block.iteration}. To give you a rough idea of the passage of time, "
         "each iteration takes a couple of seconds.\n"
-        "<memory>\n" + "\n".join(_format_memory_entry(entry) for entry in entries) + "\n</memory>"
+        "<memory>\n" + "\n\n".join(_format_memory_entry(entry) for entry in entries) + "\n</memory>"
     )
 
 
