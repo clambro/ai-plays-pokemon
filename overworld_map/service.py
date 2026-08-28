@@ -4,7 +4,13 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from common.enums import AsciiTile, MapEntityType, MapId
+from common.enums import AsciiTile, Button, FacingDirection, MapEntityType, MapId
+from common.schemas import Coords
+from database.map_boundary_memory.repository import get_map_boundary_memories_for_map
+from database.map_boundary_memory.repository import (
+    remember_map_boundaries as persist_map_boundaries,
+)
+from database.map_boundary_memory.schemas import MapBoundaryMemoryCreateUpdate
 from database.map_entity_memory.repository import (
     apply_map_entity_changes,
     get_map_entity_memories_for_map,
@@ -28,9 +34,11 @@ from database.warp_memory.repository import (
 )
 from database.warp_memory.repository import record_warp_usage as persist_warp_usage
 from database.warp_memory.schemas import WarpMemoryCreateUpdate
+from emulator.control_events import ControlBoundary
 from overworld_map.schemas import MapEntityInteractionMemory, OverworldMap
 
 if TYPE_CHECKING:
+    from emulator.control_events import ControlResult
     from emulator.game_state import GameState
     from emulator.parsers.warp import Warp
     from emulator.schemas import AsciiScreenWithEntities
@@ -56,6 +64,7 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
 
     map_entity_memories = await get_map_entity_memories_for_map(map_memory.map_id)
     warp_memories = await get_warp_memories_for_map(map_memory.map_id)
+    map_boundaries = await get_map_boundary_memories_for_map(map_memory.map_id)
 
     known_map_ids = frozenset(await get_visited_maps())
 
@@ -84,6 +93,7 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
             for memory in warp_memories
             if memory.last_used_iteration is not None
         },
+        known_map_boundaries=tuple(map_boundaries),
         known_sign_ids={
             memory.entity_id
             for memory in map_entity_memories
@@ -297,6 +307,7 @@ async def _create_overworld_map_from_game_state(
     ]
     known_map_ids = frozenset(await get_visited_maps()) | {game_state.map.id}
     warp_memories = await get_warp_memories_for_map(game_state.map.id)
+    map_boundaries = await get_map_boundary_memories_for_map(game_state.map.id)
     overworld_map = OverworldMap(
         id=game_state.map.id,
         terrain=terrain,
@@ -309,6 +320,7 @@ async def _create_overworld_map_from_game_state(
             for memory in warp_memories
             if memory.last_used_iteration is not None
         },
+        known_map_boundaries=tuple(map_boundaries),
         known_sign_ids=set(),
         sign_interactions={},
         known_object_ids=set(),
@@ -383,6 +395,96 @@ async def record_warp_usage(
         )
 
 
+async def record_observed_map_boundary(
+    *,
+    button: Button,
+    previous: GameState,
+    result: ControlResult,
+    current: GameState,
+) -> None:
+    """Persist a map boundary only when one movement input demonstrably crossed it."""
+    try:
+        boundaries = _get_observed_map_boundaries(button, previous, result, current)
+        if not boundaries:
+            return
+        await persist_map_boundaries(boundaries)
+    except Exception as error:  # noqa: BLE001
+        logger.opt(exception=error).warning(
+            "Map-boundary recording failed; continuing without the latest crossing."
+        )
+
+
+def _get_observed_map_boundaries(
+    button: Button,
+    previous: GameState,
+    result: ControlResult,
+    current: GameState,
+) -> tuple[MapBoundaryMemoryCreateUpdate, ...]:
+    """Recognize a direct crossing and retain its complete crossable coordinate mapping."""
+    direction = _BUTTON_DIRECTIONS.get(button)
+    if (
+        direction is None
+        or result.boundary != ControlBoundary.OVERWORLD_READY
+        or previous.map.id == current.map.id
+        or previous.map.id in {MapId.OUTSIDE, MapId.UNKNOWN}
+        or current.map.id in {MapId.OUTSIDE, MapId.UNKNOWN}
+    ):
+        return ()
+
+    connection = {
+        FacingDirection.UP: previous.map.north_connection,
+        FacingDirection.DOWN: previous.map.south_connection,
+        FacingDirection.LEFT: previous.map.west_connection,
+        FacingDirection.RIGHT: previous.map.east_connection,
+    }[direction]
+    if (
+        connection is None
+        or connection.direction != direction
+        or connection.destination_map != current.map.id
+    ):
+        return ()
+
+    source = previous.player.coords
+    source_coordinate = (
+        source.col if direction in {FacingDirection.UP, FacingDirection.DOWN} else source.row
+    )
+    on_boundary = {
+        FacingDirection.UP: source.row == 0,
+        FacingDirection.DOWN: source.row == previous.map.height - 1,
+        FacingDirection.LEFT: source.col == 0,
+        FacingDirection.RIGHT: source.col == previous.map.width - 1,
+    }[direction]
+    if (
+        not on_boundary
+        or source_coordinate not in connection.source_coordinates
+        or connection.get_destination(source) != current.player.coords
+    ):
+        return ()
+
+    can_surf = AsciiTile.WATER in previous.get_hm_tiles()
+    if direction in {FacingDirection.UP, FacingDirection.DOWN}:
+        row = 0 if direction == FacingDirection.UP else previous.map.height - 1
+        source_coords = (Coords(row=row, col=col) for col in connection.source_coordinates)
+    else:
+        col = 0 if direction == FacingDirection.LEFT else previous.map.width - 1
+        source_coords = (Coords(row=row, col=col) for row in connection.source_coordinates)
+    return tuple(
+        MapBoundaryMemoryCreateUpdate(
+            map_id=previous.map.id,
+            direction=direction,
+            row=candidate.row,
+            col=candidate.col,
+            destination_map_id=current.map.id,
+            destination_row=destination.row,
+            destination_col=destination.col,
+        )
+        for candidate in source_coords
+        if candidate == source
+        or previous.map.is_connection_crossable(connection, candidate, can_surf=can_surf)
+        for destination in (connection.get_destination(candidate),)
+    )
+
+
 def _create_warp_memory(map_id: MapId, warp: Warp) -> WarpMemoryCreateUpdate:
     """Build one persistence record from an observed warp."""
     return WarpMemoryCreateUpdate(
@@ -394,3 +496,11 @@ def _create_warp_memory(map_id: MapId, warp: Warp) -> WarpMemoryCreateUpdate:
         destination_warp_id=warp.destination_warp_index,
         activation=warp.activation,
     )
+
+
+_BUTTON_DIRECTIONS = {
+    Button.UP: FacingDirection.UP,
+    Button.DOWN: FacingDirection.DOWN,
+    Button.LEFT: FacingDirection.LEFT,
+    Button.RIGHT: FacingDirection.RIGHT,
+}

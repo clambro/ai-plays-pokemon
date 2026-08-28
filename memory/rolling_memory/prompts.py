@@ -24,8 +24,7 @@ Retain only information likely to remain useful well after this period:
 - confirmed, durable progress such as major victories, key items, permanent unlocks, important discoveries, and lasting consequences;
 - corrections to earlier beliefs that were demonstrated by direct observation;
 - material obstacles or clues that were still unresolved at the end of the period, preserving their uncertainty;
-- failed approaches only when observations establish a genuine constraint, preserving its scope and uncertainty; and
-- exact coordinates only when they identify a durable, non-obvious route, warp, ladder, or interaction that would otherwise need to be rediscovered.
+- failed approaches only when observations establish a genuine constraint, preserving its scope and uncertainty.
 
 Use evidence carefully:
 - An entry with one iteration is a raw record. Its unlabeled first-person prose is agent reasoning regardless of how confidently it is phrased. It is not evidence by itself.
@@ -40,7 +39,7 @@ Describe unresolved conditions as historical facts about the end of this period.
 Remove:
 - the all-caps source labels that prefix game dialogue, action results, and scripted-loop notices; use their content as evidence without repeating the labels;
 - plans, intentions, self-talk, speculation, recommendations, and imperatives;
-- exact button sequences, routine paths, incidental coordinates and waypoints, routine movement, collisions, and pathfinding failures;
+- exact button sequences, routine paths, map coordinates and waypoints, routine movement, collisions, and pathfinding failures;
 - temporary snapshots such as current location, party order, HP, PP, status conditions, and short-lived inventory state;
 - routine battle turns, move-by-move tactics, ordinary type-matchup advice, and inconsequential encounters;
 - flavor text, incidental NPC dialogue, prices, exhibits, and minor items unless they caused lasting progress; and
@@ -55,7 +54,7 @@ Memory:
 COMPACTION_REVISION_PROMPT = """
 The historical summary below is {actual_characters} characters long and exceeds the limit. Return a shorter version of no more than {max_characters} characters, including spaces and line breaks.
 
-Preserve the most important confirmed, durable facts. Preserve uncertainty and scope; do not strengthen uncertain claims or infer completion or impossibility. Remove source labels, instructions, plans, repetition, temporary state, routine navigation and battle details, and incidental coordinates. Retain an exact coordinate only when it is necessary to preserve a durable, non-obvious route, warp, ladder, or interaction. Do not add any fact that is not already present.
+Preserve the most important confirmed, durable facts. Preserve uncertainty and scope; do not strengthen uncertain claims or infer completion or impossibility. Remove source labels, instructions, plans, repetition, temporary state, routine navigation and battle details, and map coordinates. Do not add any fact that is not already present.
 
 Return only the shortened summary. Omit lower-priority details rather than exceeding {max_characters} characters.
 

@@ -6,13 +6,26 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from common.enums import AsciiTile, MapEntityType, MapId, WarpActivation
+from common.enums import (
+    AsciiTile,
+    Button,
+    FacingDirection,
+    MapEntityType,
+    MapId,
+    WarpActivation,
+)
 from common.schemas import Coords
 from database.map_entity_memory.schemas import MapEntityMemoryRead
 from database.map_memory.schemas import MapMemoryRead
 from database.warp_memory.schemas import WarpMemoryRead
+from emulator.control_events import ControlBoundary, ControlResult
+from emulator.parsers.map import MapConnection
 from overworld_map.schemas import OverworldMap
-from overworld_map.service import get_overworld_map, update_overworld_map
+from overworld_map.service import (
+    get_overworld_map,
+    record_observed_map_boundary,
+    update_overworld_map,
+)
 from overworld_map.views import get_current_map_tiles, get_navigation_tiles
 
 if TYPE_CHECKING:
@@ -68,6 +81,7 @@ async def test_load_preserves_discovered_ids_without_live_records() -> None:
         ),
         get_map_entity_memories_for_map=AsyncMock(return_value=memories),
         get_warp_memories_for_map=AsyncMock(return_value=[warp_memory]),
+        get_map_boundary_memories_for_map=AsyncMock(return_value=[]),
         get_visited_maps=AsyncMock(return_value=[MapId.PALLET_TOWN]),
     ):
         current_map = await get_overworld_map(1, game_state)
@@ -167,6 +181,7 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
         object_interactions={},
         known_warp_ids=set(),
         warp_usage_iterations={},
+        known_map_boundaries=(),
         known_map_ids=frozenset(),
         north_connection=None,
         south_connection=None,
@@ -208,3 +223,79 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
     current_map.known_sprite_ids.remove(1)
     assert get_navigation_tiles(current_map, game_state).tolist() == [list("∙∙∙")]
     assert current_map.terrain == [list("∙∙∙")]
+
+
+@pytest.mark.unit
+async def test_direct_cardinal_crossing_remembers_full_connection() -> None:
+    """Persist the complete mapping only after one input matches the loaded connection."""
+    connection = MapConnection(
+        direction=FacingDirection.RIGHT,
+        destination_map=MapId.ROUTE_4,
+        source_coordinate_start=1,
+        source_coordinate_end=4,
+        destination_offset=Coords(row=0, col=-4),
+        collision_tile_pairs=((None, None),) * 3,
+    )
+    source_map = SimpleNamespace(
+        id=MapId.ROUTE_3,
+        height=5,
+        width=5,
+        north_connection=None,
+        south_connection=None,
+        east_connection=connection,
+        west_connection=None,
+        is_connection_crossable=MagicMock(return_value=True),
+    )
+    previous_player = SimpleNamespace(coords=Coords(row=2, col=4))
+    previous = cast(
+        "GameState",
+        SimpleNamespace(
+            map=source_map,
+            player=previous_player,
+            get_hm_tiles=MagicMock(return_value=[]),
+        ),
+    )
+    current = cast(
+        "GameState",
+        SimpleNamespace(
+            map=SimpleNamespace(id=MapId.ROUTE_4),
+            player=SimpleNamespace(coords=Coords(row=2, col=0)),
+        ),
+    )
+
+    with patch(
+        "overworld_map.service.persist_map_boundaries",
+        new_callable=AsyncMock,
+    ) as persist_boundaries:
+        await record_observed_map_boundary(
+            button=Button.RIGHT,
+            previous=previous,
+            result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),
+            current=current,
+        )
+
+        previous_player.coords = Coords(row=2, col=3)
+        await record_observed_map_boundary(
+            button=Button.RIGHT,
+            previous=previous,
+            result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),
+            current=current,
+        )
+
+    persist_boundaries.assert_awaited_once()
+    assert persist_boundaries.await_args is not None
+    boundaries = persist_boundaries.await_args.args[0]
+    assert {
+        (
+            boundary.map_id,
+            boundary.direction,
+            boundary.row,
+            boundary.col,
+            boundary.destination_map_id,
+            boundary.destination_row,
+            boundary.destination_col,
+        )
+        for boundary in boundaries
+    } == {
+        (MapId.ROUTE_3, FacingDirection.RIGHT, row, 4, MapId.ROUTE_4, row, 0) for row in range(1, 4)
+    }

@@ -4,6 +4,9 @@ from typing import TYPE_CHECKING
 
 from pydantic_ai import FunctionToolset
 
+from agent.overworld.tools.check_connection.interface import (
+    build_check_connection_tool,
+)
 from agent.overworld.tools.navigate.interface import build_navigation_tool
 from agent.overworld.tools.press_buttons.interface import (
     build_press_buttons_tool,
@@ -44,6 +47,7 @@ def build_overworld_toolset(
         return FunctionToolset(tools=[build_set_goal_tool(context, end_turn_on_success=True)])
 
     tools: list[Tool[AgentContext]] = [
+        build_check_connection_tool(context, game_state),
         build_press_buttons_tool(context),
         build_set_goal_tool(context),
     ]

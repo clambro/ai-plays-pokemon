@@ -37,9 +37,9 @@ The complete map's global coordinates in row-column order start at (0, 0) in its
 
 The current map region is a rectangular crop enclosing the area currently navigable from your position, its bordering terrain, and any sprites the game permits you to interact with across a counter. Its first displayed tile is global coordinate ({{region_top}}, {{region_left}}), as recorded in the tag above; displayed rows and columns continue from there without renumbering the underlying coordinates. Walls are shown throughout the rectangle so its physical shape remains clear. "{AsciiTile.OUTSIDE_REGION}" marks every other coordinate inside the rectangle that is outside your current navigable region. Do not target those coordinates directly. Previously remembered coordinates remain valid, and coordinates never change when regions expand, merge, or are entered from another location.
 
-A single map ID may contain multiple disconnected areas. The displayed current map region is only the area currently reachable from your position without changing maps, based on the terrain revealed so far. Reaching another area with the same map ID may require leaving through a warp or map boundary and re-entering that map elsewhere.
+A single map may contain multiple disconnected areas. The displayed current map region is only the area currently reachable from your position without changing maps, based on the terrain revealed so far. Reaching another area of the same map may require leaving through a warp or map boundary and re-entering that map elsewhere.
 
-Coordinates are scoped to their map ID. Identical coordinates on different maps or floors are different locations.
+Coordinates are scoped to their named map. Identical coordinates on different maps or floors are different locations.
 
 <screen_position>
 The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size).
@@ -75,10 +75,10 @@ The following discovered warp tiles are in your current region:
 {{known_warps}}
 </known_warps>
 
-The following previously used warp tiles are elsewhere on the same map ID, outside your current region. You cannot navigate directly to them from here, but they record connections you have already traversed that may be reachable via another map (e.g. through a cave or building).
-<known_warps_outside_current_region>
-{{known_warps_outside_current_region}}
-</known_warps_outside_current_region>
+The following previously traversed connections are elsewhere on the same map, outside your current connected component. They are informational only: navigation cannot target them from your current component. Use check_connection on a reachable connection, and then on returned connections, to trace known connectivity that may lead to them.
+<known_connections_outside_current_component>
+{{known_connections_outside_current_component}}
+</known_connections_outside_current_component>
 
 The following discovered signs are in your current region. These often only provide flavour text, but could give a useful tip.
 <known_signs>
@@ -161,7 +161,7 @@ def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> st
     """Build the explored-map portion of the overworld prompt."""
     current_map = map_view.overworld_map
     screen = game_state.get_ascii_screen()
-    known_warps, known_warps_outside_current_region = formatting.format_warp_sections(
+    known_warps, external_connections = formatting.format_connection_sections(
         map_view,
         game_state,
     )
@@ -178,7 +178,7 @@ def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> st
         region_left=map_view.display_origin.col,
         known_sprites=formatting.format_sprite_notes(map_view, game_state),
         known_warps=known_warps,
-        known_warps_outside_current_region=known_warps_outside_current_region,
+        known_connections_outside_current_component=external_connections,
         known_signs=formatting.format_sign_notes(map_view, game_state),
         known_objects=formatting.format_object_notes(map_view, game_state),
         ascii_screen=screen,
