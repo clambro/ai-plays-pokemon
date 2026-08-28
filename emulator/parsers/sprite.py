@@ -182,7 +182,7 @@ _ID_TO_SPRITE_LABEL = {
     0x6A: "FOSSIL",
     0x6B: SpriteLabel.BOULDER,
     0x6C: "PAPER",
-    0x6D: "POKEDEX",
+    0x6D: "BOOK",
     0x6E: "CLIPBOARD",
     0x6F: "SNORLAX",
     # 70 is unused.

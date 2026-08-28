@@ -2,6 +2,8 @@
 
 from typing import TYPE_CHECKING
 
+from common.enums import PokeballItem
+
 if TYPE_CHECKING:
     from emulator.game_state import GameState
     from emulator.parsers.pokemon import Pokemon
@@ -40,6 +42,9 @@ def format_inventory_info(game_state: GameState) -> str:
     else:
         out += "Your inventory is empty.\n"
     out += "</inventory>"
+    pokeball_names = {ball.value for ball in PokeballItem}
+    if not any(item.name in pokeball_names for item in game_state.inventory.items):
+        out += "\n\nNote: You have no Poke Balls. They can be purchased at Poke Marts."
     return out
 
 
