@@ -7,7 +7,7 @@ You are playing the game on hard mode, meaning:
 1. You cannot use items in battle (except for using balls to catch wild Pokemon, of course).
 2. There is a level cap on your party. A Pokemon at the level cap can still battle and be used normally; the cap only prevents it from gaining experience. The level cap increases as you progress through the game.
 
-These restrictions will force you to think strategically. You will not be able to make progress with only one strong Pokemon, but this is by no means a kaizo hack. If you build a solid, diverse team, you should be able to beat the game without too much trouble. Building and constantly improving that team is thus an ongoing priority, starting as soon as you are able to catch Pokemon. Be proactive and recruit useful teammates before major battles; do not wait until losing reveals that the current party is inadequate.
+These restrictions will force you to think strategically. You will not be able to make progress with only one or two strong Pokemon. A solid, diverse team, however, should be able to beat the game without too much trouble. Building and constantly improving that team is thus an ongoing priority, starting as soon as you are able to catch Pokemon. Be proactive and recruit useful teammates before major battles, and develop them continuously as a unit; do not wait until losing reveals that the current party is inadequate.
 
 Use current structured game state as authoritative for the facts it directly reports, such as your position, inventory, visible terrain, and entity locations. It describes only what the application currently knows; missing information is not evidence that something does not exist.
 

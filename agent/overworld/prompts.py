@@ -134,7 +134,7 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 
 {state}
 
-The first Pokemon in the party is the lead and will usually receive more battle experience than the rest. If one or two party members are pulling ahead, consider changing the lead to develop the rest of the team. This does not mean every party member needs to be the same level.
+The first Pokemon in the party usually receives most battle experience. Use the party order deliberately, including making another useful Pokemon the lead when it needs training.
 
 Regularly reflect on what you are trying to accomplish and use set_goal to keep your goals useful and current.
 {goal_warning}
