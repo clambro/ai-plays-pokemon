@@ -5,7 +5,12 @@ from typing import TYPE_CHECKING
 
 from agent.schemas import ScriptedDisplacementObservation
 from agent.utils import is_battle_handler_state
-from common.constants import GAME_DIALOG_LABEL, SCRIPTED_LOOP_LABEL
+from common.constants import (
+    GAME_DIALOG_LABEL,
+    LOOP_DETECTION_REPETITION_THRESHOLD,
+    LOOP_DETECTION_WINDOW_ITERATIONS,
+    SCRIPTED_LOOP_LABEL,
+)
 from common.enums import MapId
 from emulator.control_events import ControlBoundary
 from overworld_map.service import record_map_entity_interactions
@@ -18,9 +23,6 @@ if TYPE_CHECKING:
     from agent.state import AgentState
     from common.schemas import Coords
     from emulator.game_state import GameState
-
-_SCRIPTED_DISPLACEMENT_WINDOW_ITERATIONS = 20
-_SCRIPTED_DISPLACEMENT_REPETITION_THRESHOLD = 3
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -121,10 +123,6 @@ async def settle_dialog(
         )
         if scripted_displacement_warning:
             context.state.rolling_memory.add_memory(scripted_displacement_warning)
-            context.state.public_log.add(
-                context.state.iteration,
-                scripted_displacement_warning,
-            )
     update_background_from_states(context.state, final_state)
     return DialogSettlement(
         transcript=transcript,
@@ -152,7 +150,7 @@ def _record_scripted_displacement(
         A gameplay advisory once the destination has occurred at least three
         times in the rolling iteration window, otherwise ``None``.
     """
-    earliest_iteration = state.iteration - _SCRIPTED_DISPLACEMENT_WINDOW_ITERATIONS + 1
+    earliest_iteration = state.iteration - LOOP_DETECTION_WINDOW_ITERATIONS + 1
     recent_observations = [
         observation
         for observation in state.scripted_displacements
@@ -169,7 +167,7 @@ def _record_scripted_displacement(
         previous.map_id == map_id and previous.destination == destination
         for previous in state.scripted_displacements
     )
-    if matching_observations < _SCRIPTED_DISPLACEMENT_REPETITION_THRESHOLD:
+    if matching_observations < LOOP_DETECTION_REPETITION_THRESHOLD:
         return None
     return (
         f"{SCRIPTED_LOOP_LABEL} I have been moved back to the same location by a scripted event"

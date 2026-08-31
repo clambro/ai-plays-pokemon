@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from common.enums import BattleType, PokeballItem
+from common.enums import BattleType, EvolutionFamily, PokeballItem
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -61,10 +61,13 @@ def _format_enemy_pokemon(game_state: GameState) -> str:
     out = "<enemy_pokemon>\n"
     out += f"Name: {enemy_pokemon.name}\n"
     if battle.battle_type in {BattleType.WILD, BattleType.SAFARI_ZONE}:
-        if enemy_pokemon.pokedex_number in game_state.player.pokedex_caught:
-            out += "Pokedex: This species is already registered as caught.\n"
+        if is_evolution_family_caught(
+            enemy_pokemon.pokedex_number,
+            game_state.player.pokedex_caught,
+        ):
+            out += "Pokedex: A member of this evolutionary family has already been caught.\n"
         else:
-            out += "Pokedex: This species has not been caught.\n"
+            out += "Pokedex: No member of this evolutionary family has been caught.\n"
     out += f"Level: {enemy_pokemon.level}\n"
     out += f"HP Percentage: {enemy_pokemon.hp_pct:.0f}%\n"
     out += f"Status Ailment: {enemy_pokemon.status}\n"
@@ -86,3 +89,15 @@ def format_available_pokeballs(game_state: GameState) -> str:
     if not available_balls:
         return ""
     return "Available Poke Balls:\n" + "\n".join(available_balls)
+
+
+def is_evolution_family_caught(
+    pokedex_number: int,
+    caught_pokedex_numbers: frozenset[int],
+) -> bool:
+    """Return whether a related Pokemon has already been caught."""
+    group = next(
+        (group.value for group in EvolutionFamily if pokedex_number in group.value),
+        (pokedex_number,),
+    )
+    return any(member in caught_pokedex_numbers for member in group)

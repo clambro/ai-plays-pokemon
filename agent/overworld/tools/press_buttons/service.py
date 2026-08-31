@@ -5,10 +5,12 @@ from typing import TYPE_CHECKING
 from common.constants import ACTION_RESULT_LABEL
 from common.enums import Button, FacingDirection, MapId
 from emulator.control_events import ControlBoundary
+from overworld_map.service import record_observed_map_boundary
 
 if TYPE_CHECKING:
     from common.schemas import Coords
     from emulator.emulator import Emulator
+    from emulator.game_state import GameState
     from memory.rolling_memory.schemas import RollingMemory
 
 
@@ -32,14 +34,21 @@ async def press_buttons(
     """
     results = []
     for button in buttons:
-        game_state = await emulator.get_game_state()
+        previous = await emulator.get_game_state()
         control_result = await emulator.press_overworld_button(button)
-        collision_result = await _check_for_collision(
+        current = await emulator.get_game_state()
+        await record_observed_map_boundary(
             button=button,
-            prev_map_id=game_state.map.id,
-            prev_coords=game_state.player.coords,
-            prev_direction=game_state.player.direction,
-            emulator=emulator,
+            previous=previous,
+            result=control_result,
+            current=current,
+        )
+        collision_result = _check_for_collision(
+            button=button,
+            prev_map_id=previous.map.id,
+            prev_coords=previous.player.coords,
+            prev_direction=previous.player.direction,
+            game_state=current,
         )
         action_result = _check_for_action(button)
         if collision_result:
@@ -57,13 +66,13 @@ async def press_buttons(
     return result
 
 
-async def _check_for_collision(
+def _check_for_collision(
     button: Button,
     prev_map_id: MapId,
     prev_coords: Coords,
     prev_direction: FacingDirection,
     *,
-    emulator: Emulator,
+    game_state: GameState,
 ) -> str | None:
     """Check whether a directional press collided or changed maps.
 
@@ -72,7 +81,7 @@ async def _check_for_collision(
         prev_map_id: Map ID before the button press.
         prev_coords: Player coordinates before the button press.
         prev_direction: Facing direction before the button press.
-        emulator: Running emulator used to inspect the resulting state.
+        game_state: State after the button press.
 
     Returns:
         Feedback when the sequence should stop, otherwise ``None``.
@@ -80,7 +89,6 @@ async def _check_for_collision(
     if button not in [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN]:
         return None
 
-    game_state = await emulator.get_game_state()
     if prev_map_id != game_state.map.id:
         return (
             f"Map changed from {prev_map_id.name} {prev_coords}"

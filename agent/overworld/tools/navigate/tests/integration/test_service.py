@@ -22,10 +22,13 @@ def _isolate_map_memory() -> Iterator[None]:
     with (
         patch("overworld_map.service.get_map_memory", return_value=None),
         patch("overworld_map.service.get_map_entity_memories_for_map", return_value=[]),
+        patch("overworld_map.service.get_warp_memories_for_map", return_value=[]),
+        patch("overworld_map.service.get_map_boundary_memories_for_map", return_value=[]),
         patch("overworld_map.service.get_visited_maps", return_value=[]),
         patch("overworld_map.service.create_map_memory", return_value=None),
         patch("overworld_map.service.update_map_terrain", return_value=None),
         patch("overworld_map.service.apply_map_entity_changes", return_value=None),
+        patch("overworld_map.service.remember_warps", return_value=None),
     ):
         yield
 

@@ -37,9 +37,9 @@ The complete map's global coordinates in row-column order start at (0, 0) in its
 
 The current map region is a rectangular crop enclosing the area currently navigable from your position, its bordering terrain, and any sprites the game permits you to interact with across a counter. Its first displayed tile is global coordinate ({{region_top}}, {{region_left}}), as recorded in the tag above; displayed rows and columns continue from there without renumbering the underlying coordinates. Walls are shown throughout the rectangle so its physical shape remains clear. "{AsciiTile.OUTSIDE_REGION}" marks every other coordinate inside the rectangle that is outside your current navigable region. Do not target those coordinates directly. Previously remembered coordinates remain valid, and coordinates never change when regions expand, merge, or are entered from another location.
 
-A single map ID may contain multiple disconnected areas. The displayed current map region is only the area currently reachable from your position without changing maps, based on the terrain revealed so far. Reaching another area with the same map ID may require leaving through a warp or map boundary and re-entering that map elsewhere.
+A single map may contain multiple disconnected areas. The displayed current map region is only the area currently reachable from your position without changing maps, based on the terrain revealed so far. Reaching another area of the same map may require leaving through a warp or map boundary and re-entering that map elsewhere.
 
-Coordinates are scoped to their map ID. Identical coordinates on different maps or floors are different locations.
+Coordinates are scoped to their named map. Identical coordinates on different maps or floors are different locations.
 
 <screen_position>
 The ASCII screen is always ({SCREEN_HEIGHT}x{SCREEN_WIDTH}) blocks in size, and is always centered such that you are in position ({PLAYER_OFFSET_Y}, {PLAYER_OFFSET_X}) in screen coordinates (not map coordinates). It corresponds 1:1 with the screenshot provided to you above. Note that the screen can extend outside the boundaries of the map (i.e. when the screen boundary rows or columns are negative or exceed the map size).
@@ -65,7 +65,7 @@ The tile directly to the right of you is "{{tile_right}}"{{blocked_right}}.
 {{connections}}
 </map_connections>
 
-The following discovered sprites are reachable from your current region, either directly or across a counter:
+The following discovered sprites are reachable from your current region, either directly or across a counter. Interacting with newly reachable stationary sprites that have no recorded interaction should be a high priority during exploration. Strongly prefer interacting with them before continuing to explore, unless you have a specific reason to pursue another objective. Once an interaction has been recorded, do not repeat it without a specific reason.
 <known_sprites>
 {{known_sprites}}
 </known_sprites>
@@ -75,12 +75,17 @@ The following discovered warp tiles are in your current region:
 {{known_warps}}
 </known_warps>
 
-The following discovered signs are in your current region:
+The following previously traversed connections are elsewhere on the same map, outside your current connected component. They are informational only: navigation cannot target them from your current component. Use check_connection on a reachable connection, and then on returned connections, to trace known connectivity that may lead to them.
+<known_connections_outside_current_component>
+{{known_connections_outside_current_component}}
+</known_connections_outside_current_component>
+
+The following discovered signs are in your current region. These often only provide flavour text, but could give a useful tip.
 <known_signs>
 {{known_signs}}
 </known_signs>
 
-The following discovered objects are in your current region:
+The following discovered objects are in your current region. These are usually PCs, but can be buttons or switches.
 <known_objects>
 {{known_objects}}
 </known_objects>
@@ -92,7 +97,6 @@ Navigation tips:
 - To interact with a sprite normally, move to an adjacent tile, face it, and press the action button. Do not attempt to move onto the sprite's tile. You cannot walk on or through sprites (except for Pikachu, as described above).
 - Some sprite notes provide an exact reachable position for interacting across a counter. In that case, navigate to that position instead of next to the sprite, face the sprite across the "{AsciiTile.COUNTER}" tile, and press the action button.
 - Note that some sprites move around, so their position may change between screenshots. Do not let this confuse you. The information that you have in the <known_sprites> section is the most accurate information available to you since it comes straight from the game's memory at this moment in time.
-- Stationary sprites, signs, and objects with no recorded interaction are usually worth investigating, especially sprites that look like item balls. You should try to interact with everything and everyone. Once an interaction has been recorded, however, it is generally not worth repeating without a specific reason.
 
 The current ASCII screen is derived from current game memory, while the current map region combines those observations over time. Prefer the ASCII information for tile and coordinate reasoning, and use the screenshot as supplemental visual context.
 </map_info>
@@ -130,12 +134,12 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 
 {state}
 
-The first Pokemon in the party is the lead and will usually receive more battle experience than the rest. If one or two party members are pulling far ahead, consider changing the lead to develop the rest of the team. This does not mean every party member needs to be the same level.
+The first Pokemon in the party usually receives most battle experience. Use the party order deliberately, including making another useful Pokemon the lead when it needs training.
 
 Regularly reflect on what you are trying to accomplish and use set_goal to keep your goals useful and current.
 {goal_warning}
 
-The following accessible coordinates are adjacent to unseen terrain on the current map. They may be useful places to continue exploring the terrain.
+The following accessible coordinates are adjacent to unseen terrain on the current map. Fully revealing the current map is a high priority. In general, handle newly reachable unvisited stationary sprites before continuing to reveal unseen terrain, but use judgment when a specific objective should take precedence. Exploring these candidates should generally be prioritized before leaving the map, backtracking, or pursuing objectives elsewhere (unless you have a specific other goal in mind or need to heal, of course).
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>
@@ -157,6 +161,10 @@ def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> st
     """Build the explored-map portion of the overworld prompt."""
     current_map = map_view.overworld_map
     screen = game_state.get_ascii_screen()
+    known_warps, external_connections = formatting.format_connection_sections(
+        map_view,
+        game_state,
+    )
     facing_tile, facing_tile_coords = formatting.get_facing_tile_notes(game_state)
     tile_above, blocked_above = formatting.get_tile_notes(BlockedDirection.UP, screen)
     tile_below, blocked_below = formatting.get_tile_notes(BlockedDirection.DOWN, screen)
@@ -169,7 +177,8 @@ def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> st
         region_top=map_view.display_origin.row,
         region_left=map_view.display_origin.col,
         known_sprites=formatting.format_sprite_notes(map_view, game_state),
-        known_warps=formatting.format_warp_notes(map_view, game_state),
+        known_warps=known_warps,
+        known_connections_outside_current_component=external_connections,
         known_signs=formatting.format_sign_notes(map_view, game_state),
         known_objects=formatting.format_object_notes(map_view, game_state),
         ascii_screen=screen,

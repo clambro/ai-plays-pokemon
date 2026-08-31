@@ -8,6 +8,7 @@ import numpy as np
 if TYPE_CHECKING:
     from common.enums import BlockedDirection, MapId
     from common.schemas import Coords
+    from database.map_boundary_memory.schemas import MapBoundaryMemoryRead
     from emulator.parsers.map import MapConnection
 
 
@@ -34,6 +35,7 @@ class OverworldMap:
     object_interactions: dict[int, MapEntityInteractionMemory]
     known_warp_ids: set[int]
     warp_usage_iterations: dict[int, int]
+    known_map_boundaries: tuple[MapBoundaryMemoryRead, ...]
     known_map_ids: frozenset[MapId]
     north_connection: MapConnection | None
     south_connection: MapConnection | None

@@ -2,6 +2,8 @@
 
 from typing import TYPE_CHECKING
 
+from common.enums import PokeballItem
+
 if TYPE_CHECKING:
     from emulator.game_state import GameState
     from emulator.parsers.pokemon import Pokemon
@@ -40,6 +42,9 @@ def format_inventory_info(game_state: GameState) -> str:
     else:
         out += "Your inventory is empty.\n"
     out += "</inventory>"
+    pokeball_names = {ball.value for ball in PokeballItem}
+    if not any(item.name in pokeball_names for item in game_state.inventory.items):
+        out += "\n\nNote: You have no Poke Balls. They can be purchased at Poke Marts."
     return out
 
 
@@ -74,8 +79,8 @@ def _format_pokemon_list(pokemon_list: list[Pokemon], level_cap: int) -> str:
         out += f"Level: {pokemon.level}"
         if pokemon.level >= level_cap:
             out += (
-                " (AT LEVEL CAP: Can be used, but will not gain experience, even if battle dialogue"
-                " says otherwise)"
+                " (AT LEVEL CAP: Can be used, but any experience it gains is wasted and will not"
+                " be applied.)"
             )
         out += "\n"
         out += f"HP: {pokemon.hp} / {pokemon.max_hp}\n"

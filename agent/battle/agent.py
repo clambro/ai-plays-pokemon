@@ -7,6 +7,7 @@ from pydantic_ai import Agent, AgentRunError, BinaryContent, CallToolsNode
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 from pydantic_graph import End
 
+from agent.battle.formatting import is_evolution_family_caught
 from agent.battle.prompts import build_battle_decision_prompt
 from agent.battle.tools.registry import build_battle_toolset
 from agent.context import AgentContext
@@ -23,7 +24,10 @@ if TYPE_CHECKING:
 
 
 def build_battle_agent(
-    context: AgentContext, battle_type: BattleType | None
+    context: AgentContext,
+    battle_type: BattleType | None,
+    *,
+    enemy_family_caught: bool,
 ) -> Agent[AgentContext, str]:
     """Construct the Pydantic AI battle agent."""
     return Agent[AgentContext, str](
@@ -31,7 +35,13 @@ def build_battle_agent(
         name="battle_agent",
         deps_type=AgentContext,
         instructions=SYSTEM_PROMPT,
-        toolsets=[build_battle_toolset(context, battle_type)],
+        toolsets=[
+            build_battle_toolset(
+                context,
+                battle_type,
+                enemy_family_caught=enemy_family_caught,
+            )
+        ],
         capabilities=[AGENT_HOOKS],
         model_settings=OpenAIResponsesModelSettings(
             openai_reasoning_effort=REASONING_EFFORT,
@@ -49,9 +59,18 @@ async def run_battle(context: AgentContext) -> None:
     await context.complete_iteration()
     if not is_battle_handler_state(settlement.game_state):
         return
+    game_state = settlement.game_state
+    enemy_pokemon = game_state.battle.enemy_pokemon
     agent = build_battle_agent(
         context,
-        settlement.game_state.battle.battle_type,
+        game_state.battle.battle_type,
+        enemy_family_caught=(
+            enemy_pokemon is not None
+            and is_evolution_family_caught(
+                enemy_pokemon.pokedex_number,
+                game_state.player.pokedex_caught,
+            )
+        ),
     )
     try:
         async with agent.iter(

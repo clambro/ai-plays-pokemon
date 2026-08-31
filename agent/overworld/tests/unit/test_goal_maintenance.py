@@ -63,4 +63,9 @@ async def test_stale_goal_forces_one_update_then_restores_normal_tools(
     ]
     assert context.consume_control_handoff()
     complete_action.assert_awaited_once()
-    assert set(_toolset(context).tools) == {"press_buttons", "set_goal", "navigation"}
+    assert set(_toolset(context).tools) == {
+        "check_connection",
+        "press_buttons",
+        "set_goal",
+        "navigation",
+    }

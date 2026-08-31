@@ -50,14 +50,17 @@ def format_rolling_memory(memory: RollingMemory) -> str:
         return ""
 
     return (
-        "Here is your memory from prior to this point. The bracketed numbers are application "
-        "iteration numbers, with higher numbers representing more recent events. An entry "
-        "with one number contains the exact memory from that iteration. An entry with a range "
+        "Here is your memory from prior to this point. It is a fallible record of past "
+        "experiences and beliefs, not an authoritative account of the game; entries may contain "
+        "incomplete observations or mistaken conclusions. The bracketed numbers are application "
+        "iteration numbers, with higher numbers representing more recent events. An entry with "
+        "one number contains the uncompressed record from that iteration. An entry with a range "
         "is a compressed summary covering every iteration in that inclusive range, with older "
-        "history represented in progressively less detail. The current iteration is "
+        "history represented in progressively less detail. Repeated claims are not independent "
+        "confirmation. The current iteration is "
         f"{memory.current_block.iteration}. To give you a rough idea of the passage of time, "
         "each iteration takes a couple of seconds.\n"
-        "<memory>\n" + "\n".join(_format_memory_entry(entry) for entry in entries) + "\n</memory>"
+        "<memory>\n" + "\n\n".join(_format_memory_entry(entry) for entry in entries) + "\n</memory>"
     )
 
 
