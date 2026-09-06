@@ -9,7 +9,7 @@ from agent.formatting.memory import format_goals
 from agent.overworld.tools.set_goals.service import GoalChangeError
 from agent.overworld.tools.set_goals.service import set_goals as set_goals_service
 from agent.overworld.tools.utils import OverworldToolResult, complete_overworld_action
-from memory.goals import MAX_GOALS, MIN_GOALS
+from memory.goals import MAX_GOALS
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
@@ -23,19 +23,18 @@ def build_set_goals_tool(
     """Build the complete-list goal-setting tool."""
 
     async def set_goals(
-        goals: Annotated[list[str], Field(min_length=MIN_GOALS, max_length=MAX_GOALS)],
+        goals: Annotated[list[str | None], Field(min_length=MAX_GOALS, max_length=MAX_GOALS)],
     ) -> OverworldToolResult:
-        """Set the complete list of one to four goals.
+        """Replace your current goals using four slots, with null for unused slots.
 
         Pass the complete list, including any existing goals you want to keep.
         Omitted goals are removed. You may keep the list unchanged when its
         goals remain useful.
 
-        Goals are longer-term objectives or concerns worth remembering across
-        many decisions, not individual button presses or routine movement. Write
-        each goal in the first person and describe one specific, achievable
-        outcome. Keep distinct priorities in separate goals rather than
-        combining them, but do not add goals merely to fill every available slot.
+        Goals are specific, achievable objectives with clear completion conditions,
+        not ongoing play-style rules, individual button presses, or
+        routine movement. Write each goal in the imperative. Keep distinct priorities
+        separate, and do not add goals merely to fill available slots.
 
         Base goals only on current structured information, observed game text,
         or recorded memory. Do not invent locations, characters, items, or
@@ -47,14 +46,14 @@ def build_set_goals_tool(
         future decisions but do not need to determine your next action.
 
         Args:
-            goals: Complete list of one to four distinct, nonblank goals to keep.
+            goals: Exactly four entries, each a nonblank goal or null.
 
         Returns:
             Fresh screenshot and the complete revised goal list.
         """
         try:
             updated_goals = set_goals_service(
-                goals=goals,
+                goals=[goal for goal in goals if goal is not None],
                 iteration=context.state.iteration,
             )
         except GoalChangeError as error:

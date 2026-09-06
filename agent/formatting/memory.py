@@ -2,7 +2,6 @@
 
 from typing import TYPE_CHECKING
 
-from memory.goals import MAX_GOALS, MIN_GOALS
 from memory.rolling_memory.schemas import (
     CurrentMemoryBlock,
     MemorySummary,
@@ -20,18 +19,14 @@ def format_goals(goals: list[Goal]) -> str:
     """Format the agent's current goals for gameplay prompts."""
     out = "<goals_info>\n"
     out += (
-        "Here are the goals that you have set for yourself. Keep between"
-        f" {MIN_GOALS} and {MAX_GOALS} distinct goals at once. Goals are longer-term objectives or"
-        " concerns that are relevant to your progress and worth remembering. Keep them in mind"
-        " and generally work toward them as opportunities arise. When several distinct priorities"
-        " are worth remembering, record each separately. Goals can concern progression through"
-        " the current area, team development, healing or resupplying, or investigating something"
-        " you discovered. Do not use goals for individual button presses, routine movement, or"
-        " other short-lived tasks. Goals must come from current structured information, observed"
-        " game text, or recorded memory, never from assumptions about future game progression or"
-        " general Pokemon knowledge. Each goal should describe one specific, achievable outcome;"
-        " do not combine separate objectives into one broad goal or invent objectives merely to"
-        " fill all four slots. Goals are revisable plans; keep uncertain prerequisites explicitly"
+        "Here are the goals that you have set for yourself. Keep them in mind and generally"
+        " work toward them as opportunities arise. Goals are specific, achievable objectives"
+        " with clear completion conditions, not ongoing play-style rules. Write them in the"
+        " imperative and keep distinct priorities separate. Do not use goals for individual"
+        " button presses or routine movement. Goals must come from current structured information,"
+        " observed game text, or recorded memory, never from assumptions about future progression"
+        " or general Pokemon knowledge. Use null for unused slots instead of inventing objectives"
+        " to fill them. Goals are revisable plans; keep uncertain prerequisites explicitly"
         " uncertain and reassess them when new evidence contradicts the plan."
     )
     out += "\n<goals>\n"
@@ -41,7 +36,7 @@ def format_goals(goals: list[Goal]) -> str:
             for i, g in enumerate(goals)
         )
     else:
-        out += f"You don't have any active goals. Set {MIN_GOALS} to {MAX_GOALS} distinct goals."
+        out += "You don't have any active goals."
     out += "\n</goals>\n"
     out += "</goals_info>"
     return out
