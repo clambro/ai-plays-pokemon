@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from memory.goals import MAX_GOALS
+from memory.goals import MAX_GOALS, MIN_GOALS
 from memory.rolling_memory.schemas import (
     CurrentMemoryBlock,
     MemorySummary,
@@ -11,33 +11,37 @@ from memory.rolling_memory.schemas import (
 )
 
 if TYPE_CHECKING:
-    from memory.goals import Goals
+    from memory.goals import Goal
 
 type _MemoryEntry = CurrentMemoryBlock | RawMemoryBlock | MemorySummary
 
 
-def format_goals(goals: Goals) -> str:
+def format_goals(goals: list[Goal]) -> str:
     """Format the agent's current goals for gameplay prompts."""
     out = "<goals_info>\n"
     out += (
-        f"Here are the goals that you have set for yourself. You can keep up to {MAX_GOALS} goals"
-        " at once. Goals are longer-term objectives or concerns that are relevant to your progress"
-        " and worth remembering. Keep them in mind and generally work toward them as opportunities"
-        " arise. When several distinct priorities are worth remembering, record each separately."
-        " Goals can concern progression through the current area, team development, healing or"
-        " resupplying, or investigating something you discovered. Do not use goals for individual"
-        " button presses, routine movement, or other short-lived tasks. Goals must come from"
-        " current structured information, observed game text, or recorded memory, never from"
-        " assumptions about future game progression or general Pokemon knowledge."
+        "Here are the goals that you have set for yourself. Keep between"
+        f" {MIN_GOALS} and {MAX_GOALS} distinct goals at once. Goals are longer-term objectives or"
+        " concerns that are relevant to your progress and worth remembering. Keep them in mind"
+        " and generally work toward them as opportunities arise. When several distinct priorities"
+        " are worth remembering, record each separately. Goals can concern progression through"
+        " the current area, team development, healing or resupplying, or investigating something"
+        " you discovered. Do not use goals for individual button presses, routine movement, or"
+        " other short-lived tasks. Goals must come from current structured information, observed"
+        " game text, or recorded memory, never from assumptions about future game progression or"
+        " general Pokemon knowledge. Each goal should describe one specific, achievable outcome;"
+        " do not combine separate objectives into one broad goal or invent objectives merely to"
+        " fill all four slots. Goals are revisable plans; keep uncertain prerequisites explicitly"
+        " uncertain and reassess them when new evidence contradicts the plan."
     )
     out += "\n<goals>\n"
-    if goals.goals:
+    if goals:
         out += "\n".join(
             f"[{i}] {g.goal} (last updated at iteration {g.updated_at_iteration})"
-            for i, g in enumerate(goals.goals)
+            for i, g in enumerate(goals)
         )
     else:
-        out += "You don't have any active goals. You should have at least one."
+        out += f"You don't have any active goals. Set {MIN_GOALS} to {MAX_GOALS} distinct goals."
     out += "\n</goals>\n"
     out += "</goals_info>"
     return out

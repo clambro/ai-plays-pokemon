@@ -9,7 +9,7 @@ from agent.schemas import (
     PublicLog,
     ScriptedDisplacementObservation,
 )
-from memory.goals import Goals
+from memory.goals import Goal
 from memory.rolling_memory.schemas import RollingMemory
 
 
@@ -20,7 +20,7 @@ class AgentState(BaseModel):
     iteration: int = 0
     rolling_memory: RollingMemory = Field(default_factory=RollingMemory, exclude=True)
     public_log: PublicLog = Field(default_factory=PublicLog)
-    goals: Goals = Field(default_factory=Goals)
+    goals: list[Goal] = Field(default_factory=list)
     scripted_displacements: list[ScriptedDisplacementObservation] = Field(default_factory=list)
     connection_traversals: list[ConnectionTraversalObservation] = Field(default_factory=list)
     emulator_save_state: str | None = None

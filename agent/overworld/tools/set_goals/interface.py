@@ -1,4 +1,4 @@
-"""Pydantic AI interface for setting or clearing one goal."""
+"""Pydantic AI interface for setting the complete goal list."""
 
 from typing import TYPE_CHECKING, Annotated
 
@@ -6,30 +6,30 @@ from pydantic import Field
 from pydantic_ai import Tool
 
 from agent.formatting.memory import format_goals
-from agent.overworld.tools.set_goal.service import GoalChangeError
-from agent.overworld.tools.set_goal.service import set_goal as set_goal_service
+from agent.overworld.tools.set_goals.service import GoalChangeError
+from agent.overworld.tools.set_goals.service import set_goals as set_goals_service
 from agent.overworld.tools.utils import OverworldToolResult, complete_overworld_action
+from memory.goals import MAX_GOALS, MIN_GOALS
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
 
 
-def build_set_goal_tool(
+def build_set_goals_tool(
     context: AgentContext,
     *,
     end_turn_on_success: bool = False,
 ) -> Tool[AgentContext]:
-    """Build the indexed goal-setting tool."""
+    """Build the complete-list goal-setting tool."""
 
-    async def set_goal(
-        index: Annotated[int, Field(ge=0)],
-        goal: Annotated[str | None, Field(min_length=1)],
+    async def set_goals(
+        goals: Annotated[list[str], Field(min_length=MIN_GOALS, max_length=MAX_GOALS)],
     ) -> OverworldToolResult:
-        """Set or clear one longer-term goal.
+        """Set the complete list of one to four goals.
 
-        Pass goal text to replace an existing goal or append at the next unused
-        index. Pass null to remove an existing goal; later goals will shift down
-        to keep the list contiguous. The goal list can contain up to four goals.
+        Pass the complete list, including any existing goals you want to keep.
+        Omitted goals are removed. You may keep the list unchanged when its
+        goals remain useful.
 
         Goals are longer-term objectives or concerns worth remembering across
         many decisions, not individual button presses or routine movement. Write
@@ -43,34 +43,27 @@ def build_set_goal_tool(
         progression.
 
         Use this tool when an important priority is missing or when an existing
-        goal has changed, been completed, or become irrelevant. You may replace
-        a goal with the exact same text when a required review confirms that it
-        remains appropriate. Replace an outdated goal directly when another
-        priority should take its place; use null when it should simply be
-        removed. Goals guide future decisions but do not need to determine your
-        next action.
+        goal has changed, been completed, or become irrelevant. Goals guide
+        future decisions but do not need to determine your next action.
 
         Args:
-            index: Existing goal index, or the next unused index when appending.
-            goal: Complete goal text, or null to remove the indexed goal.
+            goals: Complete list of one to four distinct, nonblank goals to keep.
 
         Returns:
             Fresh screenshot and the complete revised goal list.
         """
         try:
-            goals = set_goal_service(
-                goals=context.state.goals,
-                index=index,
-                goal=goal,
+            updated_goals = set_goals_service(
+                goals=goals,
                 iteration=context.state.iteration,
             )
         except GoalChangeError as error:
             result = str(error)
         else:
-            context.state.goals = goals
+            context.state.goals = updated_goals
             if end_turn_on_success:
                 context.request_control_handoff()
-            result = f"Goals updated.\n\n{format_goals(goals)}"
+            result = f"Goals updated.\n\n{format_goals(updated_goals)}"
         return await complete_overworld_action(context, result)
 
-    return Tool(set_goal, require_parameter_descriptions=True)
+    return Tool(set_goals, require_parameter_descriptions=True)

@@ -11,7 +11,7 @@ from agent.overworld.tools.navigate.interface import build_navigation_tool
 from agent.overworld.tools.press_buttons.interface import (
     build_press_buttons_tool,
 )
-from agent.overworld.tools.set_goal.interface import build_set_goal_tool
+from agent.overworld.tools.set_goals.interface import build_set_goals_tool
 from agent.overworld.tools.sokoban_solver.interface import (
     build_sokoban_solver_tool,
 )
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from emulator.game_state import GameState
     from overworld_map.schemas import OverworldMap
 
-_FORCED_GOAL_UPDATE_INTERVAL = 300
+_FORCED_GOAL_REVIEW_INTERVAL = 200
 
 
 def build_overworld_toolset(
@@ -39,17 +39,17 @@ def build_overworld_toolset(
     game_state: GameState,
 ) -> FunctionToolset[AgentContext]:
     """Build the fixed toolset available for the current overworld state."""
-    latest_goal_update = max(
-        (goal.updated_at_iteration for goal in context.state.goals.goals),
+    last_goal_review = min(
+        (goal.updated_at_iteration for goal in context.state.goals),
         default=0,
     )
-    if context.state.iteration - latest_goal_update >= _FORCED_GOAL_UPDATE_INTERVAL:
-        return FunctionToolset(tools=[build_set_goal_tool(context, end_turn_on_success=True)])
+    if context.state.iteration - last_goal_review >= _FORCED_GOAL_REVIEW_INTERVAL:
+        return FunctionToolset(tools=[build_set_goals_tool(context, end_turn_on_success=True)])
 
     tools: list[Tool[AgentContext]] = [
         build_check_connection_tool(context, game_state),
         build_press_buttons_tool(context),
-        build_set_goal_tool(context),
+        build_set_goals_tool(context),
     ]
     if not game_state.player.is_biking:
         tools.append(build_navigation_tool(context, current_map))

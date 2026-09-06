@@ -18,8 +18,6 @@ if TYPE_CHECKING:
     from agent.overworld.map_view import CurrentMapView
     from emulator.game_state import GameState
 
-_STALE_GOAL_ITERATIONS = 100
-
 OVERWORLD_MAP_PROMPT = f"""
 <map_info>
 Map name: {{map_name}}
@@ -136,8 +134,7 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 
 The first Pokemon in the party usually receives most battle experience. Use the party order deliberately, including making another useful Pokemon the lead when it needs training.
 
-Regularly reflect on what you are trying to accomplish and use set_goal to keep your goals useful and current.
-{goal_warning}
+Regularly reflect on what you are trying to accomplish and use set_goals to keep your goals useful and current.
 
 The following accessible coordinates are adjacent to unseen terrain on the current map. Fully revealing the current map is a high priority. In general, handle newly reachable unvisited stationary sprites before continuing to reveal unseen terrain, but use judgment when a specific objective should take precedence. Exploring these candidates should generally be prioritized before leaving the map, backtracking, or pursuing objectives elsewhere (unless you have a specific other goal in mind or need to heal, of course).
 <exploration_candidates>
@@ -237,18 +234,9 @@ def build_overworld_decision_prompt(
         format_inventory_info(game_state),
         format_pc_info(game_state),
     )
-    goal_warning = ""
-    if context.state.goals.goals and all(
-        context.state.iteration - goal.updated_at_iteration > _STALE_GOAL_ITERATIONS
-        for goal in context.state.goals.goals
-    ):
-        goal_warning = (
-            "Your goals have not been updated in over 100 iterations. You may want to review them."
-        )
     return OVERWORLD_DECISION_PROMPT.format(
         state="\n\n".join(section for section in sections if section),
         exploration_candidates=exploration_candidates,
         map_boundaries=map_boundaries,
         biking_warning=biking_warning,
-        goal_warning=goal_warning,
     )

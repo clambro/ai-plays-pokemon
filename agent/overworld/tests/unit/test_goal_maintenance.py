@@ -7,9 +7,9 @@ import pytest
 
 from agent.context import AgentContext
 from agent.overworld.tools import registry
-from agent.overworld.tools.set_goal import interface as goal_interface
+from agent.overworld.tools.set_goals import interface as goal_interface
 from agent.state import AgentState
-from memory.goals import Goal, Goals
+from memory.goals import Goal
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -34,18 +34,18 @@ def _toolset(context: AgentContext) -> FunctionToolset[AgentContext]:
 
 
 @pytest.mark.unit
-async def test_stale_goal_forces_one_update_then_restores_normal_tools(
+async def test_stale_goals_allow_unchanged_review_then_restore_normal_tools(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Require one successful goal call after 300 iterations, then exit maintenance."""
-    review_iteration = 300
-    goal_text = "I will reach the next town."
+    """An unchanged full-list review satisfies required goal maintenance."""
+    review_iteration = 200
+    goal_texts = ["I will reach the next town.", "I will investigate the locked building."]
     context = AgentContext(
         state=AgentState(
             folder=tmp_path,
             iteration=review_iteration,
-            goals=Goals(goals=[Goal(goal=goal_text, updated_at_iteration=0)]),
+            goals=[Goal(goal=goal, updated_at_iteration=0) for goal in goal_texts],
         ),
         emulator=MagicMock(),
     )
@@ -53,19 +53,19 @@ async def test_stale_goal_forces_one_update_then_restores_normal_tools(
     monkeypatch.setattr(goal_interface, "complete_overworld_action", complete_action)
 
     forced_toolset = _toolset(context)
-    assert set(forced_toolset.tools) == {"set_goal"}
+    assert set(forced_toolset.tools) == {"set_goals"}
 
-    set_goal = cast("_GoalToolFunction", forced_toolset.tools["set_goal"].function)
-    await set_goal(index=0, goal=goal_text)
+    set_goals = cast("_GoalToolFunction", forced_toolset.tools["set_goals"].function)
+    await set_goals(goals=goal_texts)
 
-    assert context.state.goals.goals == [
-        Goal(goal=goal_text, updated_at_iteration=review_iteration)
+    assert context.state.goals == [
+        Goal(goal=goal, updated_at_iteration=review_iteration) for goal in goal_texts
     ]
     assert context.consume_control_handoff()
     complete_action.assert_awaited_once()
     assert set(_toolset(context).tools) == {
         "check_connection",
         "press_buttons",
-        "set_goal",
+        "set_goals",
         "navigation",
     }

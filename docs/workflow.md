@@ -43,7 +43,7 @@ flowchart LR
         item["use_item"]
         swap["swap_first_pokemon"]
         sokoban["sokoban_solver"]
-        set_goal["set_goal"]
+        set_goals["set_goals"]
     end
 
     choice --> navigate
@@ -51,14 +51,14 @@ flowchart LR
     choice --> item
     choice --> swap
     choice --> sokoban
-    choice --> set_goal
+    choice --> set_goals
 
     navigate --> settle["Settle routine dialog<br/>and return a fresh result"]
     buttons --> settle
     item --> settle
     swap --> settle
     sokoban --> settle
-    set_goal --> settle
+    set_goals --> settle
 
     settle --> continue{"Handle result"}
     continue -->|"Still in place and in the overworld"| agent
@@ -93,9 +93,9 @@ This lets the model swap its first Pokémon with another Pokémon in the party. 
 
 This was my least favourite tool to code because it is so complicated and we only need it in two areas, one of which is optional. "Sokoban" puzzles, named for the classic Japanese video game that popularized them, are the proper name for the boulder-pushing puzzles in Victory Road and the Seafoam Islands. Watching the AI struggle through them itself would be a nightmare, so we solve them automatically with a bounded search. This problem is NP-hard in general, but the puzzles found in-game are simple enough for us to brute force quickly.
 
-#### Set Goal
+#### Set Goals
 
-This tool lets the agent add, replace, or remove one of its longer-term goals. The agent is free to leave the list alone when its existing goals are still useful.
+This tool lets the agent update its longer-term goals. The agent is free to leave the list alone when its existing goals are still useful.
 
 ### Handle Result
 
