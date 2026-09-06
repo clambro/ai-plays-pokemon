@@ -302,12 +302,20 @@ def get_spinner_destination(pos: Coords, tiles: np.ndarray) -> Coords | None:
 
 def get_spinner_path(pos: Coords, tiles: np.ndarray) -> tuple[Coords, ...] | None:
     """Get every coordinate traversed from a spinner to its revealed destination."""
+    height, width = tiles.shape
+    if not (0 <= pos.row < height and 0 <= pos.col < width):
+        return None
+
     path = [pos]
     tile = tiles[pos.row, pos.col]
+    if tile not in _SPINNER_DIRECTION_MAP:
+        return None
     direction = _SPINNER_DIRECTION_MAP[tile]
 
     while True:
         new_pos = pos + direction
+        if not (0 <= new_pos.row < height and 0 <= new_pos.col < width):
+            return None
         new_tile = tiles[new_pos.row, new_pos.col]
         if new_tile == AsciiTile.UNSEEN:
             return None

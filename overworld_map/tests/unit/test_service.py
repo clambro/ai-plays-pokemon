@@ -26,7 +26,7 @@ from overworld_map.service import (
     record_observed_map_boundary,
     update_overworld_map,
 )
-from overworld_map.views import get_current_map_tiles, get_navigation_tiles
+from overworld_map.views import get_composed_map_tiles, get_navigation_tiles
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -202,7 +202,7 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
         ),
     )
 
-    assert get_current_map_tiles(current_map, game_state).tolist() == [
+    assert get_composed_map_tiles(current_map, game_state).tolist() == [
         [AsciiTile.PLAYER, AsciiTile.SPRITE, AsciiTile.FREE]
     ]
     assert get_navigation_tiles(current_map, game_state).tolist() == [
@@ -211,7 +211,7 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
 
     sprite.coords = Coords(row=0, col=2)
     player.coords = Coords(row=0, col=1)
-    assert get_current_map_tiles(current_map, game_state).tolist() == [
+    assert get_composed_map_tiles(current_map, game_state).tolist() == [
         [AsciiTile.FREE, AsciiTile.PLAYER, AsciiTile.SPRITE]
     ]
 

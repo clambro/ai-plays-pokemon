@@ -54,11 +54,11 @@ SURF_MAP = [list("∙≈∙")]
 SPINNER_MAP = [
     list(row)
     for row in [
-        "∙∙▓\u2228∙",
-        "\u2228▓∙\u2228\u2039",
+        "∙∙▓∨∙",  # noqa: RUF001
+        "∨▓∙∨‹",  # noqa: RUF001
         "∙∙∙░░",
-        "∙●\u2039░∙",
-        "\u203a∙Λ∙∙",
+        "∙●‹░∙",  # noqa: RUF001
+        "›∙Λ∙∙",  # noqa: RUF001
         "∙▓∙∙∙",
     ]
 ]
@@ -203,6 +203,17 @@ def test_get_accessible_coords_spinner() -> None:
         "01000",
         "00000",
     ]
+
+
+@pytest.mark.unit
+def test_get_spinner_path_is_unresolved_when_it_leaves_the_map() -> None:
+    """Treat a malformed off-map spinner path as unresolved instead of indexing past the map."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.terrain = [list("›∙")]  # noqa: RUF001
+
+    path = navigation.get_spinner_path(Coords(row=0, col=0), map_data.terrain_ndarray)
+
+    assert path is None
 
 
 @pytest.mark.unit

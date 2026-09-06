@@ -153,11 +153,63 @@ def test_object_overlay_provides_reachable_interaction_position() -> None:
 
     map_view = build_current_map_view(overworld_map, game_state)
 
-    assert map_view.navigation_tiles[1, 2] == AsciiTile.OBJECT
+    assert map_view.routing_tiles[1, 2] == AsciiTile.OBJECT
     assert len(map_view.object_interaction_positions[0]) == 1
     assert map_view.object_interaction_positions[0][0].coords == Coords(row=2, col=2)
     assert map_view.object_interaction_positions[0][0].direction == FacingDirection.UP
     assert overworld_map.terrain[1][2] == AsciiTile.FREE
+
+
+@pytest.mark.unit
+def test_spinner_routing_uses_terrain_under_pikachu_overlay() -> None:
+    """Resolve spinner paths from terrain even when Pikachu covers the stop tile."""
+    overworld_map = OverworldMap(
+        id=MapId.ROCKET_HIDEOUT_B3F,
+        terrain=[
+            list("▓▓▓▓▓"),
+            list("▓∙›∙●"),  # noqa: RUF001
+            list("▓∙∙∙▓"),
+            list("▓▓▓▓▓"),
+        ],
+        blockages={},
+        known_sprite_ids=set(),
+        sprite_interactions={},
+        known_sign_ids=set(),
+        sign_interactions={},
+        known_object_ids=set(),
+        object_interactions={},
+        known_warp_ids=set(),
+        warp_usage_iterations={},
+        known_map_boundaries=(),
+        known_map_ids=frozenset(),
+        north_connection=None,
+        south_connection=None,
+        east_connection=None,
+        west_connection=None,
+    )
+    spinner_stop = Coords(row=1, col=4)
+    game_state = cast(
+        "GameState",
+        SimpleNamespace(
+            sprites={},
+            warps={},
+            signs={},
+            objects={},
+            pikachu=SimpleNamespace(is_rendered=True, coords=spinner_stop),
+            player=SimpleNamespace(coords=Coords(row=2, col=2), is_surfing=False),
+            map=SimpleNamespace(),
+            get_hm_tiles=list,
+        ),
+    )
+
+    map_view = build_current_map_view(overworld_map, game_state)
+
+    display_row = spinner_stop.row - map_view.display_origin.row
+    display_col = spinner_stop.col - map_view.display_origin.col
+    assert map_view.routing_tiles[spinner_stop.row, spinner_stop.col] == AsciiTile.SPINNER_STOP
+    assert map_view.display_tiles[display_row, display_col] == AsciiTile.PIKACHU
+    assert overworld_map.terrain[spinner_stop.row][spinner_stop.col] == AsciiTile.SPINNER_STOP
+    assert spinner_stop in map_view.reachable_coords
 
 
 @pytest.mark.unit

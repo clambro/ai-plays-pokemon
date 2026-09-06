@@ -12,22 +12,22 @@ if TYPE_CHECKING:
     from overworld_map.schemas import OverworldMap
 
 
-def get_navigation_tiles(current_map: OverworldMap, game_state: GameState) -> np.ndarray:
+def get_navigation_tiles(overworld_map: OverworldMap, game_state: GameState) -> np.ndarray:
     """Build traversability from terrain and current blocking entities."""
-    tiles = current_map.terrain_ndarray.copy()
+    tiles = overworld_map.terrain_ndarray.copy()
 
-    for entity_id in current_map.known_sprite_ids:
+    for entity_id in overworld_map.known_sprite_ids:
         sprite = game_state.sprites.get(entity_id)
         if sprite is not None and _contains(tiles, sprite.coords):
             tiles[sprite.coords.row, sprite.coords.col] = AsciiTile.SPRITE
 
-    for entity_id in current_map.known_sign_ids:
+    for entity_id in overworld_map.known_sign_ids:
         sign = game_state.signs.get(entity_id)
         if sign is not None and _contains(tiles, sign.coords):
             tiles[sign.coords.row, sign.coords.col] = AsciiTile.SIGN
 
     # A Cerulean Trashed House exit is both a sign and a warp; keep the warp visible for routing.
-    for entity_id in current_map.known_warp_ids:
+    for entity_id in overworld_map.known_warp_ids:
         warp = game_state.warps.get(entity_id)
         if (
             warp is not None
@@ -36,7 +36,7 @@ def get_navigation_tiles(current_map: OverworldMap, game_state: GameState) -> np
         ):
             tiles[warp.coords.row, warp.coords.col] = AsciiTile.WARP
 
-    for entity_id in current_map.known_object_ids:
+    for entity_id in overworld_map.known_object_ids:
         obj = game_state.objects.get(entity_id)
         if obj is not None and _contains(tiles, obj.coords):
             tiles[obj.coords.row, obj.coords.col] = AsciiTile.OBJECT
@@ -44,9 +44,9 @@ def get_navigation_tiles(current_map: OverworldMap, game_state: GameState) -> np
     return tiles
 
 
-def get_current_map_tiles(current_map: OverworldMap, game_state: GameState) -> np.ndarray:
-    """Compose the current player and discovered entities over explored terrain."""
-    tiles = get_navigation_tiles(current_map, game_state)
+def get_composed_map_tiles(overworld_map: OverworldMap, game_state: GameState) -> np.ndarray:
+    """Compose the player and every discovered entity over persistent terrain."""
+    tiles = get_navigation_tiles(overworld_map, game_state)
 
     if game_state.pikachu.is_rendered and _contains(tiles, game_state.pikachu.coords):
         tiles[game_state.pikachu.coords.row, game_state.pikachu.coords.col] = AsciiTile.PIKACHU

@@ -45,19 +45,19 @@ class NavigationService:
         game_state = await self.emulator.get_game_state()
         hm_tiles = game_state.get_hm_tiles()
         map_view = build_current_map_view(self.current_map, game_state)
-        navigation_tiles = map_view.navigation_tiles
+        routing_tiles = map_view.routing_tiles
         if error := self._get_target_error(
             game_state,
             coords,
             map_view.reachable_coords,
-            navigation_tiles,
+            routing_tiles,
         ):
             return self._record_result(error)
 
         path = navigation.calculate_path_to_target(
             game_state.player.coords,
             coords,
-            navigation_tiles,
+            routing_tiles,
             self.current_map.blockages,
             hm_tiles,
         )
@@ -83,7 +83,7 @@ class NavigationService:
                 next_tile in AsciiTile.get_spinner_tiles()
                 and navigation.get_spinner_destination(
                     next_coords,
-                    navigation_tiles,
+                    routing_tiles,
                 )
                 is None
             )
@@ -161,7 +161,7 @@ class NavigationService:
         game_state: GameState,
         coords: Coords,
         accessible_coords: frozenset[Coords],
-        navigation_tiles: np.ndarray,
+        routing_tiles: np.ndarray,
     ) -> str | None:
         """Return why the target coordinates are invalid, if applicable."""
         if game_state.player.is_biking:
@@ -182,7 +182,7 @@ class NavigationService:
             game_state,
             coords,
             accessible_coords,
-            navigation_tiles,
+            routing_tiles,
         )
 
     async def _handle_pikachu(self, button: Button) -> bool:
@@ -387,10 +387,10 @@ def _get_map_target_error(
     game_state: GameState,
     coords: Coords,
     accessible_coords: frozenset[Coords],
-    navigation_tiles: np.ndarray,
+    routing_tiles: np.ndarray,
 ) -> str | None:
     """Explain why an in-bounds map coordinate is not a valid local target."""
-    target_tile = navigation_tiles[coords.row, coords.col]
+    target_tile = routing_tiles[coords.row, coords.col]
     if target_tile == AsciiTile.SPRITE:
         return (
             f"Navigation failed. The target coordinates {coords} are occupied by a sprite."
