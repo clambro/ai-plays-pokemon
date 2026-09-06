@@ -132,7 +132,7 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 
 {state}
 
-The first Pokemon in the party usually receives most battle experience. Use the party order deliberately, including making another useful Pokemon the lead when it needs training.
+The first Pokemon in the party usually receives most battle experience. Rotate the Pokemon you intend to develop into the lead for suitable encounters during normal progression, considering their actual moves, matchups, and ability to contribute. Notice when the same few Pokemon receive all the experience and give the others useful opportunities. If a teammate keeps sitting unused, find a useful role for it or reconsider its place in the party.
 
 Regularly reflect on what you are trying to accomplish and use set_goals to keep your goals useful and current.
 
