@@ -136,7 +136,7 @@ The first Pokemon in the party usually receives most battle experience. Rotate t
 
 Regularly reflect on what you are trying to accomplish and use set_goals to keep your goals useful and current.
 
-The following accessible coordinates are adjacent to unseen terrain on the current map. Fully revealing the current map is a high priority. In general, handle newly reachable unvisited stationary sprites before continuing to reveal unseen terrain, but use judgment when a specific objective should take precedence. Exploring these candidates should generally be prioritized before leaving the map, backtracking, or pursuing objectives elsewhere (unless you have a specific other goal in mind or need to heal, of course).
+Exploring the following accessible coordinates can reveal unseen terrain on the current map. Fully revealing the current map is a high priority. In general, handle newly reachable unvisited stationary sprites before continuing to reveal unseen terrain, but use judgment when a specific objective should take precedence. Exploring these candidates should generally be prioritized before leaving the map, backtracking, or pursuing objectives elsewhere (unless you have a specific other goal in mind or need to heal, of course).
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>

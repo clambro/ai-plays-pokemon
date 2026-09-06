@@ -213,6 +213,66 @@ def test_spinner_routing_uses_terrain_under_pikachu_overlay() -> None:
 
 
 @pytest.mark.unit
+def test_unresolved_spinner_shows_known_path_without_exposing_disconnected_terrain() -> None:
+    """Show a spinner's revealed turns and unknown frontier without assuming its destination."""
+    overworld_map = OverworldMap(
+        id=MapId.ROCKET_HIDEOUT_B3F,
+        terrain=[
+            list("▓▓▓▓▓▓▓"),
+            list("▓∙›∙∨▓▓"),  # noqa: RUF001
+            list("▓▓▓▓∙▓▓"),
+            list("▓▓▓▓░▓▓"),
+            list("▓▓▓▓●▓▓"),
+            list("▓▓▓▓▓▓▓"),
+        ],
+        blockages={},
+        known_sprite_ids=set(),
+        sprite_interactions={},
+        known_sign_ids=set(),
+        sign_interactions={},
+        known_object_ids=set(),
+        object_interactions={},
+        known_warp_ids=set(),
+        warp_usage_iterations={},
+        known_map_boundaries=(),
+        known_map_ids=frozenset(),
+        north_connection=None,
+        south_connection=None,
+        east_connection=None,
+        west_connection=None,
+    )
+    start = Coords(row=1, col=1)
+    entry = Coords(row=1, col=2)
+    game_state = cast(
+        "GameState",
+        SimpleNamespace(
+            sprites={},
+            warps={},
+            signs={},
+            objects={},
+            pikachu=SimpleNamespace(is_rendered=False),
+            player=SimpleNamespace(coords=start, is_surfing=False),
+            map=SimpleNamespace(),
+            get_hm_tiles=list,
+        ),
+    )
+
+    map_view = build_current_map_view(overworld_map, game_state)
+
+    assert map_view.exploration_candidates == (entry,)
+    assert map_view.reachable_coords == frozenset({start, entry})
+    for row, col in ((1, 2), (1, 3), (1, 4), (2, 4), (3, 4)):
+        assert Coords(row=row, col=col) in map_view.visible_coords
+        assert (
+            map_view.display_tiles[
+                row - map_view.display_origin.row, col - map_view.display_origin.col
+            ]
+            == overworld_map.terrain[row][col]
+        )
+    assert Coords(row=4, col=4) not in map_view.visible_coords
+
+
+@pytest.mark.unit
 def test_sprite_notes_include_only_reachable_and_counter_interactable_sprites() -> None:
     """Expose a disconnected sprite only when the ROM permits talking across its counter."""
     overworld_map = OverworldMap(

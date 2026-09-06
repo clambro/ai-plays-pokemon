@@ -83,3 +83,31 @@ def test_connection_check_lists_only_connections_in_the_arrival_component(
         tuple((boundary.row, boundary.col) for boundary in group) for group in boundary_groups
     ) == (((1, 2), (2, 3)),)
     assert has_unexplored_terrain is expected_unexplored_terrain
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("last_tile", "expected_unexplored_terrain"),
+    [("░", True), ("●", False)],
+)
+def test_connection_check_recognizes_unresolved_spinner_exploration(
+    last_tile: str,
+    *,
+    expected_unexplored_terrain: bool,
+) -> None:
+    """A spinner leading into unseen terrain keeps its arrival component explorable."""
+    map_memory = MapMemoryRead(
+        map_id=MapId.ROCKET_HIDEOUT_B3F,
+        terrain=f"▓▓▓▓▓▓▓\n▓∙›∙∙{last_tile}▓\n▓▓▓▓▓▓▓",  # noqa: RUF001
+        blockages={},
+    )
+
+    _, _, has_unexplored_terrain = get_connection_component(
+        arrival_coords=Coords(row=1, col=1),
+        warps=[],
+        boundaries=[],
+        map_memory=map_memory,
+        hm_tiles=[],
+    )
+
+    assert has_unexplored_terrain is expected_unexplored_terrain
