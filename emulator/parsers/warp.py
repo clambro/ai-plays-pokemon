@@ -14,10 +14,9 @@ from emulator.parsers.map_collision import read_map_collision_tile
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
 
-_MAP_ID_ADDRESS = 0xD3AB
+    from emulator.parsers.map import Map
+
 _TILESET_ID_ADDRESS = 0xD3B4
-_MAP_HEIGHT_ADDRESS = 0xD571
-_MAP_WIDTH_ADDRESS = 0xD572
 _LAST_MAP_ID_ADDRESS = 0xD3B2
 _WARP_COUNT_ADDRESS = 0xD3FB
 _WARP_ENTRIES_ADDRESS = 0xD3FC
@@ -73,7 +72,7 @@ def parse_warp_transition_memory(mem: PyBoyMemoryView) -> WarpTransitionMemory:
     )
 
 
-def parse_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
+def parse_warps(mem: PyBoyMemoryView, map_state: Map) -> dict[int, Warp]:
     """Parse actionable normal warps on the current map.
 
     Each four-byte record remains independent. Records that the current map's
@@ -81,11 +80,11 @@ def parse_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
 
     Args:
         mem: Current PyBoy memory view.
+        map_state: Map dimensions and terrain collision rules from the same snapshot.
 
     Returns:
         Actionable warps keyed by their zero-based source-map index.
     """
-    map_id = MapId(mem[_MAP_ID_ADDRESS])
     try:
         tileset = Tileset(mem[_TILESET_ID_ADDRESS])
     except ValueError:
@@ -97,7 +96,7 @@ def parse_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
         activation = _resolve_activation(
             mem,
             coords,
-            map_id=map_id,
+            map_state=map_state,
             tileset=tileset,
         )
         if activation is None:
@@ -106,7 +105,7 @@ def parse_warps(mem: PyBoyMemoryView) -> dict[int, Warp]:
         destination = _resolve_destination_map(
             mem,
             mem[base + 3],
-            source_map_id=map_id,
+            source_map_id=map_state.id,
             source_warp_index=index,
         )
         warps[index] = Warp(
@@ -229,33 +228,33 @@ def _resolve_activation(
     mem: PyBoyMemoryView,
     coords: Coords,
     *,
-    map_id: MapId,
+    map_state: Map,
     tileset: Tileset,
 ) -> WarpActivation | None:
     """Return one working activation input for a warp record."""
-    if read_map_collision_tile(mem, coords) in _WARP_TILE_IDS[tileset]:
+    if not (0 <= coords.row < map_state.height and 0 <= coords.col < map_state.width):
+        return None
+    standing_tile = read_map_collision_tile(mem, coords)
+    if standing_tile is None:
+        return None
+    if standing_tile in _WARP_TILE_IDS[tileset]:
         return WarpActivation.STEP_ON
 
-    if _uses_map_edge_activation(map_id, tileset):
-        height = mem[_MAP_HEIGHT_ADDRESS]
-        width = mem[_MAP_WIDTH_ADDRESS]
-        return next(
-            (
-                activation
-                for activation, is_outward in (
-                    (WarpActivation.UP, coords.row == 0),
-                    (WarpActivation.DOWN, coords.row == height - 1),
-                    (WarpActivation.LEFT, coords.col == 0),
-                    (WarpActivation.RIGHT, coords.col == width - 1),
-                )
-                if is_outward
-            ),
-            None,
-        )
-
+    uses_map_edge = _uses_map_edge_activation(map_state.id, tileset)
     for activation, offset in _DIRECTION_OFFSETS.items():
-        tile = read_map_collision_tile(mem, coords + offset)
-        if _is_directional_warp_tile(tile, activation, map_id):
+        front = coords + offset
+        tile = read_map_collision_tile(mem, front)
+        # From a standing warp, the ROM checks activation only after a collision.
+        # A walkable tile can still collide with the standing tile as a blocked pair.
+        if tile is None or (
+            tile in map_state.walkable_tiles
+            and frozenset((standing_tile, tile)) not in map_state.collision_pairs
+        ):
+            continue
+        if uses_map_edge:
+            if not (0 <= front.row < map_state.height and 0 <= front.col < map_state.width):
+                return activation
+        elif _is_directional_warp_tile(tile, activation, map_state.id):
             return activation
     return None
 

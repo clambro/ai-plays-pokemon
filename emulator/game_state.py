@@ -67,7 +67,7 @@ class GameState:
             map=map_state,
             sprites=parse_sprites(mem),
             pikachu=parse_pikachu_sprite(mem),
-            warps=parse_warps(mem),
+            warps=parse_warps(mem, map_state),
             warp_transition=parse_warp_transition_memory(mem),
             signs=parse_signs(mem),
             objects=parse_static_objects(mem, map_state.id),
