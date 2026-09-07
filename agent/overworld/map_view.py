@@ -8,7 +8,7 @@ import numpy as np
 from agent.overworld import navigation
 from common.enums import AsciiTile, FacingDirection
 from common.schemas import Coords
-from overworld_map.views import get_composed_map_tiles
+from overworld_map.views import get_composed_map_tiles, get_navigation_tiles
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -46,7 +46,10 @@ def build_current_map_view(
     """Build the current reachable region using the shared overworld traversal rules."""
     persistent_tiles = overworld_map.terrain_ndarray
     composed_tiles = get_composed_map_tiles(overworld_map, game_state)
-    routing_tiles = composed_tiles.copy()
+    routing_tiles = get_navigation_tiles(overworld_map, game_state)
+    # Allow departure from the starting warp without hiding transitions beneath Pikachu.
+    player_coords = game_state.player.coords
+    routing_tiles[player_coords.row, player_coords.col] = AsciiTile.PLAYER
     spinner_types = [*AsciiTile.get_spinner_tiles(), AsciiTile.SPINNER_STOP]
     # Entity overlays must not hide directional or stop tiles from spinner tracing.
     spinner_mask = np.isin(persistent_tiles, spinner_types)
