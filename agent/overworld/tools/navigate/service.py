@@ -61,13 +61,6 @@ async def navigate(
 
     starting_map_id = current_map.id
     dialogs: list[str] = []
-    if not await _handle_pikachu(emulator, path[0]):
-        game_state = await emulator.get_game_state()
-        return _record_result(
-            rolling_memory,
-            _get_interrupted_result(game_state, coords),
-        )
-    game_state = await emulator.get_game_state()
     for button in path:
         next_tile = _get_next_tile(current_map, button, game_state)
         next_coords = game_state.player.coords + _BUTTON_OFFSETS[button]
@@ -84,18 +77,17 @@ async def navigate(
                 iteration, emulator, current_map, button, coords, game_state
             )
             return _record_result(rolling_memory, result, dialogs=dialogs)
+        prev_pos = game_state.player.coords
         control_left_overworld = False
         if next_tile in hm_tiles:
-            dialog, boundary = await _handle_hm_use(emulator, button, game_state)
+            dialog, boundary, game_state = await _handle_hm_use(emulator, button, game_state)
             control_left_overworld = boundary != ControlBoundary.OVERWORLD_READY
             if dialog:
                 dialogs.append(dialog)
         else:
-            control_result = await _press_navigation_step(emulator, button, game_state)
+            control_result, game_state = await _press_navigation_step(emulator, button, game_state)
             control_left_overworld = control_result.boundary != ControlBoundary.OVERWORLD_READY
 
-        prev_pos = game_state.player.coords
-        game_state = await emulator.get_game_state()
         result = (
             _get_interrupted_result(game_state, coords)
             if control_left_overworld
@@ -128,7 +120,7 @@ async def _explore_spinner(
 ) -> str:
     """Traverse an unresolved spinner, record its path, and report its destination."""
     spinner_start = game_state.player.coords
-    control_result = await _press_navigation_step(
+    control_result, game_state = await _press_navigation_step(
         emulator,
         button,
         game_state,
@@ -146,7 +138,6 @@ async def _explore_spinner(
             )
             previous_observation = observation_key
 
-    game_state = await emulator.get_game_state()
     if game_state.player.coords == spinner_start:
         return f"My navigation to {target} was interrupted at {game_state.player.coords}."
     return (
@@ -185,47 +176,6 @@ def _get_target_error(
     )
 
 
-async def _handle_pikachu(emulator: Emulator, button: Button) -> bool:
-    """Check if Pikachu is in the way and face it if so.
-
-    Pikachu can block your path on the very first step of navigation if you are not facing it
-    when you try to move.
-    """
-    game_state = await emulator.get_game_state()
-    if not game_state.pikachu.is_rendered:
-        return True
-
-    player_pos = game_state.player.coords
-    facing = game_state.player.direction
-    pikachu_pos = game_state.pikachu.coords
-    needs_pikachu_turn = (
-        (
-            button == Button.UP
-            and player_pos.row == pikachu_pos.row + 1
-            and facing != FacingDirection.UP
-        )
-        or (
-            button == Button.DOWN
-            and player_pos.row == pikachu_pos.row - 1
-            and facing != FacingDirection.DOWN
-        )
-        or (
-            button == Button.LEFT
-            and player_pos.col == pikachu_pos.col + 1
-            and facing != FacingDirection.LEFT
-        )
-        or (
-            button == Button.RIGHT
-            and player_pos.col == pikachu_pos.col - 1
-            and facing != FacingDirection.RIGHT
-        )
-    )
-    if not needs_pikachu_turn:
-        return True
-    control_result, _ = await _press_and_record_boundary(emulator, button, game_state)
-    return control_result.boundary == ControlBoundary.OVERWORLD_READY
-
-
 def _get_next_tile(current_map: OverworldMap, button: Button, game_state: GameState) -> AsciiTile:
     """Get the next tile type that the player will move to."""
     tile_arr = current_map.terrain_ndarray
@@ -245,57 +195,63 @@ async def _press_navigation_step(
     game_state: GameState,
     *,
     observe_steps: bool = False,
-) -> ControlResult:
-    """Complete one movement step, including a required turn or Pikachu yield."""
+) -> tuple[ControlResult, GameState]:
+    """Complete one movement step, including turning or Pikachu yielding, and return its state."""
+    desired_direction = _BUTTON_DIRECTIONS[button]
+    if game_state.player.direction != desired_direction:
+        result, observed_state = await _press_and_record_boundary(
+            emulator,
+            button,
+            game_state,
+            observe_steps=observe_steps,
+        )
+        if (
+            result.boundary != ControlBoundary.OVERWORLD_READY
+            or observed_state.player.coords != game_state.player.coords
+            or observed_state.player.direction != desired_direction
+        ):
+            return result, observed_state
+        game_state = observed_state
+
+    pikachu_was_ahead = (
+        game_state.pikachu.is_rendered
+        and game_state.player.coords + _BUTTON_OFFSETS[button] == game_state.pikachu.coords
+    )
     result, observed_state = await _press_and_record_boundary(
         emulator,
         button,
         game_state,
         observe_steps=observe_steps,
     )
-    if result.boundary != ControlBoundary.OVERWORLD_READY:
-        return result
-
-    desired_direction = _BUTTON_DIRECTIONS[button]
-    pikachu_was_ahead = (
-        game_state.pikachu.is_rendered
-        and game_state.player.coords + _BUTTON_OFFSETS[button] == game_state.pikachu.coords
-    )
-    if game_state.player.direction == desired_direction and not pikachu_was_ahead:
-        return result
-
-    if observed_state.player.coords != game_state.player.coords:
-        return result
-
-    turned_without_moving = (
-        game_state.player.direction != desired_direction
-        and observed_state.player.direction == desired_direction
-    )
-    if turned_without_moving or pikachu_was_ahead:
-        result, _ = await _press_and_record_boundary(
+    if (
+        result.boundary == ControlBoundary.OVERWORLD_READY
+        and observed_state.player.coords == game_state.player.coords
+        and pikachu_was_ahead
+    ):
+        result, observed_state = await _press_and_record_boundary(
             emulator,
             button,
             observed_state,
             observe_steps=observe_steps,
         )
-    return result
+    return result, observed_state
 
 
 async def _handle_hm_use(
     emulator: Emulator,
     button: Button,
     game_state: GameState,
-) -> tuple[str, ControlBoundary]:
-    """Use a field move and return the dialog produced by the interaction."""
+) -> tuple[str, ControlBoundary, GameState]:
+    """Use a field move and return its dialog, control boundary, and resulting state."""
     if game_state.player.is_surfing:
-        result = await _press_navigation_step(emulator, button, game_state)
-        return "", result.boundary
+        result, game_state = await _press_navigation_step(emulator, button, game_state)
+        return "", result.boundary, game_state
 
     # Rotate to face the target.
     if game_state.player.direction != _BUTTON_DIRECTIONS[button]:
-        result, _ = await _press_and_record_boundary(emulator, button, game_state)
+        result, game_state = await _press_and_record_boundary(emulator, button, game_state)
         if result.boundary != ControlBoundary.OVERWORLD_READY:
-            return "", result.boundary
+            return "", result.boundary, game_state
 
     await emulator.press_button(Button.A)
     dialogs = [await emulator.advance_text_dialog()]
@@ -310,11 +266,11 @@ async def _handle_hm_use(
 
     game_state = await emulator.get_game_state()
     if not game_state.player.is_surfing:  # Starting to surf moves the player automatically.
-        result = await _press_navigation_step(emulator, button, game_state)
+        result, game_state = await _press_navigation_step(emulator, button, game_state)
         boundary = result.boundary
     else:
         boundary = ControlBoundary.OVERWORLD_READY
-    return " ".join(dialog for dialog in dialogs if dialog), boundary
+    return " ".join(dialog for dialog in dialogs if dialog), boundary, game_state
 
 
 async def _press_and_record_boundary(

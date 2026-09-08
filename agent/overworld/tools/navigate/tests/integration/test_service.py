@@ -60,8 +60,9 @@ async def test_navigate_after_turning() -> None:
 
 
 @pytest.mark.integration
-async def test_navigate_through_pikachu_while_facing_it() -> None:
-    """Preserve the requested steps while Pikachu yields to the player."""
+@pytest.mark.parametrize("already_facing", [False, True])
+async def test_navigate_through_pikachu(*, already_facing: bool) -> None:
+    """Navigate through Pikachu whether already facing it or needing to turn first."""
     save_file = Path(__file__).parent / "saves" / "viridian.state"
     async with Emulator(
         save_state_path=save_file,
@@ -73,10 +74,11 @@ async def test_navigate_through_pikachu_while_facing_it() -> None:
         assert game_state.pikachu.coords == Coords(row=28, col=22)
         assert game_state.player.direction == FacingDirection.RIGHT
 
-        await emulator.press_overworld_button(Button.LEFT)
-        game_state = await emulator.get_game_state()
-        assert game_state.player.coords == Coords(row=28, col=23)
-        assert game_state.player.direction == FacingDirection.LEFT
+        if already_facing:
+            await emulator.press_overworld_button(Button.LEFT)
+            game_state = await emulator.get_game_state()
+            assert game_state.player.coords == Coords(row=28, col=23)
+            assert game_state.player.direction == FacingDirection.LEFT
 
         current_map = await _get_current_map(emulator)
 
