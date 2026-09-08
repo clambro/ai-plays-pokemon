@@ -74,7 +74,12 @@ async def navigate(
         )
         if unresolved_spinner:
             result = await _explore_spinner(
-                iteration, emulator, current_map, button, coords, game_state
+                iteration=iteration,
+                emulator=emulator,
+                current_map=current_map,
+                button=button,
+                target=coords,
+                game_state=game_state,
             )
             return _record_result(rolling_memory, result, dialogs=dialogs)
         prev_pos = game_state.player.coords
@@ -110,7 +115,9 @@ async def navigate(
     return _record_result(rolling_memory, f"I reached {coords}.", dialogs=dialogs)
 
 
-async def _explore_spinner(
+# Traversal, map recording, and interruption reporting need these explicit inputs.
+async def _explore_spinner(  # noqa: PLR0913
+    *,
     iteration: int,
     emulator: Emulator,
     current_map: OverworldMap,

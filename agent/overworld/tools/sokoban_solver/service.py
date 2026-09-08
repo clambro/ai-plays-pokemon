@@ -156,7 +156,8 @@ def _solve_sokoban(
     return None  # No solution found.
 
 
-def _is_movement_possible(
+# Player movement needs remembered blockages; boulder movement needs live collision rules.
+def _is_movement_possible(  # noqa: PLR0913
     current_map: OverworldMap,
     source: Coords,
     destination: Coords,
