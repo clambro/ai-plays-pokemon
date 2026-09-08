@@ -49,12 +49,12 @@ def build_set_goals_tool(
 
         Bad goal: Collect an ordinary item at <coordinates>.
         Bad goal: Interact with <unexamined NPC>.
-        Reasoning: These are both single exploration steps, not the broader outcome.
+        Reasoning: These are each single exploration steps, not the broader outcome.
         Better goal: Completely explore <area>.
 
         Bad goal: Keep party members healthy and well trained.
         Reasoning: This is ongoing advice with no completion condition.
-        Better goal: Level <party member> to level <level> before re-attempting <major battle>.
+        Better goal: Heal my party before attempting <major battle>.
 
         Bad goal: Continue progressing towards the next badge.
         Reasoning: This describes ongoing progress instead of a specific challenge to complete.
