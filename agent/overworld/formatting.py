@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     )
     from database.map_boundary_memory.schemas import MapBoundaryMemoryRead
     from emulator.game_state import GameState
+    from emulator.parsers.map import Map
     from emulator.parsers.sign import Sign
     from emulator.parsers.sprite import Sprite
     from emulator.parsers.static_object import StaticObject
@@ -533,14 +534,13 @@ def format_object_notes(map_view: CurrentMapView, game_state: GameState) -> str:
     )
 
 
-def format_connection_notes(map_view: CurrentMapView) -> str:
+def format_connection_notes(map_view: CurrentMapView, map_state: Map) -> str:
     """Format direct map connections reachable from the current region."""
-    current_map = map_view.overworld_map
     connections = [
-        ("NORTH", FacingDirection.UP, current_map.north_connection),
-        ("SOUTH", FacingDirection.DOWN, current_map.south_connection),
-        ("EAST", FacingDirection.RIGHT, current_map.east_connection),
-        ("WEST", FacingDirection.LEFT, current_map.west_connection),
+        ("NORTH", FacingDirection.UP, map_state.north_connection),
+        ("SOUTH", FacingDirection.DOWN, map_state.south_connection),
+        ("EAST", FacingDirection.RIGHT, map_state.east_connection),
+        ("WEST", FacingDirection.LEFT, map_state.west_connection),
     ]
     reachable_connections = [
         (direction, connection)
@@ -589,22 +589,22 @@ def format_exploration_candidates(
 
 def format_map_boundary_tiles(
     boundary_tiles: Mapping[FacingDirection, Sequence[Coords]],
-    map_data: OverworldMap,
+    map_state: Map,
 ) -> str:
     """Format accessible map boundaries for the overworld agent."""
     output = []
     map_connections = {
-        FacingDirection.UP: ("NORTH", map_data.north_connection),
-        FacingDirection.DOWN: ("SOUTH", map_data.south_connection),
-        FacingDirection.RIGHT: ("EAST", map_data.east_connection),
-        FacingDirection.LEFT: ("WEST", map_data.west_connection),
+        FacingDirection.UP: ("NORTH", map_state.north_connection),
+        FacingDirection.DOWN: ("SOUTH", map_state.south_connection),
+        FacingDirection.RIGHT: ("EAST", map_state.east_connection),
+        FacingDirection.LEFT: ("WEST", map_state.west_connection),
     }
 
     for facing_dir, (cardinal_dir, connection) in map_connections.items():
         if connection is not None and boundary_tiles[facing_dir]:
             coord_str = " or ".join(str(coord) for coord in boundary_tiles[facing_dir])
             output.append(
-                f"Connection on {map_data.id.name} at {coord_str} leads {cardinal_dir} to "
+                f"Connection on {map_state.id.name} at {coord_str} leads {cardinal_dir} to "
                 f"{connection.destination_map.name}.",
             )
     return "\n".join(output) or "No connected-map boundary is reachable from this region."

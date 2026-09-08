@@ -90,7 +90,6 @@ def build_current_map_view(
         direction: tuple(coords)
         for direction, coords in get_map_boundary_tiles(
             reachable_list,
-            overworld_map,
             game_state.map,
             can_surf=AsciiTile.WATER in hm_tiles or game_state.player.is_surfing,
         ).items()

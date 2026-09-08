@@ -41,10 +41,6 @@ def test_current_map_view_crops_region_without_mutating_map() -> None:
         warp_usage_iterations={},
         known_map_boundaries=(),
         known_map_ids=frozenset(),
-        north_connection=None,
-        south_connection=None,
-        east_connection=None,
-        west_connection=None,
     )
     game_state = cast(
         "GameState",
@@ -55,7 +51,14 @@ def test_current_map_view_crops_region_without_mutating_map() -> None:
             objects={},
             pikachu=SimpleNamespace(is_rendered=False),
             player=SimpleNamespace(coords=Coords(row=2, col=2), is_surfing=False),
-            map=SimpleNamespace(),
+            map=SimpleNamespace(
+                height=overworld_map.height,
+                width=overworld_map.width,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
             get_hm_tiles=list,
         ),
     )
@@ -129,10 +132,6 @@ def test_object_overlay_provides_reachable_interaction_position() -> None:
         warp_usage_iterations={},
         known_map_boundaries=(),
         known_map_ids=frozenset(),
-        north_connection=None,
-        south_connection=None,
-        east_connection=None,
-        west_connection=None,
     )
     game_state = cast(
         "GameState",
@@ -149,7 +148,14 @@ def test_object_overlay_provides_reachable_interaction_position() -> None:
             },
             pikachu=SimpleNamespace(is_rendered=False),
             player=SimpleNamespace(coords=Coords(row=2, col=2), is_surfing=False),
-            map=SimpleNamespace(),
+            map=SimpleNamespace(
+                height=overworld_map.height,
+                width=overworld_map.width,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
             get_hm_tiles=list,
         ),
     )
@@ -185,10 +191,6 @@ def test_spinner_routing_uses_terrain_under_pikachu_overlay() -> None:
         warp_usage_iterations={},
         known_map_boundaries=(),
         known_map_ids=frozenset(),
-        north_connection=None,
-        south_connection=None,
-        east_connection=None,
-        west_connection=None,
     )
     spinner_stop = Coords(row=1, col=4)
     game_state = cast(
@@ -200,7 +202,14 @@ def test_spinner_routing_uses_terrain_under_pikachu_overlay() -> None:
             objects={},
             pikachu=SimpleNamespace(is_rendered=True, coords=spinner_stop),
             player=SimpleNamespace(coords=Coords(row=2, col=2), is_surfing=False),
-            map=SimpleNamespace(),
+            map=SimpleNamespace(
+                height=overworld_map.height,
+                width=overworld_map.width,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
             get_hm_tiles=list,
         ),
     )
@@ -268,10 +277,6 @@ def test_routing_respects_tiles_beneath_player_and_pikachu(
         warp_usage_iterations={},
         known_map_boundaries=(),
         known_map_ids=frozenset(),
-        north_connection=None,
-        south_connection=None,
-        east_connection=None,
-        west_connection=None,
     )
     game_state = cast(
         "GameState",
@@ -288,7 +293,14 @@ def test_routing_respects_tiles_beneath_player_and_pikachu(
                 moves_randomly=False,
             ),
             player=SimpleNamespace(coords=start, is_surfing=False),
-            map=SimpleNamespace(),
+            map=SimpleNamespace(
+                height=overworld_map.height,
+                width=overworld_map.width,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
             get_hm_tiles=list,
         ),
     )
@@ -330,10 +342,6 @@ def test_unresolved_spinner_shows_known_path_without_exposing_disconnected_terra
         warp_usage_iterations={},
         known_map_boundaries=(),
         known_map_ids=frozenset(),
-        north_connection=None,
-        south_connection=None,
-        east_connection=None,
-        west_connection=None,
     )
     start = Coords(row=1, col=1)
     entry = Coords(row=1, col=2)
@@ -346,7 +354,14 @@ def test_unresolved_spinner_shows_known_path_without_exposing_disconnected_terra
             objects={},
             pikachu=SimpleNamespace(is_rendered=False),
             player=SimpleNamespace(coords=start, is_surfing=False),
-            map=SimpleNamespace(),
+            map=SimpleNamespace(
+                height=overworld_map.height,
+                width=overworld_map.width,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
             get_hm_tiles=list,
         ),
     )
@@ -389,10 +404,6 @@ def test_sprite_notes_include_only_reachable_and_counter_interactable_sprites() 
         warp_usage_iterations={},
         known_map_boundaries=(),
         known_map_ids=frozenset(),
-        north_connection=None,
-        south_connection=None,
-        east_connection=None,
-        west_connection=None,
     )
     sprites = {
         1: SimpleNamespace(
@@ -418,7 +429,14 @@ def test_sprite_notes_include_only_reachable_and_counter_interactable_sprites() 
             screen=SimpleNamespace(to_screen_coords=lambda _coords: Coords(row=0, col=0)),
             pikachu=SimpleNamespace(is_rendered=False),
             player=SimpleNamespace(coords=Coords(row=2, col=1), is_surfing=False),
-            map=SimpleNamespace(),
+            map=SimpleNamespace(
+                height=overworld_map.height,
+                width=overworld_map.width,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
             get_hm_tiles=list,
         ),
     )

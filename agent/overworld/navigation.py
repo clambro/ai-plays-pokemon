@@ -80,7 +80,6 @@ def get_exploration_candidates(
 
 def get_map_boundary_tiles(
     accessible_coords: list[Coords],
-    map_data: OverworldMap,
     map_state: Map,
     *,
     can_surf: bool,
@@ -89,15 +88,14 @@ def get_map_boundary_tiles(
 
     Args:
         accessible_coords: Coordinates the player can currently reach.
-        map_data: Explored map and its cardinal connections.
-        map_state: Current map traversal metadata and connected-map collision strips.
+        map_state: Current map dimensions, connections, and traversal metadata.
         can_surf: Whether the player can traverse water.
 
     Returns:
         Accessible boundary coordinates grouped by their cardinal direction.
     """
-    height = map_data.height
-    width = map_data.width
+    height = map_state.height
+    width = map_state.width
     boundary_tiles = {
         FacingDirection.UP: [],
         FacingDirection.DOWN: [],
@@ -108,10 +106,10 @@ def get_map_boundary_tiles(
     for c in accessible_coords:
         if (
             c.row == 0
-            and map_data.north_connection is not None
-            and c.col in map_data.north_connection.source_coordinates
+            and map_state.north_connection is not None
+            and c.col in map_state.north_connection.source_coordinates
             and map_state.is_connection_crossable(
-                map_data.north_connection,
+                map_state.north_connection,
                 c,
                 can_surf=can_surf,
             )
@@ -119,10 +117,10 @@ def get_map_boundary_tiles(
             boundary_tiles[FacingDirection.UP].append(c)
         elif (
             c.row == height - 1
-            and map_data.south_connection is not None
-            and c.col in map_data.south_connection.source_coordinates
+            and map_state.south_connection is not None
+            and c.col in map_state.south_connection.source_coordinates
             and map_state.is_connection_crossable(
-                map_data.south_connection,
+                map_state.south_connection,
                 c,
                 can_surf=can_surf,
             )
@@ -130,10 +128,10 @@ def get_map_boundary_tiles(
             boundary_tiles[FacingDirection.DOWN].append(c)
         elif (
             c.col == 0
-            and map_data.west_connection is not None
-            and c.row in map_data.west_connection.source_coordinates
+            and map_state.west_connection is not None
+            and c.row in map_state.west_connection.source_coordinates
             and map_state.is_connection_crossable(
-                map_data.west_connection,
+                map_state.west_connection,
                 c,
                 can_surf=can_surf,
             )
@@ -141,10 +139,10 @@ def get_map_boundary_tiles(
             boundary_tiles[FacingDirection.LEFT].append(c)
         elif (
             c.col == width - 1
-            and map_data.east_connection is not None
-            and c.row in map_data.east_connection.source_coordinates
+            and map_state.east_connection is not None
+            and c.row in map_state.east_connection.source_coordinates
             and map_state.is_connection_crossable(
-                map_data.east_connection,
+                map_state.east_connection,
                 c,
                 can_surf=can_surf,
             )

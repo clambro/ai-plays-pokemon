@@ -56,22 +56,30 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
         game_state: Current parsed game state and map metadata.
 
     Returns:
-        The explored map populated with remembered entity identities and current map connections.
+        The explored map populated with remembered terrain and discoveries.
     """
     map_memory = await get_map_memory(game_state.map.id)
     if map_memory is None:
-        return await _create_overworld_map_from_game_state(iteration, game_state)
-
-    map_entity_memories = await get_map_entity_memories_for_map(map_memory.map_id)
-    warp_memories = await get_warp_memories_for_map(map_memory.map_id)
-    map_boundaries = await get_map_boundary_memories_for_map(map_memory.map_id)
+        terrain = [
+            [AsciiTile.UNSEEN.value] * game_state.map.width for _ in range(game_state.map.height)
+        ]
+        blockages = {}
+        map_entity_memories = []
+    else:
+        terrain = [list(row) for row in map_memory.terrain.split("\n")]
+        blockages = map_memory.blockages
+        map_entity_memories = await get_map_entity_memories_for_map(map_memory.map_id)
+    warp_memories = await get_warp_memories_for_map(game_state.map.id)
+    map_boundaries = await get_map_boundary_memories_for_map(game_state.map.id)
 
     known_map_ids = frozenset(await get_visited_maps())
+    if map_memory is None:
+        known_map_ids |= {game_state.map.id}
 
-    return OverworldMap(
-        id=map_memory.map_id,
-        terrain=[list(row) for row in map_memory.terrain.split("\n")],
-        blockages=map_memory.blockages,
+    overworld_map = OverworldMap(
+        id=game_state.map.id,
+        terrain=terrain,
+        blockages=blockages,
         known_sprite_ids={
             memory.entity_id
             for memory in map_entity_memories
@@ -122,11 +130,17 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
             and memory.last_interaction_iteration is not None
         },
         known_map_ids=known_map_ids,
-        north_connection=game_state.map.north_connection,
-        south_connection=game_state.map.south_connection,
-        east_connection=game_state.map.east_connection,
-        west_connection=game_state.map.west_connection,
     )
+    if map_memory is None:
+        await create_map_memory(
+            MapMemoryCreateUpdate(
+                iteration=iteration,
+                map_id=overworld_map.id,
+                terrain=overworld_map.terrain_str,
+                blockages={str(coord): block for coord, block in overworld_map.blockages.items()},
+            ),
+        )
+    return overworld_map
 
 
 async def prepare_overworld_map(
@@ -292,51 +306,6 @@ async def _update_overworld_map_terrain(
             blockages={str(coord): block for coord, block in overworld_map.blockages.items()},
         ),
     )
-
-
-async def _create_overworld_map_from_game_state(
-    iteration: int,
-    game_state: GameState,
-) -> OverworldMap:
-    """Create a new overworld map from the game state."""
-    terrain = [
-        [AsciiTile.UNSEEN.value] * game_state.map.width for _ in range(game_state.map.height)
-    ]
-    known_map_ids = frozenset(await get_visited_maps()) | {game_state.map.id}
-    warp_memories = await get_warp_memories_for_map(game_state.map.id)
-    map_boundaries = await get_map_boundary_memories_for_map(game_state.map.id)
-    overworld_map = OverworldMap(
-        id=game_state.map.id,
-        terrain=terrain,
-        blockages={},
-        known_sprite_ids=set(),
-        sprite_interactions={},
-        known_warp_ids={memory.warp_id for memory in warp_memories},
-        warp_usage_iterations={
-            memory.warp_id: memory.last_used_iteration
-            for memory in warp_memories
-            if memory.last_used_iteration is not None
-        },
-        known_map_boundaries=tuple(map_boundaries),
-        known_sign_ids=set(),
-        sign_interactions={},
-        known_object_ids=set(),
-        object_interactions={},
-        known_map_ids=known_map_ids,
-        north_connection=game_state.map.north_connection,
-        south_connection=game_state.map.south_connection,
-        east_connection=game_state.map.east_connection,
-        west_connection=game_state.map.west_connection,
-    )
-    await create_map_memory(
-        MapMemoryCreateUpdate(
-            iteration=iteration,
-            map_id=overworld_map.id,
-            terrain=overworld_map.terrain_str,
-            blockages={str(coord): block for coord, block in overworld_map.blockages.items()},
-        ),
-    )
-    return overworld_map
 
 
 async def record_map_entity_interactions(

@@ -9,7 +9,6 @@ if TYPE_CHECKING:
     from common.enums import BlockedDirection, MapId
     from common.schemas import Coords
     from database.map_boundary_memory.schemas import MapBoundaryMemoryRead
-    from emulator.parsers.map import MapConnection
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -37,10 +36,6 @@ class OverworldMap:
     warp_usage_iterations: dict[int, int]
     known_map_boundaries: tuple[MapBoundaryMemoryRead, ...]
     known_map_ids: frozenset[MapId]
-    north_connection: MapConnection | None
-    south_connection: MapConnection | None
-    east_connection: MapConnection | None
-    west_connection: MapConnection | None
 
     @property
     def height(self) -> int:

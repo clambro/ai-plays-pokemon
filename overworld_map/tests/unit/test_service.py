@@ -186,10 +186,6 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
         warp_usage_iterations={},
         known_map_boundaries=(),
         known_map_ids=frozenset(),
-        north_connection=None,
-        south_connection=None,
-        east_connection=None,
-        west_connection=None,
     )
     sprite = SimpleNamespace(coords=Coords(row=0, col=1), is_rendered=True)
     player = SimpleNamespace(coords=Coords(row=0, col=0))

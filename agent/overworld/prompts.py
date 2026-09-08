@@ -198,7 +198,7 @@ def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> st
         screen_left=game_state.screen.left,
         screen_bottom=game_state.screen.bottom,
         screen_right=game_state.screen.right,
-        connections=formatting.format_connection_notes(map_view),
+        connections=formatting.format_connection_notes(map_view, game_state.map),
     )
 
 
@@ -221,7 +221,7 @@ def build_overworld_decision_prompt(
         )
         map_boundaries = formatting.format_map_boundary_tiles(
             map_view.boundary_tiles,
-            current_map,
+            game_state.map,
         )
         biking_warning = ""
 
