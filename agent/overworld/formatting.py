@@ -1,10 +1,11 @@
 """Model-facing formatting for the explored overworld map."""
 
 from itertools import groupby
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, assert_never
 
 from agent.overworld.connections import group_contiguous_warps, group_map_boundaries
-from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
+from agent.overworld.tools.check_connection.schemas import ConnectionCheckError
+from common.constants import CONNECTION_CHECK_LABEL, PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpActivation
 from common.schemas import Coords
 
@@ -12,6 +13,10 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from agent.overworld.map_view import CurrentMapView, ObjectInteractionPosition
+    from agent.overworld.tools.check_connection.schemas import (
+        ConnectionCheckResult,
+        ResolvedConnection,
+    )
     from database.map_boundary_memory.schemas import MapBoundaryMemoryRead
     from emulator.game_state import GameState
     from emulator.parsers.sign import Sign
@@ -225,6 +230,90 @@ def format_connection(
             "not been discovered."
         )
     return f"{source} leads to {destination_map_id.name} at {_format_coords(destination_coords)}."
+
+
+def format_connection_check(
+    result: ConnectionCheckResult | ConnectionCheckError,
+    *,
+    map_name: str,
+    coordinates: Coords,
+) -> str:
+    """Render a completed connection check without loading or resolving any connections."""
+    if isinstance(result, ConnectionCheckError):
+        return _format_connection_check_error(result, map_name, coordinates)
+
+    connection = result.connection
+    if connection.destination_map_id is None:
+        return (
+            f"{CONNECTION_CHECK_LABEL} This connection's destination has not been visited."
+            f"{_format_connection_usage(connection)}"
+        )
+    if not connection.destination_coords:
+        return (
+            f"{CONNECTION_CHECK_LABEL} This connection's destination has not been discovered."
+            f"{_format_connection_usage(connection)}"
+        )
+
+    header = _format_resolved_connection(connection)
+    exploration = (
+        "Unexplored terrain can still be reached from this arrival region."
+        if result.has_unexplored_terrain
+        else "No unexplored terrain is reachable from this arrival region."
+    )
+    if not result.other_connections:
+        return (
+            f"{CONNECTION_CHECK_LABEL} {header}\n{exploration}\n"
+            "No other discovered connections are reachable from that arrival "
+            "point through revealed terrain."
+        )
+    return (
+        f"{CONNECTION_CHECK_LABEL} {header}\n{exploration}\n"
+        "Other discovered connections reachable from that arrival point:\n"
+        + "\n".join(f"- {_format_resolved_connection(other)}" for other in result.other_connections)
+    )
+
+
+def _format_connection_check_error(
+    error: ConnectionCheckError,
+    map_name: str,
+    coordinates: Coords,
+) -> str:
+    """Describe why the requested connection could not be inspected."""
+    match error:
+        case ConnectionCheckError.INVALID_MAP:
+            return f'{CONNECTION_CHECK_LABEL} "{map_name}" is not a known map.'
+        case ConnectionCheckError.UNSUPPORTED_MAP:
+            return f'{CONNECTION_CHECK_LABEL} "{map_name}" cannot have remembered connections.'
+        case ConnectionCheckError.UNVISITED_MAP:
+            return f"{CONNECTION_CHECK_LABEL} {map_name} has not been visited."
+        case ConnectionCheckError.UNKNOWN_CONNECTION:
+            return (
+                f"{CONNECTION_CHECK_LABEL} No previously discovered connection is known on "
+                f"{map_name} at {coordinates}."
+            )
+        case ConnectionCheckError.MEMORY_UNAVAILABLE:
+            return f"{CONNECTION_CHECK_LABEL} Connection memory is currently unavailable."
+        case _:
+            assert_never(error)
+
+
+def _format_resolved_connection(connection: ResolvedConnection) -> str:
+    """Render known endpoints and any warp-usage information."""
+    return format_connection(
+        source_map_id=connection.source_map_id,
+        source_coords=connection.source_coords,
+        destination_map_id=connection.destination_map_id,
+        destination_coords=connection.destination_coords,
+    ) + _format_connection_usage(connection)
+
+
+def _format_connection_usage(connection: ResolvedConnection) -> str:
+    """Append usage information for warps; map boundaries do not track usage."""
+    if not connection.is_warp:
+        return ""
+    if connection.last_used_iteration is None:
+        return " No recorded use."
+    return f" Last used at iteration {connection.last_used_iteration}."
 
 
 def format_legend(

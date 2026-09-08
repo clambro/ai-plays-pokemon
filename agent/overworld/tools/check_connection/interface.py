@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from pydantic_ai import Tool
 
+from agent.overworld.formatting import format_connection_check
 from agent.overworld.tools.check_connection.service import (
     check_connection as check_connection_service,
 )
@@ -44,11 +45,12 @@ def build_check_connection_tool(
         Returns:
             Known connections and exploration status on the destination map component.
         """
-        result = await check_connection_service(
+        check = await check_connection_service(
             map_name=map_name,
             coordinates=coordinates,
             hm_tiles=game_state.get_hm_tiles(),
         )
+        result = format_connection_check(check, map_name=map_name, coordinates=coordinates)
         context.state.rolling_memory.add_memory(result)
         return result
 
