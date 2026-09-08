@@ -38,14 +38,13 @@ def _toolset(context: AgentContext) -> FunctionToolset[AgentContext]:
 @pytest.mark.parametrize(
     "goal_texts",
     [
-        ["Heal the team.", None, None, None],
-        ["Reach the next town.", "Investigate the locked building.", None, None],
-        [None, " Heal the team. ", None, "Collect the nearby item."],
+        ["Heal the team.", None, None],
+        ["Reach the next town.", "Investigate the locked building.", None],
+        [None, " Heal the team. ", "Collect the nearby item."],
         [
             "Reach the next town.",
             "Investigate the locked building.",
             "Heal the team.",
-            "Collect the nearby item.",
         ],
     ],
 )
@@ -94,9 +93,9 @@ async def test_goal_replacement_satisfies_forced_review(
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("slot_count", [0, 1, 3, 5])
+@pytest.mark.parametrize("slot_count", [0, 1, 2, 4])
 def test_goal_tool_rejects_incorrect_slot_count(tmp_path: Path, slot_count: int) -> None:
-    """The tool boundary requires exactly four entries, counting unused slots."""
+    """The tool boundary requires exactly three entries, counting unused slots."""
     context = AgentContext(state=AgentState(folder=tmp_path), emulator=MagicMock())
     tool = goal_interface.build_set_goals_tool(context)
 

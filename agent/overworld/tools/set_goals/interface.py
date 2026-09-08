@@ -25,16 +25,16 @@ def build_set_goals_tool(
     async def set_goals(
         goals: Annotated[list[str | None], Field(min_length=MAX_GOALS, max_length=MAX_GOALS)],
     ) -> OverworldToolResult:
-        """Replace your current goals using four slots, with null for unused slots.
+        """Replace your current goals using three slots, with null for unused slots.
 
         Pass the complete list, including any existing goals you want to keep.
         Omitted goals are removed. You may keep the list unchanged when its
         goals remain useful.
 
-        Goals are specific, achievable objectives with clear completion conditions,
-        not ongoing play-style rules, individual button presses, or
-        routine movement. Write each goal in the imperative. Keep distinct priorities
-        separate, and do not add goals merely to fill available slots.
+        Set specific, achievable goals with clear completion conditions. Prefer meaningful
+        milestones over individual next steps. Goals are not ongoing play-style rules, nor
+        are they immediate next actions. Write them in the imperative and keep distinct
+        priorities separate. Do not add goals merely to fill slots; leave unused slots null.
 
         Base goals only on current structured information, observed game text,
         or recorded memory. Do not invent locations, characters, items, or
@@ -45,8 +45,23 @@ def build_set_goals_tool(
         goal has changed, been completed, or become irrelevant. Goals guide
         future decisions but do not need to determine your next action.
 
+        Goal examples:
+
+        Bad goal: Collect an ordinary item at <coordinates>.
+        Bad goal: Interact with <unexamined NPC>.
+        Reasoning: These are both single exploration steps, not the broader outcome.
+        Better goal: Completely explore <area>.
+
+        Bad goal: Keep party members healthy and well trained.
+        Reasoning: This is ongoing advice with no completion condition.
+        Better goal: Level <party member> to level <level> before re-attempting <major battle>.
+
+        Bad goal: Continue progressing towards the next badge.
+        Reasoning: This describes ongoing progress instead of a specific challenge to complete.
+        Better goal: Face off against <gym leader name> to get the <next badge>.
+
         Args:
-            goals: Exactly four entries, each a nonblank goal or null.
+            goals: Exactly three entries in rough order of priority, each a nonblank goal or null.
 
         Returns:
             Fresh screenshot and the complete revised goal list.

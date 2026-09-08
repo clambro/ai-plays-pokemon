@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 MIN_GOALS = 1
-MAX_GOALS = 4
+MAX_GOALS = 3
 
 
 @dataclass(slots=True, kw_only=True)
