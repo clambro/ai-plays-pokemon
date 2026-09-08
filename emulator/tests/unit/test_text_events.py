@@ -133,8 +133,19 @@ def test_reducer_attributes_complete_literal_dialog_to_its_map_entity(
 
 
 @pytest.mark.unit
-def test_text_free_entity_attempt_does_not_claim_later_dialog() -> None:
-    """Discard a text-free interaction target at its ROM handler boundary."""
+@pytest.mark.parametrize(
+    "closing_event",
+    [
+        TextEventKind.MAP_ENTITY_INTERACTION_ENDED,
+        TextEventKind.INTERACTION_CLOSED,
+        TextEventKind.OVERWORLD_ENTERED,
+        TextEventKind.BATTLE_ENDED,
+    ],
+)
+def test_text_free_interaction_is_recorded_without_claiming_later_dialog(
+    closing_event: TextEventKind,
+) -> None:
+    """Remember an interaction without text, but never attribute unrelated later dialog to it."""
     reducer = TextEventReducer()
     target = MapEntityInteractionTarget(
         map_id=MapId.MT_MOON_POKECENTER,
@@ -150,7 +161,7 @@ def test_text_free_entity_attempt_does_not_claim_later_dialog() -> None:
                     TextEventKind.MAP_ENTITY_INTERACTION_STARTED,
                     interaction_target=target,
                 ),
-                _event(2, TextEventKind.MAP_ENTITY_INTERACTION_ENDED),
+                _event(2, closing_event),
                 _event(
                     3,
                     TextEventKind.INPUT_REQUIRED,
@@ -160,6 +171,9 @@ def test_text_free_entity_attempt_does_not_claim_later_dialog() -> None:
             ]
         )
         == "Later dialog."
+    )
+    assert reducer.drain_completed_map_entity_interactions() == (
+        CompletedMapEntityInteraction(target=target, text=None),
     )
     assert reducer.drain_completed_map_entity_interactions() == ()
 

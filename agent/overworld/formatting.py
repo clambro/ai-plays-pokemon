@@ -85,7 +85,7 @@ def _format_overworld_sprite(
     if interaction is None:
         output += " You have not interacted with this sprite yet; it may be worth trying."
     else:
-        output += f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
+        output += _format_map_entity_interaction(interaction)
     if counter_positions:
         positions = ", ".join(str(position) for position in counter_positions)
         output += (
@@ -109,7 +109,7 @@ def _format_overworld_sign(
     output = f"sign_{map_id}_{sign.index} at {sign.coords}."
     if interaction is None:
         return output + " You have not interacted with this sign yet; it may be worth reading."
-    return output + f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
+    return output + _format_map_entity_interaction(interaction)
 
 
 def _format_overworld_object(
@@ -136,7 +136,14 @@ def _format_overworld_object(
         )
     if interaction is None:
         return output + " You have not interacted with this object yet; it may be worth trying."
-    return output + f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
+    return output + _format_map_entity_interaction(interaction)
+
+
+def _format_map_entity_interaction(interaction: MapEntityInteractionMemory) -> str:
+    """Describe a completed interaction even when no dialog was captured."""
+    if interaction.text is None:
+        return f" Last interacted with at iteration {interaction.iteration}."
+    return f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
 
 
 def _format_overworld_warp_group(
@@ -152,8 +159,15 @@ def _format_overworld_warp_group(
         destination_text = "This connection's destination is unresolved."
     elif warp.destination in known_map_ids or warp.destination in _VISIBLE_UNVISITED_DESTINATIONS:
         destination = warp.destination.name
-        if warp.destination_coords is not None:
-            destination += f" at {warp.destination_coords}"
+        destination_coords = tuple(
+            dict.fromkeys(
+                candidate.destination_coords
+                for candidate in warps
+                if candidate.destination_coords is not None
+            )
+        )
+        if destination_coords:
+            destination += f" at {_format_coords(destination_coords)}"
         destination_text = f"This connection leads to {destination}."
     else:
         destination_text = (
@@ -163,10 +177,7 @@ def _format_overworld_warp_group(
         )
     locations = " or ".join(str(candidate.coords) for candidate in warps)
     identity = f"Connection on {map_id.name} at {locations}"
-    output = (
-        f"{identity}. {destination_text}"
-        f" {_get_warp_description(warp, player_coords, is_multi_tile=len(warps) > 1)}"
-    )
+    output = f"{identity}. {destination_text} {_get_warp_description(warps, player_coords)}"
     if last_interaction_iteration is not None:
         output += f" Last used at iteration {last_interaction_iteration}."
     else:
@@ -175,21 +186,20 @@ def _format_overworld_warp_group(
 
 
 def _get_warp_description(
-    warp: Warp,
+    warps: Sequence[Warp],
     player_coords: Coords,
-    *,
-    is_multi_tile: bool,
 ) -> str:
     """Format instructions for entering a warp."""
+    warp = warps[0]
+    coordinate_text = "one of these coordinates" if len(warps) > 1 else "this coordinate"
     if warp.activation == WarpActivation.STEP_ON:
-        if player_coords == warp.coords:
+        if any(player_coords == candidate.coords for candidate in warps):
             return (
                 "You are currently standing on this connection, so it is inactive. "
                 "It activates only when entered from another tile. "
                 "Re-enter it only when you intend to travel to the destination described above."
             )
-        return "Step onto this coordinate to activate the connection."
-    coordinate_text = "one of these coordinates" if is_multi_tile else "this coordinate"
+        return f"Step onto {coordinate_text} to activate the connection."
     return (
         f"Stand on {coordinate_text} and press {warp.activation.value} twice "
         "to activate the connection, even if that direction appears blocked. "
@@ -198,7 +208,7 @@ def _get_warp_description(
 
 
 def _group_contiguous_warps(warps: Sequence[Warp]) -> tuple[tuple[Warp, ...], ...]:
-    """Combine adjacent warp tiles that activate the same destination."""
+    """Combine adjacent entrance tiles sharing a destination map and activation."""
     groups = []
     grouped_ids = set()
     for warp in warps:
@@ -207,10 +217,7 @@ def _group_contiguous_warps(warps: Sequence[Warp]) -> tuple[tuple[Warp, ...], ..
         matching_warps = [
             candidate
             for candidate in warps
-            if candidate.destination == warp.destination
-            and candidate.destination_warp_index == warp.destination_warp_index
-            and candidate.destination_coords == warp.destination_coords
-            and candidate.activation == warp.activation
+            if candidate.destination == warp.destination and candidate.activation == warp.activation
         ]
         group = [warp]
         grouped_ids.add(warp.index)

@@ -232,19 +232,18 @@ async def _describe_warp_group(group: tuple[WarpMemoryRead, ...]) -> str:
         return f"{connection} {usage}"
 
     destination_warps = await get_warp_memories_for_map(warp.destination_map_id)
-    destination_group = next(
-        (
-            candidate_group
-            for candidate_group in _group_contiguous_warps(destination_warps)
-            if any(candidate.warp_id == warp.destination_warp_id for candidate in candidate_group)
-        ),
-        (),
+    destination_warp_ids = {candidate.destination_warp_id for candidate in group}
+    destination_coords = tuple(
+        _coords(candidate)
+        for candidate_group in _group_contiguous_warps(destination_warps)
+        if any(candidate.warp_id in destination_warp_ids for candidate in candidate_group)
+        for candidate in candidate_group
     )
     connection = formatting.format_connection(
         source_map_id=warp.map_id,
         source_coords=tuple(_coords(candidate) for candidate in group),
         destination_map_id=warp.destination_map_id,
-        destination_coords=tuple(_coords(candidate) for candidate in destination_group),
+        destination_coords=destination_coords,
     )
     return f"{connection} {usage}"
 
@@ -330,7 +329,7 @@ def _find_boundary_group(
 def _group_contiguous_warps(
     warps: Sequence[WarpMemoryRead],
 ) -> tuple[tuple[WarpMemoryRead, ...], ...]:
-    """Combine adjacent records that represent one logical warp."""
+    """Combine adjacent entrance tiles sharing a destination map and activation."""
     groups = []
     grouped_ids = set()
     for warp in sorted(warps, key=lambda memory: memory.warp_id):
@@ -340,7 +339,6 @@ def _group_contiguous_warps(
             candidate
             for candidate in warps
             if candidate.destination_map_id == warp.destination_map_id
-            and candidate.destination_warp_id == warp.destination_warp_id
             and candidate.activation == warp.activation
         ]
         group = [warp]

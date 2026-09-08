@@ -28,12 +28,12 @@ class MapEntityMemoryRead(BaseModel):
 
 
 class MapEntityMemoryInteractionUpdate(BaseModel):
-    """A literal interaction observation for one persisted map entity."""
+    """A completed interaction and any captured dialog for one persisted map entity."""
 
     map_id: MapId
     entity_id: int
     entity_type: MapEntityType
-    last_interaction: Annotated[str, Field(min_length=1)]
+    last_interaction: Annotated[str, Field(min_length=1)] | None
     last_interaction_iteration: int
 
 

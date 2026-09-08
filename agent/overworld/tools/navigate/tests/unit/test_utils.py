@@ -54,11 +54,11 @@ SURF_MAP = [list("∙≈∙")]
 SPINNER_MAP = [
     list(row)
     for row in [
-        "∙∙▓\u2228∙",
-        "\u2228▓∙\u2228\u2039",
+        "∙∙▓∨∙",  # noqa: RUF001
+        "∨▓∙∨‹",  # noqa: RUF001
         "∙∙∙░░",
-        "∙●\u2039░∙",
-        "\u203a∙Λ∙∙",
+        "∙●‹░∙",  # noqa: RUF001
+        "›∙Λ∙∙",  # noqa: RUF001
         "∙▓∙∙∙",
     ]
 ]
@@ -203,6 +203,42 @@ def test_get_accessible_coords_spinner() -> None:
         "01000",
         "00000",
     ]
+
+
+@pytest.mark.unit
+def test_get_spinner_path_is_unresolved_when_it_leaves_the_map() -> None:
+    """Treat a malformed off-map spinner path as unresolved instead of indexing past the map."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.terrain = [list("›∙")]  # noqa: RUF001
+
+    path = navigation.get_spinner_path(Coords(row=0, col=0), map_data.terrain_ndarray)
+
+    assert path is None
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("last_tile", ["░", "●"])
+def test_spinner_exploration_ends_when_destination_is_revealed(last_tile: str) -> None:
+    """An unresolved spinner is an exploration target even with a known corridor ahead."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.terrain = [list(f"∙›∙∙{last_tile}")]  # noqa: RUF001
+    tiles = map_data.terrain_ndarray
+    start = Coords(row=0, col=0)
+    entry = Coords(row=0, col=1)
+    end = Coords(row=0, col=4)
+
+    accessible = navigation.get_accessible_coords(start, tiles, {}, [])
+    candidates = navigation.get_exploration_candidates(accessible, tiles)
+
+    assert candidates == ([entry] if last_tile == "░" else [])
+    assert navigation.get_spinner_destination(entry, tiles) == (None if last_tile == "░" else end)
+    assert navigation.get_spinner_path(entry, tiles) == tuple(
+        Coords(row=0, col=col) for col in range(1, 5)
+    )
+    if last_tile == "░":
+        assert navigation.calculate_path_to_target(start, entry, tiles, {}, []) == [Button.RIGHT]
+        assert Coords(row=0, col=2) not in accessible
+        assert end not in accessible
 
 
 @pytest.mark.unit

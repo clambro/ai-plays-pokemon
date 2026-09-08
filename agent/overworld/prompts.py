@@ -18,8 +18,6 @@ if TYPE_CHECKING:
     from agent.overworld.map_view import CurrentMapView
     from emulator.game_state import GameState
 
-_STALE_GOAL_ITERATIONS = 100
-
 OVERWORLD_MAP_PROMPT = f"""
 <map_info>
 Map name: {{map_name}}
@@ -80,7 +78,7 @@ The following previously traversed connections are elsewhere on the same map, ou
 {{known_connections_outside_current_component}}
 </known_connections_outside_current_component>
 
-The following discovered signs are in your current region. These often only provide flavour text, but could give a useful tip.
+The following discovered signs are in your current region. They may display text, open menus, or operate controls.
 <known_signs>
 {{known_signs}}
 </known_signs>
@@ -121,7 +119,7 @@ LEGEND_MAP = {
     AsciiTile.PRESSURE_PLATE: "A pressure plate that you can activate by pushing a boulder onto it.",
     AsciiTile.OBJECT: "A discovered stationary object. Its note gives the reachable position and direction needed to interact with it.",
     AsciiTile.PIKACHU: "Your companion Pikachu that follows you around. Unlike other sprites, you can walk through Pikachu, which will cause it to switch places with you. You can speak to Pikachu like any other sprite, but doing so only provides flavour text.",
-    AsciiTile.SIGN: "An object that you can interact with to read something. Usually a signpost, but could be a TV, radio, or other object. The main distinction between signs and sprites is that signs are static. They will never move, and their text will never change. Signs are usually interacted with from below, and cannot be walked through.",
+    AsciiTile.SIGN: "A stationary interaction point, such as a signpost, TV, radio, or control panel. It may display text, open a menu, or operate a control. Signs are usually interacted with from below, and cannot be walked through.",
     AsciiTile.SPINNER_UP: "A spinner tile that moves you upwards.",
     AsciiTile.SPINNER_DOWN: "A spinner tile that moves you downwards.",
     AsciiTile.SPINNER_LEFT: "A spinner tile that moves you leftwards.",
@@ -134,12 +132,11 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 
 {state}
 
-The first Pokemon in the party usually receives most battle experience. Use the party order deliberately, including making another useful Pokemon the lead when it needs training.
+The first Pokemon in the party usually receives most battle experience. Rotate the Pokemon you intend to develop into the lead for suitable encounters during normal progression, considering their actual moves, matchups, and ability to contribute. Notice when the same few Pokemon receive all the experience and give the others useful opportunities. If a teammate keeps sitting unused, find a useful role for it or reconsider its place in the party.
 
-Regularly reflect on what you are trying to accomplish and use set_goal to keep your goals useful and current.
-{goal_warning}
+Regularly reflect on what you are trying to accomplish and use set_goals to keep your goals useful and current.
 
-The following accessible coordinates are adjacent to unseen terrain on the current map. Fully revealing the current map is a high priority. In general, handle newly reachable unvisited stationary sprites before continuing to reveal unseen terrain, but use judgment when a specific objective should take precedence. Exploring these candidates should generally be prioritized before leaving the map, backtracking, or pursuing objectives elsewhere (unless you have a specific other goal in mind or need to heal, of course).
+Exploring the following accessible coordinates can reveal unseen terrain on the current map. Fully revealing the current map is a high priority. In general, handle newly reachable unvisited stationary sprites before continuing to reveal unseen terrain, but use judgment when a specific objective should take precedence. Exploring these candidates should generally be prioritized before leaving the map, backtracking, or pursuing objectives elsewhere (unless you have a specific other goal in mind or need to heal, of course).
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>
@@ -237,18 +234,9 @@ def build_overworld_decision_prompt(
         format_inventory_info(game_state),
         format_pc_info(game_state),
     )
-    goal_warning = ""
-    if context.state.goals.goals and all(
-        context.state.iteration - goal.updated_at_iteration > _STALE_GOAL_ITERATIONS
-        for goal in context.state.goals.goals
-    ):
-        goal_warning = (
-            "Your goals have not been updated in over 100 iterations. You may want to review them."
-        )
     return OVERWORLD_DECISION_PROMPT.format(
         state="\n\n".join(section for section in sections if section),
         exploration_candidates=exploration_candidates,
         map_boundaries=map_boundaries,
         biking_warning=biking_warning,
-        goal_warning=goal_warning,
     )

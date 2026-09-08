@@ -8,7 +8,7 @@ import numpy as np
 from agent.overworld import navigation
 from common.enums import AsciiTile, FacingDirection
 from common.schemas import Coords
-from overworld_map.views import get_current_map_tiles
+from overworld_map.views import get_composed_map_tiles, get_navigation_tiles
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -28,7 +28,7 @@ class CurrentMapView:
     """Ephemeral agent-facing view of one reachable region of an explored map."""
 
     overworld_map: OverworldMap
-    navigation_tiles: np.ndarray
+    routing_tiles: np.ndarray
     reachable_coords: frozenset[Coords]
     visible_coords: frozenset[Coords]
     counter_interactions: dict[int, tuple[Coords, ...]]
@@ -44,18 +44,27 @@ def build_current_map_view(
     game_state: GameState,
 ) -> CurrentMapView:
     """Build the current reachable region using the shared overworld traversal rules."""
-    navigation_tiles = get_current_map_tiles(overworld_map, game_state)
+    persistent_tiles = overworld_map.terrain_ndarray
+    composed_tiles = get_composed_map_tiles(overworld_map, game_state)
+    routing_tiles = get_navigation_tiles(overworld_map, game_state)
+    # Allow departure from the starting warp without hiding transitions beneath Pikachu.
+    player_coords = game_state.player.coords
+    routing_tiles[player_coords.row, player_coords.col] = AsciiTile.PLAYER
+    spinner_types = [*AsciiTile.get_spinner_tiles(), AsciiTile.SPINNER_STOP]
+    # Entity overlays must not hide directional or stop tiles from spinner tracing.
+    spinner_mask = np.isin(persistent_tiles, spinner_types)
+    routing_tiles[spinner_mask] = persistent_tiles[spinner_mask]
     hm_tiles = game_state.get_hm_tiles()
-    reachable = navigation.get_accessible_coords(
+    reachable_list = navigation.get_accessible_coords(
         game_state.player.coords,
-        navigation_tiles,
+        routing_tiles,
         overworld_map.blockages,
         hm_tiles,
     )
-    reachable_coords = frozenset(reachable)
+    reachable_coords = frozenset(reachable_list)
     counter_interactions = _get_counter_interactions(
         reachable_coords,
-        navigation_tiles,
+        routing_tiles,
         overworld_map,
         game_state,
     )
@@ -64,24 +73,24 @@ def build_current_map_view(
         overworld_map,
         game_state,
     )
-    visible_coords = _get_visible_coords(reachable_coords, navigation_tiles) | frozenset(
+    visible_coords = _get_visible_coords(reachable_coords, routing_tiles) | frozenset(
         game_state.sprites[entity_id].coords for entity_id in counter_interactions
     )
     display_top = min(coords.row for coords in visible_coords)
     display_bottom = max(coords.row for coords in visible_coords)
     display_left = min(coords.col for coords in visible_coords)
     display_right = max(coords.col for coords in visible_coords)
-    region_tiles = navigation_tiles[
+    display_crop = composed_tiles[
         display_top : display_bottom + 1,
         display_left : display_right + 1,
     ]
     display_tiles = np.where(
-        region_tiles == AsciiTile.WALL,
-        region_tiles,
+        display_crop == AsciiTile.WALL,
+        display_crop,
         AsciiTile.OUTSIDE_REGION,
     )
     for coords in visible_coords:
-        display_tiles[coords.row - display_top, coords.col - display_left] = navigation_tiles[
+        display_tiles[coords.row - display_top, coords.col - display_left] = composed_tiles[
             coords.row,
             coords.col,
         ]
@@ -89,7 +98,7 @@ def build_current_map_view(
     boundary_tiles = {
         direction: tuple(coords)
         for direction, coords in navigation.get_map_boundary_tiles(
-            reachable,
+            reachable_list,
             overworld_map,
             game_state.map,
             can_surf=AsciiTile.WATER in hm_tiles or game_state.player.is_surfing,
@@ -97,7 +106,7 @@ def build_current_map_view(
     }
     return CurrentMapView(
         overworld_map=overworld_map,
-        navigation_tiles=navigation_tiles,
+        routing_tiles=routing_tiles,
         reachable_coords=reachable_coords,
         visible_coords=visible_coords,
         counter_interactions=counter_interactions,
@@ -105,7 +114,7 @@ def build_current_map_view(
         display_origin=Coords(row=display_top, col=display_left),
         display_tiles=display_tiles,
         exploration_candidates=tuple(
-            navigation.get_exploration_candidates(reachable, navigation_tiles),
+            navigation.get_exploration_candidates(reachable_list, routing_tiles),
         ),
         boundary_tiles=boundary_tiles,
     )
@@ -113,7 +122,7 @@ def build_current_map_view(
 
 def _get_counter_interactions(
     reachable_coords: frozenset[Coords],
-    navigation_tiles: np.ndarray,
+    routing_tiles: np.ndarray,
     overworld_map: OverworldMap,
     game_state: GameState,
 ) -> dict[int, tuple[Coords, ...]]:
@@ -135,7 +144,7 @@ def _get_counter_interactions(
             )
             if (
                 standing in reachable_coords
-                and navigation_tiles[counter.row, counter.col] == AsciiTile.COUNTER
+                and routing_tiles[counter.row, counter.col] == AsciiTile.COUNTER
             ):
                 positions.append(standing)
         if positions:
@@ -176,11 +185,11 @@ def _get_object_interaction_positions(
 
 def _get_visible_coords(
     reachable_coords: frozenset[Coords],
-    navigation_tiles: np.ndarray,
+    routing_tiles: np.ndarray,
 ) -> frozenset[Coords]:
     """Include the reachable region and the terrain immediately bounding it."""
     visible = set(reachable_coords)
-    height, width = navigation_tiles.shape
+    height, width = routing_tiles.shape
     walkable_tiles = set(AsciiTile.get_walkable_tiles())
     spinner_tiles = set(AsciiTile.get_spinner_tiles())
     for coords in reachable_coords:
@@ -188,9 +197,9 @@ def _get_visible_coords(
             neighbor = coords + (row_offset, col_offset)  # noqa: RUF005
             if not (0 <= neighbor.row < height and 0 <= neighbor.col < width):
                 continue
-            tile = navigation_tiles[neighbor.row, neighbor.col]
+            tile = routing_tiles[neighbor.row, neighbor.col]
             if tile in spinner_tiles:
-                spinner_path = navigation.get_spinner_path(neighbor, navigation_tiles)
+                spinner_path = navigation.get_spinner_path(neighbor, routing_tiles)
                 if spinner_path is not None:
                     visible.update(spinner_path)
                 continue

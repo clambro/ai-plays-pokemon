@@ -50,10 +50,10 @@ class MapEntityInteractionTarget:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CompletedMapEntityInteraction:
-    """Literal dialog observed during one completed map-entity interaction."""
+    """A completed map-entity interaction and any captured literal dialog."""
 
     target: MapEntityInteractionTarget
-    text: str
+    text: str | None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -150,11 +150,11 @@ class TextEventReducer:
 
     def _complete_map_entity_interaction(self) -> None:
         """Finish the active entity observation at a semantic interaction boundary."""
-        if self._active_interaction_target is not None and self._active_interaction_lines:
+        if self._active_interaction_target is not None:
             self._completed_map_entity_interactions.append(
                 CompletedMapEntityInteraction(
                     target=self._active_interaction_target,
-                    text=" ".join(self._active_interaction_lines).strip(),
+                    text=" ".join(self._active_interaction_lines).strip() or None,
                 )
             )
         self._active_interaction_target = None

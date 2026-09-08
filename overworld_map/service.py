@@ -84,7 +84,6 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
             )
             for memory in map_entity_memories
             if memory.entity_type == MapEntityType.SPRITE
-            and memory.last_interaction is not None
             and memory.last_interaction_iteration is not None
         },
         known_warp_ids={memory.warp_id for memory in warp_memories},
@@ -106,7 +105,6 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
             )
             for memory in map_entity_memories
             if memory.entity_type == MapEntityType.SIGN
-            and memory.last_interaction is not None
             and memory.last_interaction_iteration is not None
         },
         known_object_ids={
@@ -121,7 +119,6 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
             )
             for memory in map_entity_memories
             if memory.entity_type == MapEntityType.OBJECT
-            and memory.last_interaction is not None
             and memory.last_interaction_iteration is not None
         },
         known_map_ids=known_map_ids,
@@ -346,7 +343,7 @@ async def record_map_entity_interactions(
     iteration: int,
     interactions: tuple[CompletedMapEntityInteraction, ...],
 ) -> None:
-    """Persist the latest completed ROM-text interaction for each map entity."""
+    """Persist the latest completed interaction for each map entity, with or without dialog."""
     if not interactions:
         return
     try:
@@ -365,7 +362,7 @@ async def record_map_entity_interactions(
         )
     except Exception as error:  # noqa: BLE001
         logger.opt(exception=error).warning(
-            "Map-entity interaction persistence failed; continuing without the latest text."
+            "Map-entity interaction persistence failed; continuing without the latest interaction."
         )
 
 

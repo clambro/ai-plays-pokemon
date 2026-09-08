@@ -1,9 +1,10 @@
 """Deterministic overworld button input."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, assert_never
 
+from agent.overworld.formatting import get_facing_tile_notes
 from common.constants import ACTION_RESULT_LABEL
-from common.enums import Button, FacingDirection, MapId
+from common.enums import AsciiTile, Button, FacingDirection, MapId
 from emulator.control_events import ControlBoundary
 from overworld_map.service import record_observed_map_boundary
 
@@ -50,7 +51,11 @@ async def press_buttons(
             prev_direction=previous.player.direction,
             game_state=current,
         )
-        action_result = _check_for_action(button)
+        action_result = (
+            _describe_action(previous, current, control_result.boundary)
+            if button == Button.A
+            else None
+        )
         if collision_result:
             results.append(collision_result)
         if action_result:
@@ -103,15 +108,32 @@ def _check_for_collision(
     return None
 
 
-def _check_for_action(button: Button) -> str | None:
-    """Check whether an action-button press produced an interaction.
-
-    Args:
-        button: Button that was pressed.
-
-    Returns:
-        Feedback when the sequence should stop, otherwise ``None``.
-    """
-    if button != Button.A:
-        return None
-    return "I pressed the action button."
+def _describe_action(
+    previous: GameState,
+    current: GameState,
+    boundary: ControlBoundary,
+) -> str:
+    """Describe an A press's origin, facing tile, and observed control state."""
+    tile, coords = get_facing_tile_notes(previous)
+    tile_name = AsciiTile(tile).name.lower().replace("_", " ")
+    if current.battle.is_in_battle:
+        outcome = "A battle started."
+    elif previous.map.id != current.map.id:
+        outcome = f"Map changed to {current.map.id.name} at {current.player.coords}."
+    else:
+        match boundary:
+            case ControlBoundary.MENU_READY:
+                outcome = "A menu opened."
+            case ControlBoundary.TEXT_INPUT_READY:
+                outcome = "Dialog opened."
+            case ControlBoundary.INTERACTIVE_READY:
+                outcome = "An interactive screen opened."
+            case ControlBoundary.OVERWORLD_READY:
+                outcome = "Overworld control is still active; no dialog or menu is open."
+            case _:
+                assert_never(boundary)
+    return (
+        f"Pressed A on {previous.map.id.name} at {previous.player.coords}, facing"
+        f" {previous.player.direction.value} toward the {tile_name} tile ({tile}) at {coords}."
+        f" {outcome}"
+    )

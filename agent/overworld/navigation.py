@@ -22,7 +22,7 @@ def get_exploration_candidates(
     accessible_coords: list[Coords],
     tiles: np.ndarray,
 ) -> list[Coords]:
-    """Get all accessible coordinates adjacent to an unseen tile.
+    """Get reachable exploration frontiers, including unresolved spinner entries.
 
     Args:
         accessible_coords: Coordinates the player can currently reach.
@@ -33,8 +33,12 @@ def get_exploration_candidates(
     """
     candidates = []
     height, width = tiles.shape
+    spinner_tiles = AsciiTile.get_spinner_tiles()
 
     for c in accessible_coords:
+        if tiles[c.row, c.col] in spinner_tiles and get_spinner_destination(c, tiles) is None:
+            candidates.append(c)
+            continue
         for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
             ny, nx = c.row + dy, c.col + dx
             if 0 <= ny < height and 0 <= nx < width and tiles[ny, nx] == AsciiTile.UNSEEN:
@@ -297,22 +301,36 @@ def _is_blocked(
 def get_spinner_destination(pos: Coords, tiles: np.ndarray) -> Coords | None:
     """Get a spinner's known destination, if its full path has been revealed."""
     path = get_spinner_path(pos, tiles)
-    return path[-1] if path is not None else None
+    if path is None:
+        return None
+    destination = path[-1]
+    return (
+        destination if tiles[destination.row, destination.col] == AsciiTile.SPINNER_STOP else None
+    )
 
 
 def get_spinner_path(pos: Coords, tiles: np.ndarray) -> tuple[Coords, ...] | None:
-    """Get every coordinate traversed from a spinner to its revealed destination."""
+    """Trace a spinner to its stop or the first unseen tile, inclusive.
+
+    Return ``None`` for a non-spinner start or a path that leaves the map.
+    """
+    height, width = tiles.shape
+    if not (0 <= pos.row < height and 0 <= pos.col < width):
+        return None
+
     path = [pos]
     tile = tiles[pos.row, pos.col]
+    if tile not in _SPINNER_DIRECTION_MAP:
+        return None
     direction = _SPINNER_DIRECTION_MAP[tile]
 
     while True:
         new_pos = pos + direction
-        new_tile = tiles[new_pos.row, new_pos.col]
-        if new_tile == AsciiTile.UNSEEN:
+        if not (0 <= new_pos.row < height and 0 <= new_pos.col < width):
             return None
+        new_tile = tiles[new_pos.row, new_pos.col]
         path.append(new_pos)
-        if new_tile == AsciiTile.SPINNER_STOP:
+        if new_tile in (AsciiTile.SPINNER_STOP, AsciiTile.UNSEEN):
             return tuple(path)
         if new_tile in AsciiTile.get_spinner_tiles():
             direction = _SPINNER_DIRECTION_MAP[new_tile]

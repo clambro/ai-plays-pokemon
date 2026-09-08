@@ -26,7 +26,7 @@ from overworld_map.service import (
     record_observed_map_boundary,
     update_overworld_map,
 )
-from overworld_map.views import get_current_map_tiles, get_navigation_tiles
+from overworld_map.views import get_composed_map_tiles, get_navigation_tiles
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -41,15 +41,18 @@ _MAP_STATE = SimpleNamespace(
 
 
 @pytest.mark.unit
-async def test_load_preserves_discovered_ids_without_live_records() -> None:
-    """Persisted discoveries do not depend on records in one emulator snapshot."""
+@pytest.mark.parametrize("interaction_text", ["Previously observed text.", None])
+async def test_load_preserves_discovered_ids_without_live_records(
+    interaction_text: str | None,
+) -> None:
+    """Persisted discoveries and interactions survive even without live records or dialog."""
     interaction_iteration = 7
     memories = [
         MapEntityMemoryRead(
             map_id=MapId.PALLET_TOWN,
             entity_id=entity_id,
             entity_type=entity_type,
-            last_interaction="Previously observed text.",
+            last_interaction=interaction_text,
             last_interaction_iteration=interaction_iteration,
         )
         for entity_id, entity_type in (
@@ -91,11 +94,11 @@ async def test_load_preserves_discovered_ids_without_live_records() -> None:
     assert current_map.known_sprite_ids == {2}
     assert current_map.known_sign_ids == {3}
     assert current_map.known_object_ids == {4}
-    assert current_map.sprite_interactions[2].text == "Previously observed text."
+    assert current_map.sprite_interactions[2].text == interaction_text
     assert current_map.sprite_interactions[2].iteration == interaction_iteration
-    assert current_map.sign_interactions[3].text == "Previously observed text."
+    assert current_map.sign_interactions[3].text == interaction_text
     assert current_map.sign_interactions[3].iteration == interaction_iteration
-    assert current_map.object_interactions[4].text == "Previously observed text."
+    assert current_map.object_interactions[4].text == interaction_text
     assert current_map.object_interactions[4].iteration == interaction_iteration
 
 
@@ -202,7 +205,7 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
         ),
     )
 
-    assert get_current_map_tiles(current_map, game_state).tolist() == [
+    assert get_composed_map_tiles(current_map, game_state).tolist() == [
         [AsciiTile.PLAYER, AsciiTile.SPRITE, AsciiTile.FREE]
     ]
     assert get_navigation_tiles(current_map, game_state).tolist() == [
@@ -211,7 +214,7 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
 
     sprite.coords = Coords(row=0, col=2)
     player.coords = Coords(row=0, col=1)
-    assert get_current_map_tiles(current_map, game_state).tolist() == [
+    assert get_composed_map_tiles(current_map, game_state).tolist() == [
         [AsciiTile.FREE, AsciiTile.PLAYER, AsciiTile.SPRITE]
     ]
 
