@@ -85,7 +85,7 @@ def _format_overworld_sprite(
     if interaction is None:
         output += " You have not interacted with this sprite yet; it may be worth trying."
     else:
-        output += f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
+        output += _format_map_entity_interaction(interaction)
     if counter_positions:
         positions = ", ".join(str(position) for position in counter_positions)
         output += (
@@ -109,7 +109,7 @@ def _format_overworld_sign(
     output = f"sign_{map_id}_{sign.index} at {sign.coords}."
     if interaction is None:
         return output + " You have not interacted with this sign yet; it may be worth reading."
-    return output + f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
+    return output + _format_map_entity_interaction(interaction)
 
 
 def _format_overworld_object(
@@ -136,7 +136,14 @@ def _format_overworld_object(
         )
     if interaction is None:
         return output + " You have not interacted with this object yet; it may be worth trying."
-    return output + f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
+    return output + _format_map_entity_interaction(interaction)
+
+
+def _format_map_entity_interaction(interaction: MapEntityInteractionMemory) -> str:
+    """Describe a completed interaction even when no dialog was captured."""
+    if interaction.text is None:
+        return f" Last interacted with at iteration {interaction.iteration}."
+    return f' Last interaction (iteration {interaction.iteration}): "{interaction.text}"'
 
 
 def _format_overworld_warp_group(

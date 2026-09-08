@@ -14,9 +14,9 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class MapEntityInteractionMemory:
-    """Last literal interaction observed for one map entity."""
+    """Last completed interaction and any captured dialog for one map entity."""
 
-    text: str
+    text: str | None
     iteration: int
 
 

@@ -70,7 +70,7 @@ async def apply_map_entity_changes(
 async def update_map_entity_interactions(
     updates: Sequence[MapEntityMemoryInteractionUpdate],
 ) -> None:
-    """Create or update entities with their latest literal interactions."""
+    """Create or update entities with their latest interactions and any captured dialog."""
     if not updates:
         return
 
