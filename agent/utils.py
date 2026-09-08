@@ -12,6 +12,7 @@ from pydantic_ai import (
 from pydantic_ai.capabilities.hooks import Hooks
 
 from agent.context import AgentContext
+from common.enums import Button
 from emulator.control_events import ControlBoundary, ControlHandoff
 from streaming.server import update_background_from_states
 
@@ -21,7 +22,22 @@ if TYPE_CHECKING:
     from pydantic_ai.messages import ToolCallPart
     from pydantic_ai.models import ModelRequestContext
 
+    from emulator.emulator import Emulator
     from emulator.game_state import GameState
+
+
+async def move_cursor(emulator: Emulator, current_index: int, target_index: int) -> None:
+    """Move a vertical menu cursor to the target index."""
+    idx_diff = current_index - target_index
+    if idx_diff > 0:
+        button = Button.UP
+    elif idx_diff < 0:
+        button = Button.DOWN
+    else:
+        return
+
+    for _ in range(abs(idx_diff)):
+        await emulator.press_button(button)
 
 
 def build_screenshot_content(screenshot: Image.Image) -> BinaryContent:

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from agent.battle.tools.errors import BattleActionUnavailableError
 from agent.battle.tools.utils import get_cursor_pos_in_fight_menu
+from agent.utils import move_cursor
 from common.enums import Button
 
 if TYPE_CHECKING:
@@ -49,7 +50,7 @@ async def switch_pokemon(
     if cursor_index is None:
         raise BattleActionUnavailableError("The Pokemon menu did not open.")
 
-    await _move_cursor(emulator, cursor_index, party_slot)
+    await move_cursor(emulator, cursor_index, party_slot)
     await emulator.press_button(Button.A)
     game_state = await emulator.get_game_state()
 
@@ -57,7 +58,7 @@ async def switch_pokemon(
     if cursor_index is None:
         raise BattleActionUnavailableError("The switch menu did not open.")
 
-    await _move_cursor(emulator, cursor_index, 0)
+    await move_cursor(emulator, cursor_index, 0)
     await emulator.press_button(Button.A)
 
     return f"Attempted to switch to {target.name} ({target.species})."
@@ -78,24 +79,6 @@ def _get_available_party_member(
     if party_slot == active_party_slot:
         return None
     return target
-
-
-async def _move_cursor(
-    emulator: Emulator,
-    current_index: int,
-    target_index: int,
-) -> None:
-    """Move a vertical menu cursor to the target index."""
-    idx_diff = current_index - target_index
-    if idx_diff > 0:
-        button = Button.UP
-    elif idx_diff < 0:
-        button = Button.DOWN
-    else:
-        return
-
-    for _ in range(abs(idx_diff)):
-        await emulator.press_button(button)
 
 
 def _get_pkmn_menu_cursor_index(game_state: GameState) -> int | None:

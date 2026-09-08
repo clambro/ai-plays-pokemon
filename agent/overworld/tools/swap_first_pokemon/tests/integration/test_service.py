@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from agent.overworld.tools.swap_first_pokemon.service import (
-    SwapFirstPokemonService,
+    swap_first_pokemon,
 )
 from emulator.emulator import Emulator
 from memory.rolling_memory.schemas import RollingMemory
@@ -35,11 +35,11 @@ async def test_switch_to_pokemon() -> None:
             ),
         )
 
-        service = SwapFirstPokemonService(
+        await swap_first_pokemon(
             rolling_memory=rolling_memory,
             emulator=emulator,
+            pokemon_index=party_index,
         )
-        await service.swap_first_pokemon(party_index)
         await emulator.wait_until_ready()
 
         game_state = await emulator.get_game_state()

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from pydantic_ai import Tool
 
-from agent.overworld.tools.sokoban_solver.service import SokobanSolverService
+from agent.overworld.tools.sokoban_solver.service import solve_sokoban
 from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
@@ -31,12 +31,11 @@ def build_sokoban_solver_tool(
         Returns:
             Fresh screenshot and the actual solver result.
         """
-        service = SokobanSolverService(
+        result = await solve_sokoban(
             emulator=context.emulator,
             current_map=current_map,
             rolling_memory=context.state.rolling_memory,
         )
-        result = await service.solve()
         return await complete_overworld_action(context, result)
 
     return Tool(sokoban_solver, require_parameter_descriptions=True)
