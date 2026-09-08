@@ -78,7 +78,7 @@ The following previously traversed connections are elsewhere on the same map, ou
 {{known_connections_outside_current_component}}
 </known_connections_outside_current_component>
 
-The following discovered signs are in your current region. These often only provide flavour text, but could give a useful tip.
+The following discovered signs are in your current region. They may display text, open menus, or operate controls.
 <known_signs>
 {{known_signs}}
 </known_signs>
@@ -119,7 +119,7 @@ LEGEND_MAP = {
     AsciiTile.PRESSURE_PLATE: "A pressure plate that you can activate by pushing a boulder onto it.",
     AsciiTile.OBJECT: "A discovered stationary object. Its note gives the reachable position and direction needed to interact with it.",
     AsciiTile.PIKACHU: "Your companion Pikachu that follows you around. Unlike other sprites, you can walk through Pikachu, which will cause it to switch places with you. You can speak to Pikachu like any other sprite, but doing so only provides flavour text.",
-    AsciiTile.SIGN: "An object that you can interact with to read something. Usually a signpost, but could be a TV, radio, or other object. The main distinction between signs and sprites is that signs are static. They will never move, and their text will never change. Signs are usually interacted with from below, and cannot be walked through.",
+    AsciiTile.SIGN: "A stationary interaction point, such as a signpost, TV, radio, or control panel. It may display text, open a menu, or operate a control. Signs are usually interacted with from below, and cannot be walked through.",
     AsciiTile.SPINNER_UP: "A spinner tile that moves you upwards.",
     AsciiTile.SPINNER_DOWN: "A spinner tile that moves you downwards.",
     AsciiTile.SPINNER_LEFT: "A spinner tile that moves you leftwards.",
