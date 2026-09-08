@@ -5,10 +5,15 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from agent.overworld import navigation
+from agent.overworld.navigation import (
+    build_routing_data,
+    get_exploration_candidates,
+    get_map_boundary_tiles,
+    get_spinner_path,
+)
 from common.enums import AsciiTile, FacingDirection
 from common.schemas import Coords
-from overworld_map.views import get_composed_map_tiles, get_navigation_tiles
+from overworld_map.views import get_composed_map_tiles
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -44,23 +49,9 @@ def build_current_map_view(
     game_state: GameState,
 ) -> CurrentMapView:
     """Build the current reachable region using the shared overworld traversal rules."""
-    persistent_tiles = overworld_map.terrain_ndarray
     composed_tiles = get_composed_map_tiles(overworld_map, game_state)
-    routing_tiles = get_navigation_tiles(overworld_map, game_state)
-    # Allow departure from the starting warp without hiding transitions beneath Pikachu.
-    player_coords = game_state.player.coords
-    routing_tiles[player_coords.row, player_coords.col] = AsciiTile.PLAYER
-    spinner_types = [*AsciiTile.get_spinner_tiles(), AsciiTile.SPINNER_STOP]
-    # Entity overlays must not hide directional or stop tiles from spinner tracing.
-    spinner_mask = np.isin(persistent_tiles, spinner_types)
-    routing_tiles[spinner_mask] = persistent_tiles[spinner_mask]
+    routing_tiles, reachable_list = build_routing_data(overworld_map, game_state)
     hm_tiles = game_state.get_hm_tiles()
-    reachable_list = navigation.get_accessible_coords(
-        game_state.player.coords,
-        routing_tiles,
-        overworld_map.blockages,
-        hm_tiles,
-    )
     reachable_coords = frozenset(reachable_list)
     counter_interactions = _get_counter_interactions(
         reachable_coords,
@@ -97,7 +88,7 @@ def build_current_map_view(
 
     boundary_tiles = {
         direction: tuple(coords)
-        for direction, coords in navigation.get_map_boundary_tiles(
+        for direction, coords in get_map_boundary_tiles(
             reachable_list,
             overworld_map,
             game_state.map,
@@ -114,7 +105,7 @@ def build_current_map_view(
         display_origin=Coords(row=display_top, col=display_left),
         display_tiles=display_tiles,
         exploration_candidates=tuple(
-            navigation.get_exploration_candidates(reachable_list, routing_tiles),
+            get_exploration_candidates(reachable_list, routing_tiles),
         ),
         boundary_tiles=boundary_tiles,
     )
@@ -199,7 +190,7 @@ def _get_visible_coords(
                 continue
             tile = routing_tiles[neighbor.row, neighbor.col]
             if tile in spinner_tiles:
-                spinner_path = navigation.get_spinner_path(neighbor, routing_tiles)
+                spinner_path = get_spinner_path(neighbor, routing_tiles)
                 if spinner_path is not None:
                     visible.update(spinner_path)
                 continue

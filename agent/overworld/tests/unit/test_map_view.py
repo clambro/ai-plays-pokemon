@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 
-from agent.overworld import navigation
 from agent.overworld.formatting import format_sprite_notes
 from agent.overworld.map_view import build_current_map_view
+from agent.overworld.navigation import calculate_path_to_target
 from common.enums import AsciiTile, Button, FacingDirection, MapId, WarpActivation
 from common.schemas import Coords
 from emulator.parsers.sprite import Sprite
@@ -294,14 +294,14 @@ def test_routing_respects_tiles_beneath_player_and_pikachu(
     )
 
     map_view = build_current_map_view(overworld_map, game_state)
-    path = navigation.calculate_path_to_target(
+    path = calculate_path_to_target(
         start, target, map_view.routing_tiles, overworld_map.blockages, []
     )
 
     assert path == expected_path
     assert target in map_view.reachable_coords
     if start != transition:
-        assert navigation.calculate_path_to_target(
+        assert calculate_path_to_target(
             start, transition, map_view.routing_tiles, overworld_map.blockages, []
         ) == [Button.UP]
 

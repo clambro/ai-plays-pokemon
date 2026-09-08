@@ -2,8 +2,11 @@
 
 from typing import TYPE_CHECKING
 
-from agent.overworld import navigation
-from agent.overworld.map_view import build_current_map_view
+from agent.overworld.navigation import (
+    build_routing_data,
+    calculate_path_to_target,
+    get_spinner_destination,
+)
 from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
 from common.enums import AsciiTile, Button, FacingDirection, MapId
 from emulator.control_events import ControlBoundary
@@ -31,18 +34,17 @@ async def navigate(
     """Navigate to the requested target coordinates."""
     game_state = await emulator.get_game_state()
     hm_tiles = game_state.get_hm_tiles()
-    map_view = build_current_map_view(current_map, game_state)
-    routing_tiles = map_view.routing_tiles
+    routing_tiles, reachable_list = build_routing_data(current_map, game_state)
     if error := _get_target_error(
         current_map,
         game_state,
         coords,
-        map_view.reachable_coords,
+        frozenset(reachable_list),
         routing_tiles,
     ):
         return _record_result(rolling_memory, error)
 
-    path = navigation.calculate_path_to_target(
+    path = calculate_path_to_target(
         game_state.player.coords,
         coords,
         routing_tiles,
@@ -71,7 +73,7 @@ async def navigate(
         next_coords = game_state.player.coords + _BUTTON_OFFSETS[button]
         unresolved_spinner = (
             next_tile in AsciiTile.get_spinner_tiles()
-            and navigation.get_spinner_destination(
+            and get_spinner_destination(
                 next_coords,
                 routing_tiles,
             )

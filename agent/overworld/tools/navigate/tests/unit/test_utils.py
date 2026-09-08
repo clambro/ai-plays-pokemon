@@ -9,7 +9,14 @@ from copy import deepcopy
 
 import pytest
 
-from agent.overworld import navigation
+from agent.overworld.navigation import (
+    calculate_path_to_target,
+    get_accessible_coords,
+    get_exploration_candidates,
+    get_map_boundary_tiles,
+    get_spinner_destination,
+    get_spinner_path,
+)
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, MapId
 from common.schemas import Coords
 from emulator.parsers.map import Map, MapConnection
@@ -211,7 +218,7 @@ def test_get_spinner_path_is_unresolved_when_it_leaves_the_map() -> None:
     map_data = deepcopy(DUMMY_MAP)
     map_data.terrain = [list("›∙")]  # noqa: RUF001
 
-    path = navigation.get_spinner_path(Coords(row=0, col=0), map_data.terrain_ndarray)
+    path = get_spinner_path(Coords(row=0, col=0), map_data.terrain_ndarray)
 
     assert path is None
 
@@ -227,16 +234,14 @@ def test_spinner_exploration_ends_when_destination_is_revealed(last_tile: str) -
     entry = Coords(row=0, col=1)
     end = Coords(row=0, col=4)
 
-    accessible = navigation.get_accessible_coords(start, tiles, {}, [])
-    candidates = navigation.get_exploration_candidates(accessible, tiles)
+    accessible = get_accessible_coords(start, tiles, {}, [])
+    candidates = get_exploration_candidates(accessible, tiles)
 
     assert candidates == ([entry] if last_tile == "░" else [])
-    assert navigation.get_spinner_destination(entry, tiles) == (None if last_tile == "░" else end)
-    assert navigation.get_spinner_path(entry, tiles) == tuple(
-        Coords(row=0, col=col) for col in range(1, 5)
-    )
+    assert get_spinner_destination(entry, tiles) == (None if last_tile == "░" else end)
+    assert get_spinner_path(entry, tiles) == tuple(Coords(row=0, col=col) for col in range(1, 5))
     if last_tile == "░":
-        assert navigation.calculate_path_to_target(start, entry, tiles, {}, []) == [Button.RIGHT]
+        assert calculate_path_to_target(start, entry, tiles, {}, []) == [Button.RIGHT]
         assert Coords(row=0, col=2) not in accessible
         assert end not in accessible
 
@@ -574,7 +579,7 @@ def _get_accessible_coords(
     map_data: OverworldMap,
     hm_tiles: list[AsciiTile],
 ) -> list[Coords]:
-    return navigation.get_accessible_coords(
+    return get_accessible_coords(
         start_pos,
         map_data.terrain_ndarray,
         map_data.blockages,
@@ -586,7 +591,7 @@ def _get_exploration_candidates(
     accessible_coords: list[Coords],
     map_data: OverworldMap,
 ) -> list[Coords]:
-    return navigation.get_exploration_candidates(accessible_coords, map_data.terrain_ndarray)
+    return get_exploration_candidates(accessible_coords, map_data.terrain_ndarray)
 
 
 def _get_map_boundary_tiles(
@@ -596,7 +601,7 @@ def _get_map_boundary_tiles(
     map_state: Map = DUMMY_MAP_STATE,
     can_surf: bool = False,
 ) -> dict[FacingDirection, list[Coords]]:
-    return navigation.get_map_boundary_tiles(
+    return get_map_boundary_tiles(
         accessible_coords,
         map_data,
         map_state,
@@ -610,7 +615,7 @@ def _calculate_path_to_target(
     map_data: OverworldMap,
     hm_tiles: list[AsciiTile],
 ) -> list[Button] | None:
-    return navigation.calculate_path_to_target(
+    return calculate_path_to_target(
         start_pos,
         target_pos,
         map_data.terrain_ndarray,

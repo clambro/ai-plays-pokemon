@@ -6,16 +6,46 @@ depending on agent presentation or tool services.
 
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection
 from common.schemas import Coords
+from overworld_map.views import get_navigation_tiles
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    import numpy as np
-
+    from emulator.game_state import GameState
     from emulator.parsers.map import Map
     from overworld_map.schemas import OverworldMap
+
+
+def build_routing_data(
+    overworld_map: OverworldMap,
+    game_state: GameState,
+) -> tuple[np.ndarray, list[Coords]]:
+    """Build routing tiles and reachable coordinates without modifying remembered terrain.
+
+    Returns:
+        Finished routing tiles and reachable coordinates in traversal order.
+    """
+    persistent_tiles = overworld_map.terrain_ndarray
+    routing_tiles = get_navigation_tiles(overworld_map, game_state)
+    # Allow departure from the starting warp without hiding transitions beneath Pikachu.
+    player_coords = game_state.player.coords
+    routing_tiles[player_coords.row, player_coords.col] = AsciiTile.PLAYER
+    spinner_types = [*AsciiTile.get_spinner_tiles(), AsciiTile.SPINNER_STOP]
+    # Entity overlays must not hide directional or stop tiles from spinner tracing.
+    spinner_mask = np.isin(persistent_tiles, spinner_types)
+    routing_tiles[spinner_mask] = persistent_tiles[spinner_mask]
+    hm_tiles = game_state.get_hm_tiles()
+    reachable_list = get_accessible_coords(
+        game_state.player.coords,
+        routing_tiles,
+        overworld_map.blockages,
+        hm_tiles,
+    )
+    return routing_tiles, reachable_list
 
 
 def get_exploration_candidates(

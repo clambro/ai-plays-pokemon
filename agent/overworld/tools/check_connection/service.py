@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 from loguru import logger
 
-from agent.overworld import formatting, navigation
+from agent.overworld import formatting
+from agent.overworld.navigation import get_accessible_coords, get_exploration_candidates
 from common.constants import CONNECTION_CHECK_LABEL
 from common.enums import AsciiTile, FacingDirection, MapId
 from common.schemas import Coords
@@ -281,7 +282,7 @@ def get_connection_component(
         return (), (), False
 
     tiles[arrival_coords.row, arrival_coords.col] = AsciiTile.PLAYER
-    reachable_coords = navigation.get_accessible_coords(
+    reachable_coords = get_accessible_coords(
         arrival_coords,
         tiles,
         map_memory.blockages,
@@ -297,7 +298,7 @@ def get_connection_component(
         for group in _group_boundaries(boundaries)
         if any(_coords(boundary) in reachable_coords for boundary in group)
     )
-    has_unexplored_terrain = bool(navigation.get_exploration_candidates(reachable_coords, tiles))
+    has_unexplored_terrain = bool(get_exploration_candidates(reachable_coords, tiles))
     return warp_groups, boundary_groups, has_unexplored_terrain
 
 
