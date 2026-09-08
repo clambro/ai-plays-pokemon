@@ -5,10 +5,11 @@ from typing import TYPE_CHECKING
 import numpy as np
 from loguru import logger
 
-from agent.overworld import formatting
+from agent.overworld.connections import group_contiguous_warps, group_map_boundaries
+from agent.overworld.formatting import format_connection
 from agent.overworld.navigation import get_accessible_coords, get_exploration_candidates
 from common.constants import CONNECTION_CHECK_LABEL
-from common.enums import AsciiTile, FacingDirection, MapId
+from common.enums import AsciiTile, MapId
 from common.schemas import Coords
 from database.map_boundary_memory.repository import get_map_boundary_memories_for_map
 from database.map_memory.repository import get_map_memory
@@ -91,7 +92,7 @@ async def _check_warp(
     """Follow a remembered warp from one of its physical coordinates."""
     source_map_id = source_warp.map_id
     source_group = next(
-        group for group in _group_contiguous_warps(source_warps) if source_warp in group
+        group for group in _group_remembered_warps(source_warps) if source_warp in group
     )
     usage = _format_warp_usage(source_group)
     destination_map = await get_map_memory(source_warp.destination_map_id)
@@ -111,7 +112,7 @@ async def _check_warp(
             f"{usage}"
         )
     arrival_group = next(
-        group for group in _group_contiguous_warps(destination_warps) if arrival_warp in group
+        group for group in _group_remembered_warps(destination_warps) if arrival_warp in group
     )
 
     destination_boundaries = await get_map_boundary_memories_for_map(destination_map.map_id)
@@ -127,7 +128,7 @@ async def _check_warp(
         for group in warp_groups
         if all(warp.warp_id != arrival_warp.warp_id for warp in group)
     )
-    header = formatting.format_connection(
+    header = format_connection(
         source_map_id=source_map_id,
         source_coords=tuple(_coords(warp) for warp in source_group),
         destination_map_id=source_warp.destination_map_id,
@@ -171,7 +172,7 @@ async def _check_boundary(
     boundary_groups = tuple(
         group for group in boundary_groups if group[0].destination_map_id != source_map_id
     )
-    header = formatting.format_connection(
+    header = format_connection(
         source_map_id=source_map_id,
         source_coords=tuple(_coords(boundary) for boundary in source_group),
         destination_map_id=source_boundary.destination_map_id,
@@ -224,7 +225,7 @@ async def _describe_warp_group(group: tuple[WarpMemoryRead, ...]) -> str:
     warp = group[0]
     usage = _format_warp_usage(group)
     if await get_map_memory(warp.destination_map_id) is None:
-        connection = formatting.format_connection(
+        connection = format_connection(
             source_map_id=warp.map_id,
             source_coords=tuple(_coords(candidate) for candidate in group),
             destination_map_id=None,
@@ -236,11 +237,11 @@ async def _describe_warp_group(group: tuple[WarpMemoryRead, ...]) -> str:
     destination_warp_ids = {candidate.destination_warp_id for candidate in group}
     destination_coords = tuple(
         _coords(candidate)
-        for candidate_group in _group_contiguous_warps(destination_warps)
+        for candidate_group in _group_remembered_warps(destination_warps)
         if any(candidate.warp_id in destination_warp_ids for candidate in candidate_group)
         for candidate in candidate_group
     )
-    connection = formatting.format_connection(
+    connection = format_connection(
         source_map_id=warp.map_id,
         source_coords=tuple(_coords(candidate) for candidate in group),
         destination_map_id=warp.destination_map_id,
@@ -252,7 +253,7 @@ async def _describe_warp_group(group: tuple[WarpMemoryRead, ...]) -> str:
 def _describe_boundary_group(group: tuple[MapBoundaryMemoryRead, ...]) -> str:
     """Describe all source and destination coordinates of one map boundary."""
     boundary = group[0]
-    return formatting.format_connection(
+    return format_connection(
         source_map_id=boundary.map_id,
         source_coords=tuple(_coords(candidate) for candidate in group),
         destination_map_id=boundary.destination_map_id,
@@ -290,12 +291,12 @@ def get_connection_component(
     )
     warp_groups = tuple(
         group
-        for group in _group_contiguous_warps(warps)
+        for group in _group_remembered_warps(warps)
         if any(_coords(warp) in reachable_coords for warp in group)
     )
     boundary_groups = tuple(
         group
-        for group in _group_boundaries(boundaries)
+        for group in group_map_boundaries(boundaries)
         if any(_coords(boundary) in reachable_coords for boundary in group)
     )
     has_unexplored_terrain = bool(get_exploration_candidates(reachable_coords, tiles))
@@ -320,59 +321,22 @@ def _find_boundary_group(
     boundaries: Sequence[MapBoundaryMemoryRead],
 ) -> tuple[MapBoundaryMemoryRead, ...]:
     """Find the known map boundary occupying one edge coordinate."""
-    groups = _group_boundaries(boundaries)
+    groups = group_map_boundaries(boundaries)
     return next(
         (group for group in groups if any(_coords(boundary) == coordinates for boundary in group)),
         (),
     )
 
 
-def _group_contiguous_warps(
+def _group_remembered_warps(
     warps: Sequence[WarpMemoryRead],
 ) -> tuple[tuple[WarpMemoryRead, ...], ...]:
-    """Combine adjacent entrance tiles sharing a destination map and activation."""
-    groups = []
-    grouped_ids = set()
-    for warp in sorted(warps, key=lambda memory: memory.warp_id):
-        if warp.warp_id in grouped_ids:
-            continue
-        matching_warps = [
-            candidate
-            for candidate in warps
-            if candidate.destination_map_id == warp.destination_map_id
-            and candidate.activation == warp.activation
-        ]
-        group = [warp]
-        grouped_ids.add(warp.warp_id)
-        pending = [warp]
-        while pending:
-            current = pending.pop()
-            for candidate in matching_warps:
-                if candidate.warp_id in grouped_ids:
-                    continue
-                if (_coords(candidate) - _coords(current)).length == 1:
-                    group.append(candidate)
-                    grouped_ids.add(candidate.warp_id)
-                    pending.append(candidate)
-        groups.append(tuple(sorted(group, key=lambda memory: memory.warp_id)))
-    return tuple(groups)
-
-
-def _group_boundaries(
-    boundaries: Sequence[MapBoundaryMemoryRead],
-) -> tuple[tuple[MapBoundaryMemoryRead, ...], ...]:
-    """Combine coordinate pairs belonging to one logical map boundary."""
-    grouped: dict[
-        tuple[MapId, FacingDirection, MapId],
-        list[MapBoundaryMemoryRead],
-    ] = {}
-    for boundary in boundaries:
-        key = (boundary.map_id, boundary.direction, boundary.destination_map_id)
-        grouped.setdefault(key, []).append(boundary)
-    return tuple(
-        tuple(sorted(group, key=lambda boundary: (boundary.row, boundary.col)))
-        for group in grouped.values()
+    """Apply shared entrance grouping while retaining the original memory records."""
+    warps_by_id = {warp.warp_id: warp for warp in warps}
+    groups = group_contiguous_warps(
+        {warp.warp_id: (_coords(warp), warp.destination_map_id, warp.activation) for warp in warps}
     )
+    return tuple(tuple(warps_by_id[warp_id] for warp_id in group) for group in groups)
 
 
 def _coords(connection: WarpMemoryRead | MapBoundaryMemoryRead) -> Coords:

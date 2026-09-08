@@ -3,6 +3,7 @@
 from itertools import groupby
 from typing import TYPE_CHECKING
 
+from agent.overworld.connections import group_contiguous_warps, group_map_boundaries
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpActivation
 from common.schemas import Coords
@@ -207,37 +208,6 @@ def _get_warp_description(
     )
 
 
-def _group_contiguous_warps(warps: Sequence[Warp]) -> tuple[tuple[Warp, ...], ...]:
-    """Combine adjacent entrance tiles sharing a destination map and activation."""
-    groups = []
-    grouped_ids = set()
-    for warp in warps:
-        if warp.index in grouped_ids:
-            continue
-        matching_warps = [
-            candidate
-            for candidate in warps
-            if candidate.destination == warp.destination and candidate.activation == warp.activation
-        ]
-        group = [warp]
-        grouped_ids.add(warp.index)
-        pending = [warp]
-        while pending:
-            current = pending.pop()
-            for candidate in matching_warps:
-                if candidate.index in grouped_ids:
-                    continue
-                distance = abs(candidate.coords.row - current.coords.row) + abs(
-                    candidate.coords.col - current.coords.col
-                )
-                if distance == 1:
-                    group.append(candidate)
-                    grouped_ids.add(candidate.index)
-                    pending.append(candidate)
-        groups.append(tuple(sorted(group, key=lambda candidate: candidate.index)))
-    return tuple(groups)
-
-
 def format_connection(
     *,
     source_map_id: MapId,
@@ -339,10 +309,13 @@ def format_connection_sections(
         for entity_id in sorted(current_map.known_warp_ids)
         if entity_id in game_state.warps
     ]
-    groups = _group_contiguous_warps(known_warps)
+    groups = group_contiguous_warps(
+        {warp.index: (warp.coords, warp.destination, warp.activation) for warp in known_warps}
+    )
     current_lines = []
     other_lines = []
-    for group in groups:
+    for group_ids in groups:
+        group = tuple(game_state.warps[warp_id] for warp_id in group_ids)
         last_used_iteration = max(
             (
                 current_map.warp_usage_iterations[warp.index]
@@ -382,7 +355,7 @@ def format_connection_sections(
                 + f" Last used at iteration {last_used_iteration}."
             )
 
-    for group in _group_map_boundaries(current_map.known_map_boundaries):
+    for group in group_map_boundaries(current_map.known_map_boundaries):
         if any(_boundary_coords(boundary) in map_view.visible_coords for boundary in group):
             continue
         boundary = group[0]
@@ -406,20 +379,6 @@ def format_connection_sections(
         "\n".join(current_lines) or "No discovered warp tiles are in the current region.",
         "\n".join(other_lines)
         or "No previously traversed connections are known elsewhere on this map.",
-    )
-
-
-def _group_map_boundaries(
-    boundaries: Sequence[MapBoundaryMemoryRead],
-) -> tuple[tuple[MapBoundaryMemoryRead, ...], ...]:
-    """Combine remembered coordinate pairs belonging to one map boundary."""
-    grouped: dict[tuple[FacingDirection, MapId], list[MapBoundaryMemoryRead]] = {}
-    for boundary in boundaries:
-        key = (boundary.direction, boundary.destination_map_id)
-        grouped.setdefault(key, []).append(boundary)
-    return tuple(
-        tuple(sorted(group, key=lambda boundary: (boundary.row, boundary.col)))
-        for group in grouped.values()
     )
 
 
