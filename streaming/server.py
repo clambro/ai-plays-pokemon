@@ -4,14 +4,13 @@ from contextlib import AbstractAsyncContextManager
 from pathlib import Path
 from typing import TYPE_CHECKING, Self
 
-import aiofiles
 from aiohttp import web
 from loguru import logger
 
 from streaming.schemas import GameStateView
 
 if TYPE_CHECKING:
-    from aiohttp.web import Request, Response
+    from aiohttp.web import FileResponse, Request, Response
 
     from agent.state import AgentState
     from emulator.game_state import GameState
@@ -85,26 +84,26 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
 
         logger.info("Background server stopped")
 
-    async def _serve_index(self, request: Request) -> Response:  # noqa: ARG002
+    async def _serve_index(self, request: Request) -> FileResponse:  # noqa: ARG002
         """Serve the main HTML page."""
-        index_path = self._background_dir / "index.html"
-        async with aiofiles.open(index_path) as f:
-            content = await f.read()
-        return web.Response(text=content, content_type="text/html")
+        return web.FileResponse(
+            self._background_dir / "index.html",
+            headers={"Content-Type": "text/html; charset=utf-8"},
+        )
 
-    async def _serve_css(self, request: Request) -> Response:  # noqa: ARG002
+    async def _serve_css(self, request: Request) -> FileResponse:  # noqa: ARG002
         """Serve the CSS file."""
-        css_path = self._background_dir / "style.css"
-        async with aiofiles.open(css_path) as f:
-            content = await f.read()
-        return web.Response(text=content, content_type="text/css")
+        return web.FileResponse(
+            self._background_dir / "style.css",
+            headers={"Content-Type": "text/css; charset=utf-8"},
+        )
 
-    async def _serve_js(self, request: Request) -> Response:  # noqa: ARG002
+    async def _serve_js(self, request: Request) -> FileResponse:  # noqa: ARG002
         """Serve the JavaScript file."""
-        js_path = self._background_dir / "script.js"
-        async with aiofiles.open(js_path) as f:
-            content = await f.read()
-        return web.Response(text=content, content_type="application/javascript")
+        return web.FileResponse(
+            self._background_dir / "script.js",
+            headers={"Content-Type": "application/javascript; charset=utf-8"},
+        )
 
     async def _serve_state(self, request: Request) -> Response:  # noqa: ARG002
         """Serve the current state data as JSON."""
