@@ -2,7 +2,6 @@
 
 from typing import TYPE_CHECKING, assert_never
 
-from agent.overworld.formatting import get_facing_tile_notes
 from common.constants import ACTION_RESULT_LABEL
 from common.enums import AsciiTile, Button, FacingDirection, MapId
 from emulator.control_events import ControlBoundary
@@ -114,7 +113,7 @@ def _describe_action(
     boundary: ControlBoundary,
 ) -> str:
     """Describe an A press's origin, facing tile, and observed control state."""
-    tile, coords = get_facing_tile_notes(previous)
+    tile, coords = previous.get_facing_tile()
     tile_name = AsciiTile(tile).name.lower().replace("_", " ")
     if current.battle.is_in_battle:
         outcome = "A battle started."

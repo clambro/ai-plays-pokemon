@@ -7,12 +7,14 @@ from pydantic_ai import Agent, AgentRunError, BinaryContent, CallToolsNode
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 from pydantic_graph import End
 
-from agent.battle.formatting import is_evolution_family_caught
 from agent.battle.prompts import build_battle_decision_prompt
 from agent.battle.tools.registry import build_battle_toolset
+from agent.battle.utils import is_evolution_family_caught
 from agent.context import AgentContext
 from agent.dialog import settle_dialog
-from agent.utils import AGENT_HOOKS, build_screenshot_content, is_battle_handler_state
+from agent.formatting.game_state import build_screenshot_content
+from agent.hooks import AGENT_HOOKS
+from agent.utils import is_battle_handler_state
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 

@@ -263,7 +263,7 @@ async def test_direct_cardinal_crossing_remembers_full_connection() -> None:
     )
 
     with patch(
-        "overworld_map.service.persist_map_boundaries",
+        "overworld_map.service.remember_map_boundaries",
         new_callable=AsyncMock,
     ) as persist_boundaries:
         await record_observed_map_boundary(

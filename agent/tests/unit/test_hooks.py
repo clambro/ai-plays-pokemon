@@ -13,7 +13,7 @@ from pydantic_ai import (
 )
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
-from agent import utils
+from agent import hooks
 from agent.context import AgentContext
 from agent.state import AgentState
 from agent.text.agent import build_text_agent
@@ -76,7 +76,7 @@ async def test_hooks_publish_accounted_reasoning_before_tool_execution(
         assert [entry.content for entry in state.public_log.entries] == [reasoning]
         events.append("publish")
 
-    monkeypatch.setattr(utils, "update_background_from_states", publish)
+    monkeypatch.setattr(hooks, "update_background_from_states", publish)
     agent = build_text_agent(context)
 
     @agent.tool_plain

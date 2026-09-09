@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Self
 import numpy as np
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_SHAPE
-from common.enums import AsciiTile, Badge, BlockedDirection
+from common.enums import AsciiTile, Badge, BlockedDirection, FacingDirection
 from common.schemas import Coords
 from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.inventory import Inventory, parse_inventory
@@ -102,6 +102,21 @@ class GameState:
         if "SURF" in movepool and Badge.SOULBADGE in self.player.badges:
             hm_tiles.append(AsciiTile.WATER)
         return hm_tiles
+
+    def get_facing_tile(self) -> tuple[str, Coords]:
+        """Get the tile and map coordinates in front of the player."""
+        offset_map = {
+            FacingDirection.UP: Coords(row=-1, col=0),
+            FacingDirection.DOWN: Coords(row=1, col=0),
+            FacingDirection.LEFT: Coords(row=0, col=-1),
+            FacingDirection.RIGHT: Coords(row=0, col=1),
+        }
+        offset = offset_map[self.player.direction]
+        screen_coords = Coords(row=PLAYER_OFFSET_Y, col=PLAYER_OFFSET_X) + offset
+        map_coords = self.player.coords + offset
+        # We need to check the screen for adjacency because the tile may be on the next map.
+        tile = self.get_ascii_screen().screen[screen_coords.row][screen_coords.col]
+        return tile, map_coords
 
     def get_ascii_screen_terrain(self) -> AsciiScreenTerrain:
         """Get the entity-free ASCII terrain visible on the current screen.

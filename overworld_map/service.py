@@ -6,9 +6,9 @@ from loguru import logger
 
 from common.enums import AsciiTile, Button, FacingDirection, MapEntityType, MapId
 from common.schemas import Coords
-from database.map_boundary_memory.repository import get_map_boundary_memories_for_map
 from database.map_boundary_memory.repository import (
-    remember_map_boundaries as persist_map_boundaries,
+    get_map_boundary_memories_for_map,
+    remember_map_boundaries,
 )
 from database.map_boundary_memory.schemas import MapBoundaryMemoryCreateUpdate
 from database.map_entity_memory.repository import (
@@ -373,7 +373,7 @@ async def record_observed_map_boundary(
         boundaries = _get_observed_map_boundaries(button, previous, result, current)
         if not boundaries:
             return
-        await persist_map_boundaries(boundaries)
+        await remember_map_boundaries(boundaries)
     except Exception as error:  # noqa: BLE001
         logger.opt(exception=error).warning(
             "Map-boundary recording failed; continuing without the latest crossing."

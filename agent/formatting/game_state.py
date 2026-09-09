@@ -1,12 +1,28 @@
 """Shared model-facing formatting for parsed gameplay state."""
 
+from io import BytesIO
 from typing import TYPE_CHECKING
+
+from pydantic_ai import BinaryContent
 
 from common.enums import PokeballItem
 
 if TYPE_CHECKING:
+    from PIL import Image
+
     from emulator.game_state import GameState
     from emulator.parsers.pokemon import Pokemon
+
+
+def build_screenshot_content(screenshot: Image.Image) -> BinaryContent:
+    """Encode a screenshot for a multimodal model message."""
+    image_buffer = BytesIO()
+    screenshot.save(image_buffer, format="PNG")
+    return BinaryContent(
+        data=image_buffer.getvalue(),
+        media_type="image/png",
+        vendor_metadata={"detail": "original"},
+    )
 
 
 def format_player_info(game_state: GameState) -> str:

@@ -9,9 +9,11 @@ from pydantic_graph import End
 
 from agent.context import AgentContext
 from agent.dialog import settle_dialog
+from agent.formatting.game_state import build_screenshot_content
+from agent.hooks import AGENT_HOOKS
 from agent.text.prompts import build_text_decision_prompt
 from agent.text.tools.registry import build_text_toolset
-from agent.utils import AGENT_HOOKS, build_screenshot_content, is_text_handler_state
+from agent.utils import is_text_handler_state
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 

@@ -328,22 +328,6 @@ def format_legend(
     return "\n".join(f'- "{tile}": {legend[tile]}' for tile in AsciiTile if tile in tiles)
 
 
-def get_facing_tile_notes(game_state: GameState) -> tuple[str, Coords]:
-    """Get the tile and map coordinates in front of the player."""
-    offset_map = {
-        FacingDirection.UP: Coords(row=-1, col=0),
-        FacingDirection.DOWN: Coords(row=1, col=0),
-        FacingDirection.LEFT: Coords(row=0, col=-1),
-        FacingDirection.RIGHT: Coords(row=0, col=1),
-    }
-    offset = offset_map[game_state.player.direction]
-    screen_coords = Coords(row=PLAYER_OFFSET_Y, col=PLAYER_OFFSET_X) + offset
-    map_coords = game_state.player.coords + offset
-    # We need to check the screen for adjacency because the tile may be on the next map.
-    tile = game_state.get_ascii_screen().screen[screen_coords.row][screen_coords.col]
-    return tile, map_coords
-
-
 def get_tile_notes(
     direction: BlockedDirection,
     screen: AsciiScreenWithEntities,
