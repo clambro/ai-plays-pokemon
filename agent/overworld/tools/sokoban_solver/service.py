@@ -1,10 +1,12 @@
 """Business logic for the overworld Sokoban solver tool."""
 
+from collections import deque
 from typing import TYPE_CHECKING
 
+from agent.overworld.navigation import is_blocked
 from agent.overworld.tools.sokoban_solver.schemas import SokobanMap
 from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
-from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, SpriteLabel
+from common.enums import AsciiTile, Button, FacingDirection, SpriteLabel
 from common.schemas import Coords
 from emulator.control_events import ControlBoundary
 from overworld_map.views import get_navigation_tiles
@@ -25,7 +27,7 @@ async def solve_sokoban(
 ) -> str:
     """Solve the Sokoban puzzle."""
     game_state, collision_tiles = await emulator.get_game_state_with_map_collision_tiles()
-    sokoban_map = _get_simplified_map(current_map, game_state)
+    sokoban_map = _get_simplified_map(current_map, game_state, collision_tiles)
 
     if not sokoban_map.boulders or not sokoban_map.goals:
         result = (
@@ -35,7 +37,6 @@ async def solve_sokoban(
         rolling_memory.add_memory(result)
         return result
 
-    sokoban_map.collision_tiles = collision_tiles
     solution = _solve_sokoban(current_map, sokoban_map, game_state)
 
     if solution is None:
@@ -53,7 +54,11 @@ async def solve_sokoban(
     return result
 
 
-def _get_simplified_map(current_map: OverworldMap, game_state: GameState) -> SokobanMap:
+def _get_simplified_map(
+    current_map: OverworldMap,
+    game_state: GameState,
+    collision_tiles: list[list[int]],
+) -> SokobanMap:
     """Get a simplified map of the Sokoban puzzle with the boulders and goals."""
     navigation_tiles = get_navigation_tiles(current_map, game_state)
     boulders = {
@@ -82,7 +87,12 @@ def _get_simplified_map(current_map: OverworldMap, game_state: GameState) -> Sok
     for b in boulders:
         simplified_tiles[b.row][b.col] = FREE_TILE
 
-    return SokobanMap(tiles=simplified_tiles, boulders=boulders, goals=goals)
+    return SokobanMap(
+        tiles=simplified_tiles,
+        boulders=boulders,
+        goals=goals,
+        collision_tiles=collision_tiles,
+    )
 
 
 def _solve_sokoban(
@@ -96,11 +106,11 @@ def _solve_sokoban(
     """
     initial_state = (game_state.player.coords, frozenset(sokoban_map.boulders))
 
-    queue = [(initial_state, [])]
+    queue = deque([(initial_state, [])])
     visited = {initial_state}
 
     while queue:
-        (current_player_pos, current_boulders), path = queue.pop(0)
+        (current_player_pos, current_boulders), path = queue.popleft()
         if current_boulders & sokoban_map.goals:  # At least one goal is solved.
             return path
 
@@ -184,7 +194,7 @@ def _is_movement_possible(  # noqa: PLR0913
             return False
     else:
         direction = destination - source
-        if _is_blocked(current_map, source, direction.row, direction.col):
+        if is_blocked(source, direction.row, direction.col, current_map.blockages):
             return False
 
     valid_tiles = (FREE_TILE,)
@@ -280,22 +290,6 @@ async def _execute_step(
         )
         if not needs_retry:
             return False
-    return False
-
-
-def _is_blocked(current_map: OverworldMap, current: Coords, dy: int, dx: int) -> bool:
-    """Check if the movement is blocked by a paired tile collision."""
-    blockages = current_map.blockages.get(current)
-    if not blockages:
-        return False
-    if dy == 1:
-        return bool(blockages & BlockedDirection.DOWN)
-    if dy == -1:
-        return bool(blockages & BlockedDirection.UP)
-    if dx == 1:
-        return bool(blockages & BlockedDirection.RIGHT)
-    if dx == -1:
-        return bool(blockages & BlockedDirection.LEFT)
     return False
 
 

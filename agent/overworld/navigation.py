@@ -4,6 +4,7 @@ This module contains traversal, pathfinding, exploration, and map-boundary calcu
 depending on agent presentation or tool services.
 """
 
+from collections import deque
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -170,10 +171,10 @@ def get_accessible_coords(
         Reachable coordinates, including ``start_pos`` so a boundary beneath the player is found.
     """
     visited = {start_pos}
-    queue = [start_pos]
+    queue = deque([start_pos])
     accessible = [start_pos]
     while queue:
-        current = queue.pop(0)
+        current = queue.popleft()
         for neighbor, _ in _get_neighbors(current, tiles, blockages, hm_tiles):
             if neighbor not in visited:
                 visited.add(neighbor)
@@ -295,7 +296,7 @@ def _get_neighbors(
             # An unresolved spinner is still reachable as an exploration action, but it is
             # terminal until traversing it reveals where it leads.
             neighbors.append((destination if destination is not None else new_pos, button))
-        elif not _is_blocked(pos, dy, dx, blockages) and (
+        elif not is_blocked(pos, dy, dx, blockages) and (
             target_tile in walkable_tiles
             or (target_tile == AsciiTile.CUT_TREE and AsciiTile.CUT_TREE in hm_tiles)
             or (target_tile == AsciiTile.WATER and AsciiTile.WATER in hm_tiles)
@@ -305,7 +306,7 @@ def _get_neighbors(
     return neighbors
 
 
-def _is_blocked(
+def is_blocked(
     current: Coords,
     dy: int,
     dx: int,
