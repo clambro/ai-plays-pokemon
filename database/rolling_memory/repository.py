@@ -22,7 +22,6 @@ async def finalize_raw_memory_block(block: RawMemoryBlockCreate) -> RawMemoryBlo
         )
         session.add(db_obj)
         await session.commit()
-        await session.refresh(db_obj)
 
     return RawMemoryBlockRead.model_validate(db_obj)
 
@@ -52,7 +51,6 @@ async def store_memory_summary(summary: MemorySummaryCreate) -> MemorySummaryRea
         )
         session.add(db_obj)
         await session.commit()
-        await session.refresh(db_obj)
 
     return MemorySummaryRead.model_validate(db_obj)
 

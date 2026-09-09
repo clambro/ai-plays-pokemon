@@ -20,7 +20,6 @@ async def create_map_memory(map_memory: MapMemoryCreateUpdate) -> MapMemoryRead:
         )
         session.add(db_obj)
         await session.commit()
-        await session.refresh(db_obj)
 
     return MapMemoryRead.model_validate(db_obj)
 
