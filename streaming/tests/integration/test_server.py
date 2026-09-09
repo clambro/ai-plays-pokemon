@@ -51,8 +51,7 @@ async def test_html_page_handles_empty_data() -> None:
 
         async with session.get("http://localhost:8082/api/state.json") as response:
             assert response.status == HTTPOk.status_code
-            content = await response.text()
-            assert content == ""  # Empty response when no data
+            assert await response.json() is None
 
 
 @pytest.mark.integration
@@ -95,8 +94,7 @@ async def test_html_page_data_updates() -> None:
     ):
         async with session.get("http://localhost:8083/api/state.json") as response:
             assert response.status == HTTPOk.status_code
-            content = await response.text()
-            assert content == ""
+            assert await response.json() is None
 
         server._current_data = MOCK_DATA
 

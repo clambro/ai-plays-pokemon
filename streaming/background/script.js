@@ -31,7 +31,7 @@ const LogEntrySchema = z.object({
 });
 
 const GameStateSchema = z.object({
-    iteration: z.number().int().positive(),
+    iteration: z.number().int().min(0),
     money: z.number().int().min(0),
     pokedex_seen: z.number().int().min(0),
     pokedex_caught: z.number().int().min(0),
@@ -277,7 +277,7 @@ async function fetchData() {
     try {
         const response = await fetch('/api/state.json');
         const raw = await response.json();
-        if (!raw || Object.keys(raw).length === 0) return;
+        if (raw === null) return;
 
         const data = GameStateSchema.parse(raw);
         requestAnimationFrame(() => updateDisplay(data));
