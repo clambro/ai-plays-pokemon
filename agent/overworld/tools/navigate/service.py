@@ -62,8 +62,8 @@ async def navigate(
     starting_map_id = current_map.id
     dialogs: list[str] = []
     for button in path:
-        next_tile = _get_next_tile(current_map, button, game_state)
         next_coords = game_state.player.coords + _BUTTON_OFFSETS[button]
+        next_tile = current_map.terrain[next_coords.row][next_coords.col]
         unresolved_spinner = (
             next_tile in AsciiTile.get_spinner_tiles()
             and get_spinner_destination(
@@ -181,19 +181,6 @@ def _get_target_error(
         accessible_coords,
         routing_tiles,
     )
-
-
-def _get_next_tile(current_map: OverworldMap, button: Button, game_state: GameState) -> AsciiTile:
-    """Get the next tile type that the player will move to."""
-    tile_arr = current_map.terrain_ndarray
-    player_pos = game_state.player.coords
-    if button == Button.UP:
-        return tile_arr[player_pos.row - 1, player_pos.col]
-    if button == Button.DOWN:
-        return tile_arr[player_pos.row + 1, player_pos.col]
-    if button == Button.LEFT:
-        return tile_arr[player_pos.row, player_pos.col - 1]
-    return tile_arr[player_pos.row, player_pos.col + 1]
 
 
 async def _press_navigation_step(

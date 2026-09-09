@@ -23,12 +23,10 @@ if TYPE_CHECKING:
 
     from emulator.control_events import ControlBoundary
     from emulator.game_state import GameState
-    from overworld_map.schemas import OverworldMap
 
 
 def build_overworld_agent(
     context: AgentContext,
-    current_map: OverworldMap,
     map_view: CurrentMapView,
     game_state: GameState,
 ) -> Agent[AgentContext, str]:
@@ -41,7 +39,6 @@ def build_overworld_agent(
         toolsets=[
             build_overworld_toolset(
                 context,
-                current_map,
                 map_view,
                 game_state,
             ),
@@ -72,7 +69,6 @@ async def run_overworld(
     map_view = build_current_map_view(current_map, initial_game_state)
     agent = build_overworld_agent(
         context,
-        current_map,
         map_view,
         initial_game_state,
     )

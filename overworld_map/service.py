@@ -294,7 +294,7 @@ async def _update_overworld_map_terrain(
         screen_terrain = screen_terrain[:, : width - right]
         right = width
 
-    terrain = overworld_map.terrain_ndarray.copy()
+    terrain = overworld_map.terrain_ndarray
     terrain[top:bottom, left:right] = screen_terrain
     overworld_map.terrain = terrain.tolist()
 

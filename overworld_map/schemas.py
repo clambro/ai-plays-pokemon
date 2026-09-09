@@ -49,7 +49,7 @@ class OverworldMap:
 
     @property
     def terrain_ndarray(self) -> np.ndarray:
-        """Return the terrain as a NumPy array."""
+        """Return a new NumPy array of the terrain."""
         return np.asarray(self.terrain)
 
     @property

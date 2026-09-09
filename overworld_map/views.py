@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 def get_navigation_tiles(overworld_map: OverworldMap, game_state: GameState) -> np.ndarray:
     """Build traversability from terrain and current blocking entities."""
-    tiles = overworld_map.terrain_ndarray.copy()
+    tiles = overworld_map.terrain_ndarray
 
     for entity_id in overworld_map.known_sprite_ids:
         sprite = game_state.sprites.get(entity_id)
