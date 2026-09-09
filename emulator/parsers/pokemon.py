@@ -95,13 +95,7 @@ def parse_player_battle_pokemon(mem: PyBoyMemoryView) -> Pokemon | None:
     type2 = _INT_TO_TYPE_MAP[mem[0xD019]]
     type2 = type2 if type1 != type2 else None  # Monotype pokemon have the same type for both.
 
-    moves = []
-    for i in range(4):
-        move_id = mem[0xD01B + i]
-        if move_id == 0:
-            continue
-        pp = mem[0xD02C + i] & _PP_MASK
-        moves.append(PokemonMove(name=_INT_TO_MOVE_MAP[move_id], pp=pp))
+    moves = _parse_moves(mem[0xD01B:0xD01F], mem[0xD02C:0xD030])
 
     hp = (mem[0xD014] << 8) | mem[0xD015]
     max_hp = (mem[0xD022] << 8) | mem[0xD023]
@@ -164,13 +158,10 @@ def _parse_party_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
     type2 = _INT_TO_TYPE_MAP[mem[0xD170 + increment]]
     type2 = type2 if type1 != type2 else None  # Monotype pokemon have the same type for both.
 
-    moves = []
-    for i in range(4):
-        move_id = mem[0xD172 + increment + i]
-        if move_id == 0:
-            continue
-        pp = mem[0xD187 + increment + i] & _PP_MASK
-        moves.append(PokemonMove(name=_INT_TO_MOVE_MAP[move_id], pp=pp))
+    moves = _parse_moves(
+        mem[0xD172 + increment : 0xD176 + increment],
+        mem[0xD187 + increment : 0xD18B + increment],
+    )
 
     hp = (mem[0xD16B + increment] << 8) | mem[0xD16B + increment + 1]
     max_hp = (mem[0xD18C + increment] << 8) | mem[0xD18C + increment + 1]
@@ -204,13 +195,10 @@ def _parse_pc_pokemon(mem: PyBoyMemoryView, index: int) -> BoxPokemon | None:
     type2 = _INT_TO_TYPE_MAP[mem[0xDA9B + increment]]
     type2 = type2 if type1 != type2 else None  # Monotype pokemon have the same type for both.
 
-    moves = []
-    for i in range(4):
-        move_id = mem[0xDA9D + increment + i]
-        if move_id == 0:
-            continue
-        pp = mem[0xDAB2 + increment + i] & _PP_MASK
-        moves.append(PokemonMove(name=_INT_TO_MOVE_MAP[move_id], pp=pp))
+    moves = _parse_moves(
+        mem[0xDA9D + increment : 0xDAA1 + increment],
+        mem[0xDAB2 + increment : 0xDAB6 + increment],
+    )
 
     return BoxPokemon(
         name=name,
@@ -220,6 +208,15 @@ def _parse_pc_pokemon(mem: PyBoyMemoryView, index: int) -> BoxPokemon | None:
         level=mem[0xDA98 + increment],
         moves=moves,
     )
+
+
+def _parse_moves(move_ids: list[int], packed_pp: list[int]) -> list[PokemonMove]:
+    """Decode occupied move slots in order, excluding PP-Up bits from remaining PP."""
+    return [
+        PokemonMove(name=_INT_TO_MOVE_MAP[move_id], pp=pp & _PP_MASK)
+        for move_id, pp in zip(move_ids, packed_pp, strict=True)
+        if move_id != 0
+    ]
 
 
 _INT_TO_SPECIES_MAP = {
