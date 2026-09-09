@@ -2,8 +2,6 @@
 
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 from agent.text.tools.errors import TextActionUnavailableError
 from common.enums import Button
 
@@ -11,14 +9,9 @@ if TYPE_CHECKING:
     from emulator.emulator import Emulator
     from emulator.game_state import GameState
 
-_LETTER_GRID = np.array(
-    [
-        ["A", "B", "C", "D", "E", "F", "G", "H", "I"],
-        ["J", "K", "L", "M", "N", "O", "P", "Q", "R"],
-        ["S", "T", "U", "V", "W", "X", "Y", "Z", " "],
-    ],
-)
-_VALID_NAME_CHARACTERS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZ ")
+_LETTER_POSITIONS = {
+    letter: divmod(index, 9) for index, letter in enumerate("ABCDEFGHIJKLMNOPQRSTUVWXYZ ")
+}
 
 
 async def assign_name(
@@ -53,7 +46,7 @@ def _validate_name(
     game_state: GameState,
 ) -> None:
     """Reject names that cannot be entered completely on the current screen."""
-    if not name or name != name.strip() or not set(name).issubset(_VALID_NAME_CHARACTERS):
+    if not name or name != name.strip() or not set(name).issubset(_LETTER_POSITIONS):
         raise TextActionUnavailableError(
             "Names must contain only uppercase letters and internal spaces.",
         )
@@ -89,11 +82,7 @@ async def _enter_name(
     """Navigate the naming grid and confirm the supplied name."""
     for letter in name:
         game_state = await emulator.get_game_state()
-        matching_positions = np.argwhere(letter == _LETTER_GRID)
-        if len(matching_positions) != 1:
-            raise TextActionUnavailableError(f"The character {letter!r} cannot be entered.")
-
-        letter_location: tuple[int, int] = tuple(matching_positions[0])
+        letter_location = _LETTER_POSITIONS[letter]
         cursor_location = game_state.screen.cursor_index
         for button in _get_dir_buttons(letter_location, cursor_location):
             await emulator.press_button(button)
