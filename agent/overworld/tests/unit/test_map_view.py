@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 
-from agent.overworld.formatting import format_sprite_notes
 from agent.overworld.map_view import build_current_map_view
 from agent.overworld.navigation import calculate_path_to_target
 from common.enums import AsciiTile, Button, FacingDirection, MapId, WarpActivation
@@ -382,7 +381,7 @@ def test_unresolved_spinner_shows_known_path_without_exposing_disconnected_terra
 
 
 @pytest.mark.unit
-def test_sprite_notes_include_only_reachable_and_counter_interactable_sprites() -> None:
+def test_current_map_view_includes_counter_interactable_sprites() -> None:
     """Expose a disconnected sprite only when the ROM permits talking across its counter."""
     overworld_map = OverworldMap(
         id=MapId.VIRIDIAN_POKECENTER,
@@ -442,9 +441,7 @@ def test_sprite_notes_include_only_reachable_and_counter_interactable_sprites() 
     )
 
     map_view = build_current_map_view(overworld_map, game_state)
-    notes = format_sprite_notes(map_view, game_state)
 
     assert map_view.counter_interactions == {1: (Coords(row=2, col=1),)}
-    assert "NURSE" in notes
-    assert "across a counter from (2, 1)" in notes
-    assert "POKEMON" not in notes
+    assert sprites[1].coords in map_view.visible_coords
+    assert sprites[2].coords not in map_view.visible_coords
