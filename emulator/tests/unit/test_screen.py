@@ -92,8 +92,6 @@ def _make_screen(*, top: int, left: int) -> Screen:
     return Screen(
         top=top,
         left=left,
-        bottom=top + SCREEN_HEIGHT,
-        right=left + SCREEN_WIDTH,
         tiles=[[0] * tile_width for _ in range(tile_height)],
         decoded_tiles=[[""] * tile_width for _ in range(tile_height)],
         is_text_window_visible=False,

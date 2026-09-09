@@ -28,8 +28,6 @@ class Screen(BaseModel):
 
     top: int
     left: int
-    bottom: int
-    right: int
     tiles: list[list[int]]  # Each block on screen is a 2x2 square of tiles.
     decoded_tiles: list[list[str]]
     is_text_window_visible: bool
@@ -38,6 +36,16 @@ class Screen(BaseModel):
     list_scroll_offset: int
 
     model_config = ConfigDict(frozen=True)
+
+    @property
+    def bottom(self) -> int:
+        """The exclusive bottom edge in map coordinates."""
+        return self.top + SCREEN_HEIGHT
+
+    @property
+    def right(self) -> int:
+        """The exclusive right edge in map coordinates."""
+        return self.left + SCREEN_WIDTH
 
     @computed_field
     @property
@@ -115,8 +123,6 @@ def parse_screen(mem: PyBoyMemoryView) -> Screen:
 
     top = player_y - PLAYER_OFFSET_Y
     left = player_x - PLAYER_OFFSET_X
-    bottom = top + SCREEN_HEIGHT
-    right = left + SCREEN_WIDTH
 
     flat_tiles = _resolve_cut_tree_tiles_from_vram(mem, mem[0xC3A0:0xC508])
     w = SCREEN_WIDTH * 2  # Convert blocks to 2x2 tiles.
@@ -126,8 +132,6 @@ def parse_screen(mem: PyBoyMemoryView) -> Screen:
     return Screen(
         top=top,
         left=left,
-        bottom=bottom,
-        right=right,
         tiles=tiles,
         decoded_tiles=decode_screen_tiles(mem, tiles),
         is_text_window_visible=mem[_WINDOW_Y_ADDRESS] < _SCREEN_HEIGHT_PIXELS,
