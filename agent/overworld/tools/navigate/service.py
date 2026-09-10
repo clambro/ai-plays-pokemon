@@ -8,7 +8,7 @@ from agent.overworld.navigation import (
     get_spinner_destination,
 )
 from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
-from common.enums import AsciiTile, Button, FacingDirection, MapId
+from common.enums import BUTTON_DIRECTIONS, BUTTON_OFFSETS, AsciiTile, Button, MapId
 from emulator.control_events import ControlBoundary
 from overworld_map.service import record_observed_map_boundary, update_overworld_map
 
@@ -62,7 +62,7 @@ async def navigate(
     starting_map_id = current_map.id
     dialogs: list[str] = []
     for button in path:
-        next_coords = game_state.player.coords + _BUTTON_OFFSETS[button]
+        next_coords = game_state.player.coords + BUTTON_OFFSETS[button]
         next_tile = current_map.terrain[next_coords.row][next_coords.col]
         unresolved_spinner = (
             next_tile in AsciiTile.get_spinner_tiles()
@@ -191,7 +191,7 @@ async def _press_navigation_step(
     observe_steps: bool = False,
 ) -> tuple[ControlResult, GameState]:
     """Complete one movement step, including turning or Pikachu yielding, and return its state."""
-    desired_direction = _BUTTON_DIRECTIONS[button]
+    desired_direction = BUTTON_DIRECTIONS[button]
     if game_state.player.direction != desired_direction:
         result, observed_state = await _press_and_record_boundary(
             emulator,
@@ -209,7 +209,7 @@ async def _press_navigation_step(
 
     pikachu_was_ahead = (
         game_state.pikachu.is_rendered
-        and game_state.player.coords + _BUTTON_OFFSETS[button] == game_state.pikachu.coords
+        and game_state.player.coords + BUTTON_OFFSETS[button] == game_state.pikachu.coords
     )
     result, observed_state = await _press_and_record_boundary(
         emulator,
@@ -242,7 +242,7 @@ async def _handle_hm_use(
         return "", result.boundary, game_state
 
     # Rotate to face the target.
-    if game_state.player.direction != _BUTTON_DIRECTIONS[button]:
+    if game_state.player.direction != BUTTON_DIRECTIONS[button]:
         result, game_state = await _press_and_record_boundary(emulator, button, game_state)
         if result.boundary != ControlBoundary.OVERWORLD_READY:
             return "", result.boundary, game_state
@@ -323,21 +323,6 @@ def _record_result(
     complete_result = "\n\n".join([*dialog_results, action_result])
     rolling_memory.add_memory(complete_result)
     return complete_result
-
-
-_BUTTON_OFFSETS = {
-    Button.UP: (-1, 0),
-    Button.DOWN: (1, 0),
-    Button.LEFT: (0, -1),
-    Button.RIGHT: (0, 1),
-}
-
-_BUTTON_DIRECTIONS = {
-    Button.UP: FacingDirection.UP,
-    Button.DOWN: FacingDirection.DOWN,
-    Button.LEFT: FacingDirection.LEFT,
-    Button.RIGHT: FacingDirection.RIGHT,
-}
 
 
 def _get_map_target_error(

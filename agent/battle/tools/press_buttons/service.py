@@ -7,19 +7,19 @@ from agent.utils import is_battle_handler_state
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from agent.context import AgentContext
     from common.enums import Button
+    from emulator.emulator import Emulator
 
 
 async def press_buttons(
     *,
-    context: AgentContext,
+    emulator: Emulator,
     buttons: Sequence[Button],
 ) -> str:
     """Press the selected buttons.
 
     Args:
-        context: Battle dependencies.
+        emulator: Emulator receiving the inputs.
         buttons: Buttons to press in order.
 
     Returns:
@@ -27,11 +27,11 @@ async def press_buttons(
     """
     pressed_buttons: list[str] = []
     for index, button in enumerate(buttons):
-        await context.emulator.press_button(button)
+        await emulator.press_button(button)
         pressed_buttons.append(button.value)
 
         if index < len(buttons) - 1:
-            game_state = await context.emulator.get_game_state()
+            game_state = await emulator.get_game_state()
             if not is_battle_handler_state(game_state):
                 break
 

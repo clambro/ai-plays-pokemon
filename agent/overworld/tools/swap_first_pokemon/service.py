@@ -7,6 +7,7 @@ from loguru import logger
 from agent.utils import move_cursor
 from common.constants import ACTION_RESULT_LABEL
 from common.enums import Button
+from emulator.control_events import ControlHandoff
 
 if TYPE_CHECKING:
     from emulator.emulator import Emulator
@@ -28,6 +29,8 @@ async def swap_first_pokemon(
             "I successfully swapped the order of my Pokemon. The new party order is "
             f"{[p.name for p in game_state.party]}."
         )
+    except ControlHandoff:
+        raise
     except Exception as error:  # noqa: BLE001
         if not isinstance(error, SwapPokemonError):
             logger.exception("Unexpected error while changing the party order.")

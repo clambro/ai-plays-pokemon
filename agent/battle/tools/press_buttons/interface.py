@@ -60,7 +60,7 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
             Fresh battle context after pressing the buttons.
         """
         result = await press_buttons_service(
-            context=context,
+            emulator=context.emulator,
             buttons=buttons,
         )
         if buttons[-1] in {Button.UP, Button.DOWN, Button.LEFT, Button.RIGHT}:

@@ -7,6 +7,7 @@ from loguru import logger
 from agent.utils import move_cursor
 from common.constants import ACTION_RESULT_LABEL
 from common.enums import Button
+from emulator.control_events import ControlHandoff
 
 if TYPE_CHECKING:
     from emulator.emulator import Emulator
@@ -22,6 +23,8 @@ async def use_item(*, rolling_memory: RollingMemory, emulator: Emulator, item_in
     try:
         item_name = await _use_item(emulator, item_index)
         result = f"I used {item_name} from inventory slot {item_index}."
+    except ControlHandoff:
+        raise
     except Exception as error:  # noqa: BLE001
         if not isinstance(error, UseItemError):
             logger.exception("Unexpected error while using an inventory item.")

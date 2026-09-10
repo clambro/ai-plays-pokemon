@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from common.enums import FacingDirection, MapId, Tileset
+from common.enums import FACING_OFFSETS, FacingDirection, MapId, Tileset
 from common.schemas import Coords
 from emulator.parsers.map_collision import read_map_collision_tile
 
@@ -369,13 +369,7 @@ def _get_connection_collision_tile_pair(
             row=source_coordinate,
             col=0 if direction == FacingDirection.LEFT else map_width - 1,
         )
-    direction_offset = {
-        FacingDirection.UP: (-1, 0),
-        FacingDirection.DOWN: (1, 0),
-        FacingDirection.LEFT: (0, -1),
-        FacingDirection.RIGHT: (0, 1),
-    }
-    destination = source + direction_offset[direction]
+    destination = source + FACING_OFFSETS[direction]
     return read_map_collision_tile(mem, source), read_map_collision_tile(mem, destination)
 
 

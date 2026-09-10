@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from common.enums import AsciiTile, Button, FacingDirection, MapEntityType, MapId
+from common.enums import BUTTON_DIRECTIONS, AsciiTile, Button, FacingDirection, MapEntityType, MapId
 from common.schemas import Coords
 from database.map_boundary_memory.repository import (
     get_map_boundary_memories_for_map,
@@ -387,7 +387,7 @@ def _get_observed_map_boundaries(
     current: GameState,
 ) -> tuple[MapBoundaryMemoryCreateUpdate, ...]:
     """Recognize a direct crossing and retain its complete crossable coordinate mapping."""
-    direction = _BUTTON_DIRECTIONS.get(button)
+    direction = BUTTON_DIRECTIONS.get(button)
     if (
         direction is None
         or result.boundary != ControlBoundary.OVERWORLD_READY
@@ -462,11 +462,3 @@ def _create_warp_memory(map_id: MapId, warp: Warp) -> WarpMemoryCreateUpdate:
         destination_warp_id=warp.destination_warp_index,
         activation=warp.activation,
     )
-
-
-_BUTTON_DIRECTIONS = {
-    Button.UP: FacingDirection.UP,
-    Button.DOWN: FacingDirection.DOWN,
-    Button.LEFT: FacingDirection.LEFT,
-    Button.RIGHT: FacingDirection.RIGHT,
-}

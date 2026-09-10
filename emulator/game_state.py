@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Self
 import numpy as np
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_SHAPE
-from common.enums import AsciiTile, Badge, BlockedDirection, FacingDirection
+from common.enums import FACING_OFFSETS, AsciiTile, Badge, BlockedDirection
 from common.schemas import Coords
 from emulator.parsers.battle import Battle, parse_battle_state
 from emulator.parsers.inventory import Inventory, parse_inventory
@@ -105,13 +105,7 @@ class GameState:
 
     def get_facing_tile(self) -> tuple[str, Coords]:
         """Get the tile and map coordinates in front of the player."""
-        offset_map = {
-            FacingDirection.UP: Coords(row=-1, col=0),
-            FacingDirection.DOWN: Coords(row=1, col=0),
-            FacingDirection.LEFT: Coords(row=0, col=-1),
-            FacingDirection.RIGHT: Coords(row=0, col=1),
-        }
-        offset = offset_map[self.player.direction]
+        offset = FACING_OFFSETS[self.player.direction]
         screen_coords = Coords(row=PLAYER_OFFSET_Y, col=PLAYER_OFFSET_X) + offset
         map_coords = self.player.coords + offset
         # We need to check the screen for adjacency because the tile may be on the next map.
@@ -134,7 +128,7 @@ class GameState:
             for j in range(0, tiles.shape[1], 2):
                 block = tiles[i : i + 2, j : j + 2]
                 blocks[i // 2, j // 2] = self._classify_background_block(block)
-                blockages = self._get_blockage(i, j, tiles, blockages)
+                self._update_blockages(i, j, tiles, blockages)
 
         # Return a plain dict so missing-key access cannot create new blockage entries.
         return AsciiScreenTerrain(
@@ -152,7 +146,7 @@ class GameState:
             The classified visible screen, its elevation blockages, and rendered entities.
         """
         terrain = self.get_ascii_screen_terrain()
-        blocks = terrain.ndarray.copy()
+        blocks = terrain.ndarray
 
         on_screen_sprites = []
         for s in self.sprites.values():
@@ -281,13 +275,13 @@ class GameState:
             tile = AsciiTile.SPINNER_STOP
         return tile
 
-    def _get_blockage(
+    def _update_blockages(
         self,
         i: int,
         j: int,
         tiles: np.ndarray,
         blockages: defaultdict[Coords, BlockedDirection],
-    ) -> defaultdict[Coords, BlockedDirection]:
+    ) -> None:
         """Update blockages for the block at a pair of tile indices.
 
         Comparisons for collisions, as elsewhere in Pokemon Yellow, are done using the bottom-left
@@ -298,9 +292,6 @@ class GameState:
             j: Tile column index of the block's upper-left corner.
             tiles: Full visible tile array.
             blockages: Blockage mapping to mutate.
-
-        Returns:
-            The mutated blockage mapping.
         """
         bi, bj = i // 2, j // 2  # Block indices, as opposed to tile indices.
         block_tile = tiles[i + 1, j]  # The bottom-left tile of the block is the one used to check.
@@ -318,5 +309,3 @@ class GameState:
             if pair in self.map.collision_pairs:
                 blockages[Coords(row=bi, col=bj)] |= BlockedDirection.LEFT
                 blockages[Coords(row=bi, col=bj - 1)] |= BlockedDirection.RIGHT
-
-        return blockages

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from agent.overworld.navigation import is_blocked
 from agent.overworld.tools.sokoban_solver.schemas import SokobanMap
 from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
-from common.enums import AsciiTile, Button, FacingDirection, SpriteLabel
+from common.enums import BUTTON_DIRECTIONS, BUTTON_OFFSETS, AsciiTile, Button, SpriteLabel
 from common.schemas import Coords
 from emulator.control_events import ControlBoundary
 from overworld_map.views import get_navigation_tiles
@@ -116,12 +116,8 @@ def _solve_sokoban(
 
         # There's thankfully no special neighbour logic here. Unlike the general navigation
         # service, the Sokoban puzzles never involve spinner tiles, surfing, or ledges.
-        for direction in [
-            Coords(row=0, col=1),
-            Coords(row=1, col=0),
-            Coords(row=0, col=-1),
-            Coords(row=-1, col=0),
-        ]:
+        for button in (Button.RIGHT, Button.DOWN, Button.LEFT, Button.UP):
+            direction = BUTTON_OFFSETS[button]
             new_player_pos = current_player_pos + direction
             if not _is_movement_possible(
                 current_map,
@@ -133,7 +129,6 @@ def _solve_sokoban(
             ):
                 continue
 
-            button = _DIRECTION_TO_BUTTON_MAP[direction]
             if new_player_pos in current_boulders:  # Pushing a boulder.
                 new_boulder_pos = new_player_pos + direction
                 is_boulder_tile_free = _is_movement_possible(
@@ -212,7 +207,7 @@ async def _execute_solution(
     strength_dialog = ""
     for button in solution:
         game_state = await emulator.get_game_state()
-        next_pos = game_state.player.coords + _BUTTON_TO_DIRECTION_MAP[button]
+        next_pos = game_state.player.coords + BUTTON_OFFSETS[button]
 
         activating_strength = not is_strength_active and next_pos in sokoban_map.boulders
         yielding_to_pikachu = next_pos == game_state.pikachu.coords
@@ -246,7 +241,7 @@ async def _execute_solution(
 
         if pushing_boulder:
             sokoban_map.boulders.remove(next_pos)
-            sokoban_map.boulders.add(next_pos + _BUTTON_TO_DIRECTION_MAP[button])
+            sokoban_map.boulders.add(next_pos + BUTTON_OFFSETS[button])
 
     return _include_dialog("I executed the Sokoban solution.", strength_dialog)
 
@@ -260,10 +255,10 @@ async def _execute_step(
 ) -> bool:
     """Execute one planned movement, including turning or the two-stage boulder push."""
     starting_coords = game_state.player.coords
-    desired_direction = _BUTTON_TO_FACING_DIRECTION[button]
+    desired_direction = BUTTON_DIRECTIONS[button]
     pikachu_ahead = (
         game_state.pikachu.is_rendered
-        and starting_coords + _BUTTON_TO_DIRECTION_MAP[button] == game_state.pikachu.coords
+        and starting_coords + BUTTON_OFFSETS[button] == game_state.pikachu.coords
     )
     max_attempts = 3 if boulder_coords is not None else 2
 
@@ -299,7 +294,7 @@ async def _face_next_pos(
     game_state: GameState,
 ) -> bool:
     """Face the next position and report whether control remains in the overworld."""
-    if game_state.player.direction == _BUTTON_TO_FACING_DIRECTION[button]:
+    if game_state.player.direction == BUTTON_DIRECTIONS[button]:
         return True
     result = await emulator.press_overworld_button(button)
     return result.boundary == ControlBoundary.OVERWORLD_READY
@@ -309,18 +304,3 @@ def _include_dialog(result: str, dialog: str) -> str:
     """Include captured field-move dialog in the first-person action result."""
     sections = [f'{GAME_DIALOG_LABEL} "{dialog}"'] if dialog else []
     return "\n\n".join([*sections, f"{ACTION_RESULT_LABEL} {result}"])
-
-
-_BUTTON_TO_DIRECTION_MAP = {
-    Button.RIGHT: Coords(row=0, col=1),
-    Button.LEFT: Coords(row=0, col=-1),
-    Button.DOWN: Coords(row=1, col=0),
-    Button.UP: Coords(row=-1, col=0),
-}
-_DIRECTION_TO_BUTTON_MAP = {v: k for k, v in _BUTTON_TO_DIRECTION_MAP.items()}
-_BUTTON_TO_FACING_DIRECTION = {
-    Button.RIGHT: FacingDirection.RIGHT,
-    Button.LEFT: FacingDirection.LEFT,
-    Button.DOWN: FacingDirection.DOWN,
-    Button.UP: FacingDirection.UP,
-}

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection
+from common.enums import BUTTON_OFFSETS, AsciiTile, BlockedDirection, Button, FacingDirection
 from common.schemas import Coords
 from overworld_map.views import get_navigation_tiles
 
@@ -269,9 +269,9 @@ def _get_neighbors(
     if current_tile in [AsciiTile.WARP, AsciiTile.BOULDER_HOLE] or current_tile in spinner_tiles:
         return []  # These transition tiles cannot be used as stable intermediate positions.
 
-    for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+    for button in (Button.RIGHT, Button.DOWN, Button.LEFT, Button.UP):
+        dy, dx = BUTTON_OFFSETS[button]
         new_pos = pos + (dy, dx)  # noqa: RUF005
-        button = _DIRECTION_BUTTON_MAP[(dy, dx)]
 
         if (
             new_pos.row < 0
@@ -365,13 +365,6 @@ def get_spinner_path(pos: Coords, tiles: np.ndarray) -> tuple[Coords, ...] | Non
             direction = _SPINNER_DIRECTION_MAP[new_tile]
         pos = new_pos
 
-
-_DIRECTION_BUTTON_MAP = {
-    (0, 1): Button.RIGHT,
-    (1, 0): Button.DOWN,
-    (0, -1): Button.LEFT,
-    (-1, 0): Button.UP,
-}
 
 _SPINNER_DIRECTION_MAP = {
     AsciiTile.SPINNER_UP: Coords(row=-1, col=0),
