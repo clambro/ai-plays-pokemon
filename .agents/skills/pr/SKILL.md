@@ -1,15 +1,13 @@
 ---
 name: pr
-description: "Use when the user wants a pull request description or a summary of branch changes. Compares feature work with v2, or the v2 release branch with main."
+description: "Use when the user wants a pull request description or a summary of branch changes. Compares the current branch with main."
 ---
 
 # Generate PR Description
 
 ## Workflow
 
-1. Run `git branch --show-current` to identify the branch and choose its base:
-   - use `v2` for v2 feature branches
-   - use `main` when preparing the eventual v2 release PR
+1. Run `git branch --show-current` to identify the branch. Use `main` as the base unless the user specifies another branch.
 2. Gather the committed branch changes:
    - `git diff <base>...HEAD --stat`
    - `git log <base>..HEAD --oneline`
