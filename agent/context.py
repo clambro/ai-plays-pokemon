@@ -40,12 +40,6 @@ class AgentContext:
         repr=False,
         compare=False,
     )
-    _last_observed_iteration: int | None = field(
-        default=None,
-        init=False,
-        repr=False,
-        compare=False,
-    )
     _last_observed_warp_transition: WarpTransitionMemory | None = field(
         default=None,
         init=False,
@@ -76,14 +70,12 @@ class AgentContext:
         return requested
 
     async def observe_game_state(self, game_state: GameState) -> None:
-        """Persist ordinary warp usage identified between dispatcher states."""
+        """Record newly observed ordinary warps under the current action's iteration."""
         previous_map_id = self._last_observed_map_id
-        previous_iteration = self._last_observed_iteration
         previous_transition = self._last_observed_warp_transition
         self._last_observed_map_id = game_state.map.id
-        self._last_observed_iteration = self.state.iteration
         self._last_observed_warp_transition = game_state.warp_transition
-        if previous_map_id is None or previous_iteration is None:
+        if previous_map_id is None:
             return
 
         transition = game_state.warp_transition
@@ -106,14 +98,14 @@ class AgentContext:
             return
 
         await record_warp_usage(
-            iteration=previous_iteration,
+            iteration=self.state.iteration,
             source_map_id=transition.source_map_id,
             source_warp_id=transition.source_warp_index,
             destination_map_id=game_state.map.id,
             destination_warp=destination_warp,
         )
         observation = ConnectionTraversalObservation(
-            iteration=previous_iteration,
+            iteration=self.state.iteration,
             source_map_id=transition.source_map_id,
             source_warp_id=transition.source_warp_index,
             destination_map_id=game_state.map.id,
@@ -123,8 +115,9 @@ class AgentContext:
         if warning:
             self.state.rolling_memory.add_memory(warning)
 
-    async def complete_iteration(self) -> None:
-        """Finalize the current block and advance the live iteration state."""
+    async def complete_iteration(self, game_state: GameState) -> None:
+        """Record the action's resulting state, then finalize and advance its iteration."""
+        await self.observe_game_state(game_state)
         try:
             rolling_memory = await finalize_iteration(self.state.rolling_memory)
         except Exception as error:  # noqa: BLE001

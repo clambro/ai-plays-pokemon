@@ -58,7 +58,7 @@ async def run_battle(context: AgentContext) -> None:
     """Run one agent conversation until the game exits battle mode."""
     await context.begin_iteration()
     settlement = await settle_dialog(context)
-    await context.complete_iteration()
+    await context.complete_iteration(settlement.game_state)
     if not is_battle_handler_state(settlement.game_state):
         return
     game_state = settlement.game_state
@@ -90,8 +90,8 @@ async def run_battle(context: AgentContext) -> None:
                 if isinstance(current_node, CallToolsNode):
                     if context.consume_control_handoff():
                         break
-                    await context.complete_iteration()
                     game_state = await context.emulator.get_game_state()
+                    await context.complete_iteration(game_state)
                     if not is_battle_handler_state(game_state):
                         break
     except AgentRunError as error:

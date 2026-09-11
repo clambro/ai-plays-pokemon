@@ -89,11 +89,11 @@ async def run_overworld(
                 if isinstance(current_node, CallToolsNode):
                     if context.consume_control_handoff():
                         break
-                    await context.complete_iteration()
                     (
                         game_state,
                         control_boundary,
                     ) = await context.emulator.get_game_state_with_control_boundary()
+                    await context.complete_iteration(game_state)
                     if _should_end_overworld_run(
                         initial_game_state,
                         game_state,
