@@ -32,8 +32,8 @@ async def check_connection(
     map_name: str,
     coordinates: Coords,
     hm_tiles: list[AsciiTile],
-) -> ConnectionCheckResult | ConnectionCheckError:
-    """Resolve a remembered connection and its arrival region without producing text."""
+) -> list[ConnectionCheckResult] | ConnectionCheckError:
+    """Inspect each remembered route and its arrival region without assuming the active route."""
     try:
         source_map_id = MapId[map_name]
     except KeyError:
@@ -59,18 +59,37 @@ async def _check_connection(
     source_map_id: MapId,
     coordinates: Coords,
     hm_tiles: list[AsciiTile],
-) -> ConnectionCheckResult | ConnectionCheckError:
+) -> list[ConnectionCheckResult] | ConnectionCheckError:
     """Locate the source, then inspect either kind of connection through the same workflow."""
     known_map_ids = frozenset(await get_visited_maps())
     if source_map_id not in known_map_ids:
         return ConnectionCheckError.UNVISITED_MAP
 
     source_warps = await get_warp_memories_for_map(source_map_id)
-    source = await _find_source_connection(source_map_id, coordinates, source_warps)
-    if source is None:
+    sources = await _find_source_connections(source_map_id, coordinates, source_warps)
+    if not sources:
         return ConnectionCheckError.UNKNOWN_CONNECTION
 
     warp_groups_by_map = {source_map_id: group_remembered_warps(source_warps)}
+    return [
+        await _check_destination(
+            source=source,
+            known_map_ids=known_map_ids,
+            warp_groups_by_map=warp_groups_by_map,
+            hm_tiles=hm_tiles,
+        )
+        for source in sources
+    ]
+
+
+async def _check_destination(
+    *,
+    source: SourceConnection,
+    known_map_ids: frozenset[MapId],
+    warp_groups_by_map: dict[MapId, WarpGroups],
+    hm_tiles: list[AsciiTile],
+) -> ConnectionCheckResult:
+    """Inspect one route without combining exploration or exits from different arrival regions."""
     source_record = source if isinstance(source, WarpMemoryRead) else source[0]
     destination_map_id = source_record.destination_map_id
     destination_map = (
@@ -94,19 +113,6 @@ async def _check_connection(
         map_memory=destination_map,
         hm_tiles=hm_tiles,
     )
-    if isinstance(source, WarpMemoryRead):
-        warp_groups = tuple(
-            group
-            for group in warp_groups
-            if all(warp.warp_id != source.destination_warp_id for warp in group)
-        )
-    else:
-        boundary_groups = tuple(
-            group
-            for group in boundary_groups
-            if group[0].destination_map_id != source_record.map_id
-        )
-
     await _load_warp_groups(
         (group[0].destination_map_id for group in warp_groups),
         known_map_ids,
@@ -133,23 +139,20 @@ async def _check_connection(
     )
 
 
-async def _find_source_connection(
+async def _find_source_connections(
     map_id: MapId,
     coordinates: Coords,
     warps: Sequence[WarpMemoryRead],
-) -> SourceConnection | None:
-    """Prefer a warp at the requested coordinate, otherwise find its remembered boundary."""
-    warp = next((warp for warp in warps if _coords(warp) == coordinates), None)
-    if warp is not None:
-        return warp
+) -> tuple[SourceConnection, ...]:
+    """Find every observed warp route at the coordinate, otherwise its remembered boundary."""
+    matches = tuple(warp for warp in warps if _coords(warp) == coordinates)
+    if matches:
+        return matches
     boundaries = await get_map_boundary_memories_for_map(map_id)
-    return next(
-        (
-            group
-            for group in group_map_boundaries(boundaries)
-            if any(_coords(boundary) == coordinates for boundary in group)
-        ),
-        None,
+    return tuple(
+        group
+        for group in group_map_boundaries(boundaries)
+        if any(_coords(boundary) == coordinates for boundary in group)
     )
 
 
@@ -208,17 +211,24 @@ def _resolve_warp_connection(
     warp = group[0]
     return ResolvedConnection(
         source_map_id=warp.map_id,
-        source_coords=tuple(_coords(candidate) for candidate in group),
+        source_coords=tuple(dict.fromkeys(_coords(candidate) for candidate in group)),
         destination_map_id=warp.destination_map_id if destination_groups is not None else None,
         destination_coords=tuple(
-            _coords(candidate)
-            for candidate_group in destination_groups or ()
-            if any(candidate.warp_id in destination_warp_ids for candidate in candidate_group)
-            for candidate in candidate_group
+            dict.fromkeys(
+                _coords(candidate)
+                for candidate_group in destination_groups or ()
+                if any(candidate.warp_id in destination_warp_ids for candidate in candidate_group)
+                for candidate in candidate_group
+            )
         ),
         is_warp=True,
         last_used_iteration=max(
-            (warp.last_used_iteration for warp in group if warp.last_used_iteration is not None),
+            (
+                warp.last_used_iteration
+                for warp in group
+                if warp.destination_warp_id in destination_warp_ids
+                and warp.last_used_iteration is not None
+            ),
             default=None,
         ),
     )
@@ -299,12 +309,15 @@ def _build_connection_tiles(
 
 
 def group_remembered_warps(warps: Sequence[WarpMemoryRead]) -> WarpGroups:
-    """Apply shared entrance grouping while retaining the original memory records."""
-    warps_by_id = {warp.warp_id: warp for warp in warps}
+    """Group route records without losing alternatives that share a source warp ID."""
+    records = dict(enumerate(sorted(warps, key=lambda warp: warp.warp_id)))
     groups = group_contiguous_warps(
-        {warp.warp_id: (_coords(warp), warp.destination_map_id, warp.activation) for warp in warps}
+        {
+            index: (_coords(warp), warp.destination_map_id, warp.activation)
+            for index, warp in records.items()
+        }
     )
-    return tuple(tuple(warps_by_id[warp_id] for warp_id in group) for group in groups)
+    return tuple(tuple(records[index] for index in group) for group in groups)
 
 
 def _coords(connection: WarpMemoryRead | MapBoundaryMemoryRead) -> Coords:

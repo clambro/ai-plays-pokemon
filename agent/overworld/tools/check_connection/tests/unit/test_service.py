@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from agent.overworld.tools.check_connection.schemas import ConnectionCheckResult
 from agent.overworld.tools.check_connection.service import (
     check_connection,
     get_connection_component,
@@ -95,8 +94,8 @@ def _boundary(
 
 
 @pytest.mark.unit
-async def test_check_warp_uses_selected_landing_and_resolves_reachable_endpoints() -> None:
-    """A grouped entrance keeps its selected landing and resolves only that region's exits."""
+async def test_check_warp_keeps_alternative_arrival_regions_separate() -> None:
+    """Retain multiple routes from one tile without combining their arrival regions or usage."""
     destination_map = MapMemoryRead(
         map_id=MapId.MT_MOON_B2F,
         terrain="▓▓▓▓▓▓▓\n▓∙∙∙∙∙▓\n▓▓▓▓▓▓▓\n▓∙∙∙∙∙▓\n▓░∙∙∙∙▓\n▓▓▓▓▓▓▓",
@@ -105,6 +104,7 @@ async def test_check_warp_uses_selected_landing_and_resolves_reachable_endpoints
     warps = {
         MapId.MT_MOON_B1F: [
             _warp(0, 1, 1, MapId.MT_MOON_B2F, 0),
+            _warp(1, 1, 2, MapId.MT_MOON_B2F, 0),
             _warp(1, 1, 2, MapId.MT_MOON_B2F, 2).model_copy(update={"last_used_iteration": 27}),
         ],
         MapId.MT_MOON_B2F: [
@@ -121,27 +121,39 @@ async def test_check_warp_uses_selected_landing_and_resolves_reachable_endpoints
         ],
     }
     with _connection_memory(destination_map, warps, {}):
-        result = await check_connection(
+        results = await check_connection(
             map_name=MapId.MT_MOON_B1F.name,
             coordinates=Coords(row=1, col=2),
             hm_tiles=[],
         )
 
-    assert isinstance(result, ConnectionCheckResult)
+    assert isinstance(results, list)
+    upper, result = results
+    assert upper.connection.destination_coords == (Coords(row=1, col=1),)
+    assert upper.connection.last_used_iteration is None
+    assert not upper.has_unexplored_terrain
+    assert tuple(connection.source_coords for connection in upper.other_connections) == (
+        (Coords(row=1, col=1),),
+        (Coords(row=1, col=3),),
+    )
     assert result.connection.source_coords == (Coords(row=1, col=1), Coords(row=1, col=2))
     assert result.connection.destination_coords == (Coords(row=3, col=1),)
-    assert result.connection.last_used_iteration == warps[MapId.MT_MOON_B1F][1].last_used_iteration
+    assert result.connection.last_used_iteration == warps[MapId.MT_MOON_B1F][2].last_used_iteration
     assert result.has_unexplored_terrain
     assert tuple(connection.source_coords for connection in result.other_connections) == (
+        (Coords(row=3, col=1),),
         (Coords(row=3, col=3),),
         (Coords(row=4, col=4),),
     )
     assert tuple(connection.destination_coords for connection in result.other_connections) == (
+        (Coords(row=1, col=1), Coords(row=1, col=2)),
         (Coords(row=0, col=0), Coords(row=0, col=1)),
         (Coords(row=2, col=0),),
     )
-    assert all(
-        connection.destination_map_id == MapId.MT_MOON_1F for connection in result.other_connections
+    assert tuple(connection.destination_map_id for connection in result.other_connections) == (
+        MapId.MT_MOON_B1F,
+        MapId.MT_MOON_1F,
+        MapId.MT_MOON_1F,
     )
 
 
@@ -180,13 +192,14 @@ async def test_check_boundary_preserves_pairs_and_distinguishes_unknown_destinat
         destination_map_id: [return_boundary, onward_boundary],
     }
     with _connection_memory(destination_map, warps, boundaries):
-        result = await check_connection(
+        results = await check_connection(
             map_name=source_map_id.name,
             coordinates=Coords(row=4, col=3),
             hm_tiles=[],
         )
 
-    assert isinstance(result, ConnectionCheckResult)
+    assert isinstance(results, list)
+    (result,) = results
     assert not result.connection.is_warp
     assert result.connection.source_coords == (Coords(row=4, col=1), Coords(row=4, col=3))
     assert result.connection.destination_coords == (Coords(row=1, col=1), Coords(row=1, col=3))
@@ -194,17 +207,62 @@ async def test_check_boundary_preserves_pairs_and_distinguishes_unknown_destinat
     assert tuple(connection.destination_map_id for connection in result.other_connections) == (
         None,
         MapId.ROUTE_4,
+        source_map_id,
         MapId.ROUTE_4,
     )
     assert tuple(connection.destination_coords for connection in result.other_connections) == (
         (),
         (),
+        (Coords(row=0, col=0),),
         (Coords(row=7, col=8),),
     )
     assert tuple(connection.is_warp for connection in result.other_connections) == (
         True,
         True,
         False,
+        False,
+    )
+
+
+@pytest.mark.unit
+async def test_elevator_arrival_exposes_all_observed_routes() -> None:
+    """Keep both the return route and an onward route sharing the elevator's arrival doorway."""
+    elevator = MapMemoryRead(
+        map_id=MapId.ROCKET_HIDEOUT_ELEVATOR,
+        terrain="▓▓▓▓▓▓\n▓∙∙∙∙▓\n▓∙∙∙∙▓\n▓▓▓▓▓▓",
+        blockages={},
+    )
+    warps = {
+        MapId.ROCKET_HIDEOUT_B1F: [_warp(4, 1, 1, MapId.ROCKET_HIDEOUT_ELEVATOR, 0)],
+        MapId.ROCKET_HIDEOUT_B2F: [_warp(8, 1, 1, MapId.ROCKET_HIDEOUT_ELEVATOR, 0)],
+        MapId.ROCKET_HIDEOUT_B4F: [_warp(9, 1, 1, MapId.ROCKET_HIDEOUT_ELEVATOR, 0)],
+        MapId.ROCKET_HIDEOUT_ELEVATOR: [
+            _warp(warp_id, 1, col, destination, landing)
+            for warp_id, col in ((0, 2), (1, 3))
+            for destination, landing in (
+                (MapId.ROCKET_HIDEOUT_B1F, 4),
+                (MapId.ROCKET_HIDEOUT_B2F, 8),
+            )
+        ],
+    }
+    with _connection_memory(elevator, warps, {}):
+        results = await check_connection(
+            map_name=MapId.ROCKET_HIDEOUT_B1F.name,
+            coordinates=Coords(row=1, col=1),
+            hm_tiles=[],
+        )
+
+    assert isinstance(results, list)
+    (result,) = results
+    assert result.connection.destination_map_id == MapId.ROCKET_HIDEOUT_ELEVATOR
+    # B4F has an incoming route, but no elevator route to B4F has been observed.
+    assert tuple(route.destination_map_id for route in result.other_connections) == (
+        MapId.ROCKET_HIDEOUT_B1F,
+        MapId.ROCKET_HIDEOUT_B2F,
+    )
+    assert all(
+        route.source_coords == (Coords(row=1, col=2), Coords(row=1, col=3))
+        for route in result.other_connections
     )
 
 

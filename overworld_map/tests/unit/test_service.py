@@ -71,7 +71,7 @@ async def test_load_preserves_discovered_ids_without_live_records(
         activation=WarpActivation.UP,
         last_used_iteration=interaction_iteration,
     )
-    game_state = cast("GameState", SimpleNamespace(map=_MAP_STATE))
+    game_state = cast("GameState", SimpleNamespace(map=_MAP_STATE, warps={}))
 
     with patch.multiple(
         "overworld_map.service",
@@ -90,7 +90,7 @@ async def test_load_preserves_discovered_ids_without_live_records(
         current_map = await get_overworld_map(1, game_state)
 
     assert current_map.known_warp_ids == {1}
-    assert current_map.warp_usage_iterations == {1: interaction_iteration}
+    assert current_map.warp_usage_iterations == {}
     assert current_map.known_sprite_ids == {2}
     assert current_map.known_sign_ids == {3}
     assert current_map.known_object_ids == {4}

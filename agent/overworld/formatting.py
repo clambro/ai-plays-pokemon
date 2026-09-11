@@ -234,7 +234,7 @@ def format_connection(
 
 
 def format_connection_check(
-    result: ConnectionCheckResult | ConnectionCheckError,
+    result: list[ConnectionCheckResult] | ConnectionCheckError,
     *,
     map_name: str,
     coordinates: Coords,
@@ -243,6 +243,11 @@ def format_connection_check(
     if isinstance(result, ConnectionCheckError):
         return _format_connection_check_error(result, map_name, coordinates)
 
+    return "\n\n".join(_format_connection_destination(destination) for destination in result)
+
+
+def _format_connection_destination(result: ConnectionCheckResult) -> str:
+    """Render one arrival region and all its reachable connections, including the return route."""
     connection = result.connection
     if connection.destination_map_id is None:
         return (
@@ -264,12 +269,12 @@ def format_connection_check(
     if not result.other_connections:
         return (
             f"{CONNECTION_CHECK_LABEL} {header}\n{exploration}\n"
-            "No other discovered connections are reachable from that arrival "
+            "No discovered connections are reachable from that arrival "
             "point through revealed terrain."
         )
     return (
         f"{CONNECTION_CHECK_LABEL} {header}\n{exploration}\n"
-        "Other discovered connections reachable from that arrival point:\n"
+        "Discovered connections reachable from that arrival point:\n"
         + "\n".join(f"- {_format_resolved_connection(other)}" for other in result.other_connections)
     )
 

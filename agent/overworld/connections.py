@@ -13,13 +13,13 @@ if TYPE_CHECKING:
 def group_contiguous_warps(
     warps: Mapping[int, tuple[Coords, MapId, WarpActivation]],
 ) -> tuple[tuple[int, ...], ...]:
-    """Group adjacent entrance IDs sharing a destination map and activation.
+    """Group coincident or adjacent entries sharing a destination map and activation.
 
     Args:
-        warps: One map's warp IDs mapped to coordinates, destination map, and activation.
+        warps: One map's entries keyed by ID, with coordinates, destination map, and activation.
 
     Returns:
-        Groups ordered by their lowest warp ID, with IDs sorted within each group.
+        Groups ordered by their lowest entry ID, with IDs sorted within each group.
         Individual landing records do not affect entrance grouping.
     """
     groups = []
@@ -45,7 +45,7 @@ def group_contiguous_warps(
             for candidate_id, candidate_coords in matching_warps.items():
                 if candidate_id in grouped_ids:
                     continue
-                if (candidate_coords - current_coords).length == 1:
+                if (candidate_coords - current_coords).length <= 1:
                     group.append(candidate_id)
                     grouped_ids.add(candidate_id)
                     pending.append(candidate_id)

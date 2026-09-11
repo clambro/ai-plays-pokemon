@@ -99,6 +99,9 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
             memory.warp_id: memory.last_used_iteration
             for memory in warp_memories
             if memory.last_used_iteration is not None
+            and (warp := game_state.warps.get(memory.warp_id)) is not None
+            and (memory.destination_map_id, memory.destination_warp_id)
+            == (warp.destination, warp.destination_warp_index)
         },
         known_map_boundaries=tuple(map_boundaries),
         known_sign_ids={
@@ -343,7 +346,7 @@ async def record_warp_usage(
     destination_map_id: MapId,
     destination_warp: Warp,
 ) -> None:
-    """Persist one ordinary warp transition on both endpoint records."""
+    """Persist usage on the travelled route and the observed arrival-side route."""
     try:
         source_found = await persist_warp_usage(
             iteration=iteration,

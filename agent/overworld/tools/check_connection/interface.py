@@ -30,9 +30,8 @@ def build_check_connection_tool(
         Use this to reconstruct a route through a previously visited multi-map
         area without moving. Pass the named map and one coordinate from a
         connection shown on the current map or in a previous check result. The
-        result follows the complete connection, lists other discovered
-        connections reachable from its destination, and reports whether that
-        region still has unexplored terrain. Check one of the returned
+        result lists known destinations, the connections reachable from each one,
+        and whether unexplored terrain remains. Check one of the returned
         connections to continue reconstructing the route.
 
         This tool does not move, choose a route, reveal unvisited maps, or infer
