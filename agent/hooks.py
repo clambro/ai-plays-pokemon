@@ -69,7 +69,7 @@ async def handle_control_handoff(
         return await handler(args)
     except ControlHandoff:
         ctx.deps.request_control_handoff()
-        return "Control passed to a different gameplay handler before this action was accepted."
+        return "The game moved on before this action reached another decision point."
 
 
 AGENT_HOOKS = Hooks[AgentContext](

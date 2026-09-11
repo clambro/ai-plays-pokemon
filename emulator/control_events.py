@@ -20,7 +20,7 @@ class ControlBoundary(StrEnum):
 
 
 class ControlHandoff(Exception):  # noqa: N818 - internal control flow, not an application error
-    """Signal that the active gameplay handler no longer owns ROM control."""
+    """Signal that an operation ended without reaching its requested control boundary."""
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -58,7 +58,7 @@ class ControlResultWaiter:
         self._publish(operation_id, result)
 
     def publish_handoff(self, operation_id: int) -> None:
-        """Wake an operation whose input domain changed before accepting its button."""
+        """Wake an operation that ended without reaching its requested boundary."""
         self._publish(operation_id, ControlHandoff())
 
     def _publish(self, operation_id: int, outcome: _ControlOutcome) -> None:

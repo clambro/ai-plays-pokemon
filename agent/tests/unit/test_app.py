@@ -101,3 +101,21 @@ async def test_dispatch_agent_handles_control_handoff(
     )
 
     await app.dispatch_agent(context)
+
+
+@pytest.mark.unit
+async def test_dispatch_agent_waits_while_rom_is_busy(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Do not invoke a gameplay agent without a genuine input boundary."""
+    emulator = MagicMock()
+    emulator.get_game_state_with_control_boundary = AsyncMock(return_value=(_game_state(), None))
+    context = AgentContext(state=AgentState(folder=tmp_path), emulator=emulator)
+    select_handler = MagicMock()
+    monkeypatch.setattr(app, "select_agent_handler", select_handler)
+    monkeypatch.setattr(app.asyncio, "sleep", AsyncMock())
+
+    await app.dispatch_agent(context)
+
+    select_handler.assert_not_called()

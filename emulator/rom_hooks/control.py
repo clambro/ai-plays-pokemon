@@ -1,8 +1,11 @@
 """Observe control boundaries in the required Yellow Legacy ROM."""
 
+import time
 from dataclasses import dataclass, field
 from enum import StrEnum, auto
 from typing import TYPE_CHECKING
+
+from loguru import logger
 
 from common.enums import Button
 from emulator.control_events import (
@@ -34,6 +37,7 @@ class _HookName(StrEnum):
     POKEDEX_PAGE_READY = auto()
     POKEDEX_PAGE_INPUT_ACCEPTED = auto()
     SURF_GAME_OVER_READY = auto()
+    TRADE_ANIMATION_STARTED = auto()
     PLAYER_STEP_COMPLETED = auto()
 
 
@@ -53,6 +57,7 @@ class _PendingOperation:
     operation_id: int
     button: Button | None
     button_mask: int
+    deadline: float
     input_domain: _ControlDomain | None = None
     required_boundary: ControlBoundary | None = None
     observe_steps: bool = False
@@ -162,6 +167,12 @@ _HOOKS = (
         signature=bytes.fromhex("f0 b3 e6 01 c8 21"),
     ),
     RomHook(
+        name=_HookName.TRADE_ANIMATION_STARTED,
+        bank=0x10,
+        address=0x5337,  # InternalClockTradeAnim
+        signature=bytes.fromhex("fa 3d cd ea 5e cd"),
+    ),
+    RomHook(
         name=_HookName.PLAYER_STEP_COMPLETED,
         bank=0x3C,
         address=0x412D,  # _AdvancePlayerSprite.afterUpdateMapCoords
@@ -197,6 +208,7 @@ _SUPPRESSED_OR_SIMULATED_INPUT = (1 << 0) | (1 << 5) | (1 << 7)
 _DOOR_LEDGE_OR_SPINNER_MOVEMENT = (1 << 1) | (1 << 6) | (1 << 7)
 _BOULDER_MOVING = 1 << 1
 _RENDER_FENCE_FRAMES = 3
+_CONTROL_OPERATION_TIMEOUT_SECONDS = 60
 
 _ACCEPTED_INPUT_HOOKS = {
     _HookName.LOW_SENSITIVITY_INPUT_ACCEPTED: (
@@ -293,6 +305,7 @@ class RomControlHooks:
             button_mask=_BUTTON_MASKS[button],
             input_domain=input_domain,
             observe_steps=observe_steps,
+            deadline=time.monotonic() + _CONTROL_OPERATION_TIMEOUT_SECONDS,
         )
         self._current_boundary = None
         return operation_id
@@ -307,6 +320,7 @@ class RomControlHooks:
             operation_id=operation_id,
             button=None,
             button_mask=0,
+            deadline=time.monotonic() + _CONTROL_OPERATION_TIMEOUT_SECONDS,
             required_boundary=boundary,
             accepted=True,
         )
@@ -329,10 +343,12 @@ class RomControlHooks:
                 pending.step_observations.append(step_observation)
             self._step_completed_this_tick = False
 
+        self._request_handoff_if_timed_out()
         self._request_handoff_if_overworld_control_lost()
         self._observe_immediate_input()
 
         pending = self._pending
+        release_scheduled_this_tick = False
         if (
             pending is not None
             and pending.button is not None
@@ -343,12 +359,12 @@ class RomControlHooks:
             # by that tick's event cleanup. Queue it here, between ticks, for the next frame.
             self._pyboy.button_release(pending.button)
             pending.release_scheduled = True
+            release_scheduled_this_tick = True
 
         if pending is not None and pending.handoff_requested:
-            if (
-                pending.button is not None
-                and self._pyboy.memory[_JOY_HELD_ADDRESS] & pending.button_mask
-            ):
+            # Let one complete emulated frame consume a newly queued host release. ROM joypad
+            # memory may remain stale throughout a scripted sequence that does not poll input.
+            if release_scheduled_this_tick:
                 return
             self._results.publish_handoff(pending.operation_id)
             self._completed_boundary = None
@@ -421,6 +437,8 @@ class RomControlHooks:
                 _ControlDomain.IMMEDIATE,
                 ControlBoundary.INTERACTIVE_READY,
             )
+        elif name == _HookName.TRADE_ANIMATION_STARTED:
+            self._request_handoff_for_accepted_button()
         elif name == _HookName.OVERWORLD_INPUT:
             self._observe_overworld_input()
         elif name == _HookName.PLAYER_STEP_COMPLETED:
@@ -550,6 +568,12 @@ class RomControlHooks:
         if pending is not None and pending.button is not None and not pending.accepted:
             pending.handoff_requested = True
 
+    def _request_handoff_for_accepted_button(self) -> None:
+        """Finish an accepted input before a noninteractive scripted sequence."""
+        pending = self._pending
+        if pending is not None and pending.button is not None and pending.accepted:
+            pending.handoff_requested = True
+
     def _request_handoff_if_overworld_control_lost(self) -> None:
         """Cancel unaccepted overworld input as soon as scripted control takes over."""
         pending = self._pending
@@ -560,6 +584,20 @@ class RomControlHooks:
             and not self._is_overworld_ready()
         ):
             pending.handoff_requested = True
+
+    def _request_handoff_if_timed_out(self) -> None:
+        """Recover a control operation that never reached a recognized boundary."""
+        pending = self._pending
+        if pending is None or pending.handoff_requested or time.monotonic() < pending.deadline:
+            return
+        logger.warning(
+            "Control operation timed out; returning control to the dispatcher",
+            operation_id=pending.operation_id,
+            button=pending.button.value if pending.button is not None else None,
+            input_domain=pending.input_domain,
+            accepted=pending.accepted,
+        )
+        pending.handoff_requested = True
 
     def _is_overworld_ready(self) -> bool:
         mem = self._pyboy.memory

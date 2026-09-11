@@ -1,5 +1,6 @@
 """Typed orchestration for the gameplay agents."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
@@ -32,6 +33,11 @@ def select_agent_handler(
 async def dispatch_agent(context: AgentContext) -> None:
     """Run the handler for the current decision-ready gameplay domain."""
     game_state, control_boundary = await context.emulator.get_game_state_with_control_boundary()
+    if control_boundary is None:
+        # Scripted sequences keep running on the emulator thread. Do not invoke an agent until the
+        # ROM exposes another genuine input boundary.
+        await asyncio.sleep(0.05)
+        return
     await context.observe_game_state(game_state)
     handler = select_agent_handler(game_state, control_boundary)
     with bind_llm_usage_updater(context.add_llm_usage):
