@@ -48,7 +48,7 @@ The project targets standard GIL-enabled Python `>=3.14,<3.15`. PyBoy is pinned 
 - `llm/`: model definitions and provider access.
 - `streaming/`: the HTML background server and view models.
 - `common/`: shared settings, enums, schemas, constants, and utilities.
-- `docs/`: current design documentation and the ordered v2 tickets.
+- `docs/`: current design documentation.
 
 ## ROMs, Fixtures, and External Effects
 

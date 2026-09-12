@@ -1,6 +1,5 @@
 """Shared dependencies for every gameplay agent."""
 
-import asyncio
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -29,12 +28,6 @@ class AgentContext:
 
     state: AgentState
     emulator: Emulator
-    _llm_usage_lock: asyncio.Lock = field(
-        default_factory=asyncio.Lock,
-        init=False,
-        repr=False,
-        compare=False,
-    )
     _control_handoff_requested: bool = field(
         default=False,
         init=False,
@@ -42,12 +35,6 @@ class AgentContext:
         compare=False,
     )
     _last_observed_map_id: MapId | None = field(
-        default=None,
-        init=False,
-        repr=False,
-        compare=False,
-    )
-    _last_observed_iteration: int | None = field(
         default=None,
         init=False,
         repr=False,
@@ -62,9 +49,8 @@ class AgentContext:
 
     async def add_llm_usage(self, tokens: int, cost: float) -> None:
         """Add one LLM response's usage to the shared state."""
-        async with self._llm_usage_lock:
-            self.state.total_tokens += tokens
-            self.state.total_cost += cost
+        self.state.total_tokens += tokens
+        self.state.total_cost += cost
 
     async def begin_iteration(self) -> None:
         """Prepare memory for one top-level handler activation."""
@@ -84,14 +70,12 @@ class AgentContext:
         return requested
 
     async def observe_game_state(self, game_state: GameState) -> None:
-        """Persist ordinary warp usage identified between dispatcher states."""
+        """Record newly observed ordinary warps under the current action's iteration."""
         previous_map_id = self._last_observed_map_id
-        previous_iteration = self._last_observed_iteration
         previous_transition = self._last_observed_warp_transition
         self._last_observed_map_id = game_state.map.id
-        self._last_observed_iteration = self.state.iteration
         self._last_observed_warp_transition = game_state.warp_transition
-        if previous_map_id is None or previous_iteration is None:
+        if previous_map_id is None:
             return
 
         transition = game_state.warp_transition
@@ -114,14 +98,14 @@ class AgentContext:
             return
 
         await record_warp_usage(
-            iteration=previous_iteration,
+            iteration=self.state.iteration,
             source_map_id=transition.source_map_id,
             source_warp_id=transition.source_warp_index,
             destination_map_id=game_state.map.id,
             destination_warp=destination_warp,
         )
         observation = ConnectionTraversalObservation(
-            iteration=previous_iteration,
+            iteration=self.state.iteration,
             source_map_id=transition.source_map_id,
             source_warp_id=transition.source_warp_index,
             destination_map_id=game_state.map.id,
@@ -131,8 +115,9 @@ class AgentContext:
         if warning:
             self.state.rolling_memory.add_memory(warning)
 
-    async def complete_iteration(self) -> None:
-        """Finalize the current block and advance the live iteration state."""
+    async def complete_iteration(self, game_state: GameState) -> None:
+        """Record the action's resulting state, then finalize and advance its iteration."""
+        await self.observe_game_state(game_state)
         try:
             rolling_memory = await finalize_iteration(self.state.rolling_memory)
         except Exception as error:  # noqa: BLE001

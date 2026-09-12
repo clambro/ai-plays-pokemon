@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pydantic_ai import BinaryContent
 
 from agent.dialog import settle_dialog
-from agent.utils import build_screenshot_content
+from agent.formatting.game_state import build_screenshot_content
 
 if TYPE_CHECKING:
     from agent.context import AgentContext

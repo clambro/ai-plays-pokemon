@@ -8,14 +8,12 @@ from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 from pydantic_graph import End
 
 from agent.context import AgentContext
+from agent.formatting.game_state import build_screenshot_content
+from agent.hooks import AGENT_HOOKS
 from agent.overworld.map_view import CurrentMapView, build_current_map_view
 from agent.overworld.prompts import build_overworld_decision_prompt
 from agent.overworld.tools.registry import build_overworld_toolset
-from agent.utils import (
-    AGENT_HOOKS,
-    build_screenshot_content,
-    is_overworld_handler_state,
-)
+from agent.utils import is_overworld_handler_state
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 from overworld_map.service import prepare_overworld_map
@@ -25,12 +23,10 @@ if TYPE_CHECKING:
 
     from emulator.control_events import ControlBoundary
     from emulator.game_state import GameState
-    from overworld_map.schemas import OverworldMap
 
 
 def build_overworld_agent(
     context: AgentContext,
-    current_map: OverworldMap,
     map_view: CurrentMapView,
     game_state: GameState,
 ) -> Agent[AgentContext, str]:
@@ -43,7 +39,6 @@ def build_overworld_agent(
         toolsets=[
             build_overworld_toolset(
                 context,
-                current_map,
                 map_view,
                 game_state,
             ),
@@ -74,7 +69,6 @@ async def run_overworld(
     map_view = build_current_map_view(current_map, initial_game_state)
     agent = build_overworld_agent(
         context,
-        current_map,
         map_view,
         initial_game_state,
     )
@@ -95,11 +89,11 @@ async def run_overworld(
                 if isinstance(current_node, CallToolsNode):
                     if context.consume_control_handoff():
                         break
-                    await context.complete_iteration()
                     (
                         game_state,
                         control_boundary,
                     ) = await context.emulator.get_game_state_with_control_boundary()
+                    await context.complete_iteration(game_state)
                     if _should_end_overworld_run(
                         initial_game_state,
                         game_state,

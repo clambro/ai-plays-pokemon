@@ -8,15 +8,15 @@ from agent.utils import is_text_handler_state
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from agent.context import AgentContext
     from common.enums import Button
+    from emulator.emulator import Emulator
 
 
-async def press_buttons(*, context: AgentContext, buttons: Sequence[Button]) -> str:
+async def press_buttons(*, emulator: Emulator, buttons: Sequence[Button]) -> str:
     """Press the selected buttons until the text state changes or an action fails.
 
     Args:
-        context: Text-agent dependencies.
+        emulator: Emulator receiving the inputs.
         buttons: Buttons to press in order.
 
     Returns:
@@ -28,14 +28,14 @@ async def press_buttons(*, context: AgentContext, buttons: Sequence[Button]) -> 
         (
             previous_state,
             previous_boundary,
-        ) = await context.emulator.get_game_state_with_control_boundary()
+        ) = await emulator.get_game_state_with_control_boundary()
         if not is_text_handler_state(previous_state, previous_boundary):
             raise TextActionUnavailableError("The interactive screen is no longer active.")
 
-        control_result = await context.emulator.press_button(button)
+        control_result = await emulator.press_button(button)
         pressed_buttons.append(button.value)
 
-        game_state = await context.emulator.get_game_state()
+        game_state = await emulator.get_game_state()
         if not is_text_handler_state(game_state, control_result.boundary):
             break
         if game_state.screen.tiles == previous_state.screen.tiles:

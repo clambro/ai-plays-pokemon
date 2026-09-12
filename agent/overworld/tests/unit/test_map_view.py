@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 
-from agent.overworld import navigation
-from agent.overworld.formatting import format_sprite_notes
 from agent.overworld.map_view import build_current_map_view
+from agent.overworld.navigation import calculate_path_to_target
 from common.enums import AsciiTile, Button, FacingDirection, MapId, WarpActivation
 from common.schemas import Coords
 from emulator.parsers.sprite import Sprite
@@ -41,10 +40,6 @@ def test_current_map_view_crops_region_without_mutating_map() -> None:
         warp_usage_iterations={},
         known_map_boundaries=(),
         known_map_ids=frozenset(),
-        north_connection=None,
-        south_connection=None,
-        east_connection=None,
-        west_connection=None,
     )
     game_state = cast(
         "GameState",
@@ -55,7 +50,14 @@ def test_current_map_view_crops_region_without_mutating_map() -> None:
             objects={},
             pikachu=SimpleNamespace(is_rendered=False),
             player=SimpleNamespace(coords=Coords(row=2, col=2), is_surfing=False),
-            map=SimpleNamespace(),
+            map=SimpleNamespace(
+                height=overworld_map.height,
+                width=overworld_map.width,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
             get_hm_tiles=list,
         ),
     )
@@ -129,10 +131,6 @@ def test_object_overlay_provides_reachable_interaction_position() -> None:
         warp_usage_iterations={},
         known_map_boundaries=(),
         known_map_ids=frozenset(),
-        north_connection=None,
-        south_connection=None,
-        east_connection=None,
-        west_connection=None,
     )
     game_state = cast(
         "GameState",
@@ -149,7 +147,14 @@ def test_object_overlay_provides_reachable_interaction_position() -> None:
             },
             pikachu=SimpleNamespace(is_rendered=False),
             player=SimpleNamespace(coords=Coords(row=2, col=2), is_surfing=False),
-            map=SimpleNamespace(),
+            map=SimpleNamespace(
+                height=overworld_map.height,
+                width=overworld_map.width,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
             get_hm_tiles=list,
         ),
     )
@@ -185,10 +190,6 @@ def test_spinner_routing_uses_terrain_under_pikachu_overlay() -> None:
         warp_usage_iterations={},
         known_map_boundaries=(),
         known_map_ids=frozenset(),
-        north_connection=None,
-        south_connection=None,
-        east_connection=None,
-        west_connection=None,
     )
     spinner_stop = Coords(row=1, col=4)
     game_state = cast(
@@ -200,7 +201,14 @@ def test_spinner_routing_uses_terrain_under_pikachu_overlay() -> None:
             objects={},
             pikachu=SimpleNamespace(is_rendered=True, coords=spinner_stop),
             player=SimpleNamespace(coords=Coords(row=2, col=2), is_surfing=False),
-            map=SimpleNamespace(),
+            map=SimpleNamespace(
+                height=overworld_map.height,
+                width=overworld_map.width,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
             get_hm_tiles=list,
         ),
     )
@@ -268,10 +276,6 @@ def test_routing_respects_tiles_beneath_player_and_pikachu(
         warp_usage_iterations={},
         known_map_boundaries=(),
         known_map_ids=frozenset(),
-        north_connection=None,
-        south_connection=None,
-        east_connection=None,
-        west_connection=None,
     )
     game_state = cast(
         "GameState",
@@ -288,20 +292,27 @@ def test_routing_respects_tiles_beneath_player_and_pikachu(
                 moves_randomly=False,
             ),
             player=SimpleNamespace(coords=start, is_surfing=False),
-            map=SimpleNamespace(),
+            map=SimpleNamespace(
+                height=overworld_map.height,
+                width=overworld_map.width,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
             get_hm_tiles=list,
         ),
     )
 
     map_view = build_current_map_view(overworld_map, game_state)
-    path = navigation.calculate_path_to_target(
+    path = calculate_path_to_target(
         start, target, map_view.routing_tiles, overworld_map.blockages, []
     )
 
     assert path == expected_path
     assert target in map_view.reachable_coords
     if start != transition:
-        assert navigation.calculate_path_to_target(
+        assert calculate_path_to_target(
             start, transition, map_view.routing_tiles, overworld_map.blockages, []
         ) == [Button.UP]
 
@@ -330,10 +341,6 @@ def test_unresolved_spinner_shows_known_path_without_exposing_disconnected_terra
         warp_usage_iterations={},
         known_map_boundaries=(),
         known_map_ids=frozenset(),
-        north_connection=None,
-        south_connection=None,
-        east_connection=None,
-        west_connection=None,
     )
     start = Coords(row=1, col=1)
     entry = Coords(row=1, col=2)
@@ -346,7 +353,14 @@ def test_unresolved_spinner_shows_known_path_without_exposing_disconnected_terra
             objects={},
             pikachu=SimpleNamespace(is_rendered=False),
             player=SimpleNamespace(coords=start, is_surfing=False),
-            map=SimpleNamespace(),
+            map=SimpleNamespace(
+                height=overworld_map.height,
+                width=overworld_map.width,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
             get_hm_tiles=list,
         ),
     )
@@ -367,7 +381,7 @@ def test_unresolved_spinner_shows_known_path_without_exposing_disconnected_terra
 
 
 @pytest.mark.unit
-def test_sprite_notes_include_only_reachable_and_counter_interactable_sprites() -> None:
+def test_current_map_view_includes_counter_interactable_sprites() -> None:
     """Expose a disconnected sprite only when the ROM permits talking across its counter."""
     overworld_map = OverworldMap(
         id=MapId.VIRIDIAN_POKECENTER,
@@ -389,10 +403,6 @@ def test_sprite_notes_include_only_reachable_and_counter_interactable_sprites() 
         warp_usage_iterations={},
         known_map_boundaries=(),
         known_map_ids=frozenset(),
-        north_connection=None,
-        south_connection=None,
-        east_connection=None,
-        west_connection=None,
     )
     sprites = {
         1: SimpleNamespace(
@@ -418,15 +428,20 @@ def test_sprite_notes_include_only_reachable_and_counter_interactable_sprites() 
             screen=SimpleNamespace(to_screen_coords=lambda _coords: Coords(row=0, col=0)),
             pikachu=SimpleNamespace(is_rendered=False),
             player=SimpleNamespace(coords=Coords(row=2, col=1), is_surfing=False),
-            map=SimpleNamespace(),
+            map=SimpleNamespace(
+                height=overworld_map.height,
+                width=overworld_map.width,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
             get_hm_tiles=list,
         ),
     )
 
     map_view = build_current_map_view(overworld_map, game_state)
-    notes = format_sprite_notes(map_view, game_state)
 
     assert map_view.counter_interactions == {1: (Coords(row=2, col=1),)}
-    assert "NURSE" in notes
-    assert "across a counter from (2, 1)" in notes
-    assert "POKEMON" not in notes
+    assert sprites[1].coords in map_view.visible_coords
+    assert sprites[2].coords not in map_view.visible_coords

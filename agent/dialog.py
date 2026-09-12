@@ -61,11 +61,6 @@ async def settle_dialog(
     """
     game_state, control_boundary = await context.emulator.get_game_state_with_control_boundary()
     initial_state = game_state
-    started_in_plain_dialog = (
-        control_boundary == ControlBoundary.TEXT_INPUT_READY
-        and not is_battle_handler_state(game_state)
-        and _is_plain_text_dialog(game_state)
-    )
 
     chunks = []
     advanced = False
@@ -107,7 +102,6 @@ async def settle_dialog(
     scripted_displacement_warning = ""
     if (
         advanced
-        and started_in_plain_dialog
         and final_boundary == ControlBoundary.OVERWORLD_READY
         and initial_state.map.id == final_state.map.id
         and final_state.map.id not in {MapId.OUTSIDE, MapId.UNKNOWN}

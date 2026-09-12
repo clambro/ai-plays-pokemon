@@ -3,7 +3,8 @@
 from typing import TYPE_CHECKING
 
 from agent.battle.tools.errors import BattleActionUnavailableError
-from agent.battle.tools.utils import get_cursor_pos_in_fight_menu
+from agent.battle.utils import get_cursor_pos_in_fight_menu
+from agent.utils import move_cursor
 from common.enums import BattleType, Button, PokeballItem
 
 if TYPE_CHECKING:
@@ -74,13 +75,7 @@ async def _select_item(
     item_index: int,
 ) -> None:
     """Move to the selected inventory item and confirm it."""
-    index_difference = cursor_index - item_index
-    if index_difference > 0:
-        for _ in range(index_difference):
-            await emulator.press_button(Button.UP)
-    elif index_difference < 0:
-        for _ in range(-index_difference):
-            await emulator.press_button(Button.DOWN)
+    await move_cursor(emulator, cursor_index, item_index)
     await emulator.press_button(Button.A)
 
 

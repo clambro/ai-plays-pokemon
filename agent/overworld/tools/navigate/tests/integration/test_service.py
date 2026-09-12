@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from agent.overworld.tools.navigate.service import NavigationService
+from agent.overworld.tools.navigate.service import navigate
 from common.enums import AsciiTile, Button, FacingDirection
 from common.schemas import Coords
 from emulator.emulator import Emulator
@@ -15,6 +15,8 @@ from overworld_map.service import prepare_overworld_map
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
+    from overworld_map.schemas import OverworldMap
 
 
 @pytest.fixture(autouse=True)
@@ -42,9 +44,15 @@ async def test_navigate_after_turning() -> None:
         mute_sound=True,
         headless=True,
     ) as emulator:
-        service = await _get_nav_service(emulator)
+        current_map = await _get_current_map(emulator)
 
-        await service.navigate(Coords(row=30, col=23))
+        await navigate(
+            iteration=0,
+            emulator=emulator,
+            current_map=current_map,
+            rolling_memory=RollingMemory(),
+            coords=Coords(row=30, col=23),
+        )
 
         game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=30, col=23)
@@ -52,8 +60,9 @@ async def test_navigate_after_turning() -> None:
 
 
 @pytest.mark.integration
-async def test_navigate_through_pikachu_while_facing_it() -> None:
-    """Preserve the requested steps while Pikachu yields to the player."""
+@pytest.mark.parametrize("already_facing", [False, True])
+async def test_navigate_through_pikachu(*, already_facing: bool) -> None:
+    """Navigate through Pikachu whether already facing it or needing to turn first."""
     save_file = Path(__file__).parent / "saves" / "viridian.state"
     async with Emulator(
         save_state_path=save_file,
@@ -65,14 +74,21 @@ async def test_navigate_through_pikachu_while_facing_it() -> None:
         assert game_state.pikachu.coords == Coords(row=28, col=22)
         assert game_state.player.direction == FacingDirection.RIGHT
 
-        await emulator.press_overworld_button(Button.LEFT)
-        game_state = await emulator.get_game_state()
-        assert game_state.player.coords == Coords(row=28, col=23)
-        assert game_state.player.direction == FacingDirection.LEFT
+        if already_facing:
+            await emulator.press_overworld_button(Button.LEFT)
+            game_state = await emulator.get_game_state()
+            assert game_state.player.coords == Coords(row=28, col=23)
+            assert game_state.player.direction == FacingDirection.LEFT
 
-        service = await _get_nav_service(emulator)
+        current_map = await _get_current_map(emulator)
 
-        await service.navigate(Coords(row=28, col=21))
+        await navigate(
+            iteration=0,
+            emulator=emulator,
+            current_map=current_map,
+            rolling_memory=RollingMemory(),
+            coords=Coords(row=28, col=21),
+        )
 
         game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=28, col=21)
@@ -92,9 +108,15 @@ async def test_navigate_through_cut_tree() -> None:
         game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=17, col=17)
 
-        service = await _get_nav_service(emulator)
+        current_map = await _get_current_map(emulator)
 
-        await service.navigate(Coords(row=20, col=15))
+        await navigate(
+            iteration=0,
+            emulator=emulator,
+            current_map=current_map,
+            rolling_memory=RollingMemory(),
+            coords=Coords(row=20, col=15),
+        )
 
         game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=20, col=15)
@@ -112,15 +134,21 @@ async def test_navigate_to_cut_tree_refreshes_removed_terrain() -> None:
         game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=17, col=17)
 
-        service = await _get_nav_service(emulator)
+        current_map = await _get_current_map(emulator)
         target = Coords(row=18, col=15)
-        assert service.current_map.terrain[target.row][target.col] == AsciiTile.CUT_TREE
+        assert current_map.terrain[target.row][target.col] == AsciiTile.CUT_TREE
 
-        await service.navigate(target)
+        await navigate(
+            iteration=0,
+            emulator=emulator,
+            current_map=current_map,
+            rolling_memory=RollingMemory(),
+            coords=target,
+        )
 
         game_state = await emulator.get_game_state()
         assert game_state.player.coords == target
-        assert service.current_map.terrain[target.row][target.col] == AsciiTile.FREE
+        assert current_map.terrain[target.row][target.col] == AsciiTile.FREE
 
 
 @pytest.mark.integration
@@ -135,9 +163,15 @@ async def test_navigate_through_spinners() -> None:
         game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=13, col=4)
 
-        service = await _get_nav_service(emulator)
+        current_map = await _get_current_map(emulator)
 
-        await service.navigate(Coords(row=16, col=8))
+        await navigate(
+            iteration=0,
+            emulator=emulator,
+            current_map=current_map,
+            rolling_memory=RollingMemory(),
+            coords=Coords(row=16, col=8),
+        )
 
         game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=16, col=8)
@@ -155,22 +189,21 @@ async def test_navigate_through_water() -> None:
         game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=20, col=19)
 
-        service = await _get_nav_service(emulator)
+        current_map = await _get_current_map(emulator)
 
-        await service.navigate(Coords(row=16, col=21))
+        await navigate(
+            iteration=0,
+            emulator=emulator,
+            current_map=current_map,
+            rolling_memory=RollingMemory(),
+            coords=Coords(row=16, col=21),
+        )
 
         game_state = await emulator.get_game_state()
         assert game_state.player.coords == Coords(row=16, col=21)
 
 
-async def _get_nav_service(emulator: Emulator) -> NavigationService:
-    """Helper function to get a navigation service with the proper mocks."""
+async def _get_current_map(emulator: Emulator) -> OverworldMap:
+    """Prepare the current map from the emulator's visible state."""
     game_state = await emulator.get_game_state()
-    overworld_map = await prepare_overworld_map(0, game_state)
-
-    return NavigationService(
-        iteration=0,
-        emulator=emulator,
-        current_map=overworld_map,
-        rolling_memory=RollingMemory(),
-    )
+    return await prepare_overworld_map(0, game_state)

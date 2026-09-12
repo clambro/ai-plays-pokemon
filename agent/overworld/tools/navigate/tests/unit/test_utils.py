@@ -9,7 +9,14 @@ from copy import deepcopy
 
 import pytest
 
-from agent.overworld import navigation
+from agent.overworld.navigation import (
+    calculate_path_to_target,
+    get_accessible_coords,
+    get_exploration_candidates,
+    get_map_boundary_tiles,
+    get_spinner_destination,
+    get_spinner_path,
+)
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, MapId
 from common.schemas import Coords
 from emulator.parsers.map import Map, MapConnection
@@ -77,10 +84,6 @@ DUMMY_MAP = OverworldMap(
     warp_usage_iterations={},
     known_map_boundaries=(),
     known_map_ids=frozenset(),
-    north_connection=None,
-    south_connection=None,
-    east_connection=None,
-    west_connection=None,
 )
 
 DUMMY_MAP_STATE = Map(
@@ -211,7 +214,7 @@ def test_get_spinner_path_is_unresolved_when_it_leaves_the_map() -> None:
     map_data = deepcopy(DUMMY_MAP)
     map_data.terrain = [list("›∙")]  # noqa: RUF001
 
-    path = navigation.get_spinner_path(Coords(row=0, col=0), map_data.terrain_ndarray)
+    path = get_spinner_path(Coords(row=0, col=0), map_data.terrain_ndarray)
 
     assert path is None
 
@@ -227,16 +230,14 @@ def test_spinner_exploration_ends_when_destination_is_revealed(last_tile: str) -
     entry = Coords(row=0, col=1)
     end = Coords(row=0, col=4)
 
-    accessible = navigation.get_accessible_coords(start, tiles, {}, [])
-    candidates = navigation.get_exploration_candidates(accessible, tiles)
+    accessible = get_accessible_coords(start, tiles, {}, [])
+    candidates = get_exploration_candidates(accessible, tiles)
 
     assert candidates == ([entry] if last_tile == "░" else [])
-    assert navigation.get_spinner_destination(entry, tiles) == (None if last_tile == "░" else end)
-    assert navigation.get_spinner_path(entry, tiles) == tuple(
-        Coords(row=0, col=col) for col in range(1, 5)
-    )
+    assert get_spinner_destination(entry, tiles) == (None if last_tile == "░" else end)
+    assert get_spinner_path(entry, tiles) == tuple(Coords(row=0, col=col) for col in range(1, 5))
     if last_tile == "░":
-        assert navigation.calculate_path_to_target(start, entry, tiles, {}, []) == [Button.RIGHT]
+        assert calculate_path_to_target(start, entry, tiles, {}, []) == [Button.RIGHT]
         assert Coords(row=0, col=2) not in accessible
         assert end not in accessible
 
@@ -277,7 +278,7 @@ def test_get_map_boundary_tiles_plateau() -> None:
     """Test that the map boundary tiles are correct for the plateau map if we add a map below."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.terrain = PLATEAU_MAP
-    map_data.south_connection = MapConnection(
+    connection = MapConnection(
         direction=FacingDirection.DOWN,
         destination_map=MapId.ROUTE_1,
         source_coordinate_start=0,
@@ -285,9 +286,16 @@ def test_get_map_boundary_tiles_plateau() -> None:
         destination_offset=Coords(row=0, col=0),
         collision_tile_pairs=((1, 1),) * len(PLATEAU_MAP[0]),
     )
+    map_state = DUMMY_MAP_STATE.model_copy(
+        update={
+            "height": map_data.height,
+            "width": map_data.width,
+            "south_connection": connection,
+        },
+    )
 
     accessible_coords = _get_accessible_coords(PLATEAU_CENTER, map_data, [])
-    boundary_tiles = _get_map_boundary_tiles(accessible_coords, map_data)
+    boundary_tiles = get_map_boundary_tiles(accessible_coords, map_state, can_surf=False)
 
     # There is no right boundary tile because the map is not connected to the right.
     assert boundary_tiles == {
@@ -304,7 +312,7 @@ def test_get_map_boundary_tiles_collision_pairs() -> None:
     map_data = deepcopy(DUMMY_MAP)
     map_data.terrain = COLLISION_PAIRS_MAP
     map_data.blockages = COLLISION_PAIRS_BLOCKAGES
-    map_data.east_connection = MapConnection(
+    east_connection = MapConnection(
         direction=FacingDirection.RIGHT,
         destination_map=MapId.ROUTE_1,
         source_coordinate_start=0,
@@ -312,7 +320,7 @@ def test_get_map_boundary_tiles_collision_pairs() -> None:
         destination_offset=Coords(row=0, col=0),
         collision_tile_pairs=((1, 1),) * len(COLLISION_PAIRS_MAP),
     )
-    map_data.west_connection = MapConnection(
+    west_connection = MapConnection(
         direction=FacingDirection.LEFT,
         destination_map=MapId.ROUTE_1,
         source_coordinate_start=0,
@@ -320,9 +328,17 @@ def test_get_map_boundary_tiles_collision_pairs() -> None:
         destination_offset=Coords(row=0, col=0),
         collision_tile_pairs=((1, 1),) * len(COLLISION_PAIRS_MAP),
     )
+    map_state = DUMMY_MAP_STATE.model_copy(
+        update={
+            "height": map_data.height,
+            "width": map_data.width,
+            "east_connection": east_connection,
+            "west_connection": west_connection,
+        },
+    )
 
     accessible_coords = _get_accessible_coords(Coords(row=0, col=0), map_data, [])
-    boundary_tiles = _get_map_boundary_tiles(accessible_coords, map_data)
+    boundary_tiles = get_map_boundary_tiles(accessible_coords, map_state, can_surf=False)
 
     assert boundary_tiles[FacingDirection.DOWN] == []
     assert set(boundary_tiles[FacingDirection.LEFT]) == {Coords(row=0, col=0), Coords(row=2, col=0)}
@@ -338,7 +354,7 @@ def test_get_map_boundary_tiles_checks_connected_map_collision_strip() -> None:
     """Expose only outward tiles that are traversable, even when they are outside the viewport."""
     map_data = deepcopy(DUMMY_MAP)
     map_data.terrain = [list("∙∙∙")]
-    map_data.south_connection = MapConnection(
+    connection = MapConnection(
         direction=FacingDirection.DOWN,
         destination_map=MapId.ROUTE_1,
         source_coordinate_start=0,
@@ -350,10 +366,17 @@ def test_get_map_boundary_tiles_checks_connected_map_collision_strip() -> None:
             (1, 3),  # The connected-map tile is water.
         ),
     )
+    map_state = DUMMY_MAP_STATE.model_copy(
+        update={
+            "height": map_data.height,
+            "width": map_data.width,
+            "south_connection": connection,
+        },
+    )
     accessible_coords = _get_accessible_coords(Coords(row=0, col=0), map_data, [])
 
-    without_surf = _get_map_boundary_tiles(accessible_coords, map_data)
-    with_surf = _get_map_boundary_tiles(accessible_coords, map_data, can_surf=True)
+    without_surf = get_map_boundary_tiles(accessible_coords, map_state, can_surf=False)
+    with_surf = get_map_boundary_tiles(accessible_coords, map_state, can_surf=True)
 
     assert without_surf[FacingDirection.DOWN] == [Coords(row=0, col=1)]
     assert with_surf[FacingDirection.DOWN] == [
@@ -365,9 +388,7 @@ def test_get_map_boundary_tiles_checks_connected_map_collision_strip() -> None:
 @pytest.mark.unit
 def test_get_map_boundary_tiles_checks_cross_boundary_collision_pair() -> None:
     """Reject an otherwise walkable connected-map tile across an elevation boundary."""
-    map_data = deepcopy(DUMMY_MAP)
-    map_data.terrain = [list("∙")]
-    map_data.south_connection = MapConnection(
+    connection = MapConnection(
         direction=FacingDirection.DOWN,
         destination_map=MapId.ROUTE_1,
         source_coordinate_start=0,
@@ -376,13 +397,13 @@ def test_get_map_boundary_tiles_checks_cross_boundary_collision_pair() -> None:
         collision_tile_pairs=((1, 4),),
     )
     map_state = DUMMY_MAP_STATE.model_copy(
-        update={"collision_pairs": [frozenset((1, 4))]},
+        update={"south_connection": connection, "collision_pairs": [frozenset((1, 4))]},
     )
 
-    boundary_tiles = _get_map_boundary_tiles(
+    boundary_tiles = get_map_boundary_tiles(
         [Coords(row=0, col=0)],
-        map_data,
-        map_state=map_state,
+        map_state,
+        can_surf=False,
     )
 
     assert boundary_tiles[FacingDirection.DOWN] == []
@@ -574,7 +595,7 @@ def _get_accessible_coords(
     map_data: OverworldMap,
     hm_tiles: list[AsciiTile],
 ) -> list[Coords]:
-    return navigation.get_accessible_coords(
+    return get_accessible_coords(
         start_pos,
         map_data.terrain_ndarray,
         map_data.blockages,
@@ -586,22 +607,7 @@ def _get_exploration_candidates(
     accessible_coords: list[Coords],
     map_data: OverworldMap,
 ) -> list[Coords]:
-    return navigation.get_exploration_candidates(accessible_coords, map_data.terrain_ndarray)
-
-
-def _get_map_boundary_tiles(
-    accessible_coords: list[Coords],
-    map_data: OverworldMap,
-    *,
-    map_state: Map = DUMMY_MAP_STATE,
-    can_surf: bool = False,
-) -> dict[FacingDirection, list[Coords]]:
-    return navigation.get_map_boundary_tiles(
-        accessible_coords,
-        map_data,
-        map_state,
-        can_surf=can_surf,
-    )
+    return get_exploration_candidates(accessible_coords, map_data.terrain_ndarray)
 
 
 def _calculate_path_to_target(
@@ -610,7 +616,7 @@ def _calculate_path_to_target(
     map_data: OverworldMap,
     hm_tiles: list[AsciiTile],
 ) -> list[Button] | None:
-    return navigation.calculate_path_to_target(
+    return calculate_path_to_target(
         start_pos,
         target_pos,
         map_data.terrain_ndarray,

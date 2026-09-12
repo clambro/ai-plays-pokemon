@@ -9,9 +9,11 @@ from pydantic_graph import End
 
 from agent.context import AgentContext
 from agent.dialog import settle_dialog
+from agent.formatting.game_state import build_screenshot_content
+from agent.hooks import AGENT_HOOKS
 from agent.text.prompts import build_text_decision_prompt
 from agent.text.tools.registry import build_text_toolset
-from agent.utils import AGENT_HOOKS, build_screenshot_content, is_text_handler_state
+from agent.utils import is_text_handler_state
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 
@@ -54,11 +56,11 @@ async def run_text(context: AgentContext) -> None:
                     if isinstance(current_node, CallToolsNode):
                         if context.consume_control_handoff():
                             break
-                        await context.complete_iteration()
                         (
                             game_state,
                             control_boundary,
                         ) = await context.emulator.get_game_state_with_control_boundary()
+                        await context.complete_iteration(game_state)
                         if not is_text_handler_state(game_state, control_boundary):
                             break
         except AgentRunError as error:
@@ -73,7 +75,7 @@ async def _prepare_text_agent_input(
 ) -> list[str | BinaryContent] | None:
     """Drain ordinary dialog and prepare input if a decision remains."""
     settlement = await settle_dialog(context)
-    await context.complete_iteration()
+    await context.complete_iteration(settlement.game_state)
 
     if not is_text_handler_state(settlement.game_state, settlement.control_boundary):
         return None

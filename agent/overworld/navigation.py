@@ -4,18 +4,49 @@ This module contains traversal, pathfinding, exploration, and map-boundary calcu
 depending on agent presentation or tool services.
 """
 
+from collections import deque
 from typing import TYPE_CHECKING
 
-from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection
+import numpy as np
+
+from common.enums import BUTTON_OFFSETS, AsciiTile, BlockedDirection, Button, FacingDirection
 from common.schemas import Coords
+from overworld_map.views import get_navigation_tiles
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    import numpy as np
-
+    from emulator.game_state import GameState
     from emulator.parsers.map import Map
     from overworld_map.schemas import OverworldMap
+
+
+def build_routing_data(
+    overworld_map: OverworldMap,
+    game_state: GameState,
+) -> tuple[np.ndarray, list[Coords]]:
+    """Build routing tiles and reachable coordinates without modifying remembered terrain.
+
+    Returns:
+        Finished routing tiles and reachable coordinates in traversal order.
+    """
+    persistent_tiles = overworld_map.terrain_ndarray
+    routing_tiles = get_navigation_tiles(overworld_map, game_state)
+    # Allow departure from the starting warp without hiding transitions beneath Pikachu.
+    player_coords = game_state.player.coords
+    routing_tiles[player_coords.row, player_coords.col] = AsciiTile.PLAYER
+    spinner_types = [*AsciiTile.get_spinner_tiles(), AsciiTile.SPINNER_STOP]
+    # Entity overlays must not hide directional or stop tiles from spinner tracing.
+    spinner_mask = np.isin(persistent_tiles, spinner_types)
+    routing_tiles[spinner_mask] = persistent_tiles[spinner_mask]
+    hm_tiles = game_state.get_hm_tiles()
+    reachable_list = get_accessible_coords(
+        game_state.player.coords,
+        routing_tiles,
+        overworld_map.blockages,
+        hm_tiles,
+    )
+    return routing_tiles, reachable_list
 
 
 def get_exploration_candidates(
@@ -50,7 +81,6 @@ def get_exploration_candidates(
 
 def get_map_boundary_tiles(
     accessible_coords: list[Coords],
-    map_data: OverworldMap,
     map_state: Map,
     *,
     can_surf: bool,
@@ -59,15 +89,14 @@ def get_map_boundary_tiles(
 
     Args:
         accessible_coords: Coordinates the player can currently reach.
-        map_data: Explored map and its cardinal connections.
-        map_state: Current map traversal metadata and connected-map collision strips.
+        map_state: Current map dimensions, connections, and traversal metadata.
         can_surf: Whether the player can traverse water.
 
     Returns:
         Accessible boundary coordinates grouped by their cardinal direction.
     """
-    height = map_data.height
-    width = map_data.width
+    height = map_state.height
+    width = map_state.width
     boundary_tiles = {
         FacingDirection.UP: [],
         FacingDirection.DOWN: [],
@@ -78,10 +107,10 @@ def get_map_boundary_tiles(
     for c in accessible_coords:
         if (
             c.row == 0
-            and map_data.north_connection is not None
-            and c.col in map_data.north_connection.source_coordinates
+            and map_state.north_connection is not None
+            and c.col in map_state.north_connection.source_coordinates
             and map_state.is_connection_crossable(
-                map_data.north_connection,
+                map_state.north_connection,
                 c,
                 can_surf=can_surf,
             )
@@ -89,10 +118,10 @@ def get_map_boundary_tiles(
             boundary_tiles[FacingDirection.UP].append(c)
         elif (
             c.row == height - 1
-            and map_data.south_connection is not None
-            and c.col in map_data.south_connection.source_coordinates
+            and map_state.south_connection is not None
+            and c.col in map_state.south_connection.source_coordinates
             and map_state.is_connection_crossable(
-                map_data.south_connection,
+                map_state.south_connection,
                 c,
                 can_surf=can_surf,
             )
@@ -100,10 +129,10 @@ def get_map_boundary_tiles(
             boundary_tiles[FacingDirection.DOWN].append(c)
         elif (
             c.col == 0
-            and map_data.west_connection is not None
-            and c.row in map_data.west_connection.source_coordinates
+            and map_state.west_connection is not None
+            and c.row in map_state.west_connection.source_coordinates
             and map_state.is_connection_crossable(
-                map_data.west_connection,
+                map_state.west_connection,
                 c,
                 can_surf=can_surf,
             )
@@ -111,10 +140,10 @@ def get_map_boundary_tiles(
             boundary_tiles[FacingDirection.LEFT].append(c)
         elif (
             c.col == width - 1
-            and map_data.east_connection is not None
-            and c.row in map_data.east_connection.source_coordinates
+            and map_state.east_connection is not None
+            and c.row in map_state.east_connection.source_coordinates
             and map_state.is_connection_crossable(
-                map_data.east_connection,
+                map_state.east_connection,
                 c,
                 can_surf=can_surf,
             )
@@ -142,10 +171,10 @@ def get_accessible_coords(
         Reachable coordinates, including ``start_pos`` so a boundary beneath the player is found.
     """
     visited = {start_pos}
-    queue = [start_pos]
+    queue = deque([start_pos])
     accessible = [start_pos]
     while queue:
-        current = queue.pop(0)
+        current = queue.popleft()
         for neighbor, _ in _get_neighbors(current, tiles, blockages, hm_tiles):
             if neighbor not in visited:
                 visited.add(neighbor)
@@ -240,9 +269,9 @@ def _get_neighbors(
     if current_tile in [AsciiTile.WARP, AsciiTile.BOULDER_HOLE] or current_tile in spinner_tiles:
         return []  # These transition tiles cannot be used as stable intermediate positions.
 
-    for dy, dx in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+    for button in (Button.RIGHT, Button.DOWN, Button.LEFT, Button.UP):
+        dy, dx = BUTTON_OFFSETS[button]
         new_pos = pos + (dy, dx)  # noqa: RUF005
-        button = _DIRECTION_BUTTON_MAP[(dy, dx)]
 
         if (
             new_pos.row < 0
@@ -267,7 +296,7 @@ def _get_neighbors(
             # An unresolved spinner is still reachable as an exploration action, but it is
             # terminal until traversing it reveals where it leads.
             neighbors.append((destination if destination is not None else new_pos, button))
-        elif not _is_blocked(pos, dy, dx, blockages) and (
+        elif not is_blocked(pos, dy, dx, blockages) and (
             target_tile in walkable_tiles
             or (target_tile == AsciiTile.CUT_TREE and AsciiTile.CUT_TREE in hm_tiles)
             or (target_tile == AsciiTile.WATER and AsciiTile.WATER in hm_tiles)
@@ -277,7 +306,7 @@ def _get_neighbors(
     return neighbors
 
 
-def _is_blocked(
+def is_blocked(
     current: Coords,
     dy: int,
     dx: int,
@@ -336,13 +365,6 @@ def get_spinner_path(pos: Coords, tiles: np.ndarray) -> tuple[Coords, ...] | Non
             direction = _SPINNER_DIRECTION_MAP[new_tile]
         pos = new_pos
 
-
-_DIRECTION_BUTTON_MAP = {
-    (0, 1): Button.RIGHT,
-    (1, 0): Button.DOWN,
-    (0, -1): Button.LEFT,
-    (-1, 0): Button.UP,
-}
 
 _SPINNER_DIRECTION_MAP = {
     AsciiTile.SPINNER_UP: Coords(row=-1, col=0),

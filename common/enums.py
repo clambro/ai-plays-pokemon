@@ -142,6 +142,25 @@ class Button(StrEnum):
     RIGHT = "right"
 
 
+FACING_OFFSETS = {
+    FacingDirection.UP: (-1, 0),
+    FacingDirection.DOWN: (1, 0),
+    FacingDirection.LEFT: (0, -1),
+    FacingDirection.RIGHT: (0, 1),
+}
+
+BUTTON_DIRECTIONS = {
+    Button.UP: FacingDirection.UP,
+    Button.DOWN: FacingDirection.DOWN,
+    Button.LEFT: FacingDirection.LEFT,
+    Button.RIGHT: FacingDirection.RIGHT,
+}
+
+BUTTON_OFFSETS = {
+    button: FACING_OFFSETS[direction] for button, direction in BUTTON_DIRECTIONS.items()
+}
+
+
 class PokeballItem(StrEnum):
     """The different types of pokeballs."""
 

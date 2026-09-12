@@ -56,7 +56,7 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         """
         try:
             result = await press_buttons_service(
-                context=context,
+                emulator=context.emulator,
                 buttons=buttons,
             )
         except TextActionUnavailableError as error:

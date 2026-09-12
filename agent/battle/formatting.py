@@ -2,7 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from common.enums import BattleType, EvolutionFamily, PokeballItem
+from agent.battle.utils import is_evolution_family_caught
+from common.enums import BattleType, PokeballItem
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -89,15 +90,3 @@ def format_available_pokeballs(game_state: GameState) -> str:
     if not available_balls:
         return ""
     return "Available Poke Balls:\n" + "\n".join(available_balls)
-
-
-def is_evolution_family_caught(
-    pokedex_number: int,
-    caught_pokedex_numbers: frozenset[int],
-) -> bool:
-    """Return whether a related Pokemon has already been caught."""
-    group = next(
-        (group.value for group in EvolutionFamily if pokedex_number in group.value),
-        (pokedex_number,),
-    )
-    return any(member in caught_pokedex_numbers for member in group)

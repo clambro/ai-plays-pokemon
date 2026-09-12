@@ -1,9 +1,11 @@
 """Model-facing formatting for the explored overworld map."""
 
 from itertools import groupby
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, assert_never
 
-from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y
+from agent.overworld.connections import group_contiguous_warps, group_map_boundaries
+from agent.overworld.tools.check_connection.schemas import ConnectionCheckError
+from common.constants import CONNECTION_CHECK_LABEL, PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpActivation
 from common.schemas import Coords
 
@@ -11,8 +13,13 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from agent.overworld.map_view import CurrentMapView, ObjectInteractionPosition
+    from agent.overworld.tools.check_connection.schemas import (
+        ConnectionCheckResult,
+        ResolvedConnection,
+    )
     from database.map_boundary_memory.schemas import MapBoundaryMemoryRead
     from emulator.game_state import GameState
+    from emulator.parsers.map import Map
     from emulator.parsers.sign import Sign
     from emulator.parsers.sprite import Sprite
     from emulator.parsers.static_object import StaticObject
@@ -207,37 +214,6 @@ def _get_warp_description(
     )
 
 
-def _group_contiguous_warps(warps: Sequence[Warp]) -> tuple[tuple[Warp, ...], ...]:
-    """Combine adjacent entrance tiles sharing a destination map and activation."""
-    groups = []
-    grouped_ids = set()
-    for warp in warps:
-        if warp.index in grouped_ids:
-            continue
-        matching_warps = [
-            candidate
-            for candidate in warps
-            if candidate.destination == warp.destination and candidate.activation == warp.activation
-        ]
-        group = [warp]
-        grouped_ids.add(warp.index)
-        pending = [warp]
-        while pending:
-            current = pending.pop()
-            for candidate in matching_warps:
-                if candidate.index in grouped_ids:
-                    continue
-                distance = abs(candidate.coords.row - current.coords.row) + abs(
-                    candidate.coords.col - current.coords.col
-                )
-                if distance == 1:
-                    group.append(candidate)
-                    grouped_ids.add(candidate.index)
-                    pending.append(candidate)
-        groups.append(tuple(sorted(group, key=lambda candidate: candidate.index)))
-    return tuple(groups)
-
-
 def format_connection(
     *,
     source_map_id: MapId,
@@ -257,6 +233,95 @@ def format_connection(
     return f"{source} leads to {destination_map_id.name} at {_format_coords(destination_coords)}."
 
 
+def format_connection_check(
+    result: list[ConnectionCheckResult] | ConnectionCheckError,
+    *,
+    map_name: str,
+    coordinates: Coords,
+) -> str:
+    """Render a completed connection check without loading or resolving any connections."""
+    if isinstance(result, ConnectionCheckError):
+        return _format_connection_check_error(result, map_name, coordinates)
+
+    return "\n\n".join(_format_connection_destination(destination) for destination in result)
+
+
+def _format_connection_destination(result: ConnectionCheckResult) -> str:
+    """Render one arrival region and all its reachable connections, including the return route."""
+    connection = result.connection
+    if connection.destination_map_id is None:
+        return (
+            f"{CONNECTION_CHECK_LABEL} This connection's destination has not been visited."
+            f"{_format_connection_usage(connection)}"
+        )
+    if not connection.destination_coords:
+        return (
+            f"{CONNECTION_CHECK_LABEL} This connection's destination has not been discovered."
+            f"{_format_connection_usage(connection)}"
+        )
+
+    header = _format_resolved_connection(connection)
+    exploration = (
+        "Unexplored terrain can still be reached from this arrival region."
+        if result.has_unexplored_terrain
+        else "No unexplored terrain is reachable from this arrival region."
+    )
+    if not result.other_connections:
+        return (
+            f"{CONNECTION_CHECK_LABEL} {header}\n{exploration}\n"
+            "No discovered connections are reachable from that arrival "
+            "point through revealed terrain."
+        )
+    return (
+        f"{CONNECTION_CHECK_LABEL} {header}\n{exploration}\n"
+        "Discovered connections reachable from that arrival point:\n"
+        + "\n".join(f"- {_format_resolved_connection(other)}" for other in result.other_connections)
+    )
+
+
+def _format_connection_check_error(
+    error: ConnectionCheckError,
+    map_name: str,
+    coordinates: Coords,
+) -> str:
+    """Describe why the requested connection could not be inspected."""
+    match error:
+        case ConnectionCheckError.INVALID_MAP:
+            return f'{CONNECTION_CHECK_LABEL} "{map_name}" is not a known map.'
+        case ConnectionCheckError.UNSUPPORTED_MAP:
+            return f'{CONNECTION_CHECK_LABEL} "{map_name}" cannot have remembered connections.'
+        case ConnectionCheckError.UNVISITED_MAP:
+            return f"{CONNECTION_CHECK_LABEL} {map_name} has not been visited."
+        case ConnectionCheckError.UNKNOWN_CONNECTION:
+            return (
+                f"{CONNECTION_CHECK_LABEL} No previously discovered connection is known on "
+                f"{map_name} at {coordinates}."
+            )
+        case ConnectionCheckError.MEMORY_UNAVAILABLE:
+            return f"{CONNECTION_CHECK_LABEL} Connection memory is currently unavailable."
+        case _:
+            assert_never(error)
+
+
+def _format_resolved_connection(connection: ResolvedConnection) -> str:
+    """Render known endpoints and any warp-usage information."""
+    return format_connection(
+        source_map_id=connection.source_map_id,
+        source_coords=connection.source_coords,
+        destination_map_id=connection.destination_map_id,
+        destination_coords=connection.destination_coords,
+    ) + _format_connection_usage(connection)
+
+
+def _format_connection_usage(connection: ResolvedConnection) -> str:
+    """Append usage information for warps; map boundaries do not track usage."""
+    if not connection.is_warp:
+        return ""
+    if connection.last_used_iteration is None:
+        return " No recorded use."
+    return f" Last used at iteration {connection.last_used_iteration}."
+
+
 def format_legend(
     map_view: CurrentMapView,
     legend: Mapping[AsciiTile, str],
@@ -266,22 +331,6 @@ def format_legend(
         AsciiTile(tile) for row in map_view.display_tiles for tile in row
     } | _ALWAYS_VISIBLE_TILES
     return "\n".join(f'- "{tile}": {legend[tile]}' for tile in AsciiTile if tile in tiles)
-
-
-def get_facing_tile_notes(game_state: GameState) -> tuple[str, Coords]:
-    """Get the tile and map coordinates in front of the player."""
-    offset_map = {
-        FacingDirection.UP: Coords(row=-1, col=0),
-        FacingDirection.DOWN: Coords(row=1, col=0),
-        FacingDirection.LEFT: Coords(row=0, col=-1),
-        FacingDirection.RIGHT: Coords(row=0, col=1),
-    }
-    offset = offset_map[game_state.player.direction]
-    screen_coords = Coords(row=PLAYER_OFFSET_Y, col=PLAYER_OFFSET_X) + offset
-    map_coords = game_state.player.coords + offset
-    # We need to check the screen for adjacency because the tile may be on the next map.
-    tile = game_state.get_ascii_screen().screen[screen_coords.row][screen_coords.col]
-    return tile, map_coords
 
 
 def get_tile_notes(
@@ -339,10 +388,13 @@ def format_connection_sections(
         for entity_id in sorted(current_map.known_warp_ids)
         if entity_id in game_state.warps
     ]
-    groups = _group_contiguous_warps(known_warps)
+    groups = group_contiguous_warps(
+        {warp.index: (warp.coords, warp.destination, warp.activation) for warp in known_warps}
+    )
     current_lines = []
     other_lines = []
-    for group in groups:
+    for group_ids in groups:
+        group = tuple(game_state.warps[warp_id] for warp_id in group_ids)
         last_used_iteration = max(
             (
                 current_map.warp_usage_iterations[warp.index]
@@ -382,7 +434,7 @@ def format_connection_sections(
                 + f" Last used at iteration {last_used_iteration}."
             )
 
-    for group in _group_map_boundaries(current_map.known_map_boundaries):
+    for group in group_map_boundaries(current_map.known_map_boundaries):
         if any(_boundary_coords(boundary) in map_view.visible_coords for boundary in group):
             continue
         boundary = group[0]
@@ -406,20 +458,6 @@ def format_connection_sections(
         "\n".join(current_lines) or "No discovered warp tiles are in the current region.",
         "\n".join(other_lines)
         or "No previously traversed connections are known elsewhere on this map.",
-    )
-
-
-def _group_map_boundaries(
-    boundaries: Sequence[MapBoundaryMemoryRead],
-) -> tuple[tuple[MapBoundaryMemoryRead, ...], ...]:
-    """Combine remembered coordinate pairs belonging to one map boundary."""
-    grouped: dict[tuple[FacingDirection, MapId], list[MapBoundaryMemoryRead]] = {}
-    for boundary in boundaries:
-        key = (boundary.direction, boundary.destination_map_id)
-        grouped.setdefault(key, []).append(boundary)
-    return tuple(
-        tuple(sorted(group, key=lambda boundary: (boundary.row, boundary.col)))
-        for group in grouped.values()
     )
 
 
@@ -485,14 +523,13 @@ def format_object_notes(map_view: CurrentMapView, game_state: GameState) -> str:
     )
 
 
-def format_connection_notes(map_view: CurrentMapView) -> str:
+def format_connection_notes(map_view: CurrentMapView, map_state: Map) -> str:
     """Format direct map connections reachable from the current region."""
-    current_map = map_view.overworld_map
     connections = [
-        ("NORTH", FacingDirection.UP, current_map.north_connection),
-        ("SOUTH", FacingDirection.DOWN, current_map.south_connection),
-        ("EAST", FacingDirection.RIGHT, current_map.east_connection),
-        ("WEST", FacingDirection.LEFT, current_map.west_connection),
+        ("NORTH", FacingDirection.UP, map_state.north_connection),
+        ("SOUTH", FacingDirection.DOWN, map_state.south_connection),
+        ("EAST", FacingDirection.RIGHT, map_state.east_connection),
+        ("WEST", FacingDirection.LEFT, map_state.west_connection),
     ]
     reachable_connections = [
         (direction, connection)
@@ -541,22 +578,22 @@ def format_exploration_candidates(
 
 def format_map_boundary_tiles(
     boundary_tiles: Mapping[FacingDirection, Sequence[Coords]],
-    map_data: OverworldMap,
+    map_state: Map,
 ) -> str:
     """Format accessible map boundaries for the overworld agent."""
     output = []
     map_connections = {
-        FacingDirection.UP: ("NORTH", map_data.north_connection),
-        FacingDirection.DOWN: ("SOUTH", map_data.south_connection),
-        FacingDirection.RIGHT: ("EAST", map_data.east_connection),
-        FacingDirection.LEFT: ("WEST", map_data.west_connection),
+        FacingDirection.UP: ("NORTH", map_state.north_connection),
+        FacingDirection.DOWN: ("SOUTH", map_state.south_connection),
+        FacingDirection.RIGHT: ("EAST", map_state.east_connection),
+        FacingDirection.LEFT: ("WEST", map_state.west_connection),
     }
 
     for facing_dir, (cardinal_dir, connection) in map_connections.items():
         if connection is not None and boundary_tiles[facing_dir]:
             coord_str = " or ".join(str(coord) for coord in boundary_tiles[facing_dir])
             output.append(
-                f"Connection on {map_data.id.name} at {coord_str} leads {cardinal_dir} to "
+                f"Connection on {map_state.id.name} at {coord_str} leads {cardinal_dir} to "
                 f"{connection.destination_map.name}.",
             )
     return "\n".join(output) or "No connected-map boundary is reachable from this region."

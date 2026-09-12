@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 
+from common.enums import MapId
 from database.db_config import db_sessionmaker
 from database.warp_memory.model import WarpMemoryDBModel
 from database.warp_memory.schemas import WarpMemoryCreateUpdate, WarpMemoryRead
@@ -11,11 +12,9 @@ from database.warp_memory.schemas import WarpMemoryCreateUpdate, WarpMemoryRead
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
-    from common.enums import MapId
-
 
 async def get_warp_memories_for_map(map_id: MapId) -> list[WarpMemoryRead]:
-    """Get all discovered warps for a map."""
+    """Get all observed routes from a map, including alternative destinations of each warp."""
     async with db_sessionmaker() as session:
         query = select(WarpMemoryDBModel).where(WarpMemoryDBModel.map_id == map_id)
         result = await session.execute(query)
@@ -41,27 +40,74 @@ async def record_warp_usage(
     source_warp_id: int,
     destination: WarpMemoryCreateUpdate,
 ) -> bool:
-    """Timestamp a known source warp and persist the observed destination warp."""
+    """Mark the travelled route and the observed arrival-side route as used."""
     async with db_sessionmaker.begin() as session:
-        destination_db_obj = await _upsert_warp(session, destination)
-        source = (
-            destination_db_obj
-            if (source_map_id, source_warp_id) == (destination.map_id, destination.warp_id)
-            else await session.get(WarpMemoryDBModel, (source_map_id, source_warp_id))
+        arrival = await _upsert_warp(session, destination)
+        if destination.destination_map_id == MapId.UNKNOWN:
+            arrival = (
+                await session.get(
+                    WarpMemoryDBModel,
+                    (destination.map_id, destination.warp_id, source_map_id, source_warp_id),
+                )
+                or arrival
+            )
+        if arrival is not None:
+            arrival.last_used_iteration = iteration
+        source = await session.scalar(
+            select(WarpMemoryDBModel)
+            .where(
+                WarpMemoryDBModel.map_id == source_map_id,
+                WarpMemoryDBModel.warp_id == source_warp_id,
+            )
+            .limit(1)
         )
-        destination_db_obj.last_used_iteration = iteration
         if source is None:
             return False
-        source.last_used_iteration = iteration
+        route = await _upsert_warp(
+            session,
+            WarpMemoryCreateUpdate(
+                map_id=source_map_id,
+                warp_id=source_warp_id,
+                row=source.row,
+                col=source.col,
+                destination_map_id=destination.map_id,
+                destination_warp_id=destination.warp_id,
+                activation=source.activation,
+            ),
+        )
+        if route is not None:
+            route.last_used_iteration = iteration
         return True
 
 
 async def _upsert_warp(
     session: AsyncSession,
     warp: WarpMemoryCreateUpdate,
-) -> WarpMemoryDBModel:
-    """Create or refresh one warp inside the caller's transaction."""
-    db_obj = await session.get(WarpMemoryDBModel, (warp.map_id, warp.warp_id))
+) -> WarpMemoryDBModel | None:
+    """Retain real destinations and resolve UNKNOWN in place; ignore unresolved reobservations."""
+    records = (
+        await session.scalars(
+            select(WarpMemoryDBModel).where(
+                WarpMemoryDBModel.map_id == warp.map_id,
+                WarpMemoryDBModel.warp_id == warp.warp_id,
+            )
+        )
+    ).all()
+    if warp.destination_map_id == MapId.UNKNOWN and records:
+        return next(
+            (record for record in records if record.destination_map_id == MapId.UNKNOWN),
+            None,
+        )
+    db_obj = next(
+        (
+            record
+            for record in records
+            if record.destination_map_id == MapId.UNKNOWN
+            or (record.destination_map_id, record.destination_warp_id)
+            == (warp.destination_map_id, warp.destination_warp_id)
+        ),
+        None,
+    )
     if db_obj is None:
         db_obj = WarpMemoryDBModel(
             map_id=warp.map_id,

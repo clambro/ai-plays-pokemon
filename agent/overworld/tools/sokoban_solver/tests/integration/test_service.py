@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from agent.overworld.tools.sokoban_solver.service import SokobanSolverService
+from agent.overworld.tools.sokoban_solver.service import solve_sokoban
 from common.enums import Button, SpriteLabel
 from common.schemas import Coords
 from emulator.emulator import Emulator
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from pyboy import PyBoy
 
     from emulator.game_state import GameState
+    from overworld_map.schemas import OverworldMap
 
 _NO_RANDOM_BATTLE_STEPS_ADDRESS = 0xD13B
 _MAX_BYTE = 0xFF
@@ -38,8 +39,12 @@ async def test_solve_sokoban_puzzle_victory_road() -> None:
         assert len(boulders) == 1
         assert boulders == {Coords(row=14, col=14)}
 
-        service = await _get_sokoban_service(emulator)
-        await service.solve()
+        current_map = await _get_current_map(emulator)
+        await solve_sokoban(
+            emulator=emulator,
+            current_map=current_map,
+            rolling_memory=RollingMemory(),
+        )
 
         game_state = await emulator.get_game_state()
         boulders = _get_boulders(game_state)
@@ -70,16 +75,24 @@ async def test_solve_sokoban_puzzle_seafoam_islands() -> None:
         assert Coords(row=15, col=3) in boulders
         assert Coords(row=14, col=5) in boulders
 
-        service = await _get_sokoban_service(emulator)
-        await service.solve()
+        current_map = await _get_current_map(emulator)
+        await solve_sokoban(
+            emulator=emulator,
+            current_map=current_map,
+            rolling_memory=RollingMemory(),
+        )
 
         # This one has two boulders to push, but we lose sight of the second one when we finish with
         # the first, so we have to walk back towards it.
         await emulator.press_button(Button.RIGHT)
         await emulator.press_button(Button.RIGHT)
         await emulator.press_button(Button.RIGHT)
-        service = await _get_sokoban_service(emulator)  # Update the sprites.
-        await service.solve()
+        current_map = await _get_current_map(emulator)  # Update the sprites.
+        await solve_sokoban(
+            emulator=emulator,
+            current_map=current_map,
+            rolling_memory=RollingMemory(),
+        )
 
         game_state = await emulator.get_game_state()
         boulders = _get_boulders(game_state)
@@ -93,8 +106,8 @@ def _suppress_random_encounters(pyboy: PyBoy) -> None:
     pyboy.memory[_NO_RANDOM_BATTLE_STEPS_ADDRESS] = _MAX_BYTE
 
 
-async def _get_sokoban_service(emulator: Emulator) -> SokobanSolverService:
-    """Helper function to get a Sokoban solver service with the proper mocks."""
+async def _get_current_map(emulator: Emulator) -> OverworldMap:
+    """Prepare a map for the puzzle without loading or persisting map memory."""
     game_state = await emulator.get_game_state()
     with (
         patch("overworld_map.service.get_map_memory", return_value=None),
@@ -109,11 +122,7 @@ async def _get_sokoban_service(emulator: Emulator) -> SokobanSolverService:
     ):
         overworld_map = await prepare_overworld_map(0, game_state)
         overworld_map.known_sprite_ids = set(game_state.sprites)
-    return SokobanSolverService(
-        emulator=emulator,
-        current_map=overworld_map,
-        rolling_memory=RollingMemory(),
-    )
+    return overworld_map
 
 
 def _get_boulders(game_state: GameState) -> set[Coords]:

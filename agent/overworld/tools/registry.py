@@ -27,14 +27,12 @@ if TYPE_CHECKING:
     from agent.context import AgentContext
     from agent.overworld.map_view import CurrentMapView
     from emulator.game_state import GameState
-    from overworld_map.schemas import OverworldMap
 
 _FORCED_GOAL_REVIEW_INTERVAL = 200
 
 
 def build_overworld_toolset(
     context: AgentContext,
-    current_map: OverworldMap,
     map_view: CurrentMapView,
     game_state: GameState,
 ) -> FunctionToolset[AgentContext]:
@@ -46,6 +44,7 @@ def build_overworld_toolset(
     if context.state.iteration - last_goal_review >= _FORCED_GOAL_REVIEW_INTERVAL:
         return FunctionToolset(tools=[build_set_goals_tool(context, end_turn_on_success=True)])
 
+    current_map = map_view.overworld_map
     tools: list[Tool[AgentContext]] = [
         build_check_connection_tool(context, game_state),
         build_press_buttons_tool(context),

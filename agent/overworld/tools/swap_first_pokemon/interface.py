@@ -6,7 +6,7 @@ from pydantic import Field
 from pydantic_ai import Tool
 
 from agent.overworld.tools.swap_first_pokemon.service import (
-    SwapFirstPokemonService,
+    swap_first_pokemon as swap_first_pokemon_service,
 )
 from agent.overworld.tools.utils import (
     OverworldToolResult,
@@ -38,11 +38,11 @@ def build_swap_first_pokemon_tool(
         Returns:
             Fresh screenshot and the actual party-change result.
         """
-        service = SwapFirstPokemonService(
+        result = await swap_first_pokemon_service(
             rolling_memory=context.state.rolling_memory,
             emulator=context.emulator,
+            pokemon_index=party_slot,
         )
-        result = await service.swap_first_pokemon(party_slot)
         return await complete_overworld_action(context, result)
 
     return Tool(swap_first_pokemon, require_parameter_descriptions=True)

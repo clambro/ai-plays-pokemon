@@ -5,8 +5,8 @@ This development script starts the server briefly to inspect styles and layouts.
 
 import asyncio
 
+from streaming.preview_data import MOCK_DATA
 from streaming.server import BackgroundStreamServer
-from streaming.tests.integration.test_server import MOCK_DATA
 
 
 async def main() -> None:

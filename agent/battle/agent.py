@@ -7,12 +7,14 @@ from pydantic_ai import Agent, AgentRunError, BinaryContent, CallToolsNode
 from pydantic_ai.models.openai import OpenAIResponsesModelSettings
 from pydantic_graph import End
 
-from agent.battle.formatting import is_evolution_family_caught
 from agent.battle.prompts import build_battle_decision_prompt
 from agent.battle.tools.registry import build_battle_toolset
+from agent.battle.utils import is_evolution_family_caught
 from agent.context import AgentContext
 from agent.dialog import settle_dialog
-from agent.utils import AGENT_HOOKS, build_screenshot_content, is_battle_handler_state
+from agent.formatting.game_state import build_screenshot_content
+from agent.hooks import AGENT_HOOKS
+from agent.utils import is_battle_handler_state
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
 
@@ -56,7 +58,7 @@ async def run_battle(context: AgentContext) -> None:
     """Run one agent conversation until the game exits battle mode."""
     await context.begin_iteration()
     settlement = await settle_dialog(context)
-    await context.complete_iteration()
+    await context.complete_iteration(settlement.game_state)
     if not is_battle_handler_state(settlement.game_state):
         return
     game_state = settlement.game_state
@@ -88,8 +90,8 @@ async def run_battle(context: AgentContext) -> None:
                 if isinstance(current_node, CallToolsNode):
                     if context.consume_control_handoff():
                         break
-                    await context.complete_iteration()
                     game_state = await context.emulator.get_game_state()
+                    await context.complete_iteration(game_state)
                     if not is_battle_handler_state(game_state):
                         break
     except AgentRunError as error:

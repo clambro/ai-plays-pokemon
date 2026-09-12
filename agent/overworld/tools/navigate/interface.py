@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from pydantic_ai import Tool
 
-from agent.overworld.tools.navigate.service import NavigationService
+from agent.overworld.tools.navigate.service import navigate
 from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
@@ -60,13 +60,13 @@ def build_navigation_tool(
         """
         state = context.state
         target = Coords(row=row, col=col)
-        service = NavigationService(
+        result = await navigate(
             iteration=state.iteration,
             emulator=context.emulator,
             current_map=current_map,
             rolling_memory=state.rolling_memory,
+            coords=target,
         )
-        result = await service.navigate(target)
         return await complete_overworld_action(context, result)
 
     return Tool(navigation, require_parameter_descriptions=True)

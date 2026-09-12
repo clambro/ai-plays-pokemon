@@ -28,7 +28,6 @@ def _toolset(context: AgentContext) -> FunctionToolset[AgentContext]:
     game_state.can_use_strength = False
     return registry.build_overworld_toolset(
         context,
-        current_map=MagicMock(),
         map_view=MagicMock(),
         game_state=game_state,
     )

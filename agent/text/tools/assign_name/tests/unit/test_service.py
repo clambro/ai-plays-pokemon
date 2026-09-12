@@ -7,122 +7,35 @@ from common.enums import Button
 
 
 @pytest.mark.unit
-def test_same_position_no_movement() -> None:
-    """Test when cursor is already at the target letter position."""
-    cursor_loc = 5  # cursor_row=0, cursor_col=0
-    letter_loc = (0, 0)
-
-    result = _get_dir_buttons(letter_loc, cursor_loc)
-
-    assert result == []
-
-
-@pytest.mark.unit
-def test_simple_right_movement() -> None:
-    """Test simple rightward movement within the same row."""
-    cursor_loc = 5  # cursor_row=0, cursor_col=0
-    letter_loc = (0, 1)
-
-    result = _get_dir_buttons(letter_loc, cursor_loc)
-
-    assert result == [Button.RIGHT]
-
-
-@pytest.mark.unit
-def test_simple_left_movement() -> None:
-    """Test simple leftward movement within the same row."""
-    cursor_loc = 7  # cursor_row=0, cursor_col=1
-    letter_loc = (0, 0)
-
-    result = _get_dir_buttons(letter_loc, cursor_loc)
-
-    assert result == [Button.LEFT]
+@pytest.mark.parametrize(
+    ("cursor_loc", "letter_loc", "expected"),
+    [
+        pytest.param(5, (0, 0), [], id="same-position"),
+        pytest.param(5, (0, 1), [Button.RIGHT], id="right"),
+        pytest.param(7, (0, 0), [Button.LEFT], id="left"),
+        pytest.param(5, (1, 0), [Button.DOWN], id="down"),
+        pytest.param(45, (0, 0), [Button.UP], id="up"),
+        pytest.param(21, (0, 0), [Button.RIGHT], id="wrap-right-to-left"),
+        pytest.param(5, (0, 8), [Button.LEFT], id="wrap-left-to-right"),
+        pytest.param(5, (0, 4), [Button.RIGHT] * 4, id="direct-path-shorter"),
+        pytest.param(5, (0, 5), [Button.LEFT] * 4, id="wrapping-threshold"),
+    ],
+)
+def test_direction_buttons(
+    cursor_loc: int, letter_loc: tuple[int, int], expected: list[Button]
+) -> None:
+    """Move to a letter using the shorter route, including horizontal wrapping."""
+    assert _get_dir_buttons(letter_loc, cursor_loc) == expected
 
 
 @pytest.mark.unit
-def test_simple_down_movement() -> None:
-    """Test simple downward movement to next row."""
-    cursor_loc = 5  # cursor_row=0, cursor_col=0
-    letter_loc = (1, 0)
-
-    result = _get_dir_buttons(letter_loc, cursor_loc)
-
-    assert result == [Button.DOWN]
-
-
-@pytest.mark.unit
-def test_simple_up_movement() -> None:
-    """Test simple upward movement to previous row."""
-    cursor_loc = 45  # cursor_row=1, cursor_col=0
-    letter_loc = (0, 0)
-
-    result = _get_dir_buttons(letter_loc, cursor_loc)
-
-    assert result == [Button.UP]
-
-
-@pytest.mark.unit
-def test_diagonal_movement() -> None:
-    """Test diagonal movement (both row and column change)."""
-    cursor_loc = 5  # cursor_row=0, cursor_col=0
-    letter_loc = (1, 1)
-
-    result = _get_dir_buttons(letter_loc, cursor_loc)
-
-    assert set(result) == {Button.DOWN, Button.RIGHT}
-
-
-@pytest.mark.unit
-def test_wrapping_right_to_left() -> None:
-    """Test wrapping from right edge to left edge (shorter path)."""
-    # cursor_row=0, cursor_col=8
-    cursor_loc = 21
-    letter_loc = (0, 0)
-
-    result = _get_dir_buttons(letter_loc, cursor_loc)
-
-    assert result == [Button.RIGHT]
-
-
-@pytest.mark.unit
-def test_wrapping_left_to_right() -> None:
-    """Test wrapping from left edge to right edge (shorter path)."""
-    cursor_loc = 5  # cursor_row=0, cursor_col=0
-    letter_loc = (0, 8)
-
-    result = _get_dir_buttons(letter_loc, cursor_loc)
-
-    assert result == [Button.LEFT]
-
-
-@pytest.mark.unit
-def test_no_wrapping_when_not_shorter() -> None:
-    """Test that wrapping doesn't occur when direct path is shorter."""
-    cursor_loc = 5  # cursor_row=0, cursor_col=0
-    letter_loc = (0, 4)
-
-    result = _get_dir_buttons(letter_loc, cursor_loc)
-
-    assert result == [Button.RIGHT, Button.RIGHT, Button.RIGHT, Button.RIGHT]
-
-
-@pytest.mark.unit
-def test_wrapping_threshold_edge_case() -> None:
-    """Test the edge case at the wrapping threshold."""
-    cursor_loc = 5  # cursor_row=0, cursor_col=0
-    letter_loc = (0, 5)
-
-    result = _get_dir_buttons(letter_loc, cursor_loc)
-
-    assert result == [Button.LEFT, Button.LEFT, Button.LEFT, Button.LEFT]
-
-
-@pytest.mark.unit
-def test_cross_row_wrapping() -> None:
-    """Test wrapping combined with row movement."""
-    cursor_loc = 21  # cursor_row=0, cursor_col=8
-    letter_loc = (1, 0)
-
-    result = _get_dir_buttons(letter_loc, cursor_loc)
-
-    assert set(result) == {Button.DOWN, Button.RIGHT}
+@pytest.mark.parametrize(
+    ("cursor_loc", "letter_loc"),
+    [
+        pytest.param(5, (1, 1), id="diagonal"),
+        pytest.param(21, (1, 0), id="cross-row-wrapping"),
+    ],
+)
+def test_diagonal_direction_buttons(cursor_loc: int, letter_loc: tuple[int, int]) -> None:
+    """Move across rows and columns without prescribing which axis moves first."""
+    assert set(_get_dir_buttons(letter_loc, cursor_loc)) == {Button.DOWN, Button.RIGHT}

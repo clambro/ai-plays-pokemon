@@ -32,19 +32,8 @@ def read_map_collision_tiles(mem: PyBoyMemoryView) -> list[list[int]]:
     for row in range(height):
         collision_row = []
         for col in range(width):
-            block_address = (
-                _OVERWORLD_MAP_ADDRESS
-                + (row // 2 + _MAP_BORDER_BLOCKS) * block_stride
-                + col // 2
-                + _MAP_BORDER_BLOCKS
-            )
-            block_id = mem[block_address]
-            tile_row = row % 2 * _MAP_CELL_TILE_WIDTH + _COLLISION_TILE_ROW_OFFSET
-            tile_col = col % 2 * _MAP_CELL_TILE_WIDTH
-            tile_offset = tile_row * _BLOCK_TILE_WIDTH + tile_col
-            collision_row.append(
-                mem[tileset_bank, blocks_pointer + block_id * _BLOCK_TILE_COUNT + tile_offset]
-            )
+            tile_address = _get_collision_tile_address(mem, row, col, block_stride, blocks_pointer)
+            collision_row.append(mem[tileset_bank, tile_address])
         collision_tiles.append(collision_row)
     return collision_tiles
 
@@ -57,18 +46,32 @@ def read_map_collision_tile(mem: PyBoyMemoryView, coords: Coords) -> int | None:
         return None
 
     block_stride = mem[_MAP_BLOCK_WIDTH_ADDRESS] + _MAP_BORDER_BLOCKS * 2
-    block_address = (
-        _OVERWORLD_MAP_ADDRESS
-        + (coords.row // 2 + _MAP_BORDER_BLOCKS) * block_stride
-        + coords.col // 2
-        + _MAP_BORDER_BLOCKS
-    )
-    block_id = mem[block_address]
-    tile_row = coords.row % 2 * _MAP_CELL_TILE_WIDTH + _COLLISION_TILE_ROW_OFFSET
-    tile_col = coords.col % 2 * _MAP_CELL_TILE_WIDTH
-    tile_offset = tile_row * _BLOCK_TILE_WIDTH + tile_col
     tileset_bank = mem[_TILESET_BANK_ADDRESS]
     blocks_pointer = mem[_TILESET_BLOCKS_POINTER_ADDRESS] | (
         mem[_TILESET_BLOCKS_POINTER_ADDRESS + 1] << 8
     )
-    return mem[tileset_bank, blocks_pointer + block_id * _BLOCK_TILE_COUNT + tile_offset]
+    tile_address = _get_collision_tile_address(
+        mem, coords.row, coords.col, block_stride, blocks_pointer
+    )
+    return mem[tileset_bank, tile_address]
+
+
+def _get_collision_tile_address(
+    mem: PyBoyMemoryView,
+    row: int,
+    col: int,
+    block_stride: int,
+    blocks_pointer: int,
+) -> int:
+    """Resolve a map cell to its collision-tile address within the tileset bank."""
+    block_address = (
+        _OVERWORLD_MAP_ADDRESS
+        + (row // 2 + _MAP_BORDER_BLOCKS) * block_stride
+        + col // 2
+        + _MAP_BORDER_BLOCKS
+    )
+    block_id = mem[block_address]
+    tile_row = row % 2 * _MAP_CELL_TILE_WIDTH + _COLLISION_TILE_ROW_OFFSET
+    tile_col = col % 2 * _MAP_CELL_TILE_WIDTH
+    tile_offset = tile_row * _BLOCK_TILE_WIDTH + tile_col
+    return blocks_pointer + block_id * _BLOCK_TILE_COUNT + tile_offset

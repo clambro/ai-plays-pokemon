@@ -9,6 +9,7 @@ from common.schemas import Coords
 from emulator.parsers.screen import Screen, parse_screen
 
 
+@pytest.mark.unit
 def test_parse_screen_uses_vram_for_cut_tree_collision_tile() -> None:
     """Keep parsed Cut-tree terrain consistent with the game's collision source."""
     tile_height = SCREEN_HEIGHT * 2
@@ -56,6 +57,7 @@ def test_parse_screen_uses_vram_for_cut_tree_collision_tile() -> None:
     assert screen.tiles[screen_row][screen_col] == vram_replacement_tile
 
 
+@pytest.mark.unit
 @pytest.mark.parametrize(
     ("map_coords", "expected"),
     [
@@ -74,6 +76,7 @@ def test_to_screen_coords(map_coords: Coords, expected: Coords | None) -> None:
     assert screen.to_screen_coords(map_coords) == expected
 
 
+@pytest.mark.unit
 def test_to_map_coords() -> None:
     """Screen coordinates are translated relative to the viewport origin."""
     screen = _make_screen(top=-2, left=3)
@@ -89,8 +92,6 @@ def _make_screen(*, top: int, left: int) -> Screen:
     return Screen(
         top=top,
         left=left,
-        bottom=top + SCREEN_HEIGHT,
-        right=left + SCREEN_WIDTH,
         tiles=[[0] * tile_width for _ in range(tile_height)],
         decoded_tiles=[[""] * tile_width for _ in range(tile_height)],
         is_text_window_visible=False,

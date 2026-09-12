@@ -3,7 +3,8 @@
 from typing import TYPE_CHECKING
 
 from agent.battle.tools.errors import BattleActionUnavailableError
-from agent.battle.tools.utils import get_cursor_pos_in_fight_menu
+from agent.battle.utils import get_cursor_pos_in_fight_menu
+from agent.utils import move_cursor
 from common.enums import Button
 
 if TYPE_CHECKING:
@@ -82,13 +83,7 @@ async def _select_move(
     move_slot: int,
 ) -> None:
     """Move to the selected move slot and confirm it."""
-    slot_difference = cursor_index - move_slot
-    if slot_difference > 0:
-        for _ in range(slot_difference):
-            await emulator.press_button(Button.UP)
-    elif slot_difference < 0:
-        for _ in range(-slot_difference):
-            await emulator.press_button(Button.DOWN)
+    await move_cursor(emulator, cursor_index, move_slot)
     await emulator.press_button(Button.A)
 
 

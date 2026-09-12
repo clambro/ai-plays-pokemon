@@ -9,7 +9,17 @@ from agent.formatting.game_state import (
     format_player_info,
 )
 from agent.formatting.memory import format_goals, format_rolling_memory
-from agent.overworld import formatting
+from agent.overworld.formatting import (
+    format_connection_notes,
+    format_connection_sections,
+    format_exploration_candidates,
+    format_legend,
+    format_map_boundary_tiles,
+    format_object_notes,
+    format_sign_notes,
+    format_sprite_notes,
+    get_tile_notes,
+)
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
 from common.enums import AsciiTile, BlockedDirection
 
@@ -158,26 +168,26 @@ def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> st
     """Build the explored-map portion of the overworld prompt."""
     current_map = map_view.overworld_map
     screen = game_state.get_ascii_screen()
-    known_warps, external_connections = formatting.format_connection_sections(
+    known_warps, external_connections = format_connection_sections(
         map_view,
         game_state,
     )
-    facing_tile, facing_tile_coords = formatting.get_facing_tile_notes(game_state)
-    tile_above, blocked_above = formatting.get_tile_notes(BlockedDirection.UP, screen)
-    tile_below, blocked_below = formatting.get_tile_notes(BlockedDirection.DOWN, screen)
-    tile_left, blocked_left = formatting.get_tile_notes(BlockedDirection.LEFT, screen)
-    tile_right, blocked_right = formatting.get_tile_notes(BlockedDirection.RIGHT, screen)
+    facing_tile, facing_tile_coords = game_state.get_facing_tile()
+    tile_above, blocked_above = get_tile_notes(BlockedDirection.UP, screen)
+    tile_below, blocked_below = get_tile_notes(BlockedDirection.DOWN, screen)
+    tile_left, blocked_left = get_tile_notes(BlockedDirection.LEFT, screen)
+    tile_right, blocked_right = get_tile_notes(BlockedDirection.RIGHT, screen)
     return OVERWORLD_MAP_PROMPT.format(
         map_name=current_map.id.name,
         ascii_map="\n".join("".join(row) for row in map_view.display_tiles),
-        legend=formatting.format_legend(map_view, LEGEND_MAP),
+        legend=format_legend(map_view, LEGEND_MAP),
         region_top=map_view.display_origin.row,
         region_left=map_view.display_origin.col,
-        known_sprites=formatting.format_sprite_notes(map_view, game_state),
+        known_sprites=format_sprite_notes(map_view, game_state),
         known_warps=known_warps,
         known_connections_outside_current_component=external_connections,
-        known_signs=formatting.format_sign_notes(map_view, game_state),
-        known_objects=formatting.format_object_notes(map_view, game_state),
+        known_signs=format_sign_notes(map_view, game_state),
+        known_objects=format_object_notes(map_view, game_state),
         ascii_screen=screen,
         player_coords=game_state.player.coords,
         player_terrain=current_map.terrain[game_state.player.coords.row][
@@ -198,7 +208,7 @@ def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> st
         screen_left=game_state.screen.left,
         screen_bottom=game_state.screen.bottom,
         screen_right=game_state.screen.right,
-        connections=formatting.format_connection_notes(map_view),
+        connections=format_connection_notes(map_view, game_state.map),
     )
 
 
@@ -215,13 +225,13 @@ def build_overworld_decision_prompt(
         map_boundaries = unavailable
         biking_warning = "You have lost access to the navigation tool because you are riding a bike. If you would like to use the navigation tool, you must first dismount your bike. If you are unable to dismount your bike because you are on Cycling Road, then you must use the button tool to move around the map."
     else:
-        exploration_candidates = formatting.format_exploration_candidates(
+        exploration_candidates = format_exploration_candidates(
             map_view.exploration_candidates,
             current_map,
         )
-        map_boundaries = formatting.format_map_boundary_tiles(
+        map_boundaries = format_map_boundary_tiles(
             map_view.boundary_tiles,
-            current_map,
+            game_state.map,
         )
         biking_warning = ""
 

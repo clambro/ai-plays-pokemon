@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import Field
 from pydantic_ai import Tool
 
-from agent.overworld.tools.use_item.service import UseItemService
+from agent.overworld.tools.use_item.service import use_item as use_item_service
 from agent.overworld.tools.utils import (
     OverworldToolResult,
     complete_overworld_action,
@@ -46,11 +46,11 @@ def build_use_item_tool(context: AgentContext) -> Tool[AgentContext]:
         Returns:
             Fresh screenshot and the actual item-use result.
         """
-        service = UseItemService(
+        result = await use_item_service(
             rolling_memory=context.state.rolling_memory,
             emulator=context.emulator,
+            item_index=inventory_slot,
         )
-        result = await service.use_item(inventory_slot)
         return await complete_overworld_action(context, result)
 
     return Tool(use_item, require_parameter_descriptions=True)

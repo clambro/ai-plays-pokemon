@@ -1,4 +1,4 @@
-"""Shared utilities for the battle handler."""
+"""Battle tool completion and model-facing results."""
 
 from typing import TYPE_CHECKING
 
@@ -6,9 +6,7 @@ from pydantic_ai import BinaryContent
 
 from agent.battle.formatting import format_available_pokeballs, format_battle_info
 from agent.dialog import settle_dialog
-from agent.formatting.game_state import format_party_info
-from agent.utils import build_screenshot_content
-from common.schemas import Coords
+from agent.formatting.game_state import build_screenshot_content, format_party_info
 
 if TYPE_CHECKING:
     from agent.context import AgentContext
@@ -36,42 +34,6 @@ def build_battle_tool_result(
         ),
     )
     return "\n\n".join(section for section in sections if section)
-
-
-def is_fight_menu_open(game_state: GameState) -> bool:
-    """Check if the fight menu is open.
-
-    Args:
-        game_state: Current game state to inspect.
-
-    Returns:
-        Whether the standard fight menu is visible.
-    """
-    screen_text = game_state.screen.text.replace(" ", "").replace("\n", "").replace("▶", "")
-    return "FIGHTPKMNITEMRUN" in screen_text
-
-
-def get_cursor_pos_in_fight_menu(game_state: GameState) -> Coords | None:
-    """Get the cursor position in the fight menu.
-
-    Args:
-        game_state: Current game state to inspect.
-
-    Returns:
-        The cursor's row and column, or ``None`` when the fight menu is not open.
-    """
-    if not is_fight_menu_open(game_state):
-        return None
-    text = game_state.screen.text
-    if "▶FIGHT" in text:
-        return Coords(row=0, col=0)
-    if "▶PKMN" in text:
-        return Coords(row=0, col=1)
-    if "▶ITEM" in text:
-        return Coords(row=1, col=0)
-    if "▶RUN" in text:
-        return Coords(row=1, col=1)
-    return None
 
 
 async def complete_battle_action(

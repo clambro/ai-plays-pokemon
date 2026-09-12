@@ -84,32 +84,6 @@ def test_select_agent_handler(
 
 
 @pytest.mark.unit
-async def test_dispatch_agent_uses_the_shared_context(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    """Observe once before invoking the selected handler."""
-    game_state = _game_state()
-    emulator = MagicMock()
-    emulator.get_game_state_with_control_boundary = AsyncMock(
-        return_value=(game_state, ControlBoundary.OVERWORLD_READY)
-    )
-    context = AgentContext(
-        state=AgentState(folder=tmp_path),
-        emulator=emulator,
-    )
-    handler = AsyncMock()
-    select_handler = MagicMock(return_value=handler)
-    monkeypatch.setattr(app, "select_agent_handler", select_handler)
-
-    await app.dispatch_agent(context)
-
-    emulator.get_game_state_with_control_boundary.assert_awaited_once_with()
-    select_handler.assert_called_once_with(game_state, ControlBoundary.OVERWORLD_READY)
-    handler.assert_awaited_once_with(context)
-
-
-@pytest.mark.unit
 async def test_dispatch_agent_handles_control_handoff(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -127,3 +101,21 @@ async def test_dispatch_agent_handles_control_handoff(
     )
 
     await app.dispatch_agent(context)
+
+
+@pytest.mark.unit
+async def test_dispatch_agent_waits_while_rom_is_busy(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Do not invoke a gameplay agent without a genuine input boundary."""
+    emulator = MagicMock()
+    emulator.get_game_state_with_control_boundary = AsyncMock(return_value=(_game_state(), None))
+    context = AgentContext(state=AgentState(folder=tmp_path), emulator=emulator)
+    select_handler = MagicMock()
+    monkeypatch.setattr(app, "select_agent_handler", select_handler)
+    monkeypatch.setattr(app.asyncio, "sleep", AsyncMock())
+
+    await app.dispatch_agent(context)
+
+    select_handler.assert_not_called()

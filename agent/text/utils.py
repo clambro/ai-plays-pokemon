@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING
 from pydantic_ai import BinaryContent
 
 from agent.dialog import settle_dialog
-from agent.utils import build_screenshot_content, is_overworld_handler_state
+from agent.formatting.game_state import build_screenshot_content
+from agent.utils import is_overworld_handler_state
 from common.constants import ACTION_RESULT_LABEL
 
 if TYPE_CHECKING:

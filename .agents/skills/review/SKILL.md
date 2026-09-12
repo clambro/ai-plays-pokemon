@@ -1,15 +1,13 @@
 ---
 name: review
-description: "Use when the user asks for a code review, PR review, or branch feedback. Reviews feature work against v2, or the v2 release branch against main."
+description: "Use when the user asks for a code review, PR review, or branch feedback. Reviews the current branch against main."
 ---
 
 # Code Review
 
 ## Workflow
 
-1. Run `git branch --show-current` to identify the branch and choose its base:
-   - use `v2` for v2 feature branches
-   - use `main` when reviewing the eventual v2 release
+1. Run `git branch --show-current` to identify the branch. Use `main` as the base unless the user specifies another branch.
 2. Gather the committed branch changes:
    - `git log <base>..HEAD --oneline`
    - `git diff <base>...HEAD`

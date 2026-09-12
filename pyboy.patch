@@ -1,0 +1,21 @@
+diff --git a/pyboy/core/sound.py b/pyboy/core/sound.py
+--- a/pyboy/core/sound.py
++++ b/pyboy/core/sound.py
+@@ -786,7 +786,7 @@ class WaveChannel:
+     def sample(self):
+         if self.enable and self.dacpow:
+             sample = self.wavetable[self.waveframe // 2]
+-            if self.waveframe % 2 == 1:  # Read 4-bit value
++            if self.waveframe % 2 == 0:  # Read upper nibble first
+                 sample >>= 4
+             sample &= 0x0F
+             return sample >> self.volumeshift
+@@ -796,7 +796,7 @@ class WaveChannel:
+     def trigger(self):
+         self.enable = 0x04 if self.dacpow else 0
+         self.lengthtimer = self.lengthtimer or 256
+         self.periodtimer = self.period
+-        # self.waveframe = 1 # Implement CH3 bug, that first sample is skipped
++        self.waveframe = 1  # CH3 starts with the second sample
+
+     def save_state(self, file):

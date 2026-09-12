@@ -5,14 +5,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from agent import context as context_module
+import agent.context
+import memory.rolling_memory.service
 from agent.context import AgentContext
 from agent.state import AgentState
 from common.enums import MapId
 from common.schemas import Coords
 from database.rolling_memory.schemas import RawMemoryBlockRead
 from emulator.parsers.warp import WarpTransitionMemory
-from memory.rolling_memory import service as rolling_memory_service
 from memory.rolling_memory.schemas import CurrentMemoryBlock, RollingMemory
 
 if TYPE_CHECKING:
@@ -52,7 +52,7 @@ async def test_begin_iteration_prepares_handler_state(
     )
     original_block = context.state.rolling_memory.current_block
     initialize_memory = AsyncMock(return_value=prepared_memory)
-    monkeypatch.setattr(context_module, "initialize_memory", initialize_memory)
+    monkeypatch.setattr(agent.context, "initialize_memory", initialize_memory)
 
     await context.begin_iteration()
 
@@ -79,17 +79,17 @@ async def test_complete_iteration_advances_after_maintenance_failure(
         emulator=MagicMock(),
     )
     monkeypatch.setattr(
-        rolling_memory_service,
+        memory.rolling_memory.service,
         "finalize_raw_memory_block",
         AsyncMock(return_value=RawMemoryBlockRead(iteration=iteration, content=content)),
     )
     monkeypatch.setattr(
-        rolling_memory_service,
+        memory.rolling_memory.service,
         "compact_memory",
         AsyncMock(side_effect=RuntimeError("compaction unavailable")),
     )
 
-    await context.complete_iteration()
+    await context.complete_iteration(MagicMock())
 
     assert context.state.iteration == iteration + 1
     assert context.state.rolling_memory.current_block == CurrentMemoryBlock(
@@ -100,12 +100,20 @@ async def test_complete_iteration_advances_after_maintenance_failure(
 
 
 @pytest.mark.unit
-async def test_game_state_observation_records_rom_identified_ordinary_warp(
+@pytest.mark.parametrize(
+    ("stationary_actions", "finalization_fails"),
+    [(0, False), (3, False), (3, True)],
+)
+async def test_iteration_completion_records_ordinary_warp_at_crossing_iteration(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
+    stationary_actions: int,
+    *,
+    finalization_fails: bool,
 ) -> None:
-    """Report both endpoints after the ROM identity matches both maps."""
+    """Record the crossing's iteration, even after several same-position decisions."""
     iteration = 42
+    crossing_iteration = iteration + stationary_actions
     source_warp_index = 2
     destination_warp_index = 0
     transition = WarpTransitionMemory(
@@ -124,23 +132,43 @@ async def test_game_state_observation_records_rom_identified_ordinary_warp(
     )
     destination_warp = current_state.warps[destination_warp_index]
     context = AgentContext(
-        state=AgentState(folder=tmp_path, iteration=iteration),
+        state=AgentState(
+            folder=tmp_path,
+            iteration=iteration,
+            rolling_memory=RollingMemory(current_block=CurrentMemoryBlock(iteration=iteration)),
+        ),
         emulator=MagicMock(),
     )
+
+    async def finalize_memory(memory: RollingMemory) -> RollingMemory:
+        if finalization_fails and memory.current_block.iteration == crossing_iteration:
+            raise RuntimeError("memory persistence unavailable")
+        return RollingMemory(
+            current_block=CurrentMemoryBlock(iteration=memory.current_block.iteration + 1),
+        )
+
+    monkeypatch.setattr(agent.context, "finalize_iteration", finalize_memory)
     record_warp_usage = AsyncMock()
-    monkeypatch.setattr(context_module, "record_warp_usage", record_warp_usage)
+    monkeypatch.setattr(agent.context, "record_warp_usage", record_warp_usage)
 
     await context.observe_game_state(previous_state)
-    context.state.iteration += 1
+    for _ in range(stationary_actions):
+        context.state.rolling_memory.add_memory("Checked a connection without moving.")
+        await context.complete_iteration(previous_state)
+    context.state.rolling_memory.add_memory("Map changed.")
+    await context.complete_iteration(current_state)
     await context.observe_game_state(current_state)
 
     record_warp_usage.assert_awaited_once_with(
-        iteration=iteration,
+        iteration=crossing_iteration,
         source_map_id=MapId.ROUTE_3,
         source_warp_id=source_warp_index,
         destination_map_id=MapId.MT_MOON_1F,
         destination_warp=destination_warp,
     )
+    assert context.state.connection_traversals[-1].iteration == crossing_iteration
+    expected_iteration = crossing_iteration if finalization_fails else crossing_iteration + 1
+    assert context.state.iteration == expected_iteration
 
 
 @pytest.mark.unit
@@ -175,7 +203,7 @@ async def test_game_state_observation_warns_after_rapid_connection_backtracking(
         state=AgentState(folder=tmp_path, iteration=1),
         emulator=MagicMock(),
     )
-    monkeypatch.setattr(context_module, "record_warp_usage", AsyncMock())
+    monkeypatch.setattr(agent.context, "record_warp_usage", AsyncMock())
 
     await context.observe_game_state(route_state)
     for iteration, game_state in enumerate(
@@ -228,10 +256,9 @@ async def test_game_state_observation_records_same_map_warp_arrival(
         emulator=MagicMock(),
     )
     record_warp_usage = AsyncMock()
-    monkeypatch.setattr(context_module, "record_warp_usage", record_warp_usage)
+    monkeypatch.setattr(agent.context, "record_warp_usage", record_warp_usage)
 
     await context.observe_game_state(previous_state)
-    context.state.iteration += 1
     await context.observe_game_state(current_state)
 
     record_warp_usage.assert_awaited_once_with(
@@ -268,7 +295,7 @@ async def test_game_state_observation_rejects_stale_warp_identity_on_boundary_cr
     )
     context = AgentContext(state=AgentState(folder=tmp_path), emulator=MagicMock())
     record_warp_usage = AsyncMock()
-    monkeypatch.setattr(context_module, "record_warp_usage", record_warp_usage)
+    monkeypatch.setattr(agent.context, "record_warp_usage", record_warp_usage)
 
     await context.observe_game_state(previous_state)
     await context.observe_game_state(current_state)
@@ -296,7 +323,7 @@ async def test_game_state_observation_rejects_special_travel(
     previous_state = _transition_state(MapId.SEAFOAM_ISLANDS_B4F, ordinary_transition)
     current_state = _transition_state(MapId.FUCHSIA_CITY, special_transition)
     record_warp_usage = AsyncMock()
-    monkeypatch.setattr(context_module, "record_warp_usage", record_warp_usage)
+    monkeypatch.setattr(agent.context, "record_warp_usage", record_warp_usage)
 
     await context.observe_game_state(previous_state)
     await context.observe_game_state(current_state)

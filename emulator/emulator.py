@@ -177,32 +177,14 @@ class Emulator(AbstractAsyncContextManager):
             RuntimeError: The emulator has been stopped.
             TypeError: PyBoy exposes no valid screenshot.
         """
-
-        def _capture_game_state_with_screenshot(
-            pyboy: PyBoy,
-        ) -> tuple[GameState, Image.Image]:
-            game_state = GameState.from_memory(pyboy.memory)
-            screenshot = deepcopy(pyboy.screen.image)
-            if not isinstance(screenshot, Image.Image):
-                raise TypeError("No screenshot available")
-            return game_state, screenshot
-
-        return await self._worker.execute(_capture_game_state_with_screenshot)
+        return await self._worker.execute(self._capture_game_state_with_screenshot)
 
     async def get_game_state_with_screenshot_and_control_boundary(
         self,
     ) -> tuple[GameState, Image.Image, ControlBoundary | None]:
         """Capture game state, screenshot, and rendered ROM boundary together."""
-
-        def _capture(pyboy: PyBoy) -> tuple[GameState, Image.Image]:
-            game_state = GameState.from_memory(pyboy.memory)
-            screenshot = deepcopy(pyboy.screen.image)
-            if not isinstance(screenshot, Image.Image):
-                raise TypeError("No screenshot available")
-            return game_state, screenshot
-
         (game_state, screenshot), boundary = await self._worker.execute_with_control_boundary(
-            _capture
+            self._capture_game_state_with_screenshot
         )
         return game_state, screenshot, boundary
 
@@ -267,3 +249,12 @@ class Emulator(AbstractAsyncContextManager):
                 return base64.b64encode(file.getvalue()).decode("utf-8")
 
         return await self._worker.execute(_capture_save_state)
+
+    @staticmethod
+    def _capture_game_state_with_screenshot(pyboy: PyBoy) -> tuple[GameState, Image.Image]:
+        """Parse game state and copy its screen image on the owner thread."""
+        game_state = GameState.from_memory(pyboy.memory)
+        screenshot = deepcopy(pyboy.screen.image)
+        if not isinstance(screenshot, Image.Image):
+            raise TypeError("No screenshot available")
+        return game_state, screenshot
