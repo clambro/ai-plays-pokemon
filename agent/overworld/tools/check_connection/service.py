@@ -60,7 +60,7 @@ async def _check_connection(
     coordinates: Coords,
     hm_tiles: list[AsciiTile],
 ) -> list[ConnectionCheckResult] | ConnectionCheckError:
-    """Locate the source, then inspect either kind of connection through the same workflow."""
+    """Locate the source, then inspect either kind of connection through the same path."""
     known_map_ids = frozenset(await get_visited_maps())
     if source_map_id not in known_map_ids:
         return ConnectionCheckError.UNVISITED_MAP

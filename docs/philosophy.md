@@ -14,7 +14,7 @@ At the high end of the autonomy spectrum sits the holy grail: An agent that inte
 
 ### My Approach
 
-My approach to solving Pokémon Yellow Legacy combines freedom with constraint, sitting firmly in the middle of the autonomy spectrum. I want the LLM to make all the high-level decisions, but I don't need it to determine every individual button press. The flow of the game remains unpredictable, but the AI is tightly bound in a workflow to keep it focused and safe. The idea here is that of a production application. LLMs are expensive and a source of uncertainty. You only want to use them when you have to, and in a way in which their output space is bounded and can be validated.
+My approach to solving Pokémon Yellow Legacy combines freedom with constraint, sitting firmly in the middle of the autonomy spectrum. I want the LLM to make all the high-level decisions, but I don't need it to determine every individual button press. The flow of the game remains unpredictable, but the agent operates within explicit constraints to keep it focused and safe. The idea here is that of a production application. LLMs are expensive and a source of uncertainty. You only want to use them when you have to, and in a way in which their output space is bounded and can be validated.
 
 An example will make this more clear: The first decision you make in Pokémon is what to name your character. Entering even a short name requires dozens of button presses. Asking a vision model to handle the entire sequence would require repeated screenshots and button selections, with each step creating another opportunity for a mistake.
 
@@ -22,7 +22,7 @@ My approach to this problem is to simply ask the model for the name, since that'
 
 Naming is a trivial example, but the same logic applies for navigation and selecting options in battles. We don't need the AI to take every single step, only to tell us where it wants to go. We don't need the AI to press seven buttons to throw a PokéBall, only to tell us to throw it. Breaking down the gameplay into these discrete units of activity allows us to use smaller models, making the project cheaper overall. Cheaper models also run faster, making for a better viewing experience. The final advantage to this approach is that these discrete actions are far easier to test and tweak than monolithic agentic prompts, and their side effects are limited by the constraints we build around them.
 
-Fundamentally the approach here is to let the agent do the thinking and offload the mechanical work to safe, deterministic algorithms. The rest of this page will discuss the core design decisions that were made to build this workflow and overcome the inherent limitations of LLMs.
+Fundamentally the approach here is to let the agent do the thinking and offload the mechanical work to safe, deterministic algorithms. The rest of this page will discuss the core design decisions that were made to build this agent and overcome the inherent limitations of LLMs.
 
 ## Core Design Concerns
 
@@ -39,7 +39,7 @@ Given that the core philosophy here is "freedom within constraints," we need an 
 
 The application is organized around three gameplay domains: overworld navigation, battles, and text interactions. A typed dispatcher selects the current domain, and all three handlers use one shared context containing live agent state and the emulator. Each handler prepares only its own run-local observations and focused tool registry. Those tools expose a thin model-facing interface, while separate deterministic services handle the underlying game mechanics.
 
-An agent may use several tools within its domain before returning control to the dispatcher. Tool results provide fresh observations for the next decision, while only information useful beyond that local loop becomes durable memory. Work that involves no meaningful model decision remains ordinary deterministic code. The [workflow documentation](/docs/workflow.md) describes the complete runtime architecture.
+An agent may use several tools within its domain before returning control to the dispatcher. Tool results provide fresh observations for the next decision, while only information useful beyond that local loop becomes durable memory. Work that involves no meaningful model decision remains ordinary deterministic code. The [architecture documentation](/docs/architecture.md) describes the complete runtime architecture.
 
 ## Overcoming the LLM's Flaws
 

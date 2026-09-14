@@ -1,6 +1,6 @@
-# AI Workflow
+# Agent Architecture
 
-This page walks through the entire AI workflow, one part at a time. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology will be used here. At a high level, we have an entrypoint that looks at the current game state and routes control to one of three dedicated handlers: the Overworld Handler, the Battle Handler, or the Text Handler. Each handler has its own agent and its own suite of tools for operating in that part of the game.
+This page walks through the agent architecture, one part at a time. You might want to [familiarize yourself with the design of the project](/docs/philosophy.md) before diving in, as some of that terminology will be used here. At a high level, we have an entrypoint that looks at the current game state and routes control to one of three dedicated handlers: the Overworld Handler, the Battle Handler, or the Text Handler. Each handler has its own agent and its own suite of tools for operating in that part of the game.
 
 ## The Main Agent Loop
 
@@ -18,7 +18,7 @@ flowchart TD
 
 ### Select Handler
 
-This is the entrypoint for the workflow. It waits until the game is ready for input, reads the current game state, and decides which handler should take over. Battles go to the Battle Handler; dialog and menus go to the Text Handler, and everything else goes to the Overworld Handler. The same shared agent state is maintained in every trip through this loop. This is where we keep the rolling memory, goals, iteration count, token usage, and other information that needs to flow from one handler to the next.
+This is the entrypoint for the agent loop. It waits until the game is ready for input, reads the current game state, and decides which handler should take over. Battles go to the Battle Handler; dialog and menus go to the Text Handler, and everything else goes to the Overworld Handler. The same shared agent state is maintained in every trip through this loop. This is where we keep the rolling memory, goals, iteration count, token usage, and other information that needs to flow from one handler to the next.
 
 ### Iterations and Memory
 
@@ -26,7 +26,7 @@ An iteration is one meaningful decision or recorded outcome. The model explains 
 
 ### Backups
 
-The application saves a backup every 10 minutes. Each backup contains the emulator state, the live agent state, and a copy of the database, which together are enough to resume the run. If the workflow fails unexpectedly, it attempts to create one final backup before shutting down.
+The application saves a backup every 10 minutes. Each backup contains the emulator state, the live agent state, and a copy of the database, which together are enough to resume the run. If the application fails unexpectedly, it attempts to create one final backup before shutting down.
 
 ## The Overworld Handler
 
@@ -71,7 +71,7 @@ This is the entrypoint for the Overworld Handler. It loads the current map from 
 
 ### Overworld Tools
 
-Once the map and game state are prepared, the overworld agent chooses from the six tools described below. The available tools depend on the current game state: For example, there is no reason to offer the item tool when the bag is empty, or the Sokoban solver when there is no boulder puzzle in sight. If the action leaves the player in the same place and still in the overworld, the result goes back to the same conversation so the agent can try something else. If the player moves or the game enters another part of the workflow, control returns to the main loop.
+Once the map and game state are prepared, the overworld agent chooses from the six tools described below. The available tools depend on the current game state: For example, there is no reason to offer the item tool when the bag is empty, or the Sokoban solver when there is no boulder puzzle in sight. If the action leaves the player in the same place and still in the overworld, the result goes back to the same conversation so the agent can try something else. If the player moves or the game enters another gameplay domain, control returns to the main loop.
 
 #### Press Buttons
 

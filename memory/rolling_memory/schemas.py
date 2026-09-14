@@ -40,7 +40,7 @@ class MemorySummary:
 
 @dataclass(slots=True, kw_only=True)
 class RollingMemory:
-    """In-memory rolling-memory view for the current workflow."""
+    """In-memory rolling-memory view for the current application run."""
 
     current_block: CurrentMemoryBlock = field(
         default_factory=lambda: CurrentMemoryBlock(iteration=1),

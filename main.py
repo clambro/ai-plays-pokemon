@@ -26,7 +26,7 @@ async def main(
     mute_sound: bool = True,
     load_latest: bool = False,
 ) -> None:
-    """Run the emulator, streaming server, and iterative agent workflow.
+    """Run the emulator, streaming server, and agent application.
 
     Args:
         rom_path: ROM file to load.
@@ -77,7 +77,7 @@ async def main(
                     await create_backup(context.state, emulator_save_state)
                     next_backup_at = loop.time() + BACKUP_INTERVAL_SECONDS
         except Exception:  # noqa: BLE001
-            logger.exception("Agent workflow raised an exception.")
+            logger.exception("Agent application raised an exception.")
             emulator_save_state = await emulator.get_emulator_save_state()
             await create_backup(context.state, emulator_save_state)
 

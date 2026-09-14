@@ -1,4 +1,4 @@
-"""Persistence and compaction workflow for rolling memory."""
+"""Rolling-memory persistence and compaction."""
 
 import asyncio
 

@@ -1,16 +1,16 @@
-# AI Workflow for Pokémon Yellow Legacy: Hard Mode!
+# AI Agent for Pokémon Yellow Legacy
 
 ## Project Overview
 
-This is a fully autonomous AI workflow designed to play [Pokémon Yellow Legacy](https://github.com/cRz-Shadows/Pokémon_Yellow_Legacy) on Hard Mode. Pokémon Yellow Legacy is a ROM hack of Pokémon Yellow that includes a balance changes, quality of life improvements, and bug fixes, while maintaining the feel of the first generation of Pokémon. Hard mode adds level caps and blocks item use in battle, forcing the AI to strategize instead of winning by overlevelling a single Pokémon.
+This is an autonomous AI agent designed to play [Pokémon Yellow Legacy](https://github.com/cRz-Shadows/Pokémon_Yellow_Legacy) on Hard Mode. Pokémon Yellow Legacy is a ROM hack of Pokémon Yellow that includes a balance changes, quality of life improvements, and bug fixes, while maintaining the feel of the first generation of Pokémon. Hard mode adds level caps and blocks item use in battle, forcing the AI to strategize instead of winning by overlevelling a single Pokémon.
 
-The AI workflow is written in Python and combines [Pydantic AI](https://ai.pydantic.dev/) agents with deterministic gameplay tools organized around the three major parts of the game: exploring the overworld, handling text, and battling. The application operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms and LLM-powered decision making. It features hierarchical rolling memory and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs. The goal was to have the AI make the decisions, while keeping the gameplay as close to human speed as possible.
+The agent is implemented in Python using [Pydantic AI](https://ai.pydantic.dev/) and deterministic gameplay tools organized around the three major parts of the game: exploring the overworld, handling text, and battling. The application operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms and LLM-powered decision making. It features hierarchical rolling memory and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs. The goal was to have the AI make the decisions, while keeping the gameplay as close to human speed as possible.
 
-Data from the AI workflow and the game's memory is piped into an HTML page for visualization, and the whole project [streams live on Twitch](https://www.twitch.tv/clambr0).
+Data from the agent and the game's memory is piped into an HTML page for visualization, and the whole project [streams live on Twitch](https://www.twitch.tv/clambr0).
 
 If you want to learn more about how this all works, check out:
 - [A deeper look into the philosophy and design of the project](docs/philosophy.md)
-- [A description of the AI architecture and its tools](docs/workflow.md)
+- [A description of the AI architecture and its tools](docs/architecture.md)
 
 Note: This is the improved v2 iteration of this project. If you want to see the original workflow-based version that streamed in Aug 2025, [you can find that here](https://github.com/clambro/ai-plays-pokemon/tree/v1.0.0).
 
@@ -41,11 +41,11 @@ Note: This is the improved v2 iteration of this project. If you want to see the 
 
 **Note:** If you try to run the integration tests, many of them will fail because they depend on save states that I am not licensed to distribute. Similarly, if you try to run the game state visualization server, you'll get an error that the sprites are unavailable for the same reason.
 
-## Running the Workflow
+## Running the Agent
 
 ### Basic Usage
 
-Run the AI workflow with the default settings using
+Run the agent with the default settings using
 
 ```bash
 uv run python -m main
@@ -69,7 +69,7 @@ Other relevant constants can be edited in `common/constants.py`.
 
 ### Backup and Restore
 
-The system automatically creates backups every 10 minutes in the `outputs/` folder. Each backup contains the AI workflow state, the game state, and a copy of the SQLite database so that you can resume play from the moment the backup was taken. Caught workflow errors also trigger a backup when the emulator remains available.
+The system automatically creates backups every 10 minutes in the `outputs/` folder. Each backup contains the agent state, the game state, and a copy of the SQLite database so that you can resume play from the moment the backup was taken. Caught application errors also trigger a backup when the emulator remains available.
 
 ## FAQs
 
