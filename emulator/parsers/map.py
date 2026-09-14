@@ -91,7 +91,7 @@ class Map(BaseModel):
     cut_tree_tiles: tuple[int, int, int, int] | None
     boulder_hole_tiles: tuple[int, int, int, int] | None
     pressure_plate_tiles: tuple[int, int, int, int] | None
-    locked_door_tiles: frozenset[int]
+    locked_door_blocks: tuple[tuple[int, int, int, int], ...]
     walkable_tiles: list[int]
     collision_pairs: list[frozenset[int]]
     boulder_blocked_tiles: frozenset[int]
@@ -238,7 +238,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         cut_tree_tiles=cut_tree_tiles,
         boulder_hole_tiles=boulder_hole_tiles,
         pressure_plate_tiles=pressure_plate_tiles,
-        locked_door_tiles=_LOCKED_DOOR_TILE_MAP.get(map_id, frozenset()),
+        locked_door_blocks=_LOCKED_DOOR_BLOCK_MAP.get(map_id, ()),
         walkable_tiles=walkable_tiles,
         collision_pairs=collision_pairs,
         boulder_blocked_tiles=(
@@ -292,7 +292,7 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
         cut_tree_tiles=None,
         boulder_hole_tiles=None,
         pressure_plate_tiles=None,
-        locked_door_tiles=frozenset(),
+        locked_door_blocks=(),
         walkable_tiles=[],
         collision_pairs=[],
         boulder_blocked_tiles=frozenset(),
@@ -477,17 +477,21 @@ _CUT_TREE_TILE_MAP = {
     Tileset.GYM: (0x40, 0x41, 0x50, 0x51),
 }
 
-_LOCKED_DOOR_TILE_MAP = {
-    MapId.SILPH_CO_2F: frozenset({0x18, 0x24}),
-    MapId.SILPH_CO_3F: frozenset({0x18, 0x24}),
-    MapId.SILPH_CO_4F: frozenset({0x18, 0x24}),
-    MapId.SILPH_CO_5F: frozenset({0x18, 0x24}),
-    MapId.SILPH_CO_6F: frozenset({0x18, 0x24}),
-    MapId.SILPH_CO_7F: frozenset({0x18, 0x24}),
-    MapId.SILPH_CO_8F: frozenset({0x18, 0x24}),
-    MapId.SILPH_CO_9F: frozenset({0x18, 0x24}),
-    MapId.SILPH_CO_10F: frozenset({0x18, 0x24}),
-    MapId.SILPH_CO_11F: frozenset({0x18, 0x24, 0x5E}),
+_FACILITY_LOCKED_DOOR_BLOCKS = (
+    (0x08, 0x08, 0x18, 0x18),
+    (0x24, 0x25, 0x24, 0x25),
+)
+_LOCKED_DOOR_BLOCK_MAP = {
+    MapId.SILPH_CO_2F: _FACILITY_LOCKED_DOOR_BLOCKS,
+    MapId.SILPH_CO_3F: _FACILITY_LOCKED_DOOR_BLOCKS,
+    MapId.SILPH_CO_4F: _FACILITY_LOCKED_DOOR_BLOCKS,
+    MapId.SILPH_CO_5F: _FACILITY_LOCKED_DOOR_BLOCKS,
+    MapId.SILPH_CO_6F: _FACILITY_LOCKED_DOOR_BLOCKS,
+    MapId.SILPH_CO_7F: _FACILITY_LOCKED_DOOR_BLOCKS,
+    MapId.SILPH_CO_8F: _FACILITY_LOCKED_DOOR_BLOCKS,
+    MapId.SILPH_CO_9F: _FACILITY_LOCKED_DOOR_BLOCKS,
+    MapId.SILPH_CO_10F: _FACILITY_LOCKED_DOOR_BLOCKS,
+    MapId.SILPH_CO_11F: ((0x5D, 0x5D, 0x5E, 0x5E),),
 }
 
 _SPINNER_TILE_MAP = {
