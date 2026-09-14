@@ -76,7 +76,7 @@ def build_current_map_view(
         display_left : display_right + 1,
     ]
     display_tiles = np.where(
-        display_crop == AsciiTile.WALL,
+        np.isin(display_crop, (AsciiTile.WALL, AsciiTile.LOCKED_DOOR)),
         display_crop,
         AsciiTile.OUTSIDE_REGION,
     )

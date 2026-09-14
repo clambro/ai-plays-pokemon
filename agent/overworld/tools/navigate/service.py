@@ -345,6 +345,12 @@ def _get_map_target_error(
             " revealed route to them exists yet. I should navigate to a listed exploration"
             " candidate to reveal more of the current map."
         )
+    if target_tile == AsciiTile.LOCKED_DOOR:
+        return (
+            f"Navigation failed. The target coordinates {coords} are a locked door."
+            " I should navigate next to it, face it, and press the action button to interact"
+            " with it."
+        )
     traversable_tiles = set(AsciiTile.get_walkable_tiles()) | set(game_state.get_hm_tiles())
     if target_tile not in traversable_tiles:
         return (

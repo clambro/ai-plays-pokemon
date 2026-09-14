@@ -100,6 +100,7 @@ DUMMY_MAP_STATE = Map(
     cut_tree_tiles=None,
     boulder_hole_tiles=None,
     pressure_plate_tiles=None,
+    locked_door_tiles=frozenset(),
     walkable_tiles=[1, 4],
     collision_pairs=[],
     boulder_blocked_tiles=frozenset(),

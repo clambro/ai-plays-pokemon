@@ -91,6 +91,7 @@ class Map(BaseModel):
     cut_tree_tiles: tuple[int, int, int, int] | None
     boulder_hole_tiles: tuple[int, int, int, int] | None
     pressure_plate_tiles: tuple[int, int, int, int] | None
+    locked_door_tiles: frozenset[int]
     walkable_tiles: list[int]
     collision_pairs: list[frozenset[int]]
     boulder_blocked_tiles: frozenset[int]
@@ -206,6 +207,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     cut_tree_tiles = _CUT_TREE_TILE_MAP.get(tileset_id)
     boulder_hole_tiles = (0x2F, 0x2F, 0x22, 0x22) if tileset_id == Tileset.CAVERN else None
     pressure_plate_tiles = (0x2B, 0x2C, 0x2D, 0x2E) if tileset_id == Tileset.CAVERN else None
+    map_id = MapId(mem[0xD3AB])
 
     walkable_tile_ptr = mem[0xD57D] | (mem[0xD57E] << 8)
     tile_bank, tile_offset = divmod(walkable_tile_ptr, 0x4000)
@@ -224,7 +226,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     collision_pairs = _COLLISION_PAIRS.get(tileset_id, [])
 
     return Map(
-        id=MapId(mem[0xD3AB]),
+        id=map_id,
         height=height,
         width=width,
         grass_tile=grass_tile,
@@ -236,6 +238,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         cut_tree_tiles=cut_tree_tiles,
         boulder_hole_tiles=boulder_hole_tiles,
         pressure_plate_tiles=pressure_plate_tiles,
+        locked_door_tiles=_LOCKED_DOOR_TILE_MAP.get(map_id, frozenset()),
         walkable_tiles=walkable_tiles,
         collision_pairs=collision_pairs,
         boulder_blocked_tiles=(
@@ -289,6 +292,7 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
         cut_tree_tiles=None,
         boulder_hole_tiles=None,
         pressure_plate_tiles=None,
+        locked_door_tiles=frozenset(),
         walkable_tiles=[],
         collision_pairs=[],
         boulder_blocked_tiles=frozenset(),
@@ -471,6 +475,19 @@ _COLLISION_PAIRS = {
 _CUT_TREE_TILE_MAP = {
     Tileset.OVERWORLD: (0x2D, 0x2E, 0x3D, 0x3E),
     Tileset.GYM: (0x40, 0x41, 0x50, 0x51),
+}
+
+_LOCKED_DOOR_TILE_MAP = {
+    MapId.SILPH_CO_2F: frozenset({0x18, 0x24}),
+    MapId.SILPH_CO_3F: frozenset({0x18, 0x24}),
+    MapId.SILPH_CO_4F: frozenset({0x18, 0x24}),
+    MapId.SILPH_CO_5F: frozenset({0x18, 0x24}),
+    MapId.SILPH_CO_6F: frozenset({0x18, 0x24}),
+    MapId.SILPH_CO_7F: frozenset({0x18, 0x24}),
+    MapId.SILPH_CO_8F: frozenset({0x18, 0x24}),
+    MapId.SILPH_CO_9F: frozenset({0x18, 0x24}),
+    MapId.SILPH_CO_10F: frozenset({0x18, 0x24}),
+    MapId.SILPH_CO_11F: frozenset({0x18, 0x24, 0x5E}),
 }
 
 _SPINNER_TILE_MAP = {
