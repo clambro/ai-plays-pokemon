@@ -26,7 +26,7 @@ The project targets standard GIL-enabled Python `>=3.14,<3.15`. PyBoy is pinned 
 - Use classes when state, identity, lifecycle, invariants, polymorphism, or a framework contract makes them useful. Test classes may also group a large test module when that grouping materially improves comprehension.
 - Use Google-style docstrings. Document caller-relevant semantics, mutation, side effects, returns, and failures; keep obvious operations concise. Do not use Sphinx directives.
 - Use Pydantic models at I/O and validation boundaries. Prefer standard-library dataclasses for internal structured data.
-- Establish the source of truth, ownership, and lifecycle before adding state or abstractions. Do not duplicate authoritative data for a view, put loading or presentation policy in domain records, or let cached state become another authority; keep persistence and workflow transitions in the coordinating service.
+- Establish the source of truth, ownership, and lifecycle before adding state or abstractions. Do not duplicate authoritative data for a view, put loading or presentation policy in domain records, or let cached state become another authority; keep persistence and runtime transitions in the coordinating service.
 - Tests must protect externally observable behavior or stable domain rules and survive internal refactors that preserve that behavior. Do not add tests that merely mirror implementation details such as private helpers, internal call sequences, exact wiring, or timing constants. Prefer real integration coverage for component interactions and focused unit tests for substantive pure algorithms. Repository policy tests are appropriate when they deliberately enforce a project convention.
 - Do not add tests whose primary assertions inspect prompts, tool descriptions or results, formatted model-facing prose, error-message wording, logs, documentation text, or other copy. Review presentation-only changes directly. Do not add a new test file unless the change introduces substantive algorithmic behavior or a stable domain invariant.
 - Keep changes focused and preserve unrelated worktree changes.
@@ -35,7 +35,7 @@ The project targets standard GIL-enabled Python `>=3.14,<3.15`. PyBoy is pinned 
 
 - Use logs for local operational health, Logfire for telemetry, and application state or persistence for gameplay history. Do not use logs as another record of agent reasoning, goals, prompts, dialog, tool results, or other domain state.
 - Keep `INFO` logs to rare lifecycle milestones such as a service starting or a backup completing. Expected validation failures, ordinary control flow, and recoverable gameplay outcomes should not be logged.
-- Use `WARNING` for unexpected degradation from which the application recovers, and `ERROR` or `EXCEPTION` for failed operations and workflow faults. Log an exception once, at the boundary that handles it, and retain its traceback.
+- Use `WARNING` for unexpected degradation from which the application recovers, and `ERROR` or `EXCEPTION` for failed operations and application faults. Log an exception once, at the boundary that handles it, and retain its traceback.
 - Keep log context compact and metadata-oriented. Never log secrets, full prompts, model-generated reasoning, or other potentially sensitive content.
 
 ## Repository Layout

@@ -114,6 +114,7 @@ LEGEND_MAP = {
     AsciiTile.OUTSIDE_REGION: "A non-wall coordinate outside your current navigable region. It may be unexplored or reachable only from somewhere else, so do not target it directly.",
     AsciiTile.UNSEEN: "Tiles that you have not yet explored. Move toward these tiles to reveal them.",
     AsciiTile.WALL: "A barrier (usually a wall or an object) that you cannot pass through.",
+    AsciiTile.LOCKED_DOOR: "A locked door. Stand next to it, face it, and press the action button to interact with it.",
     AsciiTile.COUNTER: "A counter that you cannot cross. A listed sprite on its far side can be interacted with only from the exact reachable position stated in that sprite's note.",
     AsciiTile.WATER: "Water.",
     AsciiTile.GRASS: "Tall grass, where wild Pokemon can be found.",

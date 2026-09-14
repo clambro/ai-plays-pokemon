@@ -223,10 +223,14 @@ class GameState:
         flat_block: tuple[int, int, int, int],
     ) -> AsciiTile | None:
         """Classify a block represented by a special four-tile pattern."""
-        special_blocks = (
+        special_blocks = [
             (self.map.cut_tree_tiles, AsciiTile.CUT_TREE),
             (self.map.boulder_hole_tiles, AsciiTile.BOULDER_HOLE),
             (self.map.pressure_plate_tiles, AsciiTile.PRESSURE_PLATE),
+        ]
+        special_blocks.extend(
+            (locked_door_block, AsciiTile.LOCKED_DOOR)
+            for locked_door_block in self.map.locked_door_blocks
         )
         for tile_pattern, tile_type in special_blocks:
             if tile_pattern and flat_block == tile_pattern:
