@@ -10,6 +10,7 @@ from agent.overworld.navigation import get_accessible_coords, get_exploration_ca
 from agent.overworld.tools.check_connection.schemas import (
     ConnectionCheckError,
     ConnectionCheckResult,
+    ConnectionComponent,
     ResolvedConnection,
 )
 from common.enums import AsciiTile, MapId
@@ -106,7 +107,7 @@ async def _check_destination(
         return ConnectionCheckResult(connection=connection)
 
     boundaries = await get_map_boundary_memories_for_map(destination_map_id)
-    warp_groups, boundary_groups, has_unexplored_terrain = get_connection_component(
+    component = get_connection_component(
         arrival_coords=arrival_coords,
         warp_groups=warp_groups_by_map[destination_map_id],
         boundaries=boundaries,
@@ -114,7 +115,7 @@ async def _check_destination(
         hm_tiles=hm_tiles,
     )
     await _load_warp_groups(
-        (group[0].destination_map_id for group in warp_groups),
+        (group[0].destination_map_id for group in component.warp_groups),
         known_map_ids,
         warp_groups_by_map,
     )
@@ -125,17 +126,17 @@ async def _check_destination(
                 warp_groups_by_map.get(group[0].destination_map_id),
                 destination_warp_ids={warp.destination_warp_id for warp in group},
             )
-            for group in warp_groups
+            for group in component.warp_groups
         ),
         *(
             _resolve_boundary_connection(group, destination_visited=True)
-            for group in boundary_groups
+            for group in component.boundary_groups
         ),
     )
     return ConnectionCheckResult(
         connection=connection,
         other_connections=other_connections,
-        has_unexplored_terrain=has_unexplored_terrain,
+        has_unexplored_terrain=component.has_unexplored_terrain,
     )
 
 
@@ -262,11 +263,7 @@ def get_connection_component(
     boundaries: Sequence[MapBoundaryMemoryRead],
     map_memory: MapMemoryRead,
     hm_tiles: list[AsciiTile],
-) -> tuple[
-    WarpGroups,
-    tuple[tuple[MapBoundaryMemoryRead, ...], ...],
-    bool,
-]:
+) -> ConnectionComponent:
     """Find reachable connections and unseen terrain using already-grouped warps."""
     tiles = _build_connection_tiles(
         (warp for group in warp_groups for warp in group),
@@ -274,7 +271,11 @@ def get_connection_component(
     )
     height, width = tiles.shape
     if not (0 <= arrival_coords.row < height and 0 <= arrival_coords.col < width):
-        return (), (), False
+        return ConnectionComponent(
+            warp_groups=(),
+            boundary_groups=(),
+            has_unexplored_terrain=False,
+        )
 
     tiles[arrival_coords.row, arrival_coords.col] = AsciiTile.PLAYER
     reachable_coords = get_accessible_coords(
@@ -292,7 +293,11 @@ def get_connection_component(
         if any(_coords(boundary) in reachable_coords for boundary in group)
     )
     has_unexplored_terrain = bool(get_exploration_candidates(reachable_coords, tiles))
-    return reachable_warp_groups, boundary_groups, has_unexplored_terrain
+    return ConnectionComponent(
+        warp_groups=reachable_warp_groups,
+        boundary_groups=boundary_groups,
+        has_unexplored_terrain=has_unexplored_terrain,
+    )
 
 
 def _build_connection_tiles(

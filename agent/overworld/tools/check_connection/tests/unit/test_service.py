@@ -290,7 +290,7 @@ def test_connection_check_lists_only_connections_in_the_arrival_component(
         blockages={},
     )
 
-    groups, boundary_groups, has_unexplored_terrain = get_connection_component(
+    component = get_connection_component(
         arrival_coords=Coords(row=arrival.row, col=arrival.col),
         warp_groups=group_remembered_warps([arrival, connected, disconnected]),
         boundaries=[*connected_boundaries, disconnected_boundary],
@@ -298,11 +298,15 @@ def test_connection_check_lists_only_connections_in_the_arrival_component(
         hm_tiles=[],
     )
 
-    assert tuple(tuple(warp.warp_id for warp in group) for group in groups) == ((0,), (1,))
+    assert tuple(tuple(warp.warp_id for warp in group) for group in component.warp_groups) == (
+        (0,),
+        (1,),
+    )
     assert tuple(
-        tuple((boundary.row, boundary.col) for boundary in group) for group in boundary_groups
+        tuple((boundary.row, boundary.col) for boundary in group)
+        for group in component.boundary_groups
     ) == (((1, 2), (2, 3)),)
-    assert has_unexplored_terrain is expected_unexplored_terrain
+    assert component.has_unexplored_terrain is expected_unexplored_terrain
 
 
 @pytest.mark.unit
@@ -361,7 +365,7 @@ def test_connection_check_recognizes_unresolved_spinner_exploration(
         blockages={},
     )
 
-    _, _, has_unexplored_terrain = get_connection_component(
+    component = get_connection_component(
         arrival_coords=Coords(row=1, col=1),
         warp_groups=(),
         boundaries=[],
@@ -369,4 +373,4 @@ def test_connection_check_recognizes_unresolved_spinner_exploration(
         hm_tiles=[],
     )
 
-    assert has_unexplored_terrain is expected_unexplored_terrain
+    assert component.has_unexplored_terrain is expected_unexplored_terrain
