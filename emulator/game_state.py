@@ -202,42 +202,16 @@ class GameState:
 
     def _classify_background_block(self, block: np.ndarray) -> AsciiTile:
         """Classify a 2x2 block of background tiles."""
-        if block[1, 0] in self.map.water_tiles:
-            return AsciiTile.WATER
         if ledge_type := self._get_ledge_type(block):
             return ledge_type
-        if self.map.grass_tile and block[1, 0] == self.map.grass_tile:
-            # In engine/battle/wild_encounters.asm, grass tiles only check the bottom left.
-            return AsciiTile.GRASS
-
-        if special_type := self._get_special_background_block_type(block):
-            return special_type
-        if block[1, 0] in self.map.talk_over_tiles:
-            return AsciiTile.COUNTER
-        # The engine uses the same bottom-left logic for ordinary walkable blocks.
-        return AsciiTile.FREE if block[1, 0] in self.map.walkable_tiles else AsciiTile.WALL
-
-    def _get_special_background_block_type(
-        self,
-        block: np.ndarray,
-    ) -> AsciiTile | None:
-        """Classify a block using the ROM's special terrain rules."""
-        if self.map.hole_tile is not None and block[1, 0] == self.map.hole_tile:
-            return AsciiTile.BOULDER_HOLE
+        if tile_type := self.map.background_tile_types.get(block[1, 0]):
+            return tile_type
 
         flat_block = tuple(block.flatten().tolist())
-        special_blocks = [
-            (self.map.cut_tree_tiles, AsciiTile.CUT_TREE),
-            (self.map.pressure_plate_tiles, AsciiTile.PRESSURE_PLATE),
-        ]
-        special_blocks.extend(
-            (locked_door_block, AsciiTile.LOCKED_DOOR)
-            for locked_door_block in self.map.locked_door_blocks
-        )
-        for tile_pattern, tile_type in special_blocks:
-            if tile_pattern and flat_block == tile_pattern:
-                return tile_type
-        return self._get_spinner_type(flat_block)
+        if block_type := self.map.background_block_types.get(flat_block):
+            return block_type
+        # The engine uses the same bottom-left logic for ordinary walkable blocks.
+        return AsciiTile.FREE if block[1, 0] in self.map.walkable_tiles else AsciiTile.WALL
 
     def _get_ledge_type(self, block: np.ndarray) -> AsciiTile | None:
         """Check whether a block contains a ledge.
@@ -263,23 +237,6 @@ class GameState:
         if top in self.map.ledge_tiles_right or bottom in self.map.ledge_tiles_right:
             return AsciiTile.LEDGE_RIGHT
         return None
-
-    def _get_spinner_type(self, flat_block: tuple[int, int, int, int]) -> AsciiTile | None:
-        """Get the type of spinner for a given block."""
-        if self.map.spinner_tiles is None:
-            return None
-        tile = None
-        if flat_block == self.map.spinner_tiles.up:
-            tile = AsciiTile.SPINNER_UP
-        elif flat_block == self.map.spinner_tiles.down:
-            tile = AsciiTile.SPINNER_DOWN
-        elif flat_block == self.map.spinner_tiles.left:
-            tile = AsciiTile.SPINNER_LEFT
-        elif flat_block == self.map.spinner_tiles.right:
-            tile = AsciiTile.SPINNER_RIGHT
-        elif flat_block == self.map.spinner_tiles.stop:
-            tile = AsciiTile.SPINNER_STOP
-        return tile
 
     def _update_blockages(
         self,
