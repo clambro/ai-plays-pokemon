@@ -65,10 +65,11 @@ class MapEntityType(Enum):
     SPRITE = auto()
     SIGN = auto()
     OBJECT = auto()
+    LOCKED_DOOR = auto()
 
 
 class WarpActivation(StrEnum):
-    """A working input for activating a normal warp."""
+    """How a map connection is activated."""
 
     STEP_ON = "STEP_ON"
     UP = "UP"

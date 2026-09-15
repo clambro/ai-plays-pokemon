@@ -4,7 +4,16 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from common.enums import BUTTON_DIRECTIONS, AsciiTile, Button, FacingDirection, MapEntityType, MapId
+from common.enums import (
+    BUTTON_DIRECTIONS,
+    BUTTON_OFFSETS,
+    AsciiTile,
+    Button,
+    FacingDirection,
+    MapEntityType,
+    MapId,
+    WarpActivation,
+)
 from common.schemas import Coords
 from database.map_boundary_memory.repository import (
     get_map_boundary_memories_for_map,
@@ -130,6 +139,15 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
             )
             for memory in map_entity_memories
             if memory.entity_type == MapEntityType.OBJECT
+            and memory.last_interaction_iteration is not None
+        },
+        locked_door_interactions={
+            memory.entity_id: MapEntityInteractionMemory(
+                text=memory.last_interaction,
+                iteration=memory.last_interaction_iteration,
+            )
+            for memory in map_entity_memories
+            if memory.entity_type == MapEntityType.LOCKED_DOOR
             and memory.last_interaction_iteration is not None
         },
         known_map_ids=known_map_ids,
@@ -364,22 +382,24 @@ async def record_warp_usage(
         )
 
 
-async def record_observed_map_boundary(
+async def record_observed_map_connection(
     *,
     button: Button,
     previous: GameState,
     result: ControlResult,
     current: GameState,
 ) -> None:
-    """Persist a map boundary only when one movement input demonstrably crossed it."""
+    """Persist a coordinate-based map connection caused by one movement input."""
     try:
-        boundaries = _get_observed_map_boundaries(button, previous, result, current)
-        if not boundaries:
+        connections = _get_observed_map_boundaries(button, previous, result, current)
+        if not connections:
+            connections = _get_observed_hole_connection(button, previous, result, current)
+        if not connections:
             return
-        await remember_map_boundaries(boundaries)
+        await remember_map_boundaries(connections)
     except Exception as error:  # noqa: BLE001
         logger.opt(exception=error).warning(
-            "Map-boundary recording failed; continuing without the latest crossing."
+            "Map-connection recording failed; continuing without the latest crossing."
         )
 
 
@@ -440,7 +460,7 @@ def _get_observed_map_boundaries(
     return tuple(
         MapBoundaryMemoryCreateUpdate(
             map_id=previous.map.id,
-            direction=direction,
+            activation=WarpActivation(direction.value),
             row=candidate.row,
             col=candidate.col,
             destination_map_id=current.map.id,
@@ -451,6 +471,46 @@ def _get_observed_map_boundaries(
         if candidate == source
         or previous.map.is_connection_crossable(connection, candidate, can_surf=can_surf)
         for destination in (connection.get_destination(candidate),)
+    )
+
+
+def _get_observed_hole_connection(
+    button: Button,
+    previous: GameState,
+    result: ControlResult,
+    current: GameState,
+) -> tuple[MapBoundaryMemoryCreateUpdate, ...]:
+    """Recognize a fall through a visible hole as one directed connection."""
+    if (
+        button not in BUTTON_OFFSETS
+        or result.boundary != ControlBoundary.OVERWORLD_READY
+        or previous.map.id == current.map.id
+        or previous.map.id in {MapId.OUTSIDE, MapId.UNKNOWN}
+        or current.map.id in {MapId.OUTSIDE, MapId.UNKNOWN}
+    ):
+        return ()
+
+    source = previous.player.coords + BUTTON_OFFSETS[button]
+    if any(warp.coords == source for warp in previous.warps.values()):
+        return ()
+    screen_coords = previous.screen.to_screen_coords(source)
+    if (
+        screen_coords is None
+        or previous.get_ascii_screen_terrain().screen[screen_coords.row][screen_coords.col]
+        != AsciiTile.BOULDER_HOLE
+    ):
+        return ()
+
+    return (
+        MapBoundaryMemoryCreateUpdate(
+            map_id=previous.map.id,
+            activation=WarpActivation.STEP_ON,
+            row=source.row,
+            col=source.col,
+            destination_map_id=current.map.id,
+            destination_row=current.player.coords.row,
+            destination_col=current.player.coords.col,
+        ),
     )
 
 

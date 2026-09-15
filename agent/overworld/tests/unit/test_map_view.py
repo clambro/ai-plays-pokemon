@@ -36,6 +36,7 @@ def test_current_map_view_crops_region_without_mutating_map() -> None:
         sign_interactions={},
         known_object_ids=set(),
         object_interactions={},
+        locked_door_interactions={},
         known_warp_ids=set(),
         warp_usage_iterations={},
         known_map_boundaries=(),
@@ -127,6 +128,7 @@ def test_object_overlay_provides_reachable_interaction_position() -> None:
         sign_interactions={},
         known_object_ids={0},
         object_interactions={},
+        locked_door_interactions={},
         known_warp_ids=set(),
         warp_usage_iterations={},
         known_map_boundaries=(),
@@ -169,6 +171,68 @@ def test_object_overlay_provides_reachable_interaction_position() -> None:
 
 
 @pytest.mark.unit
+def test_locked_door_uses_map_block_identity_and_requires_a_reachable_side() -> None:
+    """Represent each reachable ROM door block once, independent of its visible tile count."""
+    overworld_map = OverworldMap(
+        id=MapId.SILPH_CO_11F,
+        terrain=[
+            list("▓▓▓▓▓▓▓"),
+            list("▓▓▓▓▓▓▓"),
+            list("▓▓▓▓▓▓▓"),
+            list("▓▓◎◎▓◎▓"),
+            list("▓∙∙∙▓∙▓"),
+            list("▓∙∙∙▓∙▓"),
+            list("▓▓▓▓▓▓▓"),
+        ],
+        blockages={},
+        known_sprite_ids=set(),
+        sprite_interactions={},
+        known_sign_ids=set(),
+        sign_interactions={},
+        known_object_ids=set(),
+        object_interactions={},
+        locked_door_interactions={},
+        known_warp_ids=set(),
+        warp_usage_iterations={},
+        known_map_boundaries=(),
+        known_map_ids=frozenset(),
+    )
+    game_state = cast(
+        "GameState",
+        SimpleNamespace(
+            sprites={},
+            warps={},
+            signs={},
+            objects={},
+            pikachu=SimpleNamespace(is_rendered=False),
+            player=SimpleNamespace(coords=Coords(row=4, col=2), is_surfing=False),
+            map=SimpleNamespace(
+                height=overworld_map.height,
+                width=overworld_map.width,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
+            get_hm_tiles=list,
+        ),
+    )
+
+    map_view = build_current_map_view(overworld_map, game_state)
+
+    assert len(map_view.locked_doors) == 1
+    door = map_view.locked_doors[0]
+    assert door.block_coords == Coords(row=1, col=1)
+    assert door.tile_coords == (Coords(row=3, col=2), Coords(row=3, col=3))
+    assert tuple(position.coords for position in door.interaction_positions) == (
+        Coords(row=4, col=2),
+        Coords(row=4, col=3),
+    )
+    assert all(position.direction == FacingDirection.UP for position in door.interaction_positions)
+    assert map_view.exploration_candidates == ()
+
+
+@pytest.mark.unit
 def test_spinner_routing_uses_terrain_under_pikachu_overlay() -> None:
     """Resolve spinner paths from terrain even when Pikachu covers the stop tile."""
     overworld_map = OverworldMap(
@@ -186,6 +250,7 @@ def test_spinner_routing_uses_terrain_under_pikachu_overlay() -> None:
         sign_interactions={},
         known_object_ids=set(),
         object_interactions={},
+        locked_door_interactions={},
         known_warp_ids=set(),
         warp_usage_iterations={},
         known_map_boundaries=(),
@@ -272,6 +337,7 @@ def test_routing_respects_tiles_beneath_player_and_pikachu(
         sign_interactions={},
         known_object_ids=set(),
         object_interactions={},
+        locked_door_interactions={},
         known_warp_ids=set(warps),
         warp_usage_iterations={},
         known_map_boundaries=(),
@@ -337,6 +403,7 @@ def test_unresolved_spinner_shows_known_path_without_exposing_disconnected_terra
         sign_interactions={},
         known_object_ids=set(),
         object_interactions={},
+        locked_door_interactions={},
         known_warp_ids=set(),
         warp_usage_iterations={},
         known_map_boundaries=(),
@@ -399,6 +466,7 @@ def test_current_map_view_includes_counter_interactable_sprites() -> None:
         sign_interactions={},
         known_object_ids=set(),
         object_interactions={},
+        locked_door_interactions={},
         known_warp_ids=set(),
         warp_usage_iterations={},
         known_map_boundaries=(),

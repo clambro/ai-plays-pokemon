@@ -10,7 +10,7 @@ from agent.overworld.navigation import (
 from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
 from common.enums import BUTTON_DIRECTIONS, BUTTON_OFFSETS, AsciiTile, Button, MapId
 from emulator.control_events import ControlBoundary
-from overworld_map.service import record_observed_map_boundary, update_overworld_map
+from overworld_map.service import record_observed_map_connection, update_overworld_map
 
 if TYPE_CHECKING:
     import numpy as np
@@ -161,8 +161,6 @@ def _get_target_error(
     routing_tiles: np.ndarray,
 ) -> str | None:
     """Return why the target coordinates are invalid, if applicable."""
-    if game_state.player.is_biking:
-        return "I can't navigate while riding a bike."
     if (
         coords.row < 0
         or coords.col < 0
@@ -193,7 +191,7 @@ async def _press_navigation_step(
     """Complete one movement step, including turning or Pikachu yielding, and return its state."""
     desired_direction = BUTTON_DIRECTIONS[button]
     if game_state.player.direction != desired_direction:
-        result, observed_state = await _press_and_record_boundary(
+        result, observed_state = await _press_and_record_connection(
             emulator,
             button,
             game_state,
@@ -211,7 +209,7 @@ async def _press_navigation_step(
         game_state.pikachu.is_rendered
         and game_state.player.coords + BUTTON_OFFSETS[button] == game_state.pikachu.coords
     )
-    result, observed_state = await _press_and_record_boundary(
+    result, observed_state = await _press_and_record_connection(
         emulator,
         button,
         game_state,
@@ -222,7 +220,7 @@ async def _press_navigation_step(
         and observed_state.player.coords == game_state.player.coords
         and pikachu_was_ahead
     ):
-        result, observed_state = await _press_and_record_boundary(
+        result, observed_state = await _press_and_record_connection(
             emulator,
             button,
             observed_state,
@@ -243,7 +241,7 @@ async def _handle_hm_use(
 
     # Rotate to face the target.
     if game_state.player.direction != BUTTON_DIRECTIONS[button]:
-        result, game_state = await _press_and_record_boundary(emulator, button, game_state)
+        result, game_state = await _press_and_record_connection(emulator, button, game_state)
         if result.boundary != ControlBoundary.OVERWORLD_READY:
             return "", result.boundary, game_state
 
@@ -267,20 +265,20 @@ async def _handle_hm_use(
     return " ".join(dialog for dialog in dialogs if dialog), boundary, game_state
 
 
-async def _press_and_record_boundary(
+async def _press_and_record_connection(
     emulator: Emulator,
     button: Button,
     previous: GameState,
     *,
     observe_steps: bool = False,
 ) -> tuple[ControlResult, GameState]:
-    """Press once and retain a directly caused, validated map-boundary crossing."""
+    """Press once and retain a directly caused, validated map crossing."""
     result = await emulator.press_overworld_button(
         button,
         observe_steps=observe_steps,
     )
     current = await emulator.get_game_state()
-    await record_observed_map_boundary(
+    await record_observed_map_connection(
         button=button,
         previous=previous,
         result=result,

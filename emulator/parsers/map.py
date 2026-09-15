@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from common.enums import FACING_OFFSETS, FacingDirection, MapId, Tileset
+from common.enums import FACING_OFFSETS, AsciiTile, FacingDirection, MapId, Tileset
 from common.schemas import Coords
 from emulator.parsers.map_collision import read_map_collision_tile
 
@@ -61,37 +61,18 @@ class MapConnection:
         return self.collision_tile_pairs[source_coordinate - self.source_coordinate_start]
 
 
-class SpinnerTileIds(BaseModel):
-    """The tiles that are used for the spinner.
-
-    These are the flattened 4-tile sequences in the order
-    [top-left, top-right, bottom-left, bottom-right]
-    """
-
-    up: tuple[int, int, int, int]
-    down: tuple[int, int, int, int]
-    left: tuple[int, int, int, int]
-    right: tuple[int, int, int, int]
-    stop: tuple[int, int, int, int]
-
-
 class Map(BaseModel):
     """The state of the current map."""
 
     id: MapId
     height: int
     width: int
-    grass_tile: int | None
     water_tiles: frozenset[int]
-    talk_over_tiles: frozenset[int]
+    background_tile_types: dict[int, AsciiTile]
+    background_block_types: dict[tuple[int, int, int, int], AsciiTile]
     ledge_tiles_left: list[tuple[int, int]]
     ledge_tiles_right: list[tuple[int, int]]
     ledge_tiles_down: list[tuple[int, int]]
-    spinner_tiles: SpinnerTileIds | None
-    cut_tree_tiles: tuple[int, int, int, int] | None
-    boulder_hole_tiles: tuple[int, int, int, int] | None
-    pressure_plate_tiles: tuple[int, int, int, int] | None
-    locked_door_blocks: tuple[tuple[int, int, int, int], ...]
     walkable_tiles: list[int]
     collision_pairs: list[frozenset[int]]
     boulder_blocked_tiles: frozenset[int]
@@ -195,7 +176,6 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         ledge_tiles_left = []
         ledge_tiles_right = []
         ledge_tiles_down = []
-        cut_tree_tiles = None
 
     water_tiles = _get_water_tiles(tileset_id)
     talk_over_tiles = frozenset(
@@ -203,10 +183,6 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         for tile in mem[_TALK_OVER_TILES_ADDRESS : _TALK_OVER_TILES_ADDRESS + _TALK_OVER_TILE_COUNT]
         if tile != _NO_TALK_OVER_TILE
     )
-    grass_tile = _GRASS_TILE_MAP.get(tileset_id)
-    cut_tree_tiles = _CUT_TREE_TILE_MAP.get(tileset_id)
-    boulder_hole_tiles = (0x2F, 0x2F, 0x22, 0x22) if tileset_id == Tileset.CAVERN else None
-    pressure_plate_tiles = (0x2B, 0x2C, 0x2D, 0x2E) if tileset_id == Tileset.CAVERN else None
     map_id = MapId(mem[0xD3AB])
 
     walkable_tile_ptr = mem[0xD57D] | (mem[0xD57E] << 8)
@@ -229,22 +205,21 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         id=map_id,
         height=height,
         width=width,
-        grass_tile=grass_tile,
         water_tiles=water_tiles,
-        talk_over_tiles=talk_over_tiles,
+        background_tile_types=_get_background_tile_types(
+            tileset_id,
+            water_tiles,
+            talk_over_tiles,
+        ),
+        background_block_types=_get_background_block_types(tileset_id, map_id),
         ledge_tiles_left=ledge_tiles_left,
         ledge_tiles_right=ledge_tiles_right,
         ledge_tiles_down=ledge_tiles_down,
-        cut_tree_tiles=cut_tree_tiles,
-        boulder_hole_tiles=boulder_hole_tiles,
-        pressure_plate_tiles=pressure_plate_tiles,
-        locked_door_blocks=_LOCKED_DOOR_BLOCK_MAP.get(map_id, ()),
         walkable_tiles=walkable_tiles,
         collision_pairs=collision_pairs,
         boulder_blocked_tiles=(
             _CAVERN_BOULDER_BLOCKED_TILES if tileset_id == Tileset.CAVERN else frozenset()
         ),
-        spinner_tiles=_SPINNER_TILE_MAP.get(tileset_id),
         north_connection=_parse_map_connection(
             mem,
             _NORTH_CONNECTION_ADDRESS,
@@ -282,17 +257,12 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
         id=MapId(mem[0xD3AB]),
         height=0,
         width=0,
-        grass_tile=None,
         water_tiles=frozenset(),
-        talk_over_tiles=frozenset(),
+        background_tile_types={},
+        background_block_types={},
         ledge_tiles_left=[],
         ledge_tiles_right=[],
         ledge_tiles_down=[],
-        spinner_tiles=None,
-        cut_tree_tiles=None,
-        boulder_hole_tiles=None,
-        pressure_plate_tiles=None,
-        locked_door_blocks=(),
         walkable_tiles=[],
         collision_pairs=[],
         boulder_blocked_tiles=frozenset(),
@@ -473,8 +443,13 @@ _COLLISION_PAIRS = {
 }
 
 _CUT_TREE_TILE_MAP = {
-    Tileset.OVERWORLD: (0x2D, 0x2E, 0x3D, 0x3E),
-    Tileset.GYM: (0x40, 0x41, 0x50, 0x51),
+    Tileset.OVERWORLD: 0x3D,
+    Tileset.GYM: 0x50,
+}
+
+_HOLE_TILE_MAP = {
+    Tileset.CAVERN: 0x22,
+    Tileset.FACILITY: 0x11,
 }
 
 _FACILITY_LOCKED_DOOR_BLOCKS = (
@@ -494,19 +469,50 @@ _LOCKED_DOOR_BLOCK_MAP = {
     MapId.SILPH_CO_11F: ((0x5D, 0x5D, 0x5E, 0x5E),),
 }
 
-_SPINNER_TILE_MAP = {
-    Tileset.FACILITY: SpinnerTileIds(
-        up=(0x21, 0x31, 0x21, 0x31),
-        down=(0x20, 0x30, 0x20, 0x30),
-        left=(0x21, 0x21, 0x20, 0x20),
-        right=(0x31, 0x31, 0x30, 0x30),
-        stop=(0x5E, 0x5E, 0x5E, 0x5E),
-    ),
-    Tileset.GYM: SpinnerTileIds(
-        up=(0x3C, 0x3D, 0x3C, 0x3D),
-        down=(0x4C, 0x4D, 0x4C, 0x4D),
-        left=(0x3C, 0x3C, 0x4C, 0x4C),
-        right=(0x3D, 0x3D, 0x4D, 0x4D),
-        stop=(0x3F, 0x3F, 0x3F, 0x3F),
-    ),
+_PRESSURE_PLATE_BLOCK = (0x2B, 0x2C, 0x2D, 0x2E)
+
+_SPINNER_BLOCK_MAP = {
+    Tileset.FACILITY: {
+        (0x21, 0x31, 0x21, 0x31): AsciiTile.SPINNER_UP,
+        (0x20, 0x30, 0x20, 0x30): AsciiTile.SPINNER_DOWN,
+        (0x21, 0x21, 0x20, 0x20): AsciiTile.SPINNER_LEFT,
+        (0x31, 0x31, 0x30, 0x30): AsciiTile.SPINNER_RIGHT,
+        (0x5E, 0x5E, 0x5E, 0x5E): AsciiTile.SPINNER_STOP,
+    },
+    Tileset.GYM: {
+        (0x3C, 0x3D, 0x3C, 0x3D): AsciiTile.SPINNER_UP,
+        (0x4C, 0x4D, 0x4C, 0x4D): AsciiTile.SPINNER_DOWN,
+        (0x3C, 0x3C, 0x4C, 0x4C): AsciiTile.SPINNER_LEFT,
+        (0x3D, 0x3D, 0x4D, 0x4D): AsciiTile.SPINNER_RIGHT,
+        (0x3F, 0x3F, 0x3F, 0x3F): AsciiTile.SPINNER_STOP,
+    },
 }
+
+
+def _get_background_tile_types(
+    tileset_id: Tileset,
+    water_tiles: frozenset[int],
+    talk_over_tiles: frozenset[int],
+) -> dict[int, AsciiTile]:
+    """Return terrain types identified by the ROM's standing collision tile."""
+    tile_types = dict.fromkeys(talk_over_tiles, AsciiTile.COUNTER)
+    if cut_tree_tile := _CUT_TREE_TILE_MAP.get(tileset_id):
+        tile_types[cut_tree_tile] = AsciiTile.CUT_TREE
+    if hole_tile := _HOLE_TILE_MAP.get(tileset_id):
+        tile_types[hole_tile] = AsciiTile.BOULDER_HOLE
+    if grass_tile := _GRASS_TILE_MAP.get(tileset_id):
+        tile_types[grass_tile] = AsciiTile.GRASS
+    tile_types.update(dict.fromkeys(water_tiles, AsciiTile.WATER))
+    return tile_types
+
+
+def _get_background_block_types(
+    tileset_id: Tileset,
+    map_id: MapId,
+) -> dict[tuple[int, int, int, int], AsciiTile]:
+    """Return terrain types identified by their full rendered block."""
+    block_types = dict(_SPINNER_BLOCK_MAP.get(tileset_id, {}))
+    block_types.update(dict.fromkeys(_LOCKED_DOOR_BLOCK_MAP.get(map_id, ()), AsciiTile.LOCKED_DOOR))
+    if tileset_id == Tileset.CAVERN:
+        block_types[_PRESSURE_PLATE_BLOCK] = AsciiTile.PRESSURE_PLATE
+    return block_types

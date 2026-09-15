@@ -11,7 +11,7 @@ from agent.overworld.tools.check_connection.service import (
     get_connection_component,
     group_remembered_warps,
 )
-from common.enums import FacingDirection, MapId, WarpActivation
+from common.enums import MapId, WarpActivation
 from common.schemas import Coords
 from database.map_boundary_memory.schemas import MapBoundaryMemoryRead
 from database.map_memory.schemas import MapMemoryRead
@@ -77,14 +77,14 @@ def _warp(
 
 
 def _boundary(
-    direction: FacingDirection,
+    activation: WarpActivation,
     row: int,
     col: int,
     destination_map_id: MapId,
 ) -> MapBoundaryMemoryRead:
     return MapBoundaryMemoryRead(
         map_id=MapId.MT_MOON_B1F,
-        direction=direction,
+        activation=activation,
         row=row,
         col=col,
         destination_map_id=destination_map_id,
@@ -168,15 +168,15 @@ async def test_check_boundary_preserves_pairs_and_distinguishes_unknown_destinat
         blockages={},
     )
     source_boundaries = [
-        _boundary(FacingDirection.DOWN, 4, col, destination_map_id).model_copy(
+        _boundary(WarpActivation.DOWN, 4, col, destination_map_id).model_copy(
             update={"destination_row": 1, "destination_col": col}
         )
         for col in (1, 3)
     ]
-    return_boundary = _boundary(FacingDirection.UP, 1, 1, source_map_id).model_copy(
+    return_boundary = _boundary(WarpActivation.UP, 1, 1, source_map_id).model_copy(
         update={"map_id": destination_map_id}
     )
-    onward_boundary = _boundary(FacingDirection.DOWN, 2, 2, MapId.ROUTE_4).model_copy(
+    onward_boundary = _boundary(WarpActivation.DOWN, 2, 2, MapId.ROUTE_4).model_copy(
         update={"map_id": destination_map_id, "destination_row": 7, "destination_col": 8}
     )
     warps = {
@@ -222,6 +222,41 @@ async def test_check_boundary_preserves_pairs_and_distinguishes_unknown_destinat
         False,
         False,
     )
+
+
+@pytest.mark.unit
+async def test_check_connection_keeps_separate_holes_distinct() -> None:
+    """Do not combine independent holes merely because they lead to the same map."""
+    source_map_id = MapId.POKEMON_MANSION_3F
+    destination_map_id = MapId.POKEMON_MANSION_2F
+    destination_map = MapMemoryRead(
+        map_id=destination_map_id,
+        terrain="▓▓▓\n▓∙▓\n▓▓▓",
+        blockages={},
+    )
+    holes = [
+        _boundary(WarpActivation.STEP_ON, 4, col, destination_map_id).model_copy(
+            update={
+                "map_id": source_map_id,
+                "destination_row": 1,
+                "destination_col": 1,
+            }
+        )
+        for col in (5, 8)
+    ]
+    warps = {source_map_id: [], destination_map_id: []}
+
+    with _connection_memory(destination_map, warps, {source_map_id: holes}):
+        results = await check_connection(
+            map_name=source_map_id.name,
+            coordinates=Coords(row=4, col=5),
+            hm_tiles=[],
+        )
+
+    assert isinstance(results, list)
+    assert len(results) == 1
+    assert results[0].connection.source_coords == (Coords(row=4, col=5),)
+    assert results[0].connection.destination_coords == (Coords(row=1, col=1),)
 
 
 @pytest.mark.unit
@@ -281,16 +316,16 @@ def test_connection_check_lists_only_connections_in_the_arrival_component(
     connected = _warp(1, 1, 3, MapId.MT_MOON_B2F, 3)
     disconnected = _warp(2, 3, 3, MapId.MT_MOON_B2F, 1)
     connected_boundaries = [
-        _boundary(FacingDirection.UP, row, col, MapId.MT_MOON_1F) for row, col in ((1, 2), (2, 3))
+        _boundary(WarpActivation.UP, row, col, MapId.MT_MOON_1F) for row, col in ((1, 2), (2, 3))
     ]
-    disconnected_boundary = _boundary(FacingDirection.DOWN, 3, 2, MapId.MT_MOON_B2F)
+    disconnected_boundary = _boundary(WarpActivation.DOWN, 3, 2, MapId.MT_MOON_B2F)
     map_memory = MapMemoryRead(
         map_id=MapId.MT_MOON_B1F,
         terrain=f"{top_row}\n▓∙∙∙▓\n▓▓▓▓▓\n▓∙∙∙▓\n▓▓▓▓▓",
         blockages={},
     )
 
-    groups, boundary_groups, has_unexplored_terrain = get_connection_component(
+    component = get_connection_component(
         arrival_coords=Coords(row=arrival.row, col=arrival.col),
         warp_groups=group_remembered_warps([arrival, connected, disconnected]),
         boundaries=[*connected_boundaries, disconnected_boundary],
@@ -298,11 +333,15 @@ def test_connection_check_lists_only_connections_in_the_arrival_component(
         hm_tiles=[],
     )
 
-    assert tuple(tuple(warp.warp_id for warp in group) for group in groups) == ((0,), (1,))
+    assert tuple(tuple(warp.warp_id for warp in group) for group in component.warp_groups) == (
+        (0,),
+        (1,),
+    )
     assert tuple(
-        tuple((boundary.row, boundary.col) for boundary in group) for group in boundary_groups
+        tuple((boundary.row, boundary.col) for boundary in group)
+        for group in component.boundary_groups
     ) == (((1, 2), (2, 3)),)
-    assert has_unexplored_terrain is expected_unexplored_terrain
+    assert component.has_unexplored_terrain is expected_unexplored_terrain
 
 
 @pytest.mark.unit
@@ -361,7 +400,7 @@ def test_connection_check_recognizes_unresolved_spinner_exploration(
         blockages={},
     )
 
-    _, _, has_unexplored_terrain = get_connection_component(
+    component = get_connection_component(
         arrival_coords=Coords(row=1, col=1),
         warp_groups=(),
         boundaries=[],
@@ -369,4 +408,4 @@ def test_connection_check_recognizes_unresolved_spinner_exploration(
         hm_tiles=[],
     )
 
-    assert has_unexplored_terrain is expected_unexplored_terrain
+    assert component.has_unexplored_terrain is expected_unexplored_terrain

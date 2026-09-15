@@ -27,6 +27,7 @@ def build_use_item_tool(context: AgentContext) -> Tool[AgentContext]:
         overworld. It is useful for:
 
         - Using helpful items like REPEL, ESCAPE ROPE, evolution stones, etc.
+        - Mounting or dismounting the BICYCLE.
         - Teaching a TM or HM to a Pokemon.
         - Using a healing item like a POTION or a REVIVE. This is still allowed
           outside of battle in hard mode.

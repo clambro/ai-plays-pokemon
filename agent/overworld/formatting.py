@@ -8,11 +8,12 @@ from agent.overworld.tools.check_connection.schemas import ConnectionCheckError
 from common.constants import CONNECTION_CHECK_LABEL, PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpActivation
 from common.schemas import Coords
+from emulator.text_events import map_block_entity_id
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from agent.overworld.map_view import CurrentMapView, ObjectInteractionPosition
+    from agent.overworld.map_view import CurrentMapView, InteractionPosition, LockedDoor
     from agent.overworld.tools.check_connection.schemas import (
         ConnectionCheckResult,
         ResolvedConnection,
@@ -122,25 +123,46 @@ def _format_overworld_sign(
 def _format_overworld_object(
     obj: StaticObject,
     map_id: MapId,
-    positions: Sequence[ObjectInteractionPosition],
+    positions: Sequence[InteractionPosition],
     interaction: MapEntityInteractionMemory | None,
 ) -> str:
     """Format a known stationary object for the agent."""
-    output = f"object_{map_id}_{obj.index} at {obj.coords}."
+    output = f"object_{map_id}_{obj.index} at {obj.coords}." + _format_interaction_positions(
+        positions
+    )
+    if interaction is None:
+        return output + " You have not interacted with this object yet; it may be worth trying."
+    return output + _format_map_entity_interaction(interaction)
+
+
+def _format_interaction_positions(positions: Sequence[InteractionPosition]) -> str:
+    """Describe how to use a reachable stationary interaction."""
     if len(positions) == 1:
         position = positions[0]
-        output += (
+        return (
             f" To interact with it, stand at {position.coords}, face"
             f" {position.direction.value}, and press the action button."
         )
-    else:
-        choices = "; ".join(
-            f"{position.coords} facing {position.direction.value}" for position in positions
-        )
-        output += (
-            f" To interact with it, use one of these positions: {choices}; then press the action"
-            " button."
-        )
+    choices = "; ".join(
+        f"{position.coords} facing {position.direction.value}" for position in positions
+    )
+    return (
+        f" To interact with it, use one of these positions: {choices}; then press the action"
+        " button."
+    )
+
+
+def _format_locked_door(
+    door: LockedDoor,
+    map_id: MapId,
+    interaction: MapEntityInteractionMemory | None,
+) -> str:
+    """Format a reachable locked door for the agent."""
+    door_id = f"object_{map_id}_door_{door.block_coords.row}_{door.block_coords.col}"
+    output = (
+        f"{door_id} at {_format_coords(door.tile_coords)}. This object is a locked door."
+        + _format_interaction_positions(door.interaction_positions)
+    )
     if interaction is None:
         return output + " You have not interacted with this object yet; it may be worth trying."
     return output + _format_map_entity_interaction(interaction)
@@ -435,10 +457,14 @@ def format_connection_sections(
             )
 
     for group in group_map_boundaries(current_map.known_map_boundaries):
-        if any(_boundary_coords(boundary) in map_view.visible_coords for boundary in group):
+        is_visible = any(
+            _boundary_coords(boundary) in map_view.visible_coords for boundary in group
+        )
+        if is_visible and group[0].activation != WarpActivation.STEP_ON:
             continue
         boundary = group[0]
-        other_lines.append(
+        lines = current_lines if is_visible else other_lines
+        lines.append(
             "- "
             + format_connection(
                 source_map_id=current_map.id,
@@ -500,7 +526,7 @@ def format_sign_notes(map_view: CurrentMapView, game_state: GameState) -> str:
 
 
 def format_object_notes(map_view: CurrentMapView, game_state: GameState) -> str:
-    """Format known stationary objects in index order."""
+    """Format reachable stationary objects."""
     current_map = map_view.overworld_map
     objects = [
         game_state.objects[entity_id]
@@ -509,9 +535,7 @@ def format_object_notes(map_view: CurrentMapView, game_state: GameState) -> str:
         and game_state.objects[entity_id].coords in map_view.visible_coords
         and entity_id in map_view.object_interaction_positions
     ]
-    if not objects:
-        return "No objects discovered."
-    return "\n".join(
+    lines = [
         "- "
         + _format_overworld_object(
             obj,
@@ -520,7 +544,17 @@ def format_object_notes(map_view: CurrentMapView, game_state: GameState) -> str:
             current_map.object_interactions.get(obj.index),
         )
         for obj in objects
+    ]
+    lines.extend(
+        "- "
+        + _format_locked_door(
+            door,
+            current_map.id,
+            current_map.locked_door_interactions.get(map_block_entity_id(door.block_coords)),
+        )
+        for door in map_view.locked_doors
     )
+    return "\n".join(lines) or "No objects discovered."
 
 
 def format_connection_notes(map_view: CurrentMapView, map_state: Map) -> str:

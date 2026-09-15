@@ -37,6 +37,15 @@ class ResolvedConnection:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class ConnectionComponent:
+    """Remembered map features reachable from one arrival point."""
+
+    warp_groups: WarpGroups
+    boundary_groups: tuple[tuple[MapBoundaryMemoryRead, ...], ...]
+    has_unexplored_terrain: bool
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class ConnectionCheckResult:
     """The checked connection and other connections reachable from its arrival point."""
 

@@ -2,10 +2,13 @@
 
 from typing import TYPE_CHECKING
 
+from common.enums import WarpActivation
+from database.map_boundary_memory.schemas import MapBoundaryGroupKey
+
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from common.enums import FacingDirection, MapId, WarpActivation
+    from common.enums import MapId
     from common.schemas import Coords
     from database.map_boundary_memory.schemas import MapBoundaryMemoryRead
 
@@ -56,16 +59,20 @@ def group_contiguous_warps(
 def group_map_boundaries(
     boundaries: Sequence[MapBoundaryMemoryRead],
 ) -> tuple[tuple[MapBoundaryMemoryRead, ...], ...]:
-    """Group coordinate pairs by source map, direction, and destination map.
+    """Group boundary strips while keeping step-on connections independent.
 
     Preserve group encounter order and sort each group's records by source coordinates.
     """
-    grouped: dict[
-        tuple[MapId, FacingDirection, MapId],
-        list[MapBoundaryMemoryRead],
-    ] = {}
+    grouped: dict[MapBoundaryGroupKey, list[MapBoundaryMemoryRead]] = {}
     for boundary in boundaries:
-        key = (boundary.map_id, boundary.direction, boundary.destination_map_id)
+        is_step_on = boundary.activation == WarpActivation.STEP_ON
+        key = MapBoundaryGroupKey(
+            map_id=boundary.map_id,
+            activation=boundary.activation,
+            destination_map_id=boundary.destination_map_id,
+            source_row=boundary.row if is_step_on else None,
+            source_col=boundary.col if is_step_on else None,
+        )
         grouped.setdefault(key, []).append(boundary)
     return tuple(
         tuple(sorted(group, key=lambda boundary: (boundary.row, boundary.col)))
