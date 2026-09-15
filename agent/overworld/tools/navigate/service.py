@@ -161,8 +161,6 @@ def _get_target_error(
     routing_tiles: np.ndarray,
 ) -> str | None:
     """Return why the target coordinates are invalid, if applicable."""
-    if game_state.player.is_biking:
-        return "I can't navigate while riding a bike."
     if (
         coords.row < 0
         or coords.col < 0

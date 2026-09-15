@@ -161,7 +161,6 @@ Use navigation for ordinary movement within the current map. Use press_buttons f
 
 Briefly explain your reasoning in first person as ordinary response text, then use exactly one available tool to act. Be sure to consider all the tools at your disposal. Every response must include one tool call. A fresh observation will be returned after each tool executes.
 
-{biking_warning}
 """.strip()
 
 
@@ -220,22 +219,6 @@ def build_overworld_decision_prompt(
 ) -> str:
     """Build the initial prompt for one overworld-agent run."""
     current_map = map_view.overworld_map
-    if game_state.player.is_biking:
-        unavailable = "Navigation data is unavailable while riding a bike."
-        exploration_candidates = unavailable
-        map_boundaries = unavailable
-        biking_warning = "You have lost access to the navigation tool because you are riding a bike. If you would like to use the navigation tool, you must first dismount your bike. If you are unable to dismount your bike because you are on Cycling Road, then you must use the button tool to move around the map."
-    else:
-        exploration_candidates = format_exploration_candidates(
-            map_view.exploration_candidates,
-            current_map,
-        )
-        map_boundaries = format_map_boundary_tiles(
-            map_view.boundary_tiles,
-            game_state.map,
-        )
-        biking_warning = ""
-
     sections = (
         format_rolling_memory(context.state.rolling_memory),
         format_goals(context.state.goals),
@@ -247,7 +230,12 @@ def build_overworld_decision_prompt(
     )
     return OVERWORLD_DECISION_PROMPT.format(
         state="\n\n".join(section for section in sections if section),
-        exploration_candidates=exploration_candidates,
-        map_boundaries=map_boundaries,
-        biking_warning=biking_warning,
+        exploration_candidates=format_exploration_candidates(
+            map_view.exploration_candidates,
+            current_map,
+        ),
+        map_boundaries=format_map_boundary_tiles(
+            map_view.boundary_tiles,
+            game_state.map,
+        ),
     )

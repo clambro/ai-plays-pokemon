@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from common.enums import Button
+from common.enums import Button, MapId
 from emulator.control_events import (
     ControlBoundary,
     ControlHandoff,
@@ -27,6 +27,7 @@ class _HookName(StrEnum):
     """Executable boundaries used by control coordination."""
 
     OVERWORLD_INPUT = auto()
+    CYCLING_ROAD_INPUT = auto()
     QUANTITY_READY = auto()
     BESPOKE_INTERFACE_READY = auto()
     LOW_SENSITIVITY_INPUT_ACCEPTED = auto()
@@ -75,6 +76,12 @@ _HOOKS = (
         bank=0x00,
         address=0x0286,  # OverworldLoopLessDelay.notSimulating
         signature=bytes.fromhex("f0 b3 cb 5f 28 06"),
+    ),
+    RomHook(
+        name=_HookName.CYCLING_ROAD_INPUT,
+        bank=0x00,
+        address=0x0C88,  # ForceBikeDown
+        signature=bytes.fromhex("fa 32 d7 cb 5f c0"),
     ),
     RomHook(
         name=_HookName.QUANTITY_READY,
@@ -203,12 +210,19 @@ _JOY_PRESSED_ADDRESS = 0xFFB3
 _JOY_HELD_ADDRESS = 0xFFB4
 _MENU_INPUT_ADDRESS = 0xFFB5
 _OVERWORLD_FLAGS_ADDRESS = 0xCD60
+_CURRENT_MAP_ADDRESS = 0xD3AB
+_WALK_BIKE_SURF_STATE_ADDRESS = 0xD6FF
+_OVERWORLD_CONTROL_FLAGS_ADDRESS = 0xD730
+_TRAINER_FLAGS_ADDRESS = 0xD733
 
 _SUPPRESSED_OR_SIMULATED_INPUT = (1 << 0) | (1 << 5) | (1 << 7)
 _DOOR_LEDGE_OR_SPINNER_MOVEMENT = (1 << 1) | (1 << 6) | (1 << 7)
 _BOULDER_MOVING = 1 << 1
 _RENDER_FENCE_FRAMES = 3
 _CONTROL_OPERATION_TIMEOUT_SECONDS = 60
+_BIKING_STATE = 1
+_SIMULATED_INPUT = 1 << 7
+_TRAINER_CHALLENGE = 1 << 3
 
 _ACCEPTED_INPUT_HOOKS = {
     _HookName.LOW_SENSITIVITY_INPUT_ACCEPTED: (
@@ -256,6 +270,7 @@ class RomControlHooks:
         self._current_domain = _ControlDomain.IMMEDIATE
         self._current_boundary: ControlBoundary | None = None
         self._step_completed_this_tick = False
+        self._cycling_road_brake_injected = False
 
     def install(self) -> None:
         """Validate the required ROM layout and register the control hooks."""
@@ -375,9 +390,13 @@ class RomControlHooks:
             return
         if pending is None or not pending.accepted:
             raise RuntimeError("Completed control operation was not armed.")
-        if (pending.button is None and self._pyboy.memory[_JOY_HELD_ADDRESS] != 0) or (
-            pending.button is not None
-            and self._pyboy.memory[_JOY_HELD_ADDRESS] & pending.button_mask
+        held = (
+            self._effective_overworld_held_buttons()
+            if self._completed_boundary == ControlBoundary.OVERWORLD_READY
+            else self._pyboy.memory[_JOY_HELD_ADDRESS]
+        )
+        if (pending.button is None and held != 0) or (
+            pending.button is not None and held & pending.button_mask
         ):
             return
         self._results.publish(
@@ -441,8 +460,24 @@ class RomControlHooks:
             self._request_handoff_for_accepted_button()
         elif name == _HookName.OVERWORLD_INPUT:
             self._observe_overworld_input()
+        elif name == _HookName.CYCLING_ROAD_INPUT:
+            self._apply_cycling_road_brake()
         elif name == _HookName.PLAYER_STEP_COMPLETED:
             self._observe_player_step_completed()
+
+    def _apply_cycling_road_brake(self) -> None:
+        """Prevent Route 17 from inventing a downhill input while externally idle."""
+        mem = self._pyboy.memory
+        self._cycling_road_brake_injected = False
+        if (
+            mem[_CURRENT_MAP_ADDRESS] == MapId.ROUTE_17
+            and mem[_WALK_BIKE_SURF_STATE_ADDRESS] == _BIKING_STATE
+            and not mem[_OVERWORLD_CONTROL_FLAGS_ADDRESS] & _SIMULATED_INPUT
+            and not mem[_TRAINER_FLAGS_ADDRESS] & _TRAINER_CHALLENGE
+            and mem[_JOY_HELD_ADDRESS] == 0
+        ):
+            mem[_JOY_HELD_ADDRESS] = _BUTTON_MASKS[Button.B]
+            self._cycling_road_brake_injected = True
 
     def _observe_overworld_input(self) -> None:
         overworld_ready = self._is_overworld_ready()
@@ -450,7 +485,7 @@ class RomControlHooks:
             self._current_domain = _ControlDomain.OVERWORLD
 
         pending = self._pending
-        held = self._pyboy.memory[_JOY_HELD_ADDRESS]
+        held = self._effective_overworld_held_buttons()
         pressed = self._pyboy.memory[_JOY_PRESSED_ADDRESS]
         if pending is None:
             if overworld_ready and held == 0:
@@ -470,6 +505,13 @@ class RomControlHooks:
 
         if overworld_ready and not held & pending.button_mask:
             self._observe_ready_boundary(ControlBoundary.OVERWORLD_READY)
+
+    def _effective_overworld_held_buttons(self) -> int:
+        """Return held input with an injected Cycling Road brake treated as idle."""
+        held = self._pyboy.memory[_JOY_HELD_ADDRESS]
+        if self._cycling_road_brake_injected:
+            held &= ~_BUTTON_MASKS[Button.B]
+        return held
 
     def _observe_accepted_input(self, domain: _ControlDomain, input_address: int) -> None:
         """Record that the active input engine processed the requested button."""

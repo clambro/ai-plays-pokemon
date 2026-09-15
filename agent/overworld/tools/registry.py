@@ -47,11 +47,10 @@ def build_overworld_toolset(
     current_map = map_view.overworld_map
     tools: list[Tool[AgentContext]] = [
         build_check_connection_tool(context, game_state),
+        build_navigation_tool(context, current_map),
         build_press_buttons_tool(context),
         build_set_goals_tool(context),
     ]
-    if not game_state.player.is_biking:
-        tools.append(build_navigation_tool(context, current_map))
     if game_state.player.has_pokedex:
         if len(game_state.party) > 1:
             tools.append(build_swap_first_pokemon_tool(context))
