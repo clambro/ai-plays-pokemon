@@ -210,8 +210,7 @@ class GameState:
             # In engine/battle/wild_encounters.asm, grass tiles only check the bottom left.
             return AsciiTile.GRASS
 
-        flat_block = tuple(block.flatten().tolist())
-        if special_type := self._get_special_background_block_type(flat_block):
+        if special_type := self._get_special_background_block_type(block):
             return special_type
         if block[1, 0] in self.map.talk_over_tiles:
             return AsciiTile.COUNTER
@@ -220,12 +219,15 @@ class GameState:
 
     def _get_special_background_block_type(
         self,
-        flat_block: tuple[int, int, int, int],
+        block: np.ndarray,
     ) -> AsciiTile | None:
-        """Classify a block represented by a special four-tile pattern."""
+        """Classify a block using the ROM's special terrain rules."""
+        if self.map.hole_tile is not None and block[1, 0] == self.map.hole_tile:
+            return AsciiTile.BOULDER_HOLE
+
+        flat_block = tuple(block.flatten().tolist())
         special_blocks = [
             (self.map.cut_tree_tiles, AsciiTile.CUT_TREE),
-            (self.map.boulder_hole_tiles, AsciiTile.BOULDER_HOLE),
             (self.map.pressure_plate_tiles, AsciiTile.PRESSURE_PLATE),
         ]
         special_blocks.extend(

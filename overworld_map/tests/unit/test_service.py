@@ -23,7 +23,7 @@ from emulator.parsers.map import MapConnection
 from overworld_map.schemas import OverworldMap
 from overworld_map.service import (
     get_overworld_map,
-    record_observed_map_boundary,
+    record_observed_map_connection,
     update_overworld_map,
 )
 from overworld_map.views import get_composed_map_tiles, get_navigation_tiles
@@ -255,6 +255,8 @@ async def test_direct_cardinal_crossing_remembers_full_connection() -> None:
         SimpleNamespace(
             map=source_map,
             player=previous_player,
+            warps={},
+            screen=SimpleNamespace(to_screen_coords=MagicMock(return_value=None)),
             get_hm_tiles=MagicMock(return_value=[]),
         ),
     )
@@ -270,7 +272,7 @@ async def test_direct_cardinal_crossing_remembers_full_connection() -> None:
         "overworld_map.service.remember_map_boundaries",
         new_callable=AsyncMock,
     ) as persist_boundaries:
-        await record_observed_map_boundary(
+        await record_observed_map_connection(
             button=Button.RIGHT,
             previous=previous,
             result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),
@@ -278,7 +280,7 @@ async def test_direct_cardinal_crossing_remembers_full_connection() -> None:
         )
 
         previous_player.coords = Coords(row=2, col=3)
-        await record_observed_map_boundary(
+        await record_observed_map_connection(
             button=Button.RIGHT,
             previous=previous,
             result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),
@@ -291,7 +293,7 @@ async def test_direct_cardinal_crossing_remembers_full_connection() -> None:
     assert {
         (
             boundary.map_id,
-            boundary.direction,
+            boundary.activation,
             boundary.row,
             boundary.col,
             boundary.destination_map_id,
@@ -300,5 +302,59 @@ async def test_direct_cardinal_crossing_remembers_full_connection() -> None:
         )
         for boundary in boundaries
     } == {
-        (MapId.ROUTE_3, FacingDirection.RIGHT, row, 4, MapId.ROUTE_4, row, 0) for row in range(1, 4)
+        (MapId.ROUTE_3, WarpActivation.RIGHT, row, 4, MapId.ROUTE_4, row, 0) for row in range(1, 4)
+    }
+
+
+@pytest.mark.unit
+async def test_stepping_onto_hole_remembers_one_way_connection() -> None:
+    """Persist the observed fall without inventing a reverse connection."""
+    previous = cast(
+        "GameState",
+        SimpleNamespace(
+            map=SimpleNamespace(
+                id=MapId.POKEMON_MANSION_3F,
+                north_connection=None,
+                south_connection=None,
+                east_connection=None,
+                west_connection=None,
+            ),
+            player=SimpleNamespace(coords=Coords(row=4, col=4)),
+            warps={},
+            screen=SimpleNamespace(to_screen_coords=MagicMock(return_value=Coords(row=0, col=0))),
+            get_ascii_screen_terrain=MagicMock(
+                return_value=SimpleNamespace(screen=[[AsciiTile.BOULDER_HOLE]])
+            ),
+        ),
+    )
+    current = cast(
+        "GameState",
+        SimpleNamespace(
+            map=SimpleNamespace(id=MapId.POKEMON_MANSION_2F),
+            player=SimpleNamespace(coords=Coords(row=7, col=8)),
+        ),
+    )
+
+    with patch(
+        "overworld_map.service.remember_map_boundaries",
+        new_callable=AsyncMock,
+    ) as persist_boundaries:
+        await record_observed_map_connection(
+            button=Button.RIGHT,
+            previous=previous,
+            result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),
+            current=current,
+        )
+
+    persist_boundaries.assert_awaited_once()
+    assert persist_boundaries.await_args is not None
+    (connection,) = persist_boundaries.await_args.args[0]
+    assert connection.model_dump() == {
+        "map_id": MapId.POKEMON_MANSION_3F,
+        "activation": WarpActivation.STEP_ON,
+        "row": 4,
+        "col": 5,
+        "destination_map_id": MapId.POKEMON_MANSION_2F,
+        "destination_row": 7,
+        "destination_col": 8,
     }

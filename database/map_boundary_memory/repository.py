@@ -1,4 +1,4 @@
-"""Persistence operations for observed map-boundary memory."""
+"""Persistence operations for observed coordinate-based map connections."""
 
 from typing import TYPE_CHECKING
 
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 async def get_map_boundary_memories_for_map(map_id: MapId) -> list[MapBoundaryMemoryRead]:
-    """Get all known coordinate mappings for observed boundaries on a map."""
+    """Get all known coordinate-based connections on a map."""
     async with db_sessionmaker() as session:
         query = select(MapBoundaryMemoryDBModel).where(MapBoundaryMemoryDBModel.map_id == map_id)
         result = await session.execute(query)
@@ -30,7 +30,7 @@ async def get_map_boundary_memories_for_map(map_id: MapId) -> list[MapBoundaryMe
 async def remember_map_boundaries(
     boundaries: Sequence[MapBoundaryMemoryCreateUpdate],
 ) -> None:
-    """Create or refresh the known coordinate mapping for a map boundary."""
+    """Create or refresh known coordinate-based map connections."""
     if not boundaries:
         return
 
@@ -38,7 +38,7 @@ async def remember_map_boundaries(
         for boundary in boundaries:
             db_obj = await session.get(
                 MapBoundaryMemoryDBModel,
-                (boundary.map_id, boundary.direction, boundary.row, boundary.col),
+                (boundary.map_id, boundary.activation, boundary.row, boundary.col),
             )
             if db_obj is None:
                 session.add(MapBoundaryMemoryDBModel(**boundary.model_dump()))

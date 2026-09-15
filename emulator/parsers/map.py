@@ -89,7 +89,7 @@ class Map(BaseModel):
     ledge_tiles_down: list[tuple[int, int]]
     spinner_tiles: SpinnerTileIds | None
     cut_tree_tiles: tuple[int, int, int, int] | None
-    boulder_hole_tiles: tuple[int, int, int, int] | None
+    hole_tile: int | None
     pressure_plate_tiles: tuple[int, int, int, int] | None
     locked_door_blocks: tuple[tuple[int, int, int, int], ...]
     walkable_tiles: list[int]
@@ -205,7 +205,10 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
     )
     grass_tile = _GRASS_TILE_MAP.get(tileset_id)
     cut_tree_tiles = _CUT_TREE_TILE_MAP.get(tileset_id)
-    boulder_hole_tiles = (0x2F, 0x2F, 0x22, 0x22) if tileset_id == Tileset.CAVERN else None
+    hole_tile = {
+        Tileset.CAVERN: 0x22,
+        Tileset.FACILITY: 0x11,
+    }.get(tileset_id)
     pressure_plate_tiles = (0x2B, 0x2C, 0x2D, 0x2E) if tileset_id == Tileset.CAVERN else None
     map_id = MapId(mem[0xD3AB])
 
@@ -236,7 +239,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
         ledge_tiles_right=ledge_tiles_right,
         ledge_tiles_down=ledge_tiles_down,
         cut_tree_tiles=cut_tree_tiles,
-        boulder_hole_tiles=boulder_hole_tiles,
+        hole_tile=hole_tile,
         pressure_plate_tiles=pressure_plate_tiles,
         locked_door_blocks=_LOCKED_DOOR_BLOCK_MAP.get(map_id, ()),
         walkable_tiles=walkable_tiles,
@@ -290,7 +293,7 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
         ledge_tiles_down=[],
         spinner_tiles=None,
         cut_tree_tiles=None,
-        boulder_hole_tiles=None,
+        hole_tile=None,
         pressure_plate_tiles=None,
         locked_door_blocks=(),
         walkable_tiles=[],

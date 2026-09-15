@@ -69,7 +69,7 @@ class MapEntityType(Enum):
 
 
 class WarpActivation(StrEnum):
-    """A working input for activating a normal warp."""
+    """How a map connection is activated."""
 
     STEP_ON = "STEP_ON"
     UP = "UP"

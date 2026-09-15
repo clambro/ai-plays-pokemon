@@ -457,10 +457,14 @@ def format_connection_sections(
             )
 
     for group in group_map_boundaries(current_map.known_map_boundaries):
-        if any(_boundary_coords(boundary) in map_view.visible_coords for boundary in group):
+        is_visible = any(
+            _boundary_coords(boundary) in map_view.visible_coords for boundary in group
+        )
+        if is_visible and group[0].activation != WarpActivation.STEP_ON:
             continue
         boundary = group[0]
-        other_lines.append(
+        lines = current_lines if is_visible else other_lines
+        lines.append(
             "- "
             + format_connection(
                 source_map_id=current_map.id,
