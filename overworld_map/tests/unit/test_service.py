@@ -59,6 +59,7 @@ async def test_load_preserves_discovered_ids_without_live_records(
             (2, MapEntityType.SPRITE),
             (3, MapEntityType.SIGN),
             (4, MapEntityType.OBJECT),
+            (5, MapEntityType.LOCKED_DOOR),
         )
     ]
     warp_memory = WarpMemoryRead(
@@ -100,6 +101,8 @@ async def test_load_preserves_discovered_ids_without_live_records(
     assert current_map.sign_interactions[3].iteration == interaction_iteration
     assert current_map.object_interactions[4].text == interaction_text
     assert current_map.object_interactions[4].iteration == interaction_iteration
+    assert current_map.locked_door_interactions[5].text == interaction_text
+    assert current_map.locked_door_interactions[5].iteration == interaction_iteration
 
 
 @pytest.mark.unit
@@ -182,6 +185,7 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
         sign_interactions={},
         known_object_ids=set(),
         object_interactions={},
+        locked_door_interactions={},
         known_warp_ids=set(),
         warp_usage_iterations={},
         known_map_boundaries=(),

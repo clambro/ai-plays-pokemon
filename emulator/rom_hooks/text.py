@@ -4,6 +4,7 @@ from enum import StrEnum, auto
 from typing import TYPE_CHECKING
 
 from common.enums import MapEntityType, MapId
+from common.schemas import Coords
 from emulator.parsers.screen_text import INT_TO_CHAR_MAP
 from emulator.parsers.static_object import parse_static_objects
 from emulator.rom_hooks.core import RomHook, install_hooks
@@ -12,6 +13,7 @@ from emulator.text_events import (
     MapEntityInteractionTarget,
     TextEventJournal,
     TextEventKind,
+    map_block_entity_id,
 )
 
 if TYPE_CHECKING:
@@ -27,6 +29,7 @@ class _HookName(StrEnum):
     SIGN_INTERACTION = auto()
     OBJECT_INTERACTION = auto()
     OBJECT_INTERACTION_ENDED = auto()
+    LOCKED_DOOR_INTERACTION = auto()
     TEXT_PROCESSOR = auto()
     TEXT_COMMAND = auto()
     CONTINUE_WITHOUT_PAUSE = auto()
@@ -69,6 +72,12 @@ _HOOKS = (
         bank=0x00,
         address=0x3F1C,  # Returned from the matched hidden object's handler
         signature=bytes.fromhex("f0 eb 18 12 3e 35"),
+    ),
+    RomHook(
+        name=_HookName.LOCKED_DOOR_INTERACTION,
+        bank=0x14,
+        address=0x6780,  # PrintCardKeyText.cardKeyDoorInFrontOfPlayer
+        signature=bytes.fromhex("06 30 cd 0d 34 28"),
     ),
     RomHook(
         name=_HookName.TEXT_PROCESSOR,
@@ -168,6 +177,16 @@ _MAP_ID_ADDRESS = 0xD3AB  # wCurMap
 _SPRITE_COUNT_ADDRESS = 0xD52E  # wNumSprites
 _SPRITE_INDEX_OR_TEXT_ID_ADDRESS = 0xFF8C  # hSpriteIndexOrTextID
 _OBJECT_INDEX_ADDRESS = 0xCD3F  # wHiddenObjectIndex
+_PLAYER_Y_ADDRESS = 0xD3AE  # wYCoord
+_PLAYER_X_ADDRESS = 0xD3AF  # wXCoord
+_PLAYER_FACING_ADDRESS = 0xC109  # wSpritePlayerStateData1FacingDirection
+
+_FACING_OFFSETS = {
+    0x00: (1, 0),
+    0x04: (-1, 0),
+    0x08: (0, -1),
+    0x0C: (0, 1),
+}
 
 _TOP_BORDER_ROW = 12
 _TOP_TEXT_ROW = 14
@@ -199,6 +218,7 @@ class RomTextHooks:
         self._text_processor_depth = 0
         self._inside_wait = False
         self._object_interaction_started = False
+        self._locked_door_interaction_started = False
 
     def install(self) -> None:
         """Validate the required ROM layout and register every text hook."""
@@ -210,6 +230,7 @@ class RomTextHooks:
             _HookName.SIGN_INTERACTION: self._record_sign_interaction_start,
             _HookName.OBJECT_INTERACTION: self._record_object_interaction_start,
             _HookName.OBJECT_INTERACTION_ENDED: self._record_object_interaction_end,
+            _HookName.LOCKED_DOOR_INTERACTION: self._record_locked_door_interaction_start,
         }.get(name)
         if interaction_handler is not None:
             interaction_handler()
@@ -234,6 +255,7 @@ class RomTextHooks:
             case _HookName.WAIT_EXIT:
                 self._record_wait_exit()
             case _HookName.TEXT_DISPLAY_CLOSED:
+                self._locked_door_interaction_started = False
                 self._record(TextEventKind.INTERACTION_CLOSED)
             case _HookName.OVERWORLD_ENTERED:
                 self._record(TextEventKind.OVERWORLD_ENTERED)
@@ -292,6 +314,8 @@ class RomTextHooks:
 
     def _record_sprite_interaction_start(self) -> None:
         """Record when DisplayTextID is resolving a map-local sprite index."""
+        if self._locked_door_interaction_started:
+            return
         sprite_id = self._pyboy.memory[_SPRITE_INDEX_OR_TEXT_ID_ADDRESS]
         sprite_count = self._pyboy.memory[_SPRITE_COUNT_ADDRESS]
         if not 1 <= sprite_id <= sprite_count:
@@ -350,6 +374,31 @@ class RomTextHooks:
             return
         self._object_interaction_started = False
         self._record(TextEventKind.MAP_ENTITY_INTERACTION_ENDED)
+
+    def _record_locked_door_interaction_start(self) -> None:
+        """Record a locked door after the ROM recognizes it in front of the player."""
+        map_id = MapId(self._pyboy.memory[_MAP_ID_ADDRESS])
+        offset = _FACING_OFFSETS.get(self._pyboy.memory[_PLAYER_FACING_ADDRESS])
+        if map_id in {MapId.UNKNOWN, MapId.OUTSIDE} or offset is None:
+            return
+
+        target = (
+            Coords(
+                row=self._pyboy.memory[_PLAYER_Y_ADDRESS],
+                col=self._pyboy.memory[_PLAYER_X_ADDRESS],
+            )
+            + offset
+        )
+        block_coords = Coords(row=target.row // 2, col=target.col // 2)
+        self._locked_door_interaction_started = True
+        self._record(
+            TextEventKind.MAP_ENTITY_INTERACTION_STARTED,
+            interaction_target=MapEntityInteractionTarget(
+                map_id=map_id,
+                entity_type=MapEntityType.LOCKED_DOOR,
+                entity_id=map_block_entity_id(block_coords),
+            ),
+        )
 
     def _record(
         self,

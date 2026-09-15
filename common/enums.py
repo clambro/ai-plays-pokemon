@@ -65,6 +65,7 @@ class MapEntityType(Enum):
     SPRITE = auto()
     SIGN = auto()
     OBJECT = auto()
+    LOCKED_DOOR = auto()
 
 
 class WarpActivation(StrEnum):

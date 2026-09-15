@@ -80,6 +80,7 @@ DUMMY_MAP = OverworldMap(
     sign_interactions={},
     known_object_ids=set(),
     object_interactions={},
+    locked_door_interactions={},
     known_warp_ids=set(),
     warp_usage_iterations={},
     known_map_boundaries=(),

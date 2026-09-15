@@ -21,11 +21,20 @@ if TYPE_CHECKING:
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
-class ObjectInteractionPosition:
-    """A reachable position and facing direction for using one object."""
+class InteractionPosition:
+    """A reachable position and facing direction for using a map interaction."""
 
     coords: Coords
     direction: FacingDirection
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
+class LockedDoor:
+    """One reachable locked door represented by its ROM map block."""
+
+    block_coords: Coords
+    tile_coords: tuple[Coords, ...]
+    interaction_positions: tuple[InteractionPosition, ...]
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -37,7 +46,8 @@ class CurrentMapView:
     reachable_coords: frozenset[Coords]
     visible_coords: frozenset[Coords]
     counter_interactions: dict[int, tuple[Coords, ...]]
-    object_interaction_positions: dict[int, tuple[ObjectInteractionPosition, ...]]
+    object_interaction_positions: dict[int, tuple[InteractionPosition, ...]]
+    locked_doors: tuple[LockedDoor, ...]
     display_origin: Coords
     display_tiles: np.ndarray
     exploration_candidates: tuple[Coords, ...]
@@ -64,6 +74,7 @@ def build_current_map_view(
         overworld_map,
         game_state,
     )
+    locked_doors = _get_locked_doors(reachable_coords, overworld_map)
     visible_coords = _get_visible_coords(reachable_coords, routing_tiles) | frozenset(
         game_state.sprites[entity_id].coords for entity_id in counter_interactions
     )
@@ -101,6 +112,7 @@ def build_current_map_view(
         visible_coords=visible_coords,
         counter_interactions=counter_interactions,
         object_interaction_positions=object_interaction_positions,
+        locked_doors=locked_doors,
         display_origin=Coords(row=display_top, col=display_left),
         display_tiles=display_tiles,
         exploration_candidates=tuple(
@@ -146,31 +158,82 @@ def _get_object_interaction_positions(
     reachable_coords: frozenset[Coords],
     overworld_map: OverworldMap,
     game_state: GameState,
-) -> dict[int, tuple[ObjectInteractionPosition, ...]]:
+) -> dict[int, tuple[InteractionPosition, ...]]:
     """Find reachable adjacent positions from which each known object can be used."""
     interactions = {}
+    for entity_id in sorted(overworld_map.known_object_ids):
+        obj = game_state.objects.get(entity_id)
+        if obj is None:
+            continue
+        positions = _get_adjacent_interaction_positions(
+            obj.coords,
+            reachable_coords,
+            obj.interaction_direction,
+        )
+        if positions:
+            interactions[entity_id] = positions
+    return interactions
+
+
+def _get_locked_doors(
+    reachable_coords: frozenset[Coords],
+    overworld_map: OverworldMap,
+) -> tuple[LockedDoor, ...]:
+    """Find reachable locked doors, identified by their ROM map block."""
+    door_coords_by_block: dict[Coords, list[Coords]] = {}
+    for row, col in np.argwhere(overworld_map.terrain_ndarray == AsciiTile.LOCKED_DOOR):
+        coords = Coords(row=int(row), col=int(col))
+        block_coords = Coords(row=coords.row // 2, col=coords.col // 2)
+        door_coords_by_block.setdefault(block_coords, []).append(coords)
+
+    doors = []
+    for block_coords, door_coords in sorted(
+        door_coords_by_block.items(),
+        key=lambda item: (item[0].row, item[0].col),
+    ):
+        interaction_positions = tuple(
+            dict.fromkeys(
+                position
+                for coords in door_coords
+                for position in _get_adjacent_interaction_positions(
+                    coords,
+                    reachable_coords,
+                    None,
+                )
+            )
+        )
+        if interaction_positions:
+            doors.append(
+                LockedDoor(
+                    block_coords=block_coords,
+                    tile_coords=tuple(door_coords),
+                    interaction_positions=interaction_positions,
+                )
+            )
+    return tuple(doors)
+
+
+def _get_adjacent_interaction_positions(
+    target: Coords,
+    reachable_coords: frozenset[Coords],
+    required_direction: FacingDirection | None,
+) -> tuple[InteractionPosition, ...]:
+    """Find reachable positions from which one target can be used."""
     offsets = (
         ((1, 0), FacingDirection.UP),
         ((-1, 0), FacingDirection.DOWN),
         ((0, -1), FacingDirection.RIGHT),
         ((0, 1), FacingDirection.LEFT),
     )
-    for entity_id in sorted(overworld_map.known_object_ids):
-        obj = game_state.objects.get(entity_id)
-        if obj is None:
-            continue
-        positions = tuple(
-            ObjectInteractionPosition(
-                coords=obj.coords + offset,
-                direction=direction,
-            )
-            for offset, direction in offsets
-            if obj.coords + offset in reachable_coords
-            and (obj.interaction_direction is None or obj.interaction_direction == direction)
+    return tuple(
+        InteractionPosition(
+            coords=target + offset,
+            direction=direction,
         )
-        if positions:
-            interactions[entity_id] = positions
-    return interactions
+        for offset, direction in offsets
+        if target + offset in reachable_coords
+        and (required_direction is None or required_direction == direction)
+    )
 
 
 def _get_visible_coords(

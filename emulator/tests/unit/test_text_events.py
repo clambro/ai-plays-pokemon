@@ -84,7 +84,12 @@ def test_reducer_preserves_scroll_context_across_event_batches() -> None:
 @pytest.mark.unit
 @pytest.mark.parametrize(
     "entity_type",
-    [MapEntityType.SPRITE, MapEntityType.SIGN, MapEntityType.OBJECT],
+    [
+        MapEntityType.SPRITE,
+        MapEntityType.SIGN,
+        MapEntityType.OBJECT,
+        MapEntityType.LOCKED_DOOR,
+    ],
 )
 def test_reducer_attributes_complete_literal_dialog_to_its_map_entity(
     entity_type: MapEntityType,

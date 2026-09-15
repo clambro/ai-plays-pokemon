@@ -10,6 +10,7 @@ from common.enums import Button, MapEntityType, MapId
 from emulator.control_events import ControlBoundary
 
 if TYPE_CHECKING:
+    from common.schemas import Coords
     from emulator.emulator import Emulator
 
 
@@ -46,6 +47,11 @@ class MapEntityInteractionTarget:
     map_id: MapId
     entity_type: MapEntityType
     entity_id: int
+
+
+def map_block_entity_id(coords: Coords) -> int:
+    """Encode ROM map-block coordinates as a stable map-local entity ID."""
+    return coords.row << 8 | coords.col
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

@@ -132,6 +132,15 @@ async def get_overworld_map(iteration: int, game_state: GameState) -> OverworldM
             if memory.entity_type == MapEntityType.OBJECT
             and memory.last_interaction_iteration is not None
         },
+        locked_door_interactions={
+            memory.entity_id: MapEntityInteractionMemory(
+                text=memory.last_interaction,
+                iteration=memory.last_interaction_iteration,
+            )
+            for memory in map_entity_memories
+            if memory.entity_type == MapEntityType.LOCKED_DOOR
+            and memory.last_interaction_iteration is not None
+        },
         known_map_ids=known_map_ids,
     )
     if map_memory is None:

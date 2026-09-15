@@ -32,6 +32,7 @@ class OverworldMap:
     sign_interactions: dict[int, MapEntityInteractionMemory]
     known_object_ids: set[int]
     object_interactions: dict[int, MapEntityInteractionMemory]
+    locked_door_interactions: dict[int, MapEntityInteractionMemory]
     known_warp_ids: set[int]
     warp_usage_iterations: dict[int, int]
     known_map_boundaries: tuple[MapBoundaryMemoryRead, ...]
