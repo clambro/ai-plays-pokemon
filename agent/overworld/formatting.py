@@ -274,9 +274,15 @@ def format_map_inspection(
         arrivals_by_details.setdefault(details, []).append(arrival.arrival_coords)
     return (
         header
+        + "\nAn arrival group contains entrances with the same currently reachable connections"
+        " and exploration status. These often correspond to an apparent connected region based on"
+        " revealed terrain and available traversal abilities, but are not guaranteed to form a"
+        " single connected component. The listed options apply when entering at those coordinates,"
+        " not necessarily elsewhere on the map."
+        " Group labels apply only to this inspection."
         + "\n\n"
         + "\n\n".join(
-            f"Arrival at {_format_coords(coords)}:\n{details}"
+            f"ARRIVAL GROUP AT {coords[0]}\nEnter at: {_format_coords(coords)}\n{details}"
             for details, coords in arrivals_by_details.items()
         )
     )
@@ -285,15 +291,15 @@ def format_map_inspection(
 def _format_map_arrival_details(arrival: MapArrivalInspection) -> str:
     """Describe reachable connections and exploration independently of arrival coordinates."""
     exploration = (
-        "Exploration candidates are available from this arrival."
+        "Exploration candidates available: Yes"
         if arrival.has_unexplored_terrain
-        else "No exploration candidates are available from this arrival."
+        else "Exploration candidates available: No"
     )
     connections = (
-        "Connections reachable from this arrival:\n"
+        "Reachable connections:\n"
         + "\n".join(f"- {_format_resolved_connection(item)}" for item in arrival.connections)
         if arrival.connections
-        else "No discovered connections are reachable from this arrival."
+        else "Reachable connections: None discovered"
     )
     return f"{exploration}\n{connections}"
 
