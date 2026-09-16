@@ -70,7 +70,7 @@ class AgentContext:
         return requested
 
     async def observe_game_state(self, game_state: GameState) -> None:
-        """Record newly observed ordinary warps under the current action's iteration."""
+        """Record warp usage and flag repeated arrivals after map changes or warps."""
         previous_map_id = self._last_observed_map_id
         previous_transition = self._last_observed_warp_transition
         self._last_observed_map_id = game_state.map.id
@@ -80,23 +80,34 @@ class AgentContext:
 
         transition = game_state.warp_transition
         destination_warp = game_state.warps.get(transition.destination_warp_index)
-        if (
-            not transition.is_ordinary_warp
-            or transition.source_map_id != previous_map_id
-            or destination_warp is None
-        ):
-            return
-
+        ordinary_warp = (
+            transition.is_ordinary_warp
+            and transition.source_map_id == previous_map_id
+            and destination_warp is not None
+        )
         map_changed = previous_map_id != game_state.map.id
         same_map_arrival = (
             not map_changed
+            and ordinary_warp
             and previous_transition is not None
             and transition != previous_transition
+            and destination_warp is not None
             and destination_warp.coords == game_state.player.coords
         )
         if not map_changed and not same_map_arrival:
             return
 
+        observation = ConnectionTraversalObservation(
+            iteration=self.state.iteration,
+            map_id=game_state.map.id,
+            destination=game_state.player.coords,
+        )
+        warning = _record_connection_traversal(self.state, observation)
+        if warning:
+            self.state.rolling_memory.add_memory(warning)
+
+        if not ordinary_warp or destination_warp is None:
+            return
         await record_warp_usage(
             iteration=self.state.iteration,
             source_map_id=transition.source_map_id,
@@ -104,16 +115,6 @@ class AgentContext:
             destination_map_id=game_state.map.id,
             destination_warp=destination_warp,
         )
-        observation = ConnectionTraversalObservation(
-            iteration=self.state.iteration,
-            source_map_id=transition.source_map_id,
-            source_warp_id=transition.source_warp_index,
-            destination_map_id=game_state.map.id,
-            destination_warp_id=transition.destination_warp_index,
-        )
-        warning = _record_connection_traversal(self.state, observation)
-        if warning:
-            self.state.rolling_memory.add_memory(warning)
 
     async def complete_iteration(self, game_state: GameState) -> None:
         """Record the action's resulting state, then finalize and advance its iteration."""
@@ -133,7 +134,7 @@ def _record_connection_traversal(
     state: AgentState,
     observation: ConnectionTraversalObservation,
 ) -> str | None:
-    """Record an ordinary warp traversal and flag rapid backtracking."""
+    """Flag repeated arrivals at the same coordinate on the same map."""
     earliest_iteration = observation.iteration - LOOP_DETECTION_WINDOW_ITERATIONS + 1
     recent_observations = [
         previous
@@ -142,34 +143,16 @@ def _record_connection_traversal(
     ]
     state.connection_traversals = [*recent_observations, observation]
 
-    connection = _connection_endpoints(observation)
-    matching_observations = [
-        previous
+    matching_observations = sum(
+        previous.map_id == observation.map_id and previous.destination == observation.destination
         for previous in state.connection_traversals
-        if _connection_endpoints(previous) == connection
-    ]
-    if len(matching_observations) != LOOP_DETECTION_REPETITION_THRESHOLD or all(
-        (previous.source_map_id, previous.source_warp_id)
-        == (observation.source_map_id, observation.source_warp_id)
-        for previous in matching_observations
-    ):
+    )
+    if matching_observations < LOOP_DETECTION_REPETITION_THRESHOLD:
         return None
     return (
-        f"{CONNECTION_LOOP_LABEL} I have repeatedly crossed the same connection in both"
-        " directions without making progress. I should use inspect_map to reconstruct the"
+        f"{CONNECTION_LOOP_LABEL} I have repeatedly arrived at the same location after map"
+        " transitions without making progress. I should use inspect_map to reconstruct the"
         " surrounding connections, determine which side contains the route I need, and then move"
         " away from this connection. If I must cross it once more, I should not immediately reverse"
         " direction again."
-    )
-
-
-def _connection_endpoints(
-    observation: ConnectionTraversalObservation,
-) -> frozenset[tuple[MapId, int]]:
-    """Return a direction-independent identity for a traversed connection."""
-    return frozenset(
-        {
-            (observation.source_map_id, observation.source_warp_id),
-            (observation.destination_map_id, observation.destination_warp_id),
-        }
     )

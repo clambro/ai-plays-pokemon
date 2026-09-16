@@ -27,6 +27,7 @@ def _transition_state(
     """Build the game-state behavior needed by transition tracking."""
     game_state = MagicMock()
     game_state.map.id = map_id
+    game_state.player.coords = Coords(row=1, col=1)
     game_state.warps = {index: MagicMock() for index in warp_indices}
     game_state.warp_transition = transition
     return game_state
@@ -172,11 +173,14 @@ async def test_iteration_completion_records_ordinary_warp_at_crossing_iteration(
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize("boundary", [False, True])
 async def test_game_state_observation_warns_after_rapid_connection_backtracking(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
+    *,
+    boundary: bool,
 ) -> None:
-    """Flag repeated travel through both directions of one ordinary connection."""
+    """Flag repeated travel through either kind of connection in both directions."""
     route_warp_index = 2
     cave_warp_index = 0
     route_to_cave = WarpTransitionMemory(
@@ -199,6 +203,12 @@ async def test_game_state_observation_warns_after_rapid_connection_backtracking(
         route_to_cave,
         frozenset({cave_warp_index}),
     )
+    if boundary:
+        route_state.warp_transition = cave_state.warp_transition = WarpTransitionMemory(
+            source_map_id=MapId.VIRIDIAN_CITY,
+            source_warp_index=0,
+            destination_warp_index=0xFF,
+        )
     context = AgentContext(
         state=AgentState(folder=tmp_path, iteration=1),
         emulator=MagicMock(),
@@ -206,19 +216,22 @@ async def test_game_state_observation_warns_after_rapid_connection_backtracking(
     monkeypatch.setattr(agent.context, "record_warp_usage", AsyncMock())
 
     await context.observe_game_state(route_state)
+    warning_iteration = 6
     for iteration, game_state in enumerate(
-        (cave_state, route_state, cave_state),
+        (cave_state, route_state, cave_state, route_state, cave_state),
         start=2,
     ):
         context.state.iteration = iteration
         await context.observe_game_state(game_state)
+        if iteration < warning_iteration:
+            assert not context.state.rolling_memory.current_block.content
 
     warning = context.state.rolling_memory.current_block.content
     assert warning
     assert context.state.public_log.entries == []
 
     context.state.iteration += 1
-    await context.observe_game_state(route_state)
+    await context.observe_game_state(cave_state)
 
     assert context.state.rolling_memory.current_block.content == warning
 
@@ -281,7 +294,7 @@ async def test_game_state_observation_rejects_stale_warp_identity_on_boundary_cr
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Do not turn persistent ordinary-warp registers into a boundary arrival."""
+    """Track boundary arrivals without recording usage of stale ordinary-warp registers."""
     transition = WarpTransitionMemory(
         source_map_id=MapId.MT_MOON_1F,
         source_warp_index=2,
@@ -301,6 +314,8 @@ async def test_game_state_observation_rejects_stale_warp_identity_on_boundary_cr
     await context.observe_game_state(current_state)
 
     record_warp_usage.assert_not_awaited()
+    assert context.state.connection_traversals[-1].map_id == MapId.ROUTE_4
+    assert context.state.connection_traversals[-1].destination == current_state.player.coords
 
 
 @pytest.mark.unit

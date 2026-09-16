@@ -40,10 +40,8 @@ class ScriptedDisplacementObservation:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ConnectionTraversalObservation:
-    """An ordinary warp traversal between two identified endpoints."""
+    """An arrival after a map change or same-map warp."""
 
     iteration: int
-    source_map_id: MapId
-    source_warp_id: int
-    destination_map_id: MapId
-    destination_warp_id: int
+    map_id: MapId
+    destination: Coords
