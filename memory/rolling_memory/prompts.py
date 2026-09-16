@@ -28,17 +28,6 @@ Records:
 {source}
 """.strip()
 
-COMPACTION_REVISION_PROMPT = """
-The historical summary below is {actual_characters} characters long and exceeds the limit. Return a shorter version of no more than {max_characters} characters, including spaces and line breaks.
-
-Preserve the most important confirmed, durable facts. Preserve uncertainty and scope; do not strengthen uncertain claims or infer completion or impossibility. Remove source labels, instructions, plans, repetition, temporary state, routine navigation and battle details, and map coordinates. Do not add any fact that is not already present.
-
-Return only the shortened summary. Omit lower-priority details rather than exceeding {max_characters} characters.
-
-Summary:
-{summary}
-""".strip()
-
 
 def format_compaction_source(entries: Iterable[_CompactionSourceEntry]) -> str:
     """Format exact or summarized memory entries for a compaction request."""
