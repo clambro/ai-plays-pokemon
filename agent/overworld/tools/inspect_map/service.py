@@ -6,7 +6,6 @@ import numpy as np
 from loguru import logger
 
 from agent.overworld.connections import group_contiguous_warps, group_map_boundaries
-from agent.overworld.navigation import get_accessible_coords, get_exploration_candidates
 from agent.overworld.tools.inspect_map.schemas import (
     ConnectionComponent,
     MapArrivalInspection,
@@ -22,6 +21,7 @@ from database.map_boundary_memory.repository import (
 )
 from database.map_memory.repository import get_map_memory, get_visited_maps
 from database.warp_memory.repository import get_warp_memories_for_map, get_warp_memories_to_map
+from overworld_map.traversal import get_accessible_coords, get_exploration_candidates
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence

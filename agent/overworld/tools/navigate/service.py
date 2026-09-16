@@ -2,15 +2,15 @@
 
 from typing import TYPE_CHECKING
 
-from agent.overworld.navigation import (
-    build_routing_data,
-    calculate_path_to_target,
-    get_spinner_destination,
-)
+from agent.overworld.navigation import calculate_path_to_target
 from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
 from common.enums import BUTTON_DIRECTIONS, BUTTON_OFFSETS, AsciiTile, Button, MapId
 from emulator.control_events import ControlBoundary
 from overworld_map.service import record_observed_map_connection, update_overworld_map
+from overworld_map.traversal import (
+    build_routing_data,
+    get_spinner_destination,
+)
 
 if TYPE_CHECKING:
     import numpy as np

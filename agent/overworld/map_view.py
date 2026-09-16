@@ -5,15 +5,16 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from agent.overworld.navigation import (
-    build_routing_data,
-    get_exploration_candidates,
-    get_map_boundary_tiles,
-    get_spinner_path,
-)
 from common.enums import AsciiTile, FacingDirection
 from common.schemas import Coords
-from overworld_map.views import get_composed_map_tiles
+from overworld_map.tiles import get_composed_map_tiles
+from overworld_map.traversal import (
+    build_routing_data,
+    get_counter_interactions,
+    get_exploration_candidates,
+    get_map_boundary_tiles,
+    get_visible_coords,
+)
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -63,7 +64,7 @@ def build_current_map_view(
     routing_tiles, reachable_list = build_routing_data(overworld_map, game_state)
     hm_tiles = game_state.get_hm_tiles()
     reachable_coords = frozenset(reachable_list)
-    counter_interactions = _get_counter_interactions(
+    counter_interactions = get_counter_interactions(
         reachable_coords,
         routing_tiles,
         overworld_map,
@@ -75,7 +76,7 @@ def build_current_map_view(
         game_state,
     )
     locked_doors = _get_locked_doors(reachable_coords, overworld_map)
-    visible_coords = _get_visible_coords(reachable_coords, routing_tiles) | frozenset(
+    visible_coords = get_visible_coords(reachable_coords, routing_tiles) | frozenset(
         game_state.sprites[entity_id].coords for entity_id in counter_interactions
     )
     display_top = min(coords.row for coords in visible_coords)
@@ -120,38 +121,6 @@ def build_current_map_view(
         ),
         boundary_tiles=boundary_tiles,
     )
-
-
-def _get_counter_interactions(
-    reachable_coords: frozenset[Coords],
-    routing_tiles: np.ndarray,
-    overworld_map: OverworldMap,
-    game_state: GameState,
-) -> dict[int, tuple[Coords, ...]]:
-    """Find reachable positions from which the ROM permits talking across a counter."""
-    interactions = {}
-    for entity_id in sorted(overworld_map.known_sprite_ids):
-        sprite = game_state.sprites.get(entity_id)
-        if sprite is None:
-            continue
-        positions = []
-        for row_offset, col_offset in ((-1, 0), (0, -1), (0, 1), (1, 0)):
-            counter = Coords(
-                row=sprite.coords.row + row_offset,
-                col=sprite.coords.col + col_offset,
-            )
-            standing = Coords(
-                row=sprite.coords.row + row_offset * 2,
-                col=sprite.coords.col + col_offset * 2,
-            )
-            if (
-                standing in reachable_coords
-                and routing_tiles[counter.row, counter.col] == AsciiTile.COUNTER
-            ):
-                positions.append(standing)
-        if positions:
-            interactions[entity_id] = tuple(positions)
-    return interactions
 
 
 def _get_object_interaction_positions(
@@ -234,28 +203,3 @@ def _get_adjacent_interaction_positions(
         if target + offset in reachable_coords
         and (required_direction is None or required_direction == direction)
     )
-
-
-def _get_visible_coords(
-    reachable_coords: frozenset[Coords],
-    routing_tiles: np.ndarray,
-) -> frozenset[Coords]:
-    """Include the reachable region and the terrain immediately bounding it."""
-    visible = set(reachable_coords)
-    height, width = routing_tiles.shape
-    walkable_tiles = set(AsciiTile.get_walkable_tiles())
-    spinner_tiles = set(AsciiTile.get_spinner_tiles())
-    for coords in reachable_coords:
-        for row_offset, col_offset in ((0, 1), (1, 0), (0, -1), (-1, 0)):
-            neighbor = coords + (row_offset, col_offset)  # noqa: RUF005
-            if not (0 <= neighbor.row < height and 0 <= neighbor.col < width):
-                continue
-            tile = routing_tiles[neighbor.row, neighbor.col]
-            if tile in spinner_tiles:
-                spinner_path = get_spinner_path(neighbor, routing_tiles)
-                if spinner_path is not None:
-                    visible.update(spinner_path)
-                continue
-            if tile == AsciiTile.UNSEEN or tile not in walkable_tiles:
-                visible.add(neighbor)
-    return frozenset(visible)
