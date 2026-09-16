@@ -26,14 +26,13 @@ def build_inspect_map_tool(
         on the same map may reach different places, including one-way routes.
         Each arrival's results reflect reachability through currently revealed
         terrain, using your available traversal abilities.
-        The result also identifies entrances with no known way to reach them.
-        Match a connection's destination coordinates to its arrival entry when
-        inspecting the next map. Inspect the destination maps in turn to continue
-        reconstructing connectivity without moving.
 
-        If you are unsure how to proceed, this tool can help you iteratively inspect
-        maps along known reachable connections to look for a route forward or
-        remaining exploration candidates.
+        If you are unsure how to proceed, this tool can help you iteratively
+        inspect known connections across maps to compare possible routes before
+        travelling. Match each connection's destination coordinates to its arrival
+        entry on the next map to discover paths across several maps. Seeing no
+        exploration candidates on a given map does not rule out a potential path
+        through that map.
 
         This tool does not move, choose a route, reveal unvisited maps, or infer
         connections that have not been discovered. It can be a useful way to decide
