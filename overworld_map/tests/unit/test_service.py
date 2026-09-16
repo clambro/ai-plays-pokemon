@@ -26,7 +26,7 @@ from overworld_map.service import (
     record_observed_map_connection,
     update_overworld_map,
 )
-from overworld_map.views import get_composed_map_tiles, get_navigation_tiles
+from overworld_map.tiles import get_composed_map_tiles, get_navigation_tiles
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState

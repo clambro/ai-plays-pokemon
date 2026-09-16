@@ -1,4 +1,4 @@
-"""Resolved results of remembered connection checks."""
+"""Typed results of remembered map inspections."""
 
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -11,16 +11,14 @@ if TYPE_CHECKING:
     from database.warp_memory.schemas import WarpMemoryRead
 
 type WarpGroups = tuple[tuple[WarpMemoryRead, ...], ...]
-type SourceConnection = WarpMemoryRead | tuple[MapBoundaryMemoryRead, ...]
 
 
-class ConnectionCheckError(Enum):
-    """Reasons a requested connection cannot be inspected."""
+class MapInspectionError(Enum):
+    """Reasons a requested map cannot be inspected."""
 
     INVALID_MAP = auto()
     UNSUPPORTED_MAP = auto()
     UNVISITED_MAP = auto()
-    UNKNOWN_CONNECTION = auto()
     MEMORY_UNAVAILABLE = auto()
 
 
@@ -46,9 +44,18 @@ class ConnectionComponent:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class ConnectionCheckResult:
-    """The checked connection and other connections reachable from its arrival point."""
+class MapArrivalInspection:
+    """Options at an entrance, including whether a known entry can reach its coordinate."""
 
-    connection: ResolvedConnection
-    other_connections: tuple[ResolvedConnection, ...] = ()
-    has_unexplored_terrain: bool = False
+    arrival_coords: Coords
+    has_recorded_access: bool
+    connections: tuple[ResolvedConnection, ...]
+    has_unexplored_terrain: bool
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MapInspectionResult:
+    """All discovered entrances and observed coordinate-based arrivals on a visited map."""
+
+    map_id: MapId
+    arrivals: tuple[MapArrivalInspection, ...]

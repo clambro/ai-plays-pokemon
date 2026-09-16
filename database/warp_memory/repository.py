@@ -23,6 +23,16 @@ async def get_warp_memories_for_map(map_id: MapId) -> list[WarpMemoryRead]:
     return [WarpMemoryRead.model_validate(db_obj) for db_obj in db_objs]
 
 
+async def get_warp_memories_to_map(map_id: MapId) -> list[WarpMemoryRead]:
+    """Get observed incoming routes, including unused and one-way connections."""
+    async with db_sessionmaker() as session:
+        query = select(WarpMemoryDBModel).where(WarpMemoryDBModel.destination_map_id == map_id)
+        result = await session.execute(query)
+        db_objs = result.scalars().all()
+
+    return [WarpMemoryRead.model_validate(db_obj) for db_obj in db_objs]
+
+
 async def remember_warps(warps: list[WarpMemoryCreateUpdate]) -> None:
     """Create or refresh discovered warps from current game state."""
     if not warps:

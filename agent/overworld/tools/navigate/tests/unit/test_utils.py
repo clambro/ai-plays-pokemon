@@ -9,18 +9,18 @@ from copy import deepcopy
 
 import pytest
 
-from agent.overworld.navigation import (
-    calculate_path_to_target,
+from agent.overworld.navigation import calculate_path_to_target
+from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, MapId
+from common.schemas import Coords
+from emulator.parsers.map import Map, MapConnection
+from overworld_map.schemas import OverworldMap
+from overworld_map.traversal import (
     get_accessible_coords,
     get_exploration_candidates,
     get_map_boundary_tiles,
     get_spinner_destination,
     get_spinner_path,
 )
-from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, MapId
-from common.schemas import Coords
-from emulator.parsers.map import Map, MapConnection
-from overworld_map.schemas import OverworldMap
 
 PLATEAU_MAP = [
     list(row)

@@ -3,13 +3,13 @@
 from collections import deque
 from typing import TYPE_CHECKING
 
-from agent.overworld.navigation import is_blocked
 from agent.overworld.tools.sokoban_solver.schemas import SokobanMap
 from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
 from common.enums import BUTTON_DIRECTIONS, BUTTON_OFFSETS, AsciiTile, Button, SpriteLabel
 from common.schemas import Coords
 from emulator.control_events import ControlBoundary
-from overworld_map.views import get_navigation_tiles
+from overworld_map.tiles import get_navigation_tiles
+from overworld_map.traversal import is_blocked
 
 if TYPE_CHECKING:
     from emulator.emulator import Emulator

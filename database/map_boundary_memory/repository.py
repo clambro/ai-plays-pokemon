@@ -27,6 +27,18 @@ async def get_map_boundary_memories_for_map(map_id: MapId) -> list[MapBoundaryMe
     return [MapBoundaryMemoryRead.model_validate(db_obj) for db_obj in db_objs]
 
 
+async def get_map_boundary_memories_to_map(map_id: MapId) -> list[MapBoundaryMemoryRead]:
+    """Get observed arrivals onto a map, including one-way falls without a return connection."""
+    async with db_sessionmaker() as session:
+        query = select(MapBoundaryMemoryDBModel).where(
+            MapBoundaryMemoryDBModel.destination_map_id == map_id
+        )
+        result = await session.execute(query)
+        db_objs = result.scalars().all()
+
+    return [MapBoundaryMemoryRead.model_validate(db_obj) for db_obj in db_objs]
+
+
 async def remember_map_boundaries(
     boundaries: Sequence[MapBoundaryMemoryCreateUpdate],
 ) -> None:

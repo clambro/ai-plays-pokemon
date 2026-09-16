@@ -1,4 +1,4 @@
-"""Derived tile views of persistent overworld terrain."""
+"""Compose remembered overworld terrain and discovered entities into tile arrays."""
 
 from typing import TYPE_CHECKING
 
