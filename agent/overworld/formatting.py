@@ -284,9 +284,9 @@ def _format_connection_destination(result: ConnectionCheckResult) -> str:
 
     header = _format_resolved_connection(connection)
     exploration = (
-        "Unexplored terrain can still be reached from this arrival region."
+        "Unexplored terrain remains within this arrival region."
         if result.has_unexplored_terrain
-        else "No unexplored terrain is reachable from this arrival region."
+        else "No unexplored terrain remains within this arrival region."
     )
     if not result.other_connections:
         return (
