@@ -83,7 +83,7 @@ The following discovered warp tiles are in your current region:
 {{known_warps}}
 </known_warps>
 
-The following previously traversed connections are elsewhere on the same map, outside your current connected component. They are informational only: navigation cannot target them from your current component. Use check_connection on a reachable connection, and then on returned connections, to trace known connectivity that may lead to them.
+The following previously traversed connections are elsewhere on the same map, outside your current connected component. They are informational only: navigation cannot target them from your current component. Use inspect_map to see the connections and exploration available from each entrance, then inspect the connected maps in turn to trace known connectivity that may lead to them.
 <known_connections_outside_current_component>
 {{known_connections_outside_current_component}}
 </known_connections_outside_current_component>

@@ -84,7 +84,7 @@ async def test_goal_replacement_satisfies_forced_review(
     complete_action.assert_awaited_once()
     context.state = AgentState.model_validate_json(context.state.model_dump_json())
     assert set(_toolset(context).tools) == {
-        "check_connection",
+        "inspect_map",
         "press_buttons",
         "set_goals",
         "navigation",

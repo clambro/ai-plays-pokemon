@@ -4,8 +4,8 @@ from itertools import groupby
 from typing import TYPE_CHECKING, assert_never
 
 from agent.overworld.connections import group_contiguous_warps, group_map_boundaries
-from agent.overworld.tools.check_connection.schemas import ConnectionCheckError
-from common.constants import CONNECTION_CHECK_LABEL, PLAYER_OFFSET_X, PLAYER_OFFSET_Y
+from agent.overworld.tools.inspect_map.schemas import MapInspectionError
+from common.constants import MAP_INSPECTION_LABEL, PLAYER_OFFSET_X, PLAYER_OFFSET_Y
 from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpActivation
 from common.schemas import Coords
 from emulator.text_events import map_block_entity_id
@@ -14,8 +14,9 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from agent.overworld.map_view import CurrentMapView, InteractionPosition, LockedDoor
-    from agent.overworld.tools.check_connection.schemas import (
-        ConnectionCheckResult,
+    from agent.overworld.tools.inspect_map.schemas import (
+        MapArrivalInspection,
+        MapInspectionResult,
         ResolvedConnection,
     )
     from database.map_boundary_memory.schemas import MapBoundaryMemoryRead
@@ -255,72 +256,50 @@ def format_connection(
     return f"{source} leads to {destination_map_id.name} at {_format_coords(destination_coords)}."
 
 
-def format_connection_check(
-    result: list[ConnectionCheckResult] | ConnectionCheckError,
+def format_map_inspection(
+    result: MapInspectionResult | MapInspectionError,
     *,
     map_name: str,
-    coordinates: Coords,
 ) -> str:
-    """Render a completed connection check without loading or resolving any connections."""
-    if isinstance(result, ConnectionCheckError):
-        return _format_connection_check_error(result, map_name, coordinates)
+    """Render remembered connections and exploration separately for each arrival."""
+    if isinstance(result, MapInspectionError):
+        return _format_map_inspection_error(result, map_name)
 
-    return "\n\n".join(_format_connection_destination(destination) for destination in result)
-
-
-def _format_connection_destination(result: ConnectionCheckResult) -> str:
-    """Render one arrival region and all its reachable connections, including the return route."""
-    connection = result.connection
-    if connection.destination_map_id is None:
-        return (
-            f"{CONNECTION_CHECK_LABEL} This connection's destination has not been visited."
-            f"{_format_connection_usage(connection)}"
-        )
-    if not connection.destination_coords:
-        return (
-            f"{CONNECTION_CHECK_LABEL} This connection's destination has not been discovered."
-            f"{_format_connection_usage(connection)}"
-        )
-
-    header = _format_resolved_connection(connection)
-    exploration = (
-        "Unexplored terrain remains within this arrival region."
-        if result.has_unexplored_terrain
-        else "No unexplored terrain remains within this arrival region."
-    )
-    if not result.other_connections:
-        return (
-            f"{CONNECTION_CHECK_LABEL} {header}\n{exploration}\n"
-            "No discovered connections are reachable from that arrival "
-            "point through revealed terrain."
-        )
+    header = f"{MAP_INSPECTION_LABEL} {result.map_id.name}"
+    if not result.arrivals:
+        return f"{header}\nNo discovered entrances or arrivals are known on this map."
     return (
-        f"{CONNECTION_CHECK_LABEL} {header}\n{exploration}\n"
-        "Discovered connections reachable from that arrival point:\n"
-        + "\n".join(f"- {_format_resolved_connection(other)}" for other in result.other_connections)
+        header + "\n\n" + "\n\n".join(_format_map_arrival(arrival) for arrival in result.arrivals)
     )
 
 
-def _format_connection_check_error(
-    error: ConnectionCheckError,
-    map_name: str,
-    coordinates: Coords,
-) -> str:
-    """Describe why the requested connection could not be inspected."""
+def _format_map_arrival(arrival: MapArrivalInspection) -> str:
+    """Describe only what is reachable from this arrival coordinate."""
+    exploration = (
+        "Exploration candidates are available from this arrival."
+        if arrival.has_unexplored_terrain
+        else "No exploration candidates are available from this arrival."
+    )
+    connections = (
+        "Connections reachable from this arrival:\n"
+        + "\n".join(f"- {_format_resolved_connection(item)}" for item in arrival.connections)
+        if arrival.connections
+        else "No discovered connections are reachable from this arrival."
+    )
+    return f"Arrival at {arrival.arrival_coords}:\n{exploration}\n{connections}"
+
+
+def _format_map_inspection_error(error: MapInspectionError, map_name: str) -> str:
+    """Describe why the requested map could not be inspected."""
     match error:
-        case ConnectionCheckError.INVALID_MAP:
-            return f'{CONNECTION_CHECK_LABEL} "{map_name}" is not a known map.'
-        case ConnectionCheckError.UNSUPPORTED_MAP:
-            return f'{CONNECTION_CHECK_LABEL} "{map_name}" cannot have remembered connections.'
-        case ConnectionCheckError.UNVISITED_MAP:
-            return f"{CONNECTION_CHECK_LABEL} {map_name} has not been visited."
-        case ConnectionCheckError.UNKNOWN_CONNECTION:
-            return (
-                f"{CONNECTION_CHECK_LABEL} No previously discovered connection is known on "
-                f"{map_name} at {coordinates}."
-            )
-        case ConnectionCheckError.MEMORY_UNAVAILABLE:
-            return f"{CONNECTION_CHECK_LABEL} Connection memory is currently unavailable."
+        case MapInspectionError.INVALID_MAP:
+            return f'{MAP_INSPECTION_LABEL} "{map_name}" is not a known map.'
+        case MapInspectionError.UNSUPPORTED_MAP:
+            return f'{MAP_INSPECTION_LABEL} "{map_name}" cannot have remembered connections.'
+        case MapInspectionError.UNVISITED_MAP:
+            return f"{MAP_INSPECTION_LABEL} {map_name} has not been visited."
+        case MapInspectionError.MEMORY_UNAVAILABLE:
+            return f"{MAP_INSPECTION_LABEL} Map memory is currently unavailable."
         case _:
             assert_never(error)
 

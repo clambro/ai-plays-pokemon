@@ -156,7 +156,7 @@ def _record_connection_traversal(
         return None
     return (
         f"{CONNECTION_LOOP_LABEL} I have repeatedly crossed the same connection in both"
-        " directions without making progress. I should use check_connection to reconstruct the"
+        " directions without making progress. I should use inspect_map to reconstruct the"
         " surrounding connections, determine which side contains the route I need, and then move"
         " away from this connection. If I must cross it once more, I should not immediately reverse"
         " direction again."
