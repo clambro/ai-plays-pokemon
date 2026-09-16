@@ -31,6 +31,10 @@ def build_inspect_map_tool(
         inspecting the next map. Inspect the destination maps in turn to continue
         reconstructing connectivity without moving.
 
+        If you are unsure how to proceed, this tool can help you iteratively inspect
+        maps along known reachable connections to look for a route forward or
+        remaining exploration candidates.
+
         This tool does not move, choose a route, reveal unvisited maps, or infer
         connections that have not been discovered. It can be a useful way to decide
         where to go next before having to physically go there.
