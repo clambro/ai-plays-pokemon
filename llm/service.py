@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from genai_prices import calc_price, extract_usage
+from genai_prices import extract_usage
 from openai import AsyncOpenAI
 
 from common.settings import settings
@@ -108,12 +108,4 @@ class OpenAILLMService:
             provider_id="openai",
             api_flavor="responses",
         )
-        if usage_data.model is None:
-            raise ValueError(f"No pricing information for OpenAI model {model}.")
-        return float(
-            calc_price(
-                usage_data.usage,
-                model_ref=usage_data.model.id,
-                provider_id="openai",
-            ).total_price
-        )
+        return float(usage_data.calc_price().total_price)

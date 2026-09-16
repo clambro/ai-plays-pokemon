@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from pydantic_ai.models import ModelRequestContext
 
 
-def require_tool_call(
+async def require_tool_call(
     ctx: RunContext[AgentContext],  # noqa: ARG001
     request_context: ModelRequestContext,
 ) -> ModelRequestContext:

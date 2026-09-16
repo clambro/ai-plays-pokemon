@@ -31,8 +31,9 @@ def build_check_connection_tool(
         area without moving. Pass the named map and one coordinate from a
         connection shown on the current map or in a previous check result. The
         result lists known destinations, the connections reachable from each one,
-        and whether unexplored terrain remains. Check one of the returned
-        connections to continue reconstructing the route.
+        and whether unexplored terrain remains within each destination arrival
+        region. Check a returned connection to inspect its other side and continue
+        reconstructing the route.
 
         This tool does not move, choose a route, reveal unvisited maps, or infer
         connections that have not been discovered.
