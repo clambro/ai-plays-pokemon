@@ -268,23 +268,40 @@ def format_map_inspection(
     header = f"{MAP_INSPECTION_LABEL} {result.map_id.name}"
     if not result.arrivals:
         return f"{header}\nNo discovered entrances or arrivals are known on this map."
-    arrivals_by_details: dict[str, list[Coords]] = {}
+    arrivals_by_details: dict[str, list[MapArrivalInspection]] = {}
     for arrival in result.arrivals:
         details = _format_map_arrival_details(arrival)
-        arrivals_by_details.setdefault(details, []).append(arrival.arrival_coords)
+        arrivals_by_details.setdefault(details, []).append(arrival)
     return (
         header
         + "\nAn arrival group contains entrances with the same currently reachable connections"
         " and exploration status. These often correspond to an apparent connected region based on"
         " revealed terrain and available traversal abilities, but are not guaranteed to form a"
         " single connected component. The listed options apply when entering at those coordinates,"
-        " not necessarily elsewhere on the map."
-        " Group labels apply only to this inspection."
+        " not necessarily elsewhere on the map. An observed entrance is not necessarily reachable"
+        " from your current location. Group labels apply only to this inspection."
         + "\n\n"
         + "\n\n".join(
-            f"ARRIVAL GROUP AT {coords[0]}\nEnter at: {_format_coords(coords)}\n{details}"
-            for details, coords in arrivals_by_details.items()
+            _format_map_arrival_group(arrivals, details, group_number=group_number)
+            for group_number, (details, arrivals) in enumerate(arrivals_by_details.items(), start=1)
         )
+    )
+
+
+def _format_map_arrival_group(
+    arrivals: Sequence[MapArrivalInspection], details: str, *, group_number: int
+) -> str:
+    """Flag an arrival group only when no known entry provides access to it."""
+    coords = tuple(arrival.arrival_coords for arrival in arrivals)
+    access_text = ""
+    if not any(arrival.has_recorded_access for arrival in arrivals):
+        access_text = (
+            "No recorded access to this arrival group. No known incoming connection or revealed "
+            "route provides a way into it.\n"
+        )
+    return (
+        f"ARRIVAL GROUP {group_number}\nIf entering at: {_format_coords(coords)}\n"
+        f"{access_text}{details}"
     )
 
 

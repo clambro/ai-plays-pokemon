@@ -45,9 +45,10 @@ class ConnectionComponent:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class MapArrivalInspection:
-    """Connections and exploration available from one discovered entrance or arrival."""
+    """Options at an entrance, including whether a known entry can reach its coordinate."""
 
     arrival_coords: Coords
+    has_recorded_access: bool
     connections: tuple[ResolvedConnection, ...]
     has_unexplored_terrain: bool
 

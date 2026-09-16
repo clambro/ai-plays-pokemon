@@ -51,6 +51,17 @@ def _connection_memory(
             new=AsyncMock(side_effect=lambda map_id: warp_memories.get(map_id, [])),
         ),
         patch(
+            "agent.overworld.tools.inspect_map.service.get_warp_memories_to_map",
+            new=AsyncMock(
+                side_effect=lambda map_id: [
+                    record
+                    for records in warp_memories.values()
+                    for record in records
+                    if record.destination_map_id == map_id
+                ]
+            ),
+        ),
+        patch(
             "agent.overworld.tools.inspect_map.service.get_map_boundary_memories_for_map",
             new=AsyncMock(side_effect=lambda map_id: boundaries.get(map_id, [])),
         ),
@@ -217,6 +228,7 @@ async def test_check_boundary_preserves_pairs_and_distinguishes_unknown_destinat
         Coords(row=1, col=4),
     )
     result = results.arrivals[0]
+    assert all(arrival.has_recorded_access for arrival in results.arrivals)
     assert not result.has_unexplored_terrain
     assert tuple(connection.destination_map_id for connection in result.connections) == (
         None,
@@ -319,7 +331,8 @@ async def test_elevator_arrival_exposes_all_observed_routes() -> None:
 
 
 @pytest.mark.unit
-async def test_inspection_preserves_directional_reachability() -> None:
+@pytest.mark.parametrize("used_iteration", [None, 0])
+async def test_inspection_preserves_directional_reachability(used_iteration: int | None) -> None:
     """An upper entrance can reach the lower region without implying a return route."""
     map_id = MapId.MT_MOON_B1F
     map_memory = MapMemoryRead(
@@ -329,7 +342,9 @@ async def test_inspection_preserves_directional_reachability() -> None:
     )
     warps = {
         map_id: [
-            _warp(0, 1, 1, MapId.ROUTE_4, 0),
+            _warp(0, 1, 1, MapId.ROUTE_4, 0).model_copy(
+                update={"last_used_iteration": used_iteration}
+            ),
             _warp(1, 3, 1, MapId.ROUTE_4, 1),
         ],
         MapId.ROUTE_4: [],
@@ -339,6 +354,8 @@ async def test_inspection_preserves_directional_reachability() -> None:
 
     assert isinstance(result, MapInspectionResult)
     upper, lower = result.arrivals
+    assert upper.has_recorded_access is (used_iteration is not None)
+    assert lower.has_recorded_access is (used_iteration is not None)
     assert tuple(connection.source_coords for connection in upper.connections) == (
         (Coords(row=1, col=1),),
         (Coords(row=3, col=1),),
@@ -348,6 +365,31 @@ async def test_inspection_preserves_directional_reachability() -> None:
     )
     assert upper.has_unexplored_terrain
     assert not lower.has_unexplored_terrain
+
+
+@pytest.mark.unit
+async def test_unused_incoming_route_establishes_access_without_inventing_a_reverse_path() -> None:
+    """An unused one-way entry gives access to its region, not a region above its ledge."""
+    map_id = MapId.MT_MOON_B1F
+    memory = MapMemoryRead(
+        map_id=map_id,
+        terrain="▓▓▓▓▓\n▓∙∙∙▓\n▓▓▽▓▓\n▓∙∙∙▓\n▓▓▓▓▓",
+        blockages={},
+    )
+    warps = {
+        map_id: [
+            _warp(0, 1, 1, MapId.ROUTE_4, 0),
+            _warp(1, 3, 1, MapId.ROUTE_4, 1),
+            _warp(2, 3, 3, MapId.ROUTE_4, 2),
+        ],
+        MapId.ROUTE_4: [],
+        MapId.MT_MOON_1F: [_warp(0, 1, 1, map_id, 1)],
+    }
+    with _connection_memory(memory, warps, {}):
+        result = await inspect_map(map_name=map_id.name, hm_tiles=[])
+
+    assert isinstance(result, MapInspectionResult)
+    assert tuple(arrival.has_recorded_access for arrival in result.arrivals) == (False, True, True)
 
 
 @pytest.mark.unit

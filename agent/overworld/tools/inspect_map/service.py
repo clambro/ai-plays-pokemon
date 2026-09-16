@@ -21,7 +21,7 @@ from database.map_boundary_memory.repository import (
     get_map_boundary_memories_to_map,
 )
 from database.map_memory.repository import get_map_memory, get_visited_maps
-from database.warp_memory.repository import get_warp_memories_for_map
+from database.warp_memory.repository import get_warp_memories_for_map, get_warp_memories_to_map
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -71,6 +71,25 @@ async def _inspect_map(
     warp_groups_by_map = {map_id: group_remembered_warps(warps)}
     boundaries = await get_map_boundary_memories_for_map(map_id)
     incoming_boundaries = await get_map_boundary_memories_to_map(map_id)
+    incoming_warps = await get_warp_memories_to_map(map_id)
+    incoming_warp_ids = {warp.destination_warp_id for warp in incoming_warps}
+    entry_coords = {
+        *(_coords(warp) for warp in warps if warp.last_used_iteration is not None),
+        *(_coords(warp) for warp in warps if warp.warp_id in incoming_warp_ids),
+        *(
+            Coords(row=boundary.destination_row, col=boundary.destination_col)
+            for boundary in incoming_boundaries
+        ),
+    }
+    known_access_coords = set()
+    for coords in entry_coords:
+        tiles = _build_connection_tiles(warps, map_memory)
+        if not (0 <= coords.row < tiles.shape[0] and 0 <= coords.col < tiles.shape[1]):
+            continue
+        tiles[coords.row, coords.col] = AsciiTile.PLAYER
+        known_access_coords.update(
+            get_accessible_coords(coords, tiles, map_memory.blockages, hm_tiles)
+        )
     arrival_coords = sorted(
         {
             *(_coords(warp) for warp in warps),
@@ -109,6 +128,7 @@ async def _inspect_map(
         arrivals.append(
             MapArrivalInspection(
                 arrival_coords=coords,
+                has_recorded_access=coords in known_access_coords,
                 connections=connections,
                 has_unexplored_terrain=component.has_unexplored_terrain,
             )
