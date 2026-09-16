@@ -24,6 +24,8 @@ def build_inspect_map_tool(
         For each arrival coordinate, the result lists the connections reachable
         from there and whether exploration candidates remain. Different arrivals
         on the same map may reach different places, including one-way routes.
+        Each arrival's results reflect reachability through currently revealed
+        terrain, using your available traversal abilities.
         Match a connection's destination coordinates to its arrival entry when
         inspecting the next map. Inspect the destination maps in turn to continue
         reconstructing connectivity without moving.

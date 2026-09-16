@@ -24,7 +24,7 @@ from database.map_memory.repository import get_map_memory, get_visited_maps
 from database.warp_memory.repository import get_warp_memories_for_map
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Iterable, Sequence
+    from collections.abc import Iterable, Sequence
 
     from agent.overworld.tools.inspect_map.schemas import WarpGroups
     from database.map_boundary_memory.schemas import MapBoundaryMemoryRead
@@ -101,7 +101,6 @@ async def _inspect_map(
                 _resolve_warp_connection(
                     group,
                     warp_groups_by_map.get(group[0].destination_map_id),
-                    destination_warp_ids={warp.destination_warp_id for warp in group},
                 )
                 for group in component.warp_groups
             ),
@@ -132,11 +131,10 @@ async def _load_warp_groups(
 def _resolve_warp_connection(
     group: tuple[WarpMemoryRead, ...],
     destination_groups: WarpGroups | None,
-    *,
-    destination_warp_ids: Collection[int],
 ) -> ResolvedConnection:
     """Resolve matching landing groups while preserving each entrance's recorded identity."""
     warp = group[0]
+    destination_warp_ids = {candidate.destination_warp_id for candidate in group}
     return ResolvedConnection(
         source_map_id=warp.map_id,
         source_coords=tuple(dict.fromkeys(_coords(candidate) for candidate in group)),
@@ -151,12 +149,7 @@ def _resolve_warp_connection(
         ),
         is_warp=True,
         last_used_iteration=max(
-            (
-                warp.last_used_iteration
-                for warp in group
-                if warp.destination_warp_id in destination_warp_ids
-                and warp.last_used_iteration is not None
-            ),
+            (warp.last_used_iteration for warp in group if warp.last_used_iteration is not None),
             default=None,
         ),
     )

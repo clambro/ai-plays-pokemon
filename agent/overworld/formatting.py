@@ -261,20 +261,29 @@ def format_map_inspection(
     *,
     map_name: str,
 ) -> str:
-    """Render remembered connections and exploration separately for each arrival."""
+    """Render identical arrival details once, retaining all their coordinates."""
     if isinstance(result, MapInspectionError):
         return _format_map_inspection_error(result, map_name)
 
     header = f"{MAP_INSPECTION_LABEL} {result.map_id.name}"
     if not result.arrivals:
         return f"{header}\nNo discovered entrances or arrivals are known on this map."
+    arrivals_by_details: dict[str, list[Coords]] = {}
+    for arrival in result.arrivals:
+        details = _format_map_arrival_details(arrival)
+        arrivals_by_details.setdefault(details, []).append(arrival.arrival_coords)
     return (
-        header + "\n\n" + "\n\n".join(_format_map_arrival(arrival) for arrival in result.arrivals)
+        header
+        + "\n\n"
+        + "\n\n".join(
+            f"Arrival at {_format_coords(coords)}:\n{details}"
+            for details, coords in arrivals_by_details.items()
+        )
     )
 
 
-def _format_map_arrival(arrival: MapArrivalInspection) -> str:
-    """Describe only what is reachable from this arrival coordinate."""
+def _format_map_arrival_details(arrival: MapArrivalInspection) -> str:
+    """Describe reachable connections and exploration independently of arrival coordinates."""
     exploration = (
         "Exploration candidates are available from this arrival."
         if arrival.has_unexplored_terrain
@@ -286,7 +295,7 @@ def _format_map_arrival(arrival: MapArrivalInspection) -> str:
         if arrival.connections
         else "No discovered connections are reachable from this arrival."
     )
-    return f"Arrival at {arrival.arrival_coords}:\n{exploration}\n{connections}"
+    return f"{exploration}\n{connections}"
 
 
 def _format_map_inspection_error(error: MapInspectionError, map_name: str) -> str:
