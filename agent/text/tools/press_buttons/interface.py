@@ -44,6 +44,10 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         - ``left`` moves the cursor left one column.
         - ``right`` moves the cursor right one column.
 
+        In shop quantity selectors, ``up`` increases the quantity by 1,
+        ``down`` decreases it by 1, ``left`` decreases it by 10, and ``right``
+        increases it by 10.
+
         Prefer one button at a time. Use a short sequence only when navigating
         to a clearly identified menu choice. If you are stuck in an unfamiliar
         nested menu, pressing ``b`` several times will usually back out of it.
