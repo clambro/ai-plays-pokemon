@@ -144,7 +144,7 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 
 {state}
 
-The first Pokemon in the party usually receives most battle experience. Rotate the Pokemon you intend to develop into the lead for suitable encounters during normal progression, considering their actual moves, matchups, and ability to contribute. Notice when the same few Pokemon receive all the experience and give the others useful opportunities. If a teammate keeps sitting unused, find a useful role for it or reconsider its place in the party.
+During ordinary progression, prefer leading with weaker teammates, as this helps them gain experience faster and keep up with the other members of the party. Consider their actual moves, matchups, and ability to contribute. Notice when the same few Pokemon receive all the experience and give the others useful opportunities. If a teammate keeps sitting unused, find a useful role for it or reconsider its place in the party.
 
 Regularly reflect on what you are trying to accomplish and use set_goals to keep your goals useful and current.
 
