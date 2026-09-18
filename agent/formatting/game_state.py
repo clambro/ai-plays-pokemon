@@ -3,21 +3,23 @@
 from io import BytesIO
 from typing import TYPE_CHECKING
 
+from PIL import Image
 from pydantic_ai import BinaryContent
 
 from common.enums import PokeballItem
 
 if TYPE_CHECKING:
-    from PIL import Image
-
     from emulator.game_state import GameState
     from emulator.parsers.pokemon import Pokemon
 
 
 def build_screenshot_content(screenshot: Image.Image) -> BinaryContent:
-    """Encode a screenshot for a multimodal model message."""
+    """Encode a screenshot at four times its resolution without altering the source image."""
     image_buffer = BytesIO()
-    screenshot.save(image_buffer, format="PNG")
+    screenshot.resize(
+        (screenshot.width * 4, screenshot.height * 4),
+        resample=Image.Resampling.NEAREST,
+    ).save(image_buffer, format="PNG")
     return BinaryContent(
         data=image_buffer.getvalue(),
         media_type="image/png",
