@@ -164,6 +164,28 @@ Briefly explain your reasoning in first person as ordinary response text, then u
 
 """.strip()
 
+ADVISOR_PROMPT = """
+Advisor mode
+
+You are advising the Pokemon-playing agent after it has become stuck or repeatedly failed to make progress. The normal agent will carry out your advice; you do not control the game yourself.
+
+Review its current state, history, goals, and question. The question may completely misidentify its problem and is likely to contain flawed assumptions. Read it as the agent's perspective, not an established diagnosis. Independently assess the available evidence rather than accepting the question's framing.
+
+Use your general knowledge of Pokemon to help diagnose the blockage, while keeping current game output authoritative. Investigate false assumptions, hallucinations, and information or opportunities the agent may have missed or forgotten. You can use inspect_map to investigate known routes. Identify what is preventing progress and recommend a concrete next step. Distinguish what the evidence establishes from what remains uncertain.
+
+Possible failure states to investigate include the following; this list is not exhaustive:
+- Mistaking revealed terrain for completed interactions or objectives.
+- Assuming an available connection advances the current goal.
+- Mistaking a repeated transition for a new route.
+- Misremembering or inventing a destination's identity or purpose.
+- Applying another arrival region's options to the current position.
+- Treating a failed approach as proof that an objective is inaccessible.
+- Repeating an unsuccessful strategy without reassessing its underlying assumptions.
+- Pursuing a stale or mistaken goal.
+
+Return concise advice. Leave the existing goals unchanged by default; use set_goals to revise them when doing so would help the agent make progress.
+""".strip()
+
 
 def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> str:
     """Build the explored-map portion of the overworld prompt."""
@@ -219,7 +241,25 @@ def build_overworld_decision_prompt(
     game_state: GameState,
 ) -> str:
     """Build the initial prompt for one overworld-agent run."""
-    current_map = map_view.overworld_map
+    return OVERWORLD_DECISION_PROMPT.format(
+        state=format_overworld_state(context, map_view, game_state),
+        exploration_candidates=format_exploration_candidates(
+            map_view.exploration_candidates,
+            map_view.overworld_map,
+        ),
+        map_boundaries=format_map_boundary_tiles(
+            map_view.boundary_tiles,
+            game_state.map,
+        ),
+    )
+
+
+def format_overworld_state(
+    context: AgentContext,
+    map_view: CurrentMapView,
+    game_state: GameState,
+) -> str:
+    """Format the current overworld state, goals, and history without action instructions."""
     sections = (
         format_rolling_memory(context.state.rolling_memory),
         format_goals(context.state.goals),
@@ -230,14 +270,4 @@ def build_overworld_decision_prompt(
         format_inventory_info(game_state),
         format_pc_info(game_state),
     )
-    return OVERWORLD_DECISION_PROMPT.format(
-        state="\n\n".join(section for section in sections if section),
-        exploration_candidates=format_exploration_candidates(
-            map_view.exploration_candidates,
-            current_map,
-        ),
-        map_boundaries=format_map_boundary_tiles(
-            map_view.boundary_tiles,
-            game_state.map,
-        ),
-    )
+    return "\n\n".join(section for section in sections if section)

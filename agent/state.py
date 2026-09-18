@@ -23,6 +23,7 @@ class AgentState(BaseModel):
     goals: list[Goal] = Field(default_factory=list)
     scripted_displacements: list[ScriptedDisplacementObservation] = Field(default_factory=list)
     connection_traversals: list[ConnectionTraversalObservation] = Field(default_factory=list)
+    last_advice_iteration: int | None = None
     emulator_save_state: str | None = None
     total_tokens: int = 0
     total_cost: float = 0.0

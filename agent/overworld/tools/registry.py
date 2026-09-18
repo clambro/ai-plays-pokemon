@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from pydantic_ai import FunctionToolset
 
+from agent.overworld.tools.consult_advisor.interface import build_consult_advisor_tool
 from agent.overworld.tools.inspect_map.interface import (
     build_inspect_map_tool,
 )
@@ -50,6 +51,7 @@ def build_overworld_toolset(
         build_navigation_tool(context, current_map),
         build_press_buttons_tool(context),
         build_set_goals_tool(context),
+        build_consult_advisor_tool(context),
     ]
     if game_state.player.has_pokedex:
         if len(game_state.party) > 1:
