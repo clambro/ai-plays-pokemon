@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 _RANDOM_MOVEMENT = 0xFE
 _NOT_RENDERED = 0xFF
+_OBJECT_LIST_TERMINATOR = 0xFF
 
 
 class Sprite(BaseModel):
@@ -33,14 +34,25 @@ def parse_sprites(mem: PyBoyMemoryView) -> dict[int, Sprite]:
         mem: Current PyBoy memory view.
 
     Returns:
-        Non-player sprites keyed by their map index.
+        Present non-player sprites keyed by their map index, including offscreen sprites.
     """
+    hidden_indices = set()
+    for address in range(0xD61B, 0xD63B, 2):
+        index = mem[address]
+        if index == _OBJECT_LIST_TERMINATOR:
+            break
+        flag_index = mem[address + 1]
+        if mem[0xD5F3 + flag_index // 8] & (1 << (flag_index % 8)):
+            hidden_indices.add(index)
+
     sprites = {}
     for i in range(0x10, 0xF0, 0x10):  # First sprite is the player.
         picture_id = mem[0xC100 + i]
         if picture_id == 0:  # No more sprites on this map.
             break
         index = i // 0x10
+        if index in hidden_indices:
+            continue
         sprites[index] = Sprite(
             index=index,
             label=_ID_TO_SPRITE_LABEL.get(picture_id, "UNKNOWN"),

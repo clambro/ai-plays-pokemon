@@ -78,9 +78,7 @@ def _is_sokoban_available(
         for coords in map_view.visible_coords
     )
     has_boulder = any(
-        sprite.label == SpriteLabel.BOULDER
-        and sprite.is_rendered
-        and sprite.coords in map_view.visible_coords
+        sprite.label == SpriteLabel.BOULDER and sprite.coords in map_view.visible_coords
         for entity_id in current_map.known_sprite_ids
         if (sprite := game_state.sprites.get(entity_id)) is not None
     )
