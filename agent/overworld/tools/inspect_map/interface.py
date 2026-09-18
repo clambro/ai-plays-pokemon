@@ -27,6 +27,11 @@ def build_inspect_map_tool(
         Each arrival's results reflect reachability through currently revealed
         terrain, using your available traversal abilities.
 
+        Exploration status describes tile visibility only, not whether objects
+        have been interacted with, rewards collected, or objectives completed.
+        A fully revealed area may still contain useful interactions or unfinished
+        objectives.
+
         If you are unsure how to proceed, this tool can help you iteratively
         inspect known connections across maps to compare possible routes before
         travelling. Match each connection's destination coordinates to its arrival
