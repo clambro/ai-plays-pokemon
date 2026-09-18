@@ -80,6 +80,12 @@ def format_pc_info(game_state: GameState) -> str:
             f"{moves}\n"
         )
     out += "</pc_pokemon>"
+    max_box_pokemon = 20
+    if len(game_state.pc_pokemon) >= max_box_pokemon:
+        out += (
+            "\n\nWarning: Your active PC box is full. If your party is also full, you cannot"
+            " catch Pokemon. Change to a box with space at a PC or withdraw Pokemon to make room."
+        )
     return out
 
 
