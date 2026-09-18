@@ -16,11 +16,9 @@ from overworld_map.service import prepare_overworld_map
 if TYPE_CHECKING:
     from agent.context import AgentContext
 
-_COOLDOWN_ITERATIONS = 100
-
 
 def build_consult_advisor_tool(context: AgentContext) -> Tool[AgentContext]:
-    """Build the consultation tool with a persisted 100-iteration cooldown."""
+    """Build the consultation tool for an eligible overworld run."""
 
     async def consult_advisor(question: str) -> str:
         """Ask for strategic advice when you remain stuck or repeatedly fail to progress.
@@ -37,15 +35,10 @@ def build_consult_advisor_tool(context: AgentContext) -> Tool[AgentContext]:
             question: Describe the blockage and what you need help deciding.
 
         Returns:
-            Advice and the updated goals, or an explanation that consultation is unavailable.
+            Advice and the current goals, or an explanation that consultation failed.
         """
-        last_advice = context.state.last_advice_iteration
-        if last_advice is not None and context.state.iteration - last_advice < _COOLDOWN_ITERATIONS:
-            return (
-                "Consultation is available again at iteration "
-                f"{last_advice + _COOLDOWN_ITERATIONS}."
-            )
         context.state.last_advice_iteration = context.state.iteration
+        context.request_control_handoff()
         try:
             game_state, screenshot = await context.emulator.get_game_state_with_screenshot()
             current_map = await prepare_overworld_map(context.state.iteration, game_state)

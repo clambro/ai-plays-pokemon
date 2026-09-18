@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from emulator.game_state import GameState
 
 _FORCED_GOAL_REVIEW_INTERVAL = 200
+_ADVISOR_COOLDOWN_ITERATIONS = 100
 
 
 def build_overworld_toolset(
@@ -51,8 +52,10 @@ def build_overworld_toolset(
         build_navigation_tool(context, current_map),
         build_press_buttons_tool(context),
         build_set_goals_tool(context),
-        build_consult_advisor_tool(context),
     ]
+    last_advice = context.state.last_advice_iteration
+    if last_advice is None or context.state.iteration - last_advice >= _ADVISOR_COOLDOWN_ITERATIONS:
+        tools.append(build_consult_advisor_tool(context))
     if game_state.player.has_pokedex:
         if len(game_state.party) > 1:
             tools.append(build_swap_first_pokemon_tool(context))
