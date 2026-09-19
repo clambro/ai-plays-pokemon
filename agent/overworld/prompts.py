@@ -173,6 +173,8 @@ Review its current state, history, goals, and question. The question may complet
 
 Use your general knowledge of Pokemon to help diagnose the blockage, while keeping current game output authoritative. Investigate false assumptions, hallucinations, and information or opportunities the agent may have missed or forgotten. You can use inspect_map to investigate known routes. Identify what is preventing progress and recommend a concrete next step. Distinguish what the evidence establishes from what remains uncertain.
 
+Consider where the agent last made meaningful progress and use that context, together with your knowledge of Pokemon Yellow, to help determine how progression might continue. This does not necessarily mean returning there or continuing in the same direction.
+
 Possible failure states to investigate include the following; this list is not exhaustive:
 - Mistaking revealed terrain for completed interactions or objectives.
 - Assuming an available connection advances the current goal.
