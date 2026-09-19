@@ -14,8 +14,9 @@ from agent.overworld.map_view import CurrentMapView, build_current_map_view
 from agent.overworld.prompts import build_overworld_decision_prompt
 from agent.overworld.tools.registry import build_overworld_toolset
 from agent.utils import is_overworld_handler_state
+from common.enums import ReasoningEffort
 from common.prompts import SYSTEM_PROMPT
-from llm.service import MODEL, REASONING_EFFORT, TIMEOUT_SECONDS
+from llm.service import MODEL, TIMEOUT_SECONDS
 from overworld_map.service import prepare_overworld_map
 
 if TYPE_CHECKING:
@@ -45,7 +46,7 @@ def build_overworld_agent(
         ],
         capabilities=[AGENT_HOOKS],
         model_settings=OpenAIResponsesModelSettings(
-            openai_reasoning_effort=REASONING_EFFORT,
+            openai_reasoning_effort=ReasoningEffort.MEDIUM.value,
             openai_prompt_cache_key="overworld-agent",
             parallel_tool_calls=False,
             timeout=TIMEOUT_SECONDS,

@@ -3,6 +3,14 @@
 from enum import Enum, IntEnum, IntFlag, StrEnum, auto
 
 
+class ReasoningEffort(StrEnum):
+    """Reasoning effort used for model requests."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    XHIGH = "xhigh"
+
+
 class AsciiTile(StrEnum):
     """An enum for the ASCII representations of overworld map tiles.
 
