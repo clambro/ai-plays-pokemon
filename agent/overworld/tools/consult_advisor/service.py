@@ -10,7 +10,6 @@ from agent.context import AgentContext
 from agent.hooks import record_model_usage
 from agent.overworld.prompts import ADVISOR_PROMPT
 from agent.overworld.tools.inspect_map.interface import build_inspect_map_tool
-from agent.overworld.tools.set_goals.interface import build_set_goals_tool
 from common.prompts import SYSTEM_PROMPT
 from llm.service import MODEL, TIMEOUT_SECONDS
 
@@ -22,13 +21,13 @@ def build_advisor_agent(
     context: AgentContext,
     game_state: GameState,
 ) -> Agent[AgentContext, str]:
-    """Build an advisory agent that can inspect maps and update goals."""
+    """Build an advisory agent that can inspect known maps."""
     return Agent[AgentContext, str](
         model=f"openai-responses:{MODEL}",
         name="advisor_agent",
         deps_type=AgentContext,
         instructions=f"{SYSTEM_PROMPT}\n\n---\n\n{ADVISOR_PROMPT}",
-        tools=[build_inspect_map_tool(context, game_state), build_set_goals_tool(context)],
+        tools=[build_inspect_map_tool(context, game_state)],
         capabilities=[Hooks[AgentContext](after_model_request=record_model_usage)],
         model_settings=OpenAIResponsesModelSettings(
             openai_reasoning_effort="xhigh",

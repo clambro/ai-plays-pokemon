@@ -182,8 +182,6 @@ Possible failure states to investigate include the following; this list is not e
 - Treating a failed approach as proof that an objective is inaccessible.
 - Repeating an unsuccessful strategy without reassessing its underlying assumptions.
 - Pursuing a stale or mistaken goal.
-
-Return concise advice. Leave the existing goals unchanged by default; use set_goals to revise them when doing so would help the agent make progress.
 """.strip()
 
 

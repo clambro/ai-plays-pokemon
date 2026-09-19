@@ -13,7 +13,6 @@ from agent.overworld.tools.consult_advisor import interface, service
 from agent.overworld.tools.inspect_map import service as inspection_service
 from agent.overworld.tools.inspect_map.schemas import MapInspectionError
 from agent.overworld.tools.registry import build_overworld_toolset
-from agent.overworld.tools.set_goals import interface as goal_interface
 from agent.state import AgentState
 from llm.service import MODEL
 from memory.goals import Goal
@@ -80,11 +79,11 @@ async def test_consultation_cooldown_survives_backup_and_failure(
 
 
 @pytest.mark.unit
-async def test_advisor_updates_goals_and_accounts_usage(
+async def test_advisor_inspects_maps_and_accounts_usage(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """The advisor can replace goals and account for usage across its consultation."""
+    """The advisor can inspect maps and account for usage across its consultation."""
     context = AgentContext(
         state=AgentState(folder=tmp_path),
         emulator=MagicMock(),
@@ -94,7 +93,6 @@ async def test_advisor_updates_goals_and_accounts_usage(
         "inspect_map",
         AsyncMock(return_value=MapInspectionError.UNVISITED_MAP),
     )
-    monkeypatch.setattr(goal_interface, "complete_overworld_action", AsyncMock(return_value=[]))
     responses = iter(
         [
             ModelResponse(
@@ -104,19 +102,8 @@ async def test_advisor_updates_goals_and_accounts_usage(
                 provider_name="openai",
             ),
             ModelResponse(
-                parts=[
-                    ToolCallPart(
-                        "set_goals",
-                        {"goals": ["Reach the next town.", None, None]},
-                    ),
-                ],
-                usage=RequestUsage(input_tokens=4, output_tokens=5),
-                model_name=MODEL,
-                provider_name="openai",
-            ),
-            ModelResponse(
                 parts=[TextPart("Reassess the route.")],
-                usage=RequestUsage(input_tokens=6, output_tokens=7),
+                usage=RequestUsage(input_tokens=4, output_tokens=5),
                 model_name=MODEL,
                 provider_name="openai",
             ),
@@ -132,7 +119,6 @@ async def test_advisor_updates_goals_and_accounts_usage(
         result = await advisor.run("Help me decide where to go.", deps=context)
 
     assert result.output == "Reassess the route."
-    assert context.state.goals == [Goal(goal="Reach the next town.", updated_at_iteration=0)]
-    expected_tokens = 27
+    expected_tokens = 14
     assert context.state.total_tokens == expected_tokens
     assert context.state.total_cost > 0
