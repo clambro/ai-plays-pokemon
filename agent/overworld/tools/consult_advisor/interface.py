@@ -22,14 +22,18 @@ def build_consult_advisor_tool(context: AgentContext) -> Tool[AgentContext]:
     async def consult_advisor(question: str) -> str:
         """Ask for strategic advice when you remain stuck or repeatedly fail to progress.
 
-        Use this for a fresh assessment and a concrete suggestion for what to
-        do next when your own attempts are not resolving the blockage. The
-        advisor receives your current game state, screenshot, goals, and memory,
-        and can inspect known maps. It returns a strategic second opinion but
-        does not move you or act in the game. Its advice is generally helpful
-        but fallible, so assess it against current game data. Consultations are
-        available at most once every 100 iterations, so use them sparingly
-        rather than as a routine part of gameplay.
+        Use this when your own attempts are not resolving a blockage and you
+        need a fresh assessment and concrete suggestion for what to do next.
+        Consider consulting after repeated loop warnings or several attempts
+        that have not produced meaningful progress.
+
+        The advisor receives your current game state, screenshot, goals, and
+        memory, and can inspect known maps. It returns a strategic second
+        opinion but does not move you or act in the game. Its advice is generally
+        helpful but fallible, so assess it against current game data.
+
+        Consultations are available at most once every 100 iterations, so use
+        them only when you feel stuck instead of as part of routine gameplay.
 
         Args:
             question: Describe the blockage and what you need help deciding.
