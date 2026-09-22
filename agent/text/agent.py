@@ -56,6 +56,8 @@ async def run_text(context: AgentContext) -> None:
                     node = await agent_run.next(node)
                     if isinstance(current_node, CallToolsNode):
                         if context.consume_control_handoff():
+                            settlement = await settle_dialog(context)
+                            await context.complete_iteration(settlement.game_state)
                             break
                         (
                             game_state,
