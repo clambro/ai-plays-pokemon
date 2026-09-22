@@ -10,6 +10,7 @@ from common.constants import (
     ROLLING_MEMORY_RAW_BLOCK_SOFT_LIMIT,
     ROLLING_MEMORY_SUMMARY_MAX_CHARACTERS,
 )
+from common.enums import ReasoningEffort
 from database.rolling_memory.repository import (
     finalize_raw_memory_block,
     get_memory_summary_frontier,
@@ -151,7 +152,13 @@ async def _summarize(
         max_characters=ROLLING_MEMORY_SUMMARY_MAX_CHARACTERS,
         source=source,
     )
-    summary = (await llm_service.get_llm_response(prompt, system_prompt=SYSTEM_PROMPT)).strip()
+    summary = (
+        await llm_service.get_llm_response(
+            prompt,
+            reasoning_effort=ReasoningEffort.LOW,
+            system_prompt=SYSTEM_PROMPT,
+        )
+    ).strip()
     return await store_memory_summary(
         MemorySummaryCreate(
             start_iteration=start_iteration,

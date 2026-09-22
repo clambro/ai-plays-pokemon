@@ -11,6 +11,7 @@ from openai.types.responses.response_usage import (
 
 from agent.context import AgentContext
 from agent.state import AgentState
+from common.enums import ReasoningEffort
 from llm import service
 from llm.usage import bind_llm_usage_updater
 
@@ -46,6 +47,7 @@ async def test_get_llm_response_updates_agent_usage() -> None:
         llm_service = service.OpenAILLMService()
         result = await llm_service.get_llm_response(
             "prompt",
+            reasoning_effort=ReasoningEffort.LOW,
             system_prompt=TEST_SYSTEM_PROMPT,
         )
 
@@ -77,6 +79,7 @@ async def test_get_llm_response_rejects_incomplete_output() -> None:
     ):
         await llm_service.get_llm_response(
             "prompt",
+            reasoning_effort=ReasoningEffort.LOW,
             system_prompt=TEST_SYSTEM_PROMPT,
         )
 

@@ -126,6 +126,20 @@ def test_get_accessible_coords_plateau() -> None:
 
 
 @pytest.mark.unit
+def test_get_accessible_coords_ledge_at_map_boundary() -> None:
+    """Expose a boundary ledge without creating an off-map landing coordinate."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.terrain = [list("∙"), list("▽")]
+    start = Coords(row=0, col=0)
+    boundary = Coords(row=1, col=0)
+
+    accessible_coords = _get_accessible_coords(start, map_data, [])
+
+    assert accessible_coords == [start, boundary]
+    assert _calculate_path_to_target(start, boundary, map_data, []) == [Button.DOWN]
+
+
+@pytest.mark.unit
 def test_get_accessible_coords_collision_pairs() -> None:
     """Test that the accessible coords are correct for the collision pairs map."""
     map_data = deepcopy(DUMMY_MAP)

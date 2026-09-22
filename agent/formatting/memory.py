@@ -23,9 +23,10 @@ def format_goals(goals: list[Goal]) -> str:
         " work toward them as opportunities arise. Goals are specific, achievable objectives"
         " with clear completion conditions, not ongoing play-style rules. Write them in the"
         " imperative and keep distinct priorities separate. Do not use goals for individual"
-        " button presses or routine movement. Goals must come from current structured information,"
-        " observed game text, or recorded memory, never from assumptions about future progression"
-        " or general Pokemon knowledge. Use null for unused slots instead of inventing objectives"
+        " button presses or routine movement. Use current structured information, observed game"
+        " text, and recorded memory to ground goals. General Pokemon knowledge may guide your"
+        " plans, but do not treat it as confirmation of current game facts. Use null for unused"
+        " slots instead of inventing objectives"
         " to fill them. Goals are revisable plans; keep uncertain prerequisites explicitly"
         " uncertain and reassess them when new evidence contradicts the plan."
     )

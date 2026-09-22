@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, assert_never
 from agent.overworld.connections import group_contiguous_warps, group_map_boundaries
 from agent.overworld.tools.inspect_map.schemas import MapInspectionError
 from common.constants import MAP_INSPECTION_LABEL, PLAYER_OFFSET_X, PLAYER_OFFSET_Y
-from common.enums import AsciiTile, BlockedDirection, FacingDirection, MapId, WarpActivation
+from common.enums import AsciiTile, Badge, BlockedDirection, FacingDirection, MapId, WarpActivation
 from common.schemas import Coords
 from emulator.text_events import map_block_entity_id
 
@@ -78,6 +78,29 @@ _VISIBLE_UNVISITED_DESTINATIONS = frozenset(
         MapId.SAFFRON_MART,
     }
 )
+
+
+def format_navigation_hm_warning(game_state: GameState) -> str:
+    """Warn when an owned, badge-enabled navigation HM is missing from the party."""
+    inventory = {item.name for item in game_state.inventory.items if item.quantity > 0}
+    moves = {move.name for pokemon in game_state.party for move in pokemon.moves}
+    missing = [
+        move
+        for move, item, badge in (
+            ("CUT", "HM01 CUT", Badge.CASCADEBADGE),
+            ("SURF", "HM03 SURF", Badge.SOULBADGE),
+            ("STRENGTH", "HM04 STRENGTH", Badge.RAINBOWBADGE),
+        )
+        if item in inventory and badge in game_state.player.badges and move not in moves
+    ]
+    if not missing:
+        return ""
+    return "\n".join(
+        f"Navigation warning: You own the HM and have the required badge for {move}, "
+        "but no Pokemon in your current party knows it. This limits your navigation; "
+        "teach it to a compatible party member or withdraw a Pokemon that knows it."
+        for move in missing
+    )
 
 
 def _format_overworld_sprite(
@@ -247,7 +270,7 @@ def format_connection(
     """Format one map connection using its complete known coordinate sets."""
     source = f"Connection on {source_map_id.name} at {_format_coords(source_coords)}"
     if destination_map_id is None:
-        return f"{source} leads to an unvisited map."
+        return f"{source} has an undiscovered destination."
     if not destination_coords:
         return (
             f"{source} leads somewhere on {destination_map_id.name}, but its arrival point has "

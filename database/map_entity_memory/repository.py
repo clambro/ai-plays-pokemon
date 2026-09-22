@@ -2,13 +2,12 @@
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import and_, delete, or_, select
+from sqlalchemy import select
 
 from database.db_config import db_sessionmaker
 from database.map_entity_memory.model import MapEntityMemoryDBModel
 from database.map_entity_memory.schemas import (
     MapEntityMemoryCreate,
-    MapEntityMemoryDelete,
     MapEntityMemoryInteractionUpdate,
     MapEntityMemoryRead,
 )
@@ -29,13 +28,9 @@ async def get_map_entity_memories_for_map(map_id: MapId) -> list[MapEntityMemory
     return [MapEntityMemoryRead.model_validate(d) for d in db_objs]
 
 
-async def apply_map_entity_changes(
-    *,
-    creates: Sequence[MapEntityMemoryCreate] = (),
-    deletes: Sequence[MapEntityMemoryDelete] = (),
-) -> None:
-    """Apply a batch of map-entity changes in one transaction."""
-    if not creates and not deletes:
+async def create_map_entity_memories(entities: Sequence[MapEntityMemoryCreate]) -> None:
+    """Create discovered map-entity memories in one transaction."""
+    if not entities:
         return
 
     async with db_sessionmaker.begin() as session:
@@ -46,25 +41,9 @@ async def apply_map_entity_changes(
                     entity_id=entity.entity_id,
                     entity_type=entity.entity_type,
                 )
-                for entity in creates
+                for entity in entities
             ],
         )
-
-        if deletes:
-            await session.execute(
-                delete(MapEntityMemoryDBModel).where(
-                    or_(
-                        *[
-                            and_(
-                                MapEntityMemoryDBModel.map_id == entity.map_id,
-                                MapEntityMemoryDBModel.entity_id == entity.entity_id,
-                                MapEntityMemoryDBModel.entity_type == entity.entity_type,
-                            )
-                            for entity in deletes
-                        ],
-                    ),
-                ),
-            )
 
 
 async def update_map_entity_interactions(

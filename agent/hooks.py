@@ -26,17 +26,28 @@ async def require_tool_call(
     return request_context
 
 
-async def record_model_response(
+async def record_model_usage(
     ctx: RunContext[AgentContext],
     *,
     request_context: ModelRequestContext,  # noqa: ARG001
     response: ModelResponse,
 ) -> ModelResponse:
-    """Account for a model response and retain its ordinary-text reasoning."""
+    """Account for a model response in the shared gameplay state."""
     await ctx.deps.add_llm_usage(
         response.usage.total_tokens,
         float(response.cost().total_price),
     )
+    return response
+
+
+async def record_model_response(
+    ctx: RunContext[AgentContext],
+    *,
+    request_context: ModelRequestContext,
+    response: ModelResponse,
+) -> ModelResponse:
+    """Account for a model response and retain its ordinary-text reasoning."""
+    await record_model_usage(ctx, request_context=request_context, response=response)
     if reasoning := response.text:
         ctx.deps.state.rolling_memory.add_memory(reasoning)
         ctx.deps.state.public_log.add(ctx.deps.state.iteration, reasoning)

@@ -202,7 +202,7 @@ def get_neighbors(
     spinner_tiles = AsciiTile.get_spinner_tiles()
 
     current_tile = tiles[pos.row, pos.col]
-    if current_tile in [AsciiTile.WARP, AsciiTile.BOULDER_HOLE] or current_tile in spinner_tiles:
+    if current_tile in AsciiTile.get_step_on_transition_tiles() or current_tile in spinner_tiles:
         return []  # These transition tiles cannot be used as stable intermediate positions.
 
     for button in (Button.RIGHT, Button.DOWN, Button.LEFT, Button.UP):
@@ -226,6 +226,8 @@ def get_neighbors(
         ):
             # Jumping over a ledge skips a tile.
             ledge_pos = new_pos + (dy, dx)  # noqa: RUF005
+            if not (0 <= ledge_pos.row < tiles.shape[0] and 0 <= ledge_pos.col < tiles.shape[1]):
+                ledge_pos = new_pos
             neighbors.append((ledge_pos, button))
         elif target_tile in spinner_tiles:
             destination = get_spinner_destination(new_pos, tiles)

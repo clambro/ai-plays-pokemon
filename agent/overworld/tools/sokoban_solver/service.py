@@ -66,7 +66,6 @@ def _get_simplified_map(
         for entity_id in current_map.known_sprite_ids
         if (sprite := game_state.sprites.get(entity_id)) is not None
         and sprite.label == SpriteLabel.BOULDER
-        and sprite.is_rendered
     }
     simplified_tiles = []
     goals = set()
@@ -270,9 +269,7 @@ async def _execute_step(
         observed_state = await emulator.get_game_state()
         if boulder_coords is not None:
             boulder_still_present = any(
-                sprite.label == SpriteLabel.BOULDER
-                and sprite.coords == boulder_coords
-                and sprite.is_rendered
+                sprite.label == SpriteLabel.BOULDER and sprite.coords == boulder_coords
                 for sprite in observed_state.sprites.values()
             )
             if not boulder_still_present:

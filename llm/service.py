@@ -14,8 +14,9 @@ if TYPE_CHECKING:
         ResponseUsage,
     )
 
+    from common.enums import ReasoningEffort
+
 MODEL = "gpt-5.6-luna"
-REASONING_EFFORT = "low"
 TIMEOUT_SECONDS = 60
 MAX_RETRIES = 2
 INPUT_TOKEN_OVERHEAD = 6
@@ -36,12 +37,14 @@ class OpenAILLMService:
         self,
         prompt: str,
         *,
+        reasoning_effort: ReasoningEffort,
         system_prompt: str,
     ) -> str:
         """Get an ordinary text response from GPT-5.6 Luna.
 
         Args:
             prompt: Text to send to the model.
+            reasoning_effort: Reasoning effort for this request.
             system_prompt: Instruction supplied to the model.
 
         Returns:
@@ -54,7 +57,7 @@ class OpenAILLMService:
             model=MODEL,
             input=prompt,
             instructions=system_prompt,
-            reasoning={"effort": REASONING_EFFORT},
+            reasoning={"effort": reasoning_effort.value},
         )
         await self._record_usage(response)
         self._validate_response(response)

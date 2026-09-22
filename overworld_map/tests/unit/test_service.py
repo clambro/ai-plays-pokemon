@@ -106,8 +106,8 @@ async def test_load_preserves_discovered_ids_without_live_records(
 
 
 @pytest.mark.unit
-async def test_update_persists_discovery_and_derendering() -> None:
-    """Visible discoveries are added and a de-rendered known sprite is removed."""
+async def test_update_discovers_present_entities_on_revealed_terrain() -> None:
+    """Offscreen arrivals are discovered while hidden entities and their history stay separate."""
     warp = SimpleNamespace(
         index=4,
         coords=Coords(row=2, col=3),
@@ -123,7 +123,12 @@ async def test_update_persists_discovery_and_derendering() -> None:
     )
     game_state = MagicMock()
     game_state.map = _MAP_STATE
-    game_state.sprites = {2: SimpleNamespace(coords=Coords(row=3, col=3), is_rendered=False)}
+    game_state.sprites = {
+        3: SimpleNamespace(index=3, coords=Coords(row=2, col=2), is_rendered=False),
+        8: SimpleNamespace(index=8, coords=Coords(row=0, col=0)),
+    }
+    game_state.signs = {5: SimpleNamespace(index=5, coords=Coords(row=2, col=2))}
+    game_state.objects = {6: SimpleNamespace(index=6, coords=Coords(row=2, col=2))}
     game_state.screen.to_screen_coords.return_value = Coords(row=3, col=3)
     game_state.is_text_on_screen.return_value = False
     game_state.get_ascii_screen.return_value = visible
@@ -131,6 +136,9 @@ async def test_update_persists_discovery_and_derendering() -> None:
         "OverworldMap",
         SimpleNamespace(
             id=MapId.PALLET_TOWN,
+            height=4,
+            width=4,
+            terrain=[list("░∙∙∙"), list("∙∙∙∙"), list("∙∙∙∙"), list("∙∙∙∙")],
             known_sprite_ids={1, 2},
             sprite_interactions={2: SimpleNamespace()},
             known_warp_ids=set(),
@@ -141,7 +149,7 @@ async def test_update_persists_discovery_and_derendering() -> None:
 
     with (
         patch(
-            "overworld_map.service.apply_map_entity_changes",
+            "overworld_map.service.create_map_entity_memories",
             new_callable=AsyncMock,
         ) as apply_changes,
         patch(
@@ -155,26 +163,23 @@ async def test_update_persists_discovery_and_derendering() -> None:
     ):
         await update_overworld_map(1, cast("GameState", game_state), current_map)
 
-    assert current_map.known_sprite_ids == {1, 3}
-    assert current_map.sprite_interactions == {}
+    assert current_map.known_sprite_ids == {1, 2, 3}
+    assert set(current_map.sprite_interactions) == {2}
     assert current_map.known_warp_ids == {4}
     assert current_map.known_sign_ids == {5}
     assert current_map.known_object_ids == {6}
     assert apply_changes.await_args is not None
-    changes = apply_changes.await_args.kwargs
-    assert {(change.entity_type, change.entity_id) for change in changes["creates"]} == {
+    creates = apply_changes.await_args.args[0]
+    assert {(change.entity_type, change.entity_id) for change in creates} == {
         (MapEntityType.SPRITE, 3),
         (MapEntityType.SIGN, 5),
         (MapEntityType.OBJECT, 6),
     }
-    assert [(change.entity_type, change.entity_id) for change in changes["deletes"]] == [
-        (MapEntityType.SPRITE, 2)
-    ]
 
 
 @pytest.mark.unit
 def test_derived_views_follow_current_entities_without_changing_terrain() -> None:
-    """Known offscreen sprites block routing until their identity is removed."""
+    """Presence, not camera rendering, controls whether a discovered sprite blocks routing."""
     current_map = OverworldMap(
         id=MapId.PALLET_TOWN,
         terrain=[list("∙∙∙")],
@@ -192,11 +197,12 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
         known_map_ids=frozenset(),
     )
     sprite = SimpleNamespace(coords=Coords(row=0, col=1), is_rendered=True)
+    sprites = {1: sprite}
     player = SimpleNamespace(coords=Coords(row=0, col=0))
     game_state = cast(
         "GameState",
         SimpleNamespace(
-            sprites={1: sprite},
+            sprites=sprites,
             warps={},
             signs={},
             objects={},
@@ -223,8 +229,10 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
         [AsciiTile.FREE, AsciiTile.FREE, AsciiTile.SPRITE]
     ]
 
-    current_map.known_sprite_ids.remove(1)
+    del sprites[1]
     assert get_navigation_tiles(current_map, game_state).tolist() == [list("∙∙∙")]
+    sprites[1] = sprite
+    assert get_navigation_tiles(current_map, game_state)[0, 2] == AsciiTile.SPRITE
     assert current_map.terrain == [list("∙∙∙")]
 
 

@@ -36,10 +36,9 @@ def build_set_goals_tool(
         are they immediate next actions. Write them in the imperative and keep distinct
         priorities separate. Do not add goals merely to fill slots; leave unused slots null.
 
-        Base goals only on current structured information, observed game text,
-        or recorded memory. Do not invent locations, characters, items, or
-        objectives from general Pokemon knowledge or assumptions about future
-        progression.
+        Ground goals in current structured information, observed game text,
+        and recorded memory. General Pokemon knowledge may guide your plans,
+        but do not treat it as confirmation of current game facts.
 
         Use this tool when an important priority is missing or when an existing
         goal has changed, been completed, or become irrelevant. Goals guide

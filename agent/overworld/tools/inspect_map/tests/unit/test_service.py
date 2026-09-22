@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from agent.overworld.tools.inspect_map.schemas import MapInspectionResult
+from agent.overworld.tools.inspect_map.schemas import MapInspectionResult, ResolvedConnection
 from agent.overworld.tools.inspect_map.service import (
     get_connection_component,
     group_remembered_warps,
@@ -113,6 +113,17 @@ def _boundary(
         destination_map_id=destination_map_id,
         destination_row=0,
         destination_col=0,
+    )
+
+
+def _connection(*coords: Coords, is_warp: bool = True) -> ResolvedConnection:
+    """Build a resolved connection for component reachability checks."""
+    return ResolvedConnection(
+        source_map_id=MapId.MT_MOON_B1F,
+        source_coords=coords,
+        destination_map_id=MapId.ROUTE_4,
+        destination_coords=(),
+        is_warp=is_warp,
     )
 
 
@@ -403,13 +414,13 @@ def test_connection_check_lists_only_connections_in_the_arrival_component(
     expected_unexplored_terrain: bool,
 ) -> None:
     """Return complete connection groups only when their component is reachable."""
-    arrival = _warp(0, 1, 1, MapId.ROUTE_4, 2)
-    connected = _warp(1, 1, 3, MapId.MT_MOON_B2F, 3)
-    disconnected = _warp(2, 3, 3, MapId.MT_MOON_B2F, 1)
-    connected_boundaries = [
-        _boundary(WarpActivation.UP, row, col, MapId.MT_MOON_1F) for row, col in ((1, 2), (2, 3))
-    ]
-    disconnected_boundary = _boundary(WarpActivation.DOWN, 3, 2, MapId.MT_MOON_B2F)
+    connections = (
+        _connection(Coords(row=1, col=1)),
+        _connection(Coords(row=1, col=3)),
+        _connection(Coords(row=3, col=3)),
+        _connection(Coords(row=1, col=2), Coords(row=2, col=3), is_warp=False),
+        _connection(Coords(row=3, col=2), is_warp=False),
+    )
     map_memory = MapMemoryRead(
         map_id=MapId.MT_MOON_B1F,
         terrain=f"{top_row}\n▓∙∙∙▓\n▓▓▓▓▓\n▓∙∙∙▓\n▓▓▓▓▓",
@@ -417,22 +428,36 @@ def test_connection_check_lists_only_connections_in_the_arrival_component(
     )
 
     component = get_connection_component(
-        arrival_coords=Coords(row=arrival.row, col=arrival.col),
-        warp_groups=group_remembered_warps([arrival, connected, disconnected]),
-        boundaries=[*connected_boundaries, disconnected_boundary],
+        arrival_coords=Coords(row=1, col=1),
+        connections=connections,
         map_memory=map_memory,
         hm_tiles=[],
     )
 
-    assert tuple(tuple(warp.warp_id for warp in group) for group in component.warp_groups) == (
-        (0,),
-        (1,),
-    )
-    assert tuple(
-        tuple((boundary.row, boundary.col) for boundary in group)
-        for group in component.boundary_groups
-    ) == (((1, 2), (2, 3)),)
+    assert component.connections == (connections[0], connections[1], connections[3])
     assert component.has_unexplored_terrain is expected_unexplored_terrain
+
+
+@pytest.mark.unit
+def test_connection_check_includes_unresolved_step_on_transition() -> None:
+    """A reachable transition remains a connection before its destination is known."""
+    map_memory = MapMemoryRead(
+        map_id=MapId.POKEMON_MANSION_3F,
+        terrain="▓▓▓▓▓\n▓∙○▓▓\n▓▓▓▓▓",
+        blockages={},
+    )
+
+    component = get_connection_component(
+        arrival_coords=Coords(row=1, col=1),
+        connections=(),
+        map_memory=map_memory,
+        hm_tiles=[],
+    )
+
+    assert tuple(connection.source_coords for connection in component.connections) == (
+        (Coords(row=1, col=2),),
+    )
+    assert component.connections[0].destination_map_id is None
 
 
 @pytest.mark.unit
@@ -493,8 +518,7 @@ def test_connection_check_recognizes_unresolved_spinner_exploration(
 
     component = get_connection_component(
         arrival_coords=Coords(row=1, col=1),
-        warp_groups=(),
-        boundaries=[],
+        connections=(),
         map_memory=map_memory,
         hm_tiles=[],
     )

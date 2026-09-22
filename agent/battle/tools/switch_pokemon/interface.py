@@ -30,6 +30,10 @@ def build_switch_pokemon_tool(context: AgentContext) -> Tool[AgentContext]:
         The party slot is its zero-based position in the player's party. The
         active Pokemon and fainted Pokemon cannot be switched in. Switching
         consumes the turn, so the opponent can attack the Pokemon switched in.
+        Use this tool sparingly: repeated switching can quickly lose a battle.
+        Switch only when changing Pokemon offers a clear strategic advantage
+        worth that attack and the incoming Pokemon can survive it and
+        contribute.
 
         Args:
             party_slot: Zero-based party slot of the Pokemon to switch in.

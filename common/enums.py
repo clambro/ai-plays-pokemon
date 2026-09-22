@@ -3,6 +3,14 @@
 from enum import Enum, IntEnum, IntFlag, StrEnum, auto
 
 
+class ReasoningEffort(StrEnum):
+    """Reasoning effort used for model requests."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    XHIGH = "xhigh"
+
+
 class AsciiTile(StrEnum):
     """An enum for the ASCII representations of overworld map tiles.
 
@@ -52,6 +60,11 @@ class AsciiTile(StrEnum):
             cls.SPINNER_RIGHT,
             cls.SPINNER_STOP,
         ]
+
+    @classmethod
+    def get_step_on_transition_tiles(cls) -> frozenset[AsciiTile]:
+        """Return terrain that triggers a map transition when entered."""
+        return frozenset({cls.WARP, cls.BOULDER_HOLE})
 
     @classmethod
     def get_spinner_tiles(cls) -> list[AsciiTile]:

@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from common.enums import MapId
     from common.schemas import Coords
-    from database.map_boundary_memory.schemas import MapBoundaryMemoryRead
     from database.warp_memory.schemas import WarpMemoryRead
 
 type WarpGroups = tuple[tuple[WarpMemoryRead, ...], ...]
@@ -38,8 +37,7 @@ class ResolvedConnection:
 class ConnectionComponent:
     """Remembered map features reachable from one arrival point."""
 
-    warp_groups: WarpGroups
-    boundary_groups: tuple[tuple[MapBoundaryMemoryRead, ...], ...]
+    connections: tuple[ResolvedConnection, ...]
     has_unexplored_terrain: bool
 
 

@@ -88,6 +88,7 @@ async def test_goal_replacement_satisfies_forced_review(
         "press_buttons",
         "set_goals",
         "navigation",
+        "consult_advisor",
     }
 
 

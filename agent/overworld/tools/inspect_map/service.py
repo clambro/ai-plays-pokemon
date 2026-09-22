@@ -81,9 +81,24 @@ async def _inspect_map(
             for boundary in incoming_boundaries
         ),
     }
+    await _load_warp_groups(
+        (warp.destination_map_id for warp in warps),
+        known_map_ids,
+        warp_groups_by_map,
+    )
+    connections = (
+        *(
+            _resolve_warp_connection(
+                group,
+                warp_groups_by_map.get(group[0].destination_map_id),
+            )
+            for group in warp_groups_by_map[map_id]
+        ),
+        *(_resolve_boundary_connection(group) for group in group_map_boundaries(boundaries)),
+    )
     known_access_coords = set()
     for coords in entry_coords:
-        tiles = _build_connection_tiles(warps, map_memory)
+        tiles = _build_connection_tiles(connections, map_memory)
         if not (0 <= coords.row < tiles.shape[0] and 0 <= coords.col < tiles.shape[1]):
             continue
         tiles[coords.row, coords.col] = AsciiTile.PLAYER
@@ -100,36 +115,19 @@ async def _inspect_map(
         },
         key=lambda coords: (coords.row, coords.col),
     )
-    await _load_warp_groups(
-        (warp.destination_map_id for warp in warps),
-        known_map_ids,
-        warp_groups_by_map,
-    )
-
     arrivals = []
     for coords in arrival_coords:
         component = get_connection_component(
             arrival_coords=coords,
-            warp_groups=warp_groups_by_map[map_id],
-            boundaries=boundaries,
+            connections=connections,
             map_memory=map_memory,
             hm_tiles=hm_tiles,
-        )
-        connections = (
-            *(
-                _resolve_warp_connection(
-                    group,
-                    warp_groups_by_map.get(group[0].destination_map_id),
-                )
-                for group in component.warp_groups
-            ),
-            *(_resolve_boundary_connection(group) for group in component.boundary_groups),
         )
         arrivals.append(
             MapArrivalInspection(
                 arrival_coords=coords,
                 has_recorded_access=coords in known_access_coords,
-                connections=connections,
+                connections=component.connections,
                 has_unexplored_terrain=component.has_unexplored_terrain,
             )
         )
@@ -195,21 +193,16 @@ def _resolve_boundary_connection(
 def get_connection_component(
     *,
     arrival_coords: Coords,
-    warp_groups: WarpGroups,
-    boundaries: Sequence[MapBoundaryMemoryRead],
+    connections: Sequence[ResolvedConnection],
     map_memory: MapMemoryRead,
     hm_tiles: list[AsciiTile],
 ) -> ConnectionComponent:
-    """Find reachable connections and unseen terrain using already-grouped warps."""
-    tiles = _build_connection_tiles(
-        (warp for group in warp_groups for warp in group),
-        map_memory,
-    )
+    """Find reachable connections and unseen terrain from one arrival coordinate."""
+    tiles = _build_connection_tiles(connections, map_memory)
     height, width = tiles.shape
     if not (0 <= arrival_coords.row < height and 0 <= arrival_coords.col < width):
         return ConnectionComponent(
-            warp_groups=(),
-            boundary_groups=(),
+            connections=(),
             has_unexplored_terrain=False,
         )
 
@@ -220,32 +213,47 @@ def get_connection_component(
         map_memory.blockages,
         hm_tiles,
     )
-    reachable_warp_groups = tuple(
-        group for group in warp_groups if any(_coords(warp) in reachable_coords for warp in group)
+    reachable_connections = tuple(
+        connection
+        for connection in connections
+        if any(coords in reachable_coords for coords in connection.source_coords)
     )
-    boundary_groups = tuple(
-        group
-        for group in group_map_boundaries(boundaries)
-        if any(_coords(boundary) in reachable_coords for boundary in group)
+    recorded_connection_coords = {
+        coords for connection in connections for coords in connection.source_coords
+    }
+    transition_tiles = AsciiTile.get_step_on_transition_tiles()
+    discovered_connections = tuple(
+        ResolvedConnection(
+            source_map_id=map_memory.map_id,
+            source_coords=(coords,),
+            destination_map_id=None,
+            destination_coords=(),
+            is_warp=True,
+        )
+        for coords in sorted(reachable_coords, key=lambda coords: (coords.row, coords.col))
+        if tiles[coords.row, coords.col] in transition_tiles
+        and coords not in recorded_connection_coords
     )
     has_unexplored_terrain = bool(get_exploration_candidates(reachable_coords, tiles))
     return ConnectionComponent(
-        warp_groups=reachable_warp_groups,
-        boundary_groups=boundary_groups,
+        connections=(*reachable_connections, *discovered_connections),
         has_unexplored_terrain=has_unexplored_terrain,
     )
 
 
 def _build_connection_tiles(
-    warps: Iterable[WarpMemoryRead],
+    connections: Iterable[ResolvedConnection],
     map_memory: MapMemoryRead,
 ) -> np.ndarray:
     """Overlay remembered warp coordinates on persisted terrain."""
     tiles = np.asarray([list(row) for row in map_memory.terrain.splitlines()])
     height, width = tiles.shape
-    for warp in warps:
-        if 0 <= warp.row < height and 0 <= warp.col < width:
-            tiles[warp.row, warp.col] = AsciiTile.WARP
+    for connection in connections:
+        if not connection.is_warp:
+            continue
+        for coords in connection.source_coords:
+            if 0 <= coords.row < height and 0 <= coords.col < width:
+                tiles[coords.row, coords.col] = AsciiTile.WARP
     return tiles
 
 

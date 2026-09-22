@@ -117,7 +117,7 @@ async def _get_current_map(emulator: Emulator) -> OverworldMap:
         patch("overworld_map.service.get_visited_maps", return_value=[]),
         patch("overworld_map.service.create_map_memory", return_value=None),
         patch("overworld_map.service.update_map_terrain", return_value=None),
-        patch("overworld_map.service._add_remove_map_entities", return_value=None),
+        patch("overworld_map.service._discover_map_entities", return_value=None),
         patch("overworld_map.service.remember_warps", return_value=None),
     ):
         overworld_map = await prepare_overworld_map(0, game_state)
@@ -126,7 +126,7 @@ async def _get_current_map(emulator: Emulator) -> OverworldMap:
 
 
 def _get_boulders(game_state: GameState) -> set[Coords]:
-    """Get the boulders from the game state."""
+    """Get the boulders visible on the current screen."""
     return {
         s.coords
         for s in game_state.sprites.values()

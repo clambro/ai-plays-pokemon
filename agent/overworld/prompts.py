@@ -15,6 +15,7 @@ from agent.overworld.formatting import (
     format_exploration_candidates,
     format_legend,
     format_map_boundary_tiles,
+    format_navigation_hm_warning,
     format_object_notes,
     format_sign_notes,
     format_sprite_notes,
@@ -143,7 +144,7 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 
 {state}
 
-The first Pokemon in the party usually receives most battle experience. Rotate the Pokemon you intend to develop into the lead for suitable encounters during normal progression, considering their actual moves, matchups, and ability to contribute. Notice when the same few Pokemon receive all the experience and give the others useful opportunities. If a teammate keeps sitting unused, find a useful role for it or reconsider its place in the party.
+During ordinary progression, prefer leading with weaker teammates, as this helps them gain experience faster and keep up with the other members of the party. Consider their actual moves, matchups, and ability to contribute. Notice when the same few Pokemon receive all the experience and give the others useful opportunities. If a teammate keeps sitting unused, find a useful role for it or reconsider its place in the party.
 
 Regularly reflect on what you are trying to accomplish and use set_goals to keep your goals useful and current.
 
@@ -161,6 +162,28 @@ Use navigation for ordinary movement within the current map. Use press_buttons f
 
 Briefly explain your reasoning in first person as ordinary response text, then use exactly one available tool to act. Be sure to consider all the tools at your disposal. Every response must include one tool call. A fresh observation will be returned after each tool executes.
 
+""".strip()
+
+ADVISOR_PROMPT = """
+Advisor mode
+
+You are advising the Pokemon-playing agent after it has become stuck or repeatedly failed to make progress. The normal agent will carry out your advice; you do not control the game yourself.
+
+Review its current state, history, goals, and question. The question may completely misidentify its problem and is likely to contain flawed assumptions. Read it as the agent's perspective, not an established diagnosis. Independently assess the available evidence rather than accepting the question's framing.
+
+Use your general knowledge of Pokemon to help diagnose the blockage, while keeping current game output authoritative. Investigate false assumptions, hallucinations, and information or opportunities the agent may have missed or forgotten. You can use inspect_map to investigate known routes. Identify what is preventing progress and recommend a concrete next step. Distinguish what the evidence establishes from what remains uncertain.
+
+Consider where the agent last made meaningful progress and use that context, together with your knowledge of Pokemon Yellow, to help determine how progression might continue. This does not necessarily mean returning there or continuing in the same direction.
+
+Possible failure states to investigate include the following; this list is not exhaustive:
+- Mistaking revealed terrain for completed interactions or objectives.
+- Assuming an available connection advances the current goal.
+- Mistaking a repeated transition for a new route.
+- Misremembering or inventing a destination's identity or purpose.
+- Applying another arrival region's options to the current position.
+- Treating a failed approach as proof that an objective is inaccessible.
+- Repeating an unsuccessful strategy without reassessing its underlying assumptions.
+- Pursuing a stale or mistaken goal.
 """.strip()
 
 
@@ -218,24 +241,33 @@ def build_overworld_decision_prompt(
     game_state: GameState,
 ) -> str:
     """Build the initial prompt for one overworld-agent run."""
-    current_map = map_view.overworld_map
-    sections = (
-        format_rolling_memory(context.state.rolling_memory),
-        format_goals(context.state.goals),
-        _format_overworld_map(map_view, game_state),
-        format_player_info(game_state),
-        format_party_info(game_state),
-        format_inventory_info(game_state),
-        format_pc_info(game_state),
-    )
     return OVERWORLD_DECISION_PROMPT.format(
-        state="\n\n".join(section for section in sections if section),
+        state=format_overworld_state(context, map_view, game_state),
         exploration_candidates=format_exploration_candidates(
             map_view.exploration_candidates,
-            current_map,
+            map_view.overworld_map,
         ),
         map_boundaries=format_map_boundary_tiles(
             map_view.boundary_tiles,
             game_state.map,
         ),
     )
+
+
+def format_overworld_state(
+    context: AgentContext,
+    map_view: CurrentMapView,
+    game_state: GameState,
+) -> str:
+    """Format the current overworld state, goals, and history without action instructions."""
+    sections = (
+        format_rolling_memory(context.state.rolling_memory),
+        format_goals(context.state.goals),
+        _format_overworld_map(map_view, game_state),
+        format_player_info(game_state),
+        format_navigation_hm_warning(game_state),
+        format_party_info(game_state),
+        format_inventory_info(game_state),
+        format_pc_info(game_state),
+    )
+    return "\n\n".join(section for section in sections if section)
