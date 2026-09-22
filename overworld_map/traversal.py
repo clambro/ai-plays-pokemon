@@ -202,7 +202,7 @@ def get_neighbors(
     spinner_tiles = AsciiTile.get_spinner_tiles()
 
     current_tile = tiles[pos.row, pos.col]
-    if current_tile in [AsciiTile.WARP, AsciiTile.BOULDER_HOLE] or current_tile in spinner_tiles:
+    if current_tile in AsciiTile.get_step_on_transition_tiles() or current_tile in spinner_tiles:
         return []  # These transition tiles cannot be used as stable intermediate positions.
 
     for button in (Button.RIGHT, Button.DOWN, Button.LEFT, Button.UP):

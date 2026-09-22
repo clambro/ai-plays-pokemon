@@ -270,7 +270,7 @@ def format_connection(
     """Format one map connection using its complete known coordinate sets."""
     source = f"Connection on {source_map_id.name} at {_format_coords(source_coords)}"
     if destination_map_id is None:
-        return f"{source} leads to an unvisited map."
+        return f"{source} has an undiscovered destination."
     if not destination_coords:
         return (
             f"{source} leads somewhere on {destination_map_id.name}, but its arrival point has "

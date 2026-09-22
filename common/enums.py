@@ -62,6 +62,11 @@ class AsciiTile(StrEnum):
         ]
 
     @classmethod
+    def get_step_on_transition_tiles(cls) -> frozenset[AsciiTile]:
+        """Return terrain that triggers a map transition when entered."""
+        return frozenset({cls.WARP, cls.BOULDER_HOLE})
+
+    @classmethod
     def get_spinner_tiles(cls) -> list[AsciiTile]:
         """Get the spinner tiles."""
         return [cls.SPINNER_UP, cls.SPINNER_DOWN, cls.SPINNER_LEFT, cls.SPINNER_RIGHT]
