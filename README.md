@@ -85,7 +85,7 @@ Only what would be accessible to a human player. It can see the screen, and it h
 
 The model should make decisions, not laboriously reproduce mechanics that ordinary code can handle faster and more reliably. The agent decides what it wants to accomplish, while deterministic code validates the request against the game state and handles details such as navigation, menu input, and state persistence. This keeps decision-making with the model and predictable mechanical work in testable Python services. The boundary between model judgment and deterministic execution is the central subject of the [project philosophy](docs/philosophy.md#my-approach).
 
-### Why GPT-5.6 Luna?
+### Why GPT-6 Luna?
 
 It was the cheapest, fastest frontier model at the time of writing. A big part of this project is the idea that a smaller model, properly orchestrated to do specific tasks, can outperform a larger model. Smaller models also have lower latency, making for a more enjoyable viewing experience.
 
@@ -94,6 +94,8 @@ It was the cheapest, fastest frontier model at the time of writing. A big part o
 Not natively. You could adapt this code to another Gen 1 or Gen 2 game, but you would have to create new parsers for the memory locations in the new ROM, and probably tweak some of the timing and navigation logic. PyBoy, unfortunately, only runs GameBoy and GameBoy Color games, so you would need to find another emulator to go beyond Gen 2.
 
 ### How much does it cost to run?
+
+**Note: The estimate below was measured with GPT-5.6 Luna. GPT-6 Luna should cost roughly half as much, but we have not measured its hourly cost yet.**
 
 Short answer: Less than $1 USD/hour for the GPT-5.6 Luna API calls.
 

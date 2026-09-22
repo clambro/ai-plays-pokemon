@@ -10,7 +10,7 @@ llm_service = OpenAILLMService()
 
 @pytest.mark.integration
 async def test_one_token_per_tile() -> None:
-    """Test that GPT-5.6 Luna encodes each ASCII map tile as one token."""
+    """Test that GPT-6 Luna encodes each ASCII map tile as one token."""
     num_repeats = 10
     expected_tokens = num_repeats + 2  # Include the two surrounding newlines.
     errors = []
