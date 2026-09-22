@@ -49,8 +49,8 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         increases it by 10.
 
         Prefer one button at a time. Use a short sequence only when navigating
-        to a clearly identified menu choice. If you are stuck in an unfamiliar
-        nested menu, pressing ``b`` several times will usually back out of it.
+        to a clearly identified menu choice. To leave a menu without making a
+        selection, press ``b``; repeat as needed for nested menus.
 
         Args:
             buttons: Buttons to press in order.
