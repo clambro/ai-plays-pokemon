@@ -2,28 +2,44 @@
 
 from typing import TYPE_CHECKING
 
-from genai_prices import extract_usage
 from openai import AsyncOpenAI
 
 from common.settings import settings
 from llm.usage import update_llm_usage
 
 if TYPE_CHECKING:
-    from openai.types.responses import (
-        Response,
-        ResponseUsage,
-    )
+    from openai.types.responses import Response
 
     from common.enums import ReasoningEffort
 
-MODEL = "gpt-5.6-luna"
+MODEL = "gpt-6-luna"
 TIMEOUT_SECONDS = 60
 MAX_RETRIES = 2
 INPUT_TOKEN_OVERHEAD = 6
+LONG_CONTEXT_TOKEN_THRESHOLD = 272_000
+
+
+def calculate_luna_cost(
+    input_tokens: int,
+    output_tokens: int,
+    cache_read_tokens: int,
+    cache_write_tokens: int,
+) -> float:
+    """Estimate GPT-6 Luna request cost from OpenAI's published token rates."""
+    # genai-prices does not recognize GPT-6 Luna yet. Use these rates until the library adds it.
+    long_context = input_tokens > LONG_CONTEXT_TOKEN_THRESHOLD
+    input_multiplier = 2 if long_context else 1
+    output_multiplier = 1.5 if long_context else 1
+    uncached_tokens = input_tokens - cache_read_tokens - cache_write_tokens
+    input_cost = (
+        uncached_tokens * 0.10 + cache_read_tokens * 0.01 + cache_write_tokens * 0.125
+    ) * input_multiplier
+    output_cost = output_tokens * 0.50 * output_multiplier
+    return (input_cost + output_cost) / 1_000_000
 
 
 class OpenAILLMService:
-    """Shared GPT-5.6 Luna client and request boundary."""
+    """Shared GPT-6 Luna client and request boundary."""
 
     def __init__(self) -> None:
         """Initialize the OpenAI client."""
@@ -40,7 +56,7 @@ class OpenAILLMService:
         reasoning_effort: ReasoningEffort,
         system_prompt: str,
     ) -> str:
-        """Get an ordinary text response from GPT-5.6 Luna.
+        """Get an ordinary text response from GPT-6 Luna.
 
         Args:
             prompt: Text to send to the model.
@@ -66,7 +82,7 @@ class OpenAILLMService:
         return response.output_text
 
     async def count_input_tokens(self, text: str) -> int:
-        """Count the GPT-5.6 Luna input tokens for text."""
+        """Count the GPT-6 Luna input tokens for text."""
         response = await self.client.responses.input_tokens.count(model=MODEL, input=text)
         # The endpoint includes fixed Responses API message framing in addition to
         # the supplied text. Remove it so this method reports only the text tokens.
@@ -80,7 +96,12 @@ class OpenAILLMService:
             raise ValueError("OpenAI returned no usage information.")
         await update_llm_usage(
             usage.total_tokens,
-            OpenAILLMService._calculate_cost(response.model, usage),
+            calculate_luna_cost(
+                usage.input_tokens,
+                usage.output_tokens,
+                usage.input_tokens_details.cached_tokens,
+                usage.input_tokens_details.cache_write_tokens,
+            ),
         )
 
     @staticmethod
@@ -99,16 +120,3 @@ class OpenAILLMService:
         if response.incomplete_details is not None:
             raise ValueError(f"OpenAI response incomplete: {response.incomplete_details.reason}")
         raise ValueError(f"OpenAI response ended with status {response.status}.")
-
-    @staticmethod
-    def _calculate_cost(model: str, usage: ResponseUsage) -> float:
-        """Calculate the response cost using the shared GenAI pricing database."""
-        usage_data = extract_usage(
-            {
-                "model": model,
-                "usage": usage.model_dump(),
-            },
-            provider_id="openai",
-            api_flavor="responses",
-        )
-        return float(usage_data.calc_price().total_price)

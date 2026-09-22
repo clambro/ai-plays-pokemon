@@ -22,7 +22,7 @@ TEST_SYSTEM_PROMPT = "Test system prompt."
 async def test_get_llm_response_updates_agent_usage() -> None:
     """Record provider usage through the required agent-state updater."""
     expected_total_tokens = 12
-    expected_cost = 0.25
+    expected_cost = 0.000004335
     response = _response(
         output_text="response",
         usage=_usage(
@@ -41,7 +41,6 @@ async def test_get_llm_response_updates_agent_usage() -> None:
 
     with (
         patch("llm.service.AsyncOpenAI", return_value=client),
-        patch.object(service.OpenAILLMService, "_calculate_cost", return_value=expected_cost),
         bind_llm_usage_updater(context.add_llm_usage),
     ):
         llm_service = service.OpenAILLMService()

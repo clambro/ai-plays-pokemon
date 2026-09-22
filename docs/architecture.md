@@ -34,7 +34,7 @@ The Overworld Handler is responsible for exploring maps, interacting with the wo
 
 ```mermaid
 flowchart LR
-    dispatch["Dispatcher"] --> agent["GPT-5.6 Luna<br/>overworld agent"]
+    dispatch["Dispatcher"] --> agent["GPT-6 Luna<br/>overworld agent"]
     agent --> choice{"Function tool call"}
 
     subgraph toolset["Stable toolset for this overworld run"]
@@ -108,7 +108,7 @@ The Battle Handler takes over for an entire battle. It gives the agent the curre
 ```mermaid
 flowchart LR
     dispatch["Dispatcher"] --> prepare["Settle routine text and prepare<br/>static initial observation"]
-    prepare --> agent["GPT-5.6 Luna<br/>battle agent"]
+    prepare --> agent["GPT-6 Luna<br/>battle agent"]
     agent --> choice{"Function tool call"}
 
     subgraph toolset["Stable toolset for this battle"]
@@ -179,7 +179,7 @@ The Text Handler is responsible for dialog, menus, naming screens, and other int
 flowchart LR
     dispatch["Dispatcher"] --> settle["Settle routine dialog<br/>and return a fresh result"]
     settle --> handle{"Handle result"}
-    handle -->|"Decision required"| agent["GPT-5.6 Luna<br/>text agent"]
+    handle -->|"Decision required"| agent["GPT-6 Luna<br/>text agent"]
     handle -->|"Text ends or battle begins"| finish(["Return to dispatcher"])
 
     agent --> choice{"Function tool call"}
