@@ -136,5 +136,6 @@ def _should_end_overworld_run(
         game_state.map.id != initial_game_state.map.id
         or game_state.player.coords != initial_game_state.player.coords
         or not is_overworld_handler_state(game_state, control_boundary)
+        or game_state.warps != initial_game_state.warps
         or game_state.get_ascii_screen_terrain() != initial_game_state.get_ascii_screen_terrain()
     )

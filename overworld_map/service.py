@@ -185,7 +185,7 @@ async def update_overworld_map(
     game_state: GameState,
     overworld_map: OverworldMap,
 ) -> None:
-    """Update visible terrain and discover present entities on revealed terrain.
+    """Update visible terrain and discover present entities and warps on revealed terrain.
 
     Terrain and entities are persisted only when no text obscures the screen and the supplied map
     matches the current game state.
@@ -196,13 +196,19 @@ async def update_overworld_map(
         overworld_map: Explored map expected to match ``game_state``.
     """
     if not game_state.is_text_on_screen() and overworld_map.id == game_state.map.id:
-        ascii_screen = game_state.get_ascii_screen()
         await _update_overworld_map_terrain(iteration, game_state, overworld_map)
         await _discover_map_entities(game_state, overworld_map)
+        discovered_warps = [
+            warp
+            for warp in game_state.warps.values()
+            if 0 <= warp.coords.row < overworld_map.height
+            and 0 <= warp.coords.col < overworld_map.width
+            and overworld_map.terrain[warp.coords.row][warp.coords.col] != AsciiTile.UNSEEN
+        ]
         await remember_warps(
-            [_create_warp_memory(overworld_map.id, warp) for warp in ascii_screen.warps]
+            [_create_warp_memory(overworld_map.id, warp) for warp in discovered_warps]
         )
-        overworld_map.known_warp_ids.update(warp.index for warp in ascii_screen.warps)
+        overworld_map.known_warp_ids.update(warp.index for warp in discovered_warps)
 
 
 async def _discover_map_entities(

@@ -165,9 +165,7 @@ class GameState:
         on_screen_warps = []
         for w in self.warps.values():
             sc = self.screen.to_screen_coords(w.coords)
-            # There's a funny edge case with warps where they can be rendered on top of walls and
-            # are therefore inaccessible. An example is in map 50, when entering Viridian Forest.
-            if sc and blocks[sc.row, sc.col] != AsciiTile.WALL:
+            if sc:
                 blocks[sc.row, sc.col] = AsciiTile.WARP
                 on_screen_warps.append(w)
 
