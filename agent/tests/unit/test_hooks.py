@@ -21,7 +21,6 @@ from agent.overworld.tools.use_item.service import use_item
 from agent.state import AgentState
 from agent.text.agent import build_text_agent
 from emulator.control_events import ControlHandoff
-from llm.service import MODEL
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable
@@ -30,6 +29,8 @@ if TYPE_CHECKING:
     from pydantic_ai.capabilities import ValidatedToolArgs
 
     from emulator.game_state import GameState
+
+TEST_MODEL = "gpt-6-luna"
 
 
 @pytest.mark.unit
@@ -49,13 +50,13 @@ async def test_hooks_publish_accounted_reasoning_before_tool_execution(
                     ToolCallPart("test_action"),
                 ],
                 usage=first_usage,
-                model_name=MODEL,
+                model_name=TEST_MODEL,
                 provider_name="openai",
             ),
             ModelResponse(
                 parts=[TextPart("The action is complete.")],
                 usage=final_usage,
-                model_name=MODEL,
+                model_name=TEST_MODEL,
                 provider_name="openai",
             ),
         ),
@@ -92,7 +93,7 @@ async def test_hooks_publish_accounted_reasoning_before_tool_execution(
         events.append("tool")
         return "done"
 
-    with agent.override(model=FunctionModel(model_function, model_name=MODEL)):
+    with agent.override(model=FunctionModel(model_function, model_name=TEST_MODEL)):
         result = await agent.run("Use the test action.", deps=context)
 
     assert result.output == "The action is complete."

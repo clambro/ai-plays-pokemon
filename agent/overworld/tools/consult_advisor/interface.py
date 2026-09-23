@@ -8,7 +8,7 @@ from pydantic_ai import Tool
 from agent.formatting.game_state import build_screenshot_content
 from agent.overworld.map_view import build_current_map_view
 from agent.overworld.prompts import format_overworld_state
-from agent.overworld.tools.consult_advisor import service
+from agent.overworld.tools.consult_advisor import agent
 from common.constants import ADVISOR_ADVICE_LABEL
 from overworld_map.service import prepare_overworld_map
 
@@ -47,7 +47,7 @@ def build_consult_advisor_tool(context: AgentContext) -> Tool[AgentContext]:
             game_state, screenshot = await context.emulator.get_game_state_with_screenshot()
             current_map = await prepare_overworld_map(context.state.iteration, game_state)
             map_view = build_current_map_view(current_map, game_state)
-            advisor = service.build_advisor_agent(context, game_state)
+            advisor = agent.build_advisor_agent(context, game_state)
             result = await advisor.run(
                 [
                     build_screenshot_content(screenshot),

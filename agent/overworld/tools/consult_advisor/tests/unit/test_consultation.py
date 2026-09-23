@@ -9,12 +9,11 @@ from pydantic_ai import ModelResponse, RequestUsage, TextPart, ToolCallPart
 from pydantic_ai.models.function import FunctionModel
 
 from agent.context import AgentContext
-from agent.overworld.tools.consult_advisor import interface, service
+from agent.overworld.tools.consult_advisor import agent, interface
 from agent.overworld.tools.inspect_map import service as inspection_service
 from agent.overworld.tools.inspect_map.schemas import MapInspectionError
 from agent.overworld.tools.registry import build_overworld_toolset
 from agent.state import AgentState
-from llm.service import MODEL
 from memory.goals import Goal
 
 if TYPE_CHECKING:
@@ -23,6 +22,8 @@ if TYPE_CHECKING:
 
     from pydantic_ai import ModelMessage
     from pydantic_ai.models.function import AgentInfo
+
+TEST_MODEL = "gpt-6-luna"
 
 
 @pytest.mark.unit
@@ -52,7 +53,7 @@ async def test_consultation_cooldown_survives_backup_and_failure(
             output="Investigate the accessible entrance.",
         ),
     )
-    monkeypatch.setattr(service, "build_advisor_agent", MagicMock(return_value=advisor))
+    monkeypatch.setattr(agent, "build_advisor_agent", MagicMock(return_value=advisor))
     tool = interface.build_consult_advisor_tool(context)
     consult = cast("Callable[[str], Awaitable[str]]", tool.function)
     game_state = MagicMock()
@@ -98,13 +99,13 @@ async def test_advisor_inspects_maps_and_accounts_usage(
             ModelResponse(
                 parts=[ToolCallPart("inspect_map", {"map_name": "MT_MOON_B2F"})],
                 usage=RequestUsage(input_tokens=2, output_tokens=3),
-                model_name=MODEL,
+                model_name=TEST_MODEL,
                 provider_name="openai",
             ),
             ModelResponse(
                 parts=[TextPart("Reassess the route.")],
                 usage=RequestUsage(input_tokens=4, output_tokens=5),
-                model_name=MODEL,
+                model_name=TEST_MODEL,
                 provider_name="openai",
             ),
         ],
@@ -114,8 +115,8 @@ async def test_advisor_inspects_maps_and_accounts_usage(
         del messages, info
         return next(responses)
 
-    advisor = service.build_advisor_agent(context, MagicMock())
-    with advisor.override(model=FunctionModel(model_function, model_name=MODEL)):
+    advisor = agent.build_advisor_agent(context, MagicMock())
+    with advisor.override(model=FunctionModel(model_function, model_name=TEST_MODEL)):
         result = await advisor.run("Help me decide where to go.", deps=context)
 
     assert result.output == "Reassess the route."

@@ -1,9 +1,12 @@
 """OpenAI client integration for LLM requests."""
 
+from functools import cache
 from typing import TYPE_CHECKING
 
 from genai_prices import extract_usage
 from openai import AsyncOpenAI
+from pydantic_ai.models.openai import OpenAIResponsesModel
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from common.settings import settings
 from llm.usage import update_llm_usage
@@ -13,10 +16,21 @@ if TYPE_CHECKING:
 
     from common.enums import ReasoningEffort
 
-MODEL = "gpt-6-luna"
+_MODEL = "gpt-6-luna"
 TIMEOUT_SECONDS = 60
 MAX_RETRIES = 2
 INPUT_TOKEN_OVERHEAD = 6
+
+
+@cache
+def build_agent_model(*, max_retries: int = MAX_RETRIES) -> OpenAIResponsesModel:
+    """Build a shared agent model with an explicit OpenAI retry policy."""
+    return OpenAIResponsesModel(
+        _MODEL,
+        provider=OpenAIProvider(
+            openai_client=AsyncOpenAI(api_key=settings.openai_api_key, max_retries=max_retries)
+        ),
+    )
 
 
 class OpenAILLMService:
@@ -51,7 +65,7 @@ class OpenAILLMService:
             ValueError: OpenAI returns an unsuccessful response or no response text.
         """
         response = await self.client.responses.create(
-            model=MODEL,
+            model=_MODEL,
             input=prompt,
             instructions=system_prompt,
             reasoning={"effort": reasoning_effort.value},
@@ -64,7 +78,7 @@ class OpenAILLMService:
 
     async def count_input_tokens(self, text: str) -> int:
         """Count the GPT-6 Luna input tokens for text."""
-        response = await self.client.responses.input_tokens.count(model=MODEL, input=text)
+        response = await self.client.responses.input_tokens.count(model=_MODEL, input=text)
         # The endpoint includes fixed Responses API message framing in addition to
         # the supplied text. Remove it so this method reports only the text tokens.
         return response.input_tokens - INPUT_TOKEN_OVERHEAD

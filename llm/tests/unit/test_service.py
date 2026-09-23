@@ -16,6 +16,7 @@ from llm import service
 from llm.usage import bind_llm_usage_updater
 
 TEST_SYSTEM_PROMPT = "Test system prompt."
+TEST_MODEL = "gpt-6-luna"
 
 
 @pytest.mark.unit
@@ -54,7 +55,7 @@ async def test_get_llm_response_updates_agent_usage() -> None:
     assert context.state.total_tokens == expected_total_tokens
     assert context.state.total_cost == expected_cost
     client.responses.create.assert_awaited_once_with(
-        model=service.MODEL,
+        model=TEST_MODEL,
         input="prompt",
         instructions=TEST_SYSTEM_PROMPT,
         reasoning={"effort": "low"},
@@ -95,7 +96,7 @@ def _response(
     response.output = []
     response.output_text = output_text
     response.usage = usage or _usage(input_tokens=1, output_tokens=1)
-    response.model = service.MODEL
+    response.model = TEST_MODEL
     response.error = None
     response.incomplete_details = MagicMock()
     return response
