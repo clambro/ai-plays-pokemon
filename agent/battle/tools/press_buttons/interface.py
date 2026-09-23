@@ -45,13 +45,9 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         - ``left`` moves the cursor left one column.
         - ``right`` moves the cursor right one column.
 
-        Use this for dialog, forced selections, and screens not covered by the
-        semantic tools. Prefer one button at a time. Use a short sequence only
-        when navigating to a clearly identified menu choice.
-
-        If a forced switch repeatedly displays "There's no will to fight," the
-        highlighted Pokemon has fainted. Use the directional buttons to select
-        a different Pokemon that is still able to fight.
+        Use this for dialog and screens not covered by the semantic tools.
+        Prefer one button at a time. Use a short sequence only when navigating
+        to a clearly identified menu choice.
 
         Args:
             buttons: Buttons to press in order.
