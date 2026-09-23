@@ -1,4 +1,4 @@
-"""Luna extra-high consultation using the existing map-inspection tool."""
+"""Luna consultation using the existing map-inspection tool."""
 
 from typing import TYPE_CHECKING
 
@@ -31,7 +31,7 @@ def build_advisor_agent(
         tools=[build_inspect_map_tool(context, game_state)],
         capabilities=[Hooks[AgentContext](after_model_request=record_model_usage)],
         model_settings=OpenAIResponsesModelSettings(
-            openai_reasoning_effort=ReasoningEffort.XHIGH.value,
+            openai_reasoning_effort=ReasoningEffort.HIGH.value,
             openai_prompt_cache_key="advisor-agent",
             parallel_tool_calls=False,
             timeout=TIMEOUT_SECONDS,

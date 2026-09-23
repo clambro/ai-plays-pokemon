@@ -6,9 +6,12 @@ from enum import Enum, IntEnum, IntFlag, StrEnum, auto
 class ReasoningEffort(StrEnum):
     """Reasoning effort used for model requests."""
 
+    NONE = "none"
     LOW = "low"
     MEDIUM = "medium"
+    HIGH = "high"
     XHIGH = "xhigh"
+    MAX = "max"
 
 
 class AsciiTile(StrEnum):

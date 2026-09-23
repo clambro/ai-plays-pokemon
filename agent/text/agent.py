@@ -34,7 +34,7 @@ def build_text_agent(context: AgentContext) -> Agent[AgentContext, str]:
         toolsets=[build_text_toolset(context)],
         capabilities=[AGENT_HOOKS],
         model_settings=OpenAIResponsesModelSettings(
-            openai_reasoning_effort=ReasoningEffort.LOW.value,
+            openai_reasoning_effort=ReasoningEffort.MEDIUM.value,
             openai_prompt_cache_key="text-agent",
             parallel_tool_calls=False,
             timeout=TIMEOUT_SECONDS,
