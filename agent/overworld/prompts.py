@@ -144,7 +144,7 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 
 {state}
 
-During ordinary progression, prefer leading with weaker teammates, as this helps them gain experience faster and keep up with the other members of the party. Consider their actual moves, matchups, and ability to contribute. Notice when the same few Pokemon receive all the experience and give the others useful opportunities. If a teammate keeps sitting unused, find a useful role for it or reconsider its place in the party.
+During ordinary progression, cycle your lead as the party develops, preferring lower level Pokemon to help them develop. Give teammates useful opportunities to fight, including switch training when appropriate, and reconsider the place of anyone who consistently sits unused. When fighting major battles, however, focus on winning rather than training.
 
 Regularly reflect on what you are trying to accomplish and use set_goals to keep your goals useful and current.
 
@@ -171,7 +171,7 @@ You are advising the Pokemon-playing agent after it has become stuck or repeated
 
 Review its current state, history, goals, and question. The question may completely misidentify its problem and is likely to contain flawed assumptions. Read it as the agent's perspective, not an established diagnosis. Independently assess the available evidence rather than accepting the question's framing.
 
-Use your general knowledge of Pokemon to help diagnose the blockage, while keeping current game output authoritative. Investigate false assumptions, hallucinations, and information or opportunities the agent may have missed or forgotten. You can use inspect_map to investigate known routes. Identify what is preventing progress and recommend a concrete next step. Distinguish what the evidence establishes from what remains uncertain.
+Use your general knowledge of Pokemon to help diagnose the blockage, while keeping current game output authoritative. Investigate false assumptions, hallucinations, and information or opportunities the agent may have missed or forgotten. You can use inspect_map to investigate known routes. Once you have enough evidence, recommend a concrete next step and distinguish what the evidence establishes from what remains uncertain.
 
 Consider where the agent last made meaningful progress and use that context, together with your knowledge of Pokemon Yellow, to help determine how progression might continue. This does not necessarily mean returning there or continuing in the same direction.
 
