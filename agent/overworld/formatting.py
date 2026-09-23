@@ -660,8 +660,21 @@ def format_map_boundary_tiles(
     for facing_dir, (cardinal_dir, connection) in map_connections.items():
         if connection is not None and boundary_tiles[facing_dir]:
             coord_str = " or ".join(str(coord) for coord in boundary_tiles[facing_dir])
-            output.append(
+            description = (
                 f"Connection on {map_state.id.name} at {coord_str} leads {cardinal_dir} to "
-                f"{connection.destination_map.name}.",
+                f"{connection.destination_map.name}."
             )
+            water_entries = [
+                coord
+                for coord in boundary_tiles[facing_dir]
+                if (collision_tiles := connection.get_collision_tile_pair(coord)) is not None
+                and collision_tiles[0] not in map_state.water_tiles
+                and collision_tiles[1] in map_state.water_tiles
+            ]
+            if water_entries:
+                water_coords = " or ".join(str(coord) for coord in water_entries)
+                description += (
+                    f" At {water_coords}, face {cardinal_dir} and press A to enter the water."
+                )
+            output.append(description)
     return "\n".join(output) or "No connected-map boundary is reachable from this region."

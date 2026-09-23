@@ -6,7 +6,7 @@ from agent.overworld.navigation import calculate_path_to_target
 from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
 from common.enums import BUTTON_DIRECTIONS, BUTTON_OFFSETS, AsciiTile, Button, MapId
 from emulator.control_events import ControlBoundary
-from overworld_map.service import record_observed_map_connection, update_overworld_map
+from overworld_map.service import record_observed_hole_connection, update_overworld_map
 from overworld_map.traversal import (
     build_routing_data,
     get_spinner_destination,
@@ -272,13 +272,13 @@ async def _press_and_record_connection(
     *,
     observe_steps: bool = False,
 ) -> tuple[ControlResult, GameState]:
-    """Press once and retain a directly caused, validated map crossing."""
+    """Press once and record a directly caused hole traversal, if any."""
     result = await emulator.press_overworld_button(
         button,
         observe_steps=observe_steps,
     )
     current = await emulator.get_game_state()
-    await record_observed_map_connection(
+    await record_observed_hole_connection(
         button=button,
         previous=previous,
         result=result,

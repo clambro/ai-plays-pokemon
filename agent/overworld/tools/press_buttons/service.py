@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, assert_never
 from common.constants import ACTION_RESULT_LABEL
 from common.enums import AsciiTile, Button, FacingDirection, MapId
 from emulator.control_events import ControlBoundary
-from overworld_map.service import record_observed_map_connection
+from overworld_map.service import record_observed_hole_connection
 
 if TYPE_CHECKING:
     from common.schemas import Coords
@@ -37,7 +37,7 @@ async def press_buttons(
         previous = await emulator.get_game_state()
         control_result = await emulator.press_overworld_button(button)
         current = await emulator.get_game_state()
-        await record_observed_map_connection(
+        await record_observed_hole_connection(
             button=button,
             previous=previous,
             result=control_result,

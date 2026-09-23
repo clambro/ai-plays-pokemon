@@ -24,7 +24,8 @@ from emulator.parsers.map import MapConnection
 from overworld_map.schemas import OverworldMap
 from overworld_map.service import (
     get_overworld_map,
-    record_observed_map_connection,
+    record_observed_hole_connection,
+    record_observed_map_boundary,
     update_overworld_map,
 )
 from overworld_map.tiles import get_composed_map_tiles, get_navigation_tiles
@@ -333,8 +334,8 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
 
 
 @pytest.mark.unit
-async def test_direct_cardinal_crossing_remembers_full_connection() -> None:
-    """Persist the complete mapping only after one input matches the loaded connection."""
+async def test_observed_cardinal_crossing_remembers_full_connection() -> None:
+    """Persist a ROM-matched crossing even when it was not caused by a directional press."""
     connection = MapConnection(
         direction=FacingDirection.RIGHT,
         destination_map=MapId.ROUTE_4,
@@ -376,20 +377,10 @@ async def test_direct_cardinal_crossing_remembers_full_connection() -> None:
         "overworld_map.service.remember_map_boundaries",
         new_callable=AsyncMock,
     ) as persist_boundaries:
-        await record_observed_map_connection(
-            button=Button.RIGHT,
-            previous=previous,
-            result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),
-            current=current,
-        )
+        await record_observed_map_boundary(previous, current)
 
         previous_player.coords = Coords(row=2, col=3)
-        await record_observed_map_connection(
-            button=Button.RIGHT,
-            previous=previous,
-            result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),
-            current=current,
-        )
+        await record_observed_map_boundary(previous, current)
 
     persist_boundaries.assert_awaited_once()
     assert persist_boundaries.await_args is not None
@@ -443,7 +434,7 @@ async def test_stepping_onto_hole_remembers_one_way_connection() -> None:
         "overworld_map.service.remember_map_boundaries",
         new_callable=AsyncMock,
     ) as persist_boundaries:
-        await record_observed_map_connection(
+        await record_observed_hole_connection(
             button=Button.RIGHT,
             previous=previous,
             result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),

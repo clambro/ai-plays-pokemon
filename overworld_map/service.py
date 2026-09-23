@@ -6,7 +6,6 @@ import numpy as np
 from loguru import logger
 
 from common.enums import (
-    BUTTON_DIRECTIONS,
     BUTTON_OFFSETS,
     AsciiTile,
     Button,
@@ -380,18 +379,16 @@ async def record_warp_usage(
         )
 
 
-async def record_observed_map_connection(
+async def record_observed_hole_connection(
     *,
     button: Button,
     previous: GameState,
     result: ControlResult,
     current: GameState,
 ) -> None:
-    """Persist a coordinate-based map connection caused by one movement input."""
+    """Persist an observed hole traversal caused by one movement input."""
     try:
-        connections = _get_observed_map_boundaries(button, previous, result, current)
-        if not connections:
-            connections = _get_observed_hole_connection(button, previous, result, current)
+        connections = _get_observed_hole_connection(button, previous, result, current)
         if not connections:
             return
         await remember_map_boundaries(connections)
@@ -401,51 +398,57 @@ async def record_observed_map_connection(
         )
 
 
-def _get_observed_map_boundaries(
-    button: Button,
+async def record_observed_map_boundary(
     previous: GameState,
-    result: ControlResult,
+    current: GameState,
+) -> None:
+    """Persist a map-edge crossing observed across gameplay handlers."""
+    try:
+        connections = _get_observed_map_boundaries(previous, current)
+        if connections:
+            await remember_map_boundaries(connections)
+    except Exception as error:  # noqa: BLE001
+        logger.opt(exception=error).warning(
+            "Map-boundary recording failed; continuing without the latest crossing."
+        )
+
+
+def _get_observed_map_boundaries(
+    previous: GameState,
     current: GameState,
 ) -> tuple[MapBoundaryMemoryCreateUpdate, ...]:
-    """Recognize a direct crossing and retain its complete crossable coordinate mapping."""
-    direction = BUTTON_DIRECTIONS.get(button)
+    """Recognize a ROM map-edge crossing and retain its crossable coordinate mapping."""
     if (
-        direction is None
-        or result.boundary != ControlBoundary.OVERWORLD_READY
-        or previous.map.id == current.map.id
+        previous.map.id == current.map.id
         or previous.map.id in {MapId.OUTSIDE, MapId.UNKNOWN}
         or current.map.id in {MapId.OUTSIDE, MapId.UNKNOWN}
     ):
         return ()
 
-    connection = {
-        FacingDirection.UP: previous.map.north_connection,
-        FacingDirection.DOWN: previous.map.south_connection,
-        FacingDirection.LEFT: previous.map.west_connection,
-        FacingDirection.RIGHT: previous.map.east_connection,
-    }[direction]
-    if (
-        connection is None
-        or connection.direction != direction
-        or connection.destination_map != current.map.id
-    ):
-        return ()
-
     source = previous.player.coords
-    source_coordinate = (
-        source.col if direction in {FacingDirection.UP, FacingDirection.DOWN} else source.row
-    )
-    on_boundary = {
-        FacingDirection.UP: source.row == 0,
-        FacingDirection.DOWN: source.row == previous.map.height - 1,
-        FacingDirection.LEFT: source.col == 0,
-        FacingDirection.RIGHT: source.col == previous.map.width - 1,
-    }[direction]
-    if (
-        not on_boundary
-        or source_coordinate not in connection.source_coordinates
-        or connection.get_destination(source) != current.player.coords
+    for direction, connection, on_boundary in (
+        (FacingDirection.UP, previous.map.north_connection, source.row == 0),
+        (
+            FacingDirection.DOWN,
+            previous.map.south_connection,
+            source.row == previous.map.height - 1,
+        ),
+        (FacingDirection.LEFT, previous.map.west_connection, source.col == 0),
+        (FacingDirection.RIGHT, previous.map.east_connection, source.col == previous.map.width - 1),
     ):
+        source_coordinate = (
+            source.col if direction in {FacingDirection.UP, FacingDirection.DOWN} else source.row
+        )
+        if (
+            connection is not None
+            and connection.direction == direction
+            and connection.destination_map == current.map.id
+            and on_boundary
+            and source_coordinate in connection.source_coordinates
+            and connection.get_destination(source) == current.player.coords
+        ):
+            break
+    else:
         return ()
 
     can_surf = AsciiTile.WATER in previous.get_hm_tiles()
