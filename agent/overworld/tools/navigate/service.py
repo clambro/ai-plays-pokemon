@@ -6,7 +6,11 @@ from agent.overworld.navigation import calculate_path_to_target
 from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
 from common.enums import BUTTON_DIRECTIONS, BUTTON_OFFSETS, AsciiTile, Button, MapId
 from emulator.control_events import ControlBoundary
-from overworld_map.service import record_observed_hole_connection, update_overworld_map
+from overworld_map.service import (
+    record_observed_hole_connection,
+    record_observed_map_boundary,
+    update_overworld_map,
+)
 from overworld_map.traversal import (
     build_routing_data,
     get_spinner_destination,
@@ -278,6 +282,8 @@ async def _press_and_record_connection(
         observe_steps=observe_steps,
     )
     current = await emulator.get_game_state()
+    if previous.map.id != current.map.id:
+        await record_observed_map_boundary(previous, current)
     await record_observed_hole_connection(
         button=button,
         previous=previous,
