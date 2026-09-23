@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
 
     from common.schemas import Coords
+    from emulator.schemas import BackgroundBlock
 
 _OVERWORLD_MAP_ADDRESS = 0xC6E8
 _MAP_BORDER_BLOCKS = 3
@@ -20,7 +21,7 @@ _MAP_CELL_TILE_WIDTH = 2
 
 def read_map_background_blocks(
     mem: PyBoyMemoryView, height: int, width: int
-) -> tuple[tuple[tuple[int, int, int, int], ...], ...]:
+) -> tuple[tuple[BackgroundBlock, ...], ...]:
     """Read each map cell's 2x2 background tiles from the loaded block grid."""
     tileset_bank = mem[_TILESET_BANK_ADDRESS]
     blocks_pointer = mem[_TILESET_BLOCKS_POINTER_ADDRESS] | (

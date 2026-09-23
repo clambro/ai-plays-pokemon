@@ -24,7 +24,12 @@ from emulator.parsers.warp import (
     parse_warp_transition_memory,
     parse_warps,
 )
-from emulator.schemas import AsciiScreenTerrain, AsciiScreenWithEntities
+from emulator.schemas import (
+    AsciiScreenTerrain,
+    AsciiScreenWithEntities,
+    BackgroundBlock,
+    LedgeTilePair,
+)
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
@@ -212,7 +217,7 @@ class GameState:
         if tile_type := self.map.background_tile_types.get(block[1, 0]):
             return tile_type
 
-        flat_block = tuple(block.flatten().tolist())
+        flat_block: BackgroundBlock = (block[0, 0], block[0, 1], block[1, 0], block[1, 1])
         if block_type := self.map.background_block_types.get(flat_block):
             return block_type
         # The engine uses the same bottom-left logic for ordinary walkable blocks.
@@ -230,10 +235,10 @@ class GameState:
         Returns:
             The oriented ledge tile, or ``None`` when the block is not a ledge.
         """
-        top = tuple(block[0, :].tolist())
-        bottom = tuple(block[1, :].tolist())
-        left = tuple(block[:, 0].tolist())
-        right = tuple(block[:, 1].tolist())
+        top: LedgeTilePair = (block[0, 0], block[0, 1])
+        bottom: LedgeTilePair = (block[1, 0], block[1, 1])
+        left: LedgeTilePair = (block[0, 0], block[1, 0])
+        right: LedgeTilePair = (block[0, 1], block[1, 1])
 
         if left in self.map.ledge_tiles_down or right in self.map.ledge_tiles_down:
             return AsciiTile.LEDGE_DOWN

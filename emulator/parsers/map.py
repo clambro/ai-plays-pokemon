@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict
 from common.enums import FACING_OFFSETS, AsciiTile, FacingDirection, MapId, Tileset
 from common.schemas import Coords
 from emulator.parsers.map_collision import read_map_background_blocks, read_map_collision_tile
+from emulator.schemas import BackgroundBlock, LedgeTilePair
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
@@ -69,11 +70,11 @@ class Map(BaseModel):
     width: int
     water_tiles: frozenset[int]
     background_tile_types: dict[int, AsciiTile]
-    background_block_types: dict[tuple[int, int, int, int], AsciiTile]
-    background_blocks: tuple[tuple[tuple[int, int, int, int], ...], ...]
-    ledge_tiles_left: list[tuple[int, int]]
-    ledge_tiles_right: list[tuple[int, int]]
-    ledge_tiles_down: list[tuple[int, int]]
+    background_block_types: dict[BackgroundBlock, AsciiTile]
+    background_blocks: tuple[tuple[BackgroundBlock, ...], ...]
+    ledge_tiles_left: list[LedgeTilePair]
+    ledge_tiles_right: list[LedgeTilePair]
+    ledge_tiles_down: list[LedgeTilePair]
     walkable_tiles: list[int]
     collision_pairs: list[frozenset[int]]
     boulder_blocked_tiles: frozenset[int]
@@ -512,7 +513,7 @@ def _get_background_tile_types(
 def _get_background_block_types(
     tileset_id: Tileset,
     map_id: MapId,
-) -> dict[tuple[int, int, int, int], AsciiTile]:
+) -> dict[BackgroundBlock, AsciiTile]:
     """Return terrain types identified by their full rendered block."""
     block_types = dict(_SPINNER_BLOCK_MAP.get(tileset_id, {}))
     block_types.update(dict.fromkeys(_LOCKED_DOOR_BLOCK_MAP.get(map_id, ()), AsciiTile.LOCKED_DOOR))

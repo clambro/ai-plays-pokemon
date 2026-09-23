@@ -14,6 +14,13 @@ if TYPE_CHECKING:
     from emulator.parsers.warp import Warp
 
 
+type BackgroundBlock = tuple[int, int, int, int]
+"""A 2x2 background cell in top-left, top-right, bottom-left, bottom-right order."""
+
+type LedgeTilePair = tuple[int, int]
+"""Two adjacent visual tiles forming one side of a ledge block."""
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class AsciiScreenTerrain:
     """An entity-free ASCII terrain observation for the visible screen."""
