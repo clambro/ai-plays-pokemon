@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+import numpy as np
 from loguru import logger
 
 from common.enums import (
@@ -185,7 +186,7 @@ async def update_overworld_map(
     game_state: GameState,
     overworld_map: OverworldMap,
 ) -> None:
-    """Update visible terrain and discover present entities and warps on revealed terrain.
+    """Refresh revealed terrain and discover present entities and warps.
 
     Terrain and entities are persisted only when no text obscures the screen and the supplied map
     matches the current game state.
@@ -278,7 +279,7 @@ async def _update_overworld_map_terrain(
     game_state: GameState,
     overworld_map: OverworldMap,
 ) -> None:
-    """Reveal and persist entity-free terrain from the current screen."""
+    """Refresh known terrain from the loaded map and reveal the current screen."""
     terrain_screen = game_state.get_ascii_screen_terrain()
     screen_terrain = terrain_screen.ndarray
     screen = game_state.screen
@@ -310,6 +311,9 @@ async def _update_overworld_map_terrain(
         right = width
 
     terrain = overworld_map.terrain_ndarray
+    # Refresh seen terrain from the loaded map; the visible screen takes precedence below.
+    loaded_terrain = np.asarray(game_state.get_ascii_map_terrain())
+    np.copyto(terrain, loaded_terrain, where=terrain != AsciiTile.UNSEEN)
     terrain[top:bottom, left:right] = screen_terrain
     overworld_map.terrain = terrain.tolist()
 

@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict
 
 from common.enums import FACING_OFFSETS, AsciiTile, FacingDirection, MapId, Tileset
 from common.schemas import Coords
-from emulator.parsers.map_collision import read_map_collision_tile
+from emulator.parsers.map_collision import read_map_background_blocks, read_map_collision_tile
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
@@ -70,6 +70,7 @@ class Map(BaseModel):
     water_tiles: frozenset[int]
     background_tile_types: dict[int, AsciiTile]
     background_block_types: dict[tuple[int, int, int, int], AsciiTile]
+    background_blocks: tuple[tuple[tuple[int, int, int, int], ...], ...]
     ledge_tiles_left: list[tuple[int, int]]
     ledge_tiles_right: list[tuple[int, int]]
     ledge_tiles_down: list[tuple[int, int]]
@@ -212,6 +213,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
             talk_over_tiles,
         ),
         background_block_types=_get_background_block_types(tileset_id, map_id),
+        background_blocks=read_map_background_blocks(mem, height, width),
         ledge_tiles_left=ledge_tiles_left,
         ledge_tiles_right=ledge_tiles_right,
         ledge_tiles_down=ledge_tiles_down,
@@ -260,6 +262,7 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
         water_tiles=frozenset(),
         background_tile_types={},
         background_block_types={},
+        background_blocks=(),
         ledge_tiles_left=[],
         ledge_tiles_right=[],
         ledge_tiles_down=[],

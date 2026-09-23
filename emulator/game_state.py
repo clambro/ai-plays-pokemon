@@ -136,6 +136,13 @@ class GameState:
             blockages=dict(blockages),
         )
 
+    def get_ascii_map_terrain(self) -> list[list[AsciiTile]]:
+        """Classify the loaded map's background without revealing it to the agent."""
+        return [
+            [self._classify_background_block(np.asarray(block).reshape(2, 2)) for block in row]
+            for row in self.map.background_blocks
+        ]
+
     def get_ascii_screen(self) -> AsciiScreenWithEntities:
         """Get an ASCII representation of the current screen.
 

@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import numpy as np
 import pytest
 
 from common.enums import (
@@ -225,6 +226,51 @@ async def test_discovered_offscreen_warp_replaces_stale_wall_in_navigation() -> 
     assert tiles[1, 1] == AsciiTile.WARP
     assert tiles[0, 0] == AsciiTile.UNSEEN
     assert tiles[1, 2] == AsciiTile.WALL
+
+
+@pytest.mark.unit
+async def test_loaded_terrain_refreshes_seen_tiles_without_revealing_unseen_tiles() -> None:
+    """A remote door change updates known terrain; unseen cells stay hidden."""
+    game_state = MagicMock()
+    game_state.map = SimpleNamespace(id=MapId.PALLET_TOWN, height=2, width=3)
+    game_state.screen = SimpleNamespace(top=0, left=0, bottom=1, right=1)
+    game_state.get_ascii_screen_terrain.return_value = SimpleNamespace(
+        ndarray=np.asarray([[AsciiTile.WALL]]), blockages={}
+    )
+    game_state.get_ascii_map_terrain.return_value = [
+        [AsciiTile.FREE, AsciiTile.FREE, AsciiTile.WALL],
+        [AsciiTile.FREE, AsciiTile.WALL, AsciiTile.FREE],
+    ]
+    game_state.is_text_on_screen.return_value = False
+    game_state.warps = {}
+    game_state.sprites = {}
+    game_state.signs = {}
+    game_state.objects = {}
+    current_map = OverworldMap(
+        id=MapId.PALLET_TOWN,
+        terrain=[list("░▓▓"), list("▓▓░")],
+        blockages={},
+        known_sprite_ids=set(),
+        sprite_interactions={},
+        known_sign_ids=set(),
+        sign_interactions={},
+        known_object_ids=set(),
+        object_interactions={},
+        locked_door_interactions={},
+        known_warp_ids=set(),
+        warp_usage_iterations={},
+        known_map_boundaries=(),
+        known_map_ids=frozenset(),
+    )
+
+    with (
+        patch("overworld_map.service.update_map_terrain", new_callable=AsyncMock),
+        patch("overworld_map.service.create_map_entity_memories", new_callable=AsyncMock),
+        patch("overworld_map.service.remember_warps", new_callable=AsyncMock),
+    ):
+        await update_overworld_map(1, cast("GameState", game_state), current_map)
+
+    assert current_map.terrain == [list("▓∙▓"), list("∙▓░")]
 
 
 @pytest.mark.unit

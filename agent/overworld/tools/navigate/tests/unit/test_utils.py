@@ -94,6 +94,7 @@ DUMMY_MAP_STATE = Map(
     water_tiles=frozenset({3}),
     background_tile_types={3: AsciiTile.WATER},
     background_block_types={},
+    background_blocks=(),
     ledge_tiles_left=[],
     ledge_tiles_right=[],
     ledge_tiles_down=[],
