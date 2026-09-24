@@ -66,6 +66,7 @@ class Map(BaseModel):
     """The state of the current map."""
 
     id: MapId
+    tileset: Tileset
     height: int
     width: int
     water_tiles: frozenset[int]
@@ -205,6 +206,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
 
     return Map(
         id=map_id,
+        tileset=tileset_id,
         height=height,
         width=width,
         water_tiles=water_tiles,
@@ -258,6 +260,7 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
     """Represent startup screens with zero dimensions or non-map data in the tileset byte."""
     return Map(
         id=MapId(mem[0xD3AB]),
+        tileset=Tileset.PLACEHOLDER,
         height=0,
         width=0,
         water_tiles=frozenset(),

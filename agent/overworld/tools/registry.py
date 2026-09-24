@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from pydantic_ai import FunctionToolset
 
 from agent.overworld.tools.consult_advisor.interface import build_consult_advisor_tool
+from agent.overworld.tools.fly.interface import build_fly_tool
 from agent.overworld.tools.inspect_map.interface import (
     build_inspect_map_tool,
 )
@@ -20,7 +21,7 @@ from agent.overworld.tools.swap_first_pokemon.interface import (
     build_swap_first_pokemon_tool,
 )
 from agent.overworld.tools.use_item.interface import build_use_item_tool
-from common.enums import AsciiTile, SpriteLabel
+from common.enums import AsciiTile, Badge, SpriteLabel, Tileset
 
 if TYPE_CHECKING:
     from pydantic_ai import Tool
@@ -61,6 +62,12 @@ def build_overworld_toolset(
             tools.append(build_swap_first_pokemon_tool(context))
         if game_state.inventory.items:
             tools.append(build_use_item_tool(context))
+    if (
+        Badge.THUNDERBADGE in game_state.player.badges
+        and game_state.map.tileset in {Tileset.OVERWORLD, Tileset.PLATEAU}
+        and any(move.name == "FLY" for pokemon in game_state.party for move in pokemon.moves)
+    ):
+        tools.append(build_fly_tool(context))
     if _is_sokoban_available(map_view, game_state):
         tools.append(build_sokoban_solver_tool(context, current_map))
     return FunctionToolset(tools=tools)
