@@ -47,7 +47,7 @@ def build_battle_agent(
         ],
         capabilities=[AGENT_HOOKS],
         model_settings=OpenAIResponsesModelSettings(
-            openai_reasoning_effort=ReasoningEffort.MEDIUM.value,
+            openai_reasoning_effort=ReasoningEffort.LOW.value,
             openai_prompt_cache_key="battle-agent",
             parallel_tool_calls=False,
             timeout=TIMEOUT_SECONDS,
