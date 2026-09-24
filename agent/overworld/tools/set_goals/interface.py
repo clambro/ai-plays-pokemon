@@ -44,21 +44,6 @@ def build_set_goals_tool(
         goal has changed, been completed, or become irrelevant. Goals guide
         future decisions but do not need to determine your next action.
 
-        Goal examples:
-
-        Bad goal: Collect an ordinary item at <coordinates>.
-        Bad goal: Interact with <unexamined NPC>.
-        Reasoning: These are each single exploration steps, not the broader outcome.
-        Better goal: Completely explore <area>.
-
-        Bad goal: Keep party members healthy and well trained.
-        Reasoning: This is ongoing advice with no completion condition.
-        Better goal: Heal my party before attempting <major battle>.
-
-        Bad goal: Continue progressing towards the next badge.
-        Reasoning: This describes ongoing progress instead of a specific challenge to complete.
-        Better goal: Face off against <gym leader name> to get the <next badge>.
-
         Args:
             goals: Exactly three entries in rough order of priority, each a nonblank goal or null.
 

@@ -345,28 +345,24 @@ def _get_map_target_error(
         )
     if target_tile == AsciiTile.UNSEEN:
         return (
-            f"Navigation failed. The target coordinates {coords} are still unexplored, so no"
-            " revealed route to them exists yet. I should navigate to a listed exploration"
-            " candidate to reveal more of the current map."
+            f"Navigation failed. The target coordinates {coords} are unexplored. No revealed route "
+            f"to them exists yet."
         )
     if target_tile == AsciiTile.LOCKED_DOOR:
         return (
             f"Navigation failed. The target coordinates {coords} are a locked door."
-            " I should navigate next to it, face it, and press the action button to interact"
-            " with it."
+            " If I want to try opening it, I should navigate next to it, face it, and press the"
+            f" action button."
         )
     traversable_tiles = set(AsciiTile.get_walkable_tiles()) | set(game_state.get_hm_tiles())
     if target_tile not in traversable_tiles:
         return (
             f"Navigation failed. The target coordinates {coords} are revealed but are not a"
-            " currently traversable tile. I should choose a reachable walkable coordinate."
+            " currently traversable tile."
         )
     if coords not in accessible_coords:
         return (
             f"Navigation failed. The revealed target coordinates {coords} are outside my"
-            " current reachable map region. The navigation tool only moves within this"
-            " region and is working as intended. Another area of the same map may require me"
-            " to leave through a reachable warp or map boundary and re-enter elsewhere. I"
-            " can also continue exploring if the revealed terrain may still connect."
+            " current reachable map region."
         )
     return None

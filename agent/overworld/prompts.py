@@ -74,7 +74,7 @@ The tile directly to the right of you is "{{tile_right}}"{{blocked_right}}.
 {{connections}}
 </map_connections>
 
-The following discovered sprites are reachable from your current region, either directly or across a counter. Interacting with newly reachable stationary sprites that have no recorded interaction should be a high priority during exploration. Strongly prefer interacting with them before continuing to explore, unless you have a specific reason to pursue another objective. Once an interaction has been recorded, do not repeat it without a specific reason.
+The following discovered sprites are reachable from your current region, either directly or across a counter. Their notes include any recorded interactions.
 <known_sprites>
 {{known_sprites}}
 </known_sprites>
@@ -84,7 +84,7 @@ The following discovered warp tiles are in your current region:
 {{known_warps}}
 </known_warps>
 
-The following previously traversed connections are elsewhere on the same map, outside your current connected component. They are informational only: navigation cannot target them from your current component. Use inspect_map to see the connections and exploration available from each entrance, then inspect the connected maps in turn to trace known connectivity that may lead to them.
+The following previously traversed connections are elsewhere on the same map, outside your current connected component. They are informational only: navigation cannot target them from your current component. inspect_map shows the connections and exploration available from each entrance.
 <known_connections_outside_current_component>
 {{known_connections_outside_current_component}}
 </known_connections_outside_current_component>
@@ -99,13 +99,7 @@ The following discovered objects are in your current region. These are usually P
 {{known_objects}}
 </known_objects>
 
-Navigation tips:
-- You should explore as much of the map as possible, as it may be hiding important sprites, objects, or warp tiles. Exploration is not only a matter of revealing tiles; interact with what you discover along the way. Tiles are considered explored once they are on screen, so move towards unseen territory when you are stuck or unsure how to proceed.
-- The orientation of the map and screen is always fixed, regardless of the direction that you are facing.
-- Do not use the action button on a warp.
-- To interact with a sprite normally, move to an adjacent tile, face it, and press the action button. Do not attempt to move onto the sprite's tile. You cannot walk on or through sprites (except for Pikachu, as described above).
-- Some sprite notes provide an exact reachable position for interacting across a counter. In that case, navigate to that position instead of next to the sprite, face the sprite across the "{AsciiTile.COUNTER}" tile, and press the action button.
-- Note that some sprites move around, so their position may change between screenshots. Do not let this confuse you. The information that you have in the <known_sprites> section is the most accurate information available to you since it comes straight from the game's memory at this moment in time.
+The map and screen orientation is fixed, regardless of the direction you are facing. Tiles count as explored once they appear on screen. Some sprites move around, so their positions may change between screenshots. The <known_sprites> section comes from the game's current memory.
 
 The current ASCII screen is derived from current game memory, while the current map region combines those observations over time. Prefer the ASCII information for tile and coordinate reasoning, and use the screenshot as supplemental visual context.
 </map_info>
@@ -124,7 +118,7 @@ LEGEND_MAP = {
     AsciiTile.LEDGE_RIGHT: "A ledge that you can jump over from left to right. These tiles are only passable if you approach them from the left and walk rightwards.",
     AsciiTile.FREE: "A walkable tile with nothing noteworthy in it.",
     AsciiTile.PLAYER: "Your current location.",
-    AsciiTile.SPRITE: "A sprite. Normally, you interact with it from an adjacent tile; if its note gives an exact interaction position, use that instead. This could be an NPC, an item you can pick up, or some other interactable entity. You cannot walk through sprites, nor can you stand on top of them.",
+    AsciiTile.SPRITE: "A sprite. This could be an NPC, an item, or another interactable entity. Sprites occupy their tiles and block movement.",
     AsciiTile.WARP: "A tile that can warp you to a different location. In the screenshot view, these are shown as doors, doormats, staircases, or teleporters.",
     AsciiTile.CUT_TREE: "A tree that can be cut down.",
     AsciiTile.BOULDER_HOLE: "A hole in the ground that you can fall through by standing on it. You can also push boulders into these holes to drop them to the floor below.",
@@ -144,11 +138,7 @@ You are navigating the overworld. You are standing still. There is no onscreen t
 
 {state}
 
-During ordinary progression, cycle your lead as the party develops, preferring lower level Pokemon to help them develop. Give teammates useful opportunities to fight, including switch training when appropriate, and reconsider the place of anyone who consistently sits unused. When fighting major battles, however, focus on winning rather than training.
-
-Regularly reflect on what you are trying to accomplish and use set_goals to keep your goals useful and current.
-
-Exploring the following accessible coordinates can reveal unseen terrain on the current map. Fully revealing the current map is a high priority. In general, handle newly reachable unvisited stationary sprites before continuing to reveal unseen terrain, but use judgment when a specific objective should take precedence. Exploring these candidates should generally be prioritized before leaving the map, backtracking, or pursuing objectives elsewhere (unless you have a specific other goal in mind or need to heal, of course).
+Exploring the following accessible coordinates can reveal unseen terrain on the current map.
 <exploration_candidates>
 {exploration_candidates}
 </exploration_candidates>
@@ -158,7 +148,7 @@ The following section lists only connected-map boundaries reachable from your cu
 {map_boundaries}
 </map_boundaries>
 
-Use navigation for ordinary movement within the current map. Use press_buttons for direct interactions, changing direction, or sending the final directional input needed to cross a map boundary or warp. Prefer a specialized tool whenever it directly matches the action you want to take.
+navigation moves within the current map. press_buttons handles direct interactions, changing direction, and the final directional input needed to cross a map boundary or warp.
 
 Briefly explain your reasoning in first person as ordinary response text, then use exactly one available tool to act. Be sure to consider all the tools at your disposal. Every response must include one tool call. A fresh observation will be returned after each tool executes.
 
@@ -175,15 +165,7 @@ Use your general knowledge of Pokemon to help diagnose the blockage, while keepi
 
 Consider where the agent last made meaningful progress and use that context, together with your knowledge of Pokemon Yellow, to help determine how progression might continue. This does not necessarily mean returning there or continuing in the same direction.
 
-Possible failure states to investigate include the following; this list is not exhaustive:
-- Mistaking revealed terrain for completed interactions or objectives.
-- Assuming an available connection advances the current goal.
-- Mistaking a repeated transition for a new route.
-- Misremembering or inventing a destination's identity or purpose.
-- Applying another arrival region's options to the current position.
-- Treating a failed approach as proof that an objective is inaccessible.
-- Repeating an unsuccessful strategy without reassessing its underlying assumptions.
-- Pursuing a stale or mistaken goal.
+Current game output is authoritative. You can use inspect_map to investigate known routes. Give the agent your assessment and any suggested next step, distinguishing observed facts from uncertainty.
 """.strip()
 
 

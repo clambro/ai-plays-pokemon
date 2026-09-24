@@ -165,7 +165,5 @@ def _record_scripted_displacement(
         return None
     return (
         f"{SCRIPTED_LOOP_LABEL} I have been moved back to the same location by a scripted event"
-        " repeatedly and in quick succession. This means I am likely pursuing the wrong path."
-        " I should try something different. There is no way to sneak or force my way past a"
-        " scripted event. It usually requires some other kind of in game progress."
+        " repeatedly. I should re-evaluate what I'm doing before continuing."
     )
