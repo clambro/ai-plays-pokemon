@@ -125,8 +125,8 @@ def _format_overworld_sprite(
         )
     if sprite.moves_randomly:
         output += (
-            " This sprite wanders randomly around the map and may move before you can interact"
-            " with it."
+            " This sprite wanders randomly around the map. Your reactions are too slow to catch it."
+            " Sprites like this are not worth interacting with."
         )
     return output
 
