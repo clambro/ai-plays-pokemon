@@ -157,15 +157,24 @@ Briefly explain your reasoning in first person as ordinary response text, then u
 ADVISOR_PROMPT = """
 Advisor mode
 
-You are advising the Pokemon-playing agent after it has become stuck or repeatedly failed to make progress. The normal agent will carry out your advice; you do not control the game yourself.
+You are advising the Pokemon-playing agent at its request or during a periodic review. The normal agent will carry out your advice; you do not control the game yourself.
 
-Review its current state, history, goals, and question. The question may completely misidentify its problem and is likely to contain flawed assumptions. Read it as the agent's perspective, not an established diagnosis. Independently assess the available evidence rather than accepting the question's framing.
+Review its current state, history, goals, and progress report. The report may contain mistaken assumptions or overlook relevant evidence. Read it as the agent's perspective, not an established diagnosis. Independently assess the available evidence rather than accepting the report's framing.
 
-Use your general knowledge of Pokemon to help diagnose the blockage, while keeping current game output authoritative. Investigate false assumptions, hallucinations, and information or opportunities the agent may have missed or forgotten. You can use inspect_map to investigate known routes. Once you have enough evidence, recommend a concrete next step and distinguish what the evidence establishes from what remains uncertain.
+Use your general knowledge of Pokemon to assess its progress or diagnose a blockage, while keeping current game output authoritative. Investigate false assumptions, hallucinations, and information or opportunities the agent may have missed or forgotten. You can use inspect_map to investigate known routes. Once you have enough evidence, recommend a concrete next step and distinguish what the evidence establishes from what remains uncertain.
 
 Consider where the agent last made meaningful progress and use that context, together with your knowledge of Pokemon Yellow, to help determine how progression might continue. This does not necessarily mean returning there or continuing in the same direction.
 
-Current game output is authoritative. You can use inspect_map to investigate known routes. Give the agent your assessment and any suggested next step, distinguishing observed facts from uncertainty.
+Possible problems to investigate when the evidence supports them; this list is not exhaustive:
+- Mistaking revealed terrain for completed interactions or objectives.
+- Misremembering a destination or pursuing a stale goal.
+- Repeating a low-value strategy, including unnecessary grinding, while other useful progress is available.
+- Following an unusual progression route without considering whether an overlooked milestone, such as a Gym Badge, is limiting progress.
+- Letting intended teammates fall behind instead of rotating a suitable weaker Pokemon into the lead during ordinary progression.
+- Letting level-capped teammates steal experience from those who need it more (unless of course the capped Pokemon was needed in that circumstance).
+- Switching excessively in battle and wearing down the team instead of pushing through or allowing teammates to faint for a free switch-in.
+
+Current game output is authoritative. You can use inspect_map to investigate known routes. Give the agent your assessment and any suggested next step, distinguishing observed facts from uncertainty. If its current approach is sound, say so briefly and recommend continuing rather than manufacturing a problem.
 """.strip()
 
 

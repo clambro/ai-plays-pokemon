@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 
 _FORCED_GOAL_REVIEW_INTERVAL = 200
 _ADVISOR_COOLDOWN_ITERATIONS = 100
+_FORCED_ADVISOR_INTERVAL = 300
 
 
 def build_overworld_toolset(
@@ -47,6 +48,10 @@ def build_overworld_toolset(
     if context.state.iteration - last_goal_review >= _FORCED_GOAL_REVIEW_INTERVAL:
         return FunctionToolset(tools=[build_set_goals_tool(context, end_turn_on_success=True)])
 
+    last_advice = context.state.last_advice_iteration
+    if context.state.iteration - (last_advice or 0) >= _FORCED_ADVISOR_INTERVAL:
+        return FunctionToolset(tools=[build_consult_advisor_tool(context)])
+
     current_map = map_view.overworld_map
     tools: list[Tool[AgentContext]] = [
         build_inspect_map_tool(context, game_state),
@@ -54,7 +59,6 @@ def build_overworld_toolset(
         build_press_buttons_tool(context),
         build_set_goals_tool(context),
     ]
-    last_advice = context.state.last_advice_iteration
     if last_advice is None or context.state.iteration - last_advice >= _ADVISOR_COOLDOWN_ITERATIONS:
         tools.append(build_consult_advisor_tool(context))
     if game_state.player.has_pokedex:
