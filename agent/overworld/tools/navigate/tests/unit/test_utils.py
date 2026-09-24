@@ -10,7 +10,7 @@ from copy import deepcopy
 import pytest
 
 from agent.overworld.navigation import calculate_path_to_target
-from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, MapId
+from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, MapId, Tileset
 from common.schemas import Coords
 from emulator.parsers.map import Map, MapConnection
 from overworld_map.schemas import OverworldMap
@@ -89,11 +89,13 @@ DUMMY_MAP = OverworldMap(
 
 DUMMY_MAP_STATE = Map(
     id=MapId.PALLET_TOWN,
+    tileset=Tileset.OVERWORLD,
     height=1,
     width=1,
     water_tiles=frozenset({3}),
     background_tile_types={3: AsciiTile.WATER},
     background_block_types={},
+    background_blocks=(),
     ledge_tiles_left=[],
     ledge_tiles_right=[],
     ledge_tiles_down=[],

@@ -29,11 +29,7 @@ def get_navigation_tiles(overworld_map: OverworldMap, game_state: GameState) -> 
     # A Cerulean Trashed House exit is both a sign and a warp; keep the warp visible for routing.
     for entity_id in overworld_map.known_warp_ids:
         warp = game_state.warps.get(entity_id)
-        if (
-            warp is not None
-            and _contains(tiles, warp.coords)
-            and tiles[warp.coords.row, warp.coords.col] != AsciiTile.WALL
-        ):
+        if warp is not None and _contains(tiles, warp.coords):
             tiles[warp.coords.row, warp.coords.col] = AsciiTile.WARP
 
     for entity_id in overworld_map.known_object_ids:

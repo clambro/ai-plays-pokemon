@@ -24,7 +24,12 @@ from emulator.parsers.warp import (
     parse_warp_transition_memory,
     parse_warps,
 )
-from emulator.schemas import AsciiScreenTerrain, AsciiScreenWithEntities
+from emulator.schemas import (
+    AsciiScreenTerrain,
+    AsciiScreenWithEntities,
+    BackgroundBlock,
+    LedgeTilePair,
+)
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
@@ -136,6 +141,13 @@ class GameState:
             blockages=dict(blockages),
         )
 
+    def get_ascii_map_terrain(self) -> list[list[AsciiTile]]:
+        """Classify the loaded map's background without revealing it to the agent."""
+        return [
+            [self._classify_background_block(np.asarray(block).reshape(2, 2)) for block in row]
+            for row in self.map.background_blocks
+        ]
+
     def get_ascii_screen(self) -> AsciiScreenWithEntities:
         """Get an ASCII representation of the current screen.
 
@@ -165,9 +177,7 @@ class GameState:
         on_screen_warps = []
         for w in self.warps.values():
             sc = self.screen.to_screen_coords(w.coords)
-            # There's a funny edge case with warps where they can be rendered on top of walls and
-            # are therefore inaccessible. An example is in map 50, when entering Viridian Forest.
-            if sc and blocks[sc.row, sc.col] != AsciiTile.WALL:
+            if sc:
                 blocks[sc.row, sc.col] = AsciiTile.WARP
                 on_screen_warps.append(w)
 
@@ -207,7 +217,7 @@ class GameState:
         if tile_type := self.map.background_tile_types.get(block[1, 0]):
             return tile_type
 
-        flat_block = tuple(block.flatten().tolist())
+        flat_block: BackgroundBlock = (block[0, 0], block[0, 1], block[1, 0], block[1, 1])
         if block_type := self.map.background_block_types.get(flat_block):
             return block_type
         # The engine uses the same bottom-left logic for ordinary walkable blocks.
@@ -225,10 +235,10 @@ class GameState:
         Returns:
             The oriented ledge tile, or ``None`` when the block is not a ledge.
         """
-        top = tuple(block[0, :].tolist())
-        bottom = tuple(block[1, :].tolist())
-        left = tuple(block[:, 0].tolist())
-        right = tuple(block[:, 1].tolist())
+        top: LedgeTilePair = (block[0, 0], block[0, 1])
+        bottom: LedgeTilePair = (block[1, 0], block[1, 1])
+        left: LedgeTilePair = (block[0, 0], block[1, 0])
+        right: LedgeTilePair = (block[0, 1], block[1, 1])
 
         if left in self.map.ledge_tiles_down or right in self.map.ledge_tiles_down:
             return AsciiTile.LEDGE_DOWN

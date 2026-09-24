@@ -2,10 +2,10 @@
 
 from typing import TYPE_CHECKING
 
+import numpy as np
 from loguru import logger
 
 from common.enums import (
-    BUTTON_DIRECTIONS,
     BUTTON_OFFSETS,
     AsciiTile,
     Button,
@@ -185,7 +185,7 @@ async def update_overworld_map(
     game_state: GameState,
     overworld_map: OverworldMap,
 ) -> None:
-    """Update visible terrain and discover present entities on revealed terrain.
+    """Refresh revealed terrain and discover present entities and warps.
 
     Terrain and entities are persisted only when no text obscures the screen and the supplied map
     matches the current game state.
@@ -196,13 +196,19 @@ async def update_overworld_map(
         overworld_map: Explored map expected to match ``game_state``.
     """
     if not game_state.is_text_on_screen() and overworld_map.id == game_state.map.id:
-        ascii_screen = game_state.get_ascii_screen()
         await _update_overworld_map_terrain(iteration, game_state, overworld_map)
         await _discover_map_entities(game_state, overworld_map)
+        discovered_warps = [
+            warp
+            for warp in game_state.warps.values()
+            if 0 <= warp.coords.row < overworld_map.height
+            and 0 <= warp.coords.col < overworld_map.width
+            and overworld_map.terrain[warp.coords.row][warp.coords.col] != AsciiTile.UNSEEN
+        ]
         await remember_warps(
-            [_create_warp_memory(overworld_map.id, warp) for warp in ascii_screen.warps]
+            [_create_warp_memory(overworld_map.id, warp) for warp in discovered_warps]
         )
-        overworld_map.known_warp_ids.update(warp.index for warp in ascii_screen.warps)
+        overworld_map.known_warp_ids.update(warp.index for warp in discovered_warps)
 
 
 async def _discover_map_entities(
@@ -272,7 +278,7 @@ async def _update_overworld_map_terrain(
     game_state: GameState,
     overworld_map: OverworldMap,
 ) -> None:
-    """Reveal and persist entity-free terrain from the current screen."""
+    """Refresh known terrain from the loaded map and reveal the current screen."""
     terrain_screen = game_state.get_ascii_screen_terrain()
     screen_terrain = terrain_screen.ndarray
     screen = game_state.screen
@@ -304,6 +310,9 @@ async def _update_overworld_map_terrain(
         right = width
 
     terrain = overworld_map.terrain_ndarray
+    # Refresh seen terrain from the loaded map; the visible screen takes precedence below.
+    loaded_terrain = np.asarray(game_state.get_ascii_map_terrain())
+    np.copyto(terrain, loaded_terrain, where=terrain != AsciiTile.UNSEEN)
     terrain[top:bottom, left:right] = screen_terrain
     overworld_map.terrain = terrain.tolist()
 
@@ -370,18 +379,16 @@ async def record_warp_usage(
         )
 
 
-async def record_observed_map_connection(
+async def record_observed_hole_connection(
     *,
     button: Button,
     previous: GameState,
     result: ControlResult,
     current: GameState,
 ) -> None:
-    """Persist a coordinate-based map connection caused by one movement input."""
+    """Persist an observed hole traversal caused by one movement input."""
     try:
-        connections = _get_observed_map_boundaries(button, previous, result, current)
-        if not connections:
-            connections = _get_observed_hole_connection(button, previous, result, current)
+        connections = _get_observed_hole_connection(button, previous, result, current)
         if not connections:
             return
         await remember_map_boundaries(connections)
@@ -391,51 +398,57 @@ async def record_observed_map_connection(
         )
 
 
-def _get_observed_map_boundaries(
-    button: Button,
+async def record_observed_map_boundary(
     previous: GameState,
-    result: ControlResult,
+    current: GameState,
+) -> None:
+    """Persist a map-edge crossing observed across gameplay handlers."""
+    try:
+        connections = _get_observed_map_boundaries(previous, current)
+        if connections:
+            await remember_map_boundaries(connections)
+    except Exception as error:  # noqa: BLE001
+        logger.opt(exception=error).warning(
+            "Map-boundary recording failed; continuing without the latest crossing."
+        )
+
+
+def _get_observed_map_boundaries(
+    previous: GameState,
     current: GameState,
 ) -> tuple[MapBoundaryMemoryCreateUpdate, ...]:
-    """Recognize a direct crossing and retain its complete crossable coordinate mapping."""
-    direction = BUTTON_DIRECTIONS.get(button)
+    """Recognize a ROM map-edge crossing and retain its crossable coordinate mapping."""
     if (
-        direction is None
-        or result.boundary != ControlBoundary.OVERWORLD_READY
-        or previous.map.id == current.map.id
+        previous.map.id == current.map.id
         or previous.map.id in {MapId.OUTSIDE, MapId.UNKNOWN}
         or current.map.id in {MapId.OUTSIDE, MapId.UNKNOWN}
     ):
         return ()
 
-    connection = {
-        FacingDirection.UP: previous.map.north_connection,
-        FacingDirection.DOWN: previous.map.south_connection,
-        FacingDirection.LEFT: previous.map.west_connection,
-        FacingDirection.RIGHT: previous.map.east_connection,
-    }[direction]
-    if (
-        connection is None
-        or connection.direction != direction
-        or connection.destination_map != current.map.id
-    ):
-        return ()
-
     source = previous.player.coords
-    source_coordinate = (
-        source.col if direction in {FacingDirection.UP, FacingDirection.DOWN} else source.row
-    )
-    on_boundary = {
-        FacingDirection.UP: source.row == 0,
-        FacingDirection.DOWN: source.row == previous.map.height - 1,
-        FacingDirection.LEFT: source.col == 0,
-        FacingDirection.RIGHT: source.col == previous.map.width - 1,
-    }[direction]
-    if (
-        not on_boundary
-        or source_coordinate not in connection.source_coordinates
-        or connection.get_destination(source) != current.player.coords
+    for direction, connection, on_boundary in (
+        (FacingDirection.UP, previous.map.north_connection, source.row == 0),
+        (
+            FacingDirection.DOWN,
+            previous.map.south_connection,
+            source.row == previous.map.height - 1,
+        ),
+        (FacingDirection.LEFT, previous.map.west_connection, source.col == 0),
+        (FacingDirection.RIGHT, previous.map.east_connection, source.col == previous.map.width - 1),
     ):
+        source_coordinate = (
+            source.col if direction in {FacingDirection.UP, FacingDirection.DOWN} else source.row
+        )
+        if (
+            connection is not None
+            and connection.direction == direction
+            and connection.destination_map == current.map.id
+            and on_boundary
+            and source_coordinate in connection.source_coordinates
+            and connection.get_destination(source) == current.player.coords
+        ):
+            break
+    else:
         return ()
 
     can_surf = AsciiTile.WATER in previous.get_hm_tiles()

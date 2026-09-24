@@ -6,7 +6,6 @@ from pydantic_ai.capabilities.hooks import Hooks
 
 from agent.context import AgentContext
 from emulator.control_events import ControlHandoff
-from llm.service import calculate_luna_cost
 from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
@@ -36,12 +35,7 @@ async def record_model_usage(
     """Account for a model response in the shared gameplay state."""
     await ctx.deps.add_llm_usage(
         response.usage.total_tokens,
-        calculate_luna_cost(
-            response.usage.input_tokens,
-            response.usage.output_tokens,
-            response.usage.cache_read_tokens,
-            response.usage.cache_write_tokens,
-        ),
+        float(response.cost().total_price),
     )
     return response
 

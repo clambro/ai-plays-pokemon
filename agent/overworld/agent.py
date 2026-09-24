@@ -16,7 +16,7 @@ from agent.overworld.tools.registry import build_overworld_toolset
 from agent.utils import is_overworld_handler_state
 from common.enums import ReasoningEffort
 from common.prompts import SYSTEM_PROMPT
-from llm.service import MODEL, TIMEOUT_SECONDS
+from llm.service import TIMEOUT_SECONDS, build_agent_model
 from overworld_map.service import prepare_overworld_map
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ def build_overworld_agent(
 ) -> Agent[AgentContext, str]:
     """Construct the Pydantic AI overworld agent."""
     return Agent[AgentContext, str](
-        model=f"openai-responses:{MODEL}",
+        model=build_agent_model(),
         name="overworld_agent",
         deps_type=AgentContext,
         instructions=SYSTEM_PROMPT,
@@ -136,5 +136,7 @@ def _should_end_overworld_run(
         game_state.map.id != initial_game_state.map.id
         or game_state.player.coords != initial_game_state.player.coords
         or not is_overworld_handler_state(game_state, control_boundary)
+        or game_state.warps != initial_game_state.warps
+        or game_state.map.background_blocks != initial_game_state.map.background_blocks
         or game_state.get_ascii_screen_terrain() != initial_game_state.get_ascii_screen_terrain()
     )

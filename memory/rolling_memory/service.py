@@ -155,7 +155,7 @@ async def _summarize(
     summary = (
         await llm_service.get_llm_response(
             prompt,
-            reasoning_effort=ReasoningEffort.LOW,
+            reasoning_effort=ReasoningEffort.MEDIUM,
             system_prompt=SYSTEM_PROMPT,
         )
     ).strip()

@@ -1,4 +1,4 @@
-"""Luna extra-high consultation using the existing map-inspection tool."""
+"""Pydantic AI advisor-agent construction."""
 
 from typing import TYPE_CHECKING
 
@@ -12,10 +12,12 @@ from agent.overworld.prompts import ADVISOR_PROMPT
 from agent.overworld.tools.inspect_map.interface import build_inspect_map_tool
 from common.enums import ReasoningEffort
 from common.prompts import SYSTEM_PROMPT
-from llm.service import MODEL, TIMEOUT_SECONDS
+from llm.service import build_agent_model
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
+
+ADVISOR_TIMEOUT_SECONDS = 120
 
 
 def build_advisor_agent(
@@ -24,16 +26,17 @@ def build_advisor_agent(
 ) -> Agent[AgentContext, str]:
     """Build an advisory agent that can inspect known maps."""
     return Agent[AgentContext, str](
-        model=f"openai-responses:{MODEL}",
+        # A timed-out consultation should return to gameplay, not repeat the long request.
+        model=build_agent_model(max_retries=0),
         name="advisor_agent",
         deps_type=AgentContext,
         instructions=f"{SYSTEM_PROMPT}\n\n---\n\n{ADVISOR_PROMPT}",
         tools=[build_inspect_map_tool(context, game_state)],
         capabilities=[Hooks[AgentContext](after_model_request=record_model_usage)],
         model_settings=OpenAIResponsesModelSettings(
-            openai_reasoning_effort=ReasoningEffort.XHIGH.value,
+            openai_reasoning_effort=ReasoningEffort.HIGH.value,
             openai_prompt_cache_key="advisor-agent",
             parallel_tool_calls=False,
-            timeout=TIMEOUT_SECONDS,
+            timeout=ADVISOR_TIMEOUT_SECONDS,
         ),
     )

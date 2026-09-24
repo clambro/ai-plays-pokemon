@@ -25,15 +25,15 @@ def build_switch_pokemon_tool(context: AgentContext) -> Tool[AgentContext]:
     async def switch_pokemon(
         party_slot: Annotated[int, Field(ge=0, le=5)],
     ) -> BattleToolResult:
-        """Switch to an available Pokemon in the player's party.
+        """Choose an available Pokemon in the player's party.
 
-        The party slot is its zero-based position in the player's party. The
-        active Pokemon and fainted Pokemon cannot be switched in. Switching
-        consumes the turn, so the opponent can attack the Pokemon switched in.
-        Use this tool sparingly: repeated switching can quickly lose a battle.
-        Switch only when changing Pokemon offers a clear strategic advantage
-        worth that attack and the incoming Pokemon can survive it and
-        contribute.
+        Use this from the fight menu to switch voluntarily, or from the Pokemon
+        menu to choose a replacement after your active Pokemon faints. The
+        party slot is its zero-based position in the player's party. Fainted
+        Pokemon cannot be selected. A voluntary switch consumes the turn and
+        exposes the incoming Pokemon to an attack; a replacement after a faint
+        does not. Use voluntary switching sparingly, as repeated switching can
+        easily cost you the battle.
 
         Args:
             party_slot: Zero-based party slot of the Pokemon to switch in.

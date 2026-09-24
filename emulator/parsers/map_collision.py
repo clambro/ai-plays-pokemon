@@ -1,4 +1,4 @@
-"""Read collision tiles from the map currently loaded in emulator memory."""
+"""Read tiles from the map currently loaded in emulator memory."""
 
 from typing import TYPE_CHECKING
 
@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
 
     from common.schemas import Coords
+    from emulator.schemas import BackgroundBlock
 
 _OVERWORLD_MAP_ADDRESS = 0xC6E8
 _MAP_BORDER_BLOCKS = 3
@@ -16,6 +17,39 @@ _BLOCK_TILE_WIDTH = 4
 _BLOCK_TILE_COUNT = 16
 _COLLISION_TILE_ROW_OFFSET = 1
 _MAP_CELL_TILE_WIDTH = 2
+
+
+def read_map_background_blocks(
+    mem: PyBoyMemoryView, height: int, width: int
+) -> tuple[tuple[BackgroundBlock, ...], ...]:
+    """Read each map cell's 2x2 background tiles from the loaded block grid."""
+    tileset_bank = mem[_TILESET_BANK_ADDRESS]
+    blocks_pointer = mem[_TILESET_BLOCKS_POINTER_ADDRESS] | (
+        mem[_TILESET_BLOCKS_POINTER_ADDRESS + 1] << 8
+    )
+    block_stride = mem[_MAP_BLOCK_WIDTH_ADDRESS] + _MAP_BORDER_BLOCKS * 2
+    block_tiles: dict[int, tuple[int, ...]] = {}
+    rows = []
+    for row in range(height):
+        cells = []
+        for col in range(width):
+            block_address = (
+                _OVERWORLD_MAP_ADDRESS
+                + (row // 2 + _MAP_BORDER_BLOCKS) * block_stride
+                + col // 2
+                + _MAP_BORDER_BLOCKS
+            )
+            block_id = mem[block_address]
+            if block_id not in block_tiles:
+                start = blocks_pointer + block_id * _BLOCK_TILE_COUNT
+                block_tiles[block_id] = tuple(
+                    mem[tileset_bank, start + offset] for offset in range(_BLOCK_TILE_COUNT)
+                )
+            tiles = block_tiles[block_id]
+            offset = row % 2 * _MAP_CELL_TILE_WIDTH * _BLOCK_TILE_WIDTH + col % 2 * 2
+            cells.append((tiles[offset], tiles[offset + 1], tiles[offset + 4], tiles[offset + 5]))
+        rows.append(tuple(cells))
+    return tuple(rows)
 
 
 def read_map_collision_tiles(mem: PyBoyMemoryView) -> list[list[int]]:

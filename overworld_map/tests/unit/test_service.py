@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import numpy as np
 import pytest
 
 from common.enums import (
@@ -23,7 +24,8 @@ from emulator.parsers.map import MapConnection
 from overworld_map.schemas import OverworldMap
 from overworld_map.service import (
     get_overworld_map,
-    record_observed_map_connection,
+    record_observed_hole_connection,
+    record_observed_map_boundary,
     update_overworld_map,
 )
 from overworld_map.tiles import get_composed_map_tiles, get_navigation_tiles
@@ -115,12 +117,6 @@ async def test_update_discovers_present_entities_on_revealed_terrain() -> None:
         destination_warp_index=0,
         activation=WarpActivation.UP,
     )
-    visible = SimpleNamespace(
-        sprites=[SimpleNamespace(index=3, is_rendered=True)],
-        warps=[warp],
-        signs=[SimpleNamespace(index=5)],
-        objects=[SimpleNamespace(index=6)],
-    )
     game_state = MagicMock()
     game_state.map = _MAP_STATE
     game_state.sprites = {
@@ -131,7 +127,7 @@ async def test_update_discovers_present_entities_on_revealed_terrain() -> None:
     game_state.objects = {6: SimpleNamespace(index=6, coords=Coords(row=2, col=2))}
     game_state.screen.to_screen_coords.return_value = Coords(row=3, col=3)
     game_state.is_text_on_screen.return_value = False
-    game_state.get_ascii_screen.return_value = visible
+    game_state.warps = {warp.index: warp}
     current_map = cast(
         "OverworldMap",
         SimpleNamespace(
@@ -175,6 +171,107 @@ async def test_update_discovers_present_entities_on_revealed_terrain() -> None:
         (MapEntityType.SIGN, 5),
         (MapEntityType.OBJECT, 6),
     }
+
+
+@pytest.mark.unit
+async def test_discovered_offscreen_warp_replaces_stale_wall_in_navigation() -> None:
+    """A live warp on mapped terrain is usable without revealing unseen or inactive warps."""
+    warps = {
+        index: SimpleNamespace(
+            index=index,
+            coords=coords,
+            destination=MapId.MY_HOUSE_1F,
+            destination_warp_index=0,
+            activation=WarpActivation.STEP_ON,
+        )
+        for index, coords in {
+            1: Coords(row=1, col=1),
+            2: Coords(row=0, col=0),
+        }.items()
+    }
+    game_state = MagicMock()
+    game_state.map = _MAP_STATE
+    game_state.warps = warps
+    game_state.sprites = {}
+    game_state.signs = {}
+    game_state.objects = {}
+    game_state.is_text_on_screen.return_value = False
+    current_map = OverworldMap(
+        id=MapId.PALLET_TOWN,
+        terrain=[list("░▓▓▓"), list("∙▓▓▓"), list("∙∙∙∙")],
+        blockages={},
+        known_sprite_ids=set(),
+        sprite_interactions={},
+        known_warp_ids={3},
+        warp_usage_iterations={},
+        known_map_boundaries=(),
+        known_sign_ids=set(),
+        sign_interactions={},
+        known_object_ids=set(),
+        object_interactions={},
+        locked_door_interactions={},
+        known_map_ids=frozenset(),
+    )
+
+    with (
+        patch("overworld_map.service._update_overworld_map_terrain", new_callable=AsyncMock),
+        patch("overworld_map.service.create_map_entity_memories", new_callable=AsyncMock),
+        patch("overworld_map.service.remember_warps", new_callable=AsyncMock) as persist_warps,
+    ):
+        await update_overworld_map(1, cast("GameState", game_state), current_map)
+
+    assert current_map.known_warp_ids == {1, 3}
+    assert persist_warps.await_args is not None
+    assert [warp.warp_id for warp in persist_warps.await_args.args[0]] == [1]
+    tiles = get_navigation_tiles(current_map, cast("GameState", game_state))
+    assert tiles[1, 1] == AsciiTile.WARP
+    assert tiles[0, 0] == AsciiTile.UNSEEN
+    assert tiles[1, 2] == AsciiTile.WALL
+
+
+@pytest.mark.unit
+async def test_loaded_terrain_refreshes_seen_tiles_without_revealing_unseen_tiles() -> None:
+    """A remote door change updates known terrain; unseen cells stay hidden."""
+    game_state = MagicMock()
+    game_state.map = SimpleNamespace(id=MapId.PALLET_TOWN, height=2, width=3)
+    game_state.screen = SimpleNamespace(top=0, left=0, bottom=1, right=1)
+    game_state.get_ascii_screen_terrain.return_value = SimpleNamespace(
+        ndarray=np.asarray([[AsciiTile.WALL]]), blockages={}
+    )
+    game_state.get_ascii_map_terrain.return_value = [
+        [AsciiTile.FREE, AsciiTile.FREE, AsciiTile.WALL],
+        [AsciiTile.FREE, AsciiTile.WALL, AsciiTile.FREE],
+    ]
+    game_state.is_text_on_screen.return_value = False
+    game_state.warps = {}
+    game_state.sprites = {}
+    game_state.signs = {}
+    game_state.objects = {}
+    current_map = OverworldMap(
+        id=MapId.PALLET_TOWN,
+        terrain=[list("░▓▓"), list("▓▓░")],
+        blockages={},
+        known_sprite_ids=set(),
+        sprite_interactions={},
+        known_sign_ids=set(),
+        sign_interactions={},
+        known_object_ids=set(),
+        object_interactions={},
+        locked_door_interactions={},
+        known_warp_ids=set(),
+        warp_usage_iterations={},
+        known_map_boundaries=(),
+        known_map_ids=frozenset(),
+    )
+
+    with (
+        patch("overworld_map.service.update_map_terrain", new_callable=AsyncMock),
+        patch("overworld_map.service.create_map_entity_memories", new_callable=AsyncMock),
+        patch("overworld_map.service.remember_warps", new_callable=AsyncMock),
+    ):
+        await update_overworld_map(1, cast("GameState", game_state), current_map)
+
+    assert current_map.terrain == [list("▓∙▓"), list("∙▓░")]
 
 
 @pytest.mark.unit
@@ -237,8 +334,8 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
 
 
 @pytest.mark.unit
-async def test_direct_cardinal_crossing_remembers_full_connection() -> None:
-    """Persist the complete mapping only after one input matches the loaded connection."""
+async def test_observed_cardinal_crossing_remembers_full_connection() -> None:
+    """Persist a ROM-matched crossing even when it was not caused by a directional press."""
     connection = MapConnection(
         direction=FacingDirection.RIGHT,
         destination_map=MapId.ROUTE_4,
@@ -280,20 +377,10 @@ async def test_direct_cardinal_crossing_remembers_full_connection() -> None:
         "overworld_map.service.remember_map_boundaries",
         new_callable=AsyncMock,
     ) as persist_boundaries:
-        await record_observed_map_connection(
-            button=Button.RIGHT,
-            previous=previous,
-            result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),
-            current=current,
-        )
+        await record_observed_map_boundary(previous, current)
 
         previous_player.coords = Coords(row=2, col=3)
-        await record_observed_map_connection(
-            button=Button.RIGHT,
-            previous=previous,
-            result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),
-            current=current,
-        )
+        await record_observed_map_boundary(previous, current)
 
     persist_boundaries.assert_awaited_once()
     assert persist_boundaries.await_args is not None
@@ -347,7 +434,7 @@ async def test_stepping_onto_hole_remembers_one_way_connection() -> None:
         "overworld_map.service.remember_map_boundaries",
         new_callable=AsyncMock,
     ) as persist_boundaries:
-        await record_observed_map_connection(
+        await record_observed_hole_connection(
             button=Button.RIGHT,
             previous=previous,
             result=ControlResult(boundary=ControlBoundary.OVERWORLD_READY),

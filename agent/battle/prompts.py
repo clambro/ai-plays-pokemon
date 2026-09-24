@@ -32,9 +32,9 @@ def _format_battle_guidance(game_state: GameState) -> str:
     if battle_type not in {BattleType.TRAINER, BattleType.WILD}:
         return ""
 
-    guidance = "Using a move or voluntarily switching Pokemon consumes the turn. Switching gives the opponent an opportunity to attack the Pokemon switched in. Before switching, assess whether the incoming Pokemon can survive the opponent's likely attack and then contribute. A favorable matchup is not useful if it faints before acting. Low HP alone is not a reason to switch; letting the active Pokemon faint allows its replacement to enter without taking an attack on the switching turn. Experience is granted only to Pokemon used in the battle, provided they have not fainted and are not at the level cap."
+    guidance = "Using a move or switching Pokemon consumes the turn. Each switch exposes the incoming Pokemon to an attack, so repeated switching can quickly lose a battle. Letting the active Pokemon faint allows its replacement to enter without taking an attack, and this may be preferable to switching depending on the circumstances. Experience is granted only to Pokemon used in the battle, provided they have not fainted and are not at the level cap."
     if battle_type == BattleType.WILD:
-        guidance += " If you are not deliberately training a particular party member and do not intend to catch this Pokemon, running is the default. A favorable matchup, easy victory, or generally useful experience is not by itself a reason to fight. An unsuccessful capture attempt or failed escape also gives the opponent an opportunity to attack."
+        guidance += " If you are not deliberately training a particular party member and do not intend to catch this Pokemon, running is the default. A favorable matchup, easy victory, or generally useful experience is not by itself a reason to fight. An unsuccessful capture attempt or failed escape also give the opponent an opportunity to attack."
     return guidance
 
 

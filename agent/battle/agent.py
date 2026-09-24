@@ -17,7 +17,7 @@ from agent.hooks import AGENT_HOOKS
 from agent.utils import is_battle_handler_state
 from common.enums import ReasoningEffort
 from common.prompts import SYSTEM_PROMPT
-from llm.service import MODEL, TIMEOUT_SECONDS
+from llm.service import TIMEOUT_SECONDS, build_agent_model
 
 if TYPE_CHECKING:
     from PIL import Image
@@ -34,7 +34,7 @@ def build_battle_agent(
 ) -> Agent[AgentContext, str]:
     """Construct the Pydantic AI battle agent."""
     return Agent[AgentContext, str](
-        model=f"openai-responses:{MODEL}",
+        model=build_agent_model(),
         name="battle_agent",
         deps_type=AgentContext,
         instructions=SYSTEM_PROMPT,
@@ -47,7 +47,7 @@ def build_battle_agent(
         ],
         capabilities=[AGENT_HOOKS],
         model_settings=OpenAIResponsesModelSettings(
-            openai_reasoning_effort=ReasoningEffort.LOW.value,
+            openai_reasoning_effort=ReasoningEffort.MEDIUM.value,
             openai_prompt_cache_key="battle-agent",
             parallel_tool_calls=False,
             timeout=TIMEOUT_SECONDS,

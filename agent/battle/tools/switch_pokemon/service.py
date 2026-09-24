@@ -18,7 +18,7 @@ async def switch_pokemon(
     emulator: Emulator,
     party_slot: int,
 ) -> str:
-    """Select a party Pokemon from the battle menu.
+    """Select a party Pokemon from the fight menu or forced replacement menu.
 
     Args:
         emulator: Running emulator used to navigate the battle menus.
@@ -32,19 +32,21 @@ async def switch_pokemon(
     """
     game_state = await emulator.get_game_state()
     cursor_pos = get_cursor_pos_in_fight_menu(game_state)
-    if cursor_pos is None:
-        raise BattleActionUnavailableError("The fight menu is not open.")
+    forced_replacement = cursor_pos is None and _get_pkmn_menu_cursor_index(game_state) is not None
+    if cursor_pos is None and not forced_replacement:
+        raise BattleActionUnavailableError("The fight or Pokemon menu is not open.")
 
     target = _get_available_party_member(game_state, party_slot)
     if target is None:
         raise BattleActionUnavailableError(f"Party slot {party_slot} is not available.")
 
-    if cursor_pos.col == 0:
-        await emulator.press_button(Button.RIGHT)
-    if cursor_pos.row == 1:
-        await emulator.press_button(Button.UP)
-    await emulator.press_button(Button.A)
-    game_state = await emulator.get_game_state()
+    if cursor_pos is not None:
+        if cursor_pos.col == 0:
+            await emulator.press_button(Button.RIGHT)
+        if cursor_pos.row == 1:
+            await emulator.press_button(Button.UP)
+        await emulator.press_button(Button.A)
+        game_state = await emulator.get_game_state()
 
     cursor_index = _get_pkmn_menu_cursor_index(game_state)
     if cursor_index is None:
@@ -56,6 +58,8 @@ async def switch_pokemon(
 
     cursor_index = _get_switch_menu_cursor_index(game_state)
     if cursor_index is None:
+        if forced_replacement:
+            return f"Attempted to send out {target.name} ({target.species})."
         raise BattleActionUnavailableError("The switch menu did not open.")
 
     await move_cursor(emulator, cursor_index, 0)
@@ -70,13 +74,13 @@ def _get_available_party_member(
 ) -> Pokemon | None:
     """Resolve a legal party slot against the current battle state."""
     active_party_slot = game_state.battle.active_party_slot
-    if active_party_slot is None or party_slot >= len(game_state.party):
+    if party_slot >= len(game_state.party):
         return None
 
     target = game_state.party[party_slot]
     if target.hp <= 0:
         return None
-    if party_slot == active_party_slot:
+    if active_party_slot is not None and party_slot == active_party_slot:
         return None
     return target
 
@@ -84,7 +88,10 @@ def _get_available_party_member(
 def _get_pkmn_menu_cursor_index(game_state: GameState) -> int | None:
     """Get the cursor index in the Pokemon menu."""
     menu_index = game_state.screen.menu_item_index
-    if "Choose a POKéMON." not in game_state.screen.text or menu_index >= len(game_state.party):
+    menu_text = game_state.screen.text
+    if (
+        "Choose a POKéMON." not in menu_text and "Bring out which" not in menu_text
+    ) or menu_index >= len(game_state.party):
         return None
     return menu_index
 

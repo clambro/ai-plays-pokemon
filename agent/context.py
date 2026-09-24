@@ -12,11 +12,10 @@ from common.constants import (
     LOOP_DETECTION_WINDOW_ITERATIONS,
 )
 from memory.rolling_memory.service import finalize_iteration, initialize_memory
-from overworld_map.service import record_warp_usage
+from overworld_map.service import record_observed_map_boundary, record_warp_usage
 
 if TYPE_CHECKING:
     from agent.state import AgentState
-    from common.enums import MapId
     from emulator.emulator import Emulator
     from emulator.game_state import GameState
     from emulator.parsers.warp import WarpTransitionMemory
@@ -34,7 +33,7 @@ class AgentContext:
         repr=False,
         compare=False,
     )
-    _last_observed_map_id: MapId | None = field(
+    _last_observed_game_state: GameState | None = field(
         default=None,
         init=False,
         repr=False,
@@ -70,14 +69,15 @@ class AgentContext:
         return requested
 
     async def observe_game_state(self, game_state: GameState) -> None:
-        """Record warp usage and flag repeated arrivals after map changes or warps."""
-        previous_map_id = self._last_observed_map_id
+        """Record observed connections and flag repeated arrivals."""
+        previous_game_state = self._last_observed_game_state
         previous_transition = self._last_observed_warp_transition
-        self._last_observed_map_id = game_state.map.id
+        self._last_observed_game_state = game_state
         self._last_observed_warp_transition = game_state.warp_transition
-        if previous_map_id is None:
+        if previous_game_state is None:
             return
 
+        previous_map_id = previous_game_state.map.id
         transition = game_state.warp_transition
         destination_warp = game_state.warps.get(transition.destination_warp_index)
         ordinary_warp = (
@@ -86,6 +86,8 @@ class AgentContext:
             and destination_warp is not None
         )
         map_changed = previous_map_id != game_state.map.id
+        if map_changed:
+            await record_observed_map_boundary(previous_game_state, game_state)
         same_map_arrival = (
             not map_changed
             and ordinary_warp

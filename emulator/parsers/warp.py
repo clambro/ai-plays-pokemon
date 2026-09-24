@@ -235,7 +235,7 @@ def _resolve_activation(
     if not (0 <= coords.row < map_state.height and 0 <= coords.col < map_state.width):
         return None
     standing_tile = read_map_collision_tile(mem, coords)
-    if standing_tile is None:
+    if standing_tile not in map_state.walkable_tiles:
         return None
     if standing_tile in _WARP_TILE_IDS[tileset]:
         return WarpActivation.STEP_ON

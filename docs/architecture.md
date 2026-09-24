@@ -41,6 +41,7 @@ flowchart LR
         navigate["navigation"]
         buttons["press_buttons"]
         item["use_item"]
+        fly["fly"]
         swap["swap_first_pokemon"]
         sokoban["sokoban_solver"]
         set_goals["set_goals"]
@@ -49,6 +50,7 @@ flowchart LR
     choice --> navigate
     choice --> buttons
     choice --> item
+    choice --> fly
     choice --> swap
     choice --> sokoban
     choice --> set_goals
@@ -56,6 +58,7 @@ flowchart LR
     navigate --> settle["Settle routine dialog<br/>and return a fresh result"]
     buttons --> settle
     item --> settle
+    fly --> settle
     swap --> settle
     sokoban --> settle
     set_goals --> settle
@@ -71,7 +74,7 @@ This is the entrypoint for the Overworld Handler. It loads the current map from 
 
 ### Overworld Tools
 
-Once the map and game state are prepared, the overworld agent chooses from the six tools described below. The available tools depend on the current game state: For example, there is no reason to offer the item tool when the bag is empty, or the Sokoban solver when there is no boulder puzzle in sight. If the action leaves the player in the same place and still in the overworld, the result goes back to the same conversation so the agent can try something else. If the player moves or the game enters another gameplay domain, control returns to the main loop.
+Once the map and game state are prepared, the overworld agent chooses from the tools described below. The available tools depend on the current game state: For example, there is no reason to offer the item tool when the bag is empty, or the Sokoban solver when there is no boulder puzzle in sight. If the action leaves the player in the same place and still in the overworld, the result goes back to the same conversation so the agent can try something else. If the player moves or the game enters another gameplay domain, control returns to the main loop.
 
 #### Press Buttons
 
@@ -84,6 +87,10 @@ This is the main tool used for navigating the overworld. The AI chooses a destin
 #### Use Item
 
 This allows the AI to select an item from its bag and attempt to use it.
+
+#### Fly
+
+When Fly is available, this tool lets the AI choose a visited town or city and travel there without navigating the route manually.
 
 #### Swap First Pokémon
 

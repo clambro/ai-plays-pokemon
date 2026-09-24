@@ -7,7 +7,8 @@ from pydantic import BaseModel, ConfigDict
 
 from common.enums import FACING_OFFSETS, AsciiTile, FacingDirection, MapId, Tileset
 from common.schemas import Coords
-from emulator.parsers.map_collision import read_map_collision_tile
+from emulator.parsers.map_collision import read_map_background_blocks, read_map_collision_tile
+from emulator.schemas import BackgroundBlock, LedgeTilePair
 
 if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
@@ -65,14 +66,16 @@ class Map(BaseModel):
     """The state of the current map."""
 
     id: MapId
+    tileset: Tileset
     height: int
     width: int
     water_tiles: frozenset[int]
     background_tile_types: dict[int, AsciiTile]
-    background_block_types: dict[tuple[int, int, int, int], AsciiTile]
-    ledge_tiles_left: list[tuple[int, int]]
-    ledge_tiles_right: list[tuple[int, int]]
-    ledge_tiles_down: list[tuple[int, int]]
+    background_block_types: dict[BackgroundBlock, AsciiTile]
+    background_blocks: tuple[tuple[BackgroundBlock, ...], ...]
+    ledge_tiles_left: list[LedgeTilePair]
+    ledge_tiles_right: list[LedgeTilePair]
+    ledge_tiles_down: list[LedgeTilePair]
     walkable_tiles: list[int]
     collision_pairs: list[frozenset[int]]
     boulder_blocked_tiles: frozenset[int]
@@ -203,6 +206,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
 
     return Map(
         id=map_id,
+        tileset=tileset_id,
         height=height,
         width=width,
         water_tiles=water_tiles,
@@ -212,6 +216,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
             talk_over_tiles,
         ),
         background_block_types=_get_background_block_types(tileset_id, map_id),
+        background_blocks=read_map_background_blocks(mem, height, width),
         ledge_tiles_left=ledge_tiles_left,
         ledge_tiles_right=ledge_tiles_right,
         ledge_tiles_down=ledge_tiles_down,
@@ -255,11 +260,13 @@ def _unavailable_map(mem: PyBoyMemoryView) -> Map:
     """Represent startup screens with zero dimensions or non-map data in the tileset byte."""
     return Map(
         id=MapId(mem[0xD3AB]),
+        tileset=Tileset.PLACEHOLDER,
         height=0,
         width=0,
         water_tiles=frozenset(),
         background_tile_types={},
         background_block_types={},
+        background_blocks=(),
         ledge_tiles_left=[],
         ledge_tiles_right=[],
         ledge_tiles_down=[],
@@ -509,7 +516,7 @@ def _get_background_tile_types(
 def _get_background_block_types(
     tileset_id: Tileset,
     map_id: MapId,
-) -> dict[tuple[int, int, int, int], AsciiTile]:
+) -> dict[BackgroundBlock, AsciiTile]:
     """Return terrain types identified by their full rendered block."""
     block_types = dict(_SPINNER_BLOCK_MAP.get(tileset_id, {}))
     block_types.update(dict.fromkeys(_LOCKED_DOOR_BLOCK_MAP.get(map_id, ()), AsciiTile.LOCKED_DOOR))
