@@ -28,9 +28,8 @@ def build_swap_first_pokemon_tool(
         """Put another party Pokemon in the first position.
 
         This makes that Pokemon the lead in future battles, assuming it has not
-        fainted. Use it to prepare a favorable matchup or give a Pokemon you
-        intend to develop more opportunities to gain experience. The current
-        party order is shown in the ``party`` section of the prompt.
+        fainted. The current party order is shown in the ``party`` section of
+        the prompt.
 
         Args:
             party_slot: Zero-based non-lead party slot of the Pokemon that should become the lead.

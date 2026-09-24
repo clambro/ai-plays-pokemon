@@ -97,8 +97,7 @@ def format_navigation_hm_warning(game_state: GameState) -> str:
         return ""
     return "\n".join(
         f"Navigation warning: You own the HM and have the required badge for {move}, "
-        "but no Pokemon in your current party knows it. This limits your navigation; "
-        "teach it to a compatible party member or withdraw a Pokemon that knows it."
+        "but no Pokemon in your current party knows it. This limits your navigation."
         for move in missing
     )
 
@@ -115,7 +114,7 @@ def _format_overworld_sprite(
         f' This sprite is labeled "{sprite.label}".'
     )
     if interaction is None:
-        output += " You have not interacted with this sprite yet; it may be worth trying."
+        output += " No recorded interaction."
     else:
         output += _format_map_entity_interaction(interaction)
     if counter_positions:
@@ -126,8 +125,8 @@ def _format_overworld_sprite(
         )
     if sprite.moves_randomly:
         output += (
-            " Warning: This sprite wanders randomly around the map. Your reactions are too slow"
-            " to catch it. Sprites like this are not worth interacting with."
+            " This sprite wanders randomly around the map. Your reactions are too slow to catch it."
+            " Sprites like this are not worth interacting with."
         )
     return output
 
@@ -140,7 +139,7 @@ def _format_overworld_sign(
     """Format a known overworld sign for the agent."""
     output = f"sign_{map_id}_{sign.index} at {sign.coords}."
     if interaction is None:
-        return output + " You have not interacted with this sign yet; it may be worth reading."
+        return output + " No recorded interaction."
     return output + _format_map_entity_interaction(interaction)
 
 
@@ -155,7 +154,7 @@ def _format_overworld_object(
         positions
     )
     if interaction is None:
-        return output + " You have not interacted with this object yet; it may be worth trying."
+        return output + " No recorded interaction."
     return output + _format_map_entity_interaction(interaction)
 
 
@@ -188,7 +187,7 @@ def _format_locked_door(
         + _format_interaction_positions(door.interaction_positions)
     )
     if interaction is None:
-        return output + " You have not interacted with this object yet; it may be worth trying."
+        return output + " No recorded interaction."
     return output + _format_map_entity_interaction(interaction)
 
 
@@ -225,8 +224,7 @@ def _format_overworld_warp_group(
     else:
         destination_text = (
             "You have not been to this connection's destination yet. "
-            "Visiting it will add a new building/floor/location to your memory. "
-            "It might be a good candidate for exploration if it is accessible."
+            "Visiting it will add a new building/floor/location to your memory."
         )
     locations = " or ".join(str(candidate.coords) for candidate in warps)
     identity = f"Connection on {map_id.name} at {locations}"
@@ -249,8 +247,7 @@ def _get_warp_description(
         if any(player_coords == candidate.coords for candidate in warps):
             return (
                 "You are currently standing on this connection, so it is inactive. "
-                "It activates only when entered from another tile. "
-                "Re-enter it only when you intend to travel to the destination described above."
+                "It activates only when entered from another tile."
             )
         return f"Step onto {coordinate_text} to activate the connection."
     return (
@@ -605,10 +602,7 @@ def format_connection_notes(map_view: CurrentMapView, map_state: Map) -> str:
         if connection is not None and map_view.boundary_tiles[facing]
     ]
     if not reachable_connections:
-        return (
-            "There are no direct connections to other maps reachable from your current region."
-            " Leave it through a reachable warp or expand it by exploring unseen terrain."
-        )
+        return "There are no direct connections to other maps reachable from your current region."
     return "\n".join(
         f"- The map to the {direction} is {connection.destination_map.name}."
         for direction, connection in reachable_connections

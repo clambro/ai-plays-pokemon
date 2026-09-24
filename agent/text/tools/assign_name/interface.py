@@ -32,8 +32,7 @@ def build_assign_name_tool(context: AgentContext) -> Tool[AgentContext]:
 
         - contain only uppercase letters and spaces;
         - contain at least one character;
-        - not begin or end with a space; and
-        - be creative, unique, and different from default names.
+        - not begin or end with a space.
 
         The player and rival names are 7 characters max. Pokemon nicknames are
         10 characters max.

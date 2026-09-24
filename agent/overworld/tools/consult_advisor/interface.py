@@ -24,8 +24,6 @@ def build_consult_advisor_tool(context: AgentContext) -> Tool[AgentContext]:
 
         Use this when your own attempts are not resolving a blockage and you
         need a fresh assessment and concrete suggestion for what to do next.
-        Consider consulting after repeated loop warnings or several attempts
-        that have not produced meaningful progress.
 
         The advisor receives your current game state, screenshot, goals, and
         memory, and can inspect known maps. It returns a strategic second

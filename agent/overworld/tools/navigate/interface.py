@@ -40,10 +40,7 @@ def build_navigation_tool(
         sign, or object, navigate next to it, or use the exact interaction
         position in its map note when one is provided.
 
-        Navigation intentionally avoids random encounters where possible. When
-        deliberately seeking wild Pokemon, choose suitable grass, cave, or
-        water at least five tiles away so that the route crosses more
-        encounter-capable tiles.
+        Navigation intentionally avoids random encounters where possible.
 
         Do not attempt to navigate to the tile that you are currently standing
         on. This does nothing.

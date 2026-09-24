@@ -18,18 +18,7 @@ type _MemoryEntry = CurrentMemoryBlock | RawMemoryBlock | MemorySummary
 def format_goals(goals: list[Goal]) -> str:
     """Format the agent's current goals for gameplay prompts."""
     out = "<goals_info>\n"
-    out += (
-        "Here are the goals that you have set for yourself. Keep them in mind and generally"
-        " work toward them as opportunities arise. Goals are specific, achievable objectives"
-        " with clear completion conditions, not ongoing play-style rules. Write them in the"
-        " imperative and keep distinct priorities separate. Do not use goals for individual"
-        " button presses or routine movement. Use current structured information, observed game"
-        " text, and recorded memory to ground goals. General Pokemon knowledge may guide your"
-        " plans, but do not treat it as confirmation of current game facts. Use null for unused"
-        " slots instead of inventing objectives"
-        " to fill them. Goals are revisable plans; keep uncertain prerequisites explicitly"
-        " uncertain and reassess them when new evidence contradicts the plan."
-    )
+    out += "Here are the goals that you have set for yourself:"
     out += "\n<goals>\n"
     if goals:
         out += "\n".join(
