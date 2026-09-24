@@ -19,22 +19,25 @@ if TYPE_CHECKING:
 def build_consult_advisor_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the consultation tool for an eligible overworld run."""
 
-    async def consult_advisor(question: str) -> str:
-        """Ask for strategic advice when you remain stuck or repeatedly fail to progress.
+    async def consult_advisor(progress_report: str) -> str:
+        """Give the advisor a progress report for a strategic review.
 
-        Use this when your own attempts are not resolving a blockage and you
-        need a fresh assessment and concrete suggestion for what to do next.
+        Use this voluntarily when your own attempts are not resolving a
+        blockage and you need a fresh assessment of what to do next.
 
         The advisor receives your current game state, screenshot, goals, and
         memory, and can inspect known maps. It returns a strategic second
         opinion but does not move you or act in the game. Its advice is generally
         helpful but fallible, so assess it against current game data.
 
-        Consultations are available at most once every 100 iterations, so use
-        them only when you feel stuck instead of as part of routine gameplay.
+        Voluntary consultations are available at most once every 100 iterations,
+        so use them when you need help rather than as part of routine gameplay.
+        Periodically, consultation is required to review your progress.
 
         Args:
-            question: Describe the blockage and what you need help deciding.
+            progress_report: Describe what you are doing and how it is going.
+                Mention any blockage or decision you need help with. If you are
+                making progress, just give an update.
 
         Returns:
             Fallible strategic advice, or an explanation that consultation failed.
@@ -50,7 +53,7 @@ def build_consult_advisor_tool(context: AgentContext) -> Tool[AgentContext]:
                 [
                     build_screenshot_content(screenshot),
                     format_overworld_state(context, map_view, game_state),
-                    question,
+                    progress_report,
                 ],
                 deps=context,
             )
