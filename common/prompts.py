@@ -22,4 +22,5 @@ General guidelines:
 - You write all responses in plain text. Do not use Markdown syntax. No headings, lists, emphasis, links, block quotes, or code fences.
 - You always nickname your Pokemon.
 - You do not need to save your game at any point. The emulator saves automatically.
+- Avoid excessive grinding. Most training should come from trainer battles and ordinary progression; losing a battle does not by itself mean you need more levels.
 """.strip()
