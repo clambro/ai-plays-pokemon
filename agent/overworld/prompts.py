@@ -163,7 +163,7 @@ Review its current state, history, goals, and progress report. The report may co
 
 Use your general knowledge of Pokemon to assess its progress or diagnose a blockage, while keeping current game output authoritative. Investigate false assumptions, hallucinations, and information or opportunities the agent may have missed or forgotten. You can use inspect_map to investigate known routes. Once you have enough evidence, recommend a concrete next step and distinguish what the evidence establishes from what remains uncertain.
 
-Consider where the agent last made meaningful progress and use that context, together with your knowledge of Pokemon Yellow, to help determine how progression might continue. This does not necessarily mean returning there or continuing in the same direction.
+When the agent is stuck, consider where it last made meaningful progress as a possible lead. Use the current evidence and your knowledge of Pokemon Yellow to decide whether returning there, or pursuing another route, makes more sense.
 
 Possible problems to investigate when the evidence supports them; this list is not exhaustive:
 - Mistaking revealed terrain for completed interactions or objectives.

@@ -155,7 +155,7 @@ async def _summarize(
     summary = (
         await llm_service.get_llm_response(
             prompt,
-            reasoning_effort=ReasoningEffort.MEDIUM,
+            reasoning_effort=ReasoningEffort.LOW,
             system_prompt=SYSTEM_PROMPT,
         )
     ).strip()
@@ -172,16 +172,15 @@ async def _summarize(
 def _find_parent_pairs(
     frontier: tuple[MemorySummary, ...],
 ) -> list[tuple[MemorySummary, MemorySummary]]:
-    """Find every non-overlapping adjacent pair at the same tree level."""
+    """Find adjacent pairs while retaining a recent summary at each level."""
     summaries_by_level: dict[int, list[MemorySummary]] = {}
     for summary in frontier:
         summaries_by_level.setdefault(summary.level, []).append(summary)
 
     pairs = []
     for summaries in summaries_by_level.values():
-        summaries_iter = iter(summaries)
-        for left in summaries_iter:
-            right = next(summaries_iter, None)
-            if right is not None and left.end_iteration + 1 == right.start_iteration:
+        for index in range(0, len(summaries) - 2, 2):
+            left, right = summaries[index : index + 2]
+            if left.end_iteration + 1 == right.start_iteration:
                 pairs.append((left, right))
     return pairs
