@@ -63,7 +63,8 @@ class GameState:
         Returns:
             An immutable parsed snapshot of the relevant game state.
         """
-        map_state = parse_map_state(mem)
+        battle = parse_battle_state(mem)
+        map_state = parse_map_state(mem, is_in_battle=battle.is_in_battle)
         return cls(
             player=parse_player(mem),
             party=parse_party_pokemon(mem),
@@ -72,12 +73,12 @@ class GameState:
             map=map_state,
             sprites=parse_sprites(mem),
             pikachu=parse_pikachu_sprite(mem),
-            warps=parse_warps(mem, map_state),
+            warps={} if battle.is_in_battle else parse_warps(mem, map_state),
             warp_transition=parse_warp_transition_memory(mem),
             signs=parse_signs(mem),
             objects=parse_static_objects(mem, map_state.id),
             screen=parse_screen(mem),
-            battle=parse_battle_state(mem),
+            battle=battle,
         )
 
     @property

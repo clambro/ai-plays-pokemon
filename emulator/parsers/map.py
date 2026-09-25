@@ -149,17 +149,21 @@ class Map(BaseModel):
         )
 
 
-def parse_map_state(mem: PyBoyMemoryView) -> Map:
+def parse_map_state(mem: PyBoyMemoryView, *, is_in_battle: bool) -> Map:
     """Parse the current map from emulator memory.
 
     Tileset values all come from data/tilesets in the decompiled ROM.
 
     Args:
         mem: Current PyBoy memory view.
+        is_in_battle: Whether battle graphics currently occupy the overworld map's RAM.
 
     Returns:
         An immutable snapshot of the current map and its traversal metadata.
     """
+    if is_in_battle:
+        return _unavailable_map(mem)
+
     height = mem[0xD571]
     width = mem[0xD572]
     try:
@@ -257,7 +261,7 @@ def parse_map_state(mem: PyBoyMemoryView) -> Map:
 
 
 def _unavailable_map(mem: PyBoyMemoryView) -> Map:
-    """Represent startup screens with zero dimensions or non-map data in the tileset byte."""
+    """Keep map identity without reading terrain unavailable during battle or startup."""
     return Map(
         id=MapId(mem[0xD3AB]),
         tileset=Tileset.PLACEHOLDER,
