@@ -145,6 +145,39 @@ async def test_compaction_advances_up_to_three_parents_below_the_raw_tail_limit(
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize(("level", "span"), [(1, 20), (2, 40)])
+async def test_compaction_merges_the_oldest_pair_only_after_a_third_summary(
+    compaction_boundaries: tuple[AsyncMock, AsyncMock],
+    level: int,
+    span: int,
+) -> None:
+    """Keep the newest summary at a level when older neighbors merge."""
+    _, store_memory_summary = compaction_boundaries
+    memory = RollingMemory(
+        loaded_raw_blocks=_raw_blocks(
+            ROLLING_MEMORY_RAW_BLOCK_SOFT_LIMIT,
+            start_iteration=3 * span + 1,
+        ),
+        summary_frontier=tuple(
+            _summary(start_iteration=start, end_iteration=start + span - 1, level=level)
+            for start in range(1, 3 * span + 1, span)
+        ),
+    )
+
+    summaries = await service.compact_memory(memory)
+
+    assert summaries == [
+        MemorySummaryRead(
+            start_iteration=1,
+            end_iteration=2 * span,
+            level=level + 1,
+            content="Durable observed history.",
+        ),
+    ]
+    store_memory_summary.assert_awaited_once()
+
+
+@pytest.mark.unit
 async def test_compaction_does_nothing_without_an_eligible_range(
     compaction_boundaries: tuple[AsyncMock, AsyncMock],
 ) -> None:
@@ -153,9 +186,12 @@ async def test_compaction_does_nothing_without_an_eligible_range(
     memory = RollingMemory(
         loaded_raw_blocks=_raw_blocks(
             ROLLING_MEMORY_RAW_BLOCK_SOFT_LIMIT,
-            start_iteration=21,
+            start_iteration=41,
         ),
-        summary_frontier=(_summary(start_iteration=1, end_iteration=20, level=1),),
+        summary_frontier=(
+            _summary(start_iteration=1, end_iteration=20, level=1),
+            _summary(start_iteration=21, end_iteration=40, level=1),
+        ),
     )
 
     summaries = await service.compact_memory(memory)
