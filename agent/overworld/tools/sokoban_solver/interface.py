@@ -27,7 +27,7 @@ def build_sokoban_solver_tool(
         The Sokoban solver tool will automatically solve the onscreen Sokoban
         puzzle for you, or inform you if the puzzle is not currently solvable
         (likely meaning that you need to explore more and then try calling
-        this tool again).
+        this tool again). Try this tool before pushing boulders manually.
 
         Returns:
             Fresh screenshot and the actual solver result.

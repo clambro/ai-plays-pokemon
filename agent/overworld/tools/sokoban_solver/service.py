@@ -216,7 +216,8 @@ async def _execute_solution(
             game_state,
         ):
             return _include_dialog(
-                "I stopped the Sokoban solver because control left the overworld.",
+                "I stopped the Sokoban solver because control left the overworld."
+                " I should call it again when I return.",
                 strength_dialog,
             )
 
@@ -234,7 +235,8 @@ async def _execute_solution(
             boulder_coords=next_pos if pushing_boulder else None,
         ):
             return _include_dialog(
-                "The Sokoban solver was interrupted because my movement was blocked.",
+                "The Sokoban solver was interrupted during movement. If a battle or another"
+                " temporary event caused this, I should call it again afterward.",
                 strength_dialog,
             )
 
