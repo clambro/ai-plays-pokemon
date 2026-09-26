@@ -6,7 +6,9 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    from common.enums import BlockedDirection, MapId
+    from collections.abc import Mapping
+
+    from common.enums import AsciiTile, BlockedDirection, MapId
     from common.schemas import Coords
     from database.map_boundary_memory.schemas import MapBoundaryMemoryRead
 
@@ -17,6 +19,15 @@ class MapEntityInteractionMemory:
 
     text: str | None
     iteration: int
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TraversalRules:
+    """Movement constraints separate from the displayed map tiles."""
+
+    blockages: Mapping[Coords, BlockedDirection]
+    hm_tiles: frozenset[AsciiTile]
+    directional_warps: frozenset[Coords]
 
 
 @dataclass(slots=True, kw_only=True)

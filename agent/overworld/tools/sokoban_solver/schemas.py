@@ -15,3 +15,4 @@ class SokobanMap:
     boulders: set[Coords]
     goals: set[Coords]
     collision_tiles: list[list[int]]
+    directional_warps: frozenset[Coords]

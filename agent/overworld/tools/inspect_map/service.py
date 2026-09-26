@@ -13,7 +13,7 @@ from agent.overworld.tools.inspect_map.schemas import (
     MapInspectionResult,
     ResolvedConnection,
 )
-from common.enums import AsciiTile, MapId
+from common.enums import AsciiTile, MapId, WarpActivation
 from common.schemas import Coords
 from database.map_boundary_memory.repository import (
     get_map_boundary_memories_for_map,
@@ -21,6 +21,7 @@ from database.map_boundary_memory.repository import (
 )
 from database.map_memory.repository import get_map_memory, get_visited_maps
 from database.warp_memory.repository import get_warp_memories_for_map, get_warp_memories_to_map
+from overworld_map.schemas import TraversalRules
 from overworld_map.traversal import get_accessible_coords, get_exploration_candidates
 
 if TYPE_CHECKING:
@@ -96,15 +97,18 @@ async def _inspect_map(
         ),
         *(_resolve_boundary_connection(group) for group in group_map_boundaries(boundaries)),
     )
+    rules = TraversalRules(
+        blockages=map_memory.blockages,
+        hm_tiles=frozenset(hm_tiles),
+        directional_warps=_directional_warp_coords(connections),
+    )
     known_access_coords = set()
     for coords in entry_coords:
         tiles = _build_connection_tiles(connections, map_memory)
         if not (0 <= coords.row < tiles.shape[0] and 0 <= coords.col < tiles.shape[1]):
             continue
         tiles[coords.row, coords.col] = AsciiTile.PLAYER
-        known_access_coords.update(
-            get_accessible_coords(coords, tiles, map_memory.blockages, hm_tiles)
-        )
+        known_access_coords.update(get_accessible_coords(coords, tiles, rules))
     arrival_coords = sorted(
         {
             *(_coords(warp) for warp in warps),
@@ -166,6 +170,7 @@ def _resolve_warp_connection(
             )
         ),
         is_warp=True,
+        activation=warp.activation,
         last_used_iteration=max(
             (warp.last_used_iteration for warp in group if warp.last_used_iteration is not None),
             default=None,
@@ -187,6 +192,7 @@ def _resolve_boundary_connection(
             for candidate in group
         ),
         is_warp=False,
+        activation=None,
     )
 
 
@@ -210,8 +216,11 @@ def get_connection_component(
     reachable_coords = get_accessible_coords(
         arrival_coords,
         tiles,
-        map_memory.blockages,
-        hm_tiles,
+        TraversalRules(
+            blockages=map_memory.blockages,
+            hm_tiles=frozenset(hm_tiles),
+            directional_warps=_directional_warp_coords(connections),
+        ),
     )
     reachable_connections = tuple(
         connection
@@ -229,6 +238,7 @@ def get_connection_component(
             destination_map_id=None,
             destination_coords=(),
             is_warp=True,
+            activation=None,
         )
         for coords in sorted(reachable_coords, key=lambda coords: (coords.row, coords.col))
         if tiles[coords.row, coords.col] in transition_tiles
@@ -255,6 +265,16 @@ def _build_connection_tiles(
             if 0 <= coords.row < height and 0 <= coords.col < width:
                 tiles[coords.row, coords.col] = AsciiTile.WARP
     return tiles
+
+
+def _directional_warp_coords(connections: Iterable[ResolvedConnection]) -> frozenset[Coords]:
+    """Identify warp tiles that remain stable positions when entered."""
+    return frozenset(
+        coords
+        for connection in connections
+        if connection.is_warp and connection.activation not in (None, WarpActivation.STEP_ON)
+        for coords in connection.source_coords
+    )
 
 
 def group_remembered_warps(warps: Sequence[WarpMemoryRead]) -> WarpGroups:

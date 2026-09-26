@@ -6,20 +6,17 @@ from common.enums import AsciiTile, Button
 from overworld_map.traversal import get_neighbors
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
-
     import numpy as np
 
-    from common.enums import BlockedDirection
     from common.schemas import Coords
+    from overworld_map.schemas import TraversalRules
 
 
 def calculate_path_to_target(
     start_pos: Coords,
     target_pos: Coords,
     tiles: np.ndarray,
-    blockages: Mapping[Coords, BlockedDirection],
-    hm_tiles: list[AsciiTile],
+    rules: TraversalRules,
 ) -> list[Button] | None:
     """Calculate an A* path to the target as a sequence of button presses.
 
@@ -27,8 +24,7 @@ def calculate_path_to_target(
         start_pos: Coordinate at which to begin the path.
         target_pos: Coordinate the path should reach.
         tiles: Current navigation tiles.
-        blockages: Known paired-tile movement blockages.
-        hm_tiles: Additional tile types traversable with the player's current HMs.
+        rules: Movement constraints beyond the displayed tile symbols.
 
     Returns:
         Button presses reaching the target, or ``None`` when no path exists.
@@ -59,7 +55,7 @@ def calculate_path_to_target(
 
         open_set.remove(current)
 
-        for neighbor, button in get_neighbors(current, tiles, blockages, hm_tiles):
+        for neighbor, button in get_neighbors(current, tiles, rules):
             # Bias movement away from tiles that take more time to traverse.
             increment = 5 if tiles[neighbor.row, neighbor.col] in expensive_tiles else 1
             tentative_g_score = g_score[current] + increment

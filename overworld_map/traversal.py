@@ -7,7 +7,8 @@ import numpy as np
 
 from common.enums import BUTTON_OFFSETS, AsciiTile, BlockedDirection, Button, FacingDirection
 from common.schemas import Coords
-from overworld_map.tiles import get_navigation_tiles
+from overworld_map.schemas import TraversalRules
+from overworld_map.tiles import get_directional_warp_coords, get_navigation_tiles
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -35,12 +36,15 @@ def build_routing_data(
     # Entity overlays must not hide directional or stop tiles from spinner tracing.
     spinner_mask = np.isin(persistent_tiles, spinner_types)
     routing_tiles[spinner_mask] = persistent_tiles[spinner_mask]
-    hm_tiles = game_state.get_hm_tiles()
+    rules = TraversalRules(
+        blockages=overworld_map.blockages,
+        hm_tiles=frozenset(game_state.get_hm_tiles()),
+        directional_warps=get_directional_warp_coords(overworld_map, game_state),
+    )
     reachable_list = get_accessible_coords(
         game_state.player.coords,
         routing_tiles,
-        overworld_map.blockages,
-        hm_tiles,
+        rules,
     )
     return routing_tiles, reachable_list
 
@@ -152,16 +156,14 @@ def get_map_boundary_tiles(
 def get_accessible_coords(
     start_pos: Coords,
     tiles: np.ndarray,
-    blockages: Mapping[Coords, BlockedDirection],
-    hm_tiles: list[AsciiTile],
+    rules: TraversalRules,
 ) -> list[Coords]:
     """Find every coordinate reachable from the player's position.
 
     Args:
         start_pos: Coordinate at which to begin the search.
         tiles: Current navigation tiles.
-        blockages: Known paired-tile movement blockages.
-        hm_tiles: Additional tile types traversable with the player's current HMs.
+        rules: Movement constraints beyond the displayed tile symbols.
 
     Returns:
         Reachable coordinates, including ``start_pos`` so a boundary beneath the player is found.
@@ -171,7 +173,7 @@ def get_accessible_coords(
     accessible = [start_pos]
     while queue:
         current = queue.popleft()
-        for neighbor, _ in get_neighbors(current, tiles, blockages, hm_tiles):
+        for neighbor, _ in get_neighbors(current, tiles, rules):
             if neighbor not in visited:
                 visited.add(neighbor)
                 queue.append(neighbor)
@@ -183,16 +185,14 @@ def get_accessible_coords(
 def get_neighbors(
     pos: Coords,
     tiles: np.ndarray,
-    blockages: Mapping[Coords, BlockedDirection],
-    hm_tiles: list[AsciiTile],
+    rules: TraversalRules,
 ) -> list[tuple[Coords, Button]]:
     """Get valid neighboring coordinates from a position.
 
     Args:
         pos: Coordinate whose neighbors should be evaluated.
         tiles: Current navigation tiles.
-        blockages: Known paired-tile movement blockages.
-        hm_tiles: Additional tile types traversable with the player's current HMs.
+        rules: Movement constraints beyond the displayed tile symbols.
 
     Returns:
         Reachable neighboring coordinates paired with the button that enters each one.
@@ -202,7 +202,10 @@ def get_neighbors(
     spinner_tiles = AsciiTile.get_spinner_tiles()
 
     current_tile = tiles[pos.row, pos.col]
-    if current_tile in AsciiTile.get_step_on_transition_tiles() or current_tile in spinner_tiles:
+    if (
+        current_tile in AsciiTile.get_step_on_transition_tiles()
+        and pos not in rules.directional_warps
+    ) or current_tile in spinner_tiles:
         return []  # These transition tiles cannot be used as stable intermediate positions.
 
     for button in (Button.RIGHT, Button.DOWN, Button.LEFT, Button.UP):
@@ -234,10 +237,10 @@ def get_neighbors(
             # An unresolved spinner is still reachable as an exploration action, but it is
             # terminal until traversing it reveals where it leads.
             neighbors.append((destination if destination is not None else new_pos, button))
-        elif not is_blocked(pos, dy, dx, blockages) and (
+        elif not is_blocked(pos, dy, dx, rules.blockages) and (
             target_tile in walkable_tiles
-            or (target_tile == AsciiTile.CUT_TREE and AsciiTile.CUT_TREE in hm_tiles)
-            or (target_tile == AsciiTile.WATER and AsciiTile.WATER in hm_tiles)
+            or (target_tile == AsciiTile.CUT_TREE and AsciiTile.CUT_TREE in rules.hm_tiles)
+            or (target_tile == AsciiTile.WATER and AsciiTile.WATER in rules.hm_tiles)
         ):
             neighbors.append((new_pos, button))
 

@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from common.enums import AsciiTile
+from common.enums import AsciiTile, WarpActivation
 
 if TYPE_CHECKING:
     import numpy as np
@@ -38,6 +38,18 @@ def get_navigation_tiles(overworld_map: OverworldMap, game_state: GameState) -> 
             tiles[obj.coords.row, obj.coords.col] = AsciiTile.OBJECT
 
     return tiles
+
+
+def get_directional_warp_coords(
+    overworld_map: OverworldMap, game_state: GameState
+) -> frozenset[Coords]:
+    """Return known active warps that can be stood on without transitioning."""
+    return frozenset(
+        warp.coords
+        for entity_id in overworld_map.known_warp_ids
+        if (warp := game_state.warps.get(entity_id)) is not None
+        and warp.activation != WarpActivation.STEP_ON
+    )
 
 
 def get_composed_map_tiles(overworld_map: OverworldMap, game_state: GameState) -> np.ndarray:
