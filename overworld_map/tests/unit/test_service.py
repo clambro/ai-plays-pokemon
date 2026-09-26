@@ -13,6 +13,7 @@ from common.enums import (
     FacingDirection,
     MapEntityType,
     MapId,
+    SpriteLabel,
     WarpActivation,
 )
 from common.schemas import Coords
@@ -21,7 +22,7 @@ from database.map_memory.schemas import MapMemoryRead
 from database.warp_memory.schemas import WarpMemoryRead
 from emulator.control_events import ControlBoundary, ControlResult
 from emulator.parsers.map import MapConnection
-from overworld_map.schemas import OverworldMap
+from overworld_map.schemas import OverworldMap, TraversalRules
 from overworld_map.service import (
     get_overworld_map,
     record_observed_hole_connection,
@@ -29,6 +30,7 @@ from overworld_map.service import (
     update_overworld_map,
 )
 from overworld_map.tiles import get_composed_map_tiles, get_navigation_tiles
+from overworld_map.traversal import get_accessible_coords
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -293,7 +295,9 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
         known_map_boundaries=(),
         known_map_ids=frozenset(),
     )
-    sprite = SimpleNamespace(coords=Coords(row=0, col=1), is_rendered=True)
+    sprite = SimpleNamespace(
+        coords=Coords(row=0, col=1), is_rendered=True, label=SpriteLabel.BOULDER
+    )
     sprites = {1: sprite}
     player = SimpleNamespace(coords=Coords(row=0, col=0))
     game_state = cast(
@@ -316,10 +320,14 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
     ]
 
     sprite.coords = Coords(row=0, col=2)
-    player.coords = Coords(row=0, col=1)
     assert get_composed_map_tiles(current_map, game_state).tolist() == [
-        [AsciiTile.FREE, AsciiTile.PLAYER, AsciiTile.SPRITE]
+        [AsciiTile.PLAYER, AsciiTile.FREE, AsciiTile.SPRITE]
     ]
+    assert get_accessible_coords(
+        player.coords,
+        get_navigation_tiles(current_map, game_state),
+        TraversalRules(blockages={}, hm_tiles=frozenset(), directional_warps=frozenset()),
+    ) == [Coords(row=0, col=0), Coords(row=0, col=1)]
 
     sprite.is_rendered = False
     assert get_navigation_tiles(current_map, game_state).tolist() == [
