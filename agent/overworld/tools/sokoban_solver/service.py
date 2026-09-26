@@ -8,7 +8,7 @@ from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
 from common.enums import BUTTON_DIRECTIONS, BUTTON_OFFSETS, AsciiTile, Button, SpriteLabel
 from common.schemas import Coords
 from emulator.control_events import ControlBoundary
-from overworld_map.tiles import get_navigation_tiles
+from overworld_map.tiles import get_directional_warp_coords, get_navigation_tiles
 from overworld_map.traversal import is_blocked
 
 if TYPE_CHECKING:
@@ -91,6 +91,7 @@ def _get_simplified_map(
         boulders=boulders,
         goals=goals,
         collision_tiles=collision_tiles,
+        directional_warps=get_directional_warp_coords(current_map, game_state),
     )
 
 
@@ -191,11 +192,10 @@ def _is_movement_possible(  # noqa: PLR0913
         if is_blocked(source, direction.row, direction.col, current_map.blockages):
             return False
 
-    valid_tiles = (FREE_TILE,)
-    if is_boulder:
-        # Boulders can be pushed onto warp tiles, but the player should avoid them.
-        valid_tiles += (WARP_TILE,)
-    return sokoban_map.tiles[destination.row][destination.col] in valid_tiles
+    tile = sokoban_map.tiles[destination.row][destination.col]
+    return tile == FREE_TILE or (
+        tile == WARP_TILE and (is_boulder or destination in sokoban_map.directional_warps)
+    )
 
 
 async def _execute_solution(
@@ -216,7 +216,8 @@ async def _execute_solution(
             game_state,
         ):
             return _include_dialog(
-                "I stopped the Sokoban solver because control left the overworld.",
+                "I stopped the Sokoban solver because control left the overworld."
+                " I should call it again when I return.",
                 strength_dialog,
             )
 
@@ -234,7 +235,8 @@ async def _execute_solution(
             boulder_coords=next_pos if pushing_boulder else None,
         ):
             return _include_dialog(
-                "The Sokoban solver was interrupted because my movement was blocked.",
+                "The Sokoban solver was interrupted during movement. If a battle or another"
+                " temporary event caused this, I should call it again afterward.",
                 strength_dialog,
             )
 

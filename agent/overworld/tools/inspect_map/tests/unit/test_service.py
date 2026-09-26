@@ -124,6 +124,7 @@ def _connection(*coords: Coords, is_warp: bool = True) -> ResolvedConnection:
         destination_map_id=MapId.ROUTE_4,
         destination_coords=(),
         is_warp=is_warp,
+        activation=WarpActivation.STEP_ON if is_warp else None,
     )
 
 
@@ -436,6 +437,35 @@ def test_connection_check_lists_only_connections_in_the_arrival_component(
 
     assert component.connections == (connections[0], connections[1], connections[3])
     assert component.has_unexplored_terrain is expected_unexplored_terrain
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("activation", [WarpActivation.DOWN, WarpActivation.STEP_ON])
+def test_directional_warp_can_connect_remembered_terrain(activation: WarpActivation) -> None:
+    """Walking across a directional entrance does not activate it like a step-on warp."""
+    entrance = ResolvedConnection(
+        source_map_id=MapId.MT_MOON_B1F,
+        source_coords=(Coords(row=1, col=2),),
+        destination_map_id=MapId.ROUTE_4,
+        destination_coords=(),
+        is_warp=True,
+        activation=activation,
+    )
+    far_connection = _connection(Coords(row=1, col=3))
+    map_memory = MapMemoryRead(
+        map_id=MapId.MT_MOON_B1F,
+        terrain="▓▓▓▓▓\n▓∙∙∙▓\n▓▓▓▓▓",
+        blockages={},
+    )
+
+    component = get_connection_component(
+        arrival_coords=Coords(row=1, col=1),
+        connections=(entrance, far_connection),
+        map_memory=map_memory,
+        hm_tiles=[],
+    )
+
+    assert (far_connection in component.connections) is (activation == WarpActivation.DOWN)
 
 
 @pytest.mark.unit

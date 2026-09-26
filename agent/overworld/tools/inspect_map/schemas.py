@@ -5,7 +5,7 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from common.enums import MapId
+    from common.enums import MapId, WarpActivation
     from common.schemas import Coords
     from database.warp_memory.schemas import WarpMemoryRead
 
@@ -30,6 +30,7 @@ class ResolvedConnection:
     destination_map_id: MapId | None
     destination_coords: tuple[Coords, ...]
     is_warp: bool
+    activation: WarpActivation | None
     last_used_iteration: int | None = None
 
 

@@ -11,7 +11,7 @@ from common.enums import AsciiTile, Button, FacingDirection, MapId, WarpActivati
 from common.schemas import Coords
 from emulator.parsers.sprite import Sprite
 from emulator.parsers.warp import Warp
-from overworld_map.schemas import OverworldMap
+from overworld_map.schemas import OverworldMap, TraversalRules
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -290,17 +290,26 @@ def test_spinner_routing_uses_terrain_under_pikachu_overlay() -> None:
 
 @pytest.mark.unit
 @pytest.mark.parametrize(
-    ("tile", "player_row", "expected_path"),
+    ("tile", "activation", "player_row", "expected_path"),
     [
-        (AsciiTile.FREE, 3, [Button.UP, Button.UP]),
-        (AsciiTile.WARP, 3, [Button.LEFT, Button.UP, Button.UP, Button.RIGHT]),
-        (AsciiTile.BOULDER_HOLE, 3, [Button.LEFT, Button.UP, Button.UP, Button.RIGHT]),
-        (AsciiTile.WARP, 2, [Button.UP]),
-        (AsciiTile.BOULDER_HOLE, 2, [Button.UP]),
+        (AsciiTile.FREE, None, 3, [Button.UP, Button.UP]),
+        (
+            AsciiTile.WARP,
+            WarpActivation.STEP_ON,
+            3,
+            [Button.LEFT, Button.UP, Button.UP, Button.RIGHT],
+        ),
+        (AsciiTile.WARP, WarpActivation.RIGHT, 3, [Button.UP, Button.UP]),
+        (AsciiTile.BOULDER_HOLE, None, 3, [Button.LEFT, Button.UP, Button.UP, Button.RIGHT]),
+        (AsciiTile.WARP, WarpActivation.STEP_ON, 2, [Button.UP]),
+        (AsciiTile.BOULDER_HOLE, None, 2, [Button.UP]),
     ],
 )
 def test_routing_respects_tiles_beneath_player_and_pikachu(
-    tile: AsciiTile, player_row: int, expected_path: list[Button]
+    tile: AsciiTile,
+    activation: WarpActivation | None,
+    player_row: int,
+    expected_path: list[Button],
 ) -> None:
     """Route around transitions beneath Pikachu, but allow leaving the player's starting tile."""
     transition = Coords(row=2, col=2)
@@ -314,7 +323,7 @@ def test_routing_respects_tiles_beneath_player_and_pikachu(
                 destination=MapId.ROCKET_HIDEOUT_B4F,
                 destination_warp_index=0,
                 destination_coords=Coords(row=10, col=19),
-                activation=WarpActivation.STEP_ON,
+                activation=activation or WarpActivation.STEP_ON,
             )
         }
         if tile == AsciiTile.WARP
@@ -371,16 +380,28 @@ def test_routing_respects_tiles_beneath_player_and_pikachu(
     )
 
     map_view = build_current_map_view(overworld_map, game_state)
+    if tile == AsciiTile.WARP and start != transition:
+        assert map_view.routing_tiles[transition.row, transition.col] == AsciiTile.WARP
+    rules = TraversalRules(
+        blockages=overworld_map.blockages,
+        hm_tiles=frozenset(),
+        directional_warps=frozenset({transition})
+        if activation == WarpActivation.RIGHT
+        else frozenset(),
+    )
     path = calculate_path_to_target(
-        start, target, map_view.routing_tiles, overworld_map.blockages, []
+        start,
+        target,
+        map_view.routing_tiles,
+        rules,
     )
 
     assert path == expected_path
     assert target in map_view.reachable_coords
     if start != transition:
-        assert calculate_path_to_target(
-            start, transition, map_view.routing_tiles, overworld_map.blockages, []
-        ) == [Button.UP]
+        assert calculate_path_to_target(start, transition, map_view.routing_tiles, rules) == [
+            Button.UP
+        ]
 
 
 @pytest.mark.unit

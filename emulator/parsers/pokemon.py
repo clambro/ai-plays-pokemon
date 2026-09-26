@@ -11,6 +11,10 @@ if TYPE_CHECKING:
     from pyboy import PyBoyMemoryView
 
 _PP_MASK = 0x3F
+_MOVES_ROM_BANK = 0x0E
+_MOVES_ROM_ADDRESS = 0x4000
+_MOVE_LENGTH = 6
+_MOVE_TYPE_OFFSET = 3
 _POKEDEX_ORDER_ROM_BANK = 0x10
 _POKEDEX_ORDER_ROM_ADDRESS = 0x5279
 
@@ -19,6 +23,7 @@ class PokemonMove(BaseModel):
     """A move that a pokemon can learn."""
 
     name: str
+    type: str
     pp: int
 
     model_config = ConfigDict(frozen=True)
@@ -95,7 +100,7 @@ def parse_player_battle_pokemon(mem: PyBoyMemoryView) -> Pokemon | None:
     type2 = _INT_TO_TYPE_MAP[mem[0xD019]]
     type2 = type2 if type1 != type2 else None  # Monotype pokemon have the same type for both.
 
-    moves = _parse_moves(mem[0xD01B:0xD01F], mem[0xD02C:0xD030])
+    moves = _parse_moves(mem, mem[0xD01B:0xD01F], mem[0xD02C:0xD030])
 
     hp = (mem[0xD014] << 8) | mem[0xD015]
     max_hp = (mem[0xD022] << 8) | mem[0xD023]
@@ -159,6 +164,7 @@ def _parse_party_pokemon(mem: PyBoyMemoryView, index: int) -> Pokemon | None:
     type2 = type2 if type1 != type2 else None  # Monotype pokemon have the same type for both.
 
     moves = _parse_moves(
+        mem,
         mem[0xD172 + increment : 0xD176 + increment],
         mem[0xD187 + increment : 0xD18B + increment],
     )
@@ -196,6 +202,7 @@ def _parse_pc_pokemon(mem: PyBoyMemoryView, index: int) -> BoxPokemon | None:
     type2 = type2 if type1 != type2 else None  # Monotype pokemon have the same type for both.
 
     moves = _parse_moves(
+        mem,
         mem[0xDA9D + increment : 0xDAA1 + increment],
         mem[0xDAB2 + increment : 0xDAB6 + increment],
     )
@@ -210,13 +217,23 @@ def _parse_pc_pokemon(mem: PyBoyMemoryView, index: int) -> BoxPokemon | None:
     )
 
 
-def _parse_moves(move_ids: list[int], packed_pp: list[int]) -> list[PokemonMove]:
+def _parse_moves(
+    mem: PyBoyMemoryView, move_ids: list[int], packed_pp: list[int]
+) -> list[PokemonMove]:
     """Decode occupied move slots in order, excluding PP-Up bits from remaining PP."""
-    return [
-        PokemonMove(name=_INT_TO_MOVE_MAP[move_id], pp=pp & _PP_MASK)
-        for move_id, pp in zip(move_ids, packed_pp, strict=True)
-        if move_id != 0
-    ]
+    moves = []
+    for move_id, pp in zip(move_ids, packed_pp, strict=True):
+        if move_id == 0:
+            continue
+        type_address = _MOVES_ROM_ADDRESS + (move_id - 1) * _MOVE_LENGTH + _MOVE_TYPE_OFFSET
+        moves.append(
+            PokemonMove(
+                name=_INT_TO_MOVE_MAP[move_id],
+                type=_INT_TO_MOVE_TYPE_MAP[mem[_MOVES_ROM_BANK, type_address]],
+                pp=pp & _PP_MASK,
+            )
+        )
+    return moves
 
 
 _INT_TO_SPECIES_MAP = {
@@ -391,6 +408,8 @@ _INT_TO_TYPE_MAP = {
     0x19: "ICE",
     0x1A: "DRAGON",
 }
+# The game's type-name table displays the internal BIRD type as NORMAL.
+_INT_TO_MOVE_TYPE_MAP = _INT_TO_TYPE_MAP | {0x06: "NORMAL"}
 _ASLEEP = "ASLEEP"
 _INT_TO_STATUS_MAP = {
     0b1: _ASLEEP,  # One for each turn of sleep, but we aren't supposed to know how many turns.

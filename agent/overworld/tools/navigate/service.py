@@ -6,11 +6,13 @@ from agent.overworld.navigation import calculate_path_to_target
 from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
 from common.enums import BUTTON_DIRECTIONS, BUTTON_OFFSETS, AsciiTile, Button, MapId
 from emulator.control_events import ControlBoundary
+from overworld_map.schemas import TraversalRules
 from overworld_map.service import (
     record_observed_hole_connection,
     record_observed_map_boundary,
     update_overworld_map,
 )
+from overworld_map.tiles import get_directional_warp_coords
 from overworld_map.traversal import (
     build_routing_data,
     get_spinner_destination,
@@ -52,8 +54,11 @@ async def navigate(
         game_state.player.coords,
         coords,
         routing_tiles,
-        current_map.blockages,
-        hm_tiles,
+        TraversalRules(
+            blockages=current_map.blockages,
+            hm_tiles=frozenset(hm_tiles),
+            directional_warps=get_directional_warp_coords(current_map, game_state),
+        ),
     )
     if not path:
         return _record_result(

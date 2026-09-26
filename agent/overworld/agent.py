@@ -14,7 +14,7 @@ from agent.overworld.map_view import CurrentMapView, build_current_map_view
 from agent.overworld.prompts import build_overworld_decision_prompt
 from agent.overworld.tools.registry import build_overworld_toolset
 from agent.utils import is_overworld_handler_state
-from common.enums import ReasoningEffort
+from common.enums import ReasoningEffort, SpriteLabel
 from common.prompts import SYSTEM_PROMPT
 from llm.service import TIMEOUT_SECONDS, build_agent_model
 from overworld_map.service import prepare_overworld_map
@@ -22,6 +22,7 @@ from overworld_map.service import prepare_overworld_map
 if TYPE_CHECKING:
     from PIL import Image
 
+    from common.schemas import Coords
     from emulator.control_events import ControlBoundary
     from emulator.game_state import GameState
 
@@ -133,10 +134,20 @@ def _should_end_overworld_run(
 ) -> bool:
     """Check whether control should return to the dispatcher."""
     return (
-        game_state.map.id != initial_game_state.map.id
-        or game_state.player.coords != initial_game_state.player.coords
+        game_state.player.coords != initial_game_state.player.coords
+        or game_state.map.id != initial_game_state.map.id
         or not is_overworld_handler_state(game_state, control_boundary)
+        or _boulder_positions(game_state) != _boulder_positions(initial_game_state)
         or game_state.warps != initial_game_state.warps
         or game_state.map.background_blocks != initial_game_state.map.background_blocks
         or game_state.get_ascii_screen_terrain() != initial_game_state.get_ascii_screen_terrain()
     )
+
+
+def _boulder_positions(game_state: GameState) -> dict[int, Coords]:
+    """Get current boulder positions so a push triggers a fresh map view."""
+    return {
+        entity_id: sprite.coords
+        for entity_id, sprite in game_state.sprites.items()
+        if sprite.label == SpriteLabel.BOULDER
+    }

@@ -13,7 +13,7 @@ from agent.overworld.navigation import calculate_path_to_target
 from common.enums import AsciiTile, BlockedDirection, Button, FacingDirection, MapId, Tileset
 from common.schemas import Coords
 from emulator.parsers.map import Map, MapConnection
-from overworld_map.schemas import OverworldMap
+from overworld_map.schemas import OverworldMap, TraversalRules
 from overworld_map.traversal import (
     get_accessible_coords,
     get_exploration_candidates,
@@ -243,14 +243,15 @@ def test_spinner_exploration_ends_when_destination_is_revealed(last_tile: str) -
     entry = Coords(row=0, col=1)
     end = Coords(row=0, col=4)
 
-    accessible = get_accessible_coords(start, tiles, {}, [])
+    rules = _rules(map_data, [])
+    accessible = get_accessible_coords(start, tiles, rules)
     candidates = get_exploration_candidates(accessible, tiles)
 
     assert candidates == ([entry] if last_tile == "░" else [])
     assert get_spinner_destination(entry, tiles) == (None if last_tile == "░" else end)
     assert get_spinner_path(entry, tiles) == tuple(Coords(row=0, col=col) for col in range(1, 5))
     if last_tile == "░":
-        assert calculate_path_to_target(start, entry, tiles, {}, []) == [Button.RIGHT]
+        assert calculate_path_to_target(start, entry, tiles, rules) == [Button.RIGHT]
         assert Coords(row=0, col=2) not in accessible
         assert end not in accessible
 
@@ -611,8 +612,7 @@ def _get_accessible_coords(
     return get_accessible_coords(
         start_pos,
         map_data.terrain_ndarray,
-        map_data.blockages,
-        hm_tiles,
+        _rules(map_data, hm_tiles),
     )
 
 
@@ -633,6 +633,13 @@ def _calculate_path_to_target(
         start_pos,
         target_pos,
         map_data.terrain_ndarray,
-        map_data.blockages,
-        hm_tiles,
+        _rules(map_data, hm_tiles),
+    )
+
+
+def _rules(map_data: OverworldMap, hm_tiles: list[AsciiTile]) -> TraversalRules:
+    return TraversalRules(
+        blockages=map_data.blockages,
+        hm_tiles=frozenset(hm_tiles),
+        directional_warps=frozenset(),
     )
