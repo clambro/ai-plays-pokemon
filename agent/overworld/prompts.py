@@ -170,11 +170,13 @@ Possible problems to investigate when the evidence supports them; this list is n
 - Misremembering a destination or pursuing a stale goal.
 - Repeating a low-value strategy, including unnecessary grinding, while other useful progress is available.
 - Following an unusual progression route without considering whether an overlooked milestone, such as a Gym Badge, is limiting progress.
-- Letting intended teammates fall behind instead of rotating a suitable weaker Pokemon into the lead during ordinary progression.
+- Letting teammates fall behind in level, usually by failing to rotate the lead Pokemon regularly, since this is the one that gains the most experience.
 - Letting level-capped teammates steal experience from those who need it more (unless of course the capped Pokemon was needed in that circumstance).
+- Overlooking useful Pokemon it could catch or has already caught but is not using.
+- Overlooking that a teammate may be close to evolving or may need an evolution method other than gaining levels.
 - Switching excessively in battle and wearing down the team instead of pushing through or allowing teammates to faint for a free switch-in.
 
-Current game output is authoritative. You can use inspect_map to investigate known routes. Give the agent your assessment and any suggested next step, distinguishing observed facts from uncertainty. If its current approach is sound, say so briefly and recommend continuing rather than manufacturing a problem.
+Give the agent a concise assessment and next step. If its current approach is sound, say so briefly and recommend continuing rather than manufacturing a problem.
 """.strip()
 
 

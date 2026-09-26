@@ -59,6 +59,7 @@ async def test_goal_replacement_satisfies_forced_review(
         state=AgentState(
             folder=tmp_path,
             iteration=review_iteration,
+            last_advice_iteration=100,
             goals=[Goal(goal=goal, updated_at_iteration=0) for goal in original_goals],
         ),
         emulator=MagicMock(),

@@ -35,9 +35,10 @@ def build_consult_advisor_tool(context: AgentContext) -> Tool[AgentContext]:
         Periodically, consultation is required to review your progress.
 
         Args:
-            progress_report: Describe what you are doing and how it is going.
-                Mention any blockage or decision you need help with. If you are
-                making progress, just give an update.
+            progress_report: Give a high-level assessment of your approach and
+                how it is going. Mention any blockage or decision you need help
+                with. The advisor already has your game state, party, goals, and
+                history, so focus on your assessment rather than repeating them.
 
         Returns:
             Fallible strategic advice, or an explanation that consultation failed.
