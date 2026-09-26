@@ -29,6 +29,8 @@ def format_battle_info(game_state: GameState) -> str:
         out += "<player_pokemon>\n"
         out += f"Name: {battle.player_pokemon.name}\n"
         out += f"Species: {battle.player_pokemon.species}\n"
+        pokemon_types = filter(None, (battle.player_pokemon.type1, battle.player_pokemon.type2))
+        out += f"Type: {' / '.join(pokemon_types)}\n"
         out += f"Level: {battle.player_pokemon.level}\n"
         out += f"HP: {battle.player_pokemon.hp} / {battle.player_pokemon.max_hp}\n"
         out += f"Status Ailment: {battle.player_pokemon.status}\n"
