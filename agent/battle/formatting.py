@@ -35,7 +35,7 @@ def format_battle_info(game_state: GameState) -> str:
         out += "<moves>\n"
         for slot, move in enumerate(battle.player_pokemon.moves):
             disabled = " [DISABLED]" if slot == battle.disabled_move_slot else ""
-            out += f"- Slot {slot}: {move.name} (PP: {move.pp}){disabled}\n"
+            out += f"- Slot {slot}: {move.name} (Type: {move.type}, PP: {move.pp}){disabled}\n"
         out += "</moves>\n"
         out += "</player_pokemon>\n"
 

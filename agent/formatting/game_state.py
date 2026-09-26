@@ -73,12 +73,8 @@ def format_pc_info(game_state: GameState) -> str:
     out = "<pc_pokemon>\n"
     out += "Stored in the active PC box, not in the party:\n"
     for pokemon in game_state.pc_pokemon:
-        pokemon_type = f"{pokemon.type1}/{pokemon.type2}" if pokemon.type2 else pokemon.type1
-        moves = ", ".join(f"{move.name} ({move.pp} PP)" for move in pokemon.moves)
-        out += (
-            f"- {pokemon.name} ({pokemon.species}, Level {pokemon.level}, {pokemon_type}): "
-            f"{moves}\n"
-        )
+        moves = ", ".join(move.name for move in pokemon.moves)
+        out += f"- {pokemon.name} ({pokemon.species}, Level {pokemon.level}): {moves}\n"
     out += "</pc_pokemon>"
     max_box_pokemon = 20
     if len(game_state.pc_pokemon) >= max_box_pokemon:
@@ -111,7 +107,7 @@ def _format_pokemon_list(pokemon_list: list[Pokemon], level_cap: int) -> str:
         out += f"Status Ailment: {pokemon.status}\n"
         out += "<moves>\n"
         for move in pokemon.moves:
-            out += f"- {move.name} (PP: {move.pp})\n"
+            out += f"- {move.name} (Type: {move.type}, PP: {move.pp})\n"
         out += "</moves>\n"
         out += f"</pokemon_{index}>\n"
     return out
