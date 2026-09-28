@@ -22,17 +22,18 @@ def build_sokoban_solver_tool(
     """Build the Sokoban tool bound to the current overworld context."""
 
     async def sokoban_solver() -> OverworldToolResult:
-        """Solve the current boulder puzzle deterministically.
+        """Solve the known boulder puzzles on the current map deterministically.
 
-        The Sokoban solver tool will automatically solve the onscreen Sokoban
-        puzzle for you, or inform you if the puzzle is not currently solvable
-        (likely meaning that you need to explore more and then try calling
-        this tool again). Try this tool before pushing boulders manually.
+        Try this tool before pushing boulders manually. It continues through the goals
+        it can solve, reporting how many it completed and how many solvable goals remain
+        if interrupted. More exploration or boulders from another floor may be needed
+        for goals that are not currently solvable.
 
         Returns:
             Fresh screenshot and the actual solver result.
         """
         result = await solve_sokoban(
+            iteration=context.state.iteration,
             emulator=context.emulator,
             current_map=current_map,
             rolling_memory=context.state.rolling_memory,
