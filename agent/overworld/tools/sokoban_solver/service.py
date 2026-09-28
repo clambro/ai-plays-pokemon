@@ -69,7 +69,8 @@ async def solve_sokoban(
         solutions = _get_goal_solutions(current_map, sokoban_map, game_state)
 
     result = _include_dialog(
-        f"I solved {completed} boulder goals. {len(solutions)} solvable goals remain."
+        f"I solved {completed} boulder goal{'s' if completed != 1 else ''}. "
+        f"{len(solutions)} solvable {'goal remains' if len(solutions) == 1 else 'goals remain'}."
         + (f" {interruption}" if interruption else ""),
         "\n\n".join(dialogs),
     )
