@@ -1,6 +1,7 @@
 """Business logic for the overworld Sokoban solver tool."""
 
 from collections import deque
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from agent.overworld.tools.sokoban_solver.schemas import SokobanMap
@@ -8,6 +9,7 @@ from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
 from common.enums import BUTTON_DIRECTIONS, BUTTON_OFFSETS, AsciiTile, Button, SpriteLabel
 from common.schemas import Coords
 from emulator.control_events import ControlBoundary
+from overworld_map.service import update_overworld_map
 from overworld_map.tiles import get_directional_warp_coords, get_navigation_tiles
 from overworld_map.traversal import is_blocked
 
@@ -23,11 +25,15 @@ WARP_TILE = "P"
 
 
 async def solve_sokoban(
-    *, emulator: Emulator, current_map: OverworldMap, rolling_memory: RollingMemory
+    *,
+    iteration: int,
+    emulator: Emulator,
+    current_map: OverworldMap,
+    rolling_memory: RollingMemory,
 ) -> str:
-    """Solve the Sokoban puzzle."""
-    game_state, collision_tiles = await emulator.get_game_state_with_map_collision_tiles()
-    sokoban_map = _get_simplified_map(current_map, game_state, collision_tiles)
+    """Solve currently solvable known goals, reporting progress if interrupted."""
+    game_state = await emulator.get_game_state()
+    sokoban_map = _get_simplified_map(current_map, game_state)
 
     if not sokoban_map.boulders or not sokoban_map.goals:
         result = (
@@ -37,27 +43,55 @@ async def solve_sokoban(
         rolling_memory.add_memory(result)
         return result
 
-    solution = _solve_sokoban(current_map, sokoban_map, game_state)
+    solutions = _get_goal_solutions(current_map, sokoban_map, game_state)
 
-    if solution is None:
+    if not solutions:
         result = (
             f"{ACTION_RESULT_LABEL} The Sokoban solver was unable to find a solution. This is"
-            " likely because I"
-            " haven't explored enough of the map yet, or I need to get boulders from"
-            " other locations first, or because I already solved the puzzle previously."
+            " likely because I haven't explored enough of the map yet, or I need to get boulders"
+            " from other locations first."
         )
         rolling_memory.add_memory(result)
         return result
 
-    result = await _execute_solution(emulator, solution, sokoban_map)
+    completed = 0
+    dialogs: list[str] = []
+    interruption = None
+    while solutions:
+        solution = min(solutions.values(), key=len)
+        interruption = await _execute_solution(emulator, solution, sokoban_map, dialogs)
+        if interruption is not None:
+            break
+        completed += 1
+        game_state = await emulator.get_game_state()
+        await update_overworld_map(iteration, game_state, current_map)
+        sokoban_map = _get_simplified_map(current_map, game_state)
+        solutions = _get_goal_solutions(current_map, sokoban_map, game_state)
+
+    result = _include_dialog(
+        f"I solved {completed} boulder goal{'s' if completed != 1 else ''}. "
+        f"{len(solutions)} solvable {'goal remains' if len(solutions) == 1 else 'goals remain'}."
+        + (f" {interruption}" if interruption else ""),
+        "\n\n".join(dialogs),
+    )
     rolling_memory.add_memory(result)
     return result
+
+
+def _get_goal_solutions(
+    current_map: OverworldMap, sokoban_map: SokobanMap, game_state: GameState
+) -> dict[Coords, list[Button]]:
+    """Find a solution for each goal reachable by the current boulders."""
+    return {
+        goal: solution
+        for goal in sorted(sokoban_map.goals, key=lambda coords: (coords.row, coords.col))
+        if (solution := _solve_sokoban(current_map, replace(sokoban_map, goals={goal}), game_state))
+    }
 
 
 def _get_simplified_map(
     current_map: OverworldMap,
     game_state: GameState,
-    collision_tiles: list[list[int]],
 ) -> SokobanMap:
     """Get a simplified map of the Sokoban puzzle with the boulders and goals."""
     navigation_tiles = get_navigation_tiles(current_map, game_state)
@@ -73,7 +107,7 @@ def _get_simplified_map(
         simplified_row = []
         for col_idx, t in enumerate(row):
             terrain = current_map.terrain[row_idx][col_idx]
-            if t == AsciiTile.BOULDER_HOLE or terrain == AsciiTile.PRESSURE_PLATE:
+            if terrain in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE):
                 goals.add(Coords(row=row_idx, col=col_idx))
 
             if t in (AsciiTile.WARP, AsciiTile.BOULDER_HOLE):
@@ -83,6 +117,10 @@ def _get_simplified_map(
             else:
                 simplified_row.append(WALL_TILE)
         simplified_tiles.append(simplified_row)
+    # Occupied goals are already solved; leave their boulders as obstacles.
+    occupied_goals = boulders & goals
+    goals -= occupied_goals
+    boulders -= occupied_goals
     for b in boulders:
         simplified_tiles[b.row][b.col] = FREE_TILE
 
@@ -90,7 +128,7 @@ def _get_simplified_map(
         tiles=simplified_tiles,
         boulders=boulders,
         goals=goals,
-        collision_tiles=collision_tiles,
+        collision_tiles=[[block[2] for block in row] for row in game_state.map.background_blocks],
         directional_warps=get_directional_warp_coords(current_map, game_state),
     )
 
@@ -199,11 +237,13 @@ def _is_movement_possible(  # noqa: PLR0913
 
 
 async def _execute_solution(
-    emulator: Emulator, solution: list[Button], sokoban_map: SokobanMap
-) -> str:
-    """Execute the solution by pressing buttons."""
+    emulator: Emulator,
+    solution: list[Button],
+    sokoban_map: SokobanMap,
+    dialogs: list[str],
+) -> str | None:
+    """Execute one solution, append field dialog, and return any interruption."""
     is_strength_active = False
-    strength_dialog = ""
     for button in solution:
         game_state = await emulator.get_game_state()
         next_pos = game_state.player.coords + BUTTON_OFFSETS[button]
@@ -215,15 +255,16 @@ async def _execute_solution(
             button,
             game_state,
         ):
-            return _include_dialog(
+            return (
                 "I stopped the Sokoban solver because control left the overworld."
-                " I should call it again when I return.",
-                strength_dialog,
+                " I should call it again when I return."
             )
 
         if activating_strength:
             await emulator.press_button(Button.A)
             strength_dialog = await emulator.advance_text_dialog_until_overworld_ready()
+            if strength_dialog:
+                dialogs.append(strength_dialog)
             is_strength_active = True
 
         pushing_boulder = next_pos in sokoban_map.boulders
@@ -234,17 +275,16 @@ async def _execute_solution(
             game_state,
             boulder_coords=next_pos if pushing_boulder else None,
         ):
-            return _include_dialog(
+            return (
                 "The Sokoban solver was interrupted during movement. If a battle or another"
-                " temporary event caused this, I should call it again afterward.",
-                strength_dialog,
+                " temporary event caused this, I should call it again afterward."
             )
 
         if pushing_boulder:
             sokoban_map.boulders.remove(next_pos)
             sokoban_map.boulders.add(next_pos + BUTTON_OFFSETS[button])
 
-    return _include_dialog("I executed the Sokoban solution.", strength_dialog)
+    return None
 
 
 async def _execute_step(

@@ -86,14 +86,17 @@ def _is_sokoban_available(
         return False
 
     current_map = map_view.overworld_map
-    has_goal = any(
-        current_map.terrain[coords.row][coords.col]
-        in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE)
+    goals = {
+        coords
         for coords in map_view.visible_coords
-    )
-    has_boulder = any(
-        sprite.label == SpriteLabel.BOULDER and sprite.coords in map_view.visible_coords
+        if current_map.terrain[coords.row][coords.col]
+        in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE)
+    }
+    boulders = {
+        sprite.coords
         for entity_id in current_map.known_sprite_ids
         if (sprite := game_state.sprites.get(entity_id)) is not None
-    )
-    return has_goal and has_boulder
+        and sprite.label == SpriteLabel.BOULDER
+        and sprite.coords in map_view.visible_coords
+    }
+    return bool(goals - boulders and boulders - goals)
