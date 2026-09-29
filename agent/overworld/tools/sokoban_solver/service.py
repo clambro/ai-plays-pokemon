@@ -306,12 +306,13 @@ async def _execute_solution(
     dialogs: list[str],
 ) -> str | None:
     """Execute one solution, append field dialog, and return any interruption."""
-    is_strength_active = False
     for button in solution:
         game_state = await emulator.get_game_state()
         next_pos = game_state.player.coords + BUTTON_OFFSETS[button]
 
-        activating_strength = not is_strength_active and next_pos in sokoban_map.boulders
+        activating_strength = (
+            not game_state.player.is_strength_active and next_pos in sokoban_map.boulders
+        )
         yielding_to_pikachu = next_pos == game_state.pikachu.coords
         if (activating_strength or yielding_to_pikachu) and not await _face_next_pos(
             emulator,
@@ -328,7 +329,6 @@ async def _execute_solution(
             strength_dialog = await emulator.advance_text_dialog_until_overworld_ready()
             if strength_dialog:
                 dialogs.append(strength_dialog)
-            is_strength_active = True
 
         pushing_boulder = next_pos in sokoban_map.boulders
         game_state = await emulator.get_game_state()
