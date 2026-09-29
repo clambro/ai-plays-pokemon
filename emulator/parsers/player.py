@@ -74,7 +74,7 @@ def parse_player(mem: PyBoyMemoryView) -> Player:
         direction=_INT_TO_FACING_DIRECTION[mem[0xD577]],
         is_biking=is_biking,
         is_surfing=is_surfing,
-        is_strength_active=bool(mem[0xD728] & 0x01),
+        is_strength_active=bool(mem[0xD727] & 0x01),
         money=_read_money(mem),
         badges=badges,
         level_cap=_read_level_cap(mem, len(badges)),
