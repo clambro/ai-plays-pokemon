@@ -22,6 +22,7 @@ from agent.overworld.tools.swap_first_pokemon.interface import (
 )
 from agent.overworld.tools.use_item.interface import build_use_item_tool
 from common.enums import AsciiTile, Badge, SpriteLabel, Tileset
+from common.schemas import Coords
 
 if TYPE_CHECKING:
     from pydantic_ai import Tool
@@ -86,17 +87,17 @@ def _is_sokoban_available(
         return False
 
     current_map = map_view.overworld_map
+    # A boulder can hide a remembered goal from the current walking region.
     goals = {
-        coords
-        for coords in map_view.visible_coords
-        if current_map.terrain[coords.row][coords.col]
-        in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE)
+        Coords(row=row, col=col)
+        for row, tiles in enumerate(current_map.terrain)
+        for col, tile in enumerate(tiles)
+        if tile in (AsciiTile.BOULDER_HOLE, AsciiTile.PRESSURE_PLATE)
     }
     boulders = {
         sprite.coords
         for entity_id in current_map.known_sprite_ids
         if (sprite := game_state.sprites.get(entity_id)) is not None
         and sprite.label == SpriteLabel.BOULDER
-        and sprite.coords in map_view.visible_coords
     }
-    return bool(goals - boulders and boulders - goals)
+    return bool(goals - boulders and (boulders & map_view.visible_coords) - goals)
