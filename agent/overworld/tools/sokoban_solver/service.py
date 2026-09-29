@@ -1,7 +1,6 @@
 """Business logic for the overworld Sokoban solver tool."""
 
 from collections import deque
-from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from agent.overworld.tools.sokoban_solver.schemas import SokobanMap
@@ -31,7 +30,7 @@ async def solve_sokoban(
     current_map: OverworldMap,
     rolling_memory: RollingMemory,
 ) -> str:
-    """Solve currently solvable known goals, reporting progress if interrupted."""
+    """Solve known goals one at a time, reporting progress if interrupted."""
     game_state = await emulator.get_game_state()
     sokoban_map = _get_simplified_map(current_map, game_state)
 
@@ -43,22 +42,18 @@ async def solve_sokoban(
         rolling_memory.add_memory(result)
         return result
 
-    solutions = _get_goal_solutions(current_map, sokoban_map, game_state)
-
-    if not solutions:
-        result = (
-            f"{ACTION_RESULT_LABEL} The Sokoban solver was unable to find a solution. This is"
-            " likely because I haven't explored enough of the map yet, or I need to get boulders"
-            " from other locations first."
-        )
-        rolling_memory.add_memory(result)
-        return result
-
     completed = 0
     dialogs: list[str] = []
     interruption = None
-    while solutions:
-        solution = min(solutions.values(), key=len)
+    while sokoban_map.boulders and sokoban_map.goals:
+        solution = _solve_sokoban(current_map, sokoban_map, game_state)
+        if solution is None:
+            interruption = (
+                "The Sokoban solver was unable to find a solution. This is likely because I"
+                " haven't explored enough of the map yet, or I need to get boulders from"
+                " other locations first."
+            )
+            break
         interruption = await _execute_solution(emulator, solution, sokoban_map, dialogs)
         if interruption is not None:
             break
@@ -66,27 +61,16 @@ async def solve_sokoban(
         game_state = await emulator.get_game_state()
         await update_overworld_map(iteration, game_state, current_map)
         sokoban_map = _get_simplified_map(current_map, game_state)
-        solutions = _get_goal_solutions(current_map, sokoban_map, game_state)
 
+    remaining = len(sokoban_map.goals)
     result = _include_dialog(
         f"I solved {completed} boulder goal{'s' if completed != 1 else ''}. "
-        f"{len(solutions)} solvable {'goal remains' if len(solutions) == 1 else 'goals remain'}."
+        f"{remaining} known {'goal remains' if remaining == 1 else 'goals remain'}."
         + (f" {interruption}" if interruption else ""),
         "\n\n".join(dialogs),
     )
     rolling_memory.add_memory(result)
     return result
-
-
-def _get_goal_solutions(
-    current_map: OverworldMap, sokoban_map: SokobanMap, game_state: GameState
-) -> dict[Coords, list[Button]]:
-    """Find a solution for each goal reachable by the current boulders."""
-    return {
-        goal: solution
-        for goal in sorted(sokoban_map.goals, key=lambda coords: (coords.row, coords.col))
-        if (solution := _solve_sokoban(current_map, replace(sokoban_map, goals={goal}), game_state))
-    }
 
 
 def _get_simplified_map(

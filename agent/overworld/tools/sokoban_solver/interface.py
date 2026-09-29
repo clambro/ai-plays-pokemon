@@ -25,7 +25,7 @@ def build_sokoban_solver_tool(
         """Solve the known boulder puzzles on the current map deterministically.
 
         Try this tool before pushing boulders manually. It continues through the goals
-        it can solve, reporting how many it completed and how many solvable goals remain
+        it can solve, reporting how many it completed and how many known goals remain
         if interrupted. More exploration or boulders from another floor may be needed
         for goals that are not currently solvable.
 
