@@ -16,3 +16,11 @@ class SokobanMap:
     goals: set[Coords]
     collision_tiles: list[list[int]]
     directional_warps: frozenset[Coords]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SokobanState:
+    """Player position and boulder layout after a push."""
+
+    player_coords: Coords
+    boulders: frozenset[Coords]

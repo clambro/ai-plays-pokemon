@@ -1,9 +1,10 @@
 """Business logic for the overworld Sokoban solver tool."""
 
+import math
 from collections import deque
 from typing import TYPE_CHECKING
 
-from agent.overworld.tools.sokoban_solver.schemas import SokobanMap
+from agent.overworld.tools.sokoban_solver.schemas import SokobanMap, SokobanState
 from common.constants import ACTION_RESULT_LABEL, GAME_DIALOG_LABEL
 from common.enums import BUTTON_DIRECTIONS, BUTTON_OFFSETS, AsciiTile, Button, SpriteLabel
 from common.schemas import Coords
@@ -122,65 +123,143 @@ def _solve_sokoban(
     sokoban_map: SokobanMap,
     game_state: GameState,
 ) -> list[Button] | None:
-    """Solve the Sokoban puzzle using breadth-first search.
+    """Find any goal using A* over pushes, reconstructing buttons only for the solution."""
+    initial_state = SokobanState(
+        player_coords=game_state.player.coords,
+        boulders=frozenset(sokoban_map.boulders),
+    )
+    goal_distances = _get_goal_distances(sokoban_map, game_state)
+    predecessors: dict[SokobanState, tuple[SokobanState, Button]] = {}
+    g_score = {initial_state: 0}
+    f_score = {
+        initial_state: min(
+            (goal_distances.get(boulder, math.inf) for boulder in initial_state.boulders),
+            default=math.inf,
+        )
+    }
+    if f_score[initial_state] == math.inf:
+        return None
+    open_set = {initial_state}
 
-    The search is deliberately simple because Pokémon's Sokoban state spaces are small.
-    """
-    initial_state = (game_state.player.coords, frozenset(sokoban_map.boulders))
-
-    queue = deque([(initial_state, [])])
-    visited = {initial_state}
-
-    while queue:
-        (current_player_pos, current_boulders), path = queue.popleft()
-        if current_boulders & sokoban_map.goals:  # At least one goal is solved.
-            return path
-
-        # There's thankfully no special neighbour logic here. Unlike the general navigation
-        # service, the Sokoban puzzles never involve spinner tiles, surfing, or ledges.
-        for button in (Button.RIGHT, Button.DOWN, Button.LEFT, Button.UP):
-            direction = BUTTON_OFFSETS[button]
-            new_player_pos = current_player_pos + direction
-            if not _is_movement_possible(
-                current_map,
-                current_player_pos,
-                new_player_pos,
-                sokoban_map,
-                game_state,
-                is_boulder=False,
-            ):
-                continue
-
-            if new_player_pos in current_boulders:  # Pushing a boulder.
-                new_boulder_pos = new_player_pos + direction
-                is_boulder_tile_free = _is_movement_possible(
-                    current_map,
-                    current_player_pos,
-                    new_boulder_pos,
-                    sokoban_map,
-                    game_state,
-                    is_boulder=True,
+    while open_set:
+        # On equal estimates, prefer progress toward a goal over unrelated sideways pushes.
+        current_state = min(open_set, key=lambda state: (f_score[state], -g_score[state]))
+        if current_state.boulders & sokoban_map.goals:
+            return _reconstruct_solution(
+                current_state, predecessors, current_map, sokoban_map, game_state
+            )
+        open_set.remove(current_state)
+        next_g_score = g_score[current_state] + 1
+        paths = _get_walking_paths(current_state, current_map, sokoban_map, game_state)
+        for boulder in current_state.boulders:
+            for button in (Button.RIGHT, Button.DOWN, Button.LEFT, Button.UP):
+                offset = BUTTON_OFFSETS[button]
+                standing = boulder - offset
+                destination = boulder + offset
+                if (
+                    standing not in paths
+                    or destination in current_state.boulders
+                    or not _is_movement_possible(
+                        current_map, standing, boulder, sokoban_map, game_state, is_boulder=False
+                    )
+                    or not _is_movement_possible(
+                        current_map, standing, destination, sokoban_map, game_state, is_boulder=True
+                    )
+                ):
+                    continue
+                # In-game, a push moves the boulder but leaves the player on the standing tile.
+                next_state = SokobanState(
+                    player_coords=standing,
+                    boulders=(current_state.boulders - {boulder}) | {destination},
                 )
-                if new_boulder_pos in current_boulders or not is_boulder_tile_free:
-                    continue  # Push is illegal.
+                if next_g_score >= g_score.get(next_state, math.inf):
+                    continue
+                remaining_distance = min(
+                    (goal_distances.get(boulder, math.inf) for boulder in next_state.boulders),
+                    default=math.inf,
+                )
+                if remaining_distance == math.inf:
+                    continue
+                predecessors[next_state] = (current_state, button)
+                g_score[next_state] = next_g_score
+                f_score[next_state] = next_g_score + remaining_distance
+                open_set.add(next_state)
 
-                new_boulders = set(current_boulders)
-                new_boulders.remove(new_player_pos)
-                new_boulders.add(new_boulder_pos)
-                # Pushing a boulder doesn't change the player's position!
-                new_state = (current_player_pos, frozenset(new_boulders))
+    return None
 
-                if new_state not in visited:
-                    visited.add(new_state)
-                    queue.append((new_state, [*path, button]))
 
-            else:  # Regular walking.
-                new_state = (new_player_pos, current_boulders)
-                if new_state not in visited:
-                    visited.add(new_state)
-                    queue.append((new_state, [*path, button]))
+def _get_goal_distances(sokoban_map: SokobanMap, game_state: GameState) -> dict[Coords, int]:
+    """Work backward from known goals to estimate the fewest remaining pushes.
 
-    return None  # No solution found.
+    Ignore other boulders and the player's access to standing tiles, making this a lower bound.
+    """
+    walkable = {
+        Coords(row=row, col=col)
+        for row, tiles in enumerate(sokoban_map.tiles)
+        for col, tile in enumerate(tiles)
+        if tile == FREE_TILE
+    } | sokoban_map.directional_warps
+    distances = dict.fromkeys(sokoban_map.goals, 0)
+    queue = deque(sokoban_map.goals)
+    while queue:
+        destination = queue.popleft()
+        for offset in BUTTON_OFFSETS.values():
+            boulder = destination - offset
+            standing = boulder - offset
+            if boulder in distances or boulder not in walkable or standing not in walkable:
+                continue
+            if game_state.map.is_boulder_push_terrain_legal(
+                sokoban_map.collision_tiles, standing, destination
+            ):
+                distances[boulder] = distances[destination] + 1
+                queue.append(boulder)
+    return distances
+
+
+def _get_walking_paths(
+    state: SokobanState,
+    current_map: OverworldMap,
+    sokoban_map: SokobanMap,
+    game_state: GameState,
+) -> dict[Coords, tuple[Coords, Button] | None]:
+    """Find reachable standing positions and their walking predecessors."""
+    paths: dict[Coords, tuple[Coords, Button] | None] = {state.player_coords: None}
+    queue = deque([state.player_coords])
+    while queue:
+        source = queue.popleft()
+        for button in (Button.RIGHT, Button.DOWN, Button.LEFT, Button.UP):
+            destination = source + BUTTON_OFFSETS[button]
+            if (
+                destination not in state.boulders
+                and destination not in paths
+                and _is_movement_possible(
+                    current_map, source, destination, sokoban_map, game_state, is_boulder=False
+                )
+            ):
+                paths[destination] = (source, button)
+                queue.append(destination)
+    return paths
+
+
+def _reconstruct_solution(
+    state: SokobanState,
+    predecessors: dict[SokobanState, tuple[SokobanState, Button]],
+    current_map: OverworldMap,
+    sokoban_map: SokobanMap,
+    game_state: GameState,
+) -> list[Button]:
+    """Reconstruct walking and push buttons only for the successful predecessor chain."""
+    solution = []
+    while state in predecessors:
+        previous_state, button = predecessors[state]
+        solution.append(button)
+        paths = _get_walking_paths(previous_state, current_map, sokoban_map, game_state)
+        position = state.player_coords
+        while (step := paths[position]) is not None:
+            position, button = step
+            solution.append(button)
+        state = previous_state
+    return list(reversed(solution))
 
 
 # Player movement needs remembered blockages; boulder movement needs live collision rules.
