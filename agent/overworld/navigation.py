@@ -17,6 +17,8 @@ def calculate_path_to_target(
     target_pos: Coords,
     tiles: np.ndarray,
     rules: TraversalRules,
+    *,
+    is_surfing: bool,
 ) -> list[Button] | None:
     """Calculate an A* path to the target as a sequence of button presses.
 
@@ -25,6 +27,7 @@ def calculate_path_to_target(
         target_pos: Coordinate the path should reach.
         tiles: Current navigation tiles.
         rules: Movement constraints beyond the displayed tile symbols.
+        is_surfing: Whether the player is already surfing at the start.
 
     Returns:
         Button presses reaching the target, or ``None`` when no path exists.
@@ -33,12 +36,6 @@ def calculate_path_to_target(
     came_from: dict[Coords, tuple[Coords, Button]] = {}
     g_score = {start_pos: 0}
     f_score = {start_pos: (start_pos - target_pos).length}
-    expensive_tiles = [
-        AsciiTile.GRASS,
-        AsciiTile.CUT_TREE,
-        AsciiTile.WATER,
-        *AsciiTile.get_spinner_tiles(),
-    ]
 
     while open_set:
         current = min(open_set, key=lambda pos: f_score.get(pos, float("inf")))
@@ -56,8 +53,18 @@ def calculate_path_to_target(
         open_set.remove(current)
 
         for neighbor, button in get_neighbors(current, tiles, rules):
-            # Bias movement away from tiles that take more time to traverse.
-            increment = 5 if tiles[neighbor.row, neighbor.col] in expensive_tiles else 1
+            neighbor_tile = tiles[neighbor.row, neighbor.col]
+            is_entering_water = neighbor_tile == AsciiTile.WATER and (
+                not is_surfing
+                if current == start_pos
+                else tiles[current.row, current.col] != AsciiTile.WATER
+            )
+            if is_entering_water or neighbor_tile == AsciiTile.CUT_TREE:
+                increment = 10  # These require a dialog. Avoid if possible.
+            elif neighbor_tile in [AsciiTile.GRASS, *AsciiTile.get_spinner_tiles()]:
+                increment = 5  # These can slow us down. Avoid if possible, but better than dialog.
+            else:
+                increment = 1
             tentative_g_score = g_score[current] + increment
 
             if neighbor not in g_score or tentative_g_score < g_score[neighbor]:

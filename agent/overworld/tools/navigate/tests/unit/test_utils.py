@@ -251,7 +251,9 @@ def test_spinner_exploration_ends_when_destination_is_revealed(last_tile: str) -
     assert get_spinner_destination(entry, tiles) == (None if last_tile == "░" else end)
     assert get_spinner_path(entry, tiles) == tuple(Coords(row=0, col=col) for col in range(1, 5))
     if last_tile == "░":
-        assert calculate_path_to_target(start, entry, tiles, rules) == [Button.RIGHT]
+        assert calculate_path_to_target(start, entry, tiles, rules, is_surfing=False) == [
+            Button.RIGHT
+        ]
         assert Coords(row=0, col=2) not in accessible
         assert end not in accessible
 
@@ -582,6 +584,37 @@ def test_calculate_path_through_water() -> None:
 
 
 @pytest.mark.unit
+def test_calculate_path_avoids_starting_surf_for_shortcut() -> None:
+    """Prefer a land detour to starting Surf for one water tile."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.terrain = [list(row) for row in ["∙≈∙", "∙▓∙", "∙▓∙", "∙▓∙", "∙∙∙"]]
+
+    path = _calculate_path_to_target(
+        Coords(row=0, col=0),
+        Coords(row=0, col=2),
+        map_data,
+        [AsciiTile.WATER],
+    )
+    assert path == [Button.DOWN] * 4 + [Button.RIGHT] * 2 + [Button.UP] * 4
+
+
+@pytest.mark.unit
+def test_calculate_path_continues_surfing_instead_of_detouring_onto_land() -> None:
+    """Water movement remains cheap once Surf is active beneath the player marker."""
+    map_data = deepcopy(DUMMY_MAP)
+    map_data.terrain = [list(row) for row in ["☺≈≈≈∙", "∙∙∙∙∙"]]
+
+    path = _calculate_path_to_target(
+        Coords(row=0, col=0),
+        Coords(row=0, col=4),
+        map_data,
+        [AsciiTile.WATER],
+        is_surfing=True,
+    )
+    assert path == [Button.RIGHT] * 4
+
+
+@pytest.mark.unit
 def test_calculate_path_through_spinners() -> None:
     """Test that we can path through spinners."""
     map_data = deepcopy(DUMMY_MAP)
@@ -628,12 +661,15 @@ def _calculate_path_to_target(
     target_pos: Coords,
     map_data: OverworldMap,
     hm_tiles: list[AsciiTile],
+    *,
+    is_surfing: bool = False,
 ) -> list[Button] | None:
     return calculate_path_to_target(
         start_pos,
         target_pos,
         map_data.terrain_ndarray,
         _rules(map_data, hm_tiles),
+        is_surfing=is_surfing,
     )
 
 
