@@ -36,6 +36,9 @@ def build_navigation_tool(
         directly onto an accessible warp tile; if that step changes maps,
         navigation ends after the transition.
 
+        Navigation can use Cut and Surf when available, but it does not use
+        Strength or push boulders.
+
         This tool cannot interact with entities. To interact with a sprite,
         sign, or object, navigate next to it, or use the exact interaction
         position in its map note when one is provided.
