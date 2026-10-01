@@ -90,5 +90,5 @@ def format_available_pokeballs(game_state: GameState) -> str:
         if item.name in pokeball_names
     ]
     if not available_balls:
-        return ""
+        return "You have no Poke Balls."
     return "Available Poke Balls:\n" + "\n".join(available_balls)
