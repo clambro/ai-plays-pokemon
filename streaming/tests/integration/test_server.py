@@ -127,4 +127,3 @@ async def test_server_cleans_up_if_startup_is_cancelled(
         await startup
     assert server.runner is None
     assert server.site is None
-    assert BackgroundStreamServer.get_instance() is None

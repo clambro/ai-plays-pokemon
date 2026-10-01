@@ -19,19 +19,6 @@ if TYPE_CHECKING:
 class BackgroundStreamServer(AbstractAsyncContextManager):
     """Async context manager for hosting the background HTML page with live updates."""
 
-    # Global instance for dependency injection
-    _instance: BackgroundStreamServer | None = None
-
-    @classmethod
-    def get_instance(cls) -> BackgroundStreamServer | None:
-        """Get the global instance of the stream server."""
-        return cls._instance
-
-    @classmethod
-    def _set_instance(cls, instance: BackgroundStreamServer | None) -> None:
-        """Set the global instance of the stream server."""
-        cls._instance = instance
-
     def __init__(self, host: str = "localhost", port: int = 8080) -> None:
         """Initialize the background stream server."""
         self.host = host
@@ -63,8 +50,6 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
                 self.runner = None
             raise
 
-        self._set_instance(self)
-
         logger.info(f"Background server started at http://{self.host}:{self.port}")
         return self
 
@@ -80,7 +65,6 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
             finally:
                 self.site = None
                 self.runner = None
-                self._set_instance(None)
 
         logger.info("Background server stopped")
 
@@ -114,15 +98,3 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
     def update_data(self, agent_state: AgentState, game_state: GameState) -> None:
         """Update the current state data."""
         self._current_data = GameStateView.from_states(agent_state, game_state)
-
-
-def update_background_from_states(
-    agent_state: AgentState,
-    game_state: GameState,
-) -> None:
-    """Helper function to update the stream server from anywhere in the codebase."""
-    server = BackgroundStreamServer.get_instance()
-    if server is not None:
-        server.update_data(agent_state, game_state)
-    else:
-        logger.warning("Stream server not available for update")

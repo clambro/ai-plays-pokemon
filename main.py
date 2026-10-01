@@ -2,6 +2,7 @@
 
 import argparse
 import asyncio
+from contextlib import suppress
 from pathlib import Path
 
 import aiofiles
@@ -65,11 +66,14 @@ async def main(
     ):
         context = AgentContext(state=state, emulator=emulator)
         stream_server.update_data(context.state, await emulator.get_game_state())
-        if not emulator_state:
-            await asyncio.sleep(30)  # Some time to manually get to the new game screen.
-        loop = asyncio.get_running_loop()
-        next_backup_at = loop.time() + BACKUP_INTERVAL_SECONDS
+        stream_refresh_task = asyncio.create_task(
+            _refresh_stream(stream_server, context.state, emulator)
+        )
         try:
+            if not emulator_state:
+                await asyncio.sleep(30)  # Some time to manually get to the new game screen.
+            loop = asyncio.get_running_loop()
+            next_backup_at = loop.time() + BACKUP_INTERVAL_SECONDS
             while True:
                 await dispatch_agent(context)
                 if loop.time() >= next_backup_at:
@@ -80,6 +84,25 @@ async def main(
             logger.exception("Agent application raised an exception.")
             emulator_save_state = await emulator.get_emulator_save_state()
             await create_backup(context.state, emulator_save_state)
+        finally:
+            stream_refresh_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await stream_refresh_task
+
+
+async def _refresh_stream(
+    server: BackgroundStreamServer,
+    state: AgentState,
+    emulator: Emulator,
+) -> None:
+    """Refresh the stream's game snapshot independently of gameplay decisions."""
+    while True:
+        await asyncio.sleep(0.5)
+        try:
+            server.update_data(state, await emulator.get_game_state())
+        except Exception:  # noqa: BLE001
+            logger.exception("Background stream refresh failed.")
+            return
 
 
 if __name__ == "__main__":

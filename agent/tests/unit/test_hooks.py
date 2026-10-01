@@ -28,17 +28,12 @@ if TYPE_CHECKING:
 
     from pydantic_ai.capabilities import ValidatedToolArgs
 
-    from emulator.game_state import GameState
-
 TEST_MODEL = "gpt-6-luna"
 
 
 @pytest.mark.unit
-async def test_hooks_publish_accounted_reasoning_before_tool_execution(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    """Publish updated usage and reasoning before the selected tool acts."""
+async def test_hooks_account_reasoning_before_tool_execution(tmp_path: Path) -> None:
+    """Account for usage and reasoning before the selected tool acts."""
     reasoning = "I will use the test action."
     first_usage = RequestUsage(input_tokens=2, output_tokens=3)
     final_usage = RequestUsage(input_tokens=4, output_tokens=5)
@@ -70,26 +65,18 @@ async def test_hooks_publish_accounted_reasoning_before_tool_execution(
         return next(responses)
 
     events: list[str] = []
-    game_state = MagicMock()
     context = AgentContext(
         state=AgentState(folder=tmp_path),
         emulator=MagicMock(),
     )
-    context.emulator.get_game_state = AsyncMock(return_value=game_state)
-
-    def publish(state: AgentState, observed_state: GameState) -> None:
-        assert observed_state is game_state
-        assert state.total_tokens == first_usage.total_tokens
-        assert state.rolling_memory.current_block.content == reasoning
-        assert [entry.content for entry in state.public_log.entries] == [reasoning]
-        events.append("publish")
-
-    monkeypatch.setattr(hooks, "update_background_from_states", publish)
     agent = build_text_agent(context)
 
     @agent.tool_plain
     async def test_action() -> str:
         """Perform the test action."""
+        assert context.state.total_tokens == first_usage.total_tokens
+        assert context.state.rolling_memory.current_block.content == reasoning
+        assert [entry.content for entry in context.state.public_log.entries] == [reasoning]
         events.append("tool")
         return "done"
 
@@ -97,7 +84,7 @@ async def test_hooks_publish_accounted_reasoning_before_tool_execution(
         result = await agent.run("Use the test action.", deps=context)
 
     assert result.output == "The action is complete."
-    assert events == ["publish", "tool"]
+    assert events == ["tool"]
     assert context.state.total_tokens == first_usage.total_tokens + final_usage.total_tokens
 
 

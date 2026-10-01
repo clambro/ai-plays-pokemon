@@ -14,7 +14,6 @@ from common.constants import (
 from common.enums import MapId
 from emulator.control_events import ControlBoundary
 from overworld_map.service import record_map_entity_interactions
-from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
     from PIL import Image
@@ -117,7 +116,6 @@ async def settle_dialog(
         )
         if scripted_displacement_warning:
             context.state.rolling_memory.add_memory(scripted_displacement_warning)
-    update_background_from_states(context.state, final_state)
     return DialogSettlement(
         transcript=transcript,
         game_state=final_state,
