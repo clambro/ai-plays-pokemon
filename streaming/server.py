@@ -4,7 +4,7 @@ from contextlib import AbstractAsyncContextManager
 from pathlib import Path
 from typing import TYPE_CHECKING, Self
 
-from aiohttp import web
+from aiohttp import WSMsgType, web
 from loguru import logger
 
 from streaming.schemas import GameStateView
@@ -13,16 +13,24 @@ if TYPE_CHECKING:
     from aiohttp.web import FileResponse, Request, Response
 
     from agent.state import AgentState
+    from emulator.emulator import Emulator
     from emulator.game_state import GameState
 
 
 class BackgroundStreamServer(AbstractAsyncContextManager):
     """Async context manager for hosting the background HTML page with live updates."""
 
-    def __init__(self, host: str = "localhost", port: int = 8080) -> None:
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = 8080,
+        *,
+        emulator: Emulator | None = None,
+    ) -> None:
         """Initialize the background stream server."""
         self.host = host
         self.port = port
+        self.emulator = emulator
         self.app = web.Application()
         self.runner: web.AppRunner | None = None
         self.site: web.TCPSite | None = None
@@ -31,6 +39,7 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
 
         self.app.router.add_get("/", self._serve_index)
         self.app.router.add_get("/api/state.json", self._serve_state)
+        self.app.router.add_get("/api/frames", self._serve_frames)
         self.app.router.add_get("/style.css", self._serve_css)
         self.app.router.add_get("/script.js", self._serve_js)
         self.app.router.add_static("/assets", self._background_dir / "assets")
@@ -94,6 +103,27 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
         if self._current_data is None:
             return web.json_response(None)
         return web.json_response(self._current_data.model_dump(mode="json"))
+
+    async def _serve_frames(self, request: Request) -> web.WebSocketResponse:
+        """Stream the latest emulator frame to a browser canvas."""
+        if self.emulator is None:
+            raise web.HTTPServiceUnavailable
+        socket = web.WebSocketResponse()
+        await socket.prepare(request)
+        try:
+            while not socket.closed:
+                await socket.send_bytes(await self.emulator.get_frame_bytes())
+                try:
+                    message = await socket.receive(timeout=1 / 30)
+                except TimeoutError:
+                    continue
+                if message.type in {WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.ERROR}:
+                    break
+        except ConnectionResetError:
+            pass
+        finally:
+            await socket.close()
+        return socket
 
     def update_data(self, agent_state: AgentState, game_state: GameState) -> None:
         """Update the current state data."""

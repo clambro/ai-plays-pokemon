@@ -57,6 +57,8 @@ const refs = {
     logDiv: document.getElementById('log-content'),
     partyDiv: document.getElementById('party'),
     template: document.getElementById('pokemon-card-template'),
+    gameScreen: document.getElementById('game-screen'),
+    gameWindow: document.getElementById('game-window'),
 };
 
 let renderedLog = null;
@@ -290,3 +292,20 @@ async function fetchData() {
 // Initial load and polling.
 fetchData();
 setInterval(fetchData, 100);
+
+const gameContext = refs.gameScreen.getContext('2d', { alpha: false });
+gameContext.imageSmoothingEnabled = false;
+
+function connectGameFrames() {
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socket = new WebSocket(`${protocol}//${location.host}/api/frames`);
+    socket.binaryType = 'arraybuffer';
+    socket.addEventListener('message', ({ data }) => {
+        if (data.byteLength !== 160 * 144 * 4) return;
+        gameContext.putImageData(new ImageData(new Uint8ClampedArray(data), 160, 144), 0, 0);
+        refs.gameWindow.classList.add('is-live');
+    });
+    socket.addEventListener('close', () => setTimeout(connectGameFrames, 1000));
+}
+
+connectGameFrames();

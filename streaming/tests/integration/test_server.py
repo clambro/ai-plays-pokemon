@@ -6,9 +6,10 @@ and that all JavaScript functionality works as expected.
 
 import asyncio
 from pathlib import Path
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-from aiohttp import ClientSession
+from aiohttp import ClientSession, WSMsgType
 from aiohttp.web import HTTPOk
 
 import streaming.server as server_module
@@ -102,6 +103,23 @@ async def test_html_page_data_updates() -> None:
             assert response.status == HTTPOk.status_code
             json_content = await response.json()
             assert json_content == MOCK_DATA.model_dump()
+
+
+@pytest.mark.integration
+async def test_game_frames_stream_over_websocket() -> None:
+    """The browser receives a raw RGBA game frame over a persistent connection."""
+    frame = bytes([0, 80, 160, 255]) * (160 * 144)
+    emulator = Mock()
+    emulator.get_frame_bytes = AsyncMock(return_value=frame)
+
+    async with (
+        BackgroundStreamServer(host="localhost", port=8085, emulator=emulator),
+        ClientSession() as session,
+        session.ws_connect("http://localhost:8085/api/frames") as socket,
+    ):
+        message = await asyncio.wait_for(socket.receive(), timeout=2)
+        assert message.type is WSMsgType.BINARY
+        assert message.data == frame
 
 
 @pytest.mark.integration

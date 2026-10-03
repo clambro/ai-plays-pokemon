@@ -62,7 +62,7 @@ async def main(
 
     async with (
         Emulator(str(rom_path), emulator_state, mute_sound=mute_sound) as emulator,
-        BackgroundStreamServer() as stream_server,
+        BackgroundStreamServer(emulator=emulator) as stream_server,
     ):
         context = AgentContext(state=state, emulator=emulator)
         stream_server.update_data(context.state, await emulator.get_game_state())

@@ -179,6 +179,10 @@ class Emulator(AbstractAsyncContextManager):
         """
         return await self._worker.execute(self._capture_game_state_with_screenshot)
 
+    async def get_frame_bytes(self) -> bytes:
+        """Copy the current RGBA frame from PyBoy's owner thread."""
+        return await self._worker.execute(lambda pyboy: pyboy.screen.ndarray.tobytes())
+
     async def get_game_state_with_screenshot_and_control_boundary(
         self,
     ) -> tuple[GameState, Image.Image, ControlBoundary | None]:
