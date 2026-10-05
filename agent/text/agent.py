@@ -22,11 +22,12 @@ if TYPE_CHECKING:
     from PIL import Image
 
     from emulator.game_state import GameState
+    from emulator.parsers.screen import Screen
 
 
 def build_text_agent(
     context: AgentContext,
-    initial_screen_text: str,
+    initial_screen: Screen,
 ) -> Agent[AgentContext, str]:
     """Construct the Pydantic AI text agent."""
     return Agent[AgentContext, str](
@@ -34,7 +35,7 @@ def build_text_agent(
         name="text_agent",
         deps_type=AgentContext,
         instructions=SYSTEM_PROMPT,
-        toolsets=[build_text_toolset(context, initial_screen_text)],
+        toolsets=[build_text_toolset(context, initial_screen)],
         capabilities=[AGENT_HOOKS],
         model_settings=OpenAIResponsesModelSettings(
             openai_reasoning_effort=ReasoningEffort.MEDIUM.value,
@@ -46,7 +47,7 @@ def build_text_agent(
 
 
 async def run_text(context: AgentContext) -> None:
-    """Handle text decisions until control changes or Pokemon state needs a fresh prompt."""
+    """Handle text decisions until control changes or displayed state needs a fresh prompt."""
     await context.begin_iteration()
     settlement = await settle_dialog(context)
     await context.complete_iteration(settlement.game_state)
@@ -59,7 +60,7 @@ async def run_text(context: AgentContext) -> None:
         initial_game_state=initial_game_state,
         initial_screenshot=settlement.screenshot,
     )
-    agent = build_text_agent(context, initial_game_state.screen.text)
+    agent = build_text_agent(context, initial_game_state.screen)
     try:
         async with agent.iter(agent_input, deps=context) as agent_run:
             node = agent_run.next_node
@@ -76,11 +77,15 @@ async def run_text(context: AgentContext) -> None:
                         control_boundary,
                     ) = await context.emulator.get_game_state_with_control_boundary()
                     await context.complete_iteration(game_state)
-                    # Rebuild the prompt before another decision uses stale Pokemon data.
+                    # Rebuild when displayed data or menu-specific tool availability changes.
                     if (
                         not is_text_handler_state(game_state, control_boundary)
                         or game_state.party != initial_game_state.party
                         or game_state.pc_pokemon != initial_game_state.pc_pokemon
+                        or game_state.inventory != initial_game_state.inventory
+                        or (game_state.screen.pokemon_list_source is not None)
+                        != (initial_game_state.screen.pokemon_list_source is not None)
+                        or game_state.screen.is_bag_menu != initial_game_state.screen.is_bag_menu
                     ):
                         break
     except AgentRunError as error:

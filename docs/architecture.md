@@ -193,9 +193,11 @@ flowchart LR
     choice --> buttons["press_buttons"]
     choice --> name["assign_name"]
     choice --> pc["select_pc_pokemon"]
+    choice --> item["use_item"]
     buttons --> settle
     name --> settle
     pc --> settle
+    item --> settle
 ```
 
 ### Handle Dialog Box
@@ -213,3 +215,7 @@ A niche tool, but a very useful one. This enters a name when the player or rival
 ### Select PC Pokémon
 
 When a PC Pokémon list is open, this tool selects a Pokémon by its party or active-box index, handling the scrolling in one call. The agent then chooses what to do with that Pokémon from the resulting menu.
+
+### Use Item
+
+When the bag is open, this selects an item by its inventory index and chooses USE without scrolling one entry at a time. The agent handles any target selection or further choices from the resulting screen.
