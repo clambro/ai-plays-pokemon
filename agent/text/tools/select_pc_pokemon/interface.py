@@ -31,13 +31,14 @@ def build_select_pc_pokemon_tool(context: AgentContext) -> Tool[AgentContext]:
         Returns:
             Fresh text context after selecting the Pokemon.
         """
+        previous_game_state = await context.emulator.get_game_state()
         try:
             result = await select_pc_pokemon_service(
                 emulator=context.emulator,
                 pokemon_index=pokemon_index,
             )
         except TextActionUnavailableError as error:
-            return await complete_text_action(context, str(error))
-        return await complete_text_action(context, result)
+            result = str(error)
+        return await complete_text_action(context, result, previous_game_state=previous_game_state)
 
     return Tool(select_pc_pokemon, require_parameter_descriptions=True)

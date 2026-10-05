@@ -58,13 +58,14 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         Returns:
             Fresh text context after pressing the buttons.
         """
+        previous_game_state = await context.emulator.get_game_state()
         try:
             result = await press_buttons_service(
                 emulator=context.emulator,
                 buttons=buttons,
             )
         except TextActionUnavailableError as error:
-            return await complete_text_action(context, str(error))
-        return await complete_text_action(context, result)
+            result = str(error)
+        return await complete_text_action(context, result, previous_game_state=previous_game_state)
 
     return Tool(press_buttons, require_parameter_descriptions=True)

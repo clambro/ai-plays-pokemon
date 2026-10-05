@@ -43,13 +43,14 @@ def build_assign_name_tool(context: AgentContext) -> Tool[AgentContext]:
         Returns:
             Fresh text context after attempting to enter the name.
         """
+        previous_game_state = await context.emulator.get_game_state()
         try:
             result = await assign_name_service(
                 emulator=context.emulator,
                 name=name,
             )
         except TextActionUnavailableError as error:
-            return await complete_text_action(context, str(error))
-        return await complete_text_action(context, result)
+            result = str(error)
+        return await complete_text_action(context, result, previous_game_state=previous_game_state)
 
     return Tool(assign_name, require_parameter_descriptions=True)

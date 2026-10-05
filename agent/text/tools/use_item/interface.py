@@ -27,10 +27,11 @@ def build_use_item_tool(context: AgentContext) -> Tool[AgentContext]:
         Returns:
             Fresh text context after attempting to use the item.
         """
+        previous_game_state = await context.emulator.get_game_state()
         result = await items.use_item(
             emulator=context.emulator,
             item_index=inventory_slot,
         )
-        return await complete_text_action(context, result)
+        return await complete_text_action(context, result, previous_game_state=previous_game_state)
 
     return Tool(use_item, require_parameter_descriptions=True)

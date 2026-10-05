@@ -47,7 +47,7 @@ def build_text_agent(
 
 
 async def run_text(context: AgentContext) -> None:
-    """Handle text decisions until control changes or displayed state needs a fresh prompt."""
+    """Handle text decisions until control or menu-specific tool availability changes."""
     await context.begin_iteration()
     settlement = await settle_dialog(context)
     await context.complete_iteration(settlement.game_state)
@@ -77,12 +77,9 @@ async def run_text(context: AgentContext) -> None:
                         control_boundary,
                     ) = await context.emulator.get_game_state_with_control_boundary()
                     await context.complete_iteration(game_state)
-                    # Rebuild when displayed data or menu-specific tool availability changes.
+                    # Tools remain fixed within a run; state updates arrive in their results.
                     if (
                         not is_text_handler_state(game_state, control_boundary)
-                        or game_state.party != initial_game_state.party
-                        or game_state.pc_pokemon != initial_game_state.pc_pokemon
-                        or game_state.inventory != initial_game_state.inventory
                         or (game_state.screen.pokemon_list_source is not None)
                         != (initial_game_state.screen.pokemon_list_source is not None)
                         or game_state.screen.is_bag_menu != initial_game_state.screen.is_bag_menu
