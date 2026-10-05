@@ -112,14 +112,22 @@ async def test_game_frames_stream_over_websocket() -> None:
     emulator = Mock()
     emulator.get_frame_bytes = AsyncMock(return_value=frame)
 
-    async with (
-        BackgroundStreamServer(host="localhost", port=8085, emulator=emulator),
-        ClientSession() as session,
-        session.ws_connect("http://localhost:8085/api/frames") as socket,
-    ):
-        message = await asyncio.wait_for(socket.receive(), timeout=2)
-        assert message.type is WSMsgType.BINARY
-        assert message.data == frame
+    async with asyncio.timeout(3), ClientSession() as session:
+        async with BackgroundStreamServer(host="localhost", port=8085, emulator=emulator):
+            socket = await session.ws_connect("http://localhost:8085/api/frames")
+            message = await socket.receive()
+            assert message.type is WSMsgType.BINARY
+            assert message.data == frame
+
+            async def receive_until_closed() -> None:
+                async for message in socket:
+                    assert message.type is WSMsgType.BINARY
+                    assert message.data == frame
+
+            receiver = asyncio.create_task(receive_until_closed())
+
+        await receiver
+        assert socket.closed
 
 
 @pytest.mark.integration

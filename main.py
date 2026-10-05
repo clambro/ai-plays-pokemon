@@ -102,7 +102,6 @@ async def _refresh_stream(
             server.update_data(state, await emulator.get_game_state())
         except Exception:  # noqa: BLE001
             logger.exception("Background stream refresh failed.")
-            return
 
 
 if __name__ == "__main__":

@@ -1,10 +1,11 @@
 """HTTP server for the live game-state display."""
 
+import asyncio
 from contextlib import AbstractAsyncContextManager
 from pathlib import Path
 from typing import TYPE_CHECKING, Self
 
-from aiohttp import WSMsgType, web
+from aiohttp import WSCloseCode, WSMsgType, web
 from loguru import logger
 
 from streaming.schemas import GameStateView
@@ -35,8 +36,10 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
         self.runner: web.AppRunner | None = None
         self.site: web.TCPSite | None = None
         self._current_data: GameStateView | None = None
+        self._frame_sockets: set[web.WebSocketResponse] = set()
         self._background_dir = Path("streaming/background")
 
+        self.app.on_shutdown.append(self._close_frame_sockets)
         self.app.router.add_get("/", self._serve_index)
         self.app.router.add_get("/api/state.json", self._serve_state)
         self.app.router.add_get("/api/frames", self._serve_frames)
@@ -110,6 +113,7 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
             raise web.HTTPServiceUnavailable
         socket = web.WebSocketResponse()
         await socket.prepare(request)
+        self._frame_sockets.add(socket)
         try:
             while not socket.closed:
                 await socket.send_bytes(await self.emulator.get_frame_bytes())
@@ -122,8 +126,15 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
         except ConnectionResetError:
             pass
         finally:
+            self._frame_sockets.discard(socket)
             await socket.close()
         return socket
+
+    async def _close_frame_sockets(self, app: web.Application) -> None:  # noqa: ARG002
+        """Close active video connections before waiting for request handlers to finish."""
+        await asyncio.gather(
+            *(socket.close(code=WSCloseCode.GOING_AWAY) for socket in tuple(self._frame_sockets))
+        )
 
     def update_data(self, agent_state: AgentState, game_state: GameState) -> None:
         """Update the current state data."""
