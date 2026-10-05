@@ -19,8 +19,8 @@ if TYPE_CHECKING:
 def build_consult_advisor_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the consultation tool for an eligible overworld run."""
 
-    async def consult_advisor(assessment: str) -> str:
-        """Ask the advisor to re-evaluate your strategy and recent decisions.
+    async def consult_advisor() -> str:
+        """Ask the advisor for an independent review of your strategy and recent decisions.
 
         Use this voluntarily when your own attempts are not resolving a
         blockage and you need a fresh assessment of what to do next.
@@ -34,13 +34,6 @@ def build_consult_advisor_tool(context: AgentContext) -> Tool[AgentContext]:
         so use them when you need help rather than as part of routine gameplay.
         Periodically, consultation is required to reassess your approach and
         the results it is producing.
-
-        Args:
-            assessment: Explain your approach, the assumptions behind it, and
-                how you think it is working. Mention any blockage or decision
-                you need help with. The advisor already has your game state,
-                party, goals, and history, so focus on your assessment rather
-                than repeating them.
 
         Returns:
             Fallible strategic advice, or an explanation that consultation failed.
@@ -56,7 +49,6 @@ def build_consult_advisor_tool(context: AgentContext) -> Tool[AgentContext]:
                 [
                     build_screenshot_content(screenshot),
                     format_overworld_state(context, map_view, game_state),
-                    assessment,
                 ],
                 deps=context,
             )

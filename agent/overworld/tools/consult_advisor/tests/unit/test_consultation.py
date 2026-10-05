@@ -55,14 +55,14 @@ async def test_consultation_cooldown_survives_backup_and_failure(
     )
     monkeypatch.setattr(agent, "build_advisor_agent", MagicMock(return_value=advisor))
     tool = interface.build_consult_advisor_tool(context)
-    consult = cast("Callable[[str], Awaitable[str]]", tool.function)
+    consult = cast("Callable[[], Awaitable[str]]", tool.function)
     game_state = MagicMock()
     game_state.can_use_strength = False
     game_state.player.has_pokedex = False
     map_view = MagicMock()
     assert "consult_advisor" in build_overworld_toolset(context, map_view, game_state).tools
 
-    await consult("How can I make progress?")
+    await consult()
     assert context.state.last_advice_iteration == 0
     assert context.consume_control_handoff()
     context.state = AgentState.model_validate_json(context.state.model_dump_json())
@@ -73,7 +73,7 @@ async def test_consultation_cooldown_survives_backup_and_failure(
     context.state.iteration = next_consultation_iteration
     assert "consult_advisor" in build_overworld_toolset(context, map_view, game_state).tools
     advisor.run.reset_mock()
-    await consult("How can I make progress?")
+    await consult()
     advisor.run.assert_awaited_once()
     assert context.state.last_advice_iteration == next_consultation_iteration
     assert context.state.goals == original_goals
