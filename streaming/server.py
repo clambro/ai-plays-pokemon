@@ -1,10 +1,11 @@
 """HTTP server for the live game-state display."""
 
+import asyncio
 from contextlib import AbstractAsyncContextManager
 from pathlib import Path
 from typing import TYPE_CHECKING, Self
 
-from aiohttp import web
+from aiohttp import WSCloseCode, WSMsgType, web
 from loguru import logger
 
 from streaming.schemas import GameStateView
@@ -13,37 +14,35 @@ if TYPE_CHECKING:
     from aiohttp.web import FileResponse, Request, Response
 
     from agent.state import AgentState
+    from emulator.emulator import Emulator
     from emulator.game_state import GameState
 
 
 class BackgroundStreamServer(AbstractAsyncContextManager):
     """Async context manager for hosting the background HTML page with live updates."""
 
-    # Global instance for dependency injection
-    _instance: BackgroundStreamServer | None = None
-
-    @classmethod
-    def get_instance(cls) -> BackgroundStreamServer | None:
-        """Get the global instance of the stream server."""
-        return cls._instance
-
-    @classmethod
-    def _set_instance(cls, instance: BackgroundStreamServer | None) -> None:
-        """Set the global instance of the stream server."""
-        cls._instance = instance
-
-    def __init__(self, host: str = "localhost", port: int = 8080) -> None:
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = 8080,
+        *,
+        emulator: Emulator | None = None,
+    ) -> None:
         """Initialize the background stream server."""
         self.host = host
         self.port = port
+        self.emulator = emulator
         self.app = web.Application()
         self.runner: web.AppRunner | None = None
         self.site: web.TCPSite | None = None
         self._current_data: GameStateView | None = None
+        self._frame_sockets: set[web.WebSocketResponse] = set()
         self._background_dir = Path("streaming/background")
 
+        self.app.on_shutdown.append(self._close_frame_sockets)
         self.app.router.add_get("/", self._serve_index)
         self.app.router.add_get("/api/state.json", self._serve_state)
+        self.app.router.add_get("/api/frames", self._serve_frames)
         self.app.router.add_get("/style.css", self._serve_css)
         self.app.router.add_get("/script.js", self._serve_js)
         self.app.router.add_static("/assets", self._background_dir / "assets")
@@ -63,8 +62,6 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
                 self.runner = None
             raise
 
-        self._set_instance(self)
-
         logger.info(f"Background server started at http://{self.host}:{self.port}")
         return self
 
@@ -80,7 +77,6 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
             finally:
                 self.site = None
                 self.runner = None
-                self._set_instance(None)
 
         logger.info("Background server stopped")
 
@@ -111,18 +107,35 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
             return web.json_response(None)
         return web.json_response(self._current_data.model_dump(mode="json"))
 
+    async def _serve_frames(self, request: Request) -> web.WebSocketResponse:
+        """Stream the latest emulator frame to a browser canvas."""
+        if self.emulator is None:
+            raise web.HTTPServiceUnavailable
+        socket = web.WebSocketResponse()
+        await socket.prepare(request)
+        self._frame_sockets.add(socket)
+        try:
+            while not socket.closed:
+                await socket.send_bytes(await self.emulator.get_frame_bytes())
+                try:
+                    message = await socket.receive(timeout=1 / 30)
+                except TimeoutError:
+                    continue
+                if message.type in {WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.ERROR}:
+                    break
+        except ConnectionResetError:
+            pass
+        finally:
+            self._frame_sockets.discard(socket)
+            await socket.close()
+        return socket
+
+    async def _close_frame_sockets(self, app: web.Application) -> None:  # noqa: ARG002
+        """Close active video connections before waiting for request handlers to finish."""
+        await asyncio.gather(
+            *(socket.close(code=WSCloseCode.GOING_AWAY) for socket in tuple(self._frame_sockets))
+        )
+
     def update_data(self, agent_state: AgentState, game_state: GameState) -> None:
         """Update the current state data."""
         self._current_data = GameStateView.from_states(agent_state, game_state)
-
-
-def update_background_from_states(
-    agent_state: AgentState,
-    game_state: GameState,
-) -> None:
-    """Helper function to update the stream server from anywhere in the codebase."""
-    server = BackgroundStreamServer.get_instance()
-    if server is not None:
-        server.update_data(agent_state, game_state)
-    else:
-        logger.warning("Stream server not available for update")

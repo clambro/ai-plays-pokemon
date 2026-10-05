@@ -10,7 +10,6 @@ from agent.battle.tools.fight.service import fight as fight_service
 from agent.battle.tools.utils import (
     BattleToolResult,
     complete_battle_action,
-    refresh_battle_observation,
 )
 
 if TYPE_CHECKING:
@@ -39,10 +38,8 @@ def build_fight_tool(context: AgentContext) -> Tool[AgentContext]:
                 move_slot=move_slot,
             )
         except BattleActionUnavailableError as error:
-            return await refresh_battle_observation(
-                context,
-                action_result=str(error),
-            )
+            # Sleep or Bind/Wrap can prevent move selection; read through the resulting battle text.
+            result = str(error)
         return await complete_battle_action(context, result)
 
     return Tool(fight, require_parameter_descriptions=True)

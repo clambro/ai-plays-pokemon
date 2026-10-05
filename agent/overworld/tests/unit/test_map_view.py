@@ -394,14 +394,15 @@ def test_routing_respects_tiles_beneath_player_and_pikachu(
         target,
         map_view.routing_tiles,
         rules,
+        is_surfing=False,
     )
 
     assert path == expected_path
     assert target in map_view.reachable_coords
     if start != transition:
-        assert calculate_path_to_target(start, transition, map_view.routing_tiles, rules) == [
-            Button.UP
-        ]
+        assert calculate_path_to_target(
+            start, transition, map_view.routing_tiles, rules, is_surfing=False
+        ) == [Button.UP]
 
 
 @pytest.mark.unit

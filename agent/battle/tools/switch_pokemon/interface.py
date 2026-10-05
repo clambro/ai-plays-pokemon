@@ -22,16 +22,16 @@ if TYPE_CHECKING:
 def build_switch_pokemon_tool(context: AgentContext) -> Tool[AgentContext]:
     """Build the switch tool bound to the current battle context."""
 
-    async def switch_pokemon(
-        party_slot: Annotated[int, Field(ge=0, le=5)],
-    ) -> BattleToolResult:
+    async def switch_pokemon(party_slot: Annotated[int, Field(ge=0, le=5)]) -> BattleToolResult:
         """Switch the active Pokemon to a selected party member.
 
         Select the party member by its zero-based slot. This also selects a
         replacement after the active Pokemon faints. Fainted Pokemon cannot
-        be selected. Note that switching Pokemon consumes your turn, leaving
-        the incoming Pokemon open to attack. Carelessly switching Pokemon is
-        thus the fastest way to lose a battle.
+        be selected. A voluntary switch consumes your turn, leaving the incoming
+        Pokemon open to attack. Note that unlike later generations, gen 1
+        opponents select their move after you switch, and thus may favor an
+        attack effective against the incoming Pokemon. Carelessly switching
+        Pokemon is therefore one of the fastest ways to lose a battle.
 
         Args:
             party_slot: Zero-based party slot of the Pokemon to switch in.

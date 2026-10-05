@@ -45,3 +45,18 @@ def build_text_decision_prompt(
         state=state,
         text=initial_game_state.screen.text,
     )
+
+
+def format_text_state_updates(previous_game_state: GameState, game_state: GameState) -> str:
+    """Return complete replacements for state sections changed by a text action."""
+    sections = []
+    if game_state.party != previous_game_state.party:
+        sections.append(format_party_info(game_state))
+    if game_state.inventory != previous_game_state.inventory:
+        sections.append(format_inventory_info(game_state))
+    if game_state.pc_pokemon != previous_game_state.pc_pokemon:
+        sections.append(
+            format_pc_info(game_state)
+            or "<pc_pokemon>\nYour active PC box is empty.\n</pc_pokemon>"
+        )
+    return "\n\n".join(sections)

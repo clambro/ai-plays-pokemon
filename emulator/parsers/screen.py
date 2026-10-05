@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, computed_field
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
+from common.enums import PokemonListSource
 from common.schemas import Coords
 from emulator.parsers.screen_text import decode_screen_tiles
 
@@ -21,6 +22,12 @@ _BACKGROUND_MAP_WIDTH = 32
 _VRAM_BANK = 0
 _TILE_SIZE_PIXELS = 8
 _CUT_TREE_COLLISION_TILE = 0x3D
+_LIST_TOP = 4
+_LIST_LEFT = 5
+_ACTIVE_MENU_CURSOR_TILE = 0xED
+_PARTY_COUNT_ADDRESS = 0xD162
+_BOX_COUNT_ADDRESS = 0xDA7F
+_BAG_COUNT_ADDRESS = 0xD31C
 
 
 class Screen(BaseModel):
@@ -34,6 +41,8 @@ class Screen(BaseModel):
     cursor_index: int
     menu_item_index: int
     list_scroll_offset: int
+    pokemon_list_source: PokemonListSource | None
+    is_bag_menu: bool
 
     model_config = ConfigDict(frozen=True)
 
@@ -128,6 +137,7 @@ def parse_screen(mem: PyBoyMemoryView) -> Screen:
     w = SCREEN_WIDTH * 2  # Convert blocks to 2x2 tiles.
     h = SCREEN_HEIGHT * 2
     tiles = [[flat_tiles[i * w + j] for j in range(w)] for i in range(h)]
+    list_pointer = _parse_active_list_pointer(mem)
 
     return Screen(
         top=top,
@@ -138,7 +148,29 @@ def parse_screen(mem: PyBoyMemoryView) -> Screen:
         cursor_index=mem[0xCC30],
         menu_item_index=mem[0xCC26],
         list_scroll_offset=mem[0xCC36],
+        pokemon_list_source={
+            _PARTY_COUNT_ADDRESS: PokemonListSource.PARTY,
+            _BOX_COUNT_ADDRESS: PokemonListSource.BOX,
+        }.get(list_pointer),
+        is_bag_menu=list_pointer == _BAG_COUNT_ADDRESS,
     )
+
+
+def _parse_active_list_pointer(
+    mem: PyBoyMemoryView,
+) -> int | None:
+    """Identify an active scrolling list, excluding overlaid action and confirmation menus."""
+    # DisplayListMenuID places the cursor at (5, 4 + 2 * menu item).
+    # List metadata survives into submenus, so require the active cursor there too.
+    cursor_row = _LIST_TOP + 2 * mem[0xCC26]
+    if (
+        mem[0xCC24] != _LIST_TOP  # wTopMenuItemY
+        or mem[0xCC25] != _LIST_LEFT  # wTopMenuItemX
+        or cursor_row >= SCREEN_HEIGHT * 2
+        or mem[0xC3A0 + cursor_row * SCREEN_WIDTH * 2 + _LIST_LEFT] != _ACTIVE_MENU_CURSOR_TILE
+    ):
+        return None
+    return mem[0xCF8A] | mem[0xCF8B] << 8  # wListPointer
 
 
 def _resolve_cut_tree_tiles_from_vram(

@@ -24,6 +24,7 @@ def build_battle_toolset(
     battle_type: BattleType | None,
     *,
     enemy_family_caught: bool,
+    has_pokeballs: bool,
 ) -> FunctionToolset[AgentContext]:
     """Build the fixed toolset for the current battle state."""
     tools: list[Tool[AgentContext]] = []
@@ -35,7 +36,7 @@ def build_battle_toolset(
             ),
         )
     if battle_type == BattleType.WILD:
-        if not enemy_family_caught:
+        if not enemy_family_caught and has_pokeballs:
             tools.append(build_throw_ball_tool(context))
         tools.append(build_run_tool(context))
     tools.append(build_press_buttons_tool(context))

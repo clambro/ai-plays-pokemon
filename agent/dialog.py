@@ -14,7 +14,6 @@ from common.constants import (
 from common.enums import MapId
 from emulator.control_events import ControlBoundary
 from overworld_map.service import record_map_entity_interactions
-from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
     from PIL import Image
@@ -34,15 +33,6 @@ class DialogSettlement:
     screenshot: Image.Image
     control_boundary: ControlBoundary | None
     scripted_displacement_warning: str = ""
-
-
-def _is_plain_text_dialog(game_state: GameState) -> bool:
-    """Check whether visible dialog can be advanced without a decision."""
-    # Text outside the dialog box usually indicates a menu or yes/no question,
-    # which must be left for the agent rather than advanced automatically.
-    return game_state.screen.is_dialog_box_on_screen and not game_state.is_text_on_screen(
-        ignore_dialog_box=True
-    )
 
 
 async def settle_dialog(
@@ -70,9 +60,7 @@ async def settle_dialog(
             ControlBoundary.TEXT_INPUT_READY,
         }:
             chunk = await context.emulator.advance_battle_dialog()
-        elif control_boundary == ControlBoundary.TEXT_INPUT_READY and _is_plain_text_dialog(
-            game_state
-        ):
+        elif control_boundary == ControlBoundary.TEXT_INPUT_READY:
             chunk = await context.emulator.advance_text_dialog()
         else:
             break
@@ -117,7 +105,6 @@ async def settle_dialog(
         )
         if scripted_displacement_warning:
             context.state.rolling_memory.add_memory(scripted_displacement_warning)
-    update_background_from_states(context.state, final_state)
     return DialogSettlement(
         transcript=transcript,
         game_state=final_state,

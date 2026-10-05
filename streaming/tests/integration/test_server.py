@@ -6,9 +6,10 @@ and that all JavaScript functionality works as expected.
 
 import asyncio
 from pathlib import Path
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-from aiohttp import ClientSession
+from aiohttp import ClientSession, WSMsgType
 from aiohttp.web import HTTPOk
 
 import streaming.server as server_module
@@ -105,6 +106,31 @@ async def test_html_page_data_updates() -> None:
 
 
 @pytest.mark.integration
+async def test_game_frames_stream_over_websocket() -> None:
+    """The browser receives a raw RGBA game frame over a persistent connection."""
+    frame = bytes([0, 80, 160, 255]) * (160 * 144)
+    emulator = Mock()
+    emulator.get_frame_bytes = AsyncMock(return_value=frame)
+
+    async with asyncio.timeout(3), ClientSession() as session:
+        async with BackgroundStreamServer(host="localhost", port=8085, emulator=emulator):
+            socket = await session.ws_connect("http://localhost:8085/api/frames")
+            message = await socket.receive()
+            assert message.type is WSMsgType.BINARY
+            assert message.data == frame
+
+            async def receive_until_closed() -> None:
+                async for message in socket:
+                    assert message.type is WSMsgType.BINARY
+                    assert message.data == frame
+
+            receiver = asyncio.create_task(receive_until_closed())
+
+        await receiver
+        assert socket.closed
+
+
+@pytest.mark.integration
 async def test_server_cleans_up_if_startup_is_cancelled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -127,4 +153,3 @@ async def test_server_cleans_up_if_startup_is_cancelled(
         await startup
     assert server.runner is None
     assert server.site is None
-    assert BackgroundStreamServer.get_instance() is None

@@ -6,7 +6,6 @@ from pydantic_ai.capabilities.hooks import Hooks
 
 from agent.context import AgentContext
 from emulator.control_events import ControlHandoff
-from streaming.server import update_background_from_states
 
 if TYPE_CHECKING:
     from pydantic_ai import ModelResponse, RunContext, ToolDefinition
@@ -54,19 +53,6 @@ async def record_model_response(
     return response
 
 
-async def publish_before_tool(
-    ctx: RunContext[AgentContext],
-    *,
-    call: ToolCallPart,  # noqa: ARG001
-    tool_def: ToolDefinition,  # noqa: ARG001
-    args: dict[str, object],
-) -> dict[str, object]:
-    """Publish the completed decision immediately before its action begins."""
-    game_state = await ctx.deps.emulator.get_game_state()
-    update_background_from_states(ctx.deps.state, game_state)
-    return args
-
-
 async def handle_control_handoff(
     ctx: RunContext[AgentContext],
     *,
@@ -86,6 +72,5 @@ async def handle_control_handoff(
 AGENT_HOOKS = Hooks[AgentContext](
     before_model_request=require_tool_call,
     after_model_request=record_model_response,
-    before_tool_execute=publish_before_tool,
     tool_execute=handle_control_handoff,
 )

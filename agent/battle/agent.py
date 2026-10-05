@@ -15,7 +15,7 @@ from agent.dialog import settle_dialog
 from agent.formatting.game_state import build_screenshot_content
 from agent.hooks import AGENT_HOOKS
 from agent.utils import is_battle_handler_state
-from common.enums import ReasoningEffort
+from common.enums import PokeballItem, ReasoningEffort
 from common.prompts import SYSTEM_PROMPT
 from llm.service import TIMEOUT_SECONDS, build_agent_model
 
@@ -31,6 +31,7 @@ def build_battle_agent(
     battle_type: BattleType | None,
     *,
     enemy_family_caught: bool,
+    has_pokeballs: bool,
 ) -> Agent[AgentContext, str]:
     """Construct the Pydantic AI battle agent."""
     return Agent[AgentContext, str](
@@ -43,6 +44,7 @@ def build_battle_agent(
                 context,
                 battle_type,
                 enemy_family_caught=enemy_family_caught,
+                has_pokeballs=has_pokeballs,
             )
         ],
         capabilities=[AGENT_HOOKS],
@@ -64,6 +66,7 @@ async def run_battle(context: AgentContext) -> None:
         return
     game_state = settlement.game_state
     enemy_pokemon = game_state.battle.enemy_pokemon
+    ball_names = {ball.value for ball in PokeballItem}
     agent = build_battle_agent(
         context,
         game_state.battle.battle_type,
@@ -73,6 +76,9 @@ async def run_battle(context: AgentContext) -> None:
                 enemy_pokemon.pokedex_number,
                 game_state.player.pokedex_caught,
             )
+        ),
+        has_pokeballs=any(
+            item.name in ball_names and item.quantity > 0 for item in game_state.inventory.items
         ),
     )
     try:

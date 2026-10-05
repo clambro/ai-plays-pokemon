@@ -72,9 +72,9 @@ def format_pc_info(game_state: GameState) -> str:
         return ""
     out = "<pc_pokemon>\n"
     out += "Stored in the active PC box, not in the party:\n"
-    for pokemon in game_state.pc_pokemon:
+    for index, pokemon in enumerate(game_state.pc_pokemon):
         moves = ", ".join(move.name for move in pokemon.moves)
-        out += f"- {pokemon.name} ({pokemon.species}, Level {pokemon.level}): {moves}\n"
+        out += f"[{index}] {pokemon.name} ({pokemon.species}, Level {pokemon.level}): {moves}\n"
     out += "</pc_pokemon>"
     max_box_pokemon = 20
     if len(game_state.pc_pokemon) >= max_box_pokemon:

@@ -59,6 +59,7 @@ async def navigate(
             hm_tiles=frozenset(hm_tiles),
             directional_warps=get_directional_warp_coords(current_map, game_state),
         ),
+        is_surfing=game_state.player.is_surfing,
     )
     if not path:
         return _record_result(
