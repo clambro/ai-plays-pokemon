@@ -35,6 +35,7 @@ def test_parse_screen_uses_vram_for_cut_tree_collision_tile() -> None:
         0xCC30: 0,
         0xCC26: 0,
         0xCC36: 0,
+        0xCF93: 1,
     }
     mem = MagicMock()
 
@@ -98,4 +99,5 @@ def _make_screen(*, top: int, left: int) -> Screen:
         cursor_index=0,
         menu_item_index=0,
         list_scroll_offset=0,
+        pokemon_list_source=None,
     )

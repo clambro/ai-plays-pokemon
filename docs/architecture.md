@@ -192,8 +192,10 @@ flowchart LR
     agent --> choice{"Function tool call"}
     choice --> buttons["press_buttons"]
     choice --> name["assign_name"]
+    choice --> pc["select_pc_pokemon"]
     buttons --> settle
     name --> settle
+    pc --> settle
 ```
 
 ### Handle Dialog Box
@@ -207,3 +209,7 @@ This is the generic decision-making tool for the Text Handler. It is used for me
 ### Assign Name
 
 A niche tool, but a very useful one. This enters a name when the player or rival needs one at the start of the game, or when a newly caught Pokémon needs a nickname. It saves time and tokens by asking the AI for a name and entering it deterministically, rather than getting the AI to move around the keyboard one button at a time. The AI is also terrible at entering names manually, so this saves us from watching it play with a team full of Pokémon named "AAAAAAAAAA".
+
+### Select PC Pokémon
+
+When a PC Pokémon list is open, this tool selects a Pokémon by its party or active-box index, handling the scrolling in one call. The agent then chooses what to do with that Pokémon from the resulting menu.

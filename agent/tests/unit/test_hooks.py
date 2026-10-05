@@ -69,7 +69,7 @@ async def test_hooks_account_reasoning_before_tool_execution(tmp_path: Path) -> 
         state=AgentState(folder=tmp_path),
         emulator=MagicMock(),
     )
-    agent = build_text_agent(context)
+    agent = build_text_agent(context, "")
 
     @agent.tool_plain
     async def test_action() -> str:

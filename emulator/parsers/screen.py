@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, computed_field
 
 from common.constants import PLAYER_OFFSET_X, PLAYER_OFFSET_Y, SCREEN_HEIGHT, SCREEN_WIDTH
+from common.enums import PokemonListSource
 from common.schemas import Coords
 from emulator.parsers.screen_text import decode_screen_tiles
 
@@ -21,6 +22,11 @@ _BACKGROUND_MAP_WIDTH = 32
 _VRAM_BANK = 0
 _TILE_SIZE_PIXELS = 8
 _CUT_TREE_COLLISION_TILE = 0x3D
+_PC_LIST_TOP = 4
+_PC_LIST_LEFT = 5
+_ACTIVE_MENU_CURSOR_TILE = 0xED
+_PARTY_COUNT_ADDRESS = 0xD162
+_BOX_COUNT_ADDRESS = 0xDA7F
 
 
 class Screen(BaseModel):
@@ -34,6 +40,7 @@ class Screen(BaseModel):
     cursor_index: int
     menu_item_index: int
     list_scroll_offset: int
+    pokemon_list_source: PokemonListSource | None
 
     model_config = ConfigDict(frozen=True)
 
@@ -138,7 +145,31 @@ def parse_screen(mem: PyBoyMemoryView) -> Screen:
         cursor_index=mem[0xCC30],
         menu_item_index=mem[0xCC26],
         list_scroll_offset=mem[0xCC36],
+        pokemon_list_source=_parse_pokemon_list_source(mem),
     )
+
+
+def _parse_pokemon_list_source(
+    mem: PyBoyMemoryView,
+) -> PokemonListSource | None:
+    """Identify an active PC list, excluding overlaid action and confirmation menus."""
+    # DisplayMonListMenu uses list ID 0 and a cursor at (5, 4 + 2 * menu item).
+    # List metadata survives into submenus, so require the active cursor there too.
+    cursor_row = _PC_LIST_TOP + 2 * mem[0xCC26]
+    if (
+        mem[0xCF93] != 0  # wListMenuID: PCPOKEMONLISTMENU
+        or mem[0xCC24] != _PC_LIST_TOP  # wTopMenuItemY
+        or mem[0xCC25] != _PC_LIST_LEFT  # wTopMenuItemX
+        or cursor_row >= SCREEN_HEIGHT * 2
+        or mem[0xC3A0 + cursor_row * SCREEN_WIDTH * 2 + _PC_LIST_LEFT] != _ACTIVE_MENU_CURSOR_TILE
+    ):
+        return None
+    list_pointer = mem[0xCF8A] | mem[0xCF8B] << 8  # wListPointer
+    if list_pointer == _PARTY_COUNT_ADDRESS:
+        return PokemonListSource.PARTY
+    if list_pointer == _BOX_COUNT_ADDRESS:
+        return PokemonListSource.BOX
+    return None
 
 
 def _resolve_cut_tree_tiles_from_vram(

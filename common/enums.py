@@ -14,6 +14,13 @@ class ReasoningEffort(StrEnum):
     MAX = "max"
 
 
+class PokemonListSource(Enum):
+    """Pokemon collection displayed in an active selection list."""
+
+    PARTY = auto()
+    BOX = auto()
+
+
 class AsciiTile(StrEnum):
     """An enum for the ASCII representations of overworld map tiles.
 

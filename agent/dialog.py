@@ -35,15 +35,6 @@ class DialogSettlement:
     scripted_displacement_warning: str = ""
 
 
-def _is_plain_text_dialog(game_state: GameState) -> bool:
-    """Check whether visible dialog can be advanced without a decision."""
-    # Text outside the dialog box usually indicates a menu or yes/no question,
-    # which must be left for the agent rather than advanced automatically.
-    return game_state.screen.is_dialog_box_on_screen and not game_state.is_text_on_screen(
-        ignore_dialog_box=True
-    )
-
-
 async def settle_dialog(
     context: AgentContext,
 ) -> DialogSettlement:
@@ -69,9 +60,7 @@ async def settle_dialog(
             ControlBoundary.TEXT_INPUT_READY,
         }:
             chunk = await context.emulator.advance_battle_dialog()
-        elif control_boundary == ControlBoundary.TEXT_INPUT_READY and _is_plain_text_dialog(
-            game_state
-        ):
+        elif control_boundary == ControlBoundary.TEXT_INPUT_READY:
             chunk = await context.emulator.advance_text_dialog()
         else:
             break
