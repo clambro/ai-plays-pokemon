@@ -133,7 +133,7 @@ async def test_inspection_keeps_separate_arrival_regions() -> None:
     """Inspect all entrances without combining disconnected regions."""
     destination_map = MapMemoryRead(
         map_id=MapId.MT_MOON_B2F,
-        terrain="▓▓▓▓▓▓▓\n▓∙∙∙∙∙▓\n▓▓▓▓▓▓▓\n▓∙∙∙∙∙▓\n▓░∙∙∙∙▓\n▓▓▓▓▓▓▓",
+        terrain="#######\n#.....#\n#######\n#.....#\n#?....#\n#######",
         blockages={},
     )
     warps = {
@@ -200,7 +200,7 @@ async def test_check_boundary_preserves_pairs_and_distinguishes_unknown_destinat
     destination_map_id = MapId.MT_MOON_B2F
     destination_map = MapMemoryRead(
         map_id=destination_map_id,
-        terrain="▓▓▓▓▓▓\n▓∙∙∙∙▓\n▓∙∙∙∙▓\n▓▓▓▓▓▓",
+        terrain="######\n#....#\n#....#\n######",
         blockages={},
     )
     source_boundaries = [
@@ -269,7 +269,7 @@ async def test_inspection_includes_one_way_arrivals_without_return_connections()
     destination_map_id = MapId.POKEMON_MANSION_2F
     destination_map = MapMemoryRead(
         map_id=destination_map_id,
-        terrain="▓▓▓\n▓∙▓\n▓▓▓",
+        terrain="###\n#.#\n###",
         blockages={},
     )
     holes = [
@@ -302,7 +302,7 @@ async def test_elevator_arrival_exposes_all_observed_routes() -> None:
     """Keep both the return route and an onward route sharing the elevator's arrival doorway."""
     elevator = MapMemoryRead(
         map_id=MapId.ROCKET_HIDEOUT_ELEVATOR,
-        terrain="▓▓▓▓▓▓\n▓∙∙∙∙▓\n▓∙∙∙∙▓\n▓▓▓▓▓▓",
+        terrain="######\n#....#\n#....#\n######",
         blockages={},
     )
     warps = {
@@ -349,7 +349,7 @@ async def test_inspection_preserves_directional_reachability(used_iteration: int
     map_id = MapId.MT_MOON_B1F
     map_memory = MapMemoryRead(
         map_id=map_id,
-        terrain="▓░▓▓▓\n▓∙∙∙▓\n▓▓▽▓▓\n▓∙∙∙▓\n▓▓▓▓▓",
+        terrain="#?###\n#...#\n##↓##\n#...#\n#####",
         blockages={},
     )
     warps = {
@@ -385,7 +385,7 @@ async def test_unused_incoming_route_establishes_access_without_inventing_a_reve
     map_id = MapId.MT_MOON_B1F
     memory = MapMemoryRead(
         map_id=map_id,
-        terrain="▓▓▓▓▓\n▓∙∙∙▓\n▓▓▽▓▓\n▓∙∙∙▓\n▓▓▓▓▓",
+        terrain="#####\n#...#\n##↓##\n#...#\n#####",
         blockages={},
     )
     warps = {
@@ -407,7 +407,7 @@ async def test_unused_incoming_route_establishes_access_without_inventing_a_reve
 @pytest.mark.unit
 @pytest.mark.parametrize(
     ("top_row", "expected_unexplored_terrain"),
-    [("▓░▓▓▓", True), ("▓▓▓▓▓", False)],
+    [("#?###", True), ("#####", False)],
 )
 def test_connection_check_lists_only_connections_in_the_arrival_component(
     top_row: str,
@@ -424,7 +424,7 @@ def test_connection_check_lists_only_connections_in_the_arrival_component(
     )
     map_memory = MapMemoryRead(
         map_id=MapId.MT_MOON_B1F,
-        terrain=f"{top_row}\n▓∙∙∙▓\n▓▓▓▓▓\n▓∙∙∙▓\n▓▓▓▓▓",
+        terrain=f"{top_row}\n#...#\n#####\n#...#\n#####",
         blockages={},
     )
 
@@ -454,7 +454,7 @@ def test_directional_warp_can_connect_remembered_terrain(activation: WarpActivat
     far_connection = _connection(Coords(row=1, col=3))
     map_memory = MapMemoryRead(
         map_id=MapId.MT_MOON_B1F,
-        terrain="▓▓▓▓▓\n▓∙∙∙▓\n▓▓▓▓▓",
+        terrain="#####\n#...#\n#####",
         blockages={},
     )
 
@@ -473,7 +473,7 @@ def test_connection_check_includes_unresolved_step_on_transition() -> None:
     """A reachable transition remains a connection before its destination is known."""
     map_memory = MapMemoryRead(
         map_id=MapId.POKEMON_MANSION_3F,
-        terrain="▓▓▓▓▓\n▓∙○▓▓\n▓▓▓▓▓",
+        terrain="#####\n#.O##\n#####",
         blockages={},
     )
 
@@ -532,7 +532,7 @@ def test_connection_groups_follow_chains_without_merging_separate_entrances() ->
 @pytest.mark.unit
 @pytest.mark.parametrize(
     ("last_tile", "expected_unexplored_terrain"),
-    [("░", True), ("●", False)],
+    [("?", True), ("■", False)],
 )
 def test_connection_check_recognizes_unresolved_spinner_exploration(
     last_tile: str,
@@ -542,7 +542,7 @@ def test_connection_check_recognizes_unresolved_spinner_exploration(
     """A spinner leading into unseen terrain keeps its arrival component explorable."""
     map_memory = MapMemoryRead(
         map_id=MapId.ROCKET_HIDEOUT_B3F,
-        terrain=f"▓▓▓▓▓▓▓\n▓∙›∙∙{last_tile}▓\n▓▓▓▓▓▓▓",  # noqa: RUF001
+        terrain=f"#######\n#.▶..{last_tile}#\n#######",
         blockages={},
     )
 

@@ -23,11 +23,11 @@ def test_current_map_view_crops_region_without_mutating_map() -> None:
     overworld_map = OverworldMap(
         id=MapId.ROUTE_2,
         terrain=[
-            list("▓▓▓▓▓▓▓"),
-            list("▓∙▓▓▓▓▓"),
-            list("▓▓∙∙▓∙▓"),
-            list("▓▓∙∙▓∙▓"),
-            list("▓▓▓▓∙▓▓"),
+            list("#######"),
+            list("#.#####"),
+            list("##..#.#"),
+            list("##..#.#"),
+            list("####.##"),
         ],
         blockages={},
         known_sprite_ids=set(),
@@ -101,11 +101,11 @@ def test_current_map_view_crops_region_without_mutating_map() -> None:
         },
     )
     assert overworld_map.terrain == [
-        list("▓▓▓▓▓▓▓"),
-        list("▓∙▓▓▓▓▓"),
-        list("▓▓∙∙▓∙▓"),
-        list("▓▓∙∙▓∙▓"),
-        list("▓▓▓▓∙▓▓"),
+        list("#######"),
+        list("#.#####"),
+        list("##..#.#"),
+        list("##..#.#"),
+        list("####.##"),
     ]
 
 
@@ -115,11 +115,11 @@ def test_object_overlay_provides_reachable_interaction_position() -> None:
     overworld_map = OverworldMap(
         id=MapId.BILLS_HOUSE,
         terrain=[
-            list("▓▓▓▓▓"),
-            list("▓∙∙∙▓"),
-            list("▓∙∙∙▓"),
-            list("▓∙∙∙▓"),
-            list("▓▓▓▓▓"),
+            list("#####"),
+            list("#...#"),
+            list("#...#"),
+            list("#...#"),
+            list("#####"),
         ],
         blockages={},
         known_sprite_ids=set(),
@@ -176,13 +176,13 @@ def test_locked_door_uses_map_block_identity_and_requires_a_reachable_side() -> 
     overworld_map = OverworldMap(
         id=MapId.SILPH_CO_11F,
         terrain=[
-            list("▓▓▓▓▓▓▓"),
-            list("▓▓▓▓▓▓▓"),
-            list("▓▓▓▓▓▓▓"),
-            list("▓▓◎◎▓◎▓"),
-            list("▓∙∙∙▓∙▓"),
-            list("▓∙∙∙▓∙▓"),
-            list("▓▓▓▓▓▓▓"),
+            list("#######"),
+            list("#######"),
+            list("#######"),
+            list("##DD#D#"),
+            list("#...#.#"),
+            list("#...#.#"),
+            list("#######"),
         ],
         blockages={},
         known_sprite_ids=set(),
@@ -238,10 +238,10 @@ def test_spinner_routing_uses_terrain_under_pikachu_overlay() -> None:
     overworld_map = OverworldMap(
         id=MapId.ROCKET_HIDEOUT_B3F,
         terrain=[
-            list("▓▓▓▓▓"),
-            list("▓∙›∙●"),  # noqa: RUF001
-            list("▓∙∙∙▓"),
-            list("▓▓▓▓▓"),
+            list("#####"),
+            list("#.▶.■"),
+            list("#...#"),
+            list("#####"),
         ],
         blockages={},
         known_sprite_ids=set(),
@@ -333,11 +333,11 @@ def test_routing_respects_tiles_beneath_player_and_pikachu(
     overworld_map = OverworldMap(
         id=MapId.ROCKET_HIDEOUT_B3F,
         terrain=[
-            list("▓▓▓▓▓"),
-            list("▓∙∙∙▓"),
-            list(f"▓∙{terrain_tile}▓▓"),
-            list("▓∙∙▓▓"),
-            list("▓▓▓▓▓"),
+            list("#####"),
+            list("#...#"),
+            list(f"#.{terrain_tile}##"),
+            list("#..##"),
+            list("#####"),
         ],
         blockages={},
         known_sprite_ids=set(),
@@ -411,12 +411,12 @@ def test_unresolved_spinner_shows_known_path_without_exposing_disconnected_terra
     overworld_map = OverworldMap(
         id=MapId.ROCKET_HIDEOUT_B3F,
         terrain=[
-            list("▓▓▓▓▓▓▓"),
-            list("▓∙›∙∨▓▓"),  # noqa: RUF001
-            list("▓▓▓▓∙▓▓"),
-            list("▓▓▓▓░▓▓"),
-            list("▓▓▓▓●▓▓"),
-            list("▓▓▓▓▓▓▓"),
+            list("#######"),
+            list("#.▶.▼##"),
+            list("####.##"),
+            list("####?##"),
+            list("####■##"),
+            list("#######"),
         ],
         blockages={},
         known_sprite_ids=set(),
@@ -475,11 +475,11 @@ def test_current_map_view_includes_counter_interactable_sprites() -> None:
     overworld_map = OverworldMap(
         id=MapId.VIRIDIAN_POKECENTER,
         terrain=[
-            list("▓▓▓▓▓▓▓"),
-            list("▓∙▓∙∙∙▓"),
-            list("▓∙‡∙∙∙▓"),
-            list("▓∙▓∙∙∙▓"),
-            list("▓▓▓▓▓▓▓"),
+            list("#######"),
+            list("#.#...#"),
+            list("#.=...#"),
+            list("#.#...#"),
+            list("#######"),
         ],
         blockages={},
         known_sprite_ids={1, 2},

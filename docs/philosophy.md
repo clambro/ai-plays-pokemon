@@ -66,41 +66,39 @@ The other major shortcoming of LLMs in Pokémon is their lack of spatial reasoni
 A minimap for each map ID is constructed using ASCII characters and stored in the database. The map is initialized as a rectangle of undiscovered territory the same size as the map in the game's memory, and with every step the player takes in game, the map is updated using whatever information is available on screen. Here is a sample map for Pallet Town:
 
 ```
-∙∙∙▓∙∙∙∙∙▓※※▓∙∙∙∙∙▓∙
-▓▓▓▓▓▓▓▓▓▓※※▓▓▓▓▓▓▓▓
-▓∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▓
-▓∙∙∙▓▓▓▓∙∙∙∙▓▓▓▓∙∙∙▓
-▓∙∙∙▓▓▓▓∙∙∙∙▓▓▓▓∙∙∙▓
-▓∙∙‼▓∞▓▓∙∙∙‼▓∞▓▓∙∙∙▓
-▓∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▓
-▓∙∙∙∙∙∙∙☺♦∙∙∙∙∙∙∙∙∙▓
-▓∙∙∙◆∙∙∙∙∙▓▓▓▓▓▓∙∙∙▓
-▓∙∙∙▓▓▓‼∙∙▓▓▓▓▓▓∙∙∙▓
-▓∙∙∙∙∙∙∙∙∙▓▓▓▓▓▓∙∙∙▓
-▓∙∙∙∙∙∙∙∙∙▓▓∞▓▓▓∙∙∙▓
-▓∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙▓
-▓∙∙∙∙∙∙∙∙∙▓▓▓‼▓▓∙∙∙▓
-▓∙∙∙≈≈≈≈◆∙∙∙∙∙∙∙∙∙∙▓
-░░░∙≈≈≈≈∙∙∙∙∙∙∙∙∙∙∙▓
-░░░∙≈≈≈≈∙∙∙∙∙∙∙∙∙∙∙▓
-░░░∙≈≈≈≈▓▓▓▓▓▓▓▓▓▓▓▓
+...#.....#""#.....#.
+##########""########
+#..................#
+#...####....####...#
+#...####....####...#
+#..!#W##...!#W##...#
+#..................#
+#.......@P.........#
+#...N.....######...#
+#...###!..######...#
+#.........######...#
+#.........##W###...#
+#..................#
+#.........###!##...#
+#...~~~~N..........#
+???.~~~~...........#
+???.~~~~...........#
+???.~~~~############
 
 Legend:
-░ Undiscovered
-∙ Free tile
-☺ Player
-♦ Pikachu
-▓ Barrier/wall
-≈ Water
-※ Tall grass
-◆ Sprite
-∞ Warp
-‼ Sign
+? Undiscovered
+. Free tile
+@ Player
+P Pikachu
+# Barrier/wall
+~ Water
+" Tall grass
+N Sprite
+W Warp
+! Sign
 ```
 
 This map helps the AI understand its surroundings far better than by simply looking at the game screen. It also comes with an index of all the sprites, signs, objects, and warp tiles that the player has currently seen on it.
-
-You will notice that the tile characters chosen above are unusual Unicode characters, and there is a reason for this: Each tile must be exactly one token that doesn't combine with any of its neighbours. LLMs read tokens, not individual characters. If I were to use "w" to represent water, then three water tiles "www" would get consolidated into a single token, different from the original "w" token. This messes with the model's ability to recognize and count tiles, so we have to ensure that the tiles don't combine. [There is a test](/common/tests/integration/test_enums.py) that validates this for us.
 
 ### What About Vision?
 

@@ -83,7 +83,7 @@ async def test_load_preserves_discovered_ids_without_live_records(
         get_map_memory=AsyncMock(
             return_value=MapMemoryRead(
                 map_id=MapId.PALLET_TOWN,
-                terrain="∙",
+                terrain=".",
                 blockages={},
             ),
         ),
@@ -136,7 +136,7 @@ async def test_update_discovers_present_entities_on_revealed_terrain() -> None:
             id=MapId.PALLET_TOWN,
             height=4,
             width=4,
-            terrain=[list("░∙∙∙"), list("∙∙∙∙"), list("∙∙∙∙"), list("∙∙∙∙")],
+            terrain=[list("?..."), list("...."), list("...."), list("....")],
             known_sprite_ids={1, 2},
             sprite_interactions={2: SimpleNamespace()},
             known_warp_ids=set(),
@@ -200,7 +200,7 @@ async def test_discovered_offscreen_warp_replaces_stale_wall_in_navigation() -> 
     game_state.is_text_on_screen.return_value = False
     current_map = OverworldMap(
         id=MapId.PALLET_TOWN,
-        terrain=[list("░▓▓▓"), list("∙▓▓▓"), list("∙∙∙∙")],
+        terrain=[list("?###"), list(".###"), list("....")],
         blockages={},
         known_sprite_ids=set(),
         sprite_interactions={},
@@ -251,7 +251,7 @@ async def test_loaded_terrain_refreshes_seen_tiles_without_revealing_unseen_tile
     game_state.objects = {}
     current_map = OverworldMap(
         id=MapId.PALLET_TOWN,
-        terrain=[list("░▓▓"), list("▓▓░")],
+        terrain=[list("?##"), list("##?")],
         blockages={},
         known_sprite_ids=set(),
         sprite_interactions={},
@@ -273,7 +273,7 @@ async def test_loaded_terrain_refreshes_seen_tiles_without_revealing_unseen_tile
     ):
         await update_overworld_map(1, cast("GameState", game_state), current_map)
 
-    assert current_map.terrain == [list("▓∙▓"), list("∙▓░")]
+    assert current_map.terrain == [list("#.#"), list(".#?")]
 
 
 @pytest.mark.unit
@@ -281,7 +281,7 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
     """Presence, not camera rendering, controls whether a discovered sprite blocks routing."""
     current_map = OverworldMap(
         id=MapId.PALLET_TOWN,
-        terrain=[list("∙∙∙")],
+        terrain=[list("...")],
         blockages={},
         known_sprite_ids={1},
         sprite_interactions={},
@@ -335,10 +335,10 @@ def test_derived_views_follow_current_entities_without_changing_terrain() -> Non
     ]
 
     del sprites[1]
-    assert get_navigation_tiles(current_map, game_state).tolist() == [list("∙∙∙")]
+    assert get_navigation_tiles(current_map, game_state).tolist() == [list("...")]
     sprites[1] = sprite
     assert get_navigation_tiles(current_map, game_state)[0, 2] == AsciiTile.SPRITE
-    assert current_map.terrain == [list("∙∙∙")]
+    assert current_map.terrain == [list("...")]
 
 
 @pytest.mark.unit
