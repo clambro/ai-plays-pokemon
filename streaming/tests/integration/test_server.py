@@ -1,8 +1,4 @@
-"""Tests for the streaming background HTML page.
-
-These tests validate that the HTML page renders correctly without console errors
-and that all JavaScript functionality works as expected.
-"""
+"""HTTP state, static assets, and video streaming integration tests."""
 
 import asyncio
 from pathlib import Path
@@ -13,34 +9,27 @@ from aiohttp import ClientSession, WSMsgType
 from aiohttp.web import HTTPOk
 
 import streaming.server as server_module
+from agent.state import AgentState
+from emulator.game_state import GameState
 from emulator.parsers.pokemon import _INT_TO_SPECIES_MAP
-from streaming.preview_data import MOCK_DATA
 from streaming.server import BackgroundStreamServer
 
 
 @pytest.mark.integration
-async def test_html_page_renders_without_errors() -> None:
-    """Test that the HTML, JS, and CSS files load correctly, and that the API returns valid JSON."""
-    async with BackgroundStreamServer(host="localhost", port=8081) as server:
-        server._current_data = MOCK_DATA
+async def test_html_page_assets_are_served() -> None:
+    """Serve the HTML, JavaScript, and CSS with their expected content types."""
+    async with BackgroundStreamServer(host="localhost", port=8081), ClientSession() as session:
+        async with session.get("http://localhost:8081/") as response:
+            assert response.status == HTTPOk.status_code
+            assert response.content_type == "text/html"
 
-        async with ClientSession() as session:
-            async with session.get("http://localhost:8081/") as response:
-                assert response.status == HTTPOk.status_code
-                assert response.content_type == "text/html"
+        async with session.get("http://localhost:8081/style.css") as response:
+            assert response.status == HTTPOk.status_code
+            assert response.content_type == "text/css"
 
-            async with session.get("http://localhost:8081/style.css") as response:
-                assert response.status == HTTPOk.status_code
-                assert response.content_type == "text/css"
-
-            async with session.get("http://localhost:8081/script.js") as response:
-                assert response.status == HTTPOk.status_code
-                assert response.content_type == "application/javascript"
-
-            async with session.get("http://localhost:8081/api/state.json") as response:
-                assert response.status == HTTPOk.status_code
-                json_content = await response.json()
-                assert json_content == MOCK_DATA.model_dump()
+        async with session.get("http://localhost:8081/script.js") as response:
+            assert response.status == HTTPOk.status_code
+            assert response.content_type == "application/javascript"
 
 
 @pytest.mark.integration
@@ -87,22 +76,35 @@ def test_html_page_assets_exist() -> None:
 
 
 @pytest.mark.integration
-async def test_html_page_data_updates() -> None:
-    """Test that the API endpoint updates correctly when data changes."""
+async def test_commentary_updates_without_a_new_game_snapshot(tmp_path: Path) -> None:
+    """Publish fresh commentary while retaining the last safe game data."""
+    state = AgentState(folder=tmp_path)
+    game_state = Mock(spec=GameState)
+    game_state.party = []
+    game_state.player = Mock(
+        money=100,
+        pokedex_seen=1,
+        pokedex_caught=[],
+        play_time_seconds=20,
+        badges=[],
+    )
     async with (
         BackgroundStreamServer(host="localhost", port=8083) as server,
         ClientSession() as session,
     ):
-        async with session.get("http://localhost:8083/api/state.json") as response:
-            assert response.status == HTTPOk.status_code
-            assert await response.json() is None
-
-        server._current_data = MOCK_DATA
+        server.update_data(state, game_state)
 
         async with session.get("http://localhost:8083/api/state.json") as response:
             assert response.status == HTTPOk.status_code
-            json_content = await response.json()
-            assert json_content == MOCK_DATA.model_dump()
+            initial = await response.json()
+
+        state.public_log.add(1, "Continue exploring.")
+        # The emulator has not supplied another safe snapshot yet.
+        async with session.get("http://localhost:8083/api/state.json") as response:
+            assert await response.json() == {
+                **initial,
+                "log": [{"iteration": 1, "thought": "Continue exploring."}],
+            }
 
 
 @pytest.mark.integration
