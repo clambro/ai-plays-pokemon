@@ -5,10 +5,39 @@ from pathlib import Path
 
 import pytest
 
-from common.enums import Button, MapEntityType
+from common.constants import DEFAULT_ROM_PATH
+from common.enums import Button, MapEntityType, MapId
 from emulator.control_events import ControlBoundary
 from emulator.emulator import Emulator
+from emulator.game_state import GameState
+from emulator.pyboy_worker import PyBoyWorker
 from emulator.text_events import TextEventKind
+
+
+@pytest.mark.integration
+async def test_snapshot_during_blackout_waits_for_restored_map() -> None:
+    """A post-battle snapshot must contain restored terrain, not shared battle graphics."""
+    worker = PyBoyWorker(
+        str(DEFAULT_ROM_PATH),
+        save_state=None,
+        save_state_path=Path(__file__).parent / "saves" / "blackout_transition.state",
+        mute_sound=True,
+        headless=True,
+    )
+    await worker.start()
+    try:
+        game_state, boundary = await asyncio.wait_for(
+            worker.execute_with_control_boundary(lambda pyboy: GameState.from_memory(pyboy.memory)),
+            timeout=5,
+        )
+    finally:
+        await worker.stop()
+
+    assert boundary == ControlBoundary.OVERWORLD_READY
+    assert game_state.map.id == MapId.INDIGO_PLATEAU
+    assert (game_state.map.height, game_state.map.width) == (18, 20)
+    assert len(game_state.map.background_blocks) == game_state.map.height
+    assert all(len(row) == game_state.map.width for row in game_state.map.background_blocks)
 
 
 @pytest.mark.integration

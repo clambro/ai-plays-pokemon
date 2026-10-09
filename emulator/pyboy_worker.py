@@ -125,15 +125,24 @@ class PyBoyWorker:
     async def execute_with_control_boundary[ResultT](
         self,
         operation: Callable[[PyBoy], ResultT],
-    ) -> tuple[ResultT, ControlBoundary | None]:
-        """Execute an operation and capture the active ROM boundary atomically."""
+    ) -> tuple[ResultT, ControlBoundary]:
+        """Wait for a decision boundary, then execute and capture it atomically."""
 
-        def _capture(pyboy: PyBoy) -> tuple[ResultT, ControlBoundary | None]:
+        def _capture(pyboy: PyBoy) -> tuple[ResultT, ControlBoundary] | None:
             if self._control_hooks is None:
                 raise RuntimeError("ROM control hooks are not installed.")
-            return operation(pyboy), self._control_hooks.current_boundary
+            boundary = self._control_hooks.current_boundary
+            if boundary is None:
+                return None
+            # Battle exit clears the battle flag before restoring the shared map buffer. Check
+            # readiness before parsing, while still on the owner thread, to avoid that gap.
+            return operation(pyboy), boundary
 
-        return await self.execute(_capture)
+        while True:
+            result = await self.execute(_capture)
+            if result is not None:
+                return result
+            await asyncio.sleep(0.01)
 
     async def stop(self) -> None:
         """Stop PyBoy on its owner thread and wait for thread termination."""
