@@ -60,7 +60,7 @@ def format_inventory_info(game_state: GameState) -> str:
     else:
         out += "Your inventory is empty.\n"
     out += "</inventory>"
-    pokeball_names = {ball.value for ball in PokeballItem}
+    pokeball_names = PokeballItem.get_regular_balls()
     if not any(item.name in pokeball_names for item in game_state.inventory.items):
         out += "\n\nNote: You have no Poke Balls. They can be purchased at Poke Marts."
     return out

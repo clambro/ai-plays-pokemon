@@ -1,6 +1,7 @@
 """Enumerations shared throughout the application."""
 
 from enum import Enum, IntEnum, IntFlag, StrEnum, auto
+from functools import cache
 
 
 class ReasoningEffort(StrEnum):
@@ -190,6 +191,12 @@ class PokeballItem(StrEnum):
     GREAT_BALL = "GREAT BALL"
     ULTRA_BALL = "ULTRA BALL"
     MASTER_BALL = "MASTER BALL"
+
+    @classmethod
+    @cache
+    def get_regular_balls(cls) -> frozenset[PokeballItem]:
+        """Return ordinary Poke Balls, excluding the Master Ball."""
+        return frozenset({cls.POKE_BALL, cls.GREAT_BALL, cls.ULTRA_BALL})
 
 
 class SpriteLabel(StrEnum):
