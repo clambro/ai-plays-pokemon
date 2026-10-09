@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 _MODEL = "gpt-6-luna"
 TIMEOUT_SECONDS = 60
 MAX_RETRIES = 2
-INPUT_TOKEN_OVERHEAD = 6
 
 
 @cache
@@ -75,13 +74,6 @@ class OpenAILLMService:
         if not response.output_text:
             raise ValueError("OpenAI returned no response text.")
         return response.output_text
-
-    async def count_input_tokens(self, text: str) -> int:
-        """Count the GPT-6 Luna input tokens for text."""
-        response = await self.client.responses.input_tokens.count(model=_MODEL, input=text)
-        # The endpoint includes fixed Responses API message framing in addition to
-        # the supplied text. Remove it so this method reports only the text tokens.
-        return response.input_tokens - INPUT_TOKEN_OVERHEAD
 
     @staticmethod
     async def _record_usage(response: Response) -> None:

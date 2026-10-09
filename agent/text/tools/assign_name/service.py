@@ -36,7 +36,6 @@ async def assign_name(
         raise TextActionUnavailableError("The naming screen is not open.")
 
     _validate_name(name, game_state)
-    _validate_name_uniqueness(name, game_state)
     await _enter_name(emulator, name)
     return f"Entered the name {name}."
 
@@ -59,20 +58,6 @@ def _validate_name(
         raise TextActionUnavailableError(
             f"This naming screen accepts at most {max_length} characters.",
         )
-
-
-def _validate_name_uniqueness(
-    name: str,
-    game_state: GameState,
-) -> None:
-    """Reject a name already used by the player or one of their Pokemon."""
-    existing_names = [
-        game_state.player.name,
-        *[pokemon.name for pokemon in game_state.party],
-        *[pokemon.name for pokemon in game_state.pc_pokemon],
-    ]
-    if name in existing_names:
-        raise TextActionUnavailableError(f"The name {name} is already in use.")
 
 
 async def _enter_name(
