@@ -223,8 +223,8 @@ def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> st
         blocked_right=blocked_right,
         screen_top=game_state.screen.top,
         screen_left=game_state.screen.left,
-        screen_bottom=game_state.screen.bottom,
-        screen_right=game_state.screen.right,
+        screen_bottom=game_state.screen.bottom - 1,
+        screen_right=game_state.screen.right - 1,
         connections=format_connection_notes(map_view, game_state.map),
     )
 
