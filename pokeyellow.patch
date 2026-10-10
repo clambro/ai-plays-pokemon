@@ -18,10 +18,53 @@ Apply with: cd resources/pokeyellow && git apply ../../pokeyellow.patch && make
    unrelated data for a better attack, incorrectly discouraging real moves.
    Initialize `b` to NUM_MOVES + 1, as in original Yellow.
 
+4. Fix the trainer AI's Mirror Move history check.
+   Read wPlayerUsedMove, the same history used when Mirror Move executes,
+   instead of wPlayerLastSelectedMove, which Legacy never updates.
+
+5. Complete the trainer AI's switch and status-cure bookkeeping.
+   Preserve the outgoing mon's types and status on accepted voluntary switches,
+   and its previous status on successful active-mon cures. Use the saved types
+   for effectiveness scoring so the AI does not evaluate the replacement.
+   Clear action snapshots each turn, including after skipped AI selections.
+
 diff --git a/engine/battle/core.asm b/engine/battle/core.asm
+index b9ae299..78ecaa4 100644
 --- a/engine/battle/core.asm
 +++ b/engine/battle/core.asm
-@@ -5553,7 +5553,7 @@ AIGetTypeEffectiveness:
+@@ -293,6 +293,10 @@ EnemyRanText:
+ 	text_end
+
+ MainInBattleLoop:
++	; Saved AI target data belongs only to the current player action.
++	xor a
++	ld [wAIMoveSpamAvoider], a
++	ld [wAITargetMonStatus], a
+ 	call ReadPlayerMonCurHPAndStatus
+ 	ld hl, wBattleMonHP
+ 	ld a, [hli]
+@@ -2585,6 +2589,12 @@ PartyMenuOrRockOrRun:
+ .notAlreadyOut
+ 	call HasMonFainted
+ 	jp z, .partyMonDeselected ; can't switch to fainted mon
++	; Preserve the outgoing target only after a voluntary switch is accepted.
++	callfar StoreBattleMonTypes
++	ld a, [wBattleMonStatus]
++	ld [wAITargetMonStatus], a
++	ld a, 2
++	ld [wAIMoveSpamAvoider], a
+ 	ld a, $1
+ 	ld [wActionResultOrTookBattleTurn], a
+ 	call GBPalWhiteOut
+@@ -5550,11 +5560,16 @@ AIGetTypeEffectiveness:
+ 	ld a, [wEnemyMoveType]
+ 	ld d, a                    ; d = type of enemy move
+ 	ld hl, wBattleMonType
++	ld a, [wAIMoveSpamAvoider]
++	cp 2
++	jr nz, .targetTypes
++	ld hl, wAITargetMonType1 ; evaluate the outgoing mon, not its replacement
++.targetTypes
  	ld b, [hl]                 ; b = type 1 of player's pokemon
  	inc hl
  	ld c, [hl]                 ; c = type 2 of player's pokemon
@@ -30,7 +73,8 @@ diff --git a/engine/battle/core.asm b/engine/battle/core.asm
 +	ld a, EFFECTIVE
  	ld [wTypeEffectiveness], a
  	ld hl, TypeEffects
-@@ -6883,7 +6883,7 @@ ApplyBadgeStatBoosts:
+ .loop
+@@ -6883,7 +6898,7 @@ ApplyBadgeStatBoosts:
  	rr e
      ld a, [wBattleMonSpecies] ; Check if the species is Pikachu
      cp PIKACHU
@@ -40,9 +84,27 @@ diff --git a/engine/battle/core.asm b/engine/battle/core.asm
  	rr e
  .continue
 diff --git a/engine/battle/trainer_ai.asm b/engine/battle/trainer_ai.asm
+index 7db45de..a8f4dd0 100644
 --- a/engine/battle/trainer_ai.asm
 +++ b/engine/battle/trainer_ai.asm
-@@ -494,7 +494,7 @@ AIMoveChoiceModification3:
+@@ -227,4 +227,7 @@ AIMoveChoiceModification1:
+ 					 ; the AI shouldn't predict this perfectly when deciding whether to use dream eater
++	ld a, [wAIMoveSpamAvoider]
++	cp 2
++	jr z, .discourage ; the outgoing mon was awake; ignore the replacement's status
+ 	ld a, [wBattleMonStatus]
+ 	and SLP_MASK
+ 	jr z, .discourage ; heavily discourage, if the player isn't asleep avoid using dream eater
+@@ -274,7 +277,7 @@ AIMoveChoiceModification1:
+ 	pop hl
+ 	jp .nextMove
+ .checkNoMirrorMoveOnFirstTurn
+-	ld a, [wPlayerLastSelectedMove]
++	ld a, [wPlayerUsedMove] ; same move history used by MirrorMoveCopyMove
+ 	and a
+ 	jp z, .discourage ; don't use mirror move if the player has never selected a move yet
+ 	jp .nextMove
+@@ -494,7 +497,7 @@ AIMoveChoiceModification3:
  	ld a, [wEnemyMoveType]
  	ld d, a
  	ld hl, wEnemyMonMoves  ; enemy moves
@@ -51,3 +113,50 @@ diff --git a/engine/battle/trainer_ai.asm b/engine/battle/trainer_ai.asm
  	ld c, $0
  .loopMoves
  	dec b
+@@ -1247,4 +1250,4 @@ UndoBurnParStats:
+ .return
+ 	xor a
+ 	ld [de], a	;reset the stat change bits
+-	ret
+\ No newline at end of file
++	ret
+diff --git a/engine/items/item_effects.asm b/engine/items/item_effects.asm
+index 59c0aab..a66b429 100644
+--- a/engine/items/item_effects.asm
++++ b/engine/items/item_effects.asm
+@@ -908,6 +908,19 @@ RefusingText:
+ 	text_far _RefusingText
+ 	text_end
+
++StoreAIStatusBeforeCure:
++	; Called only for a successful cure of the active mon, before clearing its status.
++	ld a, [wIsInBattle]
++	and a
++	ret z
++	ld a, [wBattleMonStatus]
++	and a
++	ret z
++	ld [wAITargetMonStatus], a
++	ld a, 1
++	ld [wAIMoveSpamAvoider], a
++	ret
++
+ ItemUseVitamin:
+ 	ld a, [wIsInBattle]
+ 	and a
+@@ -1010,6 +1023,7 @@ ItemUseMedicine:
+ 	cp d ; is pokemon the item was used on active in battle?
+ 	jp nz, .doneHealing
+ ; if it is active in battle
++	call StoreAIStatusBeforeCure
+ 	xor a
+ 	ld [wBattleMonStatus], a ; remove the status ailment in the in-battle pokemon data
+ 	push hl
+@@ -1305,6 +1319,7 @@ ItemUseMedicine:
+ 	ld a, [wcf91]
+ 	cp FULL_RESTORE
+ 	jr nz, .calculateHPBarCoords
++	call StoreAIStatusBeforeCure
+ 	xor a
+ 	ld [wBattleMonStatus], a ; remove the status ailment in the in-battle pokemon data
+ .calculateHPBarCoords
