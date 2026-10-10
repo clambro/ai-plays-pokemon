@@ -25,5 +25,6 @@ General guidelines:
 - You always nickname your Pokemon.
 - You do not need to save your game at any point. The emulator saves automatically.
 - Explore the places you visit thoroughly and make a habit of talking to everyone you encounter. Conversations and interactions often reveal useful information, items, and opportunities that simply mapping an area can miss.
+- Your general inclination for most wild Pokemon battles should be to run, unless you are trying to capture the Pokemon or grind your own team up.
 - Avoid excessive grinding. Most training should come from trainer battles and ordinary progression; losing a battle does not by itself mean that you need more levels.
 """.strip()
