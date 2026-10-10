@@ -28,10 +28,8 @@ def build_switch_pokemon_tool(context: AgentContext) -> Tool[AgentContext]:
         Select the party member by its zero-based slot. This also selects a
         replacement after the active Pokemon faints. Fainted Pokemon cannot
         be selected. A voluntary switch consumes your turn, leaving the incoming
-        Pokemon open to attack. Note that unlike later generations, gen 1
-        opponents select their move after you switch, and thus may favor an
-        attack effective against the incoming Pokemon. Carelessly switching
-        Pokemon is therefore one of the fastest ways to lose a battle.
+        Pokemon open to attack. Carelessly switching Pokemon is one of the
+        fastest ways to lose a battle.
 
         Args:
             party_slot: Zero-based party slot of the Pokemon to switch in.

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is an autonomous AI agent designed to play [Pokémon Yellow Legacy](https://github.com/cRz-Shadows/Pokémon_Yellow_Legacy) on Hard Mode. Pokémon Yellow Legacy is a ROM hack of Pokémon Yellow that includes a balance changes, quality of life improvements, and bug fixes, while maintaining the feel of the first generation of Pokémon. Hard mode adds level caps and blocks item use in battle, forcing the AI to strategize instead of winning by overlevelling a single Pokémon.
+This is an autonomous AI agent designed to play [Pokémon Yellow Legacy](https://github.com/clambro/Pokemon_Yellow_Legacy) on Hard Mode. Pokémon Yellow Legacy is a ROM hack of Pokémon Yellow that includes balance changes, quality of life improvements, and bug fixes, while maintaining the feel of the first generation of Pokémon. Hard mode adds level caps and blocks item use in battle, forcing the AI to strategize instead of winning by overlevelling a single Pokémon.
 
 The agent is implemented in Python using [Pydantic AI](https://ai.pydantic.dev/) and deterministic gameplay tools organized around the three major parts of the game: exploring the overworld, handling text, and battling. The application operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms and LLM-powered decision making. It features hierarchical rolling memory and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs. The goal was to have the AI make the decisions, while keeping the gameplay as close to human speed as possible.
 
@@ -23,7 +23,7 @@ Note: This is the improved v2 iteration of this project. If you want to see the 
 - Python 3.14
 - [The uv package manager](https://docs.astral.sh/uv/) for installing dependencies
 - [An OpenAI API key](https://platform.openai.com/api-keys) for calling the LLM
-- The Pokémon Yellow Legacy ROM (I am not licensed to distribute this; you'll have to get it yourself)
+- [The Pokémon Yellow Legacy ROM](https://github.com/clambro/Pokemon_Yellow_Legacy), which you'll have to build yourself
 
 ### Installation
 
@@ -31,11 +31,9 @@ Note: This is the improved v2 iteration of this project. If you want to see the 
 
 2. Install the dependencies with `uv sync`
 
-   (Optionally, apply [`pyboy.patch`](pyboy.patch) to PyBoy 2.7.0 for a minor audio fix.)
-
 3. Make a copy of the `.env.example` file and name it `.env`. Add your OpenAI API key there.
 
-4. Put a compatible ROM at `resources/ylegacy.gbc`. If you build from the Yellow Legacy decomp, you can optionally apply [`pokeyellow.patch`](pokeyellow.patch) for two minor bug fixes.
+4. Put the ROM you just built at `resources/ylegacy.gbc`.
 
 5. (Optional) Add a [Logfire](https://logfire.pydantic.dev/) write token as `LOGFIRE_TOKEN`. Without telemetry, you will have very little visibility into what the agent is doing behind the scenes.
 
@@ -75,7 +73,7 @@ The system automatically creates backups every 10 minutes in the `outputs/` fold
 
 ### Why Yellow Legacy?
 
-Partly nostalgia since Pokémon Yellow was the first video game I ever played, but largely because its hard mode prevents the AI from winning by grinding a single Pokémon to level 100. I also think that the team behind Yellow Legacy did a great job with this hack and I wanted to highlight their excellent work.
+Partly nostalgia since Pokémon Yellow was the first video game I ever played, but largely because its hard mode prevents the AI from winning by grinding a single Pokémon to level 100. I also think that the team behind Yellow Legacy did a great job with this hack and I wanted to highlight their excellent work. The particular version linked above includes several minor bugfixes from me, but is otherwise identical to the original ROM hack.
 
 ### What does the AI know?
 

@@ -35,7 +35,8 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
         self.app = web.Application()
         self.runner: web.AppRunner | None = None
         self.site: web.TCPSite | None = None
-        self._current_data: GameStateView | None = None
+        self._game_state: GameState | None = None
+        self._agent_state: AgentState | None = None
         self._frame_sockets: set[web.WebSocketResponse] = set()
         self._background_dir = Path("streaming/background")
 
@@ -103,9 +104,10 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
 
     async def _serve_state(self, request: Request) -> Response:  # noqa: ARG002
         """Serve the current state data as JSON."""
-        if self._current_data is None:
+        if self._agent_state is None or self._game_state is None:
             return web.json_response(None)
-        return web.json_response(self._current_data.model_dump(mode="json"))
+        data = GameStateView.from_states(self._agent_state, self._game_state)
+        return web.json_response(data.model_dump(mode="json"))
 
     async def _serve_frames(self, request: Request) -> web.WebSocketResponse:
         """Stream the latest emulator frame to a browser canvas."""
@@ -137,5 +139,6 @@ class BackgroundStreamServer(AbstractAsyncContextManager):
         )
 
     def update_data(self, agent_state: AgentState, game_state: GameState) -> None:
-        """Update the current state data."""
-        self._current_data = GameStateView.from_states(agent_state, game_state)
+        """Capture safe game data and retain the live agent state for browser polls."""
+        self._agent_state = agent_state
+        self._game_state = game_state

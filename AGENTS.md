@@ -52,7 +52,7 @@ The project targets standard GIL-enabled Python `>=3.14,<3.15`. PyBoy is pinned 
 
 ## ROMs, Fixtures, and External Effects
 
-ROMs are proprietary local inputs and must never be committed. The default ROM is expected at `resources/ylegacy.gbc`; distributable repository changes use a patch plus hashes and application instructions, not a ROM image.
+ROMs are proprietary local inputs and must never be committed. Build the default ROM from [the separate Yellow Legacy fork](https://github.com/clambro/Pokemon_Yellow_Legacy) and place it at `resources/ylegacy.gbc`.
 
 Save states, RAM saves, backups, databases, output folders, generated game assets, `.env` files, and credentials are also local artifacts. Do not add them to Git, copy them into tracked paths, or overwrite them casually. Some integration tests depend on ignored emulator fixtures that are not present in a fresh clone.
 

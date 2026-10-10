@@ -1,6 +1,7 @@
 """Enumerations shared throughout the application."""
 
 from enum import Enum, IntEnum, IntFlag, StrEnum, auto
+from functools import cache
 
 
 class ReasoningEffort(StrEnum):
@@ -22,36 +23,33 @@ class PokemonListSource(Enum):
 
 
 class AsciiTile(StrEnum):
-    """An enum for the ASCII representations of overworld map tiles.
+    """Single-character representations of overworld map tiles."""
 
-    These HAVE to be one token each or the LLM will hallucinate. There's a test to validate this.
-    """
-
-    OUTSIDE_REGION = "▒"
-    UNSEEN = "░"
-    WALL = "▓"
-    LOCKED_DOOR = "◎"
-    COUNTER = "‡"
-    WATER = "≈"
-    GRASS = "※"
-    LEDGE_DOWN = "▽"
-    LEDGE_LEFT = "≤"
-    LEDGE_RIGHT = "≥"
-    FREE = "∙"
-    PLAYER = "☺"
-    SPRITE = "◆"
-    WARP = "∞"
-    CUT_TREE = "†"
-    BOULDER_HOLE = "○"
-    PRESSURE_PLATE = "◇"
-    OBJECT = "¤"
-    PIKACHU = "♦"
-    SIGN = "‼"
-    SPINNER_UP = "Λ"
-    SPINNER_DOWN = "\u2228"
-    SPINNER_LEFT = "\u2039"
-    SPINNER_RIGHT = "\u203a"
-    SPINNER_STOP = "●"
+    OUTSIDE_REGION = "X"
+    UNSEEN = "?"
+    WALL = "#"
+    LOCKED_DOOR = "D"
+    COUNTER = "="
+    WATER = "~"
+    GRASS = '"'
+    LEDGE_DOWN = "↓"
+    LEDGE_LEFT = "←"
+    LEDGE_RIGHT = "→"
+    FREE = "."
+    PLAYER = "@"
+    SPRITE = "N"
+    WARP = "W"
+    CUT_TREE = "T"
+    BOULDER_HOLE = "O"
+    PRESSURE_PLATE = "_"
+    OBJECT = "B"
+    PIKACHU = "P"
+    SIGN = "!"
+    SPINNER_UP = "▲"
+    SPINNER_DOWN = "▼"
+    SPINNER_LEFT = "◀"
+    SPINNER_RIGHT = "▶"
+    SPINNER_STOP = "■"
 
     @classmethod
     def get_walkable_tiles(cls) -> list[AsciiTile]:
@@ -193,6 +191,12 @@ class PokeballItem(StrEnum):
     GREAT_BALL = "GREAT BALL"
     ULTRA_BALL = "ULTRA BALL"
     MASTER_BALL = "MASTER BALL"
+
+    @classmethod
+    @cache
+    def get_regular_balls(cls) -> frozenset[PokeballItem]:
+        """Return ordinary Poke Balls, excluding the Master Ball."""
+        return frozenset({cls.POKE_BALL, cls.GREAT_BALL, cls.ULTRA_BALL})
 
 
 class SpriteLabel(StrEnum):

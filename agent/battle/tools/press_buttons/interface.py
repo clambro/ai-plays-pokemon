@@ -45,9 +45,10 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         - ``left`` moves the cursor left one column.
         - ``right`` moves the cursor right one column.
 
-        Use this for dialog and screens not covered by the semantic tools.
-        Prefer one button at a time. Use a short sequence only when navigating
-        to a clearly identified menu choice.
+        Use this for screens not covered by the dedicated battle tools.
+        Combine known menu inputs in a short sequence, stopping to observe
+        when the next input depends on the result. The sequence stops early
+        if control leaves the battle handler.
 
         Args:
             buttons: Buttons to press in order.

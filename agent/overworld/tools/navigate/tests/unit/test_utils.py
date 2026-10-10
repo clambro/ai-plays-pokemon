@@ -25,13 +25,13 @@ from overworld_map.traversal import (
 PLATEAU_MAP = [
     list(row)
     for row in [
-        "▓▓▓▓▓▓▓▓▓▓▓",
-        "░∙≤∙∙∙∙∙≥∙░",
-        "░∙≤∙∙∙∙∙≥∙░",
-        "░∙≤∙∙∙∙∙≥∙∙",
-        "░∙▓▽▽∙▽▽▓∙░",
-        "░∙∙∙∙∙∙∙∙∙░",
-        "░░░░░∙░░░░░",
+        "###########",
+        "?.←.....→.?",
+        "?.←.....→.?",
+        "?.←.....→..",
+        "?.#↓↓.↓↓#.?",
+        "?.........?",
+        "?????.?????",
     ]
 ]
 PLATEAU_CENTER = Coords(row=2, col=5)
@@ -39,9 +39,9 @@ PLATEAU_CENTER = Coords(row=2, col=5)
 COLLISION_PAIRS_MAP = [
     list(row)
     for row in [
-        "∙∙∙",  # Position 2 in this row is inaccessible.
-        "∙∙∙",  # Position 0 in this row is inaccessible.
-        "∙∙∙",  # All positions in this row are accessible.
+        "...",  # Position 2 in this row is inaccessible.
+        "...",  # Position 0 in this row is inaccessible.
+        "...",  # All positions in this row are accessible.
     ]
 ]
 COLLISION_PAIRS_BLOCKAGES = {
@@ -54,19 +54,19 @@ COLLISION_PAIRS_BLOCKAGES = {
     Coords(row=2, col=0): BlockedDirection.UP,
 }
 
-CUT_TREE_MAP = [list("∙†∙")]
+CUT_TREE_MAP = [list(".T.")]
 
-SURF_MAP = [list("∙≈∙")]
+SURF_MAP = [list(".~.")]
 
 SPINNER_MAP = [
     list(row)
     for row in [
-        "∙∙▓∨∙",  # noqa: RUF001
-        "∨▓∙∨‹",  # noqa: RUF001
-        "∙∙∙░░",
-        "∙●‹░∙",  # noqa: RUF001
-        "›∙Λ∙∙",  # noqa: RUF001
-        "∙▓∙∙∙",
+        "..#▼.",
+        "▼#.▼◀",
+        "...??",
+        ".■◀?.",
+        "▶.▲..",
+        ".#...",
     ]
 ]
 
@@ -131,7 +131,7 @@ def test_get_accessible_coords_plateau() -> None:
 def test_get_accessible_coords_ledge_at_map_boundary() -> None:
     """Expose a boundary ledge without creating an off-map landing coordinate."""
     map_data = deepcopy(DUMMY_MAP)
-    map_data.terrain = [list("∙"), list("▽")]
+    map_data.terrain = [list("."), list("↓")]
     start = Coords(row=0, col=0)
     boundary = Coords(row=1, col=0)
 
@@ -225,7 +225,7 @@ def test_get_accessible_coords_spinner() -> None:
 def test_get_spinner_path_is_unresolved_when_it_leaves_the_map() -> None:
     """Treat a malformed off-map spinner path as unresolved instead of indexing past the map."""
     map_data = deepcopy(DUMMY_MAP)
-    map_data.terrain = [list("›∙")]  # noqa: RUF001
+    map_data.terrain = [list("▶.")]
 
     path = get_spinner_path(Coords(row=0, col=0), map_data.terrain_ndarray)
 
@@ -233,11 +233,11 @@ def test_get_spinner_path_is_unresolved_when_it_leaves_the_map() -> None:
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("last_tile", ["░", "●"])
+@pytest.mark.parametrize("last_tile", ["?", "■"])
 def test_spinner_exploration_ends_when_destination_is_revealed(last_tile: str) -> None:
     """An unresolved spinner is an exploration target even with a known corridor ahead."""
     map_data = deepcopy(DUMMY_MAP)
-    map_data.terrain = [list(f"∙›∙∙{last_tile}")]  # noqa: RUF001
+    map_data.terrain = [list(f".▶..{last_tile}")]
     tiles = map_data.terrain_ndarray
     start = Coords(row=0, col=0)
     entry = Coords(row=0, col=1)
@@ -247,10 +247,10 @@ def test_spinner_exploration_ends_when_destination_is_revealed(last_tile: str) -
     accessible = get_accessible_coords(start, tiles, rules)
     candidates = get_exploration_candidates(accessible, tiles)
 
-    assert candidates == ([entry] if last_tile == "░" else [])
-    assert get_spinner_destination(entry, tiles) == (None if last_tile == "░" else end)
+    assert candidates == ([entry] if last_tile == "?" else [])
+    assert get_spinner_destination(entry, tiles) == (None if last_tile == "?" else end)
     assert get_spinner_path(entry, tiles) == tuple(Coords(row=0, col=col) for col in range(1, 5))
-    if last_tile == "░":
+    if last_tile == "?":
         assert calculate_path_to_target(start, entry, tiles, rules, is_surfing=False) == [
             Button.RIGHT
         ]
@@ -369,7 +369,7 @@ def test_get_map_boundary_tiles_collision_pairs() -> None:
 def test_get_map_boundary_tiles_checks_connected_map_collision_strip() -> None:
     """Expose only outward tiles that are traversable, even when they are outside the viewport."""
     map_data = deepcopy(DUMMY_MAP)
-    map_data.terrain = [list("∙∙∙")]
+    map_data.terrain = [list("...")]
     connection = MapConnection(
         direction=FacingDirection.DOWN,
         destination_map=MapId.ROUTE_1,
@@ -518,8 +518,8 @@ def test_calculate_path_around_grass() -> None:
     map_data.terrain = [
         list(row)
         for row in [
-            "∙※∙",
-            "∙∙∙",
+            '.".',
+            "...",
         ]
     ]
 
@@ -539,8 +539,8 @@ def test_calculate_path_through_grass() -> None:
     map_data.terrain = [
         list(row)
         for row in [
-            "∙※∙",
-            "∙※∙",
+            '.".',
+            '.".',
         ]
     ]
 
@@ -587,7 +587,7 @@ def test_calculate_path_through_water() -> None:
 def test_calculate_path_avoids_starting_surf_for_shortcut() -> None:
     """Prefer a land detour to starting Surf for one water tile."""
     map_data = deepcopy(DUMMY_MAP)
-    map_data.terrain = [list(row) for row in ["∙≈∙", "∙▓∙", "∙▓∙", "∙▓∙", "∙∙∙"]]
+    map_data.terrain = [list(row) for row in [".~.", ".#.", ".#.", ".#.", "..."]]
 
     path = _calculate_path_to_target(
         Coords(row=0, col=0),
@@ -602,7 +602,7 @@ def test_calculate_path_avoids_starting_surf_for_shortcut() -> None:
 def test_calculate_path_continues_surfing_instead_of_detouring_onto_land() -> None:
     """Water movement remains cheap once Surf is active beneath the player marker."""
     map_data = deepcopy(DUMMY_MAP)
-    map_data.terrain = [list(row) for row in ["☺≈≈≈∙", "∙∙∙∙∙"]]
+    map_data.terrain = [list(row) for row in ["@~~~.", "....."]]
 
     path = _calculate_path_to_target(
         Coords(row=0, col=0),

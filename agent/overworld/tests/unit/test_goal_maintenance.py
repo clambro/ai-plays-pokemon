@@ -37,9 +37,9 @@ def _toolset(context: AgentContext) -> FunctionToolset[AgentContext]:
 @pytest.mark.parametrize(
     "goal_texts",
     [
-        ["Heal the team.", None, None],
-        ["Reach the next town.", "Investigate the locked building.", None],
-        [None, " Heal the team. ", "Collect the nearby item."],
+        ["Heal the team."],
+        ["Reach the next town.", "Investigate the locked building."],
+        [" Heal the team. ", "Collect the nearby item."],
         [
             "Reach the next town.",
             "Investigate the locked building.",
@@ -50,9 +50,9 @@ def _toolset(context: AgentContext) -> FunctionToolset[AgentContext]:
 async def test_goal_replacement_satisfies_forced_review(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
-    goal_texts: list[str | None],
+    goal_texts: list[str],
 ) -> None:
-    """Nullable tool entries are filtered before replacing or reviewing stored goals."""
+    """Replacing or retaining goals satisfies the periodic review requirement."""
     review_iteration = 200
     original_goals = ["Reach the next town.", "Investigate the locked building."]
     context = AgentContext(
@@ -77,9 +77,7 @@ async def test_goal_replacement_satisfies_forced_review(
     await set_goals(**arguments)
 
     assert context.state.goals == [
-        Goal(goal=goal.strip(), updated_at_iteration=review_iteration)
-        for goal in goal_texts
-        if goal is not None
+        Goal(goal=goal.strip(), updated_at_iteration=review_iteration) for goal in goal_texts
     ]
     assert context.consume_control_handoff()
     complete_action.assert_awaited_once()
@@ -94,11 +92,11 @@ async def test_goal_replacement_satisfies_forced_review(
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("slot_count", [0, 1, 2, 4])
-def test_goal_tool_rejects_incorrect_slot_count(tmp_path: Path, slot_count: int) -> None:
-    """The tool boundary requires exactly three entries, counting unused slots."""
+@pytest.mark.parametrize("goal_texts", [[], ["Goal"] * 4, [None]])
+def test_goal_tool_rejects_invalid_list(tmp_path: Path, goal_texts: list[str | None]) -> None:
+    """The tool boundary accepts one to three strings without null padding."""
     context = AgentContext(state=AgentState(folder=tmp_path), emulator=MagicMock())
     tool = goal_interface.build_set_goals_tool(context)
 
     with pytest.raises(ValidationError):
-        tool.function_schema.validator.validate_python({"goals": [None] * slot_count})
+        tool.function_schema.validator.validate_python({"goals": goal_texts})

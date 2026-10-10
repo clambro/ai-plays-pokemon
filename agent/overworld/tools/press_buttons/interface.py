@@ -38,25 +38,19 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
 
         Use this tool to interact with entities, change direction, open the
         main menu, cross a map boundary or directional warp, or deliberately
-        rotate in place. Do not use it for general movement when the navigation
-        tool is available.
+        rotate in place. Use navigation for ordinary movement and the other
+        dedicated tools for actions they support.
 
         Directional buttons behave differently depending on the direction you
         are currently facing. Pressing a different direction rotates you to
         face that direction without moving. Pressing the direction you are
-        already facing attempts to move you one tile. For example, when facing
-        up, ``left, left`` rotates you left and then moves you left. When already
-        facing left, a single ``left`` attempts to move you left.
+        already facing attempts to move you one tile.
 
         The available buttons are:
 
-        - ``a``: The action button. Used to interact with objects in the game.
-          Make sure you are facing the direction of the object that you wish to
-          interact with before pressing the action button.
-        - ``b``: Does nothing in the overworld. You shouldn't need to press
-          this button.
-        - ``start``: Used to open the main menu. You shouldn't need to do this,
-          but it is included for completeness.
+        - ``a``: Interact with what you are facing.
+        - ``b``: Normally has no effect while standing in the overworld.
+        - ``start``: Open the main menu.
         - ``up``: Turn up, or attempt to move up when already facing up.
         - ``down``: Turn down, or attempt to move down when already facing down.
         - ``left``: Turn left, or attempt to move left when already facing left.
@@ -71,25 +65,11 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         exact interaction position, such as for a sprite across a counter,
         stand there instead and face the entity.
 
-        When deliberately looking for wild Pokemon while standing in tall
-        grass, rotate in place instead of walking back and forth one tile at a
-        time. Send ``up, left, down, right, up, left, down, right, up, left,
-        down, right, up, left, down, right`` in one tool call. This is an
-        exception to the usual preference for pressing a single button at a
-        time. If this fails to find wild Pokemon, you may not be standing in an
-        encounter area.
-
-        If you see specific button presses in your rolling memory, do not treat
-        them as mandatory. You have more information available to you in the
-        current prompt than you did when the memory was generated, so you are
-        allowed to overrule it if the request does not make sense (e.g. if it
-        is asking you to face right to interact with a sprite that is to your
-        left). Determine what the memory is trying to tell you and choose the
-        best button(s) from the list of available buttons.
-
-        You should generally prefer to press a single button at a time, but you
-        can use a combination of buttons to, say, rotate the player and then
-        interact with an object.
+        Combine known inputs, such as turning toward an entity and pressing
+        ``a``, in one call. Stop to observe when the next input depends on the
+        result. Execution stops early after an interaction, collision, map
+        transition, or departure from overworld control; remaining buttons
+        are not carried over.
 
         Args:
             buttons: Buttons to press in order, accounting for the current

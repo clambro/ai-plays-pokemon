@@ -174,7 +174,7 @@ Possible problems to investigate when the evidence supports them; this list is n
 - Letting level-capped teammates steal experience from those who need it more (unless of course the capped Pokemon was needed in that circumstance).
 - Overlooking useful Pokemon it could catch or has already caught but is not using.
 - Overlooking useful items it could collect or purchase, or failing to use items it already has when they could help it make progress.
-- Overlooking that a teammate may be close to evolving or may need an evolution method other than gaining levels.
+- Overlooking that a teammate may be close to evolving or may need an evolution method other than gaining levels (e.g. a stone).
 - Switching excessively in battle and wearing down the team instead of pushing through or allowing teammates to faint for a free switch-in.
 
 Give the agent a concise assessment and next step. If its current approach is sound, say so briefly and recommend continuing rather than manufacturing a problem.
@@ -223,8 +223,8 @@ def _format_overworld_map(map_view: CurrentMapView, game_state: GameState) -> st
         blocked_right=blocked_right,
         screen_top=game_state.screen.top,
         screen_left=game_state.screen.left,
-        screen_bottom=game_state.screen.bottom,
-        screen_right=game_state.screen.right,
+        screen_bottom=game_state.screen.bottom - 1,
+        screen_right=game_state.screen.right - 1,
         connections=format_connection_notes(map_view, game_state.map),
     )
 

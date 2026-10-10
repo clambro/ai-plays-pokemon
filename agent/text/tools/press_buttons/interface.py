@@ -48,9 +48,13 @@ def build_press_buttons_tool(context: AgentContext) -> Tool[AgentContext]:
         ``down`` decreases it by 1, ``left`` decreases it by 10, and ``right``
         increases it by 10.
 
-        Prefer one button at a time. Use a short sequence only when navigating
-        to a clearly identified menu choice. To leave a menu without making a
-        selection, press ``b``; repeat as needed for nested menus.
+        Use a dedicated selection tool when one is available. Otherwise,
+        combine known menu inputs in a short sequence, stopping to observe
+        when the next input depends on the result. The sequence stops early
+        if control leaves the text handler or a button leaves the screen unchanged.
+
+        To leave a menu without making a selection, press ``b``; repeat as
+        needed for nested menus.
 
         Args:
             buttons: Buttons to press in order.

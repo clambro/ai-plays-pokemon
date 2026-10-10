@@ -88,12 +88,13 @@ class Emulator(AbstractAsyncContextManager):
             raise shutdown_error
 
     async def get_game_state(self) -> GameState:
-        """Get the current game state."""
-        return await self._worker.execute(lambda pyboy: GameState.from_memory(pyboy.memory))
+        """Get a game-state snapshot at the next decision boundary."""
+        game_state, _ = await self.get_game_state_with_control_boundary()
+        return game_state
 
     async def get_game_state_with_control_boundary(
         self,
-    ) -> tuple[GameState, ControlBoundary | None]:
+    ) -> tuple[GameState, ControlBoundary]:
         """Capture parsed game state and its rendered ROM decision boundary."""
         return await self._worker.execute_with_control_boundary(
             lambda pyboy: GameState.from_memory(pyboy.memory)
@@ -162,7 +163,8 @@ class Emulator(AbstractAsyncContextManager):
         def _capture(pyboy: PyBoy) -> tuple[GameState, list[list[int]]]:
             return GameState.from_memory(pyboy.memory), read_map_collision_tiles(pyboy.memory)
 
-        return await self._worker.execute(_capture)
+        result, _ = await self._worker.execute_with_control_boundary(_capture)
+        return result
 
     async def get_game_state_with_screenshot(
         self,
@@ -177,7 +179,10 @@ class Emulator(AbstractAsyncContextManager):
             RuntimeError: The emulator has been stopped.
             TypeError: PyBoy exposes no valid screenshot.
         """
-        return await self._worker.execute(self._capture_game_state_with_screenshot)
+        result, _ = await self._worker.execute_with_control_boundary(
+            self._capture_game_state_with_screenshot
+        )
+        return result
 
     async def get_frame_bytes(self) -> bytes:
         """Copy the current RGBA frame from PyBoy's owner thread."""
@@ -185,7 +190,7 @@ class Emulator(AbstractAsyncContextManager):
 
     async def get_game_state_with_screenshot_and_control_boundary(
         self,
-    ) -> tuple[GameState, Image.Image, ControlBoundary | None]:
+    ) -> tuple[GameState, Image.Image, ControlBoundary]:
         """Capture game state, screenshot, and rendered ROM boundary together."""
         (game_state, screenshot), boundary = await self._worker.execute_with_control_boundary(
             self._capture_game_state_with_screenshot
