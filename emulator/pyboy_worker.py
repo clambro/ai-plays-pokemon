@@ -3,7 +3,6 @@
 import asyncio
 import base64
 import io
-import time
 from collections.abc import Callable
 from concurrent.futures import Future
 from queue import Empty, Queue
@@ -261,11 +260,6 @@ class PyBoyWorker:
                         else None
                     )
                     self._control_hooks.publish_tick(step_observation)
-                # PyBoy's SDL limiter skips its own sleep while refilling a low audio buffer.
-                # Without this minimum delay, the tight worker loop runs catch-up frames
-                # back-to-back, causing brief audio and visual speed-ups after scheduling jitter.
-                # PyBoy adjusts its normal SDL sleep around this delay, preserving real-time speed.
-                time.sleep(0.002)
         except Exception as exc:  # noqa: BLE001
             # Every worker failure must reach pending and future callers.
             failure = exc
