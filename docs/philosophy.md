@@ -102,7 +102,7 @@ This map helps the AI understand its surroundings far better than by simply look
 
 ### What About Vision?
 
-Attentive readers will note that I have not said anything about editing the emulator's screenshot with additional information to improve the model's performance. This is something that other projects have included (e.g. by adding coordinates, colour coding, or borders to each tile in the image), but I did not find that it was necessary for my approach. The model sees the raw screenshot from the game in every prompt, but its inclusion doesn't seem to make much difference given the huge amount of information provided by the game state and overworld map.
+Attentive readers will note that I have not said anything about editing the emulator's screenshot with additional information to improve the model's performance. This is something that other projects have included (e.g. by adding coordinates, colour coding, or borders to each tile in the image), but I did not find that it was necessary for my approach. The model sees the game's screenshot upscaled 4x, but its inclusion doesn't seem to make much difference given the huge amount of information provided by the game state and overworld map.
 
 ## Conclusion
 

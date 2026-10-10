@@ -45,6 +45,8 @@ flowchart LR
         swap["swap_first_pokemon"]
         sokoban["sokoban_solver"]
         set_goals["set_goals"]
+        inspect["inspect_map"]
+        advisor["consult_advisor"]
     end
 
     choice --> navigate
@@ -54,6 +56,11 @@ flowchart LR
     choice --> swap
     choice --> sokoban
     choice --> set_goals
+    choice --> inspect
+    choice --> advisor
+
+    inspect --> agent
+    advisor --> finish
 
     navigate --> settle["Settle routine dialog<br/>and return a fresh result"]
     buttons --> settle
@@ -75,6 +82,14 @@ This is the entrypoint for the Overworld Handler. It loads the current map from 
 ### Overworld Tools
 
 Once the map and game state are prepared, the overworld agent chooses from the tools described below. The available tools depend on the current game state: For example, there is no reason to offer the item tool when the bag is empty, or the Sokoban solver when there is no boulder puzzle in sight. If the action leaves the player in the same place and still in the overworld, the result goes back to the same conversation so the agent can try something else. If the player moves or the game enters another gameplay domain, control returns to the main loop.
+
+#### Inspect Map
+
+This lets the agent inspect a previously visited map without travelling there. For each known arrival, it reports reachable connections and whether unexplored terrain remains, allowing the agent to compare routes across maps. Exploration describes tile visibility, not whether interactions or objectives are complete.
+
+#### Consult Advisor
+
+The advisor independently reviews the current game state, screenshot, goals, and memory, and can inspect known maps. It returns strategic advice to the rolling memory without acting in the game. Voluntary consultations are available at most once every 100 iterations.
 
 #### Press Buttons
 
@@ -98,7 +113,7 @@ This lets the model swap its first Pokémon with another Pokémon in the party. 
 
 #### Sokoban Solver
 
-This was my least favourite tool to code because it is so complicated and we only need it in two areas, one of which is optional. "Sokoban" puzzles, named for the classic Japanese video game that popularized them, are the proper name for the boulder-pushing puzzles in Victory Road and the Seafoam Islands. Watching the AI struggle through them itself would be a nightmare, so we solve them automatically with a bounded search. This problem is NP-hard in general, but the puzzles found in-game are simple enough for us to brute force quickly.
+This was my least favourite tool to code because it is so complicated and we only need it in two areas, one of which is optional. "Sokoban" puzzles, named for the classic Japanese video game that popularized them, are the proper name for the boulder-pushing puzzles in Victory Road and the Seafoam Islands. The tool searches for a solution to one known goal at a time, executes it, and refreshes the map before attempting the next. It reports how many goals it solved and how many remain, including when interrupted.
 
 #### Set Goals
 
@@ -160,7 +175,7 @@ Uses one of the current Pokémon's available moves. The tool enters the necessar
 
 ### Switch Pokémon
 
-Switches to another living Pokémon in the party. The tool checks that the requested Pokémon can actually be used before navigating the party menu.
+Switches to another living Pokémon in the party, including forced replacements after a faint. The tool checks that the requested Pokémon can actually be used before navigating the party menu.
 
 ### Throw Ball
 
@@ -172,7 +187,7 @@ Attempts to escape from a wild battle. If the attempt fails, the opponent's resp
 
 ### Press Buttons
 
-This is the generic tool for battle screens that do not fit one of the options above. It handles forced switches, unusual battle types, and any other situation where the agent needs to operate the menu directly.
+This is the generic tool for battle screens that do not fit one of the options above. It handles unusual battle types (e.g. the Safari Zone) and any other situation where the agent needs to operate the menu directly.
 
 ### Handle Subsequent Text
 
