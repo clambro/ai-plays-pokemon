@@ -23,7 +23,7 @@ Note: This is the improved v2 iteration of this project. If you want to see the 
 - Python 3.14
 - [The uv package manager](https://docs.astral.sh/uv/) for installing dependencies
 - [An OpenAI API key](https://platform.openai.com/api-keys) for calling the LLM
-- The Pokémon Yellow Legacy ROM (I am not licensed to distribute this; you'll have to get it yourself)
+- [The Pokémon Yellow Legacy ROM](https://github.com/clambro/Pokemon_Yellow_Legacy), which you'll have to build yourself
 
 ### Installation
 
@@ -35,7 +35,7 @@ Note: This is the improved v2 iteration of this project. If you want to see the 
 
 3. Make a copy of the `.env.example` file and name it `.env`. Add your OpenAI API key there.
 
-4. Put a compatible ROM at `resources/ylegacy.gbc`. If you build from the Yellow Legacy decomp, you can optionally apply [`pokeyellow.patch`](pokeyellow.patch) for three minor bug fixes.
+4. Put the ROM you just built at `resources/ylegacy.gbc`.
 
 5. (Optional) Add a [Logfire](https://logfire.pydantic.dev/) write token as `LOGFIRE_TOKEN`. Without telemetry, you will have very little visibility into what the agent is doing behind the scenes.
 
@@ -75,7 +75,7 @@ The system automatically creates backups every 10 minutes in the `outputs/` fold
 
 ### Why Yellow Legacy?
 
-Partly nostalgia since Pokémon Yellow was the first video game I ever played, but largely because its hard mode prevents the AI from winning by grinding a single Pokémon to level 100. I also think that the team behind Yellow Legacy did a great job with this hack and I wanted to highlight their excellent work.
+Partly nostalgia since Pokémon Yellow was the first video game I ever played, but largely because its hard mode prevents the AI from winning by grinding a single Pokémon to level 100. I also think that the team behind Yellow Legacy did a great job with this hack and I wanted to highlight their excellent work. The particular version linked above includes several minor bugfixes from me, but is otherwise identical to the original ROM hack.
 
 ### What does the AI know?
 
