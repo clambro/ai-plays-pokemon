@@ -110,13 +110,13 @@ _HOOKS = (
     RomHook(
         name=_HookName.BESPOKE_INTERFACE_READY,
         bank=0x1C,
-        address=0x4FE0,  # DisplayTownMap.inputLoop
-        signature=bytes.fromhex("cd f1 57 cd 2b 38"),
+        address=0x4FE3,  # DisplayTownMap.inputLoop
+        signature=bytes.fromhex("cd f4 57 cd 2b 38"),
     ),
     RomHook(
         name=_HookName.BESPOKE_INTERFACE_READY,
         bank=0x1C,
-        address=0x512D,  # LoadTownMap_Fly.inputLoop
+        address=0x5130,  # LoadTownMap_Fly.inputLoop
         signature=bytes.fromhex("e5 cd 05 1e cd 2b"),
     ),
     RomHook(
