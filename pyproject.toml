@@ -7,7 +7,7 @@ requires-python = ">=3.14,<3.15"
 readme = "README.md"
 license = { file = "LICENSE" }
 dependencies = [
-    "pyboy==2.7.0",  # Updating Pyboy breaks existing save states so we pin it.
+    "pyboy==2.8.1",  # Updating Pyboy breaks existing save states so we pin it.
     "numpy>=2.5.3,<3",
     "pillow>=12.3.0,<13",
     "pydantic>=2.13.5,<3",
