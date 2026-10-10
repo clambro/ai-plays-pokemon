@@ -35,7 +35,7 @@ Note: This is the improved v2 iteration of this project. If you want to see the 
 
 3. Make a copy of the `.env.example` file and name it `.env`. Add your OpenAI API key there.
 
-4. Put a compatible ROM at `resources/ylegacy.gbc`. If you build from the Yellow Legacy decomp, you can optionally apply [`pokeyellow.patch`](pokeyellow.patch) for two minor bug fixes.
+4. Put a compatible ROM at `resources/ylegacy.gbc`. If you build from the Yellow Legacy decomp, you can optionally apply [`pokeyellow.patch`](pokeyellow.patch) for three minor bug fixes.
 
 5. (Optional) Add a [Logfire](https://logfire.pydantic.dev/) write token as `LOGFIRE_TOKEN`. Without telemetry, you will have very little visibility into what the agent is doing behind the scenes.
 

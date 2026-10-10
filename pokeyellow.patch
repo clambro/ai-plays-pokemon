@@ -12,6 +12,12 @@ Apply with: cd resources/pokeyellow && git apply ../../pokeyellow.patch && make
    (hex 16). That caused neutral damaging moves to be encouraged like
    super-effective ones. Initialize neutral to `EFFECTIVE` instead.
 
+3. Fix AI resisted-move fallback loop bound.
+   The loop counts moves in `b`, but Legacy initializes `bc` instead,
+   leaving `b` at zero. It can read past the four move slots and mistake
+   unrelated data for a better attack, incorrectly discouraging real moves.
+   Initialize `b` to NUM_MOVES + 1, as in original Yellow.
+
 diff --git a/engine/battle/core.asm b/engine/battle/core.asm
 --- a/engine/battle/core.asm
 +++ b/engine/battle/core.asm
@@ -33,3 +39,15 @@ diff --git a/engine/battle/core.asm b/engine/battle/core.asm
  	srl d
  	rr e
  .continue
+diff --git a/engine/battle/trainer_ai.asm b/engine/battle/trainer_ai.asm
+--- a/engine/battle/trainer_ai.asm
++++ b/engine/battle/trainer_ai.asm
+@@ -494,7 +494,7 @@ AIMoveChoiceModification3:
+ 	ld a, [wEnemyMoveType]
+ 	ld d, a
+ 	ld hl, wEnemyMonMoves  ; enemy moves
+-	ld bc, NUM_MOVES + 1
++	ld b, NUM_MOVES + 1
+ 	ld c, $0
+ .loopMoves
+ 	dec b
