@@ -29,7 +29,7 @@ _SUPPORTED_HANDLERS = {
     (0x14, 0x659D): FacingDirection.UP,  # Mansion4Script_Switches
     (0x17, 0x5E43): FacingDirection.UP,  # OpenRedsPC
     (0x17, 0x60F3): None,  # GymTrashScript
-    (0x18, 0x672D): FacingDirection.UP,  # OpenPokemonCenterPC
+    (0x18, 0x6731): FacingDirection.UP,  # OpenPokemonCenterPC
 }
 
 
