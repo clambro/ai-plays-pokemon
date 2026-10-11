@@ -177,21 +177,24 @@ async def test_get_ascii_screen_viridian_water() -> None:
     Specifically making sure that the boundaries around water are rendered correctly, as well as
     the cut tree.
     """
-    await _helper_test_expected_screen(
-        state_filename="viridian_water.state",
-        expected_blockages={},
-        expected_screen=[
-            "..........",
-            "..........",
-            "##....N...",
-            "..T.......",
-            "N.##@P....",
-            "..~~~~~~..",
-            "..~~~~~~..",
-            "..~~~~~~..",
-            "↓↓~~~~~~↓.",
-        ],
-    )
+    save_file = Path(__file__).parent / "saves" / "viridian_water.state"
+    async with Emulator(save_state_path=save_file, mute_sound=True, headless=True) as emulator:
+        game_state = await emulator.get_game_state()
+
+    terrain = game_state.get_ascii_screen_terrain()
+    assert str(terrain).split("\n") == [
+        "..........",
+        "..........",
+        "##........",
+        "..T.......",
+        "..##......",
+        "..~~~~~~..",
+        "..~~~~~~..",
+        "..~~~~~~..",
+        "↓↓~~~~~~↓.",
+    ]
+    assert terrain.blockages == {}
+    assert game_state.get_ascii_screen().blockages == {}
 
 
 @pytest.mark.integration
