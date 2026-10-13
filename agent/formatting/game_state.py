@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from PIL import Image
 from pydantic_ai import BinaryContent
 
-from common.enums import PokeballItem
+from common.enums import Badge, PokeballItem
 
 if TYPE_CHECKING:
     from emulator.game_state import GameState
@@ -33,8 +33,9 @@ def format_player_info(game_state: GameState) -> str:
     if game_state.player.name:
         out += f"Name: {game_state.player.name}\n"
     out += f"Money: {game_state.player.money}\n"
-    if game_state.player.badges:
-        out += f"Badges Earned: {', '.join(game_state.player.badges)}\n"
+    out += f"Badges Earned: {', '.join(game_state.player.badges) or 'None'}\n"
+    missing_badges = [badge for badge in Badge if badge not in game_state.player.badges]
+    out += f"Badges Missing: {', '.join(missing_badges) or 'None'}\n"
     out += f"Current Level Cap: {game_state.player.level_cap}\n"
     out += "</player_info>"
     return out
