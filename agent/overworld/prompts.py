@@ -168,8 +168,8 @@ When the agent is stuck, consider where it last made meaningful progress as a po
 Possible problems to investigate when the evidence supports them; this list is not exhaustive:
 - Mistaking revealed terrain for completed interactions or objectives.
 - Misremembering a destination or pursuing a stale goal.
-- Repeating a low-value strategy, including unnecessary grinding, while other useful progress is available.
-- Following an unusual progression route without considering whether an overlooked milestone, such as a Gym Badge, is limiting progress.
+- Repeating a low-value strategy while other useful progress is available.
+- Overlooking an available Gym badge that would raise the level cap and allow the team to keep growing. Delaying accessible Gyms can make later progression much harder.
 - Letting teammates fall behind in level, usually by failing to rotate the lead Pokemon regularly, since this is the one that gains the most experience.
 - Letting level-capped teammates steal experience from those who need it more (unless of course the capped Pokemon was needed in that circumstance).
 - Overlooking useful Pokemon it could catch or has already caught but is not using.
