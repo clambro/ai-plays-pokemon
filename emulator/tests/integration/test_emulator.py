@@ -4,14 +4,43 @@ import asyncio
 from pathlib import Path
 
 import pytest
+from pyboy import PyBoy
 
 from common.constants import DEFAULT_ROM_PATH
 from common.enums import Button, MapEntityType, MapId
-from emulator.control_events import ControlBoundary
+from emulator.control_events import ControlBoundary, ControlResultWaiter
 from emulator.emulator import Emulator
 from emulator.game_state import GameState
 from emulator.pyboy_worker import PyBoyWorker
+from emulator.rom_hooks.control import RomControlHooks
 from emulator.text_events import TextEventKind
+
+
+@pytest.mark.integration
+def test_blackout_map_loading_invalidates_previous_screen_boundary() -> None:
+    """A previous interface's readiness must not survive the blackout's map load."""
+    pyboy = PyBoy(str(DEFAULT_ROM_PATH), window="null", sound_emulated=True, sound_volume=0)
+    try:
+        with (Path(__file__).parent / "saves" / "blackout_map_loading.state").open("rb") as save:
+            pyboy.load_state(save)
+        hooks = RomControlHooks(pyboy, ControlResultWaiter())
+        hooks.install()
+        hooks.observe_text_event(TextEventKind.SPECIAL_INTERFACE_OPENED)
+        hooks.publish_tick()
+        assert hooks.current_boundary is None
+
+        for _ in range(120):
+            pyboy.tick(1, render=False)
+            hooks.publish_tick()
+            if hooks.current_boundary == ControlBoundary.OVERWORLD_READY:
+                break
+        assert hooks.current_boundary == ControlBoundary.OVERWORLD_READY
+        game_state = GameState.from_memory(pyboy.memory)
+        assert game_state.map.id == MapId.INDIGO_PLATEAU
+        assert (game_state.map.height, game_state.map.width) == (18, 20)
+        assert len(game_state.map.background_blocks) == game_state.map.height
+    finally:
+        pyboy.stop(save=False)
 
 
 @pytest.mark.integration

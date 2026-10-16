@@ -219,6 +219,8 @@ _SUPPRESSED_OR_SIMULATED_INPUT = (1 << 0) | (1 << 5) | (1 << 7)
 _DOOR_LEDGE_OR_SPINNER_MOVEMENT = (1 << 1) | (1 << 6) | (1 << 7)
 _BOULDER_MOVING = 1 << 1
 _RENDER_FENCE_FRAMES = 3
+_LCD_CONTROL_ADDRESS = 0xFF40
+_LCD_ENABLED = 1 << 7
 _CONTROL_OPERATION_TIMEOUT_SECONDS = 60
 _BIKING_STATE = 1
 _SIMULATED_INPUT = 1 << 7
@@ -360,7 +362,13 @@ class RomControlHooks:
 
         self._request_handoff_if_timed_out()
         self._request_handoff_if_overworld_control_lost()
-        self._observe_immediate_input()
+        if self._pyboy.memory[_LCD_CONTROL_ADDRESS] & _LCD_ENABLED:
+            self._observe_immediate_input()
+        else:
+            # Map loading disables the LCD while replacing shared terrain memory. Discard
+            # readiness from the previous screen and wait for a fresh ROM input boundary.
+            self._current_boundary = None
+            self._completed_boundary = None
 
         pending = self._pending
         release_scheduled_this_tick = False
