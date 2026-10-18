@@ -7,7 +7,7 @@ from threading import Lock
 from typing import TYPE_CHECKING
 
 from common.enums import Button, MapEntityType, MapId
-from emulator.control_events import ControlBoundary
+from emulator.control_events import CONTROL_TIMEOUT_SECONDS, ControlBoundary
 
 if TYPE_CHECKING:
     from common.schemas import Coords
@@ -353,6 +353,7 @@ async def drive_standard_dialog(
             await emulator.press_button(Button.A)
             control.input_sent = True
 
-        batch = await emulator.wait_for_text_events()
+        batch = await emulator.wait_for_text_events(max_wait_seconds=CONTROL_TIMEOUT_SECONDS)
         if not batch:
-            raise RuntimeError("Emulator stopped before dialog reached a semantic boundary.")
+            # Preserve captured dialogue and let settlement recheck the live control boundary.
+            return reducer.reduce(events)
