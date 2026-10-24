@@ -10,6 +10,9 @@ if TYPE_CHECKING:
     from emulator.game_state import GameState
 
 
+CONTROL_TIMEOUT_SECONDS = 30
+
+
 class ControlBoundary(StrEnum):
     """Decision-ready ROM boundaries used to complete a button operation."""
 

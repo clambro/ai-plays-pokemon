@@ -57,7 +57,7 @@ OLD                                                                      NEW
       160               80                40                20             exact memories
 ```
 
-This means the amount of memory included in the prompt grows logarithmically while the detailed recent tail stays roughly the same size. This does tend to increase API costs over time, but the growth is negligible compared to the total size of all the other context in the prompt.
+This means the amount of memory included in the prompt grows logarithmically while the detailed recent tail stays roughly the same size. This slightly increases API costs over time, but the effect is small.
 
 ### Mapping
 

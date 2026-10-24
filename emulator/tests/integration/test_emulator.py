@@ -13,7 +13,44 @@ from emulator.emulator import Emulator
 from emulator.game_state import GameState
 from emulator.pyboy_worker import PyBoyWorker
 from emulator.rom_hooks.control import RomControlHooks
-from emulator.text_events import TextEventKind
+from emulator.rom_hooks.text import RomTextHooks
+from emulator.text_events import TextEventJournal, TextEventKind
+
+
+@pytest.mark.integration
+def test_credits_continuation_wait_accepts_input() -> None:
+    """The end credits expose their A/B wait without requiring a decoded dialog page."""
+    pyboy = PyBoy(str(DEFAULT_ROM_PATH), window="null", sound_emulated=True, sound_volume=0)
+    try:
+        with (Path(__file__).parent / "saves" / "credits_wait.state").open("rb") as save:
+            pyboy.load_state(save)
+        controls = RomControlHooks(pyboy, ControlResultWaiter())
+        journal = TextEventJournal()
+        text = RomTextHooks(pyboy, journal, controls.observe_text_event)
+        controls.install()
+        text.install()
+        for _ in range(60):
+            pyboy.tick(1, render=False)
+            controls.publish_tick()
+            if controls.current_boundary == ControlBoundary.TEXT_INPUT_READY:
+                break
+        assert controls.current_boundary == ControlBoundary.TEXT_INPUT_READY
+        waits = [event for event in journal.drain() if event.kind == TextEventKind.INPUT_REQUIRED]
+        assert waits
+        assert all(event.page is None for event in waits)
+
+        controls.arm_button(Button.A)
+        pyboy.button_press(Button.A)
+        resolved = False
+        for _ in range(60):
+            pyboy.tick(1, render=False)
+            controls.publish_tick()
+            if any(event.kind == TextEventKind.INPUT_RESOLVED for event in journal.drain()):
+                resolved = True
+                break
+        assert resolved
+    finally:
+        pyboy.stop(save=False)
 
 
 @pytest.mark.integration

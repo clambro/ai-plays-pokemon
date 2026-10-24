@@ -6,7 +6,7 @@ This is an autonomous AI agent designed to play [Pokémon Yellow Legacy](https:/
 
 The agent is implemented in Python using [Pydantic AI](https://ai.pydantic.dev/) and deterministic gameplay tools organized around the three major parts of the game: exploring the overworld, handling text, and battling. The application operates asynchronously with the [PyBoy emulator](https://github.com/Baekalfen/PyBoy), and is built to be modular and type-safe. The project aims to treat Pokémon as a client that can be served by a combination of classical algorithms and LLM-powered decision making. It features hierarchical rolling memory and an ASCII map renderer with A* search navigation to help with the inherent limitations of working with LLMs. The goal was to have the AI make the decisions, while keeping the gameplay as close to human speed as possible.
 
-Data from the agent and the game's memory is piped into an HTML page for visualization, and the whole project [streams live on Twitch](https://www.twitch.tv/clambr0).
+Data from the agent and the game's memory is piped into an HTML page for visualization, and the whole project [streamed live on Twitch](https://www.twitch.tv/clambr0). It defeated the Champion for the first time on October 16th, 2026 after roughly 85 hours.
 
 If you want to learn more about how this all works, check out:
 - [A deeper look into the philosophy and design of the project](docs/philosophy.md)
@@ -31,13 +31,15 @@ Note: This is the improved v2 iteration of this project. If you want to see the 
 
 2. Install the dependencies with `uv sync`
 
+   (Optional) Apply [pyboy.patch](pyboy.patch) to the PyBoy 2.8.1 source and rebuild/install it to fix periodic audio skipping.
+
 3. Make a copy of the `.env.example` file and name it `.env`. Add your OpenAI API key there.
 
-4. Put the ROM you just built at `resources/ylegacy.gbc`.
+4. Put the ROM at `resources/ylegacy.gbc`.
 
-5. (Optional) Add a [Logfire](https://logfire.pydantic.dev/) write token as `LOGFIRE_TOKEN`. Without telemetry, you will have very little visibility into what the agent is doing behind the scenes.
+5. (Optional) Add a [Logfire](https://logfire.pydantic.dev/) write token to the env file as `LOGFIRE_TOKEN`. Without telemetry, you will have very little visibility into what the agent is doing behind the scenes.
 
-**Note:** If you try to run the integration tests, many of them will fail because they depend on save states that I am not licensed to distribute. Similarly, if you try to run the game state visualization server, you'll get an error that the sprites are unavailable for the same reason.
+**Note:** If you try to run the integration tests, many of them will fail because they depend on save states that I am not licensed to distribute. For the same reason, if you try to run the game state visualization server, you'll get an error that the sprites it uses are unavailable.
 
 ## Running the Agent
 
@@ -89,25 +91,21 @@ It was the cheapest, fastest frontier model at the time of writing. A big part o
 
 ### Can it play other Pokémon games?
 
-Not natively. You could adapt this code to another Gen 1 or Gen 2 game, but you would have to create new parsers for the memory locations in the new ROM, and probably tweak some of the timing and navigation logic. PyBoy, unfortunately, only runs GameBoy and GameBoy Color games, so you would need to find another emulator to go beyond Gen 2.
+Not natively. You could adapt this code to another Gen 1 or Gen 2 game, but you would have to create new parsers for the memory locations in the new ROM, and probably tweak some of the timing and navigation logic. Additionally, PyBoy only runs GameBoy and GameBoy Color games, so you would need to find another emulator to go beyond Gen 2.
 
 ### How much does it cost to run?
 
-Short answer: Less than $1 USD/hour for the GPT-6 Luna API calls.
+Short answer: Less than $0.50/hour for the GPT-6 Luna API calls.
 
-Longer answer: Rolling memory grows logarithmically, and the cost grows with it. Based on some initial tests, it's around `$0.30 + $0.04 log t` per hour, where `t` is elapsed time in hours and `log` is the natural logarithm.
+Longer answer: Rolling memory grows logarithmically, and the cost grows with it. The curve is roughly `$0.30 + $0.05 log t` per hour, where `t` is elapsed game time in hours and `log` is the natural logarithm. The completed game cost approximately $33.50 over 85 hours.
 
 ### How fast does it play?
 
-I put a lot of effort into making its reactions as close to human speed as I could. It usually gets the Pokedex in around 20 mins, and it usually gets to Brock in around 90 mins, but this fluctuates depending on how it decides to explore in the early game.
-
-### Do you intend to keep working on this?
-
-I'd like to see it beat the game, and I'll try to support it so that it does. After that, I'm unsure. I've always wanted to build something like this, but I also have other project ideas that I'd like to work on.
+I put a lot of effort into making its reactions as close to human speed as I could. It usually beats Brock in around 90 mins, but this fluctuates depending on how it decides to explore in the early game. The endgame is a lot harder for the agent than the early and mid game, however. It got to Victory Road in just under 42 hours, but took 14 hours to find its way through and another 29 hours after that to beat the Champion, for a final time of around 85 hours.
 
 ### How long did it take to build this?
 
-[The first complete version](https://github.com/clambro/ai-plays-pokemon/tree/v1.0.0) took a good chunk of my free time for 2-3 months. The current version benefited from advances in vibe coding and was built on top of the first in a few weeks.
+[The first complete version](https://github.com/clambro/ai-plays-pokemon/tree/v1.0.0) took a good chunk of my free time for 2-3 months. The current version benefited from advances in vibe coding and was built on top of the first in a few weeks. Bugfixes and my own perfectionism added a few more weeks to the timeline while it was streaming live.
 
 ## Licence & Affiliation Notice
 

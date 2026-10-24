@@ -171,8 +171,6 @@ _TILE_MAP_START = 0xC3A0
 _TILE_MAP_WIDTH = 20
 _WINDOW_Y_ADDRESS = 0xFF4A
 _SCREEN_HEIGHT_PIXELS = 144
-_AUDIO_FADE_FLAGS_ADDRESS = 0xD72B  # wd72c
-_REDUCED_VOLUME_INTERFACE_FLAG = 1 << 1
 _MAP_ID_ADDRESS = 0xD3AB  # wCurMap
 _SPRITE_COUNT_ADDRESS = 0xD52E  # wNumSprites
 _SPRITE_INDEX_OR_TEXT_ID_ADDRESS = 0xFF8C  # hSpriteIndexOrTextID
@@ -295,22 +293,17 @@ class RomTextHooks:
         if self._inside_wait:
             return
         self._inside_wait = True
-        page = _decode_standard_dialog_page(self._pyboy.memory)
-        if page is not None:
-            self._record(TextEventKind.INPUT_REQUIRED, page=page)
-        elif self._is_reduced_volume_interface_open():
-            self._record(TextEventKind.SPECIAL_INTERFACE_OPENED)
+        self._record(
+            TextEventKind.INPUT_REQUIRED,
+            page=_decode_standard_dialog_page(self._pyboy.memory),
+        )
 
     def _record_wait_exit(self) -> None:
-        page = _decode_standard_dialog_page(self._pyboy.memory)
-        if self._inside_wait or page is not None:
-            self._record(TextEventKind.INPUT_RESOLVED, page=page)
-        if page is None and self._is_reduced_volume_interface_open():
-            self._record(TextEventKind.SPECIAL_INTERFACE_CLOSED)
+        self._record(
+            TextEventKind.INPUT_RESOLVED,
+            page=_decode_standard_dialog_page(self._pyboy.memory),
+        )
         self._inside_wait = False
-
-    def _is_reduced_volume_interface_open(self) -> bool:
-        return bool(self._pyboy.memory[_AUDIO_FADE_FLAGS_ADDRESS] & _REDUCED_VOLUME_INTERFACE_FLAG)
 
     def _record_sprite_interaction_start(self) -> None:
         """Record when DisplayTextID is resolving a map-local sprite index."""

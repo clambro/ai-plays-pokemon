@@ -9,6 +9,7 @@ from loguru import logger
 
 from common.enums import Button, MapId
 from emulator.control_events import (
+    CONTROL_TIMEOUT_SECONDS,
     ControlBoundary,
     ControlHandoff,
     ControlResult,
@@ -221,7 +222,6 @@ _BOULDER_MOVING = 1 << 1
 _RENDER_FENCE_FRAMES = 3
 _LCD_CONTROL_ADDRESS = 0xFF40
 _LCD_ENABLED = 1 << 7
-_CONTROL_OPERATION_TIMEOUT_SECONDS = 60
 _BIKING_STATE = 1
 _SIMULATED_INPUT = 1 << 7
 _TRAINER_CHALLENGE = 1 << 3
@@ -322,7 +322,7 @@ class RomControlHooks:
             button_mask=_BUTTON_MASKS[button],
             input_domain=input_domain,
             observe_steps=observe_steps,
-            deadline=time.monotonic() + _CONTROL_OPERATION_TIMEOUT_SECONDS,
+            deadline=time.monotonic() + CONTROL_TIMEOUT_SECONDS,
         )
         self._current_boundary = None
         return operation_id
@@ -337,7 +337,7 @@ class RomControlHooks:
             operation_id=operation_id,
             button=None,
             button_mask=0,
-            deadline=time.monotonic() + _CONTROL_OPERATION_TIMEOUT_SECONDS,
+            deadline=time.monotonic() + CONTROL_TIMEOUT_SECONDS,
             required_boundary=boundary,
             accepted=True,
         )
